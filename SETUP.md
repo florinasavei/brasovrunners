@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -305,7 +305,8 @@ Implement `npm run docs:check` to verify:
 - every `BR-BUS-*` ID referenced in `SPECS.md` exists in `BUSINESS.md`;
 - every `BR-REQ-*` ID referenced anywhere in the repository exists in `SPECS.md`;
 - every `BR-BUS-*` heading in `BUSINESS.md` is referenced by at least one requirement;
-- every file under the root, `docs/`, `scripts/`, and `.github/` is linked from `README.md`;
+- every file under the root, `docs/`, `scripts/`, `.github/`, and `.githooks/` is linked from `README.md`;
+- the club's own hostname appears nowhere outside §26, which uses `<domain>` until the domain is registered;
 - the top heading of `CHANGELOG.md` equals the current baseline;
 - every root document, `docs/PRACTICES.md`, and `docs/RUNBOOKS.md` show the baseline in visible text.
 
@@ -324,6 +325,7 @@ Expected names:
 ```json
 {
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -347,6 +349,15 @@ Expected names:
 ```
 
 Fill actual commands from selected tools. Do not leave placeholders in a merged implementation.
+
+`check` is the aggregate local-and-CI gate. Every step a developer can run locally —
+`format:check`, `lint`, `typecheck`, `docs:check`, `test:unit` — belongs inside it, because
+`.githooks/pre-commit` and `.github/workflows/docs-check.yml` both invoke exactly
+`npm run check` and must never name different commands (BR-REQ-090-02).
+
+`setup` is already implemented. It sets `core.hooksPath` to the tracked `.githooks`
+directory, which needs no dependency; husky and lint-staged are deliberately not installed
+(`AGENTS.md` §1.5 priority 4 and 6).
 
 ## 9. Local PostgreSQL
 
@@ -978,8 +989,10 @@ Checklist:
 
 ## 26. Create GoDaddy Node.js Hosting QA and production applications
 
-This section is the **only** place in the repository where a hostname appears. Everything
-else says "QA host" or "production host". Both applications start on their
+This section is the **only** place in the repository where the club's own hostname appears.
+Everything else says "QA host" or "production host", or writes `<domain>`. `docs:check`
+fails when a club hostname appears in any other file, so the name cannot leak into a
+document before the domain is registered. Both applications start on their
 provider-assigned default hostnames; the custom domain is bound at the end of M1 using
 `docs/RUNBOOKS.md` § Domain binding.
 
@@ -1076,24 +1089,76 @@ Add only required permissions. Do not expose production secrets to PR workflows.
 
 Required status check name should remain stable, e.g. `ci`.
 
-## 28. Daily Git flow
+## Contributing
 
-Start work:
+The shortest complete path from no clone to an open pull request. Sections 1 to 27 are the
+one-time provider and application bootstrap; this is what every contributor does afterwards,
+every time. It is deliberately unnumbered so the numbered setup sequence keeps its
+cross-references.
+
+**Once per clone:**
+
+```bash
+git clone https://github.com/florinasavei/brasovrunners.git
+cd brasovrunners
+npm ci
+npm run setup
+```
+
+`npm run setup` points git at the tracked `.githooks` directory. From then on `npm run check`
+runs before every commit and a failing commit is blocked. Skipping it is the one way to get a
+red pull request from a green working copy, so it is not optional.
+
+**Per change:**
 
 ```bash
 git switch qa
 git pull --ff-only origin qa
-git switch -c feature/<name>
+git switch -c feature/<short-name>
 ```
 
-Before PR:
+Branch from `qa`, never from `main`. Names are lowercase kebab-case with one of four
+prefixes, and the branch is deleted after merge:
+
+| Prefix | Use |
+| --- | --- |
+| `feature/` | new behavior |
+| `fix/` | a defect in merged behavior |
+| `chore/` | tooling, documentation, dependencies, no product behavior |
+| `hotfix/` | production emergency only; branches from `main`, not `qa` |
+
+Name a change after what it does, not after the file it touches: `feature/waitlist-offer-expiry`,
+not `feature/update-registrations`.
+
+**Before pushing:**
 
 ```bash
 npm run check
-npm run build
 ```
 
-Push/open PR to `qa`. Use squash merge after review/CI.
+This is the same command the pre-commit hook runs and the same command CI runs, so a clean
+result locally means a clean result in CI. Once the application exists, also run
+`npm run build`.
+
+**Opening the pull request:**
+
+- base `qa`, never `main`; a `qa -> main` pull request is a release and is section 28's job;
+- name the `BR-REQ-*` IDs the change implements, or say why none apply;
+- fill in the pull-request template, including the `AGENTS.md` §1.4 change-type checkbox;
+- a documentation rule change is never one file: edit the whole matrix row, bump the baseline
+  marker in all six root documents, add the `CHANGELOG.md` entry, append to `DECISIONS.md`;
+- `docs-check` must pass; it is a required check;
+- squash merge after review.
+
+If `npm run check` fails for a reason you believe is wrong, fix the check rather than
+bypassing it. `git commit --no-verify` exists for emergencies, does not bypass CI, and leaves
+the problem for the next person.
+
+## 28. Daily Git flow
+
+Starting work, branch naming, `npm run check`, and opening a pull request into `qa` are in
+§ Contributing above; they are not repeated here. This section covers the two flows a
+contributor does not run day to day.
 
 Release:
 
@@ -1122,9 +1187,10 @@ finished when it is on production, not when its last pull request merges.
 
 ### M1 — Launch
 
-- **PR 1 — Foundation.** Root docs and `docs:check` in `npm run check`, Next.js and MUI with
-  the App Router integration, i18n shell, CI, `CODEOWNERS`, pull-request template, local
-  PostgreSQL, environment validation, `.nvmrc` pinned to the verified GoDaddy runtime.
+- **PR 1 — Foundation.** Root docs and `docs:check` in `npm run check`, the `npm run setup`
+  hook install and the `.githooks/pre-commit` gate, Next.js and MUI with the App Router
+  integration, i18n shell, CI, `CODEOWNERS`, pull-request template, local PostgreSQL,
+  environment validation, `.nvmrc` pinned to the verified GoDaddy runtime.
 - **PR 2 — Database.** Drizzle, migrations, environment marker, seeds, the M1 schema including
   the three M2 footprints (`races`, `events.race_id`, results consent fields, `bib_number`).
 - **PR 3 — Walking skeleton.** One seeded event, registration form with privacy acknowledgment

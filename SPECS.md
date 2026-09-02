@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -979,7 +979,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 #### BR-REQ-090-02 — Release flow
 
 - **Source:** BR-BUS-090
-- **Implements:** AGENTS.md §6
+- **Implements:** AGENTS.md §6, §21
 - **Priority:** MUST
 - **Release:** M1
 
@@ -990,8 +990,10 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a release, when `qa` is promoted, then it is a reviewed pull request into `main` merged with a merge commit.
 4. Given a hotfix from `main`, when it is deployed, then it is merged back into `qa` before the next release.
 5. Given any pull request, when CI runs, then `docs:check` is part of the required checks.
+6. Given a clone on which `npm run setup` has been run, when a commit is made and `npm run check` fails, then the commit is blocked and the failure is reported.
+7. Given the CI workflow and the pre-commit hook, when both are inspected, then they invoke the same `npm run check` command, so a change cannot pass locally and fail in CI.
 
-**Verification:** repository settings audit; CI configuration
+**Verification:** repository settings audit; CI configuration; `.githooks/pre-commit` and `.github/workflows/docs-check.yml` compared
 
 #### BR-REQ-101-01 — Hosting portability
 

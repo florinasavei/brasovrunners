@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -81,19 +81,22 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `npm run check` and CI |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `npm run release`: versioned folder, archive, and standalone versioned copies under `dist/` |
+| [`scripts/setup.mjs`](./scripts/setup.mjs) | `npm run setup`: points git at `.githooks` so `npm run check` runs before every commit |
+| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `npm run check` and blocks the commit on failure; the same command CI runs |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and GoDaddy hosting. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review ownership of the root documents |
-| [`package.json`](./package.json) | Minimal, `docs:check` only; the application arrives in PR 1 |
+| [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
+| [`package.json`](./package.json) | `setup`, `check`, `docs:check`, and `release`; the application scripts arrive in PR 1 |
+| [`package-lock.json`](./package-lock.json) | Lockfile, so `npm ci` works from a clean clone; currently no dependencies |
 | [`.gitignore`](./.gitignore), [`.editorconfig`](./.editorconfig), [`.gitattributes`](./.gitattributes) | Repository hygiene: ignored paths, editor defaults, line endings |
 
 **This index is complete by rule.** Every file under the repository root, `docs/`,
-`scripts/`, and `.github/` must be linked from this README. `docs:check` fails when one is
-not, so a file added without a row here cannot merge. Application source under `src/` is
-described by the structure section below rather than linked file by file.
-| [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
+`scripts/`, `.github/`, and `.githooks/` must be linked from this README. `docs:check` fails
+when one is not, so a file added without a row here cannot merge. Application source under
+`src/` is described by the structure section below rather than linked file by file.
 
 ## If you are an AI agent
 
@@ -447,6 +450,7 @@ After the foundation pull request, a new developer should be able to run:
 
 ```bash
 npm ci
+npm run setup
 cp .env.example .env.local
 docker compose up -d db
 npm run db:migrate
@@ -454,9 +458,15 @@ npm run db:seed
 npm run dev
 ```
 
+`npm run setup` is the one step that is already live today: it points git at
+[`.githooks`](./.githooks/pre-commit), so `npm run check` runs before every commit and a
+change cannot pass locally but fail in CI. Run it once per clone. The step-by-step
+contributor walkthrough is [`SETUP.md`](./SETUP.md) § Contributing.
+
 The repository should expose stable commands:
 
 ```text
+npm run setup
 npm run dev
 npm run build
 npm run start
@@ -493,6 +503,10 @@ MANIFEST.txt
 scripts/
   docs-check.mjs        documentation synchronization check
   release.mjs           versioned release build into dist/
+  setup.mjs             npm run setup: installs the tracked git hooks
+
+.githooks/
+  pre-commit            runs npm run check and blocks a failing commit
 
 src/
   app/
@@ -563,7 +577,8 @@ pull request, with the baseline marker bumped in the same commit.
 - business-rule IDs referenced by `SPECS.md` exist in `BUSINESS.md`;
 - required root documents exist, including `DECISIONS.md`;
 - every requirement ID referenced anywhere in the repository exists in `SPECS.md`;
-- every file under the root, `docs/`, `scripts/`, and `.github/` is linked from this README.
+- every file under the root, `docs/`, `scripts/`, `.github/`, and `.githooks/` is linked from this README;
+- no hostname literal appears under `src/`, and the club's own hostname appears nowhere outside [`SETUP.md`](./SETUP.md) §26.
 
 ## Implementation order
 

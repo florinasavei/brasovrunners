@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -105,7 +105,8 @@ marker per document.
 - every `BR-BUS-*` heading in `BUSINESS.md` is referenced by at least one requirement;
 - every file under the root, `docs/`, `scripts/`, and `.github/` is linked from `README.md`, so the README index stays complete;
 - the top heading of `CHANGELOG.md` equals the current baseline;
-- every root document, `docs/PRACTICES.md`, and `docs/RUNBOOKS.md` show the baseline in visible text, not only in the marker.
+- every root document, `docs/PRACTICES.md`, and `docs/RUNBOOKS.md` show the baseline in visible text, not only in the marker;
+- no hostname literal appears under `src/`, and the club's own hostname appears in no file except `SETUP.md` §26. Every other document writes `<domain>`. This holds for `docs/history/` too, which the requirement scan skips but this check does not.
 
 Do not duplicate large sections when a short summary and link are sufficient.
 
@@ -402,6 +403,7 @@ docker-compose.yml
 The foundation must expose stable names:
 
 ```text
+npm run setup
 npm run dev
 npm run build
 npm run start
@@ -428,12 +430,15 @@ Do not claim a command exists until it is in `package.json` and tested.
 
 ```bash
 npm ci
+npm run setup
 cp .env.example .env.local
 docker compose up -d db
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
+
+`npm run setup` installs the tracked git hooks (§6.3). Run it once per clone.
 
 Local setup must not require production/QA credentials.
 
@@ -538,6 +543,12 @@ Use lowercase kebab-case. Delete after merge.
 8. `qa` deploys automatically.
 
 `qa` must remain releasable. Do not use it as an unreviewed scratch branch.
+
+Step 4 is enforced locally, not left to memory. `npm run setup` sets `core.hooksPath` to the
+tracked `.githooks`, whose `pre-commit` runs `npm run check` and blocks a failing commit. CI
+runs the same `npm run check`, so the two cannot drift as `check` grows (BR-REQ-090-02).
+Hooks need no dependency: husky and lint-staged are deliberately not installed (§1.5
+priority 4 and 6). `--no-verify` exists for emergencies and does not bypass CI.
 
 ### 6.4 Production promotion
 
@@ -2336,9 +2347,13 @@ Fail CI for key/interpolation mismatch, invalid JSON, unsupported locale, missin
 
 ## 21. Continuous integration
 
-`.github/workflows/ci.yml` runs on PRs/pushes to `qa`/`main`.
+Today `.github/workflows/docs-check.yml` runs on PRs/pushes to `qa`/`main`. It invokes
+`npm run check`, the same command `.githooks/pre-commit` runs. Keep it that way: CI and the
+hook must never name different commands, or a change can pass locally and fail in CI
+(BR-REQ-090-02). The workflow is renamed to `ci.yml` when the full pipeline below replaces
+it; until then its check name stays stable for branch protection.
 
-Typical order:
+Typical order once the application exists:
 
 ```text
 checkout
@@ -2360,6 +2375,7 @@ Playwright may run in same/parallel job after build depending runtime.
 Rules:
 
 - lockfile install only;
+- every CI step a developer can run locally belongs inside `npm run check`, so the hook and CI stay one command;
 - least-privilege workflow token;
 - no production secrets on PR jobs;
 - no untrusted fork code with privileged secrets;

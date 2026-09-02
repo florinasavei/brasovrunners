@@ -8,6 +8,22 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.12-2026-09-02
+
+- Local development workflow, the first slice of PR 1: `npm run setup` (`scripts/setup.mjs`) sets `core.hooksPath` to the tracked `.githooks`, whose `pre-commit` runs `npm run check` and blocks a failing commit. No dependency added; husky and lint-staged deliberately not installed.
+- CI now runs `npm run check` instead of `node scripts/docs-check.mjs`, so the hook and CI can never name different commands. BR-REQ-090-02 gains acceptance criteria 6 and 7.
+- Fixed: `docs:check` failed on Windows for every file outside the repository root, because it compared `path.relative` output containing `\` against Markdown links containing `/`. The same bug made the `docs/history` exclusion inert on Windows. `npm run release` was blocked by it.
+- Fixed: `npm run release` produced no archive on Windows and still exited 0, because it passed an absolute `D:\...` path to `tar` running with `cwd` already set to `dist/`.
+- Redacted the club's unregistered domain from `DECISIONS.md` and `docs/history/ORIGINAL_PLAN_2026-08.md` to `<domain>`, the placeholder `SETUP.md` §26 already used, ahead of making the repository public.
+- `docs:check` now fails when the club's own hostname appears outside `SETUP.md` §26, `docs/history/` included. The existing hostname guard only walked `src/`, which does not exist yet, so it could not see a hostname in a Markdown file.
+- That guard is driven by `git ls-files`, so it scans exactly what publishing would expose — extensionless files such as `.github/CODEOWNERS` and `.githooks/pre-commit` included — with no size cap and no extension allowlist. It matches case-insensitively and folds the spellings a browser still resolves: fullwidth and ideographic dots, zero-width characters, percent and source-code escapes, punycode labels, and a hostname split by a line wrap. Verified against a 23-case bypass matrix with no false positives.
+- `SETUP.md` §26 no longer claims to be the only place *any* hostname appears; `github.com` legitimately appears in four documents. It now states the rule the check actually enforces.
+- Added `package-lock.json`; `npm ci` failed from a clean clone without it.
+- New `SETUP.md` § Contributing: clone, `npm run setup`, branch naming, `npm run check`, pull request into `qa`. `AGENTS.md` §21 no longer points at a `ci.yml` that does not exist.
+- Added `LICENSE`: MIT, copyright Brașov Runners, naming the club rather than the maintainer per BR-BUS-101.
+- Softened four passages ahead of publication: three in `docs/PRACTICES.md` § Delivery that framed adoption and maintainer risk as predictions about the club's people, and the "vibe-coded" line in `docs/history/ORIGINAL_PLAN_2026-08.md`, which now carries a superseded note pointing at the human-review rules in `AGENTS.md` §1.5.
+- Why: `DECISIONS.md` §19.
+
 ## BR-V1.11-2026-09-02
 
 - Every document shows its baseline in a visible line under its title; `docs:check` requires it and rejects stale literals in `docs/` too.

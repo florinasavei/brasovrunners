@@ -22,4 +22,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-      - run: node scripts/docs-check.mjs
+      # Must stay `npm run check`: .githooks/pre-commit runs the same command, so local
+      # and CI cannot diverge as `check` grows past docs:check (SETUP.md section 8).
+      - run: npm run check

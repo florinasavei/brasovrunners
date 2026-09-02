@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V1.11-2026-09-02
+Baseline: BR-V1.12-2026-09-02
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -10,6 +10,8 @@ Authoritative/current root documentation:
 - SETUP.md       GitHub/provider/environment setup
 - DECISIONS.md   Planning rationale/history (context only)
 
+Licence: MIT, copyright Brașov Runners (LICENSE)
+
 Supporting files:
 - docs/PRACTICES.md                    practice guides: code priorities, delivery, mobile,
                                        SEO, AIO, accessibility, performance, editorial,
@@ -18,10 +20,13 @@ Supporting files:
 - docs/history/ORIGINAL_PLAN_2026-08.md  original planning input, not authoritative
 - scripts/docs-check.mjs               documentation synchronization check
 - scripts/release.mjs                  npm run release: versioned folder, archive, share copies
-- .github/workflows/docs-check.yml     docs:check in CI, read-only permissions
+- scripts/setup.mjs                    npm run setup: installs the tracked git hooks
+- .githooks/pre-commit                 runs npm run check, blocks a failing commit
+- .github/workflows/docs-check.yml     npm run check in CI, read-only permissions
 - .github/CODEOWNERS                   review ownership of the root documents
 - .github/pull_request_template.md     per-PR checks including the documentation sync checklist
-- package.json                         docs:check only until PR 1
+- package.json                         setup, check, docs:check, release until PR 1
+- package-lock.json                    lockfile so npm ci works from a clean clone
 - CHANGELOG.md                         one entry per baseline, newest first
 - .gitignore, .editorconfig, .gitattributes
 
@@ -52,6 +57,8 @@ Important current decisions:
 - Optional public runner profiles with Strava/social links, noindex and absent from sitemap
 - Capacity correctness comes from transaction-time expiry, not from the scheduler
 - qa -> QA, main -> production; no develop branch
+- Local checks and CI are one command: .githooks/pre-commit and the CI workflow both run
+  npm run check; hooks are dependency-free via core.hooksPath, not husky
 - Preferred hosting: GoDaddy Node.js Hosting, separate QA and production apps
 - Custom domain bound at the end of M1, before launch; SETUP.md section 26 is the only hostname table
 - GoDaddy domain/DNS once registered; Cloudflare R2 for media

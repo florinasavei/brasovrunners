@@ -2,7 +2,7 @@
 
 # Practice guides
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 ## About these guides
@@ -242,14 +242,15 @@ are not technical, and the ways a project like this usually fails.
 
 Ranked by how often they kill a project like this, not by how interesting they are.
 
-1. **Nobody at the club uses the CMS.** The platform's premise is that contributors keep
-   content current without a developer. If two organizers never log in, the site is stale
-   within a season and everyone goes back to a group chat. This is the single most likely
-   failure and it is a people problem, not a code problem.
+1. **Content upkeep has to fit how organizers already work.** The platform's premise is that
+   contributors keep content current without a developer. If editing is heavier than the tools
+   it replaces, content goes stale within a season. This is the most likely failure, and
+   onboarding, training, and editor design decide it rather than code quality.
 2. **Legal text never arrives.** Registration cannot reach confirmed without an approved
    declaration. It is the longest-lead item and it depends on someone outside the project.
-3. **Bus factor of one.** One developer builds it, understands it, and is the only person who
-   can recover production. `BR-BUS-101` names this; the schedule usually ignores it.
+3. **Single-maintainer dependency.** One developer builds it, understands it, and can recover
+   production. `BR-BUS-101` requires that this ends before handover, so plan the second person
+   into the schedule rather than after it.
 4. **Scope creep from real requests.** The deferred list in `BUSINESS.md` §8 exists because
    these requests will come, individually reasonable, from people you like.
 5. **Capacity and queue correctness.** The genuinely hard engineering problem, and the one
@@ -282,9 +283,9 @@ What it costs, permanently: dependency updates, security patches, provider chang
 someone to answer when an organizer says the site is down on a Sunday morning. That cost does
 not appear in any phase plan and does not stop.
 
-The decision stays as it is. But if the club's real need turns out to be "a nice website plus
-a way to collect names for three events a year", that is worth knowing before Phase 4 rather
-than after.
+The decision stays as it is. Review it once at a checkpoint before Phase 4 rather than after,
+so that the permanent maintenance cost above is being carried for the feature set the club
+actually uses.
 
 ### 3. Build order: get thin before you get deep
 
