@@ -59,12 +59,13 @@ Do not create a separate CMS, participant identity provider, backend API, Redis 
 
 ## 2. Ownership and prerequisite accounts
 
-Create resources under Brașov Runners-controlled ownership, not a freelancer's personal account. The domain, DNS, and hosting should preferably live in the Brașov Runners GoDaddy account; R2 remains in Cloudflare.
+Create resources under Brașov Runners-controlled ownership, not a freelancer's personal account. The domain and DNS live with the club's registrar; hosting is a Brașov Runners-owned Vercel account; R2 remains in Cloudflare.
 
 Required:
 
 - GitHub organization or organization-controlled repository;
-- GoDaddy account for Node.js Hosting, and for domain and DNS once the domain is registered;
+- Vercel account (Hobby) with two projects, QA and production;
+- a ROTLD-accredited registrar account for the `.ro` domain and its DNS once registered;
 - Cloudflare account for R2 object storage;
 - Neon account;
 - Zitadel organization/instances/projects;
@@ -94,9 +95,9 @@ Create password-manager records grouped by environment/provider:
 
 ```text
 Brașov Runners / GitHub
-Brașov Runners / GoDaddy Domain & DNS
-Brașov Runners / GoDaddy Node.js QA
-Brașov Runners / GoDaddy Node.js Production
+Brașov Runners / Registrar Domain & DNS
+Brașov Runners / Vercel QA
+Brașov Runners / Vercel Production
 Brașov Runners / Cloudflare R2
 Brașov Runners / Neon QA
 Brașov Runners / Neon Production
@@ -987,7 +988,7 @@ Checklist:
 - [ ] Backup/restore capability documented and tested before launch.
 - [ ] No production clone into QA.
 
-## 26. Create GoDaddy Node.js Hosting QA and production applications
+## 26. Create the Vercel QA and production projects
 
 This section is the **only** place in the repository where the club's own hostname appears.
 Everything else says "QA host" or "production host", or writes `<domain>`. `docs:check`
@@ -996,15 +997,19 @@ document before the domain is registered. Both applications start on their
 provider-assigned default hostnames; the custom domain is bound at the end of M1 using
 `docs/RUNBOOKS.md` § Domain binding.
 
-| Application | Branch | APP_ENV | Current hostname | Final hostname |
+| Project | Production branch | APP_ENV | Current hostname | Final hostname |
 | --- | --- | --- | --- | --- |
 | `brasov-runners-qa` | `qa` | `qa` | provider default | `qa.<domain>` |
 | `brasov-runners-production` | `main` | `production` | provider default | `<domain>` and `www.<domain>` |
 
+Two projects rather than one project with preview deployments, so each environment has its
+own environment variables and its own stable hostname. Set the function region to `fra1` on
+both. Verify the exact setting names in the Vercel dashboard when creating them.
+
 Fill the current hostname column when each application is created, and replace this table
 with the final values once binding is complete.
 
-Connect the GitHub repository and select the stated deployment branch for each application. Configure provider credentials only in the correct application/environment.
+Connect the GitHub repository to each project and set its production branch as stated. Configure provider credentials only in the correct project.
 
 `deploy:build` must verify branch and `APP_ENV`:
 
@@ -1014,24 +1019,25 @@ Connect the GitHub repository and select the stated deployment branch for each a
 
 QA headers/robots enforce noindex.
 
-GoDaddy runtime checklist:
+Runtime checklist:
 
 - [ ] Root `package.json` and `package-lock.json` present.
 - [ ] `npm run build` succeeds in clean CI.
 - [ ] `npm start` starts the production server.
 - [ ] Application honors `process.env.PORT`.
-- [ ] Repository pins a Node.js version compatible with GoDaddy's current supported runtime.
+- [ ] Repository pins a Node.js version the host currently supports, verified on the day.
 - [ ] No production dependency on Docker.
 - [ ] No durable uploads written to the app filesystem.
 - [ ] QA app has only QA credentials.
 - [ ] Production app has only production credentials.
-- [ ] `APP_BASE_URL` in each application matches that application's current hostname.
+- [ ] `APP_BASE_URL` in each project matches that project's current hostname.
+- [ ] CI runs `npm run build && npm start` and hits the server on `PORT`, because Vercel does not exercise that path.
 - [ ] QA is `noindex, nofollow`.
 
 Domain and DNS items are deliberately absent from this checklist. They belong to the
 binding runbook and are performed once, at the end of M1.
 
-The main site's DNS may remain at GoDaddy. Keep Cloudflare only for R2 unless a future feature specifically requires Cloudflare-managed DNS.
+The main site's DNS stays with the registrar. Keep Cloudflare only for R2 unless a future feature specifically requires Cloudflare-managed DNS.
 
 Background jobs:
 
@@ -1045,8 +1051,9 @@ Background jobs:
 - scheduler credentials are limited to the job endpoint and are separate per environment;
 - record every run in `job_runs` so a stalled scheduler is visible in the health check.
 
-Choose the external scheduler before Phase 5. Check first whether the GoDaddy plan
-exposes cron; if it does, prefer it, since it adds no account. GitHub Actions `schedule`
+Choose the external scheduler before Phase 5. Vercel Hobby cron runs once per day with
+hour-level jitter (Vercel's published limits, checked 2026-09-02), which is too coarse for
+maintenance every five minutes, so it is not the trigger. GitHub Actions `schedule`
 is free but has a five-minute minimum and its runs are delayed or dropped under load,
 which makes it acceptable as a watchdog and poor as a sole trigger. A dedicated HTTP cron
 service is the more reliable third option. Record the choice in §2 and §3 and in
@@ -1190,7 +1197,7 @@ finished when it is on production, not when its last pull request merges.
 - **PR 1 — Foundation.** Root docs and `docs:check` in `npm run check`, the `npm run setup`
   hook install and the `.githooks/pre-commit` gate, Next.js and MUI with the App Router
   integration, i18n shell, CI, `CODEOWNERS`, pull-request template, local PostgreSQL,
-  environment validation, `.nvmrc` pinned to the verified GoDaddy runtime.
+  environment validation, `.nvmrc` pinned to the host's verified runtime.
 - **PR 2 — Database.** Drizzle, migrations, environment marker, seeds, the M1 schema including
   the three M2 footprints (`races`, `events.race_id`, results consent fields, `bib_number`).
 - **PR 3 — Walking skeleton.** One seeded event, registration form with privacy acknowledgment
@@ -1268,7 +1275,7 @@ Application:
 
 Providers:
 
-- [ ] Separate QA/production GoDaddy applications and Neon/Zitadel/R2 resources.
+- [ ] Separate QA/production Vercel projects and Neon/Zitadel/R2 resources.
 - [ ] Mailgun production domain verified.
 - [ ] QA email restricted.
 - [ ] Webhook/job secrets configured.
@@ -1287,7 +1294,7 @@ Operations/privacy:
 
 Onboarding:
 
-- [ ] Named GitHub/GoDaddy/provider access at minimum useful role.
+- [ ] Named GitHub/Vercel/provider access at minimum useful role.
 - [ ] Password-manager shared records only as needed.
 - [ ] Read all root docs and run local setup.
 - [ ] First change through feature -> QA PR.
@@ -1295,7 +1302,7 @@ Onboarding:
 
 Offboarding:
 
-- [ ] Remove GitHub/GoDaddy/provider/password-manager access.
+- [ ] Remove GitHub/Vercel/provider/password-manager access.
 - [ ] Revoke app/session/token access.
 - [ ] Rotate shared secrets if any were exposed.
 - [ ] Transfer branches/issues/runbooks.

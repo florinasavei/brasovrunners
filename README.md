@@ -17,7 +17,7 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
 | Code | Not started. This repository currently contains documentation only. |
 | Priority | M1: event pages and registration, defined in [`DECISIONS.md`](./DECISIONS.md) §12 |
-| Next step | [`SETUP.md`](./SETUP.md) §29 PR 1, the repository foundation |
+| Now | **Weekend pilot:** Romanian event pages on Vercel from Neon, no registration — [`WEEKEND.md`](./WEEKEND.md). `SETUP.md` §29 remains the M1 plan |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -76,6 +76,8 @@ lasting decision updates every affected one and bumps that marker in the same pu
 
 | Path | Purpose |
 | --- | --- |
+| [`CLAUDE.md`](./CLAUDE.md) | Entry point for AI coding agents: current mode, live commands, the rules that cannot be broken, the pilot fast lane |
+| [`WEEKEND.md`](./WEEKEND.md) | The pilot scope: what one weekend builds, in order, and what it defers and why |
 | [`LICENSE`](./LICENSE) | MIT, copyright Brașov Runners; the club owns the platform per BR-BUS-101 |
 | [`MANIFEST.txt`](./MANIFEST.txt) | One-page handoff summary of the baseline and the headline decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
@@ -85,7 +87,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `npm run check` and blocks the commit on failure; the same command CI runs |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
-| [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and GoDaddy hosting. |
+| [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review ownership of the root documents |
 | [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
@@ -100,7 +102,8 @@ when one is not, so a file added without a row here cannot merge. Application so
 
 ## If you are an AI agent
 
-Read this section fully before making any change.
+Start with [`CLAUDE.md`](./CLAUDE.md), then [`WEEKEND.md`](./WEEKEND.md) while the pilot is
+the current mode. Then read this section fully before making any change.
 
 **Order of authority.** When two sources disagree, the higher one wins:
 
@@ -315,8 +318,8 @@ automation, Strava/Garmin sync, gamification, newsletters, page builders, a sepa
 | Participant access | Verified email action links; no participant login account |
 | Email | Mailgun behind an application adapter and transactional outbox |
 | Storage | Cloudflare R2 behind an application adapter |
-| Hosting | GoDaddy Node.js Hosting; separate QA and production applications |
-| Domain / DNS | GoDaddy initially; the custom domain is bound at the end of M1 (see [`SETUP.md`](./SETUP.md) §26) |
+| Hosting | Vercel Hobby, function region `fra1`; one project per environment, deploying `qa` and `main`. Portable by rule: no Vercel-only runtime API |
+| Domain / DNS | A ROTLD-accredited registrar for the `.ro`, transferable later; the custom domain is bound at the end of M1 (see [`SETUP.md`](./SETUP.md) §26) |
 | Source control | GitHub |
 | Testing | Vitest, disposable PostgreSQL integration tests, and Playwright |
 
@@ -354,9 +357,9 @@ Rules:
 
 ### Hosting rule
 
-GoDaddy Node.js Hosting is the preferred V1 application host. Keep the application portable: it must build with `npm run build`, start with `npm start`, use the runtime `PORT`, and avoid GoDaddy-specific business logic.
+Vercel is the V1 application host, one project per environment. Keep the application portable: it must build with `npm run build`, start with `npm start`, use the runtime `PORT`, and use no Vercel-only runtime API. Vercel itself never runs `npm start` — it builds serverless functions — so CI must exercise that contract, or a portability regression stays invisible until a host change (BR-REQ-101-01).
 
-Use two persistent GoDaddy applications:
+Use two Vercel projects from the same repository:
 
 ```text
 brasov-runners-qa          <- qa branch   <- QA host
@@ -373,7 +376,7 @@ email action links, canonical tags, `hreflang` alternates, `sitemap.xml`, `robot
 Open Graph URLs, authentication callbacks, and the Mailgun webhook URL. No hostname
 literal may appear in `src/`.
 
-The domain and normal DNS may stay at GoDaddy. Cloudflare remains the object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
+The domain and normal DNS stay with whichever registrar holds the `.ro`; that may change over time and the application does not care. Cloudflare remains the documented object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
 
 Time-driven work such as email-outbox retries and waitlist/hold expiry must be idempotent and restart-safe. No capacity or queue decision may depend on the maintenance job having run: every read and every capacity-changing transaction evaluates hold expiry against the current time. The scheduler is a delivery and liveness mechanism only, it invokes protected internal job endpoints, and it is infrastructure rather than domain logic.
 

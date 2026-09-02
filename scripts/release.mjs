@@ -40,6 +40,8 @@ const SHARE = [
   "MANIFEST.txt",
   "docs/PRACTICES.md",
   "docs/RUNBOOKS.md",
+  "CLAUDE.md",
+  "WEEKEND.md",
 ];
 
 function run(cmd, args, opts = {}) {

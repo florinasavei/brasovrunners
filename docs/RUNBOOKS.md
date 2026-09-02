@@ -138,7 +138,7 @@ criteria for this runbook.
 
 - [ ] Domain registered and owned by the Brașov Runners account, not a personal one.
 - [ ] DNS management location decided, and access recorded in the password manager.
-- [ ] Both GoDaddy applications running on their default hostnames with green health checks.
+- [ ] Both Vercel projects running on their default hostnames with green health checks.
 - [ ] Two recovery-capable owners have access to the registrar.
 
 ### Step 1 — QA first

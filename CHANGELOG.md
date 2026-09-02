@@ -22,7 +22,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 - New `SETUP.md` § Contributing: clone, `npm run setup`, branch naming, `npm run check`, pull request into `qa`. `AGENTS.md` §21 no longer points at a `ci.yml` that does not exist.
 - Added `LICENSE`: MIT, copyright Brașov Runners, naming the club rather than the maintainer per BR-BUS-101.
 - Softened four passages ahead of publication: three in `docs/PRACTICES.md` § Delivery that framed adoption and maintainer risk as predictions about the club's people, and the "vibe-coded" line in `docs/history/ORIGINAL_PLAN_2026-08.md`, which now carries a superseded note pointing at the human-review rules in `AGENTS.md` §1.5.
-- Why: `DECISIONS.md` §19.
+- Hosting reversed from GoDaddy to Vercel Hobby (`fra1`, one project per environment) after GoDaddy's own deploy contract was found to block outbound Postgres on 5432 and external SMTP, with no free public tier. `AGENTS.md` §3.1 and §7.3, `SETUP.md` §2, §3 and §26, `README.md`, BR-BUS-101, `MANIFEST.txt`. The app stays portable by rule; CI now exercises `npm start` because Vercel does not.
+- Added `CLAUDE.md` (agent entry point) and `WEEKEND.md` (pilot scope): Romanian event pages on Vercel from Neon, no registration, no email, no login. Both indexed and baseline-checked.
+- Fast lane for application code during the pilot: no baseline bump or multi-document edit for code; rule changes unchanged; trust-carrying rules unchanged.
+- Why: `DECISIONS.md` §19 and §20.
 
 ## BR-V1.11-2026-09-02
 

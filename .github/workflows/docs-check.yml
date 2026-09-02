@@ -2,7 +2,7 @@ name: docs-check
 
 # Verifies the six root documents stay in sync (scripts/docs-check.mjs).
 # Read-only by design; see AGENTS.md §22 and SETUP.md §5.
-# Once a Node version is verified against the hosting runtime, replace
+# Once a Node version is verified against Vercel's supported runtimes, replace
 # `lts/*` with `node-version-file: .nvmrc`, and pin both actions to an
 # immutable commit SHA per SETUP.md §5.
 

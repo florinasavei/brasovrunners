@@ -134,7 +134,7 @@ async function checkBaseline(docs) {
   // HTML comment marker, in every root document and the two consolidated docs.
   if (distinct.length === 1) {
     const current = distinct[0];
-    const visibleTargets = [...docs, ...(await readOptional(["docs/PRACTICES.md", "docs/RUNBOOKS.md"]))];
+    const visibleTargets = [...docs, ...(await readOptional(["docs/PRACTICES.md", "docs/RUNBOOKS.md", "CLAUDE.md", "WEEKEND.md"]))];
     for (const [name, text] of visibleTargets) {
       const withoutMarker = text.replace(/<!--\s*PROJECT_BASELINE:[^>]*-->/g, "");
       if (!withoutMarker.includes(current)) {

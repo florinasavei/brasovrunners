@@ -296,7 +296,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 | Participant access | Hashed, expiring, purpose-scoped email action tokens |
 | Email | Mailgun behind adapter and PostgreSQL outbox |
 | Storage | Cloudflare R2 behind adapter |
-| Hosting | GoDaddy Node.js Hosting; separate QA/production applications |
+| Hosting | Vercel Hobby, region `fra1`; one project per environment; no Vercel-only runtime API |
 | Source control/CI | GitHub and GitHub Actions |
 | Unit/integration | Vitest and real disposable PostgreSQL |
 | Browser tests | Playwright |
@@ -340,7 +340,7 @@ Public pages must look like a local running community, not a default MUI dashboa
               qa branch                    main branch
                   |                             |
                   v                             v
-          GoDaddy QA app                GoDaddy production app
+          Vercel QA project           Vercel production project
              QA host                        production host
                   |                             |
        +----------+----------+       +----------+----------+
@@ -622,7 +622,7 @@ Required combinations:
 
 Startup rejects unsafe combinations.
 
-### 7.3 GoDaddy Node.js Hosting applications
+### 7.3 Hosting applications
 
 Recommended:
 
@@ -640,7 +640,7 @@ The custom domain is bound at the end of M1. `SETUP.md` §26 holds the only host
 table in the repository, and `docs/RUNBOOKS.md` § Domain binding is the binding procedure.
 Binding must be a configuration and DNS change only.
 
-Separate applications prevent environment-variable/deployment mixing. GoDaddy is a hosting adapter, not part of the business/domain architecture.
+Separate projects prevent environment-variable/deployment mixing. The host is an adapter, not part of the business/domain architecture. Vercel builds the app into serverless functions and never runs `npm start`, so the portability contract below is verified in CI, not by the host.
 
 Hosting rules:
 
@@ -648,15 +648,15 @@ Hosting rules:
 - `npm run build` must produce the production build;
 - `npm start` must start the application;
 - runtime must honor `process.env.PORT`;
-- pin a Node.js version compatible with the currently supported GoDaddy runtime; do not assume an unverified future version;
+- pin a Node.js version the host currently supports, verified against the host's documentation on the day; do not assume an unverified future version;
 - no Docker or infrastructure YAML is required for normal production startup;
 - do not write durable business data to the application filesystem;
 - use PostgreSQL for business state and R2 for durable media;
-- do not introduce GoDaddy-specific imports into domain modules;
+- do not introduce host-specific imports into domain modules;
 - do not introduce Vercel-only runtime APIs, Edge-only assumptions, Vercel KV, or Vercel Blob;
 - keep hosting migration possible without rewriting event, registration, CMS, participant, declaration, or notification modules.
 
-The primary domain and normal DNS may remain at GoDaddy. Cloudflare is still used for R2; the main-site DNS does not need to move to Cloudflare solely because R2 is used.
+The primary domain and normal DNS stay with the club's registrar. Cloudflare is still used for R2; the main-site DNS does not need to move to Cloudflare solely because R2 is used.
 
 ### 7.4 Database isolation
 
@@ -2546,7 +2546,7 @@ GET /api/health
 
 No secrets/schema/PII.
 
-Brașov Runners owns GoDaddy domain/DNS/hosting, GitHub, Neon, Zitadel, Mailgun, Cloudflare R2, password manager, billing/recovery. Freelancer least privilege, not sole recovery owner.
+Brașov Runners owns the domain/DNS, Vercel, GitHub, Neon, Zitadel, Mailgun, Cloudflare R2, password manager, billing/recovery. Freelancer least privilege, not sole recovery owner.
 
 ---
 
@@ -2682,12 +2682,12 @@ A new maintainer receives:
 - QA credentials through password manager;
 - architecture/data model/decision records;
 - migration/backup/restore runbooks;
-- GoDaddy/Mailgun/R2/Zitadel/Neon ownership map;
+- registrar/Vercel/Mailgun/R2/Zitadel/Neon ownership map;
 - registration/waitlist/declaration/email support runbook;
 - known limitations/deferred scope;
 - current incident contacts.
 
-Offboarding removes GitHub/GoDaddy/provider/password-manager access and rotates any shared secret.
+Offboarding removes GitHub/Vercel/provider/password-manager access and rotates any shared secret.
 
 ---
 

@@ -919,3 +919,89 @@ description, which the check cannot see.
 
 Baseline bumped to `BR-V1.12-2026-09-02`.
 
+
+## 20. Decided — a weekend pilot on Vercel and Neon; GoDaddy reversed; a fast lane for application code (2026-09-02)
+
+Owner request: the fastest and cheapest way to host this, built in one weekend of AI-assisted
+coding, with the repository made "vibe-coding ready".
+
+**The weekend cannot be M1.** A scope review against `SPECS.md` put the documented M1 at
+180–260 focused hours plus weeks of wall-clock that belong to other people: the club approving
+the declaration and privacy notice, and a registered domain with a verified sending address.
+A weekend is 16–25 hours. Two of the five conditions in the M1 release gate are calendar items,
+not code. The owner then chose to keep delaying the domain, which removes email and therefore
+registration from the weekend entirely. What remains is real and worth shipping: Romanian event
+pages, mobile-first, from the database, on a public URL, with the English translation left in
+Draft so `/en` returns 404 as BR-REQ-040-02 already requires. `WEEKEND.md` holds that scope,
+its build order, and every deferral with its reason; `CLAUDE.md` is the entry point an agent
+reads cold. Both are root documents, indexed in `README.md`, and carry the visible baseline.
+
+**GoDaddy is reversed.** Section 2 recorded GoDaddy Node.js Hosting as the preferred runtime
+because its launch material promised a persistent Node process, GitHub deploys, and a Europe
+region. All of that is true and the product is better than its reputation. It still cannot host
+this stack. GoDaddy's own deploy contract limits outbound traffic to "HTTP (80), HTTPS (443),
+and GoDaddy managed MySQL only" — Neon on port 5432 does not connect — and states "no
+nodemailer, no external SMTP", which excludes Mailgun as specified. There is no free public
+tier: free is two private, login-gated previews and zero published apps, and two published apps
+need the Deluxe web-hosting plan at €15.99/month list. No scheduled-jobs feature is documented.
+The Help Center still calls the product beta and contradicts the launch article on whether
+previews expire. The earlier verification cited the launch blog and API reference; it did not
+read the Help Center FAQ or the deploy contract, both GoDaddy's own, and those two documents
+invalidate the choice. This is exactly the failure `AGENTS.md` §1.2 exists to prevent, and it
+is recorded here so the next provider decision reads the boring pages too.
+
+**Vercel Hobby, function region `fra1`, one project per environment.** Chosen by the owner
+for deploy ergonomics after the alternatives were laid out from the vendors' own pricing pages
+on 2026-09-02. Two facts are recorded because they will matter later. First, Vercel's fair-use
+guidelines say "Hobby teams are restricted to non-commercial personal use only" and "Asking for
+Donations fall under commercial usage"; a club site is a grey area, and if Vercel objects the
+fallback is Render Free in Frankfurt, which runs the literal `npm start` contract and needs no
+code change. Second, Vercel never runs `npm start` — it builds the app into serverless
+functions — so BR-REQ-101-01's portability contract is no longer exercised by the host and must
+be exercised by CI instead; `SETUP.md` §26 now says so. Hobby cron runs once a day with
+hour-level jitter, which rules it out as the maintenance trigger when jobs arrive. Cloudflare
+Workers was excluded because it is not Node: no `npm start`, no `PORT`, ten milliseconds of CPU
+per request on the free plan, which MUI server rendering cannot meet.
+
+**Neon Free, Frankfurt.** Unchanged provider, one new rule: the region is fixed at project
+creation, so it is chosen once and correctly. Drizzle connects over `node-postgres` with a
+`pg.Pool` on the pooled connection string, never `neon-http`, because the capacity transaction
+needs interactive `BEGIN … SELECT … FOR UPDATE … COMMIT`, which the HTTP driver cannot express.
+
+**Deferred providers keep their documentation but gain a direction.** Zitadel, Mailgun and R2
+stay in `AGENTS.md` §3.1 because nothing that uses them is being built yet and rewriting ninety
+mentions for a decision that is not being exercised is churn, not clarity. When each is built,
+the research points elsewhere and the change-type matrix applies then: for three to five staff
+who never self-register, Auth.js alone with a server-side allowlist and no external identity
+provider (Zitadel's custom domain sits on its $100/month tier); Resend in the Ireland region
+for email, free at this project's volume, with Mailgun as the EU-headquartered alternative;
+images committed under `public/` until a non-developer needs to upload. None of this is a
+decision yet. It is written down so it is not re-researched.
+
+**The domain.** A `.ro` is registered through a ROTLD-accredited registrar; the owner intends
+to transfer it to Cloudflare Registrar later if that TLD becomes available there. The
+application never learns which registrar holds it. What the next slice needs is DNS access,
+because the sending domain's verification records live there and sender reputation on a fresh
+domain takes days. Registering early and sending later is the cheap order.
+
+**The fast lane.** The six-document sync rule, the baseline bump, and the change-type matrix
+exist so that a rule change is never a single-file edit. They were never meant to tax a code
+change, but with no code in the repository the distinction had not been drawn. It is drawn now:
+during the pilot, application code needs no baseline bump and no multi-document edit, only a
+`CHANGELOG.md` line when something user-visible ships. A change to a documented rule still
+follows the matrix in full. The trust-carrying rules in `AGENTS.md` §1.5 — capacity,
+declaration, authorization, participant privacy, token handling, email canonicalization — are
+not relaxed by a single word, and `CLAUDE.md` lists them where an agent will read them first.
+`npm run check` keeps running before every commit; it guards requirement IDs, the club's
+hostname, and the README index, none of which application source under `src/` touches.
+
+**Two guard rails carried into the pilot on purpose.** The `events.capacity` column exists but
+a database `CHECK` refuses any non-null value, so an administrator cannot cap an event before
+the locked capacity transaction and its twenty-way concurrency test exist. And Next 16, MUI 9,
+next-intl 4 and Drizzle 0.45 are all newer than any model's training, so `WEEKEND.md` step 0 is
+to verify each integration against current documentation before installing it. An attempt to
+pre-verify them for this baseline was cut short by a session limit; the instruction stands on
+its own.
+
+Baseline stays `BR-V1.12-2026-09-02`: this change set belongs to the same, still unmerged pull
+request as §19, and one pull request carries one baseline.
