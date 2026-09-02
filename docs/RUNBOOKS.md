@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -138,7 +138,7 @@ criteria for this runbook.
 
 - [ ] Domain registered and owned by the Brașov Runners account, not a personal one.
 - [ ] DNS management location decided, and access recorded in the password manager.
-- [ ] Both GoDaddy applications running on their default hostnames with green health checks.
+- [ ] Both Vercel projects running on their default hostnames with green health checks.
 - [ ] Two recovery-capable owners have access to the registrar.
 
 ### Step 1 — QA first

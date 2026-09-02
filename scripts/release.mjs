@@ -40,6 +40,8 @@ const SHARE = [
   "MANIFEST.txt",
   "docs/PRACTICES.md",
   "docs/RUNBOOKS.md",
+  "CLAUDE.md",
+  "WEEKEND.md",
 ];
 
 function run(cmd, args, opts = {}) {
@@ -82,10 +84,13 @@ async function main() {
     await cp(src, path.join(share, `${stem}-${version}${ext}`));
   }
 
-  const zipPath = path.join(DIST, `${folderName}.zip`);
+  // Both commands run with cwd DIST, so the archive is named relative to it. An absolute
+  // Windows path here reaches bsdtar as "D:\..." and is parsed as host:path, which fails
+  // with "Cannot connect to D:" and silently produces no archive.
+  const zipName = `${folderName}.zip`;
   const zipped =
-    run("zip", ["-qr", zipPath, folderName], { cwd: DIST }) ||
-    run("tar", ["-a", "-cf", zipPath, folderName], { cwd: DIST });
+    run("zip", ["-qr", zipName, folderName], { cwd: DIST }) ||
+    run("tar", ["-a", "-cf", zipName, folderName], { cwd: DIST });
   if (!zipped) {
     console.warn("no zip or tar available; folder and share copies were produced without an archive");
   }

@@ -4,6 +4,7 @@
   "private": true,
   "description": "Brașov Runners website and event registration platform. Documentation baseline; application code arrives in PR 1 (SETUP.md §29).",
   "scripts": {
+    "setup": "node scripts/setup.mjs",
     "docs:check": "node scripts/docs-check.mjs",
     "check": "npm run docs:check",
     "release": "node scripts/release.mjs"

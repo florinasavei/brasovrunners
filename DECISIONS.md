@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -796,3 +796,212 @@ script refuses to run when the check fails, so a release is always consistent.
 
 Baseline bumped to `BR-V1.11-2026-09-02`.
 
+## 19. Decided — local checks and CI are one command (2026-09-02)
+
+Owner request: get the local development workflow running as the first slice of PR 1.
+
+**The check was broken before it was extended.** `npm run docs:check` failed on a clean clone
+on Windows with eight false failures, and `npm run release` refused to run behind it. The
+cause was in `scripts/docs-check.mjs`: the README coverage check compared `path.relative`
+output, which uses `\` on Windows, against Markdown link targets, which use `/`, so no file
+outside the repository root ever matched. The same comparison made the `docs/history`
+exclusion inert on Windows, meaning the requirement-ID scan covered different files locally
+than in CI. Both are now normalized through one `repoPath` helper. This mattered more than a
+platform annoyance: a pre-commit hook running a check that fails on the maintainer's own
+machine would have blocked every commit.
+
+Once the gate passed, `npm run release` ran for the first time and exposed a second defect of
+the same shape: it handed `tar` an absolute `D:\...\dist\<name>.zip` while already running
+with `cwd` set to `dist/`, and bsdtar read the drive letter as a remote `host:path`. The
+archive was skipped, a warning was printed, and the script exited 0 — a release that
+`README.md` § Versioning says is not a release. The archive name is now relative to `cwd`.
+Both bugs were invisible to CI, which is Linux; nobody had run either command to completion
+on the maintainer's machine.
+
+**Hooks without a dependency.** The hook is a plain `.githooks/pre-commit` script installed
+by `npm run setup`, which sets `core.hooksPath`. Husky was rejected. It is a runtime
+dependency and an install-time side effect for something git does natively in one config
+line, and `AGENTS.md` §1.5 ranks conventional patterns and less code above convenience.
+`.githooks` is tracked, so the hook is reviewed like any other file, and `.gitattributes`
+already normalizes it to LF so the shebang survives a Windows checkout.
+
+**One command, not two.** The CI workflow previously ran `node scripts/docs-check.mjs`
+directly. That is equivalent to `npm run check` only for as long as `check` contains nothing
+else, and `SETUP.md` §8 plans to grow it to cover format, lint, typecheck, and tests. Both
+now invoke `npm run check`, and the rule that they must is recorded in `AGENTS.md` §21 and
+`SETUP.md` §8 rather than left as a coincidence.
+
+**The requirement.** A local hook implemented no `BR-REQ-*`, which `README.md` § If you are
+an AI agent forbids. Rather than create a requirement for tooling, BR-REQ-090-02 gained
+acceptance criteria 6 and 7: a failing `npm run check` blocks the commit, and the hook and CI
+invoke the same command. Release flow already owned "docs:check is a required check", so the
+local half of the same guarantee belongs there and the rule stays in one place.
+
+`BUSINESS.md` is unchanged apart from the baseline. BR-BUS-090 is about QA preceding
+production in language the club reads; a git hook has no participant-visible or club-visible
+behavior and would only dilute it.
+
+**Not done here, deliberately.** The Node version is not pinned and no `.nvmrc` was added:
+the owner is verifying the GoDaddy runtime first, so CI keeps `node-version: lts/*`. The
+workflow still pins `actions/checkout@v4` and `actions/setup-node@v4`; both were checked
+against the GitHub API on 2026-09-02, when the current releases were checkout v7.0.1 and
+setup-node v7.0.0. v4 remains maintained, neither v7 changes anything used here, and bumping
+majors belongs with the commit-SHA pinning already scheduled in `SETUP.md` §5. `package-lock.json`
+was added because `README.md` § Local setup contract and BR-REQ-101-01 both begin with
+`npm ci`, which fails without it.
+
+**Publishing readiness.** The owner decided to make the repository public in order to get
+branch protection, which GitHub Free provides on public repositories but not on private ones.
+An audit ahead of that found the club's intended domain written out in full in `DECISIONS.md`
+and twice in `docs/history/ORIGINAL_PLAN_2026-08.md`, while `DECISIONS.md` itself records that
+the domain is not registered yet. Publishing would have announced an unowned `.ro` name, its
+registrar, and its binding date; a `.ro` costs a few euro to squat, and the domain gates
+Mailgun sending-domain verification, so losing it would block M1 rather than merely the
+branding. All four occurrences now use `<domain>`, the placeholder `SETUP.md` §26 already
+used.
+
+The rule existed and was not enforced. `SETUP.md` §26 claimed to be the only place a hostname
+appears, but `checkHostnameLiterals` only ever walked `src/`, which does not exist yet, so no
+Markdown hostname could be caught — and `docs/history/` is excluded from the requirement scan
+entirely. `docs:check` now fails on the club's own hostname in any file except `SETUP.md` §26,
+scanning `docs/history/` too. It matches subdomains and any TLD, and excludes `.git` clone
+URLs and the GoDaddy application names, which are not hostnames.
+
+The first version of that guard was weak, and an adversarial review defeated it. Two failures
+needed no trickery: the pattern lacked the `i` flag while DNS is case-insensitive, so a
+camel-cased spelling passed — the likeliest way the leak actually recurs, given the repository
+directory is itself camel-cased — and the scan inferred what gets published from an extension
+allowlist, so five files that ship today, `.github/CODEOWNERS` and `.githooks/pre-commit`
+among them, were never read. A silent 2 MB size cap, a UTF-16 file decoded as UTF-8, a
+fullwidth dot that the WHATWG URL parser maps back to `.`, zero-width characters, percent and
+source-code escapes, and a line wrap splitting the hostname each defeated it as well. The
+structural fix was to stop inferring: the scan is driven by `git ls-files`, which already
+knows exactly what publishing exposes, and matching runs over a normalized copy. A 23-case
+bypass matrix now passes with no false positives. The lesson worth keeping is that a guard
+which infers its own scope from extensions and size heuristics reports clean for the wrong
+reason, and reads exactly like one that works.
+
+§26's sentence was also
+corrected: it claimed to be the only place *any* hostname appears, which was untrue —
+`github.com` appears in four documents — and an overstated rule is one nobody trusts.
+
+**Licence.** The owner chose MIT with copyright held by Brașov Runners, not by the maintainer.
+`docs/RUNBOOKS.md` § Repository bootstrap makes this an explicit owner decision, and the MIT
+file GitHub generated at `18a2e06` — deleted in the next commit but still reachable in history
+— named the maintainer instead, which contradicts BR-BUS-101. Naming the club now matches the
+ownership the documents have always asserted and the handover in `README.md` § Ownership.
+
+**Tone before publication.** Four passages written for an internal audience read differently
+under the club's own name. Three in `docs/PRACTICES.md` § Delivery framed adoption and
+maintainer risk as predictions about the club's organizers; they now describe the same risks
+as design and scheduling problems, and the ranking is unchanged because the analysis was
+correct. The fourth, "the project will be heavily vibe-coded" in the retained original plan,
+was the single most quotable line against a platform that will hold participants' names, email
+addresses, and declaration acceptance evidence. It now reads as AI-assisted coding and carries
+a superseded note pointing at the human-review requirement in `AGENTS.md` §1.5. The wording
+changed; no risk, decision, or ranking was removed, and this paragraph records the edit so the
+history document's traceability survives it.
+
+**History rewrite.** Publishing exposes every commit, and the domain redaction above only
+touched the working tree: `98f981b` and `0003d2a`, both already pushed, still contained the
+hostname. A force-push would not have helped, because GitHub keeps unreachable commits
+fetchable by SHA until it garbage-collects, which the owner cannot trigger — the orphaned
+`c08e00f` from an earlier force-push was still retrievable through the API. The repository is
+therefore being rebuilt: a parentless root carrying the redacted baseline, the whole PR 1
+change set replayed onto it, and the GitHub repository deleted and recreated so no old object
+survives. The repository had no pull requests, issues, tags, stars, forks, webhooks, or other
+collaborators, so recreating it costs nothing. Commit identity moves to the club name and a
+noreply address, removing two of the maintainer's real addresses from metadata permanently.
+
+Deferred by the owner: registering the domain. Until that happens the name stays out of every
+file by check, but nothing prevents it being typed into a GitHub issue or pull-request
+description, which the check cannot see.
+
+Baseline bumped to `BR-V1.12-2026-09-02`.
+
+
+## 20. Decided — a weekend pilot on Vercel and Neon; GoDaddy reversed; a fast lane for application code (2026-09-02)
+
+Owner request: the fastest and cheapest way to host this, built in one weekend of AI-assisted
+coding, with the repository made "vibe-coding ready".
+
+**The weekend cannot be M1.** A scope review against `SPECS.md` put the documented M1 at
+180–260 focused hours plus weeks of wall-clock that belong to other people: the club approving
+the declaration and privacy notice, and a registered domain with a verified sending address.
+A weekend is 16–25 hours. Two of the five conditions in the M1 release gate are calendar items,
+not code. The owner then chose to keep delaying the domain, which removes email and therefore
+registration from the weekend entirely. What remains is real and worth shipping: Romanian event
+pages, mobile-first, from the database, on a public URL, with the English translation left in
+Draft so `/en` returns 404 as BR-REQ-040-02 already requires. `WEEKEND.md` holds that scope,
+its build order, and every deferral with its reason; `CLAUDE.md` is the entry point an agent
+reads cold. Both are root documents, indexed in `README.md`, and carry the visible baseline.
+
+**GoDaddy is reversed.** Section 2 recorded GoDaddy Node.js Hosting as the preferred runtime
+because its launch material promised a persistent Node process, GitHub deploys, and a Europe
+region. All of that is true and the product is better than its reputation. It still cannot host
+this stack. GoDaddy's own deploy contract limits outbound traffic to "HTTP (80), HTTPS (443),
+and GoDaddy managed MySQL only" — Neon on port 5432 does not connect — and states "no
+nodemailer, no external SMTP", which excludes Mailgun as specified. There is no free public
+tier: free is two private, login-gated previews and zero published apps, and two published apps
+need the Deluxe web-hosting plan at €15.99/month list. No scheduled-jobs feature is documented.
+The Help Center still calls the product beta and contradicts the launch article on whether
+previews expire. The earlier verification cited the launch blog and API reference; it did not
+read the Help Center FAQ or the deploy contract, both GoDaddy's own, and those two documents
+invalidate the choice. This is exactly the failure `AGENTS.md` §1.2 exists to prevent, and it
+is recorded here so the next provider decision reads the boring pages too.
+
+**Vercel Hobby, function region `fra1`, one project per environment.** Chosen by the owner
+for deploy ergonomics after the alternatives were laid out from the vendors' own pricing pages
+on 2026-09-02. Two facts are recorded because they will matter later. First, Vercel's fair-use
+guidelines say "Hobby teams are restricted to non-commercial personal use only" and "Asking for
+Donations fall under commercial usage"; a club site is a grey area, and if Vercel objects the
+fallback is Render Free in Frankfurt, which runs the literal `npm start` contract and needs no
+code change. Second, Vercel never runs `npm start` — it builds the app into serverless
+functions — so BR-REQ-101-01's portability contract is no longer exercised by the host and must
+be exercised by CI instead; `SETUP.md` §26 now says so. Hobby cron runs once a day with
+hour-level jitter, which rules it out as the maintenance trigger when jobs arrive. Cloudflare
+Workers was excluded because it is not Node: no `npm start`, no `PORT`, ten milliseconds of CPU
+per request on the free plan, which MUI server rendering cannot meet.
+
+**Neon Free, Frankfurt.** Unchanged provider, one new rule: the region is fixed at project
+creation, so it is chosen once and correctly. Drizzle connects over `node-postgres` with a
+`pg.Pool` on the pooled connection string, never `neon-http`, because the capacity transaction
+needs interactive `BEGIN … SELECT … FOR UPDATE … COMMIT`, which the HTTP driver cannot express.
+
+**Deferred providers keep their documentation but gain a direction.** Zitadel, Mailgun and R2
+stay in `AGENTS.md` §3.1 because nothing that uses them is being built yet and rewriting ninety
+mentions for a decision that is not being exercised is churn, not clarity. When each is built,
+the research points elsewhere and the change-type matrix applies then: for three to five staff
+who never self-register, Auth.js alone with a server-side allowlist and no external identity
+provider (Zitadel's custom domain sits on its $100/month tier); Resend in the Ireland region
+for email, free at this project's volume, with Mailgun as the EU-headquartered alternative;
+images committed under `public/` until a non-developer needs to upload. None of this is a
+decision yet. It is written down so it is not re-researched.
+
+**The domain.** A `.ro` is registered through a ROTLD-accredited registrar; the owner intends
+to transfer it to Cloudflare Registrar later if that TLD becomes available there. The
+application never learns which registrar holds it. What the next slice needs is DNS access,
+because the sending domain's verification records live there and sender reputation on a fresh
+domain takes days. Registering early and sending later is the cheap order.
+
+**The fast lane.** The six-document sync rule, the baseline bump, and the change-type matrix
+exist so that a rule change is never a single-file edit. They were never meant to tax a code
+change, but with no code in the repository the distinction had not been drawn. It is drawn now:
+during the pilot, application code needs no baseline bump and no multi-document edit, only a
+`CHANGELOG.md` line when something user-visible ships. A change to a documented rule still
+follows the matrix in full. The trust-carrying rules in `AGENTS.md` §1.5 — capacity,
+declaration, authorization, participant privacy, token handling, email canonicalization — are
+not relaxed by a single word, and `CLAUDE.md` lists them where an agent will read them first.
+`npm run check` keeps running before every commit; it guards requirement IDs, the club's
+hostname, and the README index, none of which application source under `src/` touches.
+
+**Two guard rails carried into the pilot on purpose.** The `events.capacity` column exists but
+a database `CHECK` refuses any non-null value, so an administrator cannot cap an event before
+the locked capacity transaction and its twenty-way concurrency test exist. And Next 16, MUI 9,
+next-intl 4 and Drizzle 0.45 are all newer than any model's training, so `WEEKEND.md` step 0 is
+to verify each integration against current documentation before installing it. An attempt to
+pre-verify them for this baseline was cut short by a session limit; the instruction stands on
+its own.
+
+Baseline stays `BR-V1.12-2026-09-02`: this change set belongs to the same, still unmerged pull
+request as §19, and one pull request carries one baseline.
