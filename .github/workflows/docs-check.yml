@@ -1,0 +1,25 @@
+name: docs-check
+
+# Verifies the six root documents stay in sync (scripts/docs-check.mjs).
+# Read-only by design; see AGENTS.md §22 and SETUP.md §5.
+# Once a Node version is verified against the hosting runtime, replace
+# `lts/*` with `node-version-file: .nvmrc`, and pin both actions to an
+# immutable commit SHA per SETUP.md §5.
+
+on:
+  pull_request:
+  push:
+    branches: [qa, main]
+
+permissions:
+  contents: read
+
+jobs:
+  docs-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: node scripts/docs-check.mjs

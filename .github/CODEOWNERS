@@ -1,0 +1,22 @@
+# The six root documents change together. Any edit to one is reviewed as a set.
+# See AGENTS.md section 1.4 for the change-type matrix.
+
+/README.md      @florinasavei
+/BUSINESS.md    @florinasavei
+/SPECS.md       @florinasavei
+/AGENTS.md      @florinasavei
+/SETUP.md       @florinasavei
+/DECISIONS.md   @florinasavei
+/MANIFEST.txt   @florinasavei
+
+/scripts/docs-check.mjs   @florinasavei
+/DECISIONS.md                 @florinasavei
+/docs/RUNBOOKS.md            @florinasavei
+/.github/                 @florinasavei
+
+# Replace @florinasavei with a club-owned team once the repository is transferred
+# to an organization (DECISIONS.md §15). An AI reviewer is never a CODEOWNER.
+#
+# While there is one maintainer, do NOT enable "require review from code owners"
+# in the ruleset: a sole owner cannot approve their own pull request. Keep the
+# required ci check instead (SETUP.md §4.1).

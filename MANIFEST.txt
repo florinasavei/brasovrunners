@@ -1,0 +1,70 @@
+Brașov Runners repository handoff
+Repository: https://github.com/florinasavei/brasovrunners
+Baseline: BR-V1.11-2026-09-02
+
+Authoritative/current root documentation:
+- README.md      Entry point
+- BUSINESS.md    Non-technical business rules
+- SPECS.md       Requirements and acceptance criteria
+- AGENTS.md      Engineering and AI-agent rules
+- SETUP.md       GitHub/provider/environment setup
+- DECISIONS.md   Planning rationale/history (context only)
+
+Supporting files:
+- docs/PRACTICES.md                    practice guides: code priorities, delivery, mobile,
+                                       SEO, AIO, accessibility, performance, editorial,
+                                       launch checklist
+- docs/RUNBOOKS.md                     repository bootstrap, domain binding, legal document version
+- docs/history/ORIGINAL_PLAN_2026-08.md  original planning input, not authoritative
+- scripts/docs-check.mjs               documentation synchronization check
+- scripts/release.mjs                  npm run release: versioned folder, archive, share copies
+- .github/workflows/docs-check.yml     docs:check in CI, read-only permissions
+- .github/CODEOWNERS                   review ownership of the root documents
+- .github/pull_request_template.md     per-PR checks including the documentation sync checklist
+- package.json                         docs:check only until PR 1
+- CHANGELOG.md                         one entry per baseline, newest first
+- .gitignore, .editorconfig, .gitattributes
+
+Milestones, in the owner's order:
+- M1 Launch: event pages + complete registration journey + minimal backoffice + live email
+- M2 Race features: multi-distance races, bibs, results with consent, backoffice completeness
+- M3 Announcements: event updates with approval, notices to registered participants
+- M4 Runner profiles
+- M5 Mini CMS: articles, pages, galleries
+
+Important current decisions:
+- Mobile-first: the phone is the design target (BR-BUS-041)
+- Next.js modular monolith
+- Material UI
+- Romanian + English i18n
+- Mini CMS with Tiptap OSS
+- Staff-only Zitadel/Auth.js authentication
+- Passwordless participant flows via verified email action links
+- Case-insensitive canonical email duplicate prevention plus Gmail dot/+ normalization,
+  with gmail.com and googlemail.com collapsed to one identity
+- Privacy-notice acknowledgment recorded at registration submission
+- Declaration acceptance required before confirmation
+- Privacy notice, terms, and declaration are versioned legal documents; no editor in V1
+- Public free-place count, waiting list, timed promotion offers
+- Waiting-list entries close when the event starts
+- Restart of a cancelled/expired registration skips re-verification when already verified
+- State-aware email resend, including a status notice for cancelled/expired registrations
+- Optional public runner profiles with Strava/social links, noindex and absent from sitemap
+- Capacity correctness comes from transaction-time expiry, not from the scheduler
+- qa -> QA, main -> production; no develop branch
+- Preferred hosting: GoDaddy Node.js Hosting, separate QA and production apps
+- Custom domain bound at the end of M1, before launch; SETUP.md section 26 is the only hostname table
+- GoDaddy domain/DNS once registered; Cloudflare R2 for media
+- Structured data (SportsOrganization, SportsEvent, Article) required on public pages
+- Public content must be server-rendered and state its facts in text, for search and AI assistants
+- AI retrieval crawlers allowed; training-crawler policy is an owner decision
+- Read-only Claude/Codex repository integration; no push/deploy/secrets
+  (a local agent operated by a human developer on a branch is unaffected)
+
+- Engineering priority order in AGENTS.md section 1.5: trust-carrying correctness first,
+  then legibility to a stranger, since most changes will be made by an AI agent
+
+Open owner decisions are listed in BUSINESS.md section 9. Baseline BR-V1.4 decisions are
+recorded in DECISIONS.md section 6 and are provisional until the owner confirms them.
+Open proposals awaiting a decision: DECISIONS.md section 8 (race photo hosting) and
+section 10 (staff-created registrations, offline declaration acceptance).
