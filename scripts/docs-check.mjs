@@ -134,7 +134,7 @@ async function checkBaseline(docs) {
   // HTML comment marker, in every root document and the two consolidated docs.
   if (distinct.length === 1) {
     const current = distinct[0];
-    const visibleTargets = [...docs, ...(await readOptional(["docs/PRACTICES.md", "docs/RUNBOOKS.md", "CLAUDE.md", "WEEKEND.md"]))];
+    const visibleTargets = [...docs, ...(await readOptional(["docs/PRACTICES.md", "docs/RUNBOOKS.md", "docs/DEVELOPMENT.md", "CLAUDE.md", "WEEKEND.md"]))];
     for (const [name, text] of visibleTargets) {
       const withoutMarker = text.replace(/<!--\s*PROJECT_BASELINE:[^>]*-->/g, "");
       if (!withoutMarker.includes(current)) {
@@ -389,6 +389,21 @@ async function checkReadmeCoverage() {
   }
   seen.delete("README.md");
   seen.delete("package-lock.json");
+
+  // Files git ignores are on disk but never published, so they need no README row:
+  // next-env.d.ts, a developer's .env.local, and similar.
+  let ignored = new Set();
+  try {
+    const out = execFileSync(
+      "git",
+      ["ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z"],
+      { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+    );
+    ignored = new Set(out.split(" ").filter(Boolean));
+  } catch {
+    // Not a git checkout: index everything on disk.
+  }
+  for (const file of ignored) seen.delete(file);
 
   for (const file of [...seen].sort()) {
     if (!linked.has(file)) {

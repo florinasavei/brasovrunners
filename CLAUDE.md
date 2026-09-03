@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.12-2026-09-02`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.13-2026-09-02`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI. Nothing is
@@ -18,14 +18,23 @@ reason.
 ## Commands that exist right now
 
 ```text
-npm run setup        install the tracked git hooks — once per clone
-npm run check        everything CI runs; the pre-commit hook runs this too
-npm run docs:check   documentation consistency (part of check)
-npm run release      versioned archive and share copies under dist/
+yarn setup        install the tracked git hooks — once per clone
+yarn dev          Next.js dev server; needs .env.local (copy .env.example)
+yarn build        production build
+yarn start        production server, honours PORT
+yarn lint         ESLint
+yarn typecheck    tsc --noEmit
+yarn check        docs:check + typecheck + lint; CI and the pre-commit hook run this
+yarn docs:check   documentation consistency
+yarn release      versioned archive and share copies under dist/
 ```
 
-Nothing else exists yet. `npm run dev`, `build`, `db:*` and `test*` arrive with the scaffold
-(`WEEKEND.md` step 1). Do not write a command into a document until it is in `package.json`.
+Full list with explanations: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md). Do not write a
+command into a document until it is in `package.json`.
+
+**Toolchain:** Node `22.14.0` (`.nvmrc`), Yarn 4.18.0 via Corepack, TypeScript 5.9.3 — not 7,
+which `typescript-eslint` refuses. Tests need no database: PGlite runs real PostgreSQL in
+process. Concurrency tests must not use it; see `docs/DEVELOPMENT.md`.
 
 ## Read order
 
@@ -58,7 +67,7 @@ Recorded once in `DECISIONS.md` §20 so it does not have to be re-argued.
 `CHANGELOG.md` line when something user-visible ships; that is all.
 
 **Not relaxed:** a change to a documented *rule* still follows the change-type matrix in
-`AGENTS.md` §1.4. The table above is in force. `npm run check` still runs before every commit
+`AGENTS.md` §1.4. The table above is in force. `yarn check` still runs before every commit
 and blocks on an undefined `BR-REQ-*`, a leaked hostname, or a root file missing from the
 README index — application source under `src/` is not indexed and needs no README row.
 
@@ -66,11 +75,11 @@ README index — application source under `src/` is not indexed and needs no REA
 
 | Layer | Decision | Status |
 | --- | --- | --- |
-| App | Next.js App Router, TypeScript strict, `src/`, npm | scaffold this weekend |
-| UI | Material UI + Emotion, official `@mui/material-nextjs` provider | scaffold this weekend |
-| i18n | `next-intl`; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | scaffold this weekend; `en` stays Draft |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL | this weekend |
-| Hosting | Vercel Hobby, function region `fra1`; one project per environment | this weekend |
+| App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
+| UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
+| i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; `en` stays Draft |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL | schema + seed done; needs `DATABASE_URL` |
+| Hosting | Vercel Hobby, function region `fra1`; one project per environment | not deployed yet |
 | Auth | staff only. Documented: Auth.js + Zitadel. Direction: Auth.js alone, no external IdP | deferred |
 | Email | Documented: Mailgun. Direction: Resend, Ireland region. Needs the domain first | deferred |
 | Storage | Documented: R2. Direction: `public/` until a non-developer needs uploads | deferred |

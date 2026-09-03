@@ -40,6 +40,7 @@ const SHARE = [
   "MANIFEST.txt",
   "docs/PRACTICES.md",
   "docs/RUNBOOKS.md",
+  "docs/DEVELOPMENT.md",
   "CLAUDE.md",
   "WEEKEND.md",
 ];

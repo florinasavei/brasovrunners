@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # WEEKEND.md — the pilot scope
 
-**Baseline `BR-V1.12-2026-09-02`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
+**Baseline `BR-V1.13-2026-09-02`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
 
 One weekend of AI-assisted building. This file says exactly what that weekend produces, in
 what order, and what it deliberately does not. When it conflicts with `SETUP.md` §29, this file
@@ -65,7 +65,7 @@ afternoon.
 MUI with the official App Router cache provider, `ThemeProvider`, `CssBaseline`, a placeholder
 palette that is not default blue, Roboto through `next/font`. `next-intl` with `[locale]`
 routing, `ro` default, `localePrefix: always`, an unknown locale → 404. Zod-validated env with
-`APP_ENV`, `APP_BASE_URL`, `DATABASE_URL`. `npm run dev` shows a page in Romanian.
+`APP_ENV`, `APP_BASE_URL`, `DATABASE_URL`. `yarn dev` shows a page in Romanian.
 BR-REQ-001-01, BR-REQ-040-01, BR-REQ-101-01.
 
 **2. Two tables and a seed (2 h).** `events` and `event_translations` only, but with the *full*
@@ -109,7 +109,7 @@ lane in `CLAUDE.md`.
 - The QA project's default `vercel.app` URL lists the seeded events at `/ro/evenimente` on a phone.
 - The production project does the same from `main`.
 - `/en/evenimente` is a 404, not a fallback.
-- `npm run check` is green on the branch; CI is green on `qa`.
+- `yarn check` is green on the branch; CI is green on `qa`.
 - The six tests pass.
 - A club organizer has opened it on their own phone and not asked "where is the date".
 

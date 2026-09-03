@@ -1,10 +1,19 @@
 # Dependencies
 node_modules/
 
+# Yarn 4: keep releases/plugins/patches, ignore the rest of the cache and state.
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnp.*
+
 # Next.js
 .next/
 out/
 next-env.d.ts
+*.tsbuildinfo
 
 # Build and test output
 dist/

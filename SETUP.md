@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -250,12 +250,12 @@ App Router: yes
 import alias: @/*
 ```
 
-Pin Node in `.nvmrc` or equivalent and commit `package-lock.json`.
+Pin Node in `.nvmrc` or equivalent and commit `yarn.lock`.
 
 Install only the foundation dependencies needed for the first slice:
 
 ```bash
-npm install \
+yarn add \
   @mui/material \
   @mui/icons-material \
   @emotion/react \
@@ -265,7 +265,7 @@ npm install \
   zod \
   drizzle-orm
 
-npm install -D \
+yarn add -D \
   drizzle-kit \
   prettier \
   vitest \
@@ -277,8 +277,8 @@ Select one current PostgreSQL driver compatible with both local PostgreSQL and t
 Add staff auth and Tiptap only in their implementation PRs:
 
 ```bash
-npm install next-auth
-npm install @tiptap/react @tiptap/starter-kit @tiptap/extension-link @tiptap/extension-placeholder
+yarn add next-auth
+yarn add @tiptap/react @tiptap/starter-kit @tiptap/extension-link @tiptap/extension-placeholder
 ```
 
 Verify current package names/peer requirements before running commands. Do not copy stale version-specific imports from this document.
@@ -298,7 +298,7 @@ SETUP.md
 DECISIONS.md
 ```
 
-Implement `npm run docs:check` to verify:
+Implement `yarn docs:check` to verify:
 
 - all six contain exactly the same `PROJECT_BASELINE` marker;
 - relative Markdown links resolve;
@@ -315,11 +315,11 @@ A reference implementation is committed at `scripts/docs-check.mjs`.
 
 Playwright runs two projects, a mobile viewport and a desktop viewport, and every registration journey runs under both (`BR-REQ-041-01`).
 
-Make this part of `npm run check` and CI. Add a `CODEOWNERS` entry covering the six root
+Make this part of `yarn check` and CI. Add a `CODEOWNERS` entry covering the six root
 documents, and a pull-request template checkbox confirming the change-type matrix in
 `AGENTS.md` §1.4 was followed.
 
-## 8. Add stable npm scripts
+## 8. Add stable package scripts
 
 Expected names:
 
@@ -354,7 +354,7 @@ Fill actual commands from selected tools. Do not leave placeholders in a merged 
 `check` is the aggregate local-and-CI gate. Every step a developer can run locally —
 `format:check`, `lint`, `typecheck`, `docs:check`, `test:unit` — belongs inside it, because
 `.githooks/pre-commit` and `.github/workflows/docs-check.yml` both invoke exactly
-`npm run check` and must never name different commands (BR-REQ-090-02).
+`yarn check` and must never name different commands (BR-REQ-090-02).
 
 `setup` is already implemented. It sets `core.hooksPath` to the tracked `.githooks`
 directory, which needs no dependency; husky and lint-staged are deliberately not installed
@@ -379,9 +379,9 @@ Local workflow:
 
 ```bash
 docker compose up -d db
-npm run db:migrate
-npm run db:seed
-npm run dev
+yarn db:migrate
+yarn db:seed
+yarn dev
 ```
 
 Integration tests use a disposable database/schema and committed migrations.
@@ -1021,9 +1021,9 @@ QA headers/robots enforce noindex.
 
 Runtime checklist:
 
-- [ ] Root `package.json` and `package-lock.json` present.
-- [ ] `npm run build` succeeds in clean CI.
-- [ ] `npm start` starts the production server.
+- [ ] Root `package.json` and `yarn.lock` present.
+- [ ] `yarn build` succeeds in clean CI.
+- [ ] `yarn start` starts the production server.
 - [ ] Application honors `process.env.PORT`.
 - [ ] Repository pins a Node.js version the host currently supports, verified on the day.
 - [ ] No production dependency on Docker.
@@ -1031,7 +1031,7 @@ Runtime checklist:
 - [ ] QA app has only QA credentials.
 - [ ] Production app has only production credentials.
 - [ ] `APP_BASE_URL` in each project matches that project's current hostname.
-- [ ] CI runs `npm run build && npm start` and hits the server on `PORT`, because Vercel does not exercise that path.
+- [ ] CI runs `yarn build && yarn start` and hits the server on `PORT`, because Vercel does not exercise that path.
 - [ ] QA is `noindex, nofollow`.
 
 Domain and DNS items are deliberately absent from this checklist. They belong to the
@@ -1071,7 +1071,7 @@ Run on pull requests and pushes to `qa`/`main`:
 ```text
 checkout
 setup pinned Node
-npm ci
+yarn install --immutable
 format:check
 lint
 typecheck
@@ -1108,11 +1108,11 @@ cross-references.
 ```bash
 git clone https://github.com/florinasavei/brasovrunners.git
 cd brasovrunners
-npm ci
-npm run setup
+yarn install --immutable
+yarn setup
 ```
 
-`npm run setup` points git at the tracked `.githooks` directory. From then on `npm run check`
+`yarn setup` points git at the tracked `.githooks` directory. From then on `yarn check`
 runs before every commit and a failing commit is blocked. Skipping it is the one way to get a
 red pull request from a green working copy, so it is not optional.
 
@@ -1140,12 +1140,12 @@ not `feature/update-registrations`.
 **Before pushing:**
 
 ```bash
-npm run check
+yarn check
 ```
 
 This is the same command the pre-commit hook runs and the same command CI runs, so a clean
 result locally means a clean result in CI. Once the application exists, also run
-`npm run build`.
+`yarn build`.
 
 **Opening the pull request:**
 
@@ -1157,13 +1157,13 @@ result locally means a clean result in CI. Once the application exists, also run
 - `docs-check` must pass; it is a required check;
 - squash merge after review.
 
-If `npm run check` fails for a reason you believe is wrong, fix the check rather than
+If `yarn check` fails for a reason you believe is wrong, fix the check rather than
 bypassing it. `git commit --no-verify` exists for emergencies, does not bypass CI, and leaves
 the problem for the next person.
 
 ## 28. Daily Git flow
 
-Starting work, branch naming, `npm run check`, and opening a pull request into `qa` are in
+Starting work, branch naming, `yarn check`, and opening a pull request into `qa` are in
 § Contributing above; they are not repeated here. This section covers the two flows a
 contributor does not run day to day.
 
@@ -1194,7 +1194,7 @@ finished when it is on production, not when its last pull request merges.
 
 ### M1 — Launch
 
-- **PR 1 — Foundation.** Root docs and `docs:check` in `npm run check`, the `npm run setup`
+- **PR 1 — Foundation.** Root docs and `docs:check` in `yarn check`, the `yarn setup`
   hook install and the `.githooks/pre-commit` gate, Next.js and MUI with the App Router
   integration, i18n shell, CI, `CODEOWNERS`, pull-request template, local PostgreSQL,
   environment validation, `.nvmrc` pinned to the host's verified runtime.

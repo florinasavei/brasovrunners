@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -118,7 +118,7 @@ maintainer's own branches and credentials.
 
 - No application code. That is PR 1 (`SETUP.md` §29).
 - No `.nvmrc`. Pin it in PR 1 after verifying the hosting runtime (`DECISIONS.md` §5).
-- No `package-lock.json`. There are no dependencies yet.
+- No `yarn.lock`. There are no dependencies yet.
 - No secrets, no `.env`. `.env.example` arrives with PR 1.
 - No pinned action SHAs in the workflow. Pin them in PR 1 per `SETUP.md` §5 once verified.
 
