@@ -1,0 +1,17 @@
+<!--
+  PLACEHOLDER MARK — not the club's logo.
+
+  A stand-in so the header, the favicon and the app icon have real geometry to lay out against.
+  Replace this file with the club's mark, keeping the filename and the 32x32 viewBox; if the
+  real mark is not square, update LOGO.mark in src/theme/brand.ts instead of distorting it.
+
+  Colours are the placeholder palette from src/theme/brand.ts, written out here because an SVG
+  in public/ is served as a static file and cannot read a CSS variable from the theme.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Brașov Runners">
+  <rect width="32" height="32" rx="7" fill="#1f5f3f"/>
+  <!-- Tâmpa, the mountain the club runs up. -->
+  <path d="M5 22.5 L12.5 10.5 L16.5 16.5 L19.5 12 L27 22.5 Z" fill="#fafaf7"/>
+  <!-- The trail. -->
+  <path d="M5 25.5 Q16 22.5 27 25.5" stroke="#d98a2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+</svg>

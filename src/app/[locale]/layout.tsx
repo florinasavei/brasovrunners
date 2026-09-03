@@ -7,6 +7,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { env } from "@/shared/config/env";
 import { routing } from "@/i18n/routing";
+import SiteHeader from "@/shared/ui/SiteHeader";
 import AppTheme from "@/theme/AppTheme";
 
 const roboto = Roboto({
@@ -49,7 +50,10 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className={roboto.variable}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
-            <NextIntlClientProvider>{children}</NextIntlClientProvider>
+            <NextIntlClientProvider>
+              <SiteHeader />
+              {children}
+            </NextIntlClientProvider>
           </AppTheme>
         </AppRouterCacheProvider>
       </body>

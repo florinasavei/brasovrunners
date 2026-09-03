@@ -1,0 +1,27 @@
+<!--
+  PLACEHOLDER LOCKUP — not the club's logo.
+
+  Mark plus wordmark, for the site header. Replace with the club's own lockup, keeping the
+  filename; if the proportions differ, update LOGO.lockup in src/theme/brand.ts.
+
+  The wordmark is one line on purpose. Stacked over two lines inside a 32-unit box, the comma
+  below the Ș of BRAȘOV descends into the line beneath it and reads as a stray accent on the
+  following word. Romanian sits below the baseline as well as above it, and a lockup has to
+  leave room for that.
+
+  The wordmark is live <text> in a generic sans stack rather than outlined paths, which is
+  exactly what a real lockup must not be: a shipped logo should have its letterforms converted
+  to paths so it renders identically everywhere and needs no font licence at the client. That
+  conversion happens when the real typeface arrives.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 32" width="180" height="32" role="img" aria-label="Brașov Runners">
+  <rect width="32" height="32" rx="7" fill="#1f5f3f"/>
+  <path d="M5 22.5 L12.5 10.5 L16.5 16.5 L19.5 12 L27 22.5 Z" fill="#fafaf7"/>
+  <path d="M5 25.5 Q16 22.5 27 25.5" stroke="#d98a2b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+
+  <text x="42" y="21" font-family="Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
+        font-size="13" fill="#1c1b19">
+    <tspan font-weight="700" letter-spacing="0.4">BRAȘOV</tspan><tspan
+       font-weight="400" letter-spacing="1.4" fill="#5b574f" dx="5">RUNNERS</tspan>
+  </text>
+</svg>
