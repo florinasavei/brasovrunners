@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # WEEKEND.md — the pilot scope
 
-**Baseline `BR-V1.13-2026-09-02`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
+**Baseline `BR-V1.14-2026-09-03`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
 
 One weekend of AI-assisted building. This file says exactly what that weekend produces, in
 what order, and what it deliberately does not. When it conflicts with `SETUP.md` §29, this file
@@ -81,13 +81,13 @@ refusal. This is the highest-leverage line of the weekend: deferring the capacit
 types 30 into a field in October and the count is computed outside a locked transaction, in
 public. BR-REQ-011-01 criterion 2, BR-REQ-034-01 criterion 4.
 
-**4. The two pages (3 h).** List and detail, Server Components, from the DB, `ro` only.
+**4. The two pages — DONE.** List and detail, Server Components, from the DB, `ro` only.
 Date and time formatted for `ro-RO` in Europe/Bucharest. Meeting point, distance, cost as text.
 Canonical and `hreflang` only for locales actually published — so `ro` alone. Renders at 320 px
 with no horizontal scroll (BR-REQ-041-01 criteria 1–3 — claim only those).
 BR-REQ-010-01, BR-REQ-011-01, BR-REQ-020-01, BR-REQ-030-01, BR-REQ-040-02.
 
-**5. Structured data and robots (1 h).** `SportsEvent` JSON-LD on the detail page, sitemap for
+**5. Structured data and robots — DONE.** `SportsEvent` JSON-LD on the detail page, sitemap for
 published `ro` pages only, `robots.txt`. QA project sends `X-Robots-Tag: noindex, nofollow`
 (BR-REQ-090-01). BR-REQ-052-02, BR-REQ-070-03.
 

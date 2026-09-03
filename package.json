@@ -17,7 +17,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/db/seeds/pilot.ts",
+    "db:seed": "node --import tsx --env-file-if-exists=.env.local src/db/seeds/pilot.ts",
     "docs:check": "node scripts/docs-check.mjs",
     "check": "yarn docs:check && yarn typecheck && yarn lint && yarn test",
     "release": "node scripts/release.mjs"

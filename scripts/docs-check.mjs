@@ -254,15 +254,29 @@ async function collectFiles(dir, acc = []) {
   return acc;
 }
 
-/** 7. Hostname literals must not leak into application source. */
+/**
+ * 7. Hostname literals must not leak into application source.
+ *
+ * The rule exists so every URL the application *emits about itself* derives from
+ * APP_BASE_URL, and binding a domain stays a configuration change (BR-REQ-101-02).
+ *
+ * Vocabulary namespaces are the one exception. A JSON-LD `@context` of
+ * "https://schema.org" is a standard identifier, not an address the application serves: it
+ * is identical in every environment, and deriving it from APP_BASE_URL would emit a
+ * meaningless context that no consumer understands. Keep this list to namespaces defined by
+ * a published standard — never a provider, a CDN, or anything the club could plausibly host.
+ */
+const VOCABULARY_HOSTS = ["schema.org", "www.w3.org"];
+
 async function checkHostnameLiterals() {
   const srcDir = path.join(ROOT, "src");
   if (!existsSync(srcDir)) return;
   const files = await collectFiles(srcDir);
-  const hostPattern = /https?:\/\/(?!localhost|127\.0\.0\.1)[a-z0-9.-]+\.[a-z]{2,}/gi;
+  const hostPattern = /https?:\/\/(?!localhost|127\.0\.0\.1)([a-z0-9.-]+\.[a-z]{2,})/gi;
   for (const file of files) {
     const text = await readFile(file, "utf8").catch(() => "");
     for (const match of matchAll(text, hostPattern)) {
+      if (VOCABULARY_HOSTS.includes(match[1].toLowerCase())) continue;
       fail(
         `${repoPath(file)}: hostname literal ${match[0]} — derive absolute URLs from APP_BASE_URL.`,
       );

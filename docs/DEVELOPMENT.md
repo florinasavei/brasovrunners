@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # Running this locally
 
-**Baseline `BR-V1.13-2026-09-02`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V1.14-2026-09-03`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -13,7 +13,7 @@ Everything here is a command that exists today. If a command is in this file it 
 | --- | --- |
 | **Node** | `22.14.0` exactly. `.nvmrc` and `engines.node` both say so; CI reads `.nvmrc`. |
 | **Yarn** | 4.18.0, via Corepack. It ships with Node — you do not install yarn yourself. |
-| **A database** | Only for event pages. The home page and the whole test suite need none. |
+| **A database** | Only for event pages: `docker compose up -d db`. The home page and the whole test suite need none. |
 
 ```bash
 node --version        # must print v22.14.0
@@ -51,10 +51,14 @@ safe examples only — never a real value (`AGENTS.md` §8).
 ### Set up the database
 
 ```bash
-yarn db:migrate       # applies src/db/migrations to DATABASE_URL
-yarn db:seed          # three sample events, Romanian published, English draft
-yarn dev              # http://localhost:47821 → redirects to /ro
+docker compose up -d db   # local PostgreSQL on 5432
+yarn db:migrate           # applies src/db/migrations
+yarn db:seed              # three sample events, Romanian published, English draft
+yarn dev                  # http://localhost:47821 → redirects to /ro
 ```
+
+`docker-compose.yml` gives you a local PostgreSQL with throwaway credentials. Use Neon instead
+by pointing `DATABASE_URL` at its **pooled** connection string — nothing else changes.
 
 `yarn db:seed` clears both tables and refuses to run when `APP_ENV=production`.
 

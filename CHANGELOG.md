@@ -8,6 +8,16 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.14-2026-09-03
+
+- Public event pages: `/ro/evenimente` and `/ro/evenimente/[slug]`, with localized pathnames per `AGENTS.md` §9.2 — the same pages are `/en/events` and `/en/events/[slug]`. Server Components, mobile-first, every fact rendered as text (BR-REQ-010-01, BR-REQ-011-01, BR-REQ-020-01, BR-REQ-040-01, BR-REQ-040-02, BR-REQ-070-03).
+- `SportsEvent` and `SportsOrganization` JSON-LD, with the event's own UTC offset on start and end times and an organizer reference to the club `@id` (BR-REQ-052-02). Logo and `sameAs` are absent until the club supplies them; the requirement is not yet fully met.
+- `sitemap.xml` and `robots.txt`. The sitemap lists only locales with a published translation, so English event URLs are absent while their translations are Draft. QA and local disallow everything (BR-REQ-090-01); no AI training-crawler policy is stated, because that is still an open owner decision.
+- New `event_translations.cost_text`: localized wording such as "Gratuit" or "50 lei". BR-REQ-041-01 and BR-REQ-070-03 both require cost on the page as text, and no field existed to hold it. Absent means the club has not stated a cost, never that the event is free.
+- `docker-compose.yml` for local PostgreSQL (`SETUP.md` §9). Tests still need nothing — they run PGlite in process.
+- The database connection is established on first use rather than at import, so `yarn build` succeeds without a database. Event pages and the sitemap render per request, since organizers publish and cancel between deploys.
+- `docs:check` no longer flags a JSON-LD vocabulary namespace such as `https://schema.org` as a leaked hostname. Providers and CDNs are still rejected; `AGENTS.md` §8 records the exception and its limits.
+
 ## BR-V1.13-2026-09-02
 
 - Package manager is Yarn 4.18.0 via Corepack, replacing npm, matching the owner's other project. `.yarnrc.yml` pins dependencies exactly by default; `yarn.lock` replaces `package-lock.json`; every document, the pre-commit hook and CI now say `yarn`.

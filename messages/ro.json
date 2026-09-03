@@ -4,7 +4,46 @@
   },
   "Home": {
     "title": "Brașov Runners",
-    "intro": "Alergăm împreună în Brașov. Evenimentele clubului apar aici în curând."
+    "intro": "Alergăm împreună în Brașov. Vezi evenimentele care urmează.",
+    "seeEvents": "Vezi evenimentele"
+  },
+  "Events": {
+    "title": "Evenimente",
+    "intro": "Alergări, ture pe munte și antrenamente organizate de club.",
+    "empty": "Nu sunt evenimente publicate momentan. Revino în curând."
+  },
+  "Event": {
+    "backToEvents": "Înapoi la evenimente",
+    "date": "Data",
+    "startTime": "Ora de start",
+    "meetingPoint": "Punct de întâlnire",
+    "address": "Adresă",
+    "distance": "Distanță",
+    "distanceKm": "{km} km",
+    "elevation": "Diferență de nivel",
+    "elevationM": "{m} m",
+    "difficulty": "Dificultate",
+    "cost": "Cost",
+    "registration": "Înscriere",
+    "cancelled": "Anulat",
+    "cancelledNotice": "Acest eveniment a fost anulat.",
+    "kind": {
+      "COMMUNITY_RUN": "Alergare de comunitate",
+      "TRAIL_RUN": "Tură pe munte",
+      "INTERVAL_SESSION": "Antrenament de intervale",
+      "LONG_RUN": "Alergare lungă",
+      "MEETUP": "Întâlnire",
+      "RACE": "Cursă",
+      "OTHER": "Alt tip"
+    },
+    "registrationState": {
+      "NOT_APPLICABLE": "Nu este necesară înscrierea",
+      "EXTERNAL": "Înscriere pe site-ul organizatorului",
+      "NOT_YET_OPEN": "Înscrierile nu s-au deschis încă",
+      "OPEN": "Înscrierile sunt deschise",
+      "CLOSED": "Înscrierile s-au închis",
+      "EVENT_CANCELLED": "Evenimentul a fost anulat"
+    }
   },
   "NotFound": {
     "title": "Pagina nu există",

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -804,7 +804,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 **Acceptance criteria**
 
 1. Given any public page, when its server HTML response is fetched without executing JavaScript, then the page's substantive content is present in that response.
-2. Given an event page, when its text is extracted, then the date, start time, meeting point, cost, and registration requirement are present as text rather than only as component styling or an image.
+2. Given an event page, when its text is extracted, then the date, start time, meeting point, cost, and registration requirement are present as text rather than only as component styling or an image. Cost is `event_translations.cost_text`, localized free text; when it is absent the page states nothing about cost rather than assuming the event is free.
 3. Given a cancelled or full event, when its text is extracted, then that status is stated in words.
 4. Given production `robots.txt`, when it is fetched, then admin, API, participant action and manage paths, declaration pages, preview, and runner profiles are disallowed for every user agent.
 5. Given production `robots.txt`, when it is inspected, then the training-crawler policy recorded in `DECISIONS.md` is reflected, with the verification date of the user-agent names recorded.

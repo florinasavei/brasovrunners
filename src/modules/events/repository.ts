@@ -12,6 +12,13 @@ type Locale = (typeof eventTranslations.locale.enumValues)[number];
 type Schema = { events: typeof events; eventTranslations: typeof eventTranslations };
 export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
 
+/**
+ * Exactly the columns a public page may show.
+ *
+ * Written out rather than `select()`-ing the whole row on purpose. When registrations and
+ * participants land, `SELECT *` on a joined query is how an email address reaches a public
+ * template; an explicit list cannot do that by accident (BR-REQ-070-01).
+ */
 const PUBLIC_COLUMNS = {
   id: events.id,
   kind: events.kind,
@@ -20,17 +27,31 @@ const PUBLIC_COLUMNS = {
   endsAt: events.endsAt,
   timezone: events.timezone,
   distanceMeters: events.distanceMeters,
+  elevationGainMeters: events.elevationGainMeters,
   registrationMode: events.registrationMode,
+  registrationOpensAt: events.registrationOpensAt,
+  registrationClosesAt: events.registrationClosesAt,
   externalRegistrationUrl: events.externalRegistrationUrl,
+  externalProvider: events.externalProvider,
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,
   locationName: eventTranslations.locationName,
   locationAddress: eventTranslations.locationAddress,
   difficultyLabel: eventTranslations.difficultyLabel,
+  costText: eventTranslations.costText,
   seoTitle: eventTranslations.seoTitle,
   seoDescription: eventTranslations.seoDescription,
+  publishedAt: eventTranslations.publishedAt,
 };
+
+/**
+ * The row shape the public pages receive.
+ *
+ * Derived from the query rather than written by hand, so nullability always matches the
+ * schema. A hand-written version silently claimed `endsAt` was never null.
+ */
+export type PublicEvent = Awaited<ReturnType<typeof listPublishedEvents>>[number];
 
 /**
  * Events visible on the public site in one locale, soonest first.

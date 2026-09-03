@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -101,6 +101,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`eslint.config.mjs`](./eslint.config.mjs) | ESLint flat config from `eslint-config-next`; `yarn lint` |
 | [`.nvmrc`](./.nvmrc) | Node version, `22.14.0`, matching `engines.node`; CI reads it via `node-version-file` |
 | [`.yarnrc.yml`](./.yarnrc.yml) | Yarn 4 settings: node-modules linker, exact version pins, supply-chain gates |
+| [`docker-compose.yml`](./docker-compose.yml) | Local PostgreSQL for development (`SETUP.md` §9); tests do not use it |
 | [`.env.example`](./.env.example) | Environment variable names and safe local examples, never real values (`AGENTS.md` §8) |
 | [`yarn.lock`](./yarn.lock) | Lockfile, so `yarn install --immutable` works from a clean clone; currently no dependencies |
 | [`.gitignore`](./.gitignore), [`.editorconfig`](./.editorconfig), [`.gitattributes`](./.gitattributes) | Repository hygiene: ignored paths, editor defaults, line endings |
