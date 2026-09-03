@@ -1,10 +1,17 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { env } from "@/shared/config/env";
+import * as emailActionTokensSchema from "./schema/email-action-tokens";
+import * as emailOutboxSchema from "./schema/email-outbox";
 import * as eventsSchema from "./schema/events";
 import * as participantsSchema from "./schema/participants";
 
-export const schema = { ...eventsSchema, ...participantsSchema };
+export const schema = {
+  ...eventsSchema,
+  ...participantsSchema,
+  ...emailActionTokensSchema,
+  ...emailOutboxSchema,
+};
 type Schema = typeof schema;
 
 /**

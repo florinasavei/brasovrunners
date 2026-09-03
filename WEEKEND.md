@@ -122,7 +122,6 @@ lane in `CLAUDE.md`.
 | --- | --- | --- |
 | Registration, confirmation, declaration, manage/cancel | Needs email and approved legal text; neither exists | domain + two approved Romanian texts |
 | Email delivery to real people | Needs a verified sending domain; a sandbox reaches only five authorized addresses | the domain |
-| The outbox, adapters and tokens | Nothing — buildable and testable against a sandbox today | already unblocked |
 | Staff login and the backoffice | Nothing to administer; events are seeded. Direction when built: Auth.js alone with a server-side allowlist, no external IdP | first registration |
 | Privacy notice and terms pages | No personal data is collected by the event pages. Needed the day registration opens | club approval |
 | Capacity and the waiting list | The pilot is uncapped and the DB enforces it. Half-built capacity overbooks in public | the locked transaction and its concurrency test |
@@ -140,8 +139,9 @@ controls the `vercel.app` zone. There are two steps, not three.
 | **Mailgun sandbox**, free, today | The whole pipeline built and tested against your own inbox | Reaches at most five authorized addresses. No club member can register |
 | **`<domain>`**, once registered | Real participants, real verification email | Needs DNS records and days for sender reputation to settle |
 
-So the sandbox is a development tool, not a launch step. Build the outbox, the adapter, the
-token layer and the three message types against it now; launch still waits on the domain.
+So the sandbox is a development tool, not a launch step. The outbox, the adapter and the token
+layer are built and tested without it; the three message types can be written against it.
+Launch still waits on the domain.
 
 ## Spam protection on the registration form
 
@@ -173,10 +173,22 @@ rejects an alias rather than trusting application code to notice. Built now beca
 the canonical email immutable with no merge path: get it wrong and the organizer's list shows
 one runner twice, permanently.
 
+**Email action tokens and the transactional outbox** (BR-REQ-036-02, BR-REQ-080-02,
+BR-REQ-080-03) — the half of the registration slice that needs neither the domain nor a
+provider account. `email_action_tokens` stores only a SHA-256 hash, scoped to one purpose and
+one registration, expiring, single use, and previous active tokens die when a new one is
+issued. `email_outbox` commits with the change that caused it, and the provider is called
+afterwards, from a separate transaction. The adapter has two implementations: capture, which is
+the mailbox in local and test, and a Mailgun stub with no network call in it. Built now because
+none of it was blocked on anything, and because the two rules it carries — a mail scanner's GET
+must not confirm a registration, and a rolled-back registration must not send email — are
+cheaper to build into the schema than to retrofit onto a working flow.
+
 ## Next weekend
 
-Buildable against a Mailgun sandbox today, no domain needed: the outbox and its adapter, the
-three Romanian message types, and hashed single-use tokens with GET-never-mutates.
+Built already, and described above: the outbox, the adapter boundary, and hashed single-use
+tokens with GET-never-mutates. What remains of that group is the three Romanian message types,
+whose wording the club has not written.
 
 Blocked until the domain and the club's approved texts exist: the registration form with privacy
 acknowledgment and results consent, confirmation → declaration → confirmed → manage/cancel, one
