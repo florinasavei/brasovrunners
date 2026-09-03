@@ -80,6 +80,8 @@ yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
 yarn test:watch          re-run on change
+yarn test:e2e            browser tests, mobile and desktop; needs the database running
+yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn typecheck           tsc --noEmit
 yarn lint                ESLint
 yarn docs:check          documentation consistency
@@ -87,6 +89,7 @@ yarn db:generate         regenerate migrations after editing src/db/schema/
 yarn db:migrate          apply migrations
 yarn db:studio           browse the database
 yarn db:seed             reset and reseed sample events
+yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 ```
 
@@ -135,6 +138,12 @@ overbooks.
 > event. When that work starts, add Docker or Testcontainers *alongside* this harness rather
 > than replacing it; these tests are fast and need no daemon, which is worth keeping.
 
+**End-to-end tests are separate.** `yarn test:e2e` builds the app, starts the production
+server and drives a real browser at 320px and at desktop width, so it needs the database
+running and a seeded set of events. It is deliberately **not** part of `yarn check`: that gate
+runs on every commit and in CI, and must work on a machine with no Docker. Install the browser
+once with `npx playwright install chromium`.
+
 Tests are named by the requirement they cover. `tests/unit/` holds pure rules;
 `tests/integration/` holds anything touching the database. A test asserting a database rule
 should use `expectViolation` from `tests/helpers/constraints.ts` — Drizzle wraps driver
@@ -178,5 +187,12 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
 - **The database refuses a capacity.** That is not a bug — see `WEEKEND.md`. A capped event
   needs the locked capacity transaction, and until it exists the constraint is what makes
   deferring it safe.
+- **Resetting the database means dropping the `drizzle` schema too.** Drizzle records applied
+  migrations in a table inside its own schema, so `DROP SCHEMA public CASCADE` alone leaves it
+  believing everything is applied; the next migrate then fails on a missing enum and leaves an
+  empty database. `yarn db:reset:local` does it correctly and refuses any non-local host.
+- **Adding a message key means adding it to both catalogues.** `yarn test` fails otherwise,
+  naming the key and the file. It also fails on a `t("…")` key that exists in neither, which
+  is what a typo looks like — nothing else catches that, since it renders the raw key.
 - **Windows and CI differ on paths and line endings.** `docs:check` has been broken by that
   before. `.gitattributes` normalises to LF; test both if you touch either.

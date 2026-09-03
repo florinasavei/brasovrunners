@@ -24,8 +24,11 @@ yarn build        production build
 yarn start        production server, honours PORT
 yarn lint         ESLint
 yarn typecheck    tsc --noEmit
-yarn check        docs:check + typecheck + lint; CI and the pre-commit hook run this
+yarn test         unit and database tests; no database or Docker needed (PGlite)
+yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
+yarn check        docs:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
+yarn db:migrate   apply migrations · db:seed sample events · db:studio browse
 yarn release      versioned archive and share copies under dist/
 ```
 

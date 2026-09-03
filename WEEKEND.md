@@ -29,8 +29,10 @@ is *defined* as done only when it is on production with club-approved legal text
 registration. A weekend is 16–25 hours. Two things make even the registration half impossible
 this weekend, and neither is about typing speed:
 
-- **No domain yet.** Resend and Mailgun both refuse to send to anyone but the account owner
-  without a verified sending domain. No domain, no verification email, no registration flow.
+- **No domain yet.** Resend and Mailgun both refuse to send to strangers without a verified
+  sending domain. A Mailgun sandbox domain lets you *build and test* the flow against your own
+  inbox — it "can only send to authorized recipients", up to five — so it de-risks the work but
+  cannot serve a single real club member. No domain, no registration flow.
 - **No approved declaration or privacy notice.** `AGENTS.md` §10.8 and §29 forbid inventing
   either. Storing a participant's name and email without a published notice is a compliance
   failure, not an unfinished feature.
@@ -95,7 +97,8 @@ published `ro` pages only, `robots.txt`. QA project sends `X-Robots-Tag: noindex
 watch the Vercel build, set `DATABASE_URL` and `APP_BASE_URL` per project, run the migration,
 open it on a phone. Then the same for `main`. Every integration surprise lives here.
 
-**7. Six tests (1.5 h).** Named by requirement: locale 404 on Draft (040-02), capacity CHECK
+**7. Tests — DONE.** 57 unit and database tests plus 16 end-to-end.
+Originally scoped as: Named by requirement: locale 404 on Draft (040-02), capacity CHECK
 refuses a number (034-01), event detail renders required fields (011-01), unknown slug → 404,
 `APP_BASE_URL` drives canonical (101-02), and one Playwright pass on the list page at a mobile
 viewport (041-01). Vitest and a real disposable Postgres, per `AGENTS.md` §20.
@@ -118,12 +121,40 @@ lane in `CLAUDE.md`.
 | Deferred | Why it is safe to wait | Unblocked by |
 | --- | --- | --- |
 | Registration, confirmation, declaration, manage/cancel | Needs email and approved legal text; neither exists | domain + two approved Romanian texts |
-| Email, outbox, tokens | Needs a verified sending domain | the domain |
+| Email delivery to real people | Needs a verified sending domain; a sandbox reaches only five authorized addresses | the domain |
+| The outbox, adapters and tokens | Nothing — buildable and testable against a sandbox today | already unblocked |
 | Staff login and the backoffice | Nothing to administer; events are seeded. Direction when built: Auth.js alone with a server-side allowlist, no external IdP | first registration |
 | Privacy notice and terms pages | No personal data is collected by the event pages. Needed the day registration opens | club approval |
 | Capacity and the waiting list | The pilot is uncapped and the DB enforces it. Half-built capacity overbooks in public | the locked transaction and its concurrency test |
 | English | Draft, so `/en` 404s. Never ship English chrome with Romanian body text | translated content |
 | CMS, media, profiles, races, bibs, results | M2–M5 | — |
+
+## The email progression, corrected
+
+The intended path was sandbox → Vercel domain → `<domain>`. The middle step does not
+exist: verifying a sending domain means adding SPF and DKIM records to its DNS, and nobody
+controls the `vercel.app` zone. There are two steps, not three.
+
+| Step | What it gives you | What it does not |
+| --- | --- | --- |
+| **Mailgun sandbox**, free, today | The whole pipeline built and tested against your own inbox | Reaches at most five authorized addresses. No club member can register |
+| **`<domain>`**, once registered | Real participants, real verification email | Needs DNS records and days for sender reputation to settle |
+
+So the sandbox is a development tool, not a launch step. Build the outbox, the adapter, the
+token layer and the three message types against it now; launch still waits on the domain.
+
+## Spam protection on the registration form
+
+The form collects an email address, so it will be found by bots. Start with a honeypot field,
+a submission-timing check and per-IP rate limiting: no third-party script, no additional
+processor to disclose, and enough for a club expecting a few hundred registrations a year.
+
+Escalate to **Cloudflare Turnstile** only if that proves insufficient. It embeds on any site
+without routing traffic through Cloudflare and processes "only the data strictly necessary",
+explicitly not form entries — the best third-party option for an EU club. The reason to wait:
+it is a script from a processor the privacy notice must disclose, and the club has not approved
+that notice yet. Adding Turnstile later is an hour's work; adding a processor to an approved
+legal document is not.
 
 ## The domain, when you get to it
 
@@ -133,10 +164,21 @@ registrar holds it. What matters for the next slice is DNS access at whichever r
 because Resend's verification records go there, and sender reputation on a new domain takes
 days to settle — register early, verify early, send later.
 
-## Next weekend, if the domain exists by then
+## Done ahead of schedule, while the accounts were pending
 
-Resend (Ireland region) with the domain verified; the outbox and three Romanian message types;
-hashed single-use tokens with GET-never-mutates; the registration form with privacy
-acknowledgment and results consent; confirmation → declaration → confirmed → manage/cancel; one
-server-authorized admin page listing who is coming; a retention rule and a named erasure
+**Email canonicalization** (BR-REQ-032-01, -02, -04) — the participant's entire identity, since
+they have no account. A pure versioned function per `AGENTS.md` §10.4, the `participants` table
+with `UNIQUE(canonical_email)`, 29 unit tests and 7 integration tests proving the *database*
+rejects an alias rather than trusting application code to notice. Built now because §10.3 makes
+the canonical email immutable with no merge path: get it wrong and the organizer's list shows
+one runner twice, permanently.
+
+## Next weekend
+
+Buildable against a Mailgun sandbox today, no domain needed: the outbox and its adapter, the
+three Romanian message types, and hashed single-use tokens with GET-never-mutates.
+
+Blocked until the domain and the club's approved texts exist: the registration form with privacy
+acknowledgment and results consent, confirmation → declaration → confirmed → manage/cancel, one
+server-authorized admin page listing who is coming, and a retention rule with a named erasure
 contact. The scope review estimated ~20 hours for that slice against an *uncapped* event.
