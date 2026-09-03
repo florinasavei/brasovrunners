@@ -1,7 +1,25 @@
-* text=auto eol=lf
+# Line endings are decided here rather than by each developer's git config. This repository is
+# written on Windows and built on Linux CI (CLAUDE.md § Working conventions), and a file that
+# arrives with the wrong endings fails a lint rule on one machine and passes on the other.
+* text=auto
+
+# Binary. Never line-ending converted — a CRLF substitution inside a JPEG or a TTF corrupts the
+# file — and never diffed as text, which would print megabytes of noise into a review.
 *.png binary
 *.jpg binary
 *.jpeg binary
+*.gif binary
 *.webp binary
 *.ico binary
 *.pdf binary
+*.xlsx binary
+
+# Fonts are binary for the same reason, and the reason matters more here: a font this
+# repository ships is served byte-for-byte to every visitor.
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# SVG is deliberately absent from the list above. It is text, and keeping it diffable is how a
+# change to the club's logo shows up in a review as something a person can read.

@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { LOGO } from "@/theme/brand";
+import { FONT, HEADER_MARK_HEIGHT, LOGO, WORDMARK } from "@/theme/brand";
 import LogoLink from "./LogoLink";
 
 /**
@@ -10,14 +11,25 @@ import LogoLink from "./LogoLink";
  * A Server Component — nothing here is interactive except the link, and that lives in
  * `LogoLink` (AGENTS.md §14.1: narrow client boundaries).
  *
- * The logo is a plain `<img>` rather than `next/image`. It is a fixed-size SVG, so there is
- * nothing for the image optimizer to do, and serving an SVG through `next/image` requires
+ * The mark is the mountains alone, with the wordmark set as live text in the club's own kit
+ * face rather than baked into the artwork. Two reasons:
+ *
+ *   1. The full lockup is 2.4:1. At a height that fits a header, the wordmark inside it renders
+ *      about four pixels tall — present, and unreadable.
+ *   2. Text scales with the reader's font settings; artwork does not.
+ *
+ * The visible wordmark is `BRASOV RUNNERS`, unaccented, matching the printed kit. That is a
+ * logotype, not the club's name, and it is safe here only because it is pure ASCII: Facón has
+ * no Romanian characters at all. The link's accessible name is set from the message catalogue
+ * instead, so assistive technology announces `Brașov Runners`, spelled properly.
+ *
+ * The mark is a plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for
+ * the image optimizer to do, and serving one through `next/image` requires
  * `dangerouslyAllowSVG`, which turns on SVG rendering for *every* remote image the app might
  * ever load. That is a large door to open for one logo.
  *
- * `alt` is the club's name, from the message catalogue: the lockup carries the name as
- * artwork, so the alternative text has to say it. It is the only place the name appears in
- * this header, which is why it is not `alt=""`.
+ * `alt=""` because the name is already beside it as text; announcing both would read the club
+ * name twice to a screen reader.
  */
 export default async function SiteHeader() {
   const t = await getTranslations("Site");
@@ -32,18 +44,36 @@ export default async function SiteHeader() {
       }}
     >
       <Container maxWidth="sm" sx={{ display: "flex", alignItems: "center", py: 1 }}>
-        <LogoLink>
+        <LogoLink label={t("name")}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={LOGO.lockup.src}
-            width={LOGO.lockup.width}
-            height={LOGO.lockup.height}
-            alt={t("name")}
-            // Reserving the box stops the header from reflowing while the SVG loads. The
-            // lockup is 180px wide and the narrowest supported viewport is 320px, so it fits
-            // without a separate mark-only variant.
+            src={LOGO.mark.src}
+            // Width is derived from the artwork's own proportions, so replacing the mark with
+            // a differently shaped one needs no change here. Both are set so the browser
+            // reserves the box and the header does not reflow while the SVG loads.
+            height={HEADER_MARK_HEIGHT}
+            width={Math.round((HEADER_MARK_HEIGHT * LOGO.mark.width) / LOGO.mark.height)}
+            alt=""
             style={{ display: "block", flexShrink: 0 }}
           />
+          <Typography
+            component="span"
+            sx={{
+              // Facón is one style: black, italic. Both are stated so the fallback, Roboto,
+              // lands in the same weight and slant if the font has not arrived yet.
+              fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,
+              fontWeight: 900,
+              fontStyle: "italic",
+              fontSize: "1.25rem",
+              lineHeight: 1,
+              // The face is wide and tightly fitted; a little tracking stops the letters
+              // touching at header size.
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {WORDMARK}
+          </Typography>
         </LogoLink>
       </Container>
     </Box>

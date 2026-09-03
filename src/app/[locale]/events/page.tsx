@@ -12,8 +12,10 @@ import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
-import { listPublishedEvents } from "@/modules/events/repository";
+import JsonLd from "@/shared/ui/JsonLd";
+import { findLatestPastEvent, listUpcomingEvents } from "@/modules/events/repository";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -38,19 +40,38 @@ export default async function EventsPage({ params }: Props) {
 
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
-  const events = await listPublishedEvents(getDb(), locale);
+  const tSite = await getTranslations("Site");
   // One timestamp for the whole page, so two cards cannot disagree about whether
-  // registration has closed.
+  // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
+  const db = getDb();
+  const upcoming = await listUpcomingEvents(db, locale, now);
+  // Only asked for when there is nothing to lead with: between seasons an empty page reads as
+  // a broken site, so the last event that happened stands in, dated.
+  const latestPast = upcoming.length === 0 ? await findLatestPastEvent(db, locale, now) : undefined;
+  const events = upcoming.length > 0 ? upcoming : latestPast ? [latestPast] : [];
 
   return (
     <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+      {/*
+        BR-REQ-052-02 criterion 1 asks the homepage to carry one SportsOrganization block, and
+        this page is now the homepage — the site root redirects here. Incomplete by design:
+        logo and sameAs are absent until the club supplies them. See structured-data.ts.
+      */}
+      <JsonLd data={sportsOrganizationJsonLd(tSite("name"))} />
+
       <Typography variant="h1" gutterBottom>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
         {t("intro")}
       </Typography>
+
+      {upcoming.length === 0 && latestPast && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {t("noUpcoming")}
+        </Alert>
+      )}
 
       {events.length === 0 ? (
         <Alert severity="info">{t("empty")}</Alert>

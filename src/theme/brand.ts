@@ -22,19 +22,25 @@
 /**
  * The palette.
  *
- * `green` and `orange` are the values the scaffold started with — deliberately not MUI's
- * default blue, so the site never reads as an admin template. They are kept rather than
- * invented over, because guessing at branding twice is worse than guessing at it once.
+ * `blue` is taken from the club's own logo file, where every path is filled `#0000ff` — pure
+ * sRGB blue. It is not sampled from the t-shirt, whose blue is a navy-to-cyan gradient and
+ * visibly not this colour. Which of the two is the brand blue is an open question for the club;
+ * until it is answered, the supplied vector file wins, because it is the only place the colour
+ * is stated as a value rather than photographed under a lamp.
+ *
+ * `blueInk` exists because pure blue is a poor UI colour even when it passes contrast: it is
+ * the default unvisited-link colour of every browser, so buttons and headings set in it read
+ * as unstyled. It is used for large flat areas; the logo keeps its exact blue.
  *
  * `ink` is not pure black and `paper` is not pure white: full-contrast black on white is
  * harsher on a phone in daylight than the near-neutrals below, and both still clear the
  * contrast ratio asserted in `tests/unit/theme/brand.test.ts`.
  */
 export const COLOR = {
-  /** Primary. Buttons, links, the logo mark. */
-  green: "#1f5f3f",
-  /** Darker green for text-on-paper, where the primary alone is too light to pass AA. */
-  greenInk: "#164630",
+  /** Primary, exactly as the supplied logo states it. 8.22:1 on paper, 8.59:1 on a card. */
+  blue: "#0000ff",
+  /** Hover and pressed states, and any large fill where pure blue would vibrate. */
+  blueInk: "#0b2fb8",
   /** Secondary. Accents and the event-kind chips. */
   orange: "#d98a2b",
   /** Body text. */
@@ -47,6 +53,37 @@ export const COLOR = {
   surface: "#ffffff",
   /** Hairlines and dividers. */
   line: "#e2e0d8",
+} as const;
+
+/**
+ * The club kit's gradient: deep navy at the shoulders, running lighter and more cyan down the
+ * body, to white at the hem. It is the most distinctive thing the club already owns, and the
+ * one part of the identity that is theirs rather than generic.
+ *
+ * DERIVED FROM A PHOTOGRAPH, and that is a real caveat. Sampling a vertical line down
+ * `docs/brand/tricou-bvr.jpg` gives this ramp:
+ *
+ *   #0d1c3d → #09254b → #0f3c60 → #295572 → (white)
+ *
+ * The photo is warm-lit and underexposed, so those samples are duller and greyer than the
+ * garment: the shirt reads as a vivid royal-to-cyan on a screen, and the measured values do
+ * not. The stops below keep the sampled *structure* — same hue progression, same direction —
+ * with saturation restored to what the fabric actually looks like. They are a proposal, not a
+ * measurement. The authoritative values are in the print file the kit supplier holds; ask for
+ * them before this ships anywhere a member will compare it against a shirt.
+ */
+export const GRADIENT = {
+  /** Shoulders. */
+  deep: "#0b1f4d",
+  /** Mid-body. */
+  mid: "#12508f",
+  /** Approaching the hem. */
+  light: "#3aa0d8",
+  /**
+   * Top to bottom, the way the shirt is worn. Kept as a CSS value rather than assembled at
+   * each use, so every surface that carries it carries the same one.
+   */
+  vertical: "linear-gradient(180deg, #0b1f4d 0%, #12508f 55%, #3aa0d8 100%)",
 } as const;
 
 /**
@@ -71,9 +108,36 @@ export const COLOR = {
 export const FONT = {
   display: "var(--font-roboto)",
   body: "var(--font-roboto)",
+  /**
+   * Facón, the face the club's kit is printed in. Loaded by the locale layout from
+   * `src/theme/fonts/`, and used in exactly one place: the header wordmark.
+   *
+   * It is confined to that one string for a hard reason, not a stylistic one. The font
+   * contains 129 characters and NONE of them are Romanian — not ș or ț in either encoding,
+   * and not ă, â or î either. `Brașov` cannot be set in it; the ș falls back mid-word to
+   * Roboto. Anything rendered from the message catalogues would eventually hit one of those
+   * letters, which is why this is not the `display` role.
+   *
+   * Its fallback is Roboto 900 italic, which is not an approximation chosen by eye: the
+   * designer's read-me names "Roboto Black Italic" as the base font Facón was drawn from.
+   */
+  wordmark: "var(--font-facon)",
   /** Used when a webfont has not loaded yet, and when it fails to. */
   fallback: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 } as const;
+
+/**
+ * The header wordmark, as a logotype rather than as the club's name.
+ *
+ * Deliberately unaccented and deliberately not from the message catalogues. It matches the
+ * kit, which is printed BRASOV RUNNERS, and it is the same in both locales because a logotype
+ * is not translated. `tests/unit/theme/brand.test.ts` asserts it stays ASCII — put an ș in
+ * here and Facón cannot render it.
+ *
+ * The club's actual name, correctly spelled, lives in `messages/*.json` under `Site.name` and
+ * is what prose, page titles and the header link's accessible name use.
+ */
+export const WORDMARK = "BRASOV RUNNERS";
 
 /**
  * The logo assets and their intrinsic proportions.
@@ -87,15 +151,38 @@ export const FONT = {
  * `APP_BASE_URL` at the point of use, never by pasting a host in here.
  */
 export const LOGO = {
-  /** Horizontal lockup: mark plus wordmark. Rendered by the site header. */
-  lockup: { src: "/brand/logo.svg", width: 180, height: 32 },
   /**
-   * The mark alone, square.
+   * The full lockup: the mountain range over BRASOV RUNNERS.
    *
-   * Its consumer is not an import: `src/app/icon.svg` is a Next file convention, so the
-   * framework picks it up by filename and emits the `<link rel="icon">`. That means the two
-   * files can silently drift — a new mark in `public/brand/`, the old one still in the browser
-   * tab. `tests/unit/theme/brand.test.ts` asserts they stay identical.
+   * Too wide and too detailed for a header — at a height that fits one, the wordmark inside it
+   * is about four pixels tall. Use it where the logo is the subject: the brand sheet, an Open
+   * Graph image, print.
    */
-  mark: { src: "/brand/logo-mark.svg", width: 32, height: 32 },
+  lockup: {
+    src: "/brand/logo.svg",
+    onDark: "/brand/logo-white.svg",
+    viewBox: "60 906 2880 1188",
+    width: 2880,
+    height: 1188,
+  },
+  /**
+   * The mountains alone, cropped from the same artwork.
+   *
+   * This is what the header uses, beside the club's name set as live text. That pairing is
+   * deliberate: the supplied wordmark reads BRASOV, without the ș, and the site's own name is
+   * Brașov. Live text lets the page spell it correctly while the artwork stays untouched.
+   */
+  mark: {
+    src: "/brand/logo-mark.svg",
+    onDark: "/brand/logo-mark-white.svg",
+    viewBox: "60 906 2840 889",
+    width: 2840,
+    height: 889,
+  },
 } as const;
+
+/**
+ * The height the header draws the mark at. Width follows from the aspect ratio, so the mark
+ * can be replaced with a differently proportioned one without touching the header.
+ */
+export const HEADER_MARK_HEIGHT = 28;

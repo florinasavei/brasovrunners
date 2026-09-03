@@ -8,8 +8,8 @@ import { COLOR, FONT } from "./brand";
  * allowed to hold a hex value, so replacing the placeholder identity with the club's is one
  * edit to one file (AGENTS.md §3.2 — no wrappers, no second way to do this).
  *
- * Both colours are still placeholders awaiting owner approval (AGENTS.md §29). They are
- * deliberately not MUI's default blue, so the site never reads as an admin template.
+ * The primary is the club's own blue, taken from their logo file. The secondary is still a
+ * placeholder awaiting owner approval (AGENTS.md §29).
  */
 export const theme = createTheme({
   // CSS variables avoid the server/client flicker MUI documents for the App Router.
@@ -17,10 +17,11 @@ export const theme = createTheme({
   modularCssLayers: true,
   palette: {
     primary: {
-      main: COLOR.green,
-      // Links and small text on the page background use the darker green: the primary alone
-      // does not reach 4.5:1 on paper, and a link is the smallest coloured text on the site.
-      dark: COLOR.greenInk,
+      main: COLOR.blue,
+      // Hover and pressed states. Not a contrast fix: the club's blue is 8.22:1 on the page
+      // background and passes AA as text on its own — `tests/unit/theme/brand.test.ts` asserts
+      // that rather than assuming it.
+      dark: COLOR.blueInk,
       contrastText: COLOR.paper,
     },
     secondary: { main: COLOR.orange, contrastText: COLOR.ink },

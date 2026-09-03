@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import {
+  findLatestPastEvent,
   findPublishedEventBySlug,
   findPublishedTranslations,
   listPublishedEvents,
+  listUpcomingEvents,
 } from "@/modules/events/repository";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -32,11 +34,12 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication per locale", () => {
     eventStatus?: "SCHEDULED" | "CANCELLED" | "COMPLETED";
     startsAt?: Date;
     slug?: string;
+    kind?: "COMMUNITY_RUN" | "TRAIL_RUN" | "RACE";
   }) {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "COMMUNITY_RUN",
+        kind: options.kind ?? "COMMUNITY_RUN",
         eventStatus: options.eventStatus ?? "SCHEDULED",
         startsAt: options.startsAt ?? new Date("2026-10-04T07:00:00Z"),
       })
@@ -105,6 +108,59 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication per locale", () => {
     await seedEvent({ slug: "c", startsAt: new Date("2026-11-01T07:00:00Z") });
     const list = await listPublishedEvents(db, "ro");
     expect(list.map((e) => e.slug)).toEqual(["b", "c", "a"]);
+  });
+
+  /**
+   * BR-REQ-020-01 — what the listing leads with.
+   *
+   * The club's races are the reason the site exists, so they outrank a training session that
+   * merely happens to fall sooner. The date decides only within a kind.
+   */
+  describe("the listing puts races first, then the soonest", () => {
+    const NOW = new Date("2026-09-01T00:00:00Z");
+
+    it("puts a distant race above an imminent community run", async () => {
+      await seedEvent({ slug: "run-tomorrow", startsAt: new Date("2026-09-02T07:00:00Z") });
+      await seedEvent({
+        slug: "race-in-december",
+        kind: "RACE",
+        startsAt: new Date("2026-12-01T07:00:00Z"),
+      });
+
+      const list = await listUpcomingEvents(db, "ro", NOW);
+      expect(list.map((e) => e.slug)).toEqual(["race-in-december", "run-tomorrow"]);
+    });
+
+    it("orders races among themselves by date", async () => {
+      await seedEvent({ slug: "race-b", kind: "RACE", startsAt: new Date("2026-11-01T07:00:00Z") });
+      await seedEvent({ slug: "race-a", kind: "RACE", startsAt: new Date("2026-10-01T07:00:00Z") });
+      await seedEvent({ slug: "run", startsAt: new Date("2026-09-05T07:00:00Z") });
+
+      const list = await listUpcomingEvents(db, "ro", NOW);
+      expect(list.map((e) => e.slug)).toEqual(["race-a", "race-b", "run"]);
+    });
+
+    it("leaves out events that have already finished", async () => {
+      await seedEvent({ slug: "past-race", kind: "RACE", startsAt: new Date("2026-08-01T07:00:00Z") });
+      await seedEvent({ slug: "upcoming-run", startsAt: new Date("2026-09-05T07:00:00Z") });
+
+      const list = await listUpcomingEvents(db, "ro", NOW);
+      // A finished race must not be promoted to the top of the page forever.
+      expect(list.map((e) => e.slug)).toEqual(["upcoming-run"]);
+    });
+
+    it("falls back to the most recent past event when nothing is upcoming", async () => {
+      await seedEvent({ slug: "older", startsAt: new Date("2026-07-01T07:00:00Z") });
+      await seedEvent({ slug: "newer", startsAt: new Date("2026-08-01T07:00:00Z") });
+
+      expect(await listUpcomingEvents(db, "ro", NOW)).toHaveLength(0);
+      const latest = await findLatestPastEvent(db, "ro", NOW);
+      expect(latest?.slug).toBe("newer");
+    });
+
+    it("returns nothing to fall back to when the club has held no events", async () => {
+      expect(await findLatestPastEvent(db, "ro", NOW)).toBeUndefined();
+    });
   });
 });
 
