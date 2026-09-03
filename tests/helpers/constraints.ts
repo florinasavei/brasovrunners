@@ -16,6 +16,8 @@ export const SQLSTATE = {
   NOT_NULL_VIOLATION: "23502",
   FOREIGN_KEY_VIOLATION: "23503",
   INVALID_ENUM_INPUT: "22P02",
+  /** Raised by PostgreSQL for any write inside a `SET TRANSACTION READ ONLY` block. */
+  READ_ONLY_TRANSACTION: "25006",
 } as const;
 
 export async function expectViolation(

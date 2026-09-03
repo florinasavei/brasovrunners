@@ -83,7 +83,14 @@ translations are Draft, so `/en/...` returns 404 — that is BR-REQ-040-02, not 
 Also built: email canonicalization with the `participants` table behind it, and the pilot
 capacity guard (the database refuses any non-null `capacity`).
 
-**115 unit and integration tests, 16 end-to-end.** `yarn test` needs no database — PGlite runs
+Also built, and reachable by nothing yet: email action tokens and the transactional outbox
+(BR-REQ-036-02, BR-REQ-080-02, BR-REQ-080-03). Hash-only storage, purpose scope, single use,
+and a read-only transaction so a GET cannot mutate; outbox rows commit with the change that
+caused them and the provider is called outside that transaction. The Mailgun adapter is
+declared and deliberately not wired — it throws rather than dropping mail — and startup refuses
+live delivery outside production.
+
+**217 unit and integration tests, 16 end-to-end.** `yarn test` needs no database — PGlite runs
 real PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed.
 
 Not built, each deferred with a reason in `WEEKEND.md`: registration, email delivery, staff

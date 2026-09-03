@@ -22,6 +22,13 @@
       "when": 1788422885783,
       "tag": "0002_participants",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788443295242,
+      "tag": "0003_email_action_tokens_and_outbox",
+      "breakpoints": true
     }
   ]
 }
