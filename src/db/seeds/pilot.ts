@@ -1,8 +1,5 @@
-import { config } from "dotenv";
-import { db } from "@/db/client";
+import { getDb } from "@/db/client";
 import { eventTranslations, events } from "@/db/schema/events";
-
-config({ path: ".env.local", quiet: true });
 
 /**
  * Pilot seed: a few real club events, Romanian published, English left as Draft.
@@ -19,8 +16,8 @@ async function seed() {
     throw new Error("Refusing to seed production. AGENTS.md §7.7: production is never auto-seeded.");
   }
 
-  await db.delete(eventTranslations);
-  await db.delete(events);
+  await getDb().delete(eventTranslations);
+  await getDb().delete(events);
 
   const rows = [
     {
@@ -33,6 +30,7 @@ async function seed() {
         excerpt: "Alergare relaxată prin parc, ritm de conversație. Vino cum ești.",
         locationName: "Parcul Tractorul, intrarea principală",
         difficultyLabel: "Ușor",
+        costText: "Gratuit",
       },
       en: { slug: "sunday-run-tractorul-park", title: "Sunday run", locationName: "Tractorul Park" },
     },
@@ -47,6 +45,7 @@ async function seed() {
         excerpt: "Urcare pe Tâmpa și retur. Bocanci sau pantofi de trail recomandați.",
         locationName: "Stația de telecabină Tâmpa",
         difficultyLabel: "Mediu",
+        costText: "Gratuit",
       },
       en: { slug: "tampa-trail", title: "Tâmpa trail run", locationName: "Tâmpa cable car station" },
     },
@@ -59,13 +58,14 @@ async function seed() {
         excerpt: "Serii pe pistă, toate nivelurile. Încălzire în grup la 18:30.",
         locationName: "Stadionul Olimpia",
         difficultyLabel: "Avansat",
+        costText: "Gratuit",
       },
       en: { slug: "interval-session-olimpia", title: "Interval session", locationName: "Olimpia Stadium" },
     },
   ];
 
   for (const row of rows) {
-    const [event] = await db
+    const [event] = await getDb()
       .insert(events)
       .values({
         kind: row.kind,
@@ -77,7 +77,7 @@ async function seed() {
       })
       .returning();
 
-    await db.insert(eventTranslations).values([
+    await getDb().insert(eventTranslations).values([
       {
         eventId: event.id,
         locale: "ro",
@@ -86,6 +86,7 @@ async function seed() {
         excerpt: row.ro.excerpt,
         locationName: row.ro.locationName,
         difficultyLabel: row.ro.difficultyLabel,
+        costText: row.ro.costText,
         editorialStatus: "PUBLISHED",
         publishedAt: new Date(),
       },

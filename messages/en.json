@@ -4,7 +4,46 @@
   },
   "Home": {
     "title": "Brașov Runners",
-    "intro": "We run together in Brașov. The club's events will appear here soon."
+    "intro": "We run together in Brașov. See what is coming up.",
+    "seeEvents": "See the events"
+  },
+  "Events": {
+    "title": "Events",
+    "intro": "Runs, trail outings and training sessions organised by the club.",
+    "empty": "No events are published right now. Check back soon."
+  },
+  "Event": {
+    "backToEvents": "Back to events",
+    "date": "Date",
+    "startTime": "Start time",
+    "meetingPoint": "Meeting point",
+    "address": "Address",
+    "distance": "Distance",
+    "distanceKm": "{km} km",
+    "elevation": "Elevation gain",
+    "elevationM": "{m} m",
+    "difficulty": "Difficulty",
+    "cost": "Cost",
+    "registration": "Registration",
+    "cancelled": "Cancelled",
+    "cancelledNotice": "This event has been cancelled.",
+    "kind": {
+      "COMMUNITY_RUN": "Community run",
+      "TRAIL_RUN": "Trail run",
+      "INTERVAL_SESSION": "Interval session",
+      "LONG_RUN": "Long run",
+      "MEETUP": "Meetup",
+      "RACE": "Race",
+      "OTHER": "Other"
+    },
+    "registrationState": {
+      "NOT_APPLICABLE": "No registration needed",
+      "EXTERNAL": "Register on the organiser's site",
+      "NOT_YET_OPEN": "Registration has not opened yet",
+      "OPEN": "Registration is open",
+      "CLOSED": "Registration has closed",
+      "EVENT_CANCELLED": "The event has been cancelled"
+    }
   },
   "NotFound": {
     "title": "This page does not exist",

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # Running this locally
 
-**Baseline `BR-V1.13-2026-09-02`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V1.14-2026-09-03`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -13,7 +13,7 @@ Everything here is a command that exists today. If a command is in this file it 
 | --- | --- |
 | **Node** | `22.14.0` exactly. `.nvmrc` and `engines.node` both say so; CI reads `.nvmrc`. |
 | **Yarn** | 4.18.0, via Corepack. It ships with Node — you do not install yarn yourself. |
-| **A database** | Only for event pages. The home page and the whole test suite need none. |
+| **A database** | Only for event pages: `docker compose up -d db`. The home page and the whole test suite need none. |
 
 ```bash
 node --version        # must print v22.14.0
@@ -34,8 +34,19 @@ yarn setup                    # points git at .githooks; once per clone
 cp .env.example .env.local
 ```
 
-`yarn setup` installs the pre-commit hook that runs `yarn check`. It is not optional: it is the
-only thing standing between you and a red pull request from a green working copy.
+`yarn setup` configures this clone's git and is not optional. It installs the pre-commit hook
+that runs `yarn check` — the only thing standing between you and a red pull request from a
+green working copy — and adds a `git gone` alias:
+
+```bash
+git gone     # delete local branches whose remote branch was deleted after merge
+```
+
+It uses `git branch -D` deliberately. This repository squash-merges into `qa`, so the squashed
+commit differs from the branch's own and plain `-d` refuses every time. The safety is the
+`[gone]` filter: a branch only reaches that state once its remote copy is deleted, which
+happens on merge. A branch you never pushed has no upstream, is never `[gone]`, and is never
+touched. Both settings are repository-local; your global git config is untouched.
 
 Then fill in `.env.local`:
 
@@ -51,10 +62,14 @@ safe examples only — never a real value (`AGENTS.md` §8).
 ### Set up the database
 
 ```bash
-yarn db:migrate       # applies src/db/migrations to DATABASE_URL
-yarn db:seed          # three sample events, Romanian published, English draft
-yarn dev              # http://localhost:47821 → redirects to /ro
+docker compose up -d db   # local PostgreSQL on 5432
+yarn db:migrate           # applies src/db/migrations
+yarn db:seed              # three sample events, Romanian published, English draft
+yarn dev                  # http://localhost:47821 → redirects to /ro
 ```
+
+`docker-compose.yml` gives you a local PostgreSQL with throwaway credentials. Use Neon instead
+by pointing `DATABASE_URL` at its **pooled** connection string — nothing else changes.
 
 `yarn db:seed` clears both tables and refuses to run when `APP_ENV=production`.
 
@@ -76,6 +91,8 @@ yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
 yarn test:watch          re-run on change
+yarn test:e2e            browser tests, mobile and desktop; needs the database running
+yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn typecheck           tsc --noEmit
 yarn lint                ESLint
 yarn docs:check          documentation consistency
@@ -83,6 +100,7 @@ yarn db:generate         regenerate migrations after editing src/db/schema/
 yarn db:migrate          apply migrations
 yarn db:studio           browse the database
 yarn db:seed             reset and reseed sample events
+yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 ```
 
@@ -131,6 +149,12 @@ overbooks.
 > event. When that work starts, add Docker or Testcontainers *alongside* this harness rather
 > than replacing it; these tests are fast and need no daemon, which is worth keeping.
 
+**End-to-end tests are separate.** `yarn test:e2e` builds the app, starts the production
+server and drives a real browser at 320px and at desktop width, so it needs the database
+running and a seeded set of events. It is deliberately **not** part of `yarn check`: that gate
+runs on every commit and in CI, and must work on a machine with no Docker. Install the browser
+once with `npx playwright install chromium`.
+
 Tests are named by the requirement they cover. `tests/unit/` holds pure rules;
 `tests/integration/` holds anything touching the database. A test asserting a database rule
 should use `expectViolation` from `tests/helpers/constraints.ts` — Drizzle wraps driver
@@ -146,7 +170,9 @@ src/
   db/
     client.ts          the pg.Pool, node-postgres — not neon-http
     schema/            Drizzle tables; edit here, then yarn db:generate
-    migrations/        generated SQL; commit it, never edit it
+    migrations/        generated SQL; commit it, never edit it. Renaming a file means
+                       updating its `tag` in meta/_journal.json to match, and the SQL
+                       must stay byte-identical or applied databases will re-run it
     seeds/
   i18n/                routing, request config, navigation helpers
   shared/
@@ -174,5 +200,12 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
 - **The database refuses a capacity.** That is not a bug — see `WEEKEND.md`. A capped event
   needs the locked capacity transaction, and until it exists the constraint is what makes
   deferring it safe.
+- **Resetting the database means dropping the `drizzle` schema too.** Drizzle records applied
+  migrations in a table inside its own schema, so `DROP SCHEMA public CASCADE` alone leaves it
+  believing everything is applied; the next migrate then fails on a missing enum and leaves an
+  empty database. `yarn db:reset:local` does it correctly and refuses any non-local host.
+- **Adding a message key means adding it to both catalogues.** `yarn test` fails otherwise,
+  naming the key and the file. It also fails on a `t("…")` key that exists in neither, which
+  is what a typo looks like — nothing else catches that, since it renders the raw key.
 - **Windows and CI differ on paths and line endings.** `docs:check` has been broken by that
   before. `.gitattributes` normalises to LF; test both if you touch either.

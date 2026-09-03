@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -739,7 +739,11 @@ Rules:
 - `APP_BASE_URL` is the single source of every absolute URL the application emits: email
   action links, canonical tags, `hreflang` alternates, `sitemap.xml`, `robots.txt`, Open
   Graph URLs, authentication callback URLs, and the Mailgun webhook URL;
-- no hostname literal may appear anywhere under `src/`; `yarn check` fails on one;
+- no hostname literal may appear anywhere under `src/`; `yarn check` fails on one. The sole
+  exception is a vocabulary namespace defined by a published standard, such as the JSON-LD
+  `@context` of `https://schema.org`: it is an identifier, identical in every environment,
+  and deriving it from `APP_BASE_URL` would emit a context no consumer understands. Providers,
+  CDNs, and anything the club could plausibly host are never exempt;
 - cookies are host-only, with no `domain` attribute set, so a hostname change breaks nothing;
 - CSP, CORS, and redirect allowlists read from configuration, never from a literal;
 - `R2_PUBLIC_BASE_URL` is configuration; start on the R2 development subdomain;
@@ -1329,6 +1333,7 @@ event_translations
 - location_name
 - location_address null
 - difficulty_label null
+- cost_text null                -- localized wording: "Gratuit", "Free", "50 lei"
 - cover_alt_text null
 - seo_title null
 - seo_description null

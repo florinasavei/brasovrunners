@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1112,3 +1112,59 @@ pre-restructure copy of `src`; `dist` and `coverage` are excluded now, but `.nex
 is not, since `include` pulls Next's generated route types from there.
 
 Baseline bumped with the same change set; `WEEKEND.md` steps 1 to 3 are done.
+
+## 23. Done — public event pages, and a field the specs required but the model lacked (2026-09-03)
+
+`WEEKEND.md` steps 4 and 5. The pilot's visible half now exists: a Romanian event list and
+detail page, structured data, a sitemap and a robots policy.
+
+**Localized pathnames, not just a locale prefix.** `AGENTS.md` §9.2 maps `/events` to
+`/ro/evenimente` and `/en/events`. That needs next-intl's `pathnames`, where the folder under
+`src/app/[locale]/` is the internal route and each locale gets its own external path. Building
+these URLs by hand is what produces an `hreflang` pointing at a page that does not exist, so
+the navigation helpers are the only sanctioned way to construct one.
+
+**A specification that no field could satisfy.** BR-REQ-041-01 criterion 2 and BR-REQ-070-03
+criterion 2 both require an event page to show *cost* as text. `AGENTS.md` §12.3 and §12.4
+defined no column for it — the requirement had been written and accepted with nothing to store
+the value. `event_translations.cost_text` closes that: free text, per locale, because "Gratuit"
+and "Free" are wording rather than a number, and nullable because null must mean "the club has
+not said" rather than "free". Assuming free on the club's behalf would be exactly the invention
+`AGENTS.md` §1.2 forbids, and it would be wrong the first time a race charges an entry fee.
+
+**Structured data that stops short of the requirement, on purpose.** BR-REQ-052-02 criterion 1
+asks for the club's logo and `sameAs` entries for its official profiles. Neither exists —
+BUSINESS.md §9 still lists the club's public identity as an owner decision. A plausible-looking
+Facebook URL would actively misinform search engines, so the block ships without them and the
+requirement is recorded as not yet met. Criterion 3, `remainingAttendeeCapacity`, is absent for
+the same reason it must be: it has to equal the free-place count shown on the page, the pilot
+has no capped events, and the database refuses a capacity at all.
+
+**The hostname rule gained its first exception.** `docs:check` flagged `https://schema.org` in
+the JSON-LD as a leaked hostname. It is not one: a vocabulary namespace is an identifier fixed
+by a published standard, identical in every environment, and deriving it from `APP_BASE_URL`
+would emit a context no consumer understands. The check now allows exactly two such namespaces
+and still rejects everything else — verified with a negative test that a provider URL is caught.
+`AGENTS.md` §8 states the exception and its limit: never a provider, a CDN, or anything the
+club could plausibly host.
+
+**Rendering strategy.** The event pages and the sitemap read the database, so they render per
+request rather than at build. Two reasons, and the second is the load-bearing one: organizers
+publish and cancel events between deploys, so a build-time snapshot would show a cancelled run
+as scheduled; and keeping the database out of the build is what lets CI build without one. The
+connection is now established on first use rather than at module import, which is what made
+that possible — an eager pool failed `yarn build` on any machine without a database.
+
+**Local PostgreSQL.** `docker-compose.yml` per `SETUP.md` §9, pinned to a specific Postgres
+patch so every machine runs the same server. The test suite deliberately does not use it and
+still needs nothing installed.
+
+Two mistakes worth recording because both were already written down as traps. `component={Link}`
+in a Server Component fails with "Functions cannot be passed directly to Client Components" —
+`docs/DEVELOPMENT.md` warns about it, and it still cost a 500 on the list page until a
+`CardLink` client boundary was added. And `formatDistance` returned a string built with
+`toFixed`, which would have rendered "14.5 km" to Romanian readers, where the separator is a
+comma; distances now go through next-intl's number formatter, which is what BR-REQ-040-03 asks
+for. Neither was caught by types or by tests — both were caught by looking at the running page.
+
+Baseline bumped to `BR-V1.14-2026-09-03`.

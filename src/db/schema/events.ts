@@ -152,6 +152,13 @@ export const eventTranslations = pgTable(
     difficultyLabel: text("difficulty_label"),
     coverAltText: text("cover_alt_text"),
 
+    // Free text, per locale: "Gratuit" / "Free", or "50 lei". BR-REQ-041-01 criterion 2 and
+    // BR-REQ-070-03 criterion 2 both require cost to be readable as text on the event page,
+    // and it is localized wording rather than a number, so it belongs on the translation.
+    // Null means the club has not stated a cost; the page then says nothing about it rather
+    // than guessing that the event is free.
+    costText: text("cost_text"),
+
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
 

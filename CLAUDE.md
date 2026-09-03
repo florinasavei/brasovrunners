@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.13-2026-09-02`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.14-2026-09-03`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI. Nothing is
@@ -18,14 +18,17 @@ reason.
 ## Commands that exist right now
 
 ```text
-yarn setup        install the tracked git hooks — once per clone
+yarn setup        install the tracked git hooks and the `git gone` alias — once per clone
 yarn dev          Next.js dev server; needs .env.local (copy .env.example)
 yarn build        production build
 yarn start        production server, honours PORT
 yarn lint         ESLint
 yarn typecheck    tsc --noEmit
-yarn check        docs:check + typecheck + lint; CI and the pre-commit hook run this
+yarn test         unit and database tests; no database or Docker needed (PGlite)
+yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
+yarn check        docs:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
+yarn db:migrate   apply migrations · db:seed sample events · db:studio browse
 yarn release      versioned archive and share copies under dist/
 ```
 
@@ -71,6 +74,25 @@ Recorded once in `DECISIONS.md` §20 so it does not have to be re-argued.
 and blocks on an undefined `BR-REQ-*`, a leaked hostname, or a root file missing from the
 README index — application source under `src/` is not indexed and needs no README row.
 
+## What exists right now
+
+Public Romanian event pages, running and tested. `/ro/evenimente` lists seeded events and
+`/ro/evenimente/<slug>` shows one, with `SportsEvent` JSON-LD, a sitemap and robots. English
+translations are Draft, so `/en/...` returns 404 — that is BR-REQ-040-02, not a gap.
+
+Also built: email canonicalization with the `participants` table behind it, and the pilot
+capacity guard (the database refuses any non-null `capacity`).
+
+**115 unit and integration tests, 16 end-to-end.** `yarn test` needs no database — PGlite runs
+real PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed.
+
+Not built, each deferred with a reason in `WEEKEND.md`: registration, email delivery, staff
+login, the CMS, capacity, waiting lists.
+
+**The one blocker:** nothing is deployed. That needs a Neon project (Frankfurt, region fixed at
+creation) and two Vercel projects (`qa` and `main`, region `fra1`). Everything else is waiting
+on the club's `.ro` domain and their approved privacy notice and declaration.
+
 ## Stack and providers, as decided
 
 | Layer | Decision | Status |
@@ -78,11 +100,12 @@ README index — application source under `src/` is not indexed and needs no REA
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; `en` stays Draft |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL | schema + seed done; needs `DATABASE_URL` |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | events, event_translations, participants; `docker-compose.yml` locally |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | not deployed yet |
 | Auth | staff only. Documented: Auth.js + Zitadel. Direction: Auth.js alone, no external IdP | deferred |
-| Email | Documented: Mailgun. Direction: Resend, Ireland region. Needs the domain first | deferred |
-| Storage | Documented: R2. Direction: `public/` until a non-developer needs uploads | deferred |
+| Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours | pipeline buildable now; delivery to real people needs the domain |
+| Storage | Documented: R2 behind the four-method adapter in `AGENTS.md` §17. Direction: `public/` until a non-developer uploads | deferred |
+| Spam | Honeypot + timing + rate limiting first. Cloudflare Turnstile only if that fails — it is a processor the unapproved privacy notice must name | not built |
 
 **Before installing anything:** verify the current API against the library's documentation
 (Context7 or the official docs site). Next 16, MUI 9, next-intl 4 and Drizzle 0.45 are newer
