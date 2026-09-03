@@ -142,7 +142,7 @@ If paid races become necessary later, design a proper payment system separately,
 # 4. High-Level Architecture
 
 ```text
-                         <domain>
+                              <domain>
                                 |
                          Cloudflare DNS
                                 |
@@ -1037,7 +1037,13 @@ production
 
 # 34. AI Coding Strategy
 
-The project will be heavily vibe-coded.
+The project will make heavy use of AI-assisted coding.
+
+> **Superseded.** The current rules require line-by-line human review of AI-generated code on
+> trust-carrying paths, and rank correctness of capacity, queue order, declaration acceptance,
+> authorization, and participant privacy above every other goal. See `AGENTS.md` §1.5 and
+> `docs/PRACTICES.md` § Code priorities. The original wording of this line was reworded when
+> the repository was prepared for publication; `DECISIONS.md` §19 records why.
 
 Use:
 

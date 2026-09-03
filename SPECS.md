@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -21,7 +21,7 @@ BR-REQ-<business rule number>-<sequence>
 
 Each requirement states its source rule, the implementing section of `AGENTS.md`, a priority, a release, numbered acceptance criteria, and how it is verified. Acceptance criteria are written so a person who has not read the code can execute them.
 
-A change to any requirement follows the change-type matrix in `AGENTS.md` §1.4. `npm run docs:check` enforces that every `BR-BUS-*` referenced here exists in `BUSINESS.md`, that every `BR-REQ-*` referenced anywhere in the repository exists here, and that every business rule is covered by at least one requirement.
+A change to any requirement follows the change-type matrix in `AGENTS.md` §1.4. `yarn docs:check` enforces that every `BR-BUS-*` referenced here exists in `BUSINESS.md`, that every `BR-REQ-*` referenced anywhere in the repository exists here, and that every business rule is covered by at least one requirement.
 
 ## 2. Priority definitions
 
@@ -979,7 +979,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 #### BR-REQ-090-02 — Release flow
 
 - **Source:** BR-BUS-090
-- **Implements:** AGENTS.md §6
+- **Implements:** AGENTS.md §6, §21
 - **Priority:** MUST
 - **Release:** M1
 
@@ -990,8 +990,10 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a release, when `qa` is promoted, then it is a reviewed pull request into `main` merged with a merge commit.
 4. Given a hotfix from `main`, when it is deployed, then it is merged back into `qa` before the next release.
 5. Given any pull request, when CI runs, then `docs:check` is part of the required checks.
+6. Given a clone on which `yarn setup` has been run, when a commit is made and `yarn check` fails, then the commit is blocked and the failure is reported.
+7. Given the CI workflow and the pre-commit hook, when both are inspected, then they invoke the same `yarn check` command, so a change cannot pass locally and fail in CI.
 
-**Verification:** repository settings audit; CI configuration
+**Verification:** repository settings audit; CI configuration; `.githooks/pre-commit` and `.github/workflows/docs-check.yml` compared
 
 #### BR-REQ-101-01 — Hosting portability
 
@@ -1002,7 +1004,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 
 **Acceptance criteria**
 
-1. Given a clean checkout, when `npm ci && npm run build && npm start` runs, then the application starts and honours `process.env.PORT`.
+1. Given a clean checkout, when `yarn install --immutable && yarn build && yarn start` runs, then the application starts and honours `process.env.PORT`.
 2. Given the source tree, when it is inspected, then no provider-specific business API and no Vercel-only runtime API is used.
 3. Given the running application, when it writes, then no durable business data is written to the local filesystem.
 4. Given QA and production, when their configuration is compared, then they share no database, bucket, authentication instance, or secret.

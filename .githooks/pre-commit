@@ -1,0 +1,16 @@
+#!/bin/sh
+# Brasov Runners pre-commit hook.
+#
+# Runs `yarn check`, the same command .github/workflows/docs-check.yml runs, so a
+# commit cannot pass locally and fail in CI. As `check` grows to cover format, lint,
+# typecheck, and tests (SETUP.md section 8), this hook grows with it and needs no edit.
+#
+# Installed by `yarn setup`, which sets core.hooksPath to .githooks.
+# Emergency bypass: git commit --no-verify. Fix before pushing; CI still blocks the merge.
+
+if ! yarn check; then
+	echo ""
+	echo "pre-commit: 'yarn check' failed, so the commit was blocked."
+	echo "Fix the problems above, or bypass with --no-verify and fix before pushing."
+	exit 1
+fi

@@ -1,0 +1,13 @@
+{
+  "Site": {
+    "name": "Brașov Runners"
+  },
+  "Home": {
+    "title": "Brașov Runners",
+    "intro": "Alergăm împreună în Brașov. Evenimentele clubului apar aici în curând."
+  },
+  "NotFound": {
+    "title": "Pagina nu există",
+    "back": "Înapoi la prima pagină"
+  }
+}

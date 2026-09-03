@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -758,9 +758,9 @@ The club must approve:
 
 Brașov Runners should own the domain, hosting, repository, database, staff authentication, email service, and media storage accounts. A freelancer may be granted access but must not become the only person capable of recovering the platform.
 
-The preferred V1 application host is GoDaddy Node.js Hosting, with one QA application and one production application. This is an operational choice, not a product dependency: changing hosting later must not change registration, waiting-list, declaration, CMS, profile, or participant behavior.
+The V1 application host is Vercel, with one QA project and one production project. This is an operational choice, not a product dependency: changing hosting later must not change registration, waiting-list, declaration, CMS, profile, or participant behavior.
 
-The public domain and normal DNS may remain at GoDaddy. Cloudflare is used for R2 media storage and does not need to control the main site's DNS unless a later feature requires it.
+The public domain and normal DNS stay with the club's registrar, which may change. Cloudflare is used for R2 media storage and does not need to control the main site's DNS unless a later feature requires it.
 
 The source repository starts under the maintainer's personal GitHub account and is
 transferred to a club-owned organization before handover, so that the club, not an

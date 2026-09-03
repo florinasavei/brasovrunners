@@ -6,7 +6,7 @@ Requirements:
 
 ## Checks
 
-- [ ] `npm run check` passes locally (includes `docs:check`).
+- [ ] `yarn check` passes locally (includes `docs:check`).
 - [ ] Tests cover the acceptance criteria of every requirement listed above.
 - [ ] No hostname literal, secret, or participant data added to the repository.
 

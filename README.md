@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.11-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.11-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -15,9 +15,9 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | --- | --- |
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
-| Code | Not started. This repository currently contains documentation only. |
+| Code | Scaffold running: Next.js App Router, Material UI, `next-intl` with `ro`/`en`. No database or registration yet. |
 | Priority | M1: event pages and registration, defined in [`DECISIONS.md`](./DECISIONS.md) §12 |
-| Next step | [`SETUP.md`](./SETUP.md) §29 PR 1, the repository foundation |
+| Now | **Weekend pilot:** Romanian event pages on Vercel from Neon, no registration — [`WEEKEND.md`](./WEEKEND.md). `SETUP.md` §29 remains the M1 plan |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -43,7 +43,7 @@ BR-V<major>.<minor>-<YYYY-MM-DD>
 - **Filenames inside the repository stay stable.** `README.md` must be called `README.md` for
   GitHub to render it, and every link, `CODEOWNERS` line, and check keys on the current names.
   Renaming files per version would break all of them on every bump.
-- **Filenames outside the repository are versioned.** `npm run release` builds
+- **Filenames outside the repository are versioned.** `yarn release` builds
   `dist/brasovrunners-<baseline>/`, the archive `dist/brasovrunners-<baseline>.zip`, and
   `dist/share/<NAME>-<baseline>.md` standalone copies of every document for sending to people
   who do not use git. It refuses to run when `docs:check` fails. An archive or a shared copy
@@ -76,28 +76,44 @@ lasting decision updates every affected one and bumps that marker in the same pu
 
 | Path | Purpose |
 | --- | --- |
+| [`CLAUDE.md`](./CLAUDE.md) | Entry point for AI coding agents: current mode, live commands, the rules that cannot be broken, the pilot fast lane |
+| [`WEEKEND.md`](./WEEKEND.md) | The pilot scope: what one weekend builds, in order, and what it defers and why |
 | [`LICENSE`](./LICENSE) | MIT, copyright Brașov Runners; the club owns the platform per BR-BUS-101 |
 | [`MANIFEST.txt`](./MANIFEST.txt) | One-page handoff summary of the baseline and the headline decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
-| [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `npm run check` and CI |
-| [`scripts/release.mjs`](./scripts/release.mjs) | `npm run release`: versioned folder, archive, and standalone versioned copies under `dist/` |
+| [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
+| [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
+| [`scripts/dev.mjs`](./scripts/dev.mjs) | `yarn dev`: starts on port 47821, or the next free one, and keeps `APP_BASE_URL` matching |
+| [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit |
+| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
+| [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
-| [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and GoDaddy hosting. |
+| [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review ownership of the root documents |
-| [`package.json`](./package.json) | Minimal, `docs:check` only; the application arrives in PR 1 |
+| [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
+| [`package.json`](./package.json) | Scripts and exact-pinned dependencies; `yarn check` is the aggregate gate |
+| [`drizzle.config.ts`](./drizzle.config.ts) | Drizzle Kit config: schema path, migration output, `DATABASE_URL` |
+| [`vitest.config.mts`](./vitest.config.mts) | Vitest config; `.mts` because Vite loads a `.ts` config as CommonJS |
+| [`next.config.ts`](./next.config.ts) | Next.js configuration, wrapped by the next-intl plugin; nothing host-specific |
+| [`tsconfig.json`](./tsconfig.json) | TypeScript, strict, as generated by create-next-app |
+| [`eslint.config.mjs`](./eslint.config.mjs) | ESLint flat config from `eslint-config-next`; `yarn lint` |
+| [`.nvmrc`](./.nvmrc) | Node version, `22.14.0`, matching `engines.node`; CI reads it via `node-version-file` |
+| [`.yarnrc.yml`](./.yarnrc.yml) | Yarn 4 settings: node-modules linker, exact version pins, supply-chain gates |
+| [`.env.example`](./.env.example) | Environment variable names and safe local examples, never real values (`AGENTS.md` §8) |
+| [`yarn.lock`](./yarn.lock) | Lockfile, so `yarn install --immutable` works from a clean clone; currently no dependencies |
 | [`.gitignore`](./.gitignore), [`.editorconfig`](./.editorconfig), [`.gitattributes`](./.gitattributes) | Repository hygiene: ignored paths, editor defaults, line endings |
 
 **This index is complete by rule.** Every file under the repository root, `docs/`,
-`scripts/`, and `.github/` must be linked from this README. `docs:check` fails when one is
-not, so a file added without a row here cannot merge. Application source under `src/` is
-described by the structure section below rather than linked file by file.
-| [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
+`scripts/`, `.github/`, and `.githooks/` must be linked from this README. `docs:check` fails
+when one is not, so a file added without a row here cannot merge. Application source under
+`src/` is described by the structure section below rather than linked file by file.
 
 ## If you are an AI agent
 
-Read this section fully before making any change.
+Start with [`CLAUDE.md`](./CLAUDE.md), then [`WEEKEND.md`](./WEEKEND.md) while the pilot is
+the current mode. Then read this section fully before making any change.
 
 **Order of authority.** When two sources disagree, the higher one wins:
 
@@ -139,7 +155,7 @@ not about who writes code: see [`AGENTS.md`](./AGENTS.md) §22 and [`DECISIONS.m
 short-lived branch under a human developer's credentials, whose output goes through normal
 pull-request review, is expected and unrestricted by that section.
 
-**Definition of done for any change:** `npm run check` passes, including `docs:check`; tests
+**Definition of done for any change:** `yarn check` passes, including `docs:check`; tests
 cover the acceptance criteria of every requirement you listed; the documentation rows in the
 change-type matrix are complete; and the pull-request template checklist is filled in.
 
@@ -312,8 +328,8 @@ automation, Strava/Garmin sync, gamification, newsletters, page builders, a sepa
 | Participant access | Verified email action links; no participant login account |
 | Email | Mailgun behind an application adapter and transactional outbox |
 | Storage | Cloudflare R2 behind an application adapter |
-| Hosting | GoDaddy Node.js Hosting; separate QA and production applications |
-| Domain / DNS | GoDaddy initially; the custom domain is bound at the end of M1 (see [`SETUP.md`](./SETUP.md) §26) |
+| Hosting | Vercel Hobby, function region `fra1`; one project per environment, deploying `qa` and `main`. Portable by rule: no Vercel-only runtime API |
+| Domain / DNS | A ROTLD-accredited registrar for the `.ro`, transferable later; the custom domain is bound at the end of M1 (see [`SETUP.md`](./SETUP.md) §26) |
 | Source control | GitHub |
 | Testing | Vitest, disposable PostgreSQL integration tests, and Playwright |
 
@@ -351,9 +367,9 @@ Rules:
 
 ### Hosting rule
 
-GoDaddy Node.js Hosting is the preferred V1 application host. Keep the application portable: it must build with `npm run build`, start with `npm start`, use the runtime `PORT`, and avoid GoDaddy-specific business logic.
+Vercel is the V1 application host, one project per environment. Keep the application portable: it must build with `yarn build`, start with `yarn start`, use the runtime `PORT`, and use no Vercel-only runtime API. Vercel itself never runs `yarn start` — it builds serverless functions — so CI must exercise that contract, or a portability regression stays invisible until a host change (BR-REQ-101-01).
 
-Use two persistent GoDaddy applications:
+Use two Vercel projects from the same repository:
 
 ```text
 brasov-runners-qa          <- qa branch   <- QA host
@@ -370,7 +386,7 @@ email action links, canonical tags, `hreflang` alternates, `sitemap.xml`, `robot
 Open Graph URLs, authentication callbacks, and the Mailgun webhook URL. No hostname
 literal may appear in `src/`.
 
-The domain and normal DNS may stay at GoDaddy. Cloudflare remains the object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
+The domain and normal DNS stay with whichever registrar holds the `.ro`; that may change over time and the application does not care. Cloudflare remains the documented object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
 
 Time-driven work such as email-outbox retries and waitlist/hold expiry must be idempotent and restart-safe. No capacity or queue decision may depend on the maintenance job having run: every read and every capacity-changing transaction evaluates hold expiry against the current time. The scheduler is a delivery and liveness mechanism only, it invokes protected internal job endpoints, and it is infrastructure rather than domain logic.
 
@@ -446,38 +462,45 @@ Enforce this with GitHub App/workflow permissions, branch protection, and deploy
 After the foundation pull request, a new developer should be able to run:
 
 ```bash
-npm ci
+yarn install --immutable
+yarn setup
 cp .env.example .env.local
 docker compose up -d db
-npm run db:migrate
-npm run db:seed
-npm run dev
+yarn db:migrate
+yarn db:seed
+yarn dev
 ```
+
+`yarn setup` is the one step that is already live today: it points git at
+[`.githooks`](./.githooks/pre-commit), so `yarn check` runs before every commit and a
+change cannot pass locally but fail in CI. Run it once per clone. The step-by-step
+contributor walkthrough is [`SETUP.md`](./SETUP.md) § Contributing.
 
 The repository should expose stable commands:
 
 ```text
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run format
-npm run format:check
-npm run typecheck
-npm run test
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-npm run check
-npm run docs:check
-npm run db:generate
-npm run db:migrate
-npm run db:seed
-npm run db:reset:local
-npm run deploy:build
+yarn setup
+yarn dev
+yarn build
+yarn start
+yarn lint
+yarn format
+yarn format:check
+yarn typecheck
+yarn test
+yarn test:unit
+yarn test:integration
+yarn test:e2e
+yarn check
+yarn docs:check
+yarn db:generate
+yarn db:migrate
+yarn db:seed
+yarn db:reset:local
+yarn deploy:build
 ```
 
-Exact versions belong in `package.json`, `package-lock.json`, and the pinned Node version. Contributors must inspect those files rather than assume versions from this document.
+Exact versions belong in `package.json`, `yarn.lock`, and the pinned Node version. Contributors must inspect those files rather than assume versions from this document.
 
 ## Suggested repository structure
 
@@ -493,6 +516,10 @@ MANIFEST.txt
 scripts/
   docs-check.mjs        documentation synchronization check
   release.mjs           versioned release build into dist/
+  setup.mjs             yarn setup: installs the tracked git hooks
+
+.githooks/
+  pre-commit            runs yarn check and blocks a failing commit
 
 src/
   app/
@@ -556,14 +583,15 @@ Create folders only when they contain real code.
 single-file edit: it is the complete set of edits across every affected document, in one
 pull request, with the baseline marker bumped in the same commit.
 
-[`scripts/docs-check.mjs`](./scripts/docs-check.mjs) implements `npm run docs:check`, which verifies:
+[`scripts/docs-check.mjs`](./scripts/docs-check.mjs) implements `yarn docs:check`, which verifies:
 
 - all six baseline markers are identical;
 - relative document links resolve;
 - business-rule IDs referenced by `SPECS.md` exist in `BUSINESS.md`;
 - required root documents exist, including `DECISIONS.md`;
 - every requirement ID referenced anywhere in the repository exists in `SPECS.md`;
-- every file under the root, `docs/`, `scripts/`, and `.github/` is linked from this README.
+- every file under the root, `docs/`, `scripts/`, `.github/`, and `.githooks/` is linked from this README;
+- no hostname literal appears under `src/`, and the club's own hostname appears nowhere outside [`SETUP.md`](./SETUP.md) §26.
 
 ## Implementation order
 
