@@ -34,8 +34,19 @@ yarn setup                    # points git at .githooks; once per clone
 cp .env.example .env.local
 ```
 
-`yarn setup` installs the pre-commit hook that runs `yarn check`. It is not optional: it is the
-only thing standing between you and a red pull request from a green working copy.
+`yarn setup` configures this clone's git and is not optional. It installs the pre-commit hook
+that runs `yarn check` — the only thing standing between you and a red pull request from a
+green working copy — and adds a `git gone` alias:
+
+```bash
+git gone     # delete local branches whose remote branch was deleted after merge
+```
+
+It uses `git branch -D` deliberately. This repository squash-merges into `qa`, so the squashed
+commit differs from the branch's own and plain `-d` refuses every time. The safety is the
+`[gone]` filter: a branch only reaches that state once its remote copy is deleted, which
+happens on merge. A branch you never pushed has no upstream, is never `[gone]`, and is never
+touched. Both settings are repository-local; your global git config is untouched.
 
 Then fill in `.env.local`:
 
