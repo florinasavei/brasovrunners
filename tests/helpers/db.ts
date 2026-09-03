@@ -2,8 +2,9 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { eventTranslations, events } from "@/db/schema/events";
+import { participants } from "@/db/schema/participants";
 
-const schema = { events, eventTranslations };
+const schema = { events, eventTranslations, participants };
 export type TestDatabase = PgliteDatabase<typeof schema>;
 
 /**
@@ -46,4 +47,5 @@ export async function createTestDatabase(): Promise<{
 export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(eventTranslations);
   await db.delete(events);
+  await db.delete(participants);
 }

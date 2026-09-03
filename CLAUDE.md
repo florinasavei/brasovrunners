@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.13-2026-09-02`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.14-2026-09-03`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI. Nothing is
@@ -24,8 +24,11 @@ yarn build        production build
 yarn start        production server, honours PORT
 yarn lint         ESLint
 yarn typecheck    tsc --noEmit
-yarn check        docs:check + typecheck + lint; CI and the pre-commit hook run this
+yarn test         unit and database tests; no database or Docker needed (PGlite)
+yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
+yarn check        docs:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
+yarn db:migrate   apply migrations · db:seed sample events · db:studio browse
 yarn release      versioned archive and share copies under dist/
 ```
 

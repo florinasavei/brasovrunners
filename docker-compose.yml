@@ -1,0 +1,36 @@
+# Local PostgreSQL for development (SETUP.md §9).
+#
+# Development only. The credentials below are deliberately trivial and must never be reused
+# for QA or production, which run on Neon with their own secrets (AGENTS.md §7.4).
+#
+#   docker compose up -d db
+#   yarn db:migrate && yarn db:seed
+#
+# The test suite does NOT use this: it runs PGlite in process and needs nothing running.
+
+services:
+  db:
+    # Pinned to a major and a specific patch so every machine gets the same server.
+    image: postgres:17.6-alpine
+    container_name: brasovrunners-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: brasov_runners
+      POSTGRES_USER: brasov_runners
+      POSTGRES_PASSWORD: local_only_not_a_secret
+      # Deterministic collation, so ordering matches regardless of the host locale.
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - brasovrunners_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # `yarn db:migrate` immediately after `up -d` otherwise races the server's first start.
+      test: ["CMD-SHELL", "pg_isready -U brasov_runners -d brasov_runners"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  brasovrunners_pgdata:

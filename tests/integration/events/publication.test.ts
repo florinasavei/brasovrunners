@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
-import { findPublishedEventBySlug, listPublishedEvents } from "@/modules/events/repository";
+import {
+  findPublishedEventBySlug,
+  findPublishedTranslations,
+  listPublishedEvents,
+} from "@/modules/events/repository";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -156,5 +160,75 @@ describe("BR-REQ-040-02 slug and translation uniqueness", () => {
       db.insert(eventTranslations).values(translation(a.id, "ro", "doi")),
       { code: SQLSTATE.UNIQUE_VIOLATION, constraint: "event_translations_event_locale_unique" },
     );
+  });
+});
+
+/**
+ * BR-REQ-040-01 criterion 5 — an alternate-locale link points at the corresponding localized
+ * slug, not at a concatenated URL.
+ *
+ * This is the failure the criterion is written to prevent: the Romanian slug is
+ * "alergare-de-duminica" and the English one "sunday-run", so building /en/ + the Romanian
+ * slug produces a page that does not exist. The lookup below is what makes that impossible.
+ */
+describe("BR-REQ-040-01 criterion 5 alternate locales", () => {
+  let db: TestDatabase;
+  let close: () => Promise<void>;
+
+  beforeAll(async () => {
+    ({ db, close } = await createTestDatabase());
+  });
+  afterAll(async () => close());
+  beforeEach(async () => resetTables(db));
+
+  async function seed(enStatus: "DRAFT" | "PUBLISHED") {
+    const [event] = await db
+      .insert(events)
+      .values({ kind: "COMMUNITY_RUN", startsAt: new Date("2026-10-04T07:00:00Z") })
+      .returning();
+    await db.insert(eventTranslations).values([
+      {
+        eventId: event.id,
+        locale: "ro",
+        slug: "alergare-de-duminica",
+        title: "Alergare de duminică",
+        locationName: "Parcul Tractorul",
+        editorialStatus: "PUBLISHED",
+      },
+      {
+        eventId: event.id,
+        locale: "en",
+        slug: "sunday-run",
+        title: "Sunday run",
+        locationName: "Tractorul Park",
+        editorialStatus: enStatus,
+      },
+    ]);
+    return event;
+  }
+
+  it("returns each published locale with its own distinct slug", async () => {
+    const event = await seed("PUBLISHED");
+    const translations = await findPublishedTranslations(db, event.id);
+
+    const byLocale = Object.fromEntries(translations.map((t) => [t.locale, t.slug]));
+    expect(byLocale).toEqual({ ro: "alergare-de-duminica", en: "sunday-run" });
+    // The slugs must differ, or this test would pass even with concatenation.
+    expect(byLocale.ro).not.toBe(byLocale.en);
+  });
+
+  it("omits a locale whose translation is still a draft", async () => {
+    const event = await seed("DRAFT");
+    const translations = await findPublishedTranslations(db, event.id);
+
+    expect(translations.map((t) => t.locale)).toEqual(["ro"]);
+  });
+
+  it("returns nothing for an event that has no published translation at all", async () => {
+    const [event] = await db
+      .insert(events)
+      .values({ kind: "MEETUP", startsAt: new Date("2026-10-04T07:00:00Z") })
+      .returning();
+    expect(await findPublishedTranslations(db, event.id)).toEqual([]);
   });
 });

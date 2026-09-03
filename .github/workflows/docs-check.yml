@@ -2,7 +2,7 @@ name: docs-check
 
 # Runs the same command the pre-commit hook runs, so local and CI cannot diverge.
 # Read-only by design; see AGENTS.md §22 and SETUP.md §5.
-# Pin both actions to an immutable commit SHA per SETUP.md §5 before launch.
+# Pin every action to an immutable commit SHA per SETUP.md §5 before launch.
 
 on:
   pull_request:
@@ -33,6 +33,7 @@ jobs:
 
       # Must stay `yarn check`: .githooks/pre-commit runs the same command, so the two
       # cannot diverge as `check` grows past docs:check (SETUP.md §8).
+      # It needs no database: the tests run PostgreSQL in process via PGlite.
       - run: yarn check
 
       # Vercel builds serverless functions and never runs `yarn start`, so the portability
@@ -48,3 +49,46 @@ jobs:
             sleep 1
           done
           echo "did not serve on PORT within 30s"; exit 1
+
+  # Separate job because it needs a real PostgreSQL and a browser, which `docs-check` must
+  # not require — that one gates every commit and has to run on a bare machine.
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_DB: brasov_runners
+          POSTGRES_USER: brasov_runners
+          POSTGRES_PASSWORD: local_only_not_a_secret
+        ports:
+          - 5432:5432
+        # Without this the first migration races the server's startup.
+        options: >-
+          --health-cmd "pg_isready -U brasov_runners -d brasov_runners"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgres://brasov_runners:local_only_not_a_secret@localhost:5432/brasov_runners
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+
+      # Only Chromium, and only its dependencies: the full install pulls three browsers.
+      - run: yarn playwright install --with-deps chromium
+
+      - run: yarn db:migrate
+      - run: yarn db:seed
+      - run: yarn test:e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
