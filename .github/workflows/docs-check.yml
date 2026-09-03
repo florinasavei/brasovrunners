@@ -1,10 +1,8 @@
 name: docs-check
 
-# Verifies the six root documents stay in sync (scripts/docs-check.mjs).
+# Runs the same command the pre-commit hook runs, so local and CI cannot diverge.
 # Read-only by design; see AGENTS.md §22 and SETUP.md §5.
-# Once a Node version is verified against Vercel's supported runtimes, replace
-# `lts/*` with `node-version-file: .nvmrc`, and pin both actions to an
-# immutable commit SHA per SETUP.md §5.
+# Pin both actions to an immutable commit SHA per SETUP.md §5 before launch.
 
 on:
   pull_request:
@@ -15,13 +13,38 @@ permissions:
   contents: read
 
 jobs:
+  # The job name is the required status check in branch protection. Do not rename it.
   docs-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Corepack must be enabled before setup-node, or the yarn cache probe has no yarn.
+      - run: corepack enable
+
       - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
-      # Must stay `npm run check`: .githooks/pre-commit runs the same command, so local
-      # and CI cannot diverge as `check` grows past docs:check (SETUP.md section 8).
-      - run: npm run check
+          node-version-file: .nvmrc
+          cache: yarn
+
+      # --immutable fails if yarn.lock would change, so CI can never silently resolve
+      # a different dependency tree than the one committed.
+      - run: yarn install --immutable
+
+      # Must stay `yarn check`: .githooks/pre-commit runs the same command, so the two
+      # cannot diverge as `check` grows past docs:check (SETUP.md §8).
+      - run: yarn check
+
+      # Vercel builds serverless functions and never runs `yarn start`, so the portability
+      # contract in BR-REQ-101-01 is exercised here or nowhere.
+      - run: yarn build
+      - name: Verify the app serves on PORT
+        run: |
+          PORT=3999 yarn start &
+          for i in $(seq 1 30); do
+            if curl -sf -o /dev/null http://localhost:3999/ro; then
+              echo "serves on PORT"; exit 0
+            fi
+            sleep 1
+          done
+          echo "did not serve on PORT within 30s"; exit 1

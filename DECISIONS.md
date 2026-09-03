@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1005,3 +1005,110 @@ its own.
 
 Baseline stays `BR-V1.12-2026-09-02`: this change set belongs to the same, still unmerged pull
 request as §19, and one pull request carries one baseline.
+
+## 21. Done — the scaffold runs (2026-09-02)
+
+`WEEKEND.md` step 1, built on `feature/pilot-event-pages`. Nothing here overrides a rule; it
+records what was verified rather than assumed, because four of these libraries are newer than
+any model's training data and three of the four differ from what a model would have written.
+
+Versions were read from the npm registry and every integration from the library's own current
+documentation before installing: Next 16.3.4, React 19.2.8, MUI 9.4.0, next-intl 4.14.2,
+Zod 4.5.4, all pinned exactly.
+
+Four things that would have been wrong from memory:
+
+- **`middleware.ts` is `proxy.ts` in Next 16.** The named export is `proxy`, and the runtime is
+  Node.js only — the edge runtime is not supported there. `src/proxy.ts` holds the next-intl
+  middleware.
+- **The MUI App Router provider is version-suffixed.** `@mui/material-nextjs` ships
+  `v13-appRouter` through `v16-appRouter` side by side; the installed package must be imported
+  at the subpath matching the Next major, so `v16-appRouter`. Guessing the wrong one compiles
+  and then misbehaves.
+- **`component={Link}` cannot be written in a Server Component.** Passing a component across
+  the boundary fails at prerender with "Functions cannot be passed directly to Client
+  Components". The build caught it. `src/components/ButtonLink.tsx` is a client component that
+  keeps both halves on the same side; that is the reason it exists.
+- **`create-next-app` defaults to Tailwind**, which `AGENTS.md` §3.2 forbids. `--no-tailwind`
+  is required, and the generated `globals.css` was deleted because `CssBaseline` owns the reset.
+
+Behaviour verified against a running production server rather than inferred from the build:
+`npm start` honours `PORT`; `/` redirects to `/ro`; `/ro` and `/en` prerender; `/en` serves
+English rather than falling back to Romanian; `/de` redirects to a path that 404s rather than
+serving Romanian content, which is BR-REQ-040-02; and Romanian diacritics render, which is why
+the Roboto subset list includes `latin-ext`.
+
+`npm run check` grew from `docs:check` alone to `docs:check && typecheck && lint`. That is the
+aggregate gate `SETUP.md` §8 describes, and because the pre-commit hook and CI both invoke that
+one command, both grew with it and neither needed editing.
+
+One check was too strict and is now correct: `docs:check` required a README index row for every
+file on disk, which failed the moment a build produced `tsconfig.tsbuildinfo`. It now excludes
+files git ignores, since those are never published. Application source under `src/` was already
+outside the index rule.
+
+The palette in `src/theme/theme.ts` is a placeholder. Final branding is an owner decision
+(`AGENTS.md` §29); it is deliberately not the MUI default blue so nobody mistakes it for one.
+
+Baseline bumped to `BR-V1.13-2026-09-02`.
+
+## 22. Decided — Yarn 4, a pinned Node, and a test database that needs nothing (2026-09-03)
+
+Three toolchain decisions, taken together because they interact.
+
+**Yarn 4.18.0 replaces npm.** The owner's other project runs Yarn 4 with Corepack, a pinned
+Node, and exact dependency pins, and the same reasoning that put Material UI in this project
+applies to the package manager: one set of habits across both repositories. `.yarnrc.yml`
+carries `defaultSemverRangePrefix: ''`, so an added dependency is pinned exactly by default
+rather than by remembering a flag — which is what `AGENTS.md` §1.2 asks for and what a range
+quietly undermines on the next install. `nodeLinker: node-modules` keeps a real tree, since
+Plug'n'Play buys nothing here and costs tooling compatibility. This is a change to a documented
+rule (`AGENTS.md` §3.1 said npm), so it carries the full change set.
+
+Yarn earned its place within the hour. Its stricter peer-dependency resolution surfaced a
+conflict npm had silently hoisted past: `typescript-eslint`, pulled in by `eslint-config-next`,
+does not support TypeScript 7 and requests `>=4.8.4 <6.1.0`. The other project runs TypeScript
+7.0.2 successfully because it uses Vite and its own ESLint setup. Here, TypeScript 7 typechecks
+and builds but makes `yarn lint` fail outright — and lint is part of `check`, so a broken linter
+is not a trade worth making. TypeScript stays at **5.9.3**, which is a deliberate deviation from
+the other project rather than an oversight, and it should be revisited when typescript-eslint
+ships TS 7 support.
+
+**Node is pinned to 22.14.0**, matching that project and the machine this was built on.
+`.nvmrc` and `engines.node` agree, and CI reads `.nvmrc` instead of `lts/*`, so the runtime
+stops drifting under the build. `SETUP.md` §29's note about pinning to a verified host runtime
+is satisfied: Vercel supports Node 22.
+
+**The test database is PGlite, and that choice has a boundary that must not be crossed.**
+`AGENTS.md` §20.3 requires integration tests against real PostgreSQL. PGlite is real
+PostgreSQL compiled to WebAssembly running in the test process, so constraints, enums,
+transactions and MVCC behave as they do in production, and the same migrations apply. It was
+chosen over `pg-mem`, which emulates PostgreSQL in JavaScript and treats `SELECT ... FOR
+UPDATE` as a no-op — the exact failure mode that would let a capacity test pass while
+production overbooks. The result is a suite that needs no database, no Docker and no
+configuration, which for a weekend project is the difference between tests existing and not.
+
+The boundary: PGlite is single-connection and cannot express two transactions racing. Every
+concurrency requirement — BR-REQ-034-02's twenty simultaneous confirmations against one free
+place, BR-REQ-034-03, parallel waiting-list promotion — must run against a real PostgreSQL
+server. Writing those against PGlite yields a green suite and an overbooked event. When the
+capacity work starts, Docker or Testcontainers is added *alongside* this harness, not instead
+of it. This is recorded in `tests/helpers/db.ts` and `docs/DEVELOPMENT.md` as well, because a
+rule that lives only in a decision log is a rule someone will miss.
+
+**The capacity guard rail is now a database constraint**, not an intention.
+`events.capacity` exists with the full M1 column set but a `CHECK` refuses any non-null value,
+and tests assert that refusal at insert and at update. Deferring the capacity engine is only
+safe while the system is physically incapable of storing a capacity; removing that constraint
+is the last step of building the locked transaction, never the first.
+
+Two smaller things worth recording because they cost time. Drizzle wraps driver errors, so a
+test asserting `.rejects.toThrow(/constraint_name/)` passes for any failure at all, including a
+typo in the query — the constraint name is on `error.cause`. `tests/helpers/constraints.ts`
+checks the SQLSTATE code and the constraint name instead, and writing it exposed a test of mine
+that was asserting the wrong constraint entirely. And `tsconfig.json` excluded only
+`node_modules`, so `yarn typecheck` walked the `dist/` release output and failed on a stale
+pre-restructure copy of `src`; `dist` and `coverage` are excluded now, but `.next` deliberately
+is not, since `include` pulls Next's generated route types from there.
+
+Baseline bumped with the same change set; `WEEKEND.md` steps 1 to 3 are done.

@@ -8,6 +8,24 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.13-2026-09-02
+
+- Package manager is Yarn 4.18.0 via Corepack, replacing npm, matching the owner's other project. `.yarnrc.yml` pins dependencies exactly by default; `yarn.lock` replaces `package-lock.json`; every document, the pre-commit hook and CI now say `yarn`.
+- Node pinned to `22.14.0` in `.nvmrc` and `engines.node`. CI reads `.nvmrc` rather than `lts/*`, and now also runs `yarn build` and starts the server on `PORT`, because Vercel never exercises that contract (BR-REQ-101-01).
+- `events` and `event_translations` with the full M1 column set from `AGENTS.md` §12.3 and §12.4, Drizzle over `node-postgres`. A `CHECK` constraint refuses any non-null `capacity` for the whole pilot, so the capacity engine cannot be half-built (BR-REQ-034-01, BR-REQ-011-01).
+- Tests run with no database, no Docker and no setup: PGlite is real PostgreSQL in WebAssembly and applies the same migrations as Neon. 40 tests, named by requirement. Concurrency requirements are explicitly excluded from this harness, which is single-connection.
+- `yarn check` is now `docs:check + typecheck + lint + test`; the hook and CI both grew with it and neither needed editing.
+- Source restructured to `AGENTS.md` §5: `shared/config`, `shared/ui`, `modules/events`, `db/schema`, `db/seeds`, `tests/{unit,integration,helpers}`.
+- New `docs/DEVELOPMENT.md`: prerequisites, first run, every command, the PGlite limit, and the traps that have already cost time.
+- TypeScript stays at 5.9.3. 7.0.2 was tried and reverted: `eslint-config-next` pulls `typescript-eslint`, which refuses TS 7 outright.
+
+- First application code. Next.js 16 App Router scaffold with TypeScript strict and `src/`: Material UI 9 through the official `@mui/material-nextjs/v16-appRouter` cache provider, a placeholder non-default palette, Roboto with `latin-ext` for Romanian diacritics, and `next-intl` 4 with `ro` default, `en`, and `localePrefix: always`.
+- `npm run dev`, `build`, `start`, `lint` and `typecheck` now exist. `npm run check` is `docs:check` + `typecheck` + `lint`, and the pre-commit hook and CI both run it.
+- Verified on a production server: `npm start` honours `PORT`, `/` redirects to `/ro`, both locales prerender, `/en` serves English rather than a Romanian fallback, and an unknown locale 404s instead of falling back (BR-REQ-040-01, BR-REQ-040-02, BR-REQ-101-01).
+- Environment is Zod-validated in `src/env.ts`: `APP_ENV` is the environment identity, `APP_BASE_URL` drives `metadataBase`, so no hostname literal exists in `src/` (BR-REQ-101-02).
+- `docs:check` no longer demands a README index row for git-ignored files, so build output such as `*.tsbuildinfo` and a developer's `.env.local` cannot fail the check.
+- Why: `DECISIONS.md` §20; scope in `WEEKEND.md` step 1.
+
 ## BR-V1.12-2026-09-02
 
 - Local development workflow, the first slice of PR 1: `npm run setup` (`scripts/setup.mjs`) sets `core.hooksPath` to the tracked `.githooks`, whose `pre-commit` runs `npm run check` and blocks a failing commit. No dependency added; husky and lint-staged deliberately not installed.

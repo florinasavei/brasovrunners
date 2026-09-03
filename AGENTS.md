@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -95,7 +95,7 @@ The current value is the one in this file's first line. Bump it in all six docum
 the same commit. `scripts/docs-check.mjs` rejects a mismatch and rejects more than one
 marker per document.
 
-`npm run docs:check` must verify:
+`yarn docs:check` must verify:
 
 - identical baseline marker in all six files;
 - required files exist;
@@ -144,7 +144,7 @@ changes generation. Every bump is one pull request with the whole change set, a
 `CHANGELOG.md` entry whose heading equals the new marker, and an appended `DECISIONS.md`
 section. Tag `main` with `baseline/<baseline>` on merge. Application code is versioned by
 semver in `package.json` and tagged `v<semver>`; a code release records the baseline it
-implements. Filenames inside the repository stay stable; `npm run release` produces the versioned
+implements. Filenames inside the repository stay stable; `yarn release` produces the versioned
 folder, archive, and standalone copies. Every document carries a visible baseline line under
 its title. `README.md` § Versioning is the full policy.
 
@@ -277,7 +277,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 | --- | --- |
 | Framework | Next.js App Router |
 | Language | TypeScript, strict mode |
-| Package manager | npm with committed `package-lock.json` |
+| Package manager | Yarn 4 via Corepack, committed `yarn.lock`, exact version pins |
 | Rendering | Server Components by default |
 | UI | Material UI Core |
 | Styling | Emotion, MUI theme, `sx`, limited CSS Modules |
@@ -391,10 +391,10 @@ AGENTS.md
 SETUP.md
 DECISIONS.md
 package.json
-package-lock.json
+yarn.lock
 .env.example
 .gitignore
-.nvmrc or equivalent Node pin
+.nvmrc pinned to the host's verified Node version
 docker-compose.yml
 ```
 
@@ -403,25 +403,25 @@ docker-compose.yml
 The foundation must expose stable names:
 
 ```text
-npm run setup
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run format
-npm run format:check
-npm run typecheck
-npm run test
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-npm run check
-npm run docs:check
-npm run db:generate
-npm run db:migrate
-npm run db:seed
-npm run db:reset:local
-npm run deploy:build
+yarn setup
+yarn dev
+yarn build
+yarn start
+yarn lint
+yarn format
+yarn format:check
+yarn typecheck
+yarn test
+yarn test:unit
+yarn test:integration
+yarn test:e2e
+yarn check
+yarn docs:check
+yarn db:generate
+yarn db:migrate
+yarn db:seed
+yarn db:reset:local
+yarn deploy:build
 ```
 
 Do not claim a command exists until it is in `package.json` and tested.
@@ -429,16 +429,16 @@ Do not claim a command exists until it is in `package.json` and tested.
 ### 4.3 Local setup contract
 
 ```bash
-npm ci
-npm run setup
+yarn install --immutable
+yarn setup
 cp .env.example .env.local
 docker compose up -d db
-npm run db:migrate
-npm run db:seed
-npm run dev
+yarn db:migrate
+yarn db:seed
+yarn dev
 ```
 
-`npm run setup` installs the tracked git hooks (§6.3). Run it once per clone.
+`yarn setup` installs the tracked git hooks (§6.3). Run it once per clone.
 
 Local setup must not require production/QA credentials.
 
@@ -544,9 +544,9 @@ Use lowercase kebab-case. Delete after merge.
 
 `qa` must remain releasable. Do not use it as an unreviewed scratch branch.
 
-Step 4 is enforced locally, not left to memory. `npm run setup` sets `core.hooksPath` to the
-tracked `.githooks`, whose `pre-commit` runs `npm run check` and blocks a failing commit. CI
-runs the same `npm run check`, so the two cannot drift as `check` grows (BR-REQ-090-02).
+Step 4 is enforced locally, not left to memory. `yarn setup` sets `core.hooksPath` to the
+tracked `.githooks`, whose `pre-commit` runs `yarn check` and blocks a failing commit. CI
+runs the same `yarn check`, so the two cannot drift as `check` grows (BR-REQ-090-02).
 Hooks need no dependency: husky and lint-staged are deliberately not installed (§1.5
 priority 4 and 6). `--no-verify` exists for emergencies and does not bypass CI.
 
@@ -640,13 +640,13 @@ The custom domain is bound at the end of M1. `SETUP.md` §26 holds the only host
 table in the repository, and `docs/RUNBOOKS.md` § Domain binding is the binding procedure.
 Binding must be a configuration and DNS change only.
 
-Separate projects prevent environment-variable/deployment mixing. The host is an adapter, not part of the business/domain architecture. Vercel builds the app into serverless functions and never runs `npm start`, so the portability contract below is verified in CI, not by the host.
+Separate projects prevent environment-variable/deployment mixing. The host is an adapter, not part of the business/domain architecture. Vercel builds the app into serverless functions and never runs `yarn start`, so the portability contract below is verified in CI, not by the host.
 
 Hosting rules:
 
-- root `package.json` and `package-lock.json` are required;
-- `npm run build` must produce the production build;
-- `npm start` must start the application;
+- root `package.json` and `yarn.lock` are required;
+- `yarn build` must produce the production build;
+- `yarn start` must start the application;
 - runtime must honor `process.env.PORT`;
 - pin a Node.js version the host currently supports, verified against the host's documentation on the day; do not assume an unverified future version;
 - no Docker or infrastructure YAML is required for normal production startup;
@@ -739,7 +739,7 @@ Rules:
 - `APP_BASE_URL` is the single source of every absolute URL the application emits: email
   action links, canonical tags, `hreflang` alternates, `sitemap.xml`, `robots.txt`, Open
   Graph URLs, authentication callback URLs, and the Mailgun webhook URL;
-- no hostname literal may appear anywhere under `src/`; `npm run check` fails on one;
+- no hostname literal may appear anywhere under `src/`; `yarn check` fails on one;
 - cookies are host-only, with no `domain` attribute set, so a hostname change breaks nothing;
 - CSP, CORS, and redirect allowlists read from configuration, never from a literal;
 - `R2_PUBLIC_BASE_URL` is configuration; start on the R2 development subdomain;
@@ -2348,7 +2348,7 @@ Fail CI for key/interpolation mismatch, invalid JSON, unsupported locale, missin
 ## 21. Continuous integration
 
 Today `.github/workflows/docs-check.yml` runs on PRs/pushes to `qa`/`main`. It invokes
-`npm run check`, the same command `.githooks/pre-commit` runs. Keep it that way: CI and the
+`yarn check`, the same command `.githooks/pre-commit` runs. Keep it that way: CI and the
 hook must never name different commands, or a change can pass locally and fail in CI
 (BR-REQ-090-02). The workflow is renamed to `ci.yml` when the full pipeline below replaces
 it; until then its check name stays stable for branch protection.
@@ -2358,16 +2358,16 @@ Typical order once the application exists:
 ```text
 checkout
 setup pinned Node
-npm ci
-npm run format:check
-npm run lint
-npm run typecheck
-npm run docs:check
-npm run test:unit
+yarn install --immutable
+yarn format:check
+yarn lint
+yarn typecheck
+yarn docs:check
+yarn test:unit
 start disposable PostgreSQL
-npm run db:migrate
-npm run test:integration
-npm run build
+yarn db:migrate
+yarn test:integration
+yarn build
 ```
 
 Playwright may run in same/parallel job after build depending runtime.
@@ -2375,7 +2375,7 @@ Playwright may run in same/parallel job after build depending runtime.
 Rules:
 
 - lockfile install only;
-- every CI step a developer can run locally belongs inside `npm run check`, so the hook and CI stay one command;
+- every CI step a developer can run locally belongs inside `yarn check`, so the hook and CI stay one command;
 - least-privilege workflow token;
 - no production secrets on PR jobs;
 - no untrusted fork code with privileged secrets;

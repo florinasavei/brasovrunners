@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.12-2026-09-02 -->
+<!-- PROJECT_BASELINE: BR-V1.13-2026-09-02 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.12-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.13-2026-09-02`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -15,7 +15,7 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | --- | --- |
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
-| Code | Not started. This repository currently contains documentation only. |
+| Code | Scaffold running: Next.js App Router, Material UI, `next-intl` with `ro`/`en`. No database or registration yet. |
 | Priority | M1: event pages and registration, defined in [`DECISIONS.md`](./DECISIONS.md) §12 |
 | Now | **Weekend pilot:** Romanian event pages on Vercel from Neon, no registration — [`WEEKEND.md`](./WEEKEND.md). `SETUP.md` §29 remains the M1 plan |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
@@ -43,7 +43,7 @@ BR-V<major>.<minor>-<YYYY-MM-DD>
 - **Filenames inside the repository stay stable.** `README.md` must be called `README.md` for
   GitHub to render it, and every link, `CODEOWNERS` line, and check keys on the current names.
   Renaming files per version would break all of them on every bump.
-- **Filenames outside the repository are versioned.** `npm run release` builds
+- **Filenames outside the repository are versioned.** `yarn release` builds
   `dist/brasovrunners-<baseline>/`, the archive `dist/brasovrunners-<baseline>.zip`, and
   `dist/share/<NAME>-<baseline>.md` standalone copies of every document for sending to people
   who do not use git. It refuses to run when `docs:check` fails. An archive or a shared copy
@@ -81,18 +81,28 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`LICENSE`](./LICENSE) | MIT, copyright Brașov Runners; the club owns the platform per BR-BUS-101 |
 | [`MANIFEST.txt`](./MANIFEST.txt) | One-page handoff summary of the baseline and the headline decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
-| [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `npm run check` and CI |
-| [`scripts/release.mjs`](./scripts/release.mjs) | `npm run release`: versioned folder, archive, and standalone versioned copies under `dist/` |
-| [`scripts/setup.mjs`](./scripts/setup.mjs) | `npm run setup`: points git at `.githooks` so `npm run check` runs before every commit |
-| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `npm run check` and blocks the commit on failure; the same command CI runs |
+| [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
+| [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
+| [`scripts/dev.mjs`](./scripts/dev.mjs) | `yarn dev`: starts on port 47821, or the next free one, and keeps `APP_BASE_URL` matching |
+| [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit |
+| [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
+| [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review ownership of the root documents |
 | [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
-| [`package.json`](./package.json) | `setup`, `check`, `docs:check`, and `release`; the application scripts arrive in PR 1 |
-| [`package-lock.json`](./package-lock.json) | Lockfile, so `npm ci` works from a clean clone; currently no dependencies |
+| [`package.json`](./package.json) | Scripts and exact-pinned dependencies; `yarn check` is the aggregate gate |
+| [`drizzle.config.ts`](./drizzle.config.ts) | Drizzle Kit config: schema path, migration output, `DATABASE_URL` |
+| [`vitest.config.mts`](./vitest.config.mts) | Vitest config; `.mts` because Vite loads a `.ts` config as CommonJS |
+| [`next.config.ts`](./next.config.ts) | Next.js configuration, wrapped by the next-intl plugin; nothing host-specific |
+| [`tsconfig.json`](./tsconfig.json) | TypeScript, strict, as generated by create-next-app |
+| [`eslint.config.mjs`](./eslint.config.mjs) | ESLint flat config from `eslint-config-next`; `yarn lint` |
+| [`.nvmrc`](./.nvmrc) | Node version, `22.14.0`, matching `engines.node`; CI reads it via `node-version-file` |
+| [`.yarnrc.yml`](./.yarnrc.yml) | Yarn 4 settings: node-modules linker, exact version pins, supply-chain gates |
+| [`.env.example`](./.env.example) | Environment variable names and safe local examples, never real values (`AGENTS.md` §8) |
+| [`yarn.lock`](./yarn.lock) | Lockfile, so `yarn install --immutable` works from a clean clone; currently no dependencies |
 | [`.gitignore`](./.gitignore), [`.editorconfig`](./.editorconfig), [`.gitattributes`](./.gitattributes) | Repository hygiene: ignored paths, editor defaults, line endings |
 
 **This index is complete by rule.** Every file under the repository root, `docs/`,
@@ -145,7 +155,7 @@ not about who writes code: see [`AGENTS.md`](./AGENTS.md) §22 and [`DECISIONS.m
 short-lived branch under a human developer's credentials, whose output goes through normal
 pull-request review, is expected and unrestricted by that section.
 
-**Definition of done for any change:** `npm run check` passes, including `docs:check`; tests
+**Definition of done for any change:** `yarn check` passes, including `docs:check`; tests
 cover the acceptance criteria of every requirement you listed; the documentation rows in the
 change-type matrix are complete; and the pull-request template checklist is filled in.
 
@@ -357,7 +367,7 @@ Rules:
 
 ### Hosting rule
 
-Vercel is the V1 application host, one project per environment. Keep the application portable: it must build with `npm run build`, start with `npm start`, use the runtime `PORT`, and use no Vercel-only runtime API. Vercel itself never runs `npm start` — it builds serverless functions — so CI must exercise that contract, or a portability regression stays invisible until a host change (BR-REQ-101-01).
+Vercel is the V1 application host, one project per environment. Keep the application portable: it must build with `yarn build`, start with `yarn start`, use the runtime `PORT`, and use no Vercel-only runtime API. Vercel itself never runs `yarn start` — it builds serverless functions — so CI must exercise that contract, or a portability regression stays invisible until a host change (BR-REQ-101-01).
 
 Use two Vercel projects from the same repository:
 
@@ -452,45 +462,45 @@ Enforce this with GitHub App/workflow permissions, branch protection, and deploy
 After the foundation pull request, a new developer should be able to run:
 
 ```bash
-npm ci
-npm run setup
+yarn install --immutable
+yarn setup
 cp .env.example .env.local
 docker compose up -d db
-npm run db:migrate
-npm run db:seed
-npm run dev
+yarn db:migrate
+yarn db:seed
+yarn dev
 ```
 
-`npm run setup` is the one step that is already live today: it points git at
-[`.githooks`](./.githooks/pre-commit), so `npm run check` runs before every commit and a
+`yarn setup` is the one step that is already live today: it points git at
+[`.githooks`](./.githooks/pre-commit), so `yarn check` runs before every commit and a
 change cannot pass locally but fail in CI. Run it once per clone. The step-by-step
 contributor walkthrough is [`SETUP.md`](./SETUP.md) § Contributing.
 
 The repository should expose stable commands:
 
 ```text
-npm run setup
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run format
-npm run format:check
-npm run typecheck
-npm run test
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-npm run check
-npm run docs:check
-npm run db:generate
-npm run db:migrate
-npm run db:seed
-npm run db:reset:local
-npm run deploy:build
+yarn setup
+yarn dev
+yarn build
+yarn start
+yarn lint
+yarn format
+yarn format:check
+yarn typecheck
+yarn test
+yarn test:unit
+yarn test:integration
+yarn test:e2e
+yarn check
+yarn docs:check
+yarn db:generate
+yarn db:migrate
+yarn db:seed
+yarn db:reset:local
+yarn deploy:build
 ```
 
-Exact versions belong in `package.json`, `package-lock.json`, and the pinned Node version. Contributors must inspect those files rather than assume versions from this document.
+Exact versions belong in `package.json`, `yarn.lock`, and the pinned Node version. Contributors must inspect those files rather than assume versions from this document.
 
 ## Suggested repository structure
 
@@ -506,10 +516,10 @@ MANIFEST.txt
 scripts/
   docs-check.mjs        documentation synchronization check
   release.mjs           versioned release build into dist/
-  setup.mjs             npm run setup: installs the tracked git hooks
+  setup.mjs             yarn setup: installs the tracked git hooks
 
 .githooks/
-  pre-commit            runs npm run check and blocks a failing commit
+  pre-commit            runs yarn check and blocks a failing commit
 
 src/
   app/
@@ -573,7 +583,7 @@ Create folders only when they contain real code.
 single-file edit: it is the complete set of edits across every affected document, in one
 pull request, with the baseline marker bumped in the same commit.
 
-[`scripts/docs-check.mjs`](./scripts/docs-check.mjs) implements `npm run docs:check`, which verifies:
+[`scripts/docs-check.mjs`](./scripts/docs-check.mjs) implements `yarn docs:check`, which verifies:
 
 - all six baseline markers are identical;
 - relative document links resolve;
