@@ -13,7 +13,7 @@ Everything here is a command that exists today. If a command is in this file it 
 | --- | --- |
 | **Node** | `22.14.0` exactly. `.nvmrc` and `engines.node` both say so; CI reads `.nvmrc`. |
 | **Yarn** | 4.18.0, via Corepack. It ships with Node — you do not install yarn yourself. |
-| **A database** | Only for `yarn dev`. Tests need nothing (see [Tests](#tests)). |
+| **A database** | Only for event pages. The home page and the whole test suite need none. |
 
 ```bash
 node --version        # must print v22.14.0
@@ -42,7 +42,7 @@ Then fill in `.env.local`:
 | Variable | What to put in it |
 | --- | --- |
 | `APP_ENV` | `local` |
-| `APP_BASE_URL` | `http://localhost:3000` |
+| `APP_BASE_URL` | `http://localhost:47821`. `yarn dev` overrides it with the port it actually bound. |
 | `DATABASE_URL` | Your Neon **pooled** connection string, the host containing `-pooler`. Region Frankfurt. |
 
 `.env.local` is git-ignored and must never be committed. `.env.example` carries the names and
@@ -53,21 +53,22 @@ safe examples only — never a real value (`AGENTS.md` §8).
 ```bash
 yarn db:migrate       # applies src/db/migrations to DATABASE_URL
 yarn db:seed          # three sample events, Romanian published, English draft
-yarn dev              # http://localhost:3000 → redirects to /ro
+yarn dev              # http://localhost:47821 → redirects to /ro
 ```
 
 `yarn db:seed` clears both tables and refuses to run when `APP_ENV=production`.
 
 ### No database yet?
 
-`yarn dev` needs one, but almost nothing else does. You can run `yarn check`, the whole test
-suite, `yarn build` and `yarn lint` with `DATABASE_URL` empty. Come back to this section when
-you have a Neon project.
+Skip the two `db:` commands and run `yarn dev` anyway — the home page reads nothing from the
+database, and `yarn check`, the full test suite, `yarn build` and `yarn lint` all pass without
+one. Leave `DATABASE_URL` **commented out** rather than empty: an empty value fails URL
+validation, while an absent one is allowed. Come back here when you have a Neon project.
 
 ## Everyday commands
 
 ```text
-yarn dev                 dev server on http://localhost:3000
+yarn dev                 dev server on http://localhost:47821 (next free port if taken)
 yarn build               production build
 yarn start               production server; honours PORT
 yarn check               docs:check + typecheck + lint + tests — the pre-commit gate
@@ -87,6 +88,27 @@ yarn release             versioned archive and share copies under dist/
 
 `yarn check` is the single gate. The pre-commit hook runs it and CI runs it, so they cannot
 drift. When a step is added to CI that a developer can run locally, it belongs inside `check`.
+
+## The dev server port
+
+`yarn dev` starts on **47821** — the same URL every day, and far from 3000, 5173, 8000 and
+8080 so it does not collide with other projects. If something already holds it, the server
+steps up to 47822, 47823 and so on, printing which port it chose.
+
+`next dev` cannot do this alone: given an explicit `--port` it fails with `EADDRINUSE` rather
+than stepping up, and it only walks the port range when no port was specified at all. So
+`yarn dev` runs [`scripts/dev.mjs`](../scripts/dev.mjs), which probes for a free port first.
+
+That script also exports `APP_BASE_URL` matching the port it chose. Next's loader does not
+overwrite variables already in the environment, so the chosen port always wins over the value
+in `.env.local` and the two cannot disagree. `yarn build` and `yarn start` do not go through
+the script, so `.env.local` governs there.
+
+Start somewhere else with `DEV_PORT=50000 yarn dev`.
+
+Note that Next refuses to run two dev servers for the same project regardless of port — you
+will see "Another next dev server is already running". That is Next's own lock, not this
+script.
 
 ## Tests
 
