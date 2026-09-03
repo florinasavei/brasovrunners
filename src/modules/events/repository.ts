@@ -75,6 +75,29 @@ export async function listPublishedEvents(db: Database, locale: Locale) {
     .orderBy(asc(events.startsAt));
 }
 
+/**
+ * The locales in which one event is published, with each locale's own slug.
+ *
+ * BR-REQ-040-01 criterion 5: an alternate-locale link must point at the *corresponding
+ * localized slug*, never at the current slug with a different prefix glued on. The slugs
+ * genuinely differ — `tura-pe-tampa` and `tampa-trail` are the same event — so a concatenated
+ * URL is a 404 rather than a cosmetic problem.
+ *
+ * Draft locales are excluded, because advertising an alternate that 404s is worse than
+ * advertising none (BR-REQ-040-02).
+ */
+export async function findPublishedTranslations(db: Database, eventId: string) {
+  return db
+    .select({ locale: eventTranslations.locale, slug: eventTranslations.slug })
+    .from(eventTranslations)
+    .where(
+      and(
+        eq(eventTranslations.eventId, eventId),
+        eq(eventTranslations.editorialStatus, "PUBLISHED"),
+      ),
+    );
+}
+
 /** One published event by its locale-scoped slug, or undefined when it should 404. */
 export async function findPublishedEventBySlug(db: Database, locale: Locale, slug: string) {
   const [row] = await db

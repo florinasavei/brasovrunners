@@ -6,21 +6,21 @@
       "idx": 0,
       "version": "7",
       "when": 1788404097867,
-      "tag": "0000_complex_lilith",
+      "tag": "0000_events_and_translations",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
       "when": 1788417580646,
-      "tag": "0001_hesitant_reavers",
+      "tag": "0001_event_cost_text",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
       "when": 1788422885783,
-      "tag": "0002_flippant_prodigy",
+      "tag": "0002_participants",
       "breakpoints": true
     }
   ]

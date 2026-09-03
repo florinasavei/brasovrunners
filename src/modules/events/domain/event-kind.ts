@@ -17,11 +17,6 @@ export const EVENT_KINDS = [
 
 export type EventKind = (typeof EVENT_KINDS)[number];
 
-/** The message key for a kind's localized label, e.g. `EventKind.TRAIL_RUN`. */
-export function eventKindMessageKey(kind: EventKind): `EventKind.${EventKind}` {
-  return `EventKind.${kind}`;
-}
-
 /**
  * Metres to kilometres, as a number. Null when there is no distance, so the caller renders
  * nothing rather than "0 km".

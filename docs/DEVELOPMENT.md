@@ -159,7 +159,9 @@ src/
   db/
     client.ts          the pg.Pool, node-postgres — not neon-http
     schema/            Drizzle tables; edit here, then yarn db:generate
-    migrations/        generated SQL; commit it, never edit it
+    migrations/        generated SQL; commit it, never edit it. Renaming a file means
+                       updating its `tag` in meta/_journal.json to match, and the SQL
+                       must stay byte-identical or applied databases will re-run it
     seeds/
   i18n/                routing, request config, navigation helpers
   shared/

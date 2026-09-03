@@ -10,7 +10,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import { env } from "@/shared/config/env";
@@ -43,8 +43,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: event.seoDescription ?? event.excerpt ?? undefined,
     alternates: {
       canonical: eventUrl(locale, slug),
-      // Only locales that actually have a published translation belong here. Emitting an
-      // hreflang for a draft locale advertises a URL that 404s (BR-REQ-040-02).
+      // BR-REQ-040-01 criterion 5: each alternate points at *that locale's own slug*, looked
+      // up from the database. Never build one by swapping the prefix on this slug — the
+      // slugs differ per locale, so a concatenated URL is a 404.
+      // Only published locales appear; advertising a draft one is worse than advertising none.
+      languages: Object.fromEntries(
+        (await findPublishedTranslations(getDb(), event.id)).map((t) => [
+          t.locale,
+          eventUrl(t.locale, t.slug),
+        ]),
+      ),
     },
     openGraph: {
       title: event.seoTitle ?? event.title,
