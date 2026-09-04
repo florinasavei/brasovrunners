@@ -182,7 +182,21 @@ export const LOGO = {
 } as const;
 
 /**
- * The height the header draws the mark at. Width follows from the aspect ratio, so the mark
- * can be replaced with a differently proportioned one without touching the header.
+ * The size of the header lockup, as fluid CSS rather than fixed pixels.
+ *
+ * The mark is 3.2:1 and the wordmark is a wide, heavy face, so at a fixed 28px the two came to
+ * 307px beside each other — wider than the 288px of content a 320px phone leaves after the
+ * container's padding, which pushed the whole page into a horizontal scroll (BR-REQ-041-01
+ * criterion 1). A fixed size that fits the narrowest phone would then look undersized on a
+ * desktop, so both scale with the viewport and stop at a maximum.
+ *
+ * `clamp` rather than a breakpoint: the failure is continuous — every width below roughly
+ * 360px overflows by a different amount — so the fix should be continuous too. A breakpoint at
+ * 360 would leave 361px overflowing.
+ *
+ * MARK_HEIGHT_PX is the upper bound, used for the `width`/`height` attributes that reserve the
+ * box before the SVG loads; the CSS below overrides the drawn size.
  */
-export const HEADER_MARK_HEIGHT = 28;
+export const HEADER_MARK_HEIGHT_PX = 28;
+export const HEADER_MARK_HEIGHT = "clamp(20px, 5.5vw, 28px)";
+export const HEADER_WORDMARK_SIZE = "clamp(0.95rem, 4.2vw, 1.25rem)";

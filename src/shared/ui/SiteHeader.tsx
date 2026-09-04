@@ -2,7 +2,14 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { FONT, HEADER_MARK_HEIGHT, LOGO, WORDMARK } from "@/theme/brand";
+import {
+  FONT,
+  HEADER_MARK_HEIGHT,
+  HEADER_MARK_HEIGHT_PX,
+  HEADER_WORDMARK_SIZE,
+  LOGO,
+  WORDMARK,
+} from "@/theme/brand";
 import LogoLink from "./LogoLink";
 
 /**
@@ -51,10 +58,19 @@ export default async function SiteHeader() {
             // Width is derived from the artwork's own proportions, so replacing the mark with
             // a differently shaped one needs no change here. Both are set so the browser
             // reserves the box and the header does not reflow while the SVG loads.
-            height={HEADER_MARK_HEIGHT}
-            width={Math.round((HEADER_MARK_HEIGHT * LOGO.mark.width) / LOGO.mark.height)}
+            // The attributes reserve the box at its largest, so the header does not reflow
+            // while the SVG loads; the CSS below draws it at the fluid size.
+            height={HEADER_MARK_HEIGHT_PX}
+            width={Math.round((HEADER_MARK_HEIGHT_PX * LOGO.mark.width) / LOGO.mark.height)}
             alt=""
-            style={{ display: "block", flexShrink: 0 }}
+            style={{
+              display: "block",
+              flexShrink: 0,
+              height: HEADER_MARK_HEIGHT,
+              // Width follows the artwork's own aspect ratio, so a differently proportioned
+              // mark needs no change here.
+              width: "auto",
+            }}
           />
           <Typography
             component="span"
@@ -64,7 +80,7 @@ export default async function SiteHeader() {
               fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,
               fontWeight: 900,
               fontStyle: "italic",
-              fontSize: "1.25rem",
+              fontSize: HEADER_WORDMARK_SIZE,
               lineHeight: 1,
               // The face is wide and tightly fitted; a little tracking stops the letters
               // touching at header size.
