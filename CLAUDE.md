@@ -7,13 +7,15 @@
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
 
-## Current mode: M1 complete in code
+## Current mode: M1 complete in code, QA deployed
 
 M1 — event pages, the full registration lifecycle, staff sign-in, legal document versioning,
-transactional email and a registrations backoffice — exists and is tested. What is left is not
-application code: a Zitadel tenant, a Neon project, two Vercel projects, the club's `.ro`
-domain, a Mailgun account, and the club's approved privacy notice and declaration text. See
-"The one blocker" below and `DECISIONS.md` §26–§27 for what changed to get here.
+transactional email and a registrations backoffice — exists and is tested. **QA now runs on a
+real host**: a Neon project in Frankfurt and a Vercel project on its provider-assigned
+hostname, serving the seeded events with a reachable database. What is left is still not
+application code: a Zitadel tenant, a Mailgun account, the club's `.ro` domain, the club's
+approved privacy notice and declaration text, and the production half of the two-project
+topology. See "What is deployed" below and `DECISIONS.md` §26–§27 for what changed to get here.
 
 [`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced — Romanian event pages
 only, no registration, no email, no login — and is now a historical scope document rather than
@@ -148,10 +150,19 @@ Not built: the rest of the CMS — articles, static pages, galleries, the media 
 Tiptap body contract (M5) — and everything M2–M4 name (multi-distance races, bibs, results,
 runner profiles).
 
-**The one blocker: nothing is deployed, and none of what remains is application code.** A
-Zitadel tenant for staff sign-in, a Neon project (Frankfurt, region fixed at creation), two
-Vercel projects (`qa` and `main`, region `fra1`), the club's `.ro` domain, a Mailgun account,
-and the club's approved privacy notice and declaration text.
+**What is deployed.** QA only, and none of what remains is application code. A Neon project in
+Frankfurt holds the migrated schema and the seeded events; a Vercel project tracking `qa`
+serves them on its provider-assigned hostname, with `/api/health` reporting the database
+reachable. Its exact hostname lives in `SETUP.md` §26 and nowhere else, and `APP_BASE_URL` is
+the only thing that knows it. Staff sign-in there is `disabled` — the honest state until a
+Zitadel tenant exists — so the backoffice answers 404, and email is `capture`, so nothing
+transmits.
+
+**Still owed, all of it account creation rather than code.** A Zitadel tenant for staff
+sign-in; a Mailgun account; the club's `.ro` domain; the club's approved privacy notice and
+declaration text, without which registration correctly refuses everyone; and the production
+half of the topology — its own Neon project and its own Vercel project tracking `main`, never
+sharing QA's database or secrets. `SETUP.md` §26 and `docs/RUNBOOKS.md` are the procedures.
 
 ## Stack and providers, as decided
 
@@ -160,8 +171,9 @@ and the club's approved privacy notice and declaration text.
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | events, event_translations, participants; `docker-compose.yml` locally |
-| Hosting | Vercel Hobby, function region `fra1`; one project per environment | not deployed yet |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | QA project live, migrated and seeded; production project not created |
+| Hosting | Vercel Hobby, function region `fra1`; one project per environment | QA deployed on its provider hostname, tracking `qa`; production project not created |
+| Jobs | No in-process interval — serverless has no process for one. `.github/workflows/scheduled-jobs.yml` calls both endpoints every five minutes with each environment's `JOB_SECRET` | built; QA secrets set per `SETUP.md` §26 |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher, and the provider wiring itself are all built; only a Zitadel tenant is missing | built; waits on a tenant |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
 | Storage | Documented: R2 behind the four-method adapter in `AGENTS.md` §17. Direction: `public/` until a non-developer uploads | deferred |

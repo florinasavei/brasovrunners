@@ -1016,8 +1016,13 @@ provider-assigned default hostnames; the custom domain is bound at the end of M1
 
 | Project | Production branch | APP_ENV | Current hostname | Final hostname |
 | --- | --- | --- | --- | --- |
-| `brasov-runners-qa` | `qa` | `qa` | provider default | `qa.<domain>` |
-| `brasov-runners-production` | `main` | `production` | provider default | `<domain>` and `www.<domain>` |
+| `brasov-runners-qa` | `qa` | `qa` | `brasov-runners-qa-nu.vercel.app` | `qa.<domain>` |
+| `brasov-runners-production` | `main` | `production` | not created yet | `<domain>` and `www.<domain>` |
+
+The QA project's hostname carries a `-nu` suffix Vercel appended because the plain name was
+taken. It is not cosmetic: `APP_BASE_URL` must match it character for character, or the
+sitemap, the canonical tags and every email action link name a host that is not this one. The
+first deployment got this wrong and the sitemap proved it within a minute.
 
 Two projects rather than one project with preview deployments, so each environment has its
 own environment variables and its own stable hostname. Set the function region to `fra1` on
@@ -1073,6 +1078,23 @@ Background jobs:
 - run maintenance about every five minutes and the outbox every one to five minutes;
 - scheduler credentials are limited to the job endpoint and are separate per environment;
 - record every run in `job_runs` so a stalled scheduler is visible in the health check.
+
+The scheduler itself is `.github/workflows/scheduled-jobs.yml`, every five minutes. Vercel's
+Hobby plan fires cron once per day, which cannot serve a 30-minute declaration hold; GitHub
+Actions' floor is five minutes. Each environment contributes two repository secrets, named
+for it, and a matrix row in that workflow:
+
+```text
+QA_APP_BASE_URL          https://<the qa project's current hostname>
+QA_JOB_SECRET            the qa project's JOB_SECRET, character for character
+PRODUCTION_APP_BASE_URL  added with the production project
+PRODUCTION_JOB_SECRET    added with the production project
+```
+
+A missing pair is skipped with a notice rather than failing the run, so the workflow can be
+merged before an environment exists. Both values must match that Vercel project's own
+variables exactly — a mismatched secret shows up as a 401 in the workflow log and as a
+`stale` job in `/api/health`, never as silent inaction.
 
 Choose the external scheduler before Phase 5. Vercel Hobby cron runs once per day with
 hour-level jitter (Vercel's published limits, checked 2026-09-02), which is too coarse for
