@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -51,7 +51,7 @@ There is no `develop` branch.
 
 The frontend uses **Material UI**, not Tailwind or shadcn, so conventions remain close to Flyward while the visual identity remains specific to Brașov Runners.
 
-Zitadel authentication is for staff only. Participants do not receive application accounts or passwords.
+Staff authentication is for staff only. Participants do not receive application accounts or passwords.
 
 AI reviewers may read and comment, but reviewer-only integrations must not push code, modify workflows, merge, deploy, or read secrets.
 
@@ -232,6 +232,13 @@ The launchable product is **M1**. Later milestones are scheduled in the owner's 
 Requirements for a milestone are written in `SPECS.md` when that milestone starts. Do not
 implement a later milestone's behavior early.
 
+**One deliberate exception, recorded rather than relabelled.** The event-editing slice of M5 —
+BR-REQ-050-01, BR-REQ-051-01 and BR-REQ-051-02 as they apply to `event_translations`, plus the
+roles of BR-REQ-060-01 — was built during M1, because the alternative was a developer editing
+a seed file and re-running it every time the club changed a race. Articles, static pages,
+galleries, the media library and the Tiptap body contract remain M5, and those requirements
+keep their `Release: M5` field: the plan moved, the requirement did not (`DECISIONS.md` §25).
+
 **The one permitted exception to "nothing for later".** M1 includes three structural
 footprints for M2 because they are trivial now and painful on race week: the `races` table
 and `events.race_id`, results consent fields on registrations, and a nullable
@@ -292,7 +299,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 | Validation | Zod at application boundaries |
 | ORM | Drizzle ORM |
 | Database | PostgreSQL; Neon for QA/production |
-| Staff authentication | Auth.js with Zitadel provider |
+| Staff authentication | Auth.js alone, `staff_users` as the server-side allowlist; no external identity provider (§13.1) |
 | Participant access | Hashed, expiring, purpose-scoped email action tokens |
 | Email | Mailgun behind adapter and PostgreSQL outbox |
 | Storage | Cloudflare R2 behind adapter |
@@ -346,13 +353,13 @@ Public pages must look like a local running community, not a default MUI dashboa
        +----------+----------+       +----------+----------+
        |          |          |       |          |          |
        v          v          v       v          v          v
-    Zitadel     Neon       R2      Zitadel     Neon       R2
-      QA         QA        QA        PROD       PROD      PROD
+     Neon        R2                Neon        R2
+      QA          QA                PROD        PROD
                   |                             |
               Mailgun QA                  Mailgun PROD
 ```
 
-Zitadel is used only by staff. Public participant actions are handled by this application's email-token boundary.
+Staff authentication runs inside the application (Auth.js, no external provider) and is used only by staff. Public participant actions are handled by this application's email-token boundary.
 
 Local and test use local/disposable infrastructure and fake/capture adapters.
 
@@ -598,15 +605,15 @@ type AppEnvironment = "local" | "test" | "qa" | "production";
 
 | Environment | Database | Staff auth | Email | Storage | Data |
 | --- | --- | --- | --- | --- | --- |
-| local | Local PostgreSQL | Mock | Capture | Local/fake | Synthetic |
-| test | Disposable PostgreSQL | Mock | Capture | Fake | Disposable |
-| qa | Dedicated Neon | Dedicated Zitadel QA | Capture/allowlist | Dedicated R2 | Persistent synthetic |
-| production | Dedicated Neon | Dedicated Zitadel production | Live | Dedicated R2 | Authorized real |
+| local | Local PostgreSQL | Development switcher | Capture | Local/fake | Synthetic |
+| test | Disposable PostgreSQL | Development switcher | Capture | Fake | Disposable |
+| qa | Dedicated Neon | Auth.js; disabled until the sign-in method ships | Capture/allowlist | Dedicated R2 | Persistent synthetic |
+| production | Dedicated Neon | Auth.js; disabled until the sign-in method ships | Live | Dedicated R2 | Authorized real |
 
 ### 7.2 Provider modes
 
 ```ts
-type StaffAuthMode = "mock" | "zitadel";
+type StaffAuthMode = "dev-switcher" | "disabled";
 type EmailDeliveryMode = "capture" | "allowlist" | "live";
 type StorageMode = "local" | "fake" | "r2";
 ```
@@ -615,10 +622,10 @@ Required combinations:
 
 | APP_ENV | Auth | Email | Storage |
 | --- | --- | --- | --- |
-| local | mock | capture | local |
-| test | mock | capture | fake |
-| qa | zitadel | capture or allowlist | r2 |
-| production | zitadel | live | r2 |
+| local | dev-switcher | capture | local |
+| test | dev-switcher | capture | fake |
+| qa | disabled until sign-in ships | capture or allowlist | r2 |
+| production | disabled until sign-in ships | live | r2 |
 
 Startup rejects unsafe combinations.
 
@@ -714,7 +721,7 @@ APP_ENV
 APP_BASE_URL
 DATABASE_URL
 STAFF_AUTH_MODE
-Auth.js/Zitadel values required by installed provider
+Auth.js values required by the installed provider
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
 MAILGUN_API_KEY
@@ -749,7 +756,11 @@ Rules:
 - `R2_PUBLIC_BASE_URL` is configuration; start on the R2 development subdomain;
 - production rejects localhost/non-production identifiers;
 - QA rejects known production identifiers/live email;
-- do not invent Auth.js provider variable names; use installed official contract.
+- do not invent Auth.js provider variable names; use installed official contract;
+- `STAFF_AUTH_MODE` is `dev-switcher` or `disabled`. Unset, it derives: the switcher in local
+  and test, nothing anywhere else. Stating `dev-switcher` outside local or test fails at
+  startup, for the same reason live email does — a permissive deployment is noticed after
+  someone has used it, and a process that will not boot is noticed in seconds.
 
 Business timing defaults belong in typed config/constants with tests:
 
@@ -811,7 +822,16 @@ Logical/public route mapping includes:
 /legal/privacy                  /ro/confidentialitate        /en/privacy
 /legal/terms                    /ro/termeni                  /en/terms
 /admin/...                      /ro/admin/...                /en/admin/...
+/sign-in                        /ro/autentificare            /en/sign-in
+/preview/events/[id]            /ro/previzualizare/evenimente/[id]
+                                /en/preview/events/[id]
 ```
+
+Staff routes are localized like everything else but never appear in public navigation or the
+sitemap, are disallowed in `robots.txt`, and are served with `X-Robots-Tag: noindex` and a
+private, no-store cache policy. The preview renders the translation of the locale in its own
+URL: previewing one language through another language's chrome shows the organizer a page that
+does not exist.
 
 The two legal routes render the current approved version of the corresponding legal
 document and are linked from the footer in both locales.
@@ -1215,16 +1235,32 @@ Use PostgreSQL UUID primary keys unless accepted repository convention differs. 
 ```text
 staff_users
 - id uuid PK
-- zitadel_subject text UNIQUE NOT NULL
-- email text NOT NULL
+- auth_subject text UNIQUE null      -- the provider's immutable subject; null until first sign-in
+- email text UNIQUE NOT NULL         -- lowercased; the allowlist key
 - display_name text NOT NULL
 - preferred_locale ro|en NOT NULL DEFAULT ro
 - role AUTHOR|EDITOR|ADMIN NOT NULL
+- invited_at timestamptz NOT NULL
+- first_signed_in_at timestamptz null
 - created_at timestamptz
 - updated_at timestamptz
 ```
 
+Checks:
+
+- `email = lower(email)`;
+- a subject and a first sign-in are present together or not at all.
+
 No passwords/provider tokens.
+
+The column is `auth_subject`, not a provider name: staff authentication is Auth.js alone with
+this table as the server-side allowlist, and no external identity provider (§13.1,
+`DECISIONS.md` §24).
+
+The row is the invitation. An Administrator adds a colleague by email and role before that
+person has ever signed in; the first sign-in binds the provider's subject to the waiting row.
+No row, no access, whatever a provider asserts. There is no invitation email until the club's
+sending domain exists — inventing one is forbidden by §1.2.
 
 ### 12.2 Participants
 
@@ -1279,11 +1315,14 @@ events
 - race_id uuid null            -- M1 footprint for M2; null for events with no siblings
 - kind
 - event_status
-- starts_at timestamptz
+- starts_at timestamptz          -- when the event begins; for a race, the gathering
+- race_starts_at timestamptz null -- the gun time, when it differs from the event start
 - ends_at timestamptz null
 - timezone text NOT NULL DEFAULT Europe/Bucharest
 - latitude numeric null
 - longitude numeric null
+- map_url text null              -- the organizer's own map link, stored not assembled
+- featured boolean NOT NULL DEFAULT false
 - distance_meters integer null
 - elevation_gain_meters integer null
 - capacity integer null
@@ -1304,6 +1343,11 @@ Checks:
 
 - when `race_id` is set, the event's kind is `RACE`;
 - end after start;
+- the race start is not before `starts_at` and not after `ends_at` where one exists;
+- `map_url` is https or null. It is stored rather than built from the coordinates because §8
+  forbids a hostname literal under `src/` and exempts no provider;
+- at most one event carries `featured`, enforced by a partial unique index rather than by
+  application code — two featured events would leave the landing page choosing one arbitrarily;
 - non-negative distance/elevation;
 - positive capacity;
 - close not before open/not after start for internal;
@@ -1615,26 +1659,38 @@ Do not add participant auth/password/account-provider tables, questions, medical
 
 ### 13.1 Staff authentication
 
-Use Auth.js Zitadel provider. Do not hand-roll OIDC/token exchange/session/logout.
+Use Auth.js, with `staff_users` as the server-side allowlist. **No external identity
+provider.** The Zitadel provider that earlier baselines named was dropped before any of it was
+built: a club of volunteers would be operating an identity platform for at most a handful of
+staff accounts, and the column that would have encoded it is now `auth_subject` (§12.1,
+`DECISIONS.md` §24). Do not hand-roll OIDC, token exchange, session or logout.
 
-Verify installed/current official docs for callback, env names, issuer, logout, redirects, claims.
+Verify the installed and current official documentation for callback paths, environment
+variable names, session strategy, logout and claims before writing any of it.
 
-Local/test may provide development-only seeded staff switcher:
+The sign-in method itself is not built yet, and the reason is the same one registration waits
+on: the only method that suits volunteers with no passwords is an emailed link, and delivery to
+a real person needs the club's sending domain. Until then `STAFF_AUTH_MODE=disabled` is the
+honest state of qa and production: every guarded call asks who is signing the request and gets
+nobody, so the backoffice answers 404 rather than being hidden.
 
-- unavailable QA/production;
+Local/test may provide a development-only seeded staff switcher:
+
+- unavailable in QA/production, refused at startup by `STAFF_AUTH_MODE` (§8);
 - server guarded;
-- synthetic identities;
-- same authorization helpers.
+- synthetic identities, marked as such in the data;
+- same authorization helpers as the real thing.
 
 After provider login:
 
-1. read immutable `sub`;
-2. require verified email when supplied;
-3. find/create `staff_users` by subject;
+1. read the immutable subject claim;
+2. require a verified email when the provider supplies one;
+3. find the `staff_users` row by subject, or by the invited email address on a first sign-in,
+   and bind the subject to it. Never create a row for an address nobody invited;
 4. update safe email/display name;
 5. preserve local role/preference.
 
-Never provision public participants through Zitadel.
+Never provision public participants through staff authentication.
 
 Server helpers:
 
@@ -2299,7 +2355,8 @@ Real disposable PostgreSQL/migrations:
 - action token hash/single-use/invalidation;
 - profile public query excludes private fields;
 - locale publication/slug uniqueness;
-- CMS stale-version rejection;
+- CMS stale-version rejection. This one needs two real connections: PGlite is single-connection,
+  so a green test there proves only that the SQL parses. `yarn test:concurrency`;
 - environment marker/seeds/audit.
 
 ### 20.4 E2E
@@ -2332,7 +2389,7 @@ Core journeys:
 
 ### 20.5 QA provider checks
 
-- real staff Zitadel login/logout;
+- real staff login/logout, once the sign-in method exists (§13.1);
 - Mailgun allowlisted delivery/webhook;
 - R2 upload/read/delete;
 - outbox scheduler/retry;
@@ -2551,7 +2608,7 @@ GET /api/health
 
 No secrets/schema/PII.
 
-Brașov Runners owns the domain/DNS, Vercel, GitHub, Neon, Zitadel, Mailgun, Cloudflare R2, password manager, billing/recovery. Freelancer least privilege, not sole recovery owner.
+Brașov Runners owns the domain/DNS, Vercel, GitHub, Neon, Mailgun, Cloudflare R2, password manager, billing/recovery. Freelancer least privilege, not sole recovery owner.
 
 ---
 
@@ -2593,7 +2650,7 @@ pull-request breakdown. Each milestone ends with its own slice of the launch che
 
 - Phase 1.0 Foundation: repository, `qa`/`main` protection, CI, `docs:check`, Next.js, MUI, theme, i18n shell, PostgreSQL, Drizzle, migrations, environment validation, seeds.
 - Phase 1.1 Walking skeleton (`DECISIONS.md` §7): one seeded event, registration form, capture-mode email, placeholder declaration, `CONFIRMED` reached, deployed to QA, clicked through by a person.
-- Phase 1.2 Staff auth and minimal backoffice: Zitadel/Auth.js, roles, create/edit/publish an event, list registrations, one registration's timeline.
+- Phase 1.2 Staff auth and minimal backoffice: Auth.js with the `staff_users` allowlist, roles, staff administration, create/edit/publish an event, list registrations, one registration's timeline. Event editing, roles and the workflow shipped early (`DECISIONS.md` §25); the sign-in method itself waits on the sending domain.
 - Phase 1.3 Event pages: localized public list and detail, exact free-place count, structured data, sitemap, robots, canonical/hreflang. Race grouping in the schema and a grouped page when `race_id` is present; no multi-distance registration UI yet.
 - Phase 1.4 Registration lifecycle: identity and tokens, privacy acknowledgment, results consent capture, legal documents via runbook, confirmation, holds, declaration acceptance, confirmed, unregistration, concurrency tests.
 - Phase 1.5 Waiting list: FIFO, offers, expiry, restart, queue closure at event start, maintenance job, `job_runs`, scheduler.
@@ -2687,7 +2744,7 @@ A new maintainer receives:
 - QA credentials through password manager;
 - architecture/data model/decision records;
 - migration/backup/restore runbooks;
-- registrar/Vercel/Mailgun/R2/Zitadel/Neon ownership map;
+- registrar/Vercel/Mailgun/R2/Neon ownership map;
 - registration/waitlist/declaration/email support runbook;
 - known limitations/deferred scope;
 - current incident contacts.

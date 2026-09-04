@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -39,7 +39,7 @@ local
 Authentication:
 
 ```text
-staff CMS/backoffice -> Auth.js + Zitadel
+staff CMS/backoffice -> Auth.js, allowlisted by the staff_users table; no external provider
 participants          -> verified email action links, no account/password
 ```
 
@@ -68,7 +68,6 @@ Required:
 - a ROTLD-accredited registrar account for the `.ro` domain and its DNS once registered;
 - Cloudflare account for R2 object storage;
 - Neon account;
-- Zitadel organization/instances/projects;
 - Mailgun account/domain;
 - Cloudflare R2;
 - organization password manager;
@@ -101,8 +100,6 @@ Brașov Runners / Vercel Production
 Brașov Runners / Cloudflare R2
 Brașov Runners / Neon QA
 Brașov Runners / Neon Production
-Brașov Runners / Zitadel QA
-Brașov Runners / Zitadel Production
 Brașov Runners / Mailgun
 Brașov Runners / R2 QA
 Brașov Runners / R2 Production
@@ -394,7 +391,7 @@ Environment type:
 
 ```ts
 type AppEnvironment = "local" | "test" | "qa" | "production";
-type StaffAuthMode = "mock" | "zitadel";
+type StaffAuthMode = "dev-switcher" | "disabled";
 type EmailDeliveryMode = "capture" | "allowlist" | "live";
 type StorageMode = "local" | "fake" | "r2";
 ```
@@ -402,10 +399,10 @@ type StorageMode = "local" | "fake" | "r2";
 Required combinations:
 
 ```text
-local:      mock / capture / local
- test:      mock / capture / fake
- qa:        zitadel / capture-or-allowlist / r2
- production: zitadel / live / r2
+local:      dev-switcher / capture / local
+ test:      dev-switcher / capture / fake
+ qa:        disabled / capture-or-allowlist / r2
+ production: disabled / live / r2
 ```
 
 `.env.example` should document concepts:
@@ -414,8 +411,8 @@ local:      mock / capture / local
 APP_ENV
 APP_BASE_URL
 DATABASE_URL
-STAFF_AUTH_MODE
-Auth.js/Zitadel variables required by installed provider
+STAFF_AUTH_MODE          dev-switcher | disabled; unset derives per environment
+Auth.js variables required by the installed provider
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
 MAILGUN_API_KEY
@@ -570,16 +567,23 @@ Persist original verified delivery address separately. Do not claim this detects
 
 ## 15. Configure staff authentication
 
-Create separate Zitadel applications/credentials:
+Auth.js alone, with the `staff_users` table as the server-side allowlist. There is no external
+identity provider to create an account with: `DECISIONS.md` §24 records why the Zitadel plan was
+dropped before anything was built.
 
-```text
-QA staff application
-Production staff application
-```
+Nothing to configure with a provider, then, but two things to know:
 
-Local/test use mock staff identities.
+- **Local and test** use the development staff switcher: `STAFF_AUTH_MODE=dev-switcher`, three
+  synthetic identities, one per role, at `/ro/autentificare`. The process refuses to start with
+  this mode in qa or production.
+- **The sign-in method itself is not built.** The one that suits volunteers with no passwords is
+  an emailed link, and delivery to a real person needs the club's sending domain — the same
+  blocker registration waits on. Until then qa and production run `STAFF_AUTH_MODE=disabled`,
+  where every staff request is answered by nobody and the backoffice returns 404.
 
-Use Auth.js current Zitadel provider and Authorization Code/PKCE behavior supported by current package/provider. Do not hand-roll OIDC.
+Who may sign in is maintained in the backoffice by an administrator: add a colleague by email
+address and role, change a role, revoke access. There is no invitation email yet, so the entry
+waits until that person first signs in with that address.
 
 Staff roles:
 
@@ -1203,8 +1207,10 @@ finished when it is on production, not when its last pull request merges.
 - **PR 3 — Walking skeleton.** One seeded event, registration form with privacy acknowledgment
   and results consent, capture-mode outbox, placeholder declaration, `CONFIRMED` reached.
   Deployed to QA. Clicked through by a person. Deliberately ugly.
-- **PR 4 — Staff auth and minimal backoffice.** Zitadel and Auth.js, roles, mock auth locally,
-  event create/edit/publish, registration list and timeline.
+- **PR 4 — Staff auth and minimal backoffice.** Auth.js with the `staff_users` allowlist, roles,
+  the development switcher locally, event edit/publish, registration list and timeline. Event
+  editing, the roles and the editorial workflow shipped early (`DECISIONS.md` §25); the sign-in
+  method and the registration views did not.
 - **PR 5 — Event pages.** Public list and detail per locale, exact free-place count, race-grouped
   page when `race_id` is present, structured data, sitemap, robots, canonical and hreflang.
 - **PR 6 — Identity, tokens, legal documents.** Canonical email, hashed scoped tokens,
@@ -1275,7 +1281,7 @@ Application:
 
 Providers:
 
-- [ ] Separate QA/production Vercel projects and Neon/Zitadel/R2 resources.
+- [ ] Separate QA/production Vercel projects and Neon/R2 resources.
 - [ ] Mailgun production domain verified.
 - [ ] QA email restricted.
 - [ ] Webhook/job secrets configured.

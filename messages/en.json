@@ -12,13 +12,18 @@
     "intro": "Runs, trail outings and training sessions organised by the club.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
-    "pastNotice": "This event has already taken place."
+    "pastNotice": "This event has already taken place.",
+    "featured": "Featured event",
+    "featuredCallToAction": "See the race details"
   },
   "Event": {
     "backToEvents": "Back to events",
     "date": "Date",
     "startTime": "Start time",
+    "gatheringTime": "Gathering time",
+    "raceStartTime": "Race start",
     "meetingPoint": "Meeting point",
+    "openMap": "Open the map",
     "address": "Address",
     "distance": "Distance",
     "distanceKm": "{km} km",
@@ -45,6 +50,103 @@
       "OPEN": "Registration is open",
       "CLOSED": "Registration has closed",
       "EVENT_CANCELLED": "The event has been cancelled"
+    }
+  },
+  "Admin": {
+    "title": "Backoffice",
+    "signedInAs": "Signed in as {name} — {role}",
+    "signOut": "Sign out",
+    "saved": "Your changes have been saved.",
+    "backToEvents": "Back to the event list",
+    "legalNotice": "Legal documents — the privacy notice, the terms and the declaration — are not edited here. New versions arrive through a migration, following the runbook.",
+    "nav": {
+      "events": "Events",
+      "staff": "Staff"
+    },
+    "events": {
+      "empty": "There is no event in the database.",
+      "featured": "Featured",
+      "preview": "Preview"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "IN_REVIEW": "In review",
+      "PUBLISHED": "Published",
+      "ARCHIVED": "Archived"
+    },
+    "transition": {
+      "DRAFT": "Move to draft",
+      "IN_REVIEW": "Submit for review",
+      "PUBLISHED": "Publish",
+      "ARCHIVED": "Archive"
+    },
+    "roles": {
+      "AUTHOR": "Author",
+      "EDITOR": "Editor",
+      "ADMIN": "Administrator"
+    },
+    "errors": {
+      "UNAUTHENTICATED": "Your session has ended. Sign in again.",
+      "FORBIDDEN": "Your role does not allow this.",
+      "NOT_FOUND": "That record no longer exists.",
+      "VALIDATION_ERROR": "Check what you entered; something is not valid.",
+      "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten."
+    },
+    "editor": {
+      "eventSection": "Event details",
+      "startsAt": "Event start",
+      "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
+      "raceStartsAt": "Race start",
+      "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
+      "mapUrl": "Map link",
+      "mapUrlHelp": "Paste the link you already use. It must start with https://.",
+      "featured": "Lead the site with this event",
+      "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
+      "saveEvent": "Save the event details",
+      "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
+      "translationSection": "Content ({locale})",
+      "translationReadOnly": "You cannot edit this text: it is either published or written by another author.",
+      "version": "version {version}",
+      "liveWarning": "This text is published. Your changes become public the moment you save.",
+      "acknowledgeLive": "I understand that I am editing published content.",
+      "saveTranslation": "Save the text",
+      "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
+      "slugLocked": "The page has been published, so its address stays as it is.",
+      "costHelp": "Free text: \"Free\", \"50 lei\". Leave empty when no cost has been stated.",
+      "fields": {
+        "title": "Title",
+        "slug": "Page address",
+        "excerpt": "Short description",
+        "locationName": "Meeting point",
+        "locationAddress": "Address",
+        "difficultyLabel": "Difficulty",
+        "costText": "Cost",
+        "seoTitle": "Search engine title",
+        "seoDescription": "Search engine description"
+      }
+    },
+    "preview": {
+      "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
+      "backToEditor": "Back to editing"
+    },
+    "signIn": {
+      "title": "Staff sign-in",
+      "unavailable": "Staff sign-in is not available in this environment yet.",
+      "developmentOnly": "Development identities, on a local machine and in tests only. These are not real people."
+    },
+    "staff": {
+      "title": "Staff",
+      "inviteTitle": "Add someone",
+      "email": "Email address",
+      "name": "Name",
+      "role": "Role",
+      "preferredLocale": "Preferred language",
+      "invite": "Add",
+      "inviteHelp": "No email is sent: the platform has no sending domain yet. Access begins at their first sign-in with this address.",
+      "pending": "Has not signed in yet",
+      "you": "You",
+      "changeRole": "Change role",
+      "revoke": "Revoke access"
     }
   },
   "NotFound": {

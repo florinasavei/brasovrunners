@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -139,13 +139,15 @@ A race is an event type, not a separate registration system.
 A small meetup may need only:
 
 - date and time;
-- meeting point;
+- meeting point, and a link to it on a map;
 - approximate distance or difficulty;
 - short description;
 - no registration or simple internal registration.
 
 A larger event or race may additionally need:
 
+- two times rather than one: when to be there, and when the race starts. Runners need both, and
+  the difference is often an hour;
 - longer description;
 - capacity;
 - registration opening and closing dates;
@@ -153,6 +155,13 @@ A larger event or race may additionally need:
 - an external registration link;
 - participant export;
 - stronger operational checks.
+
+One event at a time may be the club's **featured** event. The website leads with that one, in
+full, above the ordinary list — the anniversary cross rather than the fourth card down. Marking
+a second event as featured is refused: two lead events is no lead event.
+
+The map link is the one the organizer already uses and shares. The platform stores it rather
+than building it, so the club is never tied to one map provider.
 
 The same event model supports both without forcing race-only complexity onto weekly meetups.
 
@@ -195,13 +204,13 @@ An external event does not create a local participant registration unless a late
 
 ### BR-BUS-031 — No participant account required
 
-Internal registration does not require a participant login, password, or Zitadel account.
+Internal registration does not require a participant login, password, or account of any kind.
 
 The participant supplies a full name and email address, and acknowledges the current approved privacy notice before the registration is accepted. The acknowledged privacy-notice version is recorded with the registration.
 
 Control of the email address is confirmed through an emailed link before the registration can progress. The confirmation link is valid for 48 hours. When it is not used in time the registration expires, and the person may start again while registration is still open.
 
-Zitadel authentication is reserved for staff using the CMS and backoffice.
+Sign-in exists only for staff using the CMS and backoffice.
 
 ### BR-BUS-032 — Email identity and duplicate prevention
 
@@ -408,6 +417,14 @@ It supports only:
 
 It is not a generic website builder.
 
+Legal documents — the privacy notice, the terms, and the event declaration — are **not** CMS
+content. No staff role edits them here in any form; new versions are loaded by the maintainer
+following a written procedure, and the backoffice may only show them.
+
+The event half of this is built and in use: an organizer edits a race, marks it as featured,
+previews it and publishes it, per language, without a developer. Articles, static pages,
+galleries and the media library are not built yet.
+
 ### BR-BUS-051 — Editorial workflow
 
 Editorial statuses are:
@@ -419,7 +436,11 @@ Editorial statuses are:
 
 An author creates and updates drafts and submits them for review. An editor or administrator decides what is published.
 
-Once content is published, only an editor or administrator may change the live version in V1. The interface clearly warns when a save affects the public site.
+Once content is published, only an editor or administrator may change the live version in V1. The interface clearly warns when a save affects the public site, and the warning has to be answered before the save is accepted.
+
+When two people edit the same text at once, the second save is refused rather than silently overwriting the first, and the person is told to reload and reapply their change. Nothing is lost quietly.
+
+A page address may be changed while the text has never been published. Once it has been public, it stays as it is: people and search engines have followed it.
 
 Scheduled publication, comments, full revision history, and simultaneous collaborative editing are not planned.
 
@@ -457,6 +478,15 @@ Changing a declaration creates a new version. It does not rewrite the historical
 | Author | Write and translate drafts |
 | Editor | Review and publish content; manage event content |
 | Admin | Manage participants, waiting lists, declarations, roles, exports, profiles, and operations |
+
+Only an administrator manages the staff list: they add a colleague by email address and role,
+change a role, and revoke access. Adding someone does not send them anything yet — the platform
+has no sending domain — so the entry simply waits, and access begins at that person's first
+sign-in with that address. Nobody outside the list can sign in at all.
+
+An administrator cannot change their own role or remove their own access, and the club can
+never be left without an administrator: those refusals exist so the club cannot lock itself out
+of its own backoffice.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
 

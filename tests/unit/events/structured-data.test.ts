@@ -21,7 +21,10 @@ function baseEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
     eventStatus: "SCHEDULED",
     startsAt: new Date("2026-09-20T05:00:00Z"),
     endsAt: null,
+    raceStartsAt: null,
     timezone: "Europe/Bucharest",
+    mapUrl: null,
+    featured: false,
     distanceMeters: 14000,
     elevationGainMeters: 600,
     registrationMode: "NONE",
@@ -128,5 +131,37 @@ describe("toOffsetIsoString", () => {
   it("handles midnight without emitting hour 24", () => {
     const result = toOffsetIsoString(new Date("2026-06-01T21:00:00Z"), "Europe/Bucharest");
     expect(result).toBe("2026-06-02T00:00:00+03:00");
+  });
+});
+
+/**
+ * BR-REQ-052-02 criterion 2 — two times, mapped to the two properties schema.org has.
+ *
+ * A race gathers at one time and starts at another. `startDate` must be the moment a runner
+ * has to be on the line, because that is what a search result shows; `doorTime` is when the
+ * event begins. The wrong way round would advertise the gathering as the start.
+ */
+describe("BR-REQ-052-02 the race start and the gathering", () => {
+  it("puts the race start in startDate and the event start in doorTime", () => {
+    const block = parsed(
+      sportsEventJsonLd(
+        baseEvent({
+          startsAt: new Date("2026-10-11T06:00:00Z"),
+          raceStartsAt: new Date("2026-10-11T07:00:00Z"),
+        }),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+
+    expect(block.startDate).toBe("2026-10-11T10:00:00+03:00");
+    expect(block.doorTime).toBe("2026-10-11T09:00:00+03:00");
+  });
+
+  it("falls back to the event start when the club has stated only one time", () => {
+    const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
+
+    expect(block.startDate).toBe("2026-09-20T08:00:00+03:00");
+    expect(block.doorTime).toBe(block.startDate);
   });
 });

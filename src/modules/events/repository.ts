@@ -25,7 +25,12 @@ const PUBLIC_COLUMNS = {
   eventStatus: events.eventStatus,
   startsAt: events.startsAt,
   endsAt: events.endsAt,
+  // The gun time, when it differs from when the event begins. Null on an ordinary run.
+  raceStartsAt: events.raceStartsAt,
   timezone: events.timezone,
+  // Stored, never assembled: AGENTS.md §8 forbids a provider hostname under src/.
+  mapUrl: events.mapUrl,
+  featured: events.featured,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
   registrationMode: events.registrationMode,
@@ -118,14 +123,22 @@ const eventEndsAt = sql`coalesce(${events.endsAt}, ${events.startsAt})`;
  *
  * This is a deliberate trade, not a neutral sort: a race three months out will sit above a
  * community run tomorrow. That is the intended reading of the page — the race is the thing
- * being advertised, the weekly run is the thing regulars already know about. If a specific
- * event ever needs to outrank its own kind, that is an editorial `featured` flag on the table,
- * not another clause here.
+ * being advertised, the weekly run is the thing regulars already know about.
  */
 const RACES_FIRST = desc(sql`${events.kind} = 'RACE'`);
 
 /**
- * Published events that have not happened yet: races first, then soonest first.
+ * The featured event outranks even a race.
+ *
+ * This is the flag the ordering comment used to predict: when one specific event has to lead
+ * the page — the anniversary cross, the day registration opens — the club says so on the row
+ * rather than someone adding another clause here. At most one row may carry it, and that is
+ * the database's job, not this file's.
+ */
+const FEATURED_FIRST = desc(events.featured);
+
+/**
+ * Published events that have not happened yet: the featured one, then races, then soonest.
  *
  * The listing shows these rather than everything: a page whose first card is last month's run
  * reads as abandoned, which for a club whose events are its whole purpose is the worst thing
@@ -144,7 +157,7 @@ export async function listUpcomingEvents(db: Database, locale: Locale, now: Date
         gte(eventEndsAt, now),
       ),
     )
-    .orderBy(RACES_FIRST, asc(events.startsAt));
+    .orderBy(FEATURED_FIRST, RACES_FIRST, asc(events.startsAt));
 }
 
 /**

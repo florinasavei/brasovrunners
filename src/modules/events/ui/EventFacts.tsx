@@ -1,6 +1,8 @@
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { distanceInKm } from "../domain/event-kind";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
@@ -28,11 +30,14 @@ export default async function EventFacts({
   const distance = distanceInKm(event.distanceMeters);
   const state = registrationState(event, now);
 
-  const facts: Array<{ label: string; value: string }> = [
+  // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
+  // local time regardless of where the page is opened.
+  const time = (at: Date) =>
+    format.dateTime(at, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit" });
+
+  const facts: Array<{ label: string; value: ReactNode }> = [
     {
       label: t("date"),
-      // The event's own timezone, not the server's or the reader's. A run in Brașov starts at
-      // its local time regardless of where the page is opened.
       value: format.dateTime(event.startsAt, {
         timeZone: event.timezone,
         weekday: "long",
@@ -41,16 +46,43 @@ export default async function EventFacts({
         year: "numeric",
       }),
     },
-    {
-      label: t("startTime"),
-      value: format.dateTime(event.startsAt, {
-        timeZone: event.timezone,
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-    { label: t("meetingPoint"), value: event.locationName },
   ];
+
+  /**
+   * One time or two, each labelled for what it is.
+   *
+   * `starts_at` is when the event begins. For a race that is the gathering, and the gun time
+   * is its own column — runners need both, and a single row labelled "start" would be read as
+   * whichever one the reader was hoping for. When the club has stated only one time, only one
+   * row appears, still labelled "start time" rather than inventing a gathering.
+   */
+  if (event.raceStartsAt) {
+    facts.push({ label: t("gatheringTime"), value: time(event.startsAt) });
+    facts.push({ label: t("raceStartTime"), value: time(event.raceStartsAt) });
+  } else {
+    facts.push({ label: t("startTime"), value: time(event.startsAt) });
+  }
+
+  facts.push({
+    label: t("meetingPoint"),
+    value: event.mapUrl ? (
+      <>
+        {event.locationName}{" "}
+        <Link
+          href={event.mapUrl}
+          target="_blank"
+          // The link goes to whatever map service the club already uses. `noopener` and
+          // `noreferrer` stop the opened page reaching back through `window.opener` and stop
+          // it learning which page sent the visitor.
+          rel="noopener noreferrer"
+        >
+          {t("openMap")}
+        </Link>
+      </>
+    ) : (
+      event.locationName
+    ),
+  });
 
   if (distance !== null) {
     // format.number applies the locale's separators: "14,5" in Romanian, "14.5" in English.

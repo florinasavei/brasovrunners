@@ -145,3 +145,45 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
     }
   });
 });
+
+/**
+ * The backoffice interpolates four sets of keys, and none of them is visible to the static
+ * scan above: statuses, transitions, roles and error codes are all built from a value. Each
+ * set has a single source of truth in the code, so the contract is checkable — and a missing
+ * one renders "Admin.errors.CONFLICT" to an organizer at the worst possible moment.
+ */
+describe("BR-REQ-040-04 the backoffice keys the source builds dynamically", () => {
+  it("has a label for every editorial status and every transition", async () => {
+    const { EDITORIAL_STATUSES } = await import("@/modules/staff-identity/domain/roles");
+    for (const status of EDITORIAL_STATUSES) {
+      expect(roFlat[`Admin.status.${status}`], `ro label for ${status}`).toBeDefined();
+      expect(enFlat[`Admin.status.${status}`], `en label for ${status}`).toBeDefined();
+      // Every status is also a possible destination of a transition button.
+      expect(roFlat[`Admin.transition.${status}`], `ro action for ${status}`).toBeDefined();
+      expect(enFlat[`Admin.transition.${status}`], `en action for ${status}`).toBeDefined();
+    }
+  });
+
+  it("has a label for every staff role", async () => {
+    const { STAFF_ROLES } = await import("@/modules/staff-identity/domain/roles");
+    for (const role of STAFF_ROLES) {
+      expect(roFlat[`Admin.roles.${role}`], `ro label for ${role}`).toBeDefined();
+      expect(enFlat[`Admin.roles.${role}`], `en label for ${role}`).toBeDefined();
+    }
+  });
+
+  it("has a message for every domain error code the backoffice can be handed", () => {
+    // The codes are a union type, so they cannot be enumerated at runtime; they are listed
+    // here instead, and the list is short enough to keep honest.
+    for (const code of [
+      "UNAUTHENTICATED",
+      "FORBIDDEN",
+      "NOT_FOUND",
+      "VALIDATION_ERROR",
+      "CONFLICT",
+    ]) {
+      expect(roFlat[`Admin.errors.${code}`], `ro message for ${code}`).toBeDefined();
+      expect(enFlat[`Admin.errors.${code}`], `en message for ${code}`).toBeDefined();
+    }
+  });
+});

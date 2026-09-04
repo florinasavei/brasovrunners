@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # WEEKEND.md — the pilot scope
 
-**Baseline `BR-V1.14-2026-09-03`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
+**Baseline `BR-V1.15-2026-09-04`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
 
 One weekend of AI-assisted building. This file says exactly what that weekend produces, in
 what order, and what it deliberately does not. When it conflicts with `SETUP.md` §29, this file
@@ -123,7 +123,7 @@ lane in `CLAUDE.md`.
 | --- | --- | --- |
 | Registration, confirmation, declaration, manage/cancel | Needs email and approved legal text; neither exists | domain + two approved Romanian texts |
 | Email delivery to real people | Needs a verified sending domain; a sandbox reaches only five authorized addresses | the domain |
-| Staff login and the backoffice | Nothing to administer; events are seeded. Direction when built: Auth.js alone with a server-side allowlist, no external IdP | first registration |
+| Staff **login**; the backoffice itself is now built | The backoffice, the three roles and the editorial workflow shipped after the pilot (`DECISIONS.md` §25), because a developer editing a seed file is not a way for a club to run a race. The sign-in method did not: the one that suits volunteers with no passwords is an emailed link, which needs the sending domain. Local and test use the development switcher; qa and production refuse every staff request | the domain |
 | Privacy notice and terms pages | No personal data is collected by the event pages. Needed the day registration opens | club approval |
 | Capacity and the waiting list | The pilot is uncapped and the DB enforces it. Half-built capacity overbooks in public | the locked transaction and its concurrency test |
 | CMS, media, profiles, races, bibs, results | M2–M5 | — |

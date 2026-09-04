@@ -95,7 +95,16 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     name: event.title,
     ...(event.excerpt ? { description: event.excerpt } : {}),
     url,
-    startDate: toOffsetIsoString(event.startsAt, event.timezone),
+    /**
+     * Two times, mapped to the two properties schema.org already has for them.
+     *
+     * `startDate` is when the race starts — the time a runner must be on the line — and falls
+     * back to the event start when the club has stated only one time. `doorTime` is when the
+     * event begins, which for a race is the gathering. Getting these the wrong way round would
+     * put the gathering time in the search result and the start time nowhere.
+     */
+    startDate: toOffsetIsoString(event.raceStartsAt ?? event.startsAt, event.timezone),
+    doorTime: toOffsetIsoString(event.startsAt, event.timezone),
     ...(event.endsAt ? { endDate: toOffsetIsoString(event.endsAt, event.timezone) } : {}),
     // Criterion 4: a cancelled event keeps its block and states the status.
     eventStatus: EVENT_STATUS_URL[event.eventStatus],

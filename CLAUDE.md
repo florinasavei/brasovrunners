@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.14-2026-09-03`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.15-2026-09-04`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI. Nothing is
@@ -25,6 +25,7 @@ yarn start        production server, honours PORT
 yarn lint         ESLint
 yarn typecheck    tsc --noEmit
 yarn test         unit and database tests; no database or Docker needed (PGlite)
+yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
 yarn check        docs:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
@@ -86,6 +87,15 @@ the events listing, which is the landing page.
 Also built: email canonicalization with the `participants` table behind it, and the pilot
 capacity guard (the database refuses any non-null `capacity`).
 
+**The backoffice.** An organizer signs in, edits a race — both of its times, its map link, every
+editorial field per language — marks it as the featured event, previews the draft, and publishes
+it, without a developer. Three staff roles asserted on the server, staff administration for an
+Administrator, DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED per locale, and a save that carries the
+version it was loaded with, so a second organizer's save is a CONFLICT rather than an overwrite.
+Built ahead of its milestone on purpose: `DECISIONS.md` §25. The sign-in method is *not* built —
+local and test use the development switcher of `AGENTS.md` §13.1, and qa and production answer
+404 to every staff request until an emailed link becomes possible, which needs the domain.
+
 Also built, and reachable by nothing yet: email action tokens and the transactional outbox
 (BR-REQ-036-02, BR-REQ-080-02, BR-REQ-080-03). Hash-only storage, purpose scope, single use,
 and a read-only transaction so a GET cannot mutate; outbox rows commit with the change that
@@ -93,11 +103,15 @@ caused them and the provider is called outside that transaction. The Mailgun ada
 declared and deliberately not wired — it throws rather than dropping mail — and startup refuses
 live delivery outside production.
 
-**243 unit and integration tests, 18 end-to-end.** `yarn test` needs no database — PGlite runs
-real PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed.
+**381 unit and integration tests, 36 end-to-end runs (18 per viewport project), and a
+three-test concurrency suite.** `yarn test` needs no database — PGlite runs real PostgreSQL in
+process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
+`yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
+single-connection database.
 
-Not built, each deferred with a reason in `WEEKEND.md`: registration, email delivery, staff
-login, the CMS, capacity, waiting lists.
+Not built, each deferred with a reason in `WEEKEND.md`: registration, email delivery, the staff
+sign-in method, capacity, waiting lists, and the rest of the CMS — articles, static pages,
+galleries, the media library and the Tiptap body contract.
 
 **The one blocker:** nothing is deployed. That needs a Neon project (Frankfurt, region fixed at
 creation) and two Vercel projects (`qa` and `main`, region `fra1`). Everything else is waiting
@@ -112,7 +126,7 @@ on the club's `.ro` domain and their approved privacy notice and declaration.
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | events, event_translations, participants; `docker-compose.yml` locally |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | not deployed yet |
-| Auth | staff only. Documented: Auth.js + Zitadel. Direction: Auth.js alone, no external IdP | deferred |
+| Auth | staff only. **Decided:** Auth.js alone, `staff_users` as the server-side allowlist, no external IdP (`DECISIONS.md` §24). Roles, helpers, backoffice and the development switcher are built; the sign-in method waits on the domain | partly built |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours | pipeline buildable now; delivery to real people needs the domain |
 | Storage | Documented: R2 behind the four-method adapter in `AGENTS.md` §17. Direction: `public/` until a non-developer uploads | deferred |
 | Spam | Honeypot + timing + rate limiting first. Cloudflare Turnstile only if that fails — it is a processor the unapproved privacy notice must name | not built |

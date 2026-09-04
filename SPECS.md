@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -45,6 +45,12 @@ are built strictly in that order (`DECISIONS.md` §12 and §13; `BUSINESS.md` §
 | M5 — Mini CMS | Articles, static pages, galleries, media | Sections 4.9 and parts of 4.10 exist; re-confirmed at milestone start |
 
 Each requirement's **Release** field names its milestone.
+
+**One slice moved earlier, and the requirements were not relabelled.** Event editing, the
+editorial workflow, the protected preview and the three staff roles were built during M1
+rather than M5, because until they existed only a developer could change a race. The affected
+requirements — BR-REQ-050-01, BR-REQ-051-01, BR-REQ-051-02 — keep `Release: M5` and carry a
+**Status** line saying which part is built. `DECISIONS.md` §25 records the reordering.
 
 **Release gate for M1.** Every M1 MUST requirement passes, the owner decisions in
 `BUSINESS.md` §9 are answered, the approved legal documents are loaded, the domain-binding
@@ -185,8 +191,12 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given an internal event, when capacity is absent, then registration is open without any numeric place count.
 3. Given an internal event, when `registration_closes_at` is absent, then registration closes at event start.
 4. Given an internal event, when `registration_opens_at` is absent, then registration opens when the event is published in that locale.
+5. Given a race with a gathering time and a gun time, when its page renders, then both are shown, each labelled, in the event's timezone; and when only one time is stated, only that one is shown. `starts_at` remains when the event begins and continues to drive ordering, the upcoming/past cut-off, the sitemap and the listing.
+6. Given a race start earlier than the event start, or later than the event end where one exists, when it is submitted, then the database refuses it.
+7. Given a map link, when it is stored, then it is a value the organizer supplied and is https; a `javascript:`, `data:` or plain-http link is refused by the database as well as by the form, and the link renders with `rel="noopener noreferrer"`. The application never assembles a map URL from the coordinates: `AGENTS.md` §8 forbids a hostname literal under `src/` and exempts no provider.
+8. Given two events, when both are marked as the featured event, then the database refuses the second; and when one is featured, the landing page leads with it, above the ordinary listing, ordered featured → race → soonest.
 
-**Verification:** integration `events/configuration.test.ts`
+**Verification:** integration `events/configuration.test.ts`; unit `events/zoned-time.test.ts`; e2e `event-pages.spec.ts`
 
 #### BR-REQ-020-01 — Publication and cancellation visibility
 
@@ -720,6 +730,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §11.1, §11.4
 - **Priority:** MUST
 - **Release:** M5
+- **Status:** the event slice is built and in use; articles, static pages, galleries and the
+  Tiptap body contract of criterion 3 are not. Built during M1 by a recorded reordering of the
+  plan (`DECISIONS.md` §25), which is why the release field still reads M5.
 
 **Acceptance criteria**
 
@@ -735,6 +748,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §11.2, §13.1
 - **Priority:** MUST
 - **Release:** M5
+- **Status:** built for event translations during M1 (`DECISIONS.md` §25); it applies to
+  articles and pages when those exist.
 
 **Acceptance criteria**
 
@@ -742,9 +757,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given an Editor or Administrator, when they review a submission, then they can publish, unpublish, and archive per locale.
 3. Given published content, when an Author attempts to edit it, then it is refused.
 4. Given a save that affects live content, when it is submitted, then the interface warns before it takes effect.
-5. Given two editors saving the same record, when the second save carries a stale version, then it is rejected as a conflict.
+5. Given two editors saving the same record, when the second save carries a stale version, then it is rejected as a conflict, and the first editor's save survives intact. This is verified with two real database connections, not the in-process test database, which is single-connection and cannot express the race.
 
-**Verification:** integration `cms/workflow.test.ts`; e2e `cms-publish.spec.ts`
+**Verification:** integration `cms/workflow.test.ts`; concurrency `cms-conflict.test.ts` (`yarn test:concurrency`); e2e `cms-publish.spec.ts`
 
 #### BR-REQ-051-02 — Protected preview
 
@@ -752,13 +767,15 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §11.5
 - **Priority:** MUST
 - **Release:** M5
+- **Status:** built for event translations during M1 (`DECISIONS.md` §25).
 
 **Acceptance criteria**
 
-1. Given a preview URL, when it is opened without staff authorization, then access is refused.
+1. Given a preview URL, when it is opened without staff authorization, then access is refused before any row is read, so the response does not reveal whether the draft exists.
 2. Given a preview page, when it renders, then it carries `noindex`, is absent from the sitemap, and is not publicly cached.
+3. Given a preview URL, when it is opened by staff, then it renders the translation of the locale in that URL, whatever its editorial status.
 
-**Verification:** integration `cms/preview.test.ts`
+**Verification:** integration `cms/preview.test.ts`; unit `seo/private-paths.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-052-01 — Publication quality gates
 
@@ -788,6 +805,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given a published event page, when it renders, then it contains a `SportsEvent` block whose start and end times carry the event timezone offset, whose `organizer` references the club `@id`, and whose `location` includes a postal address.
 3. Given a capped event, when the block renders, then `remainingAttendeeCapacity` equals the free-place count displayed on the same page.
 4. Given a cancelled event, when the page renders, then the block is still present with `eventStatus` set to cancelled.
+4a. Given a race with a gun time distinct from the event start, when the block renders, then `startDate` is the race start and `doorTime` is the event start; with no distinct gun time, `startDate` falls back to the event start.
 5. Given a published article (M5), when it renders, then it contains an `Article` block with `datePublished` and `dateModified`.
 6. Given any structured data block on any page, when it is inspected, then it contains no participant name, email, registration list, or declaration content.
 7. Given the test suite, when it runs, then it parses the emitted JSON-LD and asserts the required properties are present.
@@ -907,8 +925,11 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given an Editor, when they request participant or export endpoints, then it is refused.
 3. Given an unauthenticated request to any `/admin` route, when it is made, then it is refused.
 4. Given each guarded endpoint, when tests run, then authorization is asserted at the server, not only in the UI.
+5. Given an Administrator, when they administer staff, then they may add a colleague by email address and role, change a colleague's role, and revoke access; an Author or an Editor is refused every one of those operations.
+6. Given an Administrator, when they attempt to change their own role, remove their own access, or leave the club with no Administrator at all, then it is refused.
+7. Given the development staff switcher, when `APP_ENV` is qa or production, then it is unavailable, and a process configured to use it there does not start.
 
-**Verification:** integration `auth/role-boundaries.test.ts`
+**Verification:** integration `auth/role-boundaries.test.ts`; unit `staff/roles.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-070-01 — Participant data is never public
 

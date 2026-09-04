@@ -29,6 +29,13 @@
       "when": 1788443295242,
       "tag": "0003_email_action_tokens_and_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788497132077,
+      "tag": "0004_staff_users_and_event_editing",
+      "breakpoints": true
     }
   ]
 }

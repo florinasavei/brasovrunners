@@ -2,7 +2,7 @@
 
 # Practice guides
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 ## About these guides
@@ -423,7 +423,7 @@ The project does not end at the release; it changes shape.
 - [ ] Legal text request sent to the club with the full list from `BUSINESS.md` §9.
 - [ ] Three real events and two real articles collected for building against.
 - [ ] Walking-skeleton amendment accepted or declined, and documented either way.
-- [ ] Provider verification done: Vercel Node version and cron limits, Neon, Zitadel, Mailgun, R2 tiers.
+- [ ] Provider verification done: Vercel Node version and cron limits, Neon, Mailgun, R2 tiers.
 - [ ] Second person identified for provider recovery access.
 
 **During the build**

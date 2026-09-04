@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V1.14-2026-09-03
+Baseline: BR-V1.15-2026-09-04
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -28,6 +28,8 @@ Supporting files:
 - .github/workflows/docs-check.yml     yarn check in CI, read-only permissions
 - .github/CODEOWNERS                   review ownership of the root documents
 - .github/pull_request_template.md     per-PR checks including the documentation sync checklist
+- vitest.config.mts                    unit and database tests; no database needed
+- vitest.concurrency.config.mts        the two-connection suite: yarn test:concurrency
 - package.json                         setup, check, docs:check, release until PR 1
 - yarn.lock                    lockfile so yarn install --immutable works from a clean clone
 - CHANGELOG.md                         one entry per baseline, newest first
@@ -46,7 +48,7 @@ Important current decisions:
 - Material UI
 - Romanian + English i18n
 - Mini CMS with Tiptap OSS
-- Staff-only Zitadel/Auth.js authentication
+- Staff-only Auth.js authentication, allowlisted by the staff_users table; no external IdP
 - Passwordless participant flows via verified email action links
 - Case-insensitive canonical email duplicate prevention plus Gmail dot/+ normalization,
   with gmail.com and googlemail.com collapsed to one identity
