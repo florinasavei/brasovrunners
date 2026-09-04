@@ -154,9 +154,15 @@ runner profiles).
 Frankfurt holds the migrated schema and the seeded events; a Vercel project tracking `qa`
 serves them on its provider-assigned hostname, with `/api/health` reporting the database
 reachable. Its exact hostname lives in `SETUP.md` §26 and nowhere else, and `APP_BASE_URL` is
-the only thing that knows it. Staff sign-in there is `disabled` — the honest state until a
-Zitadel tenant exists — so the backoffice answers 404, and email is `capture`, so nothing
-transmits.
+the only thing that knows it. **Staff sign-in works there**: a Zitadel tenant exists, QA runs
+`STAFF_AUTH_MODE=provider`, and an organizer signs in with a real account gated by the
+`staff_users` allowlist. Email is still `capture`, so nothing transmits.
+
+Two settings that are not obvious and cost an afternoon between them: the Zitadel application
+needs **"Include user's profile info in the ID Token"** enabled, or the ID token carries no
+`email` claim and every sign-in is refused by the allowlist gate that cannot see an address;
+and the first Administrator is a `staff_users` row inserted by hand, because the screen that
+invites people is itself behind the sign-in it would be granting.
 
 **Still owed, all of it account creation rather than code.** A Zitadel tenant for staff
 sign-in; a Mailgun account; the club's `.ro` domain; the club's approved privacy notice and

@@ -153,8 +153,19 @@ to `provider`. Nothing here touches application code — `DECISIONS.md` §26 and
 - [ ] Set `AUTH_SECRET` (a fresh random value, not shared across environments),
       `AUTH_ZITADEL_ID`, `AUTH_ZITADEL_SECRET`, `AUTH_ZITADEL_ISSUER`, and
       `STAFF_AUTH_MODE=provider` in that environment's application settings, and restart.
+- [ ] **Enable "Include user's profile info in the ID Token"** in the application's Token
+      Settings. Without it the ID token carries no `email` claim, the allowlist gate has no
+      address to match, and every sign-in is refused as `AccessDenied` — indistinguishable, from
+      the outside, from an uninvited account. This is the single most likely cause of a refusal
+      when Zitadel itself reports the login as successful.
+- [ ] **Insert the first Administrator's `staff_users` row by hand** — one row, that person's
+      email lowercased, role `ADMIN`, `zitadel_subject` and `first_signed_in_at` left null. The
+      screen that invites people is behind the sign-in it would be granting, so the first row
+      cannot come from the backoffice. Every later colleague is invited there normally.
 - [ ] Verify a real staff member can sign in end to end, and that an address nobody invited is
       refused.
+- [ ] Confirm the binding landed: that row now carries a `zitadel_subject` and a
+      `first_signed_in_at`. Both fill together or neither does — a CHECK constraint enforces it.
 - [ ] Verify the development switcher refuses to start in this environment
       (`STAFF_AUTH_MODE=dev-switcher` must fail at boot outside local and test).
 

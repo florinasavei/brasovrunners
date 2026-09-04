@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import { env } from "@/shared/config/env";
 import { routing } from "@/i18n/routing";
+import BuildBadge from "@/shared/ui/BuildBadge";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
 import AppTheme from "@/theme/AppTheme";
@@ -80,6 +81,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                 <SiteHeader />
                 <Box sx={{ flex: 1 }}>{children}</Box>
                 <SiteFooter />
+                <BuildBadge />
               </Box>
             </NextIntlClientProvider>
           </AppTheme>

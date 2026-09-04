@@ -17,7 +17,7 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
 | Code | M1 complete in code. Public event pages; a backoffice where an organizer edits, features, previews and publishes a race per language; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents with no invented text outside a developer's machine; ten transactional message types through the outbox; a registrations backoffice with a state-aware resend and CSV export; `/api/health`. See [`DECISIONS.md`](./DECISIONS.md) §26–§27. |
 | Priority | Account creation and DevOps, not application code: a Zitadel tenant, a Mailgun account, the `.ro` domain, the club's approved privacy notice and declaration text, and the production Neon and Vercel projects |
-| Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in there is `disabled` and email is `capture`, so the backoffice 404s and nothing transmits — both the honest state until a tenant and a sending domain exist. Production is not created. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
+| Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in works there through Zitadel, gated by the `staff_users` allowlist; email is still `capture`, so nothing transmits until a sending domain exists. Production is not created. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -460,7 +460,7 @@ Time-driven work such as email-outbox retries and waitlist/hold expiry must be i
 | --- | --- | --- |
 | Local | Daily development | Local PostgreSQL, the development staff switcher, captured email, local/fake storage |
 | Test | CI and automated integration tests | Disposable PostgreSQL and fake/capture adapters |
-| QA | Integrated testing and club acceptance | Dedicated Neon and R2, allowlisted or captured email, staff sign-in disabled until it ships; synthetic data only |
+| QA | Integrated testing and club acceptance | Dedicated Neon and R2, allowlisted or captured email, staff sign-in through its own Zitadel application; synthetic data only |
 | Production | Live website | Dedicated production resources and authorized real data |
 
 `APP_ENV` distinguishes these environments. `NODE_ENV` is not used as the environment identity.
