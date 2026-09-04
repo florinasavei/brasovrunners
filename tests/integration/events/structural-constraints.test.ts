@@ -5,17 +5,20 @@ import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-034-01 criterion 4 / BR-REQ-011-01 criterion 2 — the pilot cannot store a capacity.
+ * BR-REQ-034-01 / BR-REQ-034-02 — capacity is a real, storable value.
  *
- * Deferring the capacity engine is only safe while the database physically refuses a capacity
- * value. These tests are what keeps that true: if the constraint is removed before the locked
- * capacity transaction and its concurrency test exist, this suite fails.
+ * The pilot guard that once made any capacity value physically impossible
+ * (`events_capacity_must_be_null_during_pilot`) is gone: `modules/registrations/service.ts`'s
+ * locked capacity transaction exists and `tests/concurrency/capacity.test.ts` proves it holds
+ * under real concurrent load, which is what WEEKEND.md and CLAUDE.md named as the condition
+ * for removing it. An uncapped event — `capacity IS NULL` — is still a supported, ordinary
+ * case (AGENTS.md §10.1: "absent capacity means unlimited"), not a constraint-enforced one.
  *
  * Note the `registrationMode: "INTERNAL"` in every case. Capacity on a NONE-mode event is
- * refused by a *different* constraint, so without it these tests would pass while proving
- * nothing about the pilot guard.
+ * refused by a *different* constraint (below), so without it these tests would prove nothing
+ * about capacity itself.
  */
-describe("BR-REQ-034-01 capacity cannot be set during the pilot", () => {
+describe("BR-REQ-034-01 capacity is a real, internal-only value", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 
@@ -31,27 +34,24 @@ describe("BR-REQ-034-01 capacity cannot be set during the pilot", () => {
     registrationMode: "INTERNAL" as const,
   };
 
-  it("accepts an uncapped event, which is what the pilot runs", async () => {
+  it("accepts an uncapped event — absent capacity means unlimited", async () => {
     const [row] = await db.insert(events).values(internalEvent).returning();
     expect(row.capacity).toBeNull();
   });
 
-  it.each([0, 1, 30, 1000])("refuses capacity %i at insert", async (capacity) => {
-    await expectViolation(db.insert(events).values({ ...internalEvent, capacity }), {
-      code: SQLSTATE.CHECK_VIOLATION,
-      constraint: "events_capacity_must_be_null_during_pilot",
-    });
+  it.each([0, 1, 30, 1000])("accepts and stores capacity %i on an internal event", async (capacity) => {
+    const [row] = await db.insert(events).values({ ...internalEvent, capacity }).returning();
+    expect(row.capacity).toBe(capacity);
   });
 
-  it("refuses a capacity added by a later update, not only at insert", async () => {
+  it("accepts a capacity added by a later update, not only at insert", async () => {
     const [row] = await db.insert(events).values(internalEvent).returning();
-    await expectViolation(
-      db.update(events).set({ capacity: 30 }).where(eq(events.id, row.id)),
-      {
-        code: SQLSTATE.CHECK_VIOLATION,
-        constraint: "events_capacity_must_be_null_during_pilot",
-      },
-    );
+    const [updated] = await db
+      .update(events)
+      .set({ capacity: 30 })
+      .where(eq(events.id, row.id))
+      .returning();
+    expect(updated.capacity).toBe(30);
   });
 });
 

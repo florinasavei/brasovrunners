@@ -35,16 +35,30 @@ export const envSchema = z
      * password, no provider. It is a development tool and nothing else, so it is refused
      * outright in qa and production below.
      *
-     * `disabled` means there is no way to sign in at all, which is the honest state of qa and
-     * production until the staff login lands (DECISIONS.md §24). The backoffice is not hidden
-     * there — it is unreachable, because every guarded call starts by asking who is signing
-     * this request and gets nobody.
+     * `provider` is the real thing: Auth.js with the Zitadel OAuth provider, gated on the
+     * `staff_users` allowlist. Named for the mechanism rather than the vendor — matching
+     * `EMAIL_DELIVERY_MODE`'s style — so a future change to what Zitadel's own login policy
+     * offers is not an env var rename.
+     *
+     * `disabled` means there is no way to sign in at all — the safe default for qa and
+     * production until an operator explicitly turns `provider` on for that environment. The
+     * backoffice is not hidden when disabled — it is unreachable, because every guarded call
+     * starts by asking who is signing this request and gets nobody.
      *
      * Left optional so the safe value is derived rather than typed: local and test get the
-     * switcher, every other environment gets nothing. An operator may still state it
-     * explicitly, and stating `dev-switcher` outside local or test fails at startup.
+     * switcher, every other environment gets nothing until stated. Stating `dev-switcher`
+     * outside local or test fails at startup.
      */
-    STAFF_AUTH_MODE: z.enum(["dev-switcher", "disabled"]).optional(),
+    STAFF_AUTH_MODE: z.enum(["dev-switcher", "provider", "disabled"]).optional(),
+
+    // Auth.js (AGENTS.md §13.1). Required together when STAFF_AUTH_MODE=provider.
+    AUTH_SECRET: z.string().min(1).optional(),
+    AUTH_ZITADEL_ID: z.string().min(1).optional(),
+    AUTH_ZITADEL_SECRET: z.string().min(1).optional(),
+    AUTH_ZITADEL_ISSUER: z.url().optional(),
+
+    // Verifies job-endpoint callers (AGENTS.md §16.2) — a scheduler, not a staff session.
+    JOB_SECRET: z.string().min(1).optional(),
 
     /**
      * Where a coordinate becomes a map link, e.g. a maps service's base URL.
@@ -64,6 +78,10 @@ export const envSchema = z
     EMAIL_ALLOWLIST: allowlist,
     MAILGUN_API_KEY: z.string().min(1).optional(),
     MAILGUN_DOMAIN: z.string().min(1).optional(),
+    // Verifies inbound Mailgun webhooks (AGENTS.md §16.5) — a separate secret from the API
+    // key, since the two prove different things: one authenticates outbound calls this
+    // application makes, the other authenticates inbound calls Mailgun makes to it.
+    MAILGUN_WEBHOOK_SIGNING_KEY: z.string().min(1).optional(),
   })
   /**
    * BR-REQ-080-03 criterion 3: an unsafe combination fails at startup.
@@ -93,6 +111,22 @@ export const envSchema = z
         message: `the development staff switcher is only permitted when APP_ENV is local or test; this process has APP_ENV=${APP_ENV}. AGENTS.md §13.1, BR-REQ-060-01.`,
       });
     }
+
+    // A mode that can authenticate real staff needs Auth.js's own secret and the Zitadel
+    // credentials — missing one would surface as a broken sign-in for the first person who
+    // tries it, rather than as a deployment that did not start.
+    if (
+      value.STAFF_AUTH_MODE === "provider" &&
+      (!value.AUTH_SECRET || !value.AUTH_ZITADEL_ID || !value.AUTH_ZITADEL_SECRET || !value.AUTH_ZITADEL_ISSUER)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["STAFF_AUTH_MODE"],
+        message:
+          "STAFF_AUTH_MODE=provider requires AUTH_SECRET, AUTH_ZITADEL_ID, AUTH_ZITADEL_SECRET and AUTH_ZITADEL_ISSUER. AGENTS.md §13.1.",
+      });
+    }
+
 
     /**
      * Live delivery belongs to production alone.

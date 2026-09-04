@@ -21,7 +21,7 @@ const NOW = new Date("2026-09-03T10:00:00.000Z");
 
 const MAILGUN = { MAILGUN_API_KEY: "key-not-a-real-key", MAILGUN_DOMAIN: "mail.example.test" };
 
-function render(row: OutboxRow): OutgoingEmail {
+async function render(row: OutboxRow): Promise<OutgoingEmail> {
   return {
     to: row.recipientEmail,
     subject: "Confirmă-ți înscrierea",

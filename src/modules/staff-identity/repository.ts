@@ -36,14 +36,14 @@ export async function findStaffUserByEmail<T extends Record<string, unknown>>(
   return row;
 }
 
-export async function findStaffUserByAuthSubject<T extends Record<string, unknown>>(
+export async function findStaffUserByZitadelSubject<T extends Record<string, unknown>>(
   db: Database<T>,
-  authSubject: string,
+  zitadelSubject: string,
 ): Promise<StaffUser | undefined> {
   const [row] = await db
     .select()
     .from(staffUsers)
-    .where(eq(staffUsers.authSubject, authSubject))
+    .where(eq(staffUsers.zitadelSubject, zitadelSubject))
     .limit(1);
   return row;
 }
@@ -107,7 +107,7 @@ export async function countAdministrators<T extends Record<string, unknown>>(
 }
 
 /**
- * Bind an identity provider's subject to an invited row, on first sign-in.
+ * Bind Zitadel's subject to an invited row, on first sign-in.
  *
  * The invitation is matched by email; the subject is what every later sign-in is matched by,
  * because an address can be reassigned inside an organization and a subject cannot
@@ -116,12 +116,12 @@ export async function countAdministrators<T extends Record<string, unknown>>(
 export async function recordFirstSignIn<T extends Record<string, unknown>>(
   db: Database<T>,
   id: string,
-  authSubject: string,
+  zitadelSubject: string,
   now: Date,
 ): Promise<StaffUser | undefined> {
   const [row] = await db
     .update(staffUsers)
-    .set({ authSubject, firstSignedInAt: now, updatedAt: now })
+    .set({ zitadelSubject, firstSignedInAt: now, updatedAt: now })
     .where(eq(staffUsers.id, id))
     .returning();
   return row;

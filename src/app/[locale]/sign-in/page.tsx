@@ -7,8 +7,10 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { signIn } from "@/auth";
 import { routing } from "@/i18n/routing";
 import { DEV_IDENTITIES, isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
+import { env } from "@/shared/config/env";
 import { signInAsDevIdentityAction } from "../admin/actions";
 
 type Props = {
@@ -25,10 +27,11 @@ export const metadata: Metadata = {
 /**
  * Staff sign-in.
  *
- * Today this is only the development switcher of AGENTS.md §13.1: pick a synthetic identity,
- * no password, no provider, local and test only. Where it is not enabled the page says so
- * plainly rather than showing a form that cannot work — DECISIONS.md §24 records what replaces
- * it and why that waits on the club's sending domain.
+ * `STAFF_AUTH_MODE=provider` renders the real thing: a single button that hands off to
+ * Zitadel through Auth.js (AGENTS.md §13.1, DECISIONS.md §26). `dev-switcher` keeps the
+ * synthetic, password-free identities for local and test. Anything else — the safe default
+ * for an environment nobody has turned sign-in on for — says so plainly rather than showing a
+ * form that cannot work.
  *
  * It sits outside `/admin` on purpose. Inside, the backoffice layout would redirect an
  * anonymous visitor here, and here would redirect them back.
@@ -53,9 +56,18 @@ export default async function SignInPage({ params, searchParams }: Props) {
         </Alert>
       )}
 
-      {!isDevStaffSwitcherEnabled() ? (
-        <Alert severity="info">{t("signIn.unavailable")}</Alert>
-      ) : (
+      {env.STAFF_AUTH_MODE === "provider" ? (
+        <form
+          action={async () => {
+            "use server";
+            await signIn("zitadel");
+          }}
+        >
+          <Button type="submit" variant="contained" fullWidth>
+            {t("signIn.withZitadel")}
+          </Button>
+        </form>
+      ) : isDevStaffSwitcherEnabled() ? (
         <Stack spacing={2}>
           <Alert severity="warning">{t("signIn.developmentOnly")}</Alert>
 
@@ -69,6 +81,8 @@ export default async function SignInPage({ params, searchParams }: Props) {
             </form>
           ))}
         </Stack>
+      ) : (
+        <Alert severity="info">{t("signIn.unavailable")}</Alert>
       )}
     </Container>
   );

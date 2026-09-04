@@ -11,29 +11,26 @@ export const staffRole = pgEnum("staff_role", ["AUTHOR", "EDITOR", "ADMIN"]);
 /**
  * Staff users. AGENTS.md §12.1.
  *
- * Two departures from the shape §12.1 wrote down, both recorded in DECISIONS.md §24:
+ * One departure from an ordinary allowlist table, recorded in DECISIONS.md §26: the column is
+ * nullable. An Administrator invites a colleague by email and role before that person has ever
+ * signed in, and until they do there is no Zitadel subject to store. The row is the allowlist
+ * entry: no row, no access, whatever Zitadel asserts — an invited-but-unbound row grants
+ * nothing, and a bound one is refused the moment it is deleted.
  *
- *   1. The subject column is `auth_subject`, not `zitadel_subject`. The direction is Auth.js
- *      alone with a server-side allowlist and no external identity provider, so naming the
- *      column after a product the club never bought would encode the abandoned plan in the
- *      schema — and a rename after rows exist is a migration nobody wants to write.
- *   2. It is nullable. An Administrator invites a colleague by email and role before that
- *      person has ever signed in, and until they do there is no subject to store. The row is
- *      the allowlist entry: no row, no access, whatever an identity provider asserts.
+ * No password and no provider token is stored here, ever — Zitadel holds credentials, this
+ * table holds only the immutable subject claim it issues once someone signs in.
  *
- * No password and no provider token is stored here, ever.
- *
- * Until the real login exists, the only writer of `auth_subject` is the development staff
- * switcher (AGENTS.md §13.1), whose synthetic subjects are prefixed `dev:` and which refuses
- * to run outside local and test.
+ * Until the real login exists in a given environment (`STAFF_AUTH_MODE=disabled`), the only
+ * writer of `zitadel_subject` is the development staff switcher (AGENTS.md §13.1), whose
+ * synthetic subjects are prefixed `dev:` and which refuses to run outside local and test.
  */
 export const staffUsers = pgTable(
   "staff_users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
 
-    /** The provider's immutable subject claim, or null until this person first signs in. */
-    authSubject: text("auth_subject").unique(),
+    /** Zitadel's immutable subject claim, or null until this person first signs in. */
+    zitadelSubject: text("zitadel_subject").unique(),
 
     /**
      * The allowlist key, lowercased. Unique, because two rows for one address is two answers
@@ -63,7 +60,7 @@ export const staffUsers = pgTable(
     // subject. Either alone means the sign-in path wrote half a row.
     check(
       "staff_users_signed_in_has_subject",
-      sql`(${t.authSubject} IS NULL) = (${t.firstSignedInAt} IS NULL)`,
+      sql`(${t.zitadelSubject} IS NULL) = (${t.firstSignedInAt} IS NULL)`,
     ),
   ],
 );

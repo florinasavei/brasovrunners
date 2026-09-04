@@ -46,8 +46,21 @@ export type OutboxRow = typeof emailOutbox.$inferSelect;
  * exist: Romanian and English bodies for ten message types, which the club has not approved
  * and this repository must not invent (`AGENTS.md` §10.8). The seam is here so that the
  * worker is finished and tested now, and the day templates land they are one argument.
+ *
+ * Async, and given the database, for a reason that is easy to miss: a message that carries an
+ * action link needs a token, and §14.5 forbids persisting a token's secret anywhere backups
+ * can reach — including here, in `payload_json`. The only place left to generate one is the
+ * instant before the message is actually sent, which is exactly when this function runs. A
+ * renderer for a token-bearing message type therefore calls `issueActionToken` itself, using
+ * the row's `participantId`/`registrationId` and whatever deadline the triggering row (a
+ * registration's `hold_expires_at`, for instance) still implies at render time.
+ *
+ * Takes `now` as its third argument rather than reading the clock — the same rule every other
+ * time-dependent function in this codebase follows (`docs/PRACTICES.md`): a renderer that
+ * called `new Date()` internally could not be tested for the boundary case that matters here,
+ * a token whose borrowed deadline has already passed by the time the batch runs.
  */
-export type EmailRenderer = (row: OutboxRow) => OutgoingEmail;
+export type EmailRenderer = (row: OutboxRow, db: Db, now: Date) => Promise<OutgoingEmail>;
 
 export type EnqueueEmailParams = {
   participantId: string | null;
@@ -80,9 +93,18 @@ export type EnqueueEmailParams = {
  * Nothing here contacts a provider, reads configuration, or renders a body. Everything this
  * function does is one INSERT in the caller's transaction, so if the caller rolls back, the
  * message was never queued.
+ *
+ * Generic over the caller's schema, unlike this file's other functions: a registration-lifecycle
+ * transaction (`modules/registrations/service.ts`) enqueues a message as one step among several
+ * that also touch `registrations`, `participants` and `legal_documents`, none of which this
+ * module knows about. `Transaction<T>` for a shared `T` is what lets one open transaction
+ * satisfy every module's requirement at once; a schema fixed to `{ emailOutbox }` here would
+ * not structurally match a caller's differently-scoped fixed schema. `Transaction`, not
+ * `Database`, is still required — a plain `Database<T>` is not assignable to it, so queuing a
+ * message outside a transaction still does not compile (BR-REQ-080-02 criterion 1).
  */
-export async function enqueueEmail(
-  tx: Transaction<Schema>,
+export async function enqueueEmail<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
   params: EnqueueEmailParams,
 ): Promise<OutboxRow | null> {
   const [row] = await tx
@@ -206,7 +228,7 @@ export async function processOutboxBatch(
   for (const row of claimed) {
     let message: OutgoingEmail;
     try {
-      message = render(row);
+      message = await render(row, db, now);
     } catch (error) {
       await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
       summary.failed += 1;
@@ -282,4 +304,48 @@ async function recordFailure(
     .update(emailOutbox)
     .set({ status, lockedAt: null, nextAttemptAt: null, lastError: error })
     .where(eq(emailOutbox.id, id));
+}
+
+/**
+ * The Mailgun events a delivery webhook may report, and what each does to the row it names
+ * (AGENTS.md §16.5). `delivered`/`opened`/`clicked`/`unsubscribed` update nothing — this schema
+ * tracks send outcome, not engagement — and are accepted (not rejected) so Mailgun does not
+ * retry a webhook this application has nothing to do with.
+ */
+export type MailgunEventType =
+  | "delivered"
+  | "opened"
+  | "clicked"
+  | "unsubscribed"
+  | "permanent_fail"
+  | "temporary_fail"
+  | "failed"
+  | "complained";
+
+/**
+ * Apply one delivery event to the outbox row it names, found by the provider message id this
+ * application supplied when sending (`SendResult.providerMessageId`).
+ *
+ * Naturally idempotent: setting `BOUNCED` on an already-`BOUNCED` row, because Mailgun resent
+ * the same webhook, changes nothing. No separate dedup table is needed for that reason alone.
+ */
+export async function applyMailgunEvent(
+  db: Db,
+  params: { providerMessageId: string; event: MailgunEventType; reason: string | null },
+): Promise<void> {
+  const status: EmailOutboxStatus | null =
+    params.event === "complained"
+      ? "COMPLAINED"
+      : params.event === "permanent_fail" || params.event === "failed"
+        ? "BOUNCED"
+        : null;
+
+  // A transient failure (`temporary_fail`) is Mailgun's own retry in progress — this
+  // application's outbox has its own retry policy and does not need to react to Mailgun's.
+  if (status === null) return;
+
+  await db
+    .update(emailOutbox)
+    .set({ status, lockedAt: null, nextAttemptAt: null, lastError: params.reason })
+    .where(eq(emailOutbox.providerMessageId, params.providerMessageId));
 }

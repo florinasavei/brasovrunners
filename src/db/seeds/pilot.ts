@@ -1,5 +1,6 @@
 import { getDb } from "@/db/client";
 import { eventTranslations, events } from "@/db/schema/events";
+import { seedPlaceholderLegalDocuments } from "./legal-placeholder";
 
 /**
  * Pilot seed: the club's events, published in both languages.
@@ -182,6 +183,11 @@ async function seed() {
   }
 
   console.log(`seeded ${rows.length} events, Romanian and English published, into APP_ENV=${appEnv}`);
+
+  // DECISIONS.md §27: never in qa or production — only ever called here, for local and test.
+  if (appEnv === "local" || appEnv === "test") {
+    await seedPlaceholderLegalDocuments();
+  }
 }
 
 seed()

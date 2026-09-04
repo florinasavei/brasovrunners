@@ -70,7 +70,39 @@
     "legalNotice": "Documentele legale — nota de confidențialitate, termenii și declarația — nu se editează aici. Versiunile noi se încarcă prin migrare, conform procedurii din documentație.",
     "nav": {
       "events": "Evenimente",
+      "registrations": "Înscrieri",
       "staff": "Echipa"
+    },
+    "registrations": {
+      "empty": "Nu există nicio înscriere.",
+      "filterAll": "Toate evenimentele",
+      "filter": "Filtrează",
+      "statusLabel": "Stare",
+      "export": "Exportă CSV",
+      "backToList": "Înapoi la înscrieri",
+      "resend": "Retrimite emailul",
+      "resendSent": "Emailul a fost pus în coadă din nou.",
+      "resendNothingToSend": "Nu există niciun email de retrimis pentru această stare.",
+      "timeline": "Cronologie",
+      "submitted": "Trimisă",
+      "emailConfirmed": "Email confirmat",
+      "waitlisted": "Pe lista de așteptare",
+      "offerCreated": "Ofertă creată",
+      "holdExpires": "Rezervarea expiră",
+      "confirmed": "Confirmată",
+      "cancelled": "Anulată",
+      "expired": "Expirată",
+      "declaration": "Declarație semnată",
+      "outboxHistory": "Istoric email",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Așteaptă confirmarea emailului",
+        "PENDING_DECLARATION": "Așteaptă semnarea declarației",
+        "WAITLISTED": "Pe lista de așteptare",
+        "WAITLIST_OFFERED": "Ofertă activă",
+        "CONFIRMED": "Confirmată",
+        "CANCELLED": "Anulată",
+        "EXPIRED": "Expirată"
+      }
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -144,7 +176,8 @@
     "signIn": {
       "title": "Autentificare echipă",
       "unavailable": "Autentificarea pentru echipă nu este încă disponibilă în acest mediu.",
-      "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale."
+      "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale.",
+      "withZitadel": "Autentificare cu Zitadel"
     },
     "staff": {
       "title": "Echipa",
@@ -164,5 +197,47 @@
   "NotFound": {
     "title": "Pagina nu există",
     "back": "Înapoi la prima pagină"
+  },
+  "Legal": {
+    "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
+    "privacyLinkLabel": "Confidențialitate",
+    "termsLinkLabel": "Termeni și condiții"
+  },
+  "Registration": {
+    "title": "Înscriere: {event}",
+    "name": "Nume complet",
+    "email": "Adresă de email",
+    "privacyPrefix": "Am citit și sunt de acord cu",
+    "privacyLinkLabel": "nota de confidențialitate",
+    "resultsNameConsent": "Sunt de acord ca numele meu să apară în rezultatele publice",
+    "submit": "Trimite înscrierea",
+    "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
+    "errors": {
+      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
+    }
+  },
+  "Registrations": {
+    "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",
+    "confirm": {
+      "title": "Confirmă adresa de email",
+      "prompt": "Apasă butonul de mai jos pentru a confirma adresa de email și a continua înscrierea.",
+      "action": "Confirmă",
+      "done": "Adresa de email a fost confirmată."
+    },
+    "declare": {
+      "title": "Declarație pe proprie răspundere",
+      "accept": "Am citit și accept declarația de mai sus",
+      "typedName": "Scrie numele complet ca semnătură",
+      "action": "Semnează și confirmă",
+      "doneConfirmed": "Înscrierea a fost confirmată.",
+      "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare."
+    },
+    "manage": {
+      "title": "Gestionează înscrierea",
+      "prompt": "Poți anula această înscriere. Locul va fi eliberat imediat.",
+      "action": "Anulează înscrierea",
+      "done": "Înscrierea a fost anulată.",
+      "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată."
+    }
   }
 }

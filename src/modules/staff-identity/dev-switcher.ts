@@ -8,9 +8,10 @@ import type { StaffRole } from "./domain/roles";
 /**
  * The development staff switcher (AGENTS.md §13.1).
  *
- * There is no staff login yet — DECISIONS.md §24 records why, and what replaces this. Until
- * then a developer, and the end-to-end suite, need a way to *be* an Author or an Editor, so
- * §13.1 permits a seeded switcher with four conditions: unavailable in qa and production,
+ * Real staff sign-in is Auth.js with the Zitadel provider (DECISIONS.md §26), which most
+ * developer machines have no tenant for. A developer, and the end-to-end suite, still need a
+ * way to *be* an Author or an Editor, so §13.1 permits a seeded switcher with four conditions:
+ * unavailable in qa and production,
  * server guarded, synthetic identities, and the same authorization helpers as the real thing.
  * All four are met here, and the first is met twice — the process refuses to start if this
  * mode is configured outside local and test (`shared/config/env.ts`), and every function below
@@ -28,7 +29,7 @@ export type DevIdentityKey = "author" | "editor" | "admin";
 
 type DevIdentity = {
   key: DevIdentityKey;
-  authSubject: string;
+  zitadelSubject: string;
   email: string;
   displayName: string;
   role: StaffRole;
@@ -37,21 +38,21 @@ type DevIdentity = {
 export const DEV_IDENTITIES: readonly DevIdentity[] = [
   {
     key: "author",
-    authSubject: `${DEV_SUBJECT_PREFIX}author`,
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}author`,
     email: "dev-author@dev.test",
     displayName: "Dev Author",
     role: "AUTHOR",
   },
   {
     key: "editor",
-    authSubject: `${DEV_SUBJECT_PREFIX}editor`,
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}editor`,
     email: "dev-editor@dev.test",
     displayName: "Dev Editor",
     role: "EDITOR",
   },
   {
     key: "admin",
-    authSubject: `${DEV_SUBJECT_PREFIX}admin`,
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}admin`,
     email: "dev-admin@dev.test",
     displayName: "Dev Administrator",
     role: "ADMIN",
@@ -77,9 +78,17 @@ export function assertDevStaffSwitcherEnabled(): void {
  *
  * Created on demand rather than in the seed, so signing in works on a database that was
  * migrated but never seeded — which is what the end-to-end suite and a fresh clone both have.
- * `onConflictDoNothing` then a read, rather than an upsert that overwrites: if a developer has
- * changed the role of a dev identity in their own database to try something, re-signing in
- * should not silently put it back.
+ *
+ * Subject first, then email, then create — the same order `resolveZitadelSignIn` uses for the
+ * real provider, and for the same reason: a database can hold a row that already claims this
+ * synthetic address with no subject bound yet (an invited-but-unbound row is exactly that
+ * shape, and so, incidentally, is a row a schema migration had to unbind — `DECISIONS.md`
+ * §26's rename left exactly one such row on a database that had signed in under the old
+ * column). `ON CONFLICT` on the subject alone cannot see that case: the row it would collide
+ * with has no subject to conflict on, so the insert fails on the *email* constraint instead.
+ * Looking the row up by email first and binding it is what a real sign-in already has to do,
+ * and doing the same here does not silently reset a role a developer changed to try something
+ * — it only ever sets the subject and the sign-in timestamp.
  */
 export async function ensureDevStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -91,23 +100,32 @@ export async function ensureDevStaffUser<T extends Record<string, unknown>>(
   const identity = DEV_IDENTITIES.find((candidate) => candidate.key === key);
   if (!identity) throw new DomainError("VALIDATION_ERROR", `unknown development identity: ${key}`);
 
-  await db
+  const [bySubject] = await db
+    .select()
+    .from(staffUsers)
+    .where(eq(staffUsers.zitadelSubject, identity.zitadelSubject))
+    .limit(1);
+  if (bySubject) return bySubject;
+
+  const [byEmail] = await db.select().from(staffUsers).where(eq(staffUsers.email, identity.email)).limit(1);
+  if (byEmail) {
+    const [bound] = await db
+      .update(staffUsers)
+      .set({ zitadelSubject: identity.zitadelSubject, firstSignedInAt: now, updatedAt: now })
+      .where(eq(staffUsers.id, byEmail.id))
+      .returning();
+    return bound;
+  }
+
+  const [created] = await db
     .insert(staffUsers)
     .values({
-      authSubject: identity.authSubject,
+      zitadelSubject: identity.zitadelSubject,
       email: identity.email,
       displayName: identity.displayName,
       role: identity.role,
       firstSignedInAt: now,
     })
-    .onConflictDoNothing({ target: staffUsers.authSubject });
-
-  const [row] = await db
-    .select()
-    .from(staffUsers)
-    .where(eq(staffUsers.authSubject, identity.authSubject))
-    .limit(1);
-
-  if (!row) throw new DomainError("NOT_FOUND", `development identity ${key} could not be created`);
-  return row;
+    .returning();
+  return created;
 }

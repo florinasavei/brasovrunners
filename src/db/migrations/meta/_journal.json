@@ -43,6 +43,41 @@
       "when": 1788503102222,
       "tag": "0005_event_coordinates",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788510450984,
+      "tag": "0006_registrations_legal_docs_and_job_infra",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788510478599,
+      "tag": "0007_drop_staff_auth_subject",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788510491571,
+      "tag": "0008_add_staff_zitadel_subject",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788513680649,
+      "tag": "0009_drop_pilot_capacity_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788514995323,
+      "tag": "0010_email_outbox_sent_at_allows_post_send_bounce",
+      "breakpoints": true
     }
   ]
 }

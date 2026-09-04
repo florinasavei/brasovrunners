@@ -14,6 +14,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
@@ -120,8 +121,8 @@ export const events = pgTable(
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),
     registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
 
-    // References legal_documents once that table exists; unconstrained until then.
-    declarationDocumentId: uuid("declaration_document_id"),
+    // The EVENT_DECLARATION document version an internal registration must accept.
+    declarationDocumentId: uuid("declaration_document_id").references(() => legalDocuments.id),
 
     externalProvider: text("external_provider"),
     externalRegistrationUrl: text("external_registration_url"),
@@ -139,16 +140,11 @@ export const events = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    /**
-     * The pilot guard rail. BR-REQ-034-02 requires that a capped event never overbooks, and
-     * that guarantee comes from a locked capacity transaction with a concurrency test, which
-     * does not exist yet. Deferring the capacity engine is only safe if the system is
-     * physically incapable of storing a capacity, so the database refuses one.
-     *
-     * Removing this constraint is the last step of building the capacity transaction, never
-     * the first. WEEKEND.md records the reasoning.
-     */
-    check("events_capacity_must_be_null_during_pilot", sql`${t.capacity} IS NULL`),
+    // The pilot guard rail that blocked any capacity value — `events_capacity_must_be_null_
+    // during_pilot` — is removed here, and only here: BR-REQ-034-02's locked capacity
+    // transaction (`modules/registrations/service.ts`) and its concurrency suite
+    // (`tests/concurrency/capacity.test.ts`) exist and pass first. WEEKEND.md and
+    // DECISIONS.md record why the guard existed and when removing it became safe.
 
     // AGENTS.md §12.3: capacity and a declaration are internal-registration concepts only.
     check(

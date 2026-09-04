@@ -156,10 +156,18 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/",
       "/admin",
       "/admin/events/[id]",
+      "/admin/registrations",
+      "/admin/registrations/[id]",
       "/admin/staff",
       "/events",
       "/events/[slug]",
+      "/events/[slug]/register",
+      "/legal/privacy",
+      "/legal/terms",
       "/preview/events/[id]",
+      "/registrations/confirm/[token]",
+      "/registrations/declare/[token]",
+      "/registrations/manage/[token]",
       "/sign-in",
     ]);
   });

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
 
 # WEEKEND.md — the pilot scope
 
-**Baseline `BR-V1.15-2026-09-04`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
+**Baseline `BR-V1.16-2026-09-04`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
 
 One weekend of AI-assisted building. This file says exactly what that weekend produces, in
 what order, and what it deliberately does not. When it conflicts with `SETUP.md` §29, this file
@@ -121,11 +121,11 @@ lane in `CLAUDE.md`.
 
 | Deferred | Why it is safe to wait | Unblocked by |
 | --- | --- | --- |
-| Registration, confirmation, declaration, manage/cancel | Needs email and approved legal text; neither exists | domain + two approved Romanian texts |
-| Email delivery to real people | Needs a verified sending domain; a sandbox reaches only five authorized addresses | the domain |
-| Staff **login**; the backoffice itself is now built | The backoffice, the three roles and the editorial workflow shipped after the pilot (`DECISIONS.md` §25), because a developer editing a seed file is not a way for a club to run a race. The sign-in method did not: the one that suits volunteers with no passwords is an emailed link, which needs the sending domain. Local and test use the development switcher; qa and production refuse every staff request | the domain |
-| Privacy notice and terms pages | No personal data is collected by the event pages. Needed the day registration opens | club approval |
-| Capacity and the waiting list | The pilot is uncapped and the DB enforces it. Half-built capacity overbooks in public | the locked transaction and its concurrency test |
+| Registration, confirmation, declaration, manage/cancel; **the code now exists** | Built after the pilot, against real PostgreSQL under concurrent load — see `CHANGELOG.md` BR-V1.16. What remains is not code: no event is `INTERNAL` mode with a real capacity yet, no legal text is approved outside a developer's machine, and live email needs the domain | two approved Romanian texts + the domain |
+| Email delivery to real people; **the pipeline now exists** | Ten message templates, the outbox jobs and the Mailgun webhook are built and tested in capture mode. Live delivery needs a verified sending domain; a sandbox reaches only five authorized addresses | the domain |
+| Staff **login**; the backoffice itself is now built | The backoffice, the three roles and the editorial workflow shipped after the pilot (`DECISIONS.md` §25), because a developer editing a seed file is not a way for a club to run a race. Staff sign-in now exists too, through Auth.js and Zitadel (`DECISIONS.md` §26) — it does not need the sending domain the way an emailed link would have, only a Zitadel tenant. Local and test use the development switcher; qa and production run `STAFF_AUTH_MODE=disabled` until a tenant exists for them | a Zitadel tenant |
+| Privacy notice and terms pages; **the versioning and the routes now exist** | A `PLACEHOLDER` version is seeded in local and test only (`DECISIONS.md` §27) and registration itself refuses when nothing is approved. The routes 404 nowhere they shouldn't — they simply have nothing real to show yet | club approval of real Romanian and English text |
+| Capacity and the waiting list; **no longer deferred** | The locked capacity transaction exists and its concurrency suite (`tests/concurrency/capacity.test.ts`) passed before the pilot's `CHECK (capacity IS NULL)` guard was removed. An event may carry a real capacity now | — |
 | CMS, media, profiles, races, bibs, results | M2–M5 | — |
 
 ## The email progression, corrected
@@ -184,13 +184,15 @@ none of it was blocked on anything, and because the two rules it carries — a m
 must not confirm a registration, and a rolled-back registration must not send email — are
 cheaper to build into the schema than to retrofit onto a working flow.
 
-## Next weekend
+## Next weekend, done
 
-Built already, and described above: the outbox, the adapter boundary, and hashed single-use
-tokens with GET-never-mutates. What remains of that group is the three Romanian message types,
-whose wording the club has not written.
+Everything this section once described as blocked has since been built: the registration form
+with privacy acknowledgment and results consent, confirmation → declaration → confirmed →
+manage/cancel, capacity and the waiting list with a real concurrency suite, ten message
+templates in both languages, and a server-authorized backoffice page listing who is coming,
+with a state-aware resend and CSV export. `CHANGELOG.md` BR-V1.16 and `DECISIONS.md` §26–§27
+are the record.
 
-Blocked until the domain and the club's approved texts exist: the registration form with privacy
-acknowledgment and results consent, confirmation → declaration → confirmed → manage/cancel, one
-server-authorized admin page listing who is coming, and a retention rule with a named erasure
-contact. The scope review estimated ~20 hours for that slice against an *uncapped* event.
+What genuinely still blocks a real participant from using any of it: the club's approved
+Romanian and English privacy notice and declaration text, a Zitadel tenant for staff sign-in,
+and the sending domain for live email. None of those are code.

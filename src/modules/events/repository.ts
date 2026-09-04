@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
+import type { Database as GenericDatabase } from "@/db/types";
 
 type Locale = (typeof eventTranslations.locale.enumValues)[number];
 
@@ -186,6 +187,41 @@ export async function findLatestPastEvent(db: Database, locale: Locale, now: Dat
     .limit(1);
 
   return row;
+}
+
+/**
+ * The full internal event row — including `capacity`, which `PUBLIC_COLUMNS` deliberately
+ * omits. Registration needs the raw number to compute occupancy; the public site only ever
+ * needs the *derived* available-places count (BR-REQ-034-01), never the capacity itself.
+ */
+export async function findEventForRegistrationById(db: Database, eventId: string) {
+  const [row] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+  return row;
+}
+
+/**
+ * The title, meeting point and start time an email template needs, in one locale — falling
+ * back to the other published locale if this one has none, since a notification must never
+ * fail to render for a locale gap that a 404 would be the right answer to on the public site.
+ */
+export async function findEventNotificationDetails<T extends Record<string, unknown>>(
+  db: GenericDatabase<T>,
+  eventId: string,
+  locale: Locale,
+) {
+  const rows = await db
+    .select({
+      locale: eventTranslations.locale,
+      title: eventTranslations.title,
+      locationName: eventTranslations.locationName,
+      startsAt: events.startsAt,
+      timezone: events.timezone,
+    })
+    .from(eventTranslations)
+    .innerJoin(events, eq(events.id, eventTranslations.eventId))
+    .where(eq(eventTranslations.eventId, eventId));
+
+  return rows.find((row) => row.locale === locale) ?? rows[0];
 }
 
 /** One published event by its locale-scoped slug, or undefined when it should 404. */

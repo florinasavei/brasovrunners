@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V1.15-2026-09-04
+Baseline: BR-V1.16-2026-09-04
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -12,8 +12,12 @@ Authoritative/current root documentation:
 
 Licence: MIT, copyright Brașov Runners (LICENSE)
 
-Current mode: weekend pilot (WEEKEND.md) - Romanian event pages on Vercel from Neon, no
-registration. Agents start at CLAUDE.md.
+Current mode: M1 complete in code - event pages, the full registration lifecycle, capacity and
+the waiting list, staff sign-in, legal document versioning, transactional email and a
+registrations backoffice all exist and are tested. What remains is account creation and DevOps,
+not application code: a Zitadel tenant, a Neon project, two Vercel projects, the club's .ro
+domain, a Mailgun account, and the club's approved privacy notice and declaration text.
+WEEKEND.md records the narrower pilot this replaced. Agents start at CLAUDE.md.
 
 Supporting files:
 - docs/PRACTICES.md                    practice guides: code priorities, delivery, mobile,
@@ -49,7 +53,8 @@ Important current decisions:
 - Material UI
 - Romanian + English i18n
 - Mini CMS with Tiptap OSS
-- Staff-only Auth.js authentication, allowlisted by the staff_users table; no external IdP
+- Staff-only Auth.js authentication with the Zitadel OAuth provider, allowlisted by the
+  staff_users table (DECISIONS.md §26)
 - Passwordless participant flows via verified email action links
 - Case-insensitive canonical email duplicate prevention plus Gmail dot/+ normalization,
   with gmail.com and googlemail.com collapsed to one identity

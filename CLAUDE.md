@@ -1,19 +1,23 @@
-<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.15-2026-09-04`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.16-2026-09-04`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
-club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI. Nothing is
-built yet — the repository is documentation, a documentation checker, and a pre-commit hook.
+club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
 
-## Current mode: weekend pilot
+## Current mode: M1 complete in code
 
-Read [`WEEKEND.md`](./WEEKEND.md) before anything else. It is the scope. The full plan in
-`SETUP.md` §29 is ten pull requests and roughly 200 hours; the pilot is Romanian event pages on
-Vercel from Neon, no registration, no email, no login. Everything else is deferred there with a
-reason.
+M1 — event pages, the full registration lifecycle, staff sign-in, legal document versioning,
+transactional email and a registrations backoffice — exists and is tested. What is left is not
+application code: a Zitadel tenant, a Neon project, two Vercel projects, the club's `.ro`
+domain, a Mailgun account, and the club's approved privacy notice and declaration text. See
+"The one blocker" below and `DECISIONS.md` §26–§27 for what changed to get here.
+
+[`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced — Romanian event pages
+only, no registration, no email, no login — and is now a historical scope document rather than
+the current one. `SETUP.md` §29 is the original ten-pull-request M1 plan; most of it now exists.
 
 ## Commands that exist right now
 
@@ -42,8 +46,8 @@ process. Concurrency tests must not use it; see `docs/DEVELOPMENT.md`.
 
 ## Read order
 
-1. `WEEKEND.md` — what to build this weekend and what not to.
-2. This file.
+1. This file.
+2. `WEEKEND.md` — the pilot this replaced, kept for its reasoning, not its scope table.
 3. `AGENTS.md` §1.5 (priority order) and the one §10 subsection for the rule you are touching.
 4. The `BR-REQ-*` you implement, in `SPECS.md`. Name it before you write code.
 5. Everything else on demand. `README.md` § Where a rule lives is the index.
@@ -54,7 +58,7 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 
 | Rule | Where it lives |
 | --- | --- |
-| No capped event until the locked capacity transaction exists. The DB refuses a non-null `capacity` for now. | `AGENTS.md` §10.6, BR-REQ-034-01, BR-REQ-034-02 |
+| No overbooking, ever, under real concurrent load — not merely under a single-connection test. `tests/concurrency/capacity.test.ts` is what the locked capacity transaction is checked against; the pilot's `CHECK (capacity IS NULL)` guard is gone now that it passes. | `AGENTS.md` §10.6, BR-REQ-034-01, BR-REQ-034-02 |
 | No registration without the club's approved declaration and privacy notice. Never invent legal text. | `AGENTS.md` §10.8, §29; BR-REQ-053-01 |
 | Participants never get passwords or accounts. Staff-only auth. | `AGENTS.md` §10.3, §13 |
 | Email action links: token hashed at rest, single use, GET never mutates. | `AGENTS.md` §12.8, BR-REQ-036-02 |
@@ -65,7 +69,11 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 
 ## Fast lane — what is relaxed during the pilot, and what is not
 
-Recorded once in `DECISIONS.md` §20 so it does not have to be re-argued.
+Recorded once in `DECISIONS.md` §20 so it does not have to be re-argued. This was a pilot-scope
+allowance; the M1-completion work recorded in `DECISIONS.md` §26–§27 used the full change-type
+matrix and a baseline bump, per the scope it was given, precisely because it changed documented
+rules (the staff auth provider, the capacity guard) rather than adding pilot-scale application
+code underneath unchanged ones.
 
 **Relaxed:** application code needs no baseline bump and no six-document edit. Add a
 `CHANGELOG.md` line when something user-visible ships; that is all.
@@ -81,41 +89,69 @@ Public Romanian event pages, running and tested. `/ro/evenimente` lists seeded e
 `/ro/evenimente/<slug>` shows one, with `SportsEvent` JSON-LD, a sitemap and robots. English
 translations are published too: every event carries a complete Romanian and English
 translation. BR-REQ-040-02 still holds — an unpublished locale is a 404 and never a fallback
-to the other language — it simply no longer describes these rows. The site root redirects to
-the events listing, which is the landing page.
-
-Also built: email canonicalization with the `participants` table behind it, and the pilot
-capacity guard (the database refuses any non-null `capacity`).
+to the other language. The site root redirects to the events listing, which is the landing page.
 
 **The backoffice.** An organizer signs in, edits a race — both of its times, its map link, every
 editorial field per language — marks it as the featured event, previews the draft, and publishes
 it, without a developer. Three staff roles asserted on the server, staff administration for an
 Administrator, DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED per locale, and a save that carries the
 version it was loaded with, so a second organizer's save is a CONFLICT rather than an overwrite.
-Built ahead of its milestone on purpose: `DECISIONS.md` §25. The sign-in method is *not* built —
-local and test use the development switcher of `AGENTS.md` §13.1, and qa and production answer
-404 to every staff request until an emailed link becomes possible, which needs the domain.
+Built ahead of its milestone on purpose: `DECISIONS.md` §25. Staff sign-in now exists too:
+Auth.js with the Zitadel OAuth provider (`DECISIONS.md` §26, reversing §24, which was never
+shipped to anyone). `STAFF_AUTH_MODE=provider` is the real thing; local and test still use the
+development switcher of `AGENTS.md` §13.1, and any environment without a Zitadel tenant runs
+`STAFF_AUTH_MODE=disabled`, answering 404 to every staff request.
 
-Also built, and reachable by nothing yet: email action tokens and the transactional outbox
-(BR-REQ-036-02, BR-REQ-080-02, BR-REQ-080-03). Hash-only storage, purpose scope, single use,
-and a read-only transaction so a GET cannot mutate; outbox rows commit with the change that
-caused them and the provider is called outside that transaction. The Mailgun adapter is
-declared and deliberately not wired — it throws rather than dropping mail — and startup refuses
-live delivery outside production.
+**Legal documents.** `legal_documents`/`legal_document_translations` (§12.5), immutable once
+referenced, with no editor screen in any form. A `PLACEHOLDER` version is seeded in local and
+test only — refused outright elsewhere (`DECISIONS.md` §27) — and the two public routes
+(`/ro/confidentialitate`, `/ro/termeni`) render whatever is currently approved, or say plainly
+that nothing is yet.
 
-**420 unit and integration tests, 44 end-to-end runs (22 per viewport project), and a
-three-test concurrency suite.** `yarn test` needs no database — PGlite runs real PostgreSQL in
-process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
+**The registration lifecycle, proven under real concurrency.** Submission (honeypot + timing
+check, generic response regardless of what the address turns out to mean), email confirmation,
+the 30-minute declaration hold, capacity, the waiting list, self-unregistration, and the
+registration-maintenance job — one shared allocator
+(`modules/registrations/service.ts`) that a participant's click and the scheduled job both go
+through. `tests/concurrency/capacity.test.ts` proves twenty simultaneous confirmations against
+one free place produce exactly one winner, and that a released place goes to the front of the
+waiting list rather than to a concurrent new registration — against real PostgreSQL, not the
+single-connection PGlite the rest of the suite runs on. The pilot's `CHECK (capacity IS NULL)`
+guard is gone, removed only after that suite passed.
+
+**Email.** Ten message types (§16.3), Romanian and English, HTML and text, through the outbox
+built earlier. A message that carries an action link mints its token at send time — the outbox
+row itself never holds a secret, satisfying §14.5 even though the row can sit queued for
+minutes before a worker renders it. Two job endpoints
+(`/api/internal/jobs/email-outbox`, `.../registration-maintenance`) behind a constant-time
+`JOB_SECRET`, and `/api/webhooks/mailgun` verifying Mailgun's own signature. No in-process
+interval: this deploys to Vercel serverless functions, which have no persistent process for one
+to live in, so the external scheduler is the only mechanism, not a fallback. The Mailgun
+adapter itself is still declared and deliberately not wired — it throws rather than dropping
+mail — and startup still refuses live delivery outside production.
+
+**A registrations backoffice.** List and filter by event and status, one registration's full
+timeline, a resend that can only ever send what §15.8 allows for the current status, and a CSV
+export with formula-neutralized cells (§15.10). Administrator only, asserted on the server.
+
+**`/api/health`.** Database reachability plus each scheduled job's own liveness — degraded, not
+down, when a job is stale or has never run, because a stalled scheduler delays a notification
+rather than breaking the site.
+
+**543 unit and integration tests, 44 end-to-end runs (22 per viewport project, not extended by
+this work), and five concurrency tests.** `yarn test` needs no database — PGlite runs real
+PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
 single-connection database.
 
-Not built, each deferred with a reason in `WEEKEND.md`: registration, email delivery, the staff
-sign-in method, capacity, waiting lists, and the rest of the CMS — articles, static pages,
-galleries, the media library and the Tiptap body contract.
+Not built: the rest of the CMS — articles, static pages, galleries, the media library and the
+Tiptap body contract (M5) — and everything M2–M4 name (multi-distance races, bibs, results,
+runner profiles).
 
-**The one blocker:** nothing is deployed. That needs a Neon project (Frankfurt, region fixed at
-creation) and two Vercel projects (`qa` and `main`, region `fra1`). Everything else is waiting
-on the club's `.ro` domain and their approved privacy notice and declaration.
+**The one blocker: nothing is deployed, and none of what remains is application code.** A
+Zitadel tenant for staff sign-in, a Neon project (Frankfurt, region fixed at creation), two
+Vercel projects (`qa` and `main`, region `fra1`), the club's `.ro` domain, a Mailgun account,
+and the club's approved privacy notice and declaration text.
 
 ## Stack and providers, as decided
 
@@ -126,10 +162,10 @@ on the club's `.ro` domain and their approved privacy notice and declaration.
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | events, event_translations, participants; `docker-compose.yml` locally |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | not deployed yet |
-| Auth | staff only. **Decided:** Auth.js alone, `staff_users` as the server-side allowlist, no external IdP (`DECISIONS.md` §24). Roles, helpers, backoffice and the development switcher are built; the sign-in method waits on the domain | partly built |
-| Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours | pipeline buildable now; delivery to real people needs the domain |
+| Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher, and the provider wiring itself are all built; only a Zitadel tenant is missing | built; waits on a tenant |
+| Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
 | Storage | Documented: R2 behind the four-method adapter in `AGENTS.md` §17. Direction: `public/` until a non-developer uploads | deferred |
-| Spam | Honeypot + timing + rate limiting first. Cloudflare Turnstile only if that fails — it is a processor the unapproved privacy notice must name | not built |
+| Spam | Honeypot + timing check on registration submission, built. Cloudflare Turnstile only if that fails — it is a processor the unapproved privacy notice must name | built (honeypot + timing); Turnstile not built |
 
 **Before installing anything:** verify the current API against the library's documentation
 (Context7 or the official docs site). Next 16, MUI 9, next-intl 4 and Drizzle 0.45 are newer
@@ -145,7 +181,7 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   commits. Creating a branch when asked is fine.
 - Branch from `qa`, PR into `qa`. `main` is production. `SETUP.md` § Contributing.
 - Windows development machine, Linux CI. Anything with paths or line endings: test both.
-- Tests are named by the `BR-REQ-*` they cover. Six tests matter for the pilot; `WEEKEND.md`
-  lists them.
+- Tests are named by the `BR-REQ-*` they cover, or by the `AGENTS.md` section for cross-cutting
+  mechanisms (jobs, health). `WEEKEND.md` records the six that mattered for the original pilot.
 - No `BaseService`, barrels, dispatch tables, or wrappers around MUI. `AGENTS.md` §1.3.
 - When a doc contradicts this file, the doc wins and this file is wrong — fix it here.

@@ -6,8 +6,10 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
+import Box from "@mui/material/Box";
 import { env } from "@/shared/config/env";
 import { routing } from "@/i18n/routing";
+import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
 import AppTheme from "@/theme/AppTheme";
 
@@ -72,8 +74,13 @@ export default async function LocaleLayout({ children, params }: Props) {
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
             <NextIntlClientProvider>
-              <SiteHeader />
-              {children}
+              {/* Not a <main>: every page already renders its own via `component="main"` on
+                  its root Container, and a document may have only one. */}
+              <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+                <SiteHeader />
+                <Box sx={{ flex: 1 }}>{children}</Box>
+                <SiteFooter />
+              </Box>
             </NextIntlClientProvider>
           </AppTheme>
         </AppRouterCacheProvider>

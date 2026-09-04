@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -15,9 +15,9 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | --- | --- |
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
-| Code | Public event pages running: Next.js App Router, Material UI, `next-intl` `ro`/`en`, PostgreSQL via Drizzle, structured data, sitemap. Plus a backoffice: an organizer edits a race, features it, previews it and publishes it per language, with the three staff roles enforced on the server. No registration or email yet, and the staff sign-in method itself waits on the domain — see [`DECISIONS.md`](./DECISIONS.md) §24. |
-| Priority | M1: event pages and registration, defined in [`DECISIONS.md`](./DECISIONS.md) §12 |
-| Now | **Weekend pilot:** Romanian event pages on Vercel from Neon, no registration — [`WEEKEND.md`](./WEEKEND.md). `SETUP.md` §29 remains the M1 plan |
+| Code | M1 complete in code. Public event pages; a backoffice where an organizer edits, features, previews and publishes a race per language; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents with no invented text outside a developer's machine; ten transactional message types through the outbox; a registrations backoffice with a state-aware resend and CSV export; `/api/health`. See [`DECISIONS.md`](./DECISIONS.md) §26–§27. |
+| Priority | Account creation and DevOps, not application code: a Zitadel tenant, a Neon project, two Vercel projects, the `.ro` domain, a Mailgun account, and the club's approved privacy notice and declaration text |
+| Now | Deployed nowhere yet. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -222,7 +222,7 @@ The club can:
 
 Authentication is deliberately limited to staff:
 
-- `AUTHOR`, `EDITOR`, and `ADMIN` users sign in to the CMS/backoffice through Auth.js, against the `staff_users` allowlist — no external identity provider ([`DECISIONS.md`](./DECISIONS.md) §24). The sign-in method is not built yet: local and test use the development switcher, and qa and production refuse every staff request until it is;
+- `AUTHOR`, `EDITOR`, and `ADMIN` users sign in to the CMS/backoffice through Auth.js and the Zitadel OAuth provider, against the `staff_users` allowlist — an unknown Zitadel account is refused before a session issues ([`DECISIONS.md`](./DECISIONS.md) §26). Local and test use the development switcher instead; qa and production refuse every staff request until an operator turns `STAFF_AUTH_MODE=provider` on for that environment, which needs a Zitadel tenant to exist first;
 - an administrator maintains that list: add a colleague by email and role, change a role, revoke access. Nobody outside it can sign in;
 - ordinary participants do **not** create an application account;
 - participant identity is based on a verified email address;
@@ -369,8 +369,9 @@ real PostgreSQL compiled to WebAssembly, in-process — so the whole suite runs 
 no Docker and no setup. Journeys run in a real browser through **Playwright**, at a 320-pixel
 phone viewport as well as a desktop one, because the phone is the design target.
 
-**Still to come**, each documented and deliberately not built yet: staff login (Auth.js),
-transactional email, a small Tiptap-based CMS for organizers, and image storage.
+**Still to come**, each documented and deliberately not built yet: a small Tiptap-based CMS for
+organizers (articles, static pages, galleries) and image storage. Staff login and transactional
+email now exist — see [`DECISIONS.md`](./DECISIONS.md) §26 and the current-status table above.
 
 ### The table
 

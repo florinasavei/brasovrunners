@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
 
 # Running this locally
 
-**Baseline `BR-V1.15-2026-09-04`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V1.16-2026-09-04`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -151,12 +151,16 @@ overbooks.
 > event. Add Docker or Testcontainers *alongside* this harness rather than replacing it; these
 > tests are fast and need no daemon, which is worth keeping.
 
-**The first suite that needed the other kind of database.** `yarn test:concurrency` runs
-`tests/concurrency/` against a real PostgreSQL server, with two genuine connections, and proves
-BR-REQ-051-01 criterion 5: two organizers saving one event, one save refused as stale, the other
-surviving whole. It has its own configuration (`vitest.concurrency.config.mts`), it is excluded
-from `yarn test`, and it fails loudly rather than skipping when `DATABASE_URL` is unset — a
-concurrency suite that quietly passes with nothing connected is worse than no suite at all.
+**The suite that needs the other kind of database.** `yarn test:concurrency` runs
+`tests/concurrency/` against a real PostgreSQL server, with genuinely parallel connections. Two
+files now: `cms-conflict.test.ts` proves BR-REQ-051-01 criterion 5 (two organizers saving one
+event, one save refused as stale, the other surviving whole), and `capacity.test.ts` proves
+BR-REQ-034-02 and BR-REQ-034-03 — twenty simultaneous confirmations against one free place
+produce exactly one winner, and a released place goes to the front of the waiting list rather
+than to a concurrent new registration. It has its own configuration
+(`vitest.concurrency.config.mts`), it is excluded from `yarn test`, and it fails loudly rather
+than skipping when `DATABASE_URL` is unset — a concurrency suite that quietly passes with
+nothing connected is worse than no suite at all.
 
 ```bash
 docker compose up -d db && yarn db:migrate
@@ -187,8 +191,9 @@ there because a country field needs hundreds; the switcher is its first use.
 
 ## Signing in to the backoffice locally
 
-There is no staff login yet (`DECISIONS.md` §24), so local and test use the development
-switcher `AGENTS.md` §13.1 permits: open `/ro/autentificare`, pick one of three synthetic
+Real staff sign-in is Auth.js with the Zitadel provider (`DECISIONS.md` §26), which needs a
+Zitadel tenant most developer machines do not have. Local and test use the development
+switcher `AGENTS.md` §13.1 permits instead: open `/ro/autentificare`, pick one of three synthetic
 identities — Author, Editor, Administrator — and you are that role until you sign out. The
 identities are created on demand, so a migrated-but-unseeded database works.
 
@@ -233,9 +238,10 @@ does not import React, Next, MUI, or a provider SDK, and there is no `utils.ts`.
   `@mui/material-nextjs/v16-appRouter`. It must match the Next major.
 - **TypeScript is pinned to 5.9.3, not 7.** `eslint-config-next` pulls `typescript-eslint`,
   which refuses TS 7 outright. Upgrading TypeScript means checking that first.
-- **The database refuses a capacity.** That is not a bug — see `WEEKEND.md`. A capped event
-  needs the locked capacity transaction, and until it exists the constraint is what makes
-  deferring it safe.
+- **The database no longer refuses a capacity.** It did, during the pilot — see `WEEKEND.md`.
+  The locked capacity transaction (`modules/registrations/service.ts`) and its concurrency
+  suite (`tests/concurrency/capacity.test.ts`) exist now, and the constraint was removed only
+  after that suite passed. An event may carry a real capacity.
 - **Resetting the database means dropping the `drizzle` schema too.** Drizzle records applied
   migrations in a table inside its own schema, so `DROP SCHEMA public CASCADE` alone leaves it
   believing everything is applied; the next migrate then fails on a missing enum and leaves an

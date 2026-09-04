@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1289,3 +1289,108 @@ loads schema modules eagerly, so that is not a style problem — it is
 `src/db/schema/locale.ts`, which imports nothing.
 
 Baseline bumped to `BR-V1.15-2026-09-04`.
+
+## 26. Decided — staff sign-in is Auth.js with the Zitadel provider, superseding §24 (2026-09-04)
+
+§24 decided "Auth.js alone, no external identity provider," and corrected `AGENTS.md` §13.1
+and §12.1, the provider tables in §3.1/§7.1/§7.2, `SETUP.md` §15 and the environment lists to
+say so. Nothing built against that decision ever ran anywhere but a developer's own machine:
+`staff_users.auth_subject` never held a row with a subject, because the sign-in method §24
+itself deferred — the emailed link — was never built either. This section reverses §24, and it
+is a correction of an unshipped plan, not a migration of live identities. The same six
+documents §24 touched are corrected again, back the other way, in the same pull request as
+this entry.
+
+**Decided: Auth.js with the Zitadel OAuth provider.** `staff_users` stays exactly what §24 made
+it — the server-side allowlist — and the boundary is unchanged: an unknown Zitadel account is
+refused before a session is ever issued, the same as an uninvited address was refused under the
+switcher. The column is `zitadel_subject` again; the rename is a real migration
+(`0007_drop_staff_auth_subject.sql`, `0008_add_staff_zitadel_subject.sql`) because migrations
+after `0004` are shipped and column renames are not silently rewritten, even when — as here —
+the column being renamed has never held a production row. A local database that had used the
+development switcher keeps its `staff_users` rows; the migration only clears the now-orphaned
+`first_signed_in_at` on any row whose subject did not survive the rename, so those identities
+simply bind again on next sign-in rather than violating the table's own "a subject and a
+sign-in arrive together" check. `ensureDevStaffUser` needed the same fix `resolveZitadelSignIn`
+already has: an insert guarded only by `ON CONFLICT (zitadel_subject)` cannot see a row that
+already claims the identity's address with no subject yet — exactly the shape that rename just
+produced — so it now looks up by subject, then by email, and binds rather than inserting when
+it finds the row by email. The end-to-end suite caught this the same afternoon it was written.
+
+The reasoning, in the order it matters now:
+
+- **Passwordless sign-in no longer waits on the sending domain.** §24's blocker was structural:
+  the only method AGENTS.md §13.1 considered for volunteers with no passwords was an emailed
+  link, and delivery needs the club's domain — the same blocker registration itself waits on.
+  Zitadel's login policy offers both password and passwordless (passkey/magic-link-style)
+  sign-in configured entirely on Zitadel's side, so the backoffice can have a real door before
+  the domain exists at all.
+- **Standing up the identity provider is an account-creation task, not application work.** §24
+  weighed "operating an identity platform for a handful of volunteers" against the club's
+  actual population and found it disproportionate. That calculus does not change; what changes
+  is who does the operating. A Zitadel tenant is configured once, by the owner, the same way
+  Neon and Vercel projects are — it is not code this repository runs, maintains, or scales.
+  `AGENTS.md` §1.3's warning against structure without a population is about engineering
+  effort inside this codebase, and this decision adds none: the provider table in §3.1 grows by
+  one row, not by a subsystem.
+- **Nothing about the boundary or the helpers moves.** Participants still never receive
+  accounts or passwords (§10.3), the three roles are unchanged, and `getCurrentStaffUser`,
+  `requireStaff`, `requireStaffRole` are the same functions, now with a second branch (session
+  strategy JWT, no adapter, no `accounts`/`sessions` tables) alongside the switcher's cookie
+  branch. `staff_users` is still the only persisted identity state this application owns.
+
+**What §24 got right and this section keeps.** The invitation model — an Administrator adds a
+colleague by email and role, the row waits, first sign-in binds the subject — needed no change
+at all: it was never really about which provider issues the subject, only about `staff_users`
+being the thing that grants access regardless of what any provider asserts. The three
+self-protection refusals (no changing your own role, no removing your own access, no leaving
+the club with no Administrator) and the double-guarded development switcher are untouched.
+
+**Verified before written, not discovered by trying.** `next-auth@5.0.0-beta.32` ships
+`next-auth/providers/zitadel`; `AUTH_ZITADEL_ID`, `AUTH_ZITADEL_SECRET` and (by Auth.js's
+environment-variable inference) `AUTH_ZITADEL_ISSUER` are its configuration, alongside
+`AUTH_SECRET` for the JWT session itself — checked against Auth.js's current documentation
+before `src/auth.ts` was written, the same discipline §24 applied when it verified the provider
+existed before dropping it.
+
+`STAFF_AUTH_MODE` gains a third value, `provider` — named for the mechanism rather than the
+vendor, matching `EMAIL_DELIVERY_MODE`'s own style, so a future change to what Zitadel's login
+policy offers is a Zitadel console change, not an environment-variable rename. `dev-switcher`
+is unchanged; `disabled` remains the safe default until an operator explicitly turns `provider`
+on for an environment.
+
+## 27. Decided — legal document versioning ships now; no placeholder ever reaches qa or production (2026-09-04)
+
+`AGENTS.md` §12.5's versioning machinery, `legal_documents` and `legal_document_translations`,
+is built in this same change set as registration itself, ahead of the club approving real
+privacy-notice, terms or declaration wording. Building the machinery early is safe; the
+question this section settles is what a database with no approved text yet should do, in every
+environment that is not a developer's own machine.
+
+**Decided: a clearly marked `PLACEHOLDER` version is seeded in local and test only.**
+`seedPlaceholderLegalDocuments` (`src/db/seeds/legal-placeholder.ts`) refuses to run — throws,
+does not silently skip — when `APP_ENV` is anything but `local` or `test`, and `pilot.ts` never
+calls it for any other environment either. This is the same double-guard shape as the
+development staff switcher: refused at the call site, and refused again inside the function
+itself if some future caller forgets the first refusal.
+
+The reasoning:
+
+- **`AGENTS.md` §1.2 forbids inventing legal text that could reach a real person.** A
+  placeholder is invented text by construction — it says so in both languages, in the body
+  itself — so the only safe environments for it are the ones no real participant's browser ever
+  reaches.
+- **Registration's own refusal is the correctness guarantee; the seed guard is defense in
+  depth.** `submitRegistration` calls `findCurrentApprovedDocument` and refuses with
+  `VALIDATION_ERROR` when it finds nothing (BR-REQ-053-01's acceptance criteria). That is what
+  actually stops a qa or production registration from proceeding with no approved privacy
+  notice — a property of the data, true regardless of what any seed script does. The seed guard
+  exists so the *invented* text specifically can never exist outside local and test, which is a
+  stronger and separate promise than "registration merely refuses when nothing is approved."
+- **The real approved versions are a migration, not a seed.** When the club approves Romanian
+  and English wording, whoever writes that migration is a person accountable for the words —
+  `docs/RUNBOOKS.md` § Legal document version is the procedure. `pilot.ts` and its placeholder
+  are exactly the seed data WEEKEND.md already called out as needing replacement before
+  anything reaches a real participant; this is the same rule extended to legal text.
+
+Baseline bumped to `BR-V1.16-2026-09-04`.

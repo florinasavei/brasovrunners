@@ -70,7 +70,39 @@
     "legalNotice": "Legal documents — the privacy notice, the terms and the declaration — are not edited here. New versions arrive through a migration, following the runbook.",
     "nav": {
       "events": "Events",
+      "registrations": "Registrations",
       "staff": "Staff"
+    },
+    "registrations": {
+      "empty": "There are no registrations.",
+      "filterAll": "All events",
+      "filter": "Filter",
+      "statusLabel": "Status",
+      "export": "Export CSV",
+      "backToList": "Back to registrations",
+      "resend": "Resend email",
+      "resendSent": "The email has been queued again.",
+      "resendNothingToSend": "There is nothing to resend for this status.",
+      "timeline": "Timeline",
+      "submitted": "Submitted",
+      "emailConfirmed": "Email confirmed",
+      "waitlisted": "Waitlisted",
+      "offerCreated": "Offer created",
+      "holdExpires": "Hold expires",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "declaration": "Declaration signed",
+      "outboxHistory": "Email history",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Waiting on email confirmation",
+        "PENDING_DECLARATION": "Waiting on declaration",
+        "WAITLISTED": "Waitlisted",
+        "WAITLIST_OFFERED": "Offer active",
+        "CONFIRMED": "Confirmed",
+        "CANCELLED": "Cancelled",
+        "EXPIRED": "Expired"
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -144,7 +176,8 @@
     "signIn": {
       "title": "Staff sign-in",
       "unavailable": "Staff sign-in is not available in this environment yet.",
-      "developmentOnly": "Development identities, on a local machine and in tests only. These are not real people."
+      "developmentOnly": "Development identities, on a local machine and in tests only. These are not real people.",
+      "withZitadel": "Sign in with Zitadel"
     },
     "staff": {
       "title": "Staff",
@@ -164,5 +197,47 @@
   "NotFound": {
     "title": "This page does not exist",
     "back": "Back to the home page"
+  },
+  "Legal": {
+    "unavailable": "This document has not been published for this environment yet.",
+    "privacyLinkLabel": "Privacy",
+    "termsLinkLabel": "Terms and conditions"
+  },
+  "Registration": {
+    "title": "Register: {event}",
+    "name": "Full name",
+    "email": "Email address",
+    "privacyPrefix": "I have read and agree to the",
+    "privacyLinkLabel": "privacy notice",
+    "resultsNameConsent": "I agree to my name appearing in public results",
+    "submit": "Submit registration",
+    "submitted": "Check your email to confirm your registration.",
+    "errors": {
+      "generic": "The registration could not be submitted. Check what you entered and try again."
+    }
+  },
+  "Registrations": {
+    "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",
+    "confirm": {
+      "title": "Confirm your email address",
+      "prompt": "Press the button below to confirm your email address and continue your registration.",
+      "action": "Confirm",
+      "done": "Your email address has been confirmed."
+    },
+    "declare": {
+      "title": "Event declaration",
+      "accept": "I have read and accept the declaration above",
+      "typedName": "Type your full name as a signature",
+      "action": "Sign and confirm",
+      "doneConfirmed": "Your registration is confirmed.",
+      "doneWaitlisted": "The place was no longer available; you have been added to the waiting list."
+    },
+    "manage": {
+      "title": "Manage your registration",
+      "prompt": "You can cancel this registration. The place will be released immediately.",
+      "action": "Cancel registration",
+      "done": "Your registration has been cancelled.",
+      "eventStarted": "This event has already started; the registration can no longer be cancelled."
+    }
   }
 }

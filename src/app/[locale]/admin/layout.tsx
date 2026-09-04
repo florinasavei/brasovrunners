@@ -78,6 +78,9 @@ export default async function AdminLayout({ children, params }: Props) {
 
       <Stack direction="row" spacing={2} sx={{ mb: 3, flexWrap: "wrap", gap: 1 }}>
         <Link href="/admin">{t("nav.events")}</Link>
+        {staffUser.role === "ADMIN" && (
+          <Link href="/admin/registrations">{t("nav.registrations")}</Link>
+        )}
         {staffUser.role === "ADMIN" && <Link href="/admin/staff">{t("nav.staff")}</Link>}
       </Stack>
 

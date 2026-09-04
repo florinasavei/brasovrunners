@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -391,7 +391,7 @@ Environment type:
 
 ```ts
 type AppEnvironment = "local" | "test" | "qa" | "production";
-type StaffAuthMode = "dev-switcher" | "disabled";
+type StaffAuthMode = "dev-switcher" | "provider" | "disabled";
 type EmailDeliveryMode = "capture" | "allowlist" | "live";
 type StorageMode = "local" | "fake" | "r2";
 ```
@@ -401,8 +401,8 @@ Required combinations:
 ```text
 local:      dev-switcher / capture / local
  test:      dev-switcher / capture / fake
- qa:        disabled / capture-or-allowlist / r2
- production: disabled / live / r2
+ qa:        provider-once-tenant-exists-else-disabled / capture-or-allowlist / r2
+ production: provider-once-tenant-exists-else-disabled / live / r2
 ```
 
 `.env.example` should document concepts:
@@ -411,8 +411,12 @@ local:      dev-switcher / capture / local
 APP_ENV
 APP_BASE_URL
 DATABASE_URL
-STAFF_AUTH_MODE          dev-switcher | disabled; unset derives per environment
-Auth.js variables required by the installed provider
+STAFF_AUTH_MODE          dev-switcher | provider | disabled; unset derives per environment
+AUTH_SECRET              required when STAFF_AUTH_MODE=provider
+AUTH_ZITADEL_ID          required when STAFF_AUTH_MODE=provider
+AUTH_ZITADEL_SECRET      required when STAFF_AUTH_MODE=provider
+AUTH_ZITADEL_ISSUER      required when STAFF_AUTH_MODE=provider
+JOB_SECRET               verifies the two job endpoints (§16.2); a scheduler's secret, not a staff session
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
 MAILGUN_API_KEY
@@ -567,19 +571,28 @@ Persist original verified delivery address separately. Do not claim this detects
 
 ## 15. Configure staff authentication
 
-Auth.js alone, with the `staff_users` table as the server-side allowlist. There is no external
-identity provider to create an account with: `DECISIONS.md` §24 records why the Zitadel plan was
-dropped before anything was built.
+Auth.js with the Zitadel OAuth provider, and `staff_users` as the server-side allowlist: an
+unknown Zitadel account is refused before a session ever issues. `DECISIONS.md` §26 records
+why this reverses §24 — nothing was ever built against §24 beyond the development switcher.
 
-Nothing to configure with a provider, then, but two things to know:
+What a Zitadel tenant needs, once one exists (an account-creation task, not a code change):
+
+- an application registered for this project, with a client ID and secret;
+- the redirect/callback URL Auth.js expects, per its current documentation, for each
+  environment's `APP_BASE_URL`;
+- `AUTH_SECRET`, `AUTH_ZITADEL_ID`, `AUTH_ZITADEL_SECRET` and `AUTH_ZITADEL_ISSUER` set for
+  that environment, and `STAFF_AUTH_MODE=provider`;
+- password and passwordless sign-in both configured in Zitadel's own login policy — this
+  application does not choose between them.
+
+Two things to know regardless:
 
 - **Local and test** use the development staff switcher: `STAFF_AUTH_MODE=dev-switcher`, three
   synthetic identities, one per role, at `/ro/autentificare`. The process refuses to start with
   this mode in qa or production.
-- **The sign-in method itself is not built.** The one that suits volunteers with no passwords is
-  an emailed link, and delivery to a real person needs the club's sending domain — the same
-  blocker registration waits on. Until then qa and production run `STAFF_AUTH_MODE=disabled`,
-  where every staff request is answered by nobody and the backoffice returns 404.
+- **Until the tenant exists for an environment**, that environment runs
+  `STAFF_AUTH_MODE=disabled`, where every staff request is answered by nobody and the
+  backoffice returns 404 — the honest state, not a workaround.
 
 Who may sign in is maintained in the backoffice by an administrator: add a colleague by email
 address and role, change a role, revoke access. There is no invitation email yet, so the entry
