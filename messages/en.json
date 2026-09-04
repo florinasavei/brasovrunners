@@ -9,7 +9,8 @@
     "languageName": {
       "ro": "Română",
       "en": "English"
-    }
+    },
+    "buildBadgeLabel": "Website version and when it was last updated"
   },
   "Home": {
     "title": "Brașov Runners",

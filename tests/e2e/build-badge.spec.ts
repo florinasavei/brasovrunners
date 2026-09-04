@@ -1,0 +1,69 @@
+import { expect, test } from "@playwright/test";
+
+/**
+ * The build badge, part of the shared chrome (AGENTS.md §8; `shared/ui/BuildBadge.tsx`).
+ *
+ * A fixed element in the bottom-right corner is exactly the kind of thing that is fine on a
+ * desktop and covers a link on a phone, so the interesting assertions here are the mobile
+ * ones: it must not swallow a tap, and it must not widen the document.
+ *
+ * These run against the seeded database, so `docker compose up -d db && yarn db:seed` first.
+ */
+
+const badge = (page: import("@playwright/test").Page) =>
+  page.getByLabel(/versiunea site-ului|website version/i);
+
+test.describe("the build badge", () => {
+  test("names a version on every page, in both locales", async ({ page }) => {
+    for (const path of ["/ro/evenimente", "/en/events", "/ro/confidentialitate"]) {
+      await page.goto(path);
+      // Either the baseline and a commit, or the "dev" fallback when a build had no git.
+      await expect(badge(page)).toHaveText(/BR-V\d+\.\d+|dev/);
+    }
+  });
+
+  test("shows when the code behind it was last changed", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    // A year is the part that is stable across locales; the month name is not.
+    await expect(badge(page)).toHaveText(/\d{4}/);
+  });
+
+  test("does not swallow a tap in the corner it occupies", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    // `pointer-events: none` is what makes this true — assert the behaviour, not the
+    // declaration, so a refactor that keeps the effect keeps passing.
+    const box = await badge(page).boundingBox();
+    expect(box).not.toBeNull();
+    const atBadge = await page.evaluate(
+      ([x, y]) => {
+        const el = document.elementFromPoint(x, y);
+        return el?.closest("[aria-label]")?.getAttribute("aria-label") ?? null;
+      },
+      [box!.x + box!.width / 2, box!.y + box!.height / 2],
+    );
+    // `?? ""` because the usual pass is `null` — the point hits page content with no labelled
+    // ancestor at all, which is the same success as hitting something that is not the badge.
+    expect(atBadge ?? "").not.toMatch(/versiunea site-ului|website version/i);
+  });
+
+  test("does not widen the document past the viewport", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    // BR-REQ-041-01 criterion 1, restated for the one element positioned outside the flow.
+    const overflow = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+  });
+
+  test("leaves the footer's legal links reachable", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    // The badge sits above the footer's own corner: the link must still be clickable, which
+    // is the failure a fixed overlay actually causes on a 320px screen.
+    await page.getByRole("link", { name: /confidențialitate/i }).click();
+    await expect(page).toHaveURL(/\/ro\/confidentialitate/);
+  });
+});
