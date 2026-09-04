@@ -23,6 +23,8 @@ function baseEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
     endsAt: null,
     raceStartsAt: null,
     timezone: "Europe/Bucharest",
+    latitude: null,
+    longitude: null,
     mapUrl: null,
     featured: false,
     distanceMeters: 14000,
@@ -163,5 +165,43 @@ describe("BR-REQ-052-02 the race start and the gathering", () => {
 
     expect(block.startDate).toBe("2026-09-20T08:00:00+03:00");
     expect(block.doorTime).toBe(block.startDate);
+  });
+});
+
+/**
+ * BR-REQ-052-02 criterion 2 and BR-REQ-011-01 criterion 7 — the exact place.
+ *
+ * A place name is as ambiguous to a search engine as it is to a runner: a park is not a start
+ * line. `geo` is what lets a result show the right pin.
+ */
+describe("BR-REQ-052-02 the meeting point as coordinates", () => {
+  it("publishes geo when the club has stated coordinates", () => {
+    const block = parsed(
+      sportsEventJsonLd(
+        baseEvent({ latitude: "45.6427", longitude: "25.5887" }),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+
+    expect(block.location.geo).toEqual({
+      "@type": "GeoCoordinates",
+      latitude: 45.6427,
+      longitude: 25.5887,
+    });
+  });
+
+  it("omits geo entirely when it does not, rather than publishing a guess", () => {
+    const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
+    expect(block.location.geo).toBeUndefined();
+    expect(block.location.hasMap).toBeUndefined();
+  });
+
+  it("publishes the same map link the page renders", () => {
+    // The pasted override needs no configuration, so it is the case this test can assert
+    // without an environment; the built link is covered in `events/map-link.test.ts`.
+    const mapUrl = "https://maps.example.test/place/parcul-tractorul";
+    const block = parsed(sportsEventJsonLd(baseEvent({ mapUrl }), URL, "Brașov Runners"));
+    expect(block.location.hasMap).toBe(mapUrl);
   });
 });

@@ -1,4 +1,5 @@
 import { env } from "@/shared/config/env";
+import { mapLinkFor } from "./domain/map-link";
 import type { PublicEvent } from "./repository";
 
 /**
@@ -88,6 +89,8 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
 
 /** BR-REQ-052-02 criteria 2 and 4. */
 export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string) {
+  const mapUrl = mapLinkFor(event, env.MAP_LINK_BASE_URL);
+
   return {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
@@ -119,6 +122,23 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
         addressLocality: "Brașov",
         addressCountry: "RO",
       },
+      /**
+       * The exact spot, when the club has stated it.
+       *
+       * A place name is ambiguous to a search engine in the same way it is to a runner: a park
+       * is not a start line. `geo` is what lets a result show the right pin, and `hasMap` is
+       * the link a person follows — the same one the page renders, so the two cannot disagree.
+       */
+      ...(event.latitude !== null && event.longitude !== null
+        ? {
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: Number(event.latitude),
+              longitude: Number(event.longitude),
+            },
+          }
+        : {}),
+      ...(mapUrl ? { hasMap: mapUrl } : {}),
     },
     sport: "Running",
     // No `remainingAttendeeCapacity`: criterion 3 requires it to equal the free-place count

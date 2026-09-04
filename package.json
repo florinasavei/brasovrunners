@@ -6,7 +6,7 @@
   "scripts": {
     "setup": "node scripts/setup.mjs",
     "dev": "node scripts/dev.mjs",
-    "build": "next build",
+    "build": "node scripts/sync-flags.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -24,7 +24,9 @@
     "db:reset:local": "node --env-file-if-exists=.env.local scripts/db-reset-local.mjs",
     "docs:check": "node scripts/docs-check.mjs",
     "check": "yarn docs:check && yarn typecheck && yarn lint && yarn test",
-    "release": "node scripts/release.mjs"
+    "release": "node scripts/release.mjs",
+    "flags:sync": "node scripts/sync-flags.mjs",
+    "postinstall": "node scripts/sync-flags.mjs"
   },
   "dependencies": {
     "@emotion/cache": "11.14.0",
@@ -52,6 +54,7 @@
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.4",
+    "flag-icons": "7.5.0",
     "tsx": "4.23.13",
     "typescript": "5.9.3",
     "vitest": "4.1.11"

@@ -101,6 +101,7 @@ yarn db:generate         regenerate migrations after editing src/db/schema/
 yarn db:migrate          apply migrations
 yarn db:studio           browse the database
 yarn db:seed             reset and reseed sample events
+yarn flags:sync          re-copy the country flags into public/flags/ (runs on install)
 yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 ```
@@ -173,6 +174,16 @@ Tests are named by the requirement they cover. `tests/unit/` holds pure rules;
 should use `expectViolation` from `tests/helpers/constraints.ts` — Drizzle wraps driver
 errors, so matching on the message would pass for any failure at all, including a typo in the
 query. The helper checks the SQLSTATE code and the constraint name instead.
+
+## Where the flags come from
+
+`public/flags/` is **generated** and git-ignored: `scripts/sync-flags.mjs` copies the 4:3 SVGs
+out of `flag-icons` on every `yarn install` and as the first half of `yarn build`. If the
+language switcher shows broken images, run `yarn flags:sync`.
+
+Only the SVG files are used, never the package's stylesheet — that CSS references all 271 flags
+as background images, which is a large file to ship for the two the header shows. The set is
+there because a country field needs hundreds; the switcher is its first use.
 
 ## Signing in to the backoffice locally
 

@@ -46,6 +46,19 @@ export const envSchema = z
      */
     STAFF_AUTH_MODE: z.enum(["dev-switcher", "disabled"]).optional(),
 
+    /**
+     * Where a coordinate becomes a map link, e.g. a maps service's base URL.
+     *
+     * Configuration rather than a literal, because AGENTS.md §8 forbids a hostname anywhere
+     * under `src/` and exempts no provider. The application appends `?q=<lat>,<lng>`, which is
+     * the query Google Maps and OpenStreetMap both understand, so switching provider is a
+     * deployment change.
+     *
+     * Optional, and unset means no link is built from coordinates: a club that has not chosen
+     * a map service shows the meeting point as text, which is what it did before.
+     */
+    MAP_LINK_BASE_URL: z.url().optional(),
+
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
     EMAIL_DELIVERY_MODE: z.enum(["capture", "allowlist", "live"]).default("capture"),
     EMAIL_ALLOWLIST: allowlist,

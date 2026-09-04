@@ -1,6 +1,15 @@
 {
   "Site": {
-    "name": "Brașov Runners"
+    "name": "Brașov Runners",
+    "language": "Language",
+    "languageCode": {
+      "ro": "RO",
+      "en": "EN"
+    },
+    "languageName": {
+      "ro": "Română",
+      "en": "English"
+    }
   },
   "Home": {
     "title": "Brașov Runners",
@@ -99,7 +108,7 @@
       "raceStartsAt": "Race start",
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Map link",
-      "mapUrlHelp": "Paste the link you already use. It must start with https://.",
+      "mapUrlHelp": "Optional. The link is built from the coordinates; fill this in only to point at a specific page. It must start with https://.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "saveEvent": "Save the event details",
@@ -123,7 +132,10 @@
         "costText": "Cost",
         "seoTitle": "Search engine title",
         "seoDescription": "Search engine description"
-      }
+      },
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "coordinatesHelp": "The exact start point, in decimal degrees — for example 45.6427 and 25.5887. Right-click the spot on a map to copy them. A park name is not a start line."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",

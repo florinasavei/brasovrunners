@@ -141,6 +141,8 @@ export async function saveEventAction(form: FormData): Promise<void> {
       fields: {
         startsAtWallTime: text(form, "startsAtWallTime"),
         raceStartsAtWallTime: text(form, "raceStartsAtWallTime"),
+        latitude: text(form, "latitude"),
+        longitude: text(form, "longitude"),
         mapUrl: text(form, "mapUrl"),
         featured: form.get("featured") === "on",
       },

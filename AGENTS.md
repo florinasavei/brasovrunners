@@ -126,6 +126,20 @@ When two goals conflict, the higher one wins:
 7. measured performance on paths that matter;
 8. elegance.
 
+**The owner's standing instruction, and it outranks everything below correctness: this site
+stays fast, small and easy for the next person to work on.** Read it as a constraint on what
+may be added, not as a note to optimize later. Concretely, and enforceable in review:
+
+- a dependency is a cost. Prefer nothing, then the platform, then what is already installed. A
+  library added for one screen must be argued for in the pull request;
+- Server Components by default and client islands kept to what genuinely needs interactivity.
+  A page that works with JavaScript disabled is the target, not the exception;
+- no build-time cleverness, no code generation, no abstraction whose payoff is a future feature.
+  The reader is an agent with no context and twenty minutes;
+- assets are inspected before they are committed: a font, an image or an icon set that is larger
+  than the page it decorates is rejected;
+- speed is a property of the served page, so it is judged on a phone at 320px, not on a laptop.
+
 Binding consequences:
 
 - Every business rule that can be a pure function MUST be one, and time-dependent rules MUST take an injected clock rather than reading the wall clock internally.
@@ -721,6 +735,7 @@ APP_ENV
 APP_BASE_URL
 DATABASE_URL
 STAFF_AUTH_MODE
+MAP_LINK_BASE_URL
 Auth.js values required by the installed provider
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
@@ -757,6 +772,11 @@ Rules:
 - production rejects localhost/non-production identifiers;
 - QA rejects known production identifiers/live email;
 - do not invent Auth.js provider variable names; use installed official contract;
+- `MAP_LINK_BASE_URL` is the map service a coordinate becomes a link to. The application
+  appends `?q=<latitude>,<longitude>`, which Google Maps and OpenStreetMap both understand, so
+  the provider is a deployment decision rather than a code one — which is what keeps the
+  hostname out of `src/`. Unset, the meeting point renders as text with no link: a missing map
+  is a missing convenience, and a guessed one sends runners somewhere else;
 - `STAFF_AUTH_MODE` is `dev-switcher` or `disabled`. Unset, it derives: the switcher in local
   and test, nothing anywhere else. Stating `dev-switcher` outside local or test fails at
   startup, for the same reason live email does — a permissive deployment is noticed after
@@ -841,6 +861,10 @@ Participant action/manage pages are localized but excluded from public navigatio
 Non-human routes are unprefixed:
 
 ```text
+/api/locale                      the language switcher: resolves the current page into the
+                                 other locale and redirects. Server-side because the two
+                                 locales of an event have different slugs and only the
+                                 database knows the pair (BR-REQ-040-01 criterion 5)
 /api/auth/...
 /api/webhooks/mailgun
 /api/internal/jobs/email-outbox
@@ -1344,8 +1368,13 @@ Checks:
 - when `race_id` is set, the event's kind is `RACE`;
 - end after start;
 - the race start is not before `starts_at` and not after `ends_at` where one exists;
-- `map_url` is https or null. It is stored rather than built from the coordinates because §8
-  forbids a hostname literal under `src/` and exempts no provider;
+- `latitude` and `longitude` are present together or not at all, within ±90 and ±180. They are
+  the meeting point itself: the map link and the `geo` of the `SportsEvent` block are both built
+  from them, because a place name is not a start line;
+- `map_url` is https or null. It is the override for what coordinates cannot express — a venue
+  page, a drawn route — and it is stored rather than built, because §8 forbids a hostname
+  literal under `src/` and exempts no provider. The ordinary link comes from the coordinates
+  plus `MAP_LINK_BASE_URL`, which is configuration;
 - at most one event carries `featured`, enforced by a partial unique index rather than by
   application code — two featured events would leave the landing page choosing one arbitrarily;
 - non-negative distance/elevation;
@@ -2220,6 +2249,8 @@ Target WCAG 2.2 AA:
 
 - Server Components;
 - narrow client islands;
+- every kilobyte on the critical path is argued for; the header and the landing page are the
+  two surfaces every visitor pays for (§1.5, the owner's standing instruction);
 - responsive images;
 - limited third-party scripts;
 - indexed queries/server pagination;

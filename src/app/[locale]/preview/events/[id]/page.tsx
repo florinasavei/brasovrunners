@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -11,10 +12,12 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
+import { mapLinkFor } from "@/modules/events/domain/map-link";
 import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { env } from "@/shared/config/env";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -80,6 +83,8 @@ export default async function PreviewEventPage({ params }: Props) {
     endsAt: event.endsAt,
     raceStartsAt: event.raceStartsAt,
     timezone: event.timezone,
+    latitude: event.latitude,
+    longitude: event.longitude,
     mapUrl: event.mapUrl,
     featured: event.featured,
     distanceMeters: event.distanceMeters,
@@ -100,6 +105,8 @@ export default async function PreviewEventPage({ params }: Props) {
     seoDescription: translation.seoDescription,
     publishedAt: translation.publishedAt,
   };
+
+  const mapLink = mapLinkFor(preview, env.MAP_LINK_BASE_URL);
 
   return (
     <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
@@ -129,7 +136,18 @@ export default async function PreviewEventPage({ params }: Props) {
       {preview.locationAddress && (
         <Stack sx={{ mt: 3 }}>
           <Typography variant="body2" color="text.secondary">
-            {preview.locationAddress}
+            {mapLink ? (
+              <MuiLink
+                href={mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+              >
+                {preview.locationAddress}
+              </MuiLink>
+            ) : (
+              preview.locationAddress
+            )}
           </Typography>
         </Stack>
       )}

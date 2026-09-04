@@ -10,6 +10,7 @@ import {
   LOGO,
   WORDMARK,
 } from "@/theme/brand";
+import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 
 /**
@@ -50,7 +51,21 @@ export default async function SiteHeader() {
         bgcolor: "background.paper",
       }}
     >
-      <Container maxWidth="sm" sx={{ display: "flex", alignItems: "center", py: 1 }}>
+      <Container
+        maxWidth="sm"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          // The lockup takes the space it needs and the switcher sits at the end — until they
+          // do not both fit, and then the switcher takes a second row. Wrapping rather than
+          // shrinking, because at 320px the header has 288px to work with and this lockup has
+          // overflowed once already (BR-REQ-041-01 criterion 1). A wrap costs 44px of height
+          // on the narrowest phones; an overflow costs the whole page a sideways scrollbar.
+          flexWrap: "wrap",
+          gap: 1,
+          py: 1,
+        }}
+      >
         <LogoLink label={t("name")}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -91,6 +106,11 @@ export default async function SiteHeader() {
             {WORDMARK}
           </Typography>
         </LogoLink>
+
+        {/* Pushed to the end of whichever row it lands on. */}
+        <Box sx={{ ml: "auto" }}>
+          <LocaleSwitcher />
+        </Box>
       </Container>
     </Box>
   );

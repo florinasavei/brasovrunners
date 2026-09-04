@@ -74,18 +74,29 @@ export const events = pgTable(
 
     timezone: text("timezone").notNull().default("Europe/Bucharest"),
 
+    /**
+     * The exact spot, in decimal degrees.
+     *
+     * A name is not a location: "Parcul Tractorul" puts a runner somewhere in a park, and the
+     * start is one corner of it. These are what the map link is built from, and what the
+     * `SportsEvent` block publishes as `geo` so a search result can show the right pin.
+     *
+     * Both or neither — half a coordinate is a point in the Atlantic.
+     */
     latitude: numeric("latitude"),
     longitude: numeric("longitude"),
 
     /**
-     * The map link the organizer already uses, stored rather than built.
+     * An override for the map link, when the club wants one specific page.
      *
-     * AGENTS.md §8 forbids a hostname literal anywhere under `src/` and exempts no provider,
-     * so the application cannot assemble a maps URL from the coordinates below, nor allowlist
-     * the host of one — `yarn docs:check` fails on the literal either way. The organizer
-     * pastes the link; the database requires https so `javascript:` and `data:` cannot be
-     * stored. Latitude and longitude stay as they are and are not a substitute: they are
-     * coordinates, not the pinned, named place a club shares before a run.
+     * The ordinary way to get a map link is the coordinates above: the application builds one
+     * from them and `MAP_LINK_BASE_URL`, which is configuration. That indirection is not
+     * decoration — AGENTS.md §8 forbids a hostname literal anywhere under `src/` and exempts no
+     * provider, so a maps URL can be *configured* but never written into the code.
+     *
+     * This column wins when it is set, for the case coordinates cannot express: a named venue
+     * page, a route the club has already drawn, a shared list. The database requires https, so
+     * `javascript:` and `data:` cannot be stored even by a seed or a hand-written `UPDATE`.
      */
     mapUrl: text("map_url"),
 
@@ -175,6 +186,23 @@ export const events = pgTable(
      * runs when a visitor clicks the club's own map link.
      */
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+
+    /**
+     * A coordinate is a pair, and each half has a range.
+     *
+     * Latitude beyond ±90 does not exist, and longitude beyond ±180 wraps — both are what a
+     * transposed pair looks like, which is the mistake this catches: Brașov is 45.65, 25.60,
+     * and typed the other way round it is a field in Somalia.
+     */
+    check(
+      "events_coordinates_are_a_pair",
+      sql`(${t.latitude} IS NULL) = (${t.longitude} IS NULL)`,
+    ),
+    check(
+      "events_coordinates_in_range",
+      sql`(${t.latitude} IS NULL OR (${t.latitude} >= -90 AND ${t.latitude} <= 90))
+          AND (${t.longitude} IS NULL OR (${t.longitude} >= -180 AND ${t.longitude} <= 180))`,
+    ),
 
     check(
       "events_non_negative_measurements",

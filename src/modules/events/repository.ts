@@ -28,7 +28,10 @@ const PUBLIC_COLUMNS = {
   // The gun time, when it differs from when the event begins. Null on an ordinary run.
   raceStartsAt: events.raceStartsAt,
   timezone: events.timezone,
-  // Stored, never assembled: AGENTS.md §8 forbids a provider hostname under src/.
+  // The exact spot, and the override for it. The link itself is built by `mapLinkFor`, from
+  // configuration: AGENTS.md §8 forbids a provider hostname under src/.
+  latitude: events.latitude,
+  longitude: events.longitude,
   mapUrl: events.mapUrl,
   featured: events.featured,
   distanceMeters: events.distanceMeters,

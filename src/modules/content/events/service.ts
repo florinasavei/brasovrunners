@@ -278,6 +278,16 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     );
   }
 
+  // Both or neither. Half a coordinate is not a partially known location; it is a point in the
+  // Atlantic, and the database refuses it either way.
+  const { latitude, longitude } = parsed.data;
+  if ((latitude === null) !== (longitude === null)) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "coordinates: give both latitude and longitude, or neither",
+    );
+  }
+
   /**
    * Featuring an event un-features the previous one, in one transaction.
    *
@@ -299,6 +309,8 @@ export async function saveEventFields<T extends Record<string, unknown>>(
       .set({
         startsAt,
         raceStartsAt,
+        latitude,
+        longitude,
         mapUrl: parsed.data.mapUrl,
         featured: parsed.data.featured,
         updatedByStaffUserId: input.actor.id,

@@ -103,7 +103,7 @@ caused them and the provider is called outside that transaction. The Mailgun ada
 declared and deliberately not wired — it throws rather than dropping mail — and startup refuses
 live delivery outside production.
 
-**381 unit and integration tests, 36 end-to-end runs (18 per viewport project), and a
+**420 unit and integration tests, 44 end-to-end runs (22 per viewport project), and a
 three-test concurrency suite.** `yarn test` needs no database — PGlite runs real PostgreSQL in
 process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
@@ -137,6 +137,10 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
 
 ## Working conventions
 
+- **Fast, clean, easy to work on — the owner's standing instruction, and it applies to every
+  change.** Prefer nothing over a dependency, the platform over a library, and what is already
+  installed over something new. Server Components by default; a client island has to earn it.
+  The header and the landing page are what every visitor pays for. `AGENTS.md` §1.5.
 - **Do not commit or push.** Stage changes and hand back a suggested message; the owner
   commits. Creating a branch when asked is fine.
 - Branch from `qa`, PR into `qa`. `main` is production. `SETUP.md` § Contributing.

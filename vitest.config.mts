@@ -16,6 +16,15 @@ export default defineConfig({
     // peak memory sane and makes failures easier to read.
     fileParallelism: false,
     testTimeout: 30_000,
+    server: {
+      deps: {
+        // next-intl's navigation helpers import `next/navigation`, which Node cannot resolve
+        // on its own when the package is left external. Letting Vite transform next-intl makes
+        // it resolve the same way the application does — which is the point: a test that
+        // stubbed the route helpers would prove nothing about the URLs they build.
+        inline: ["next-intl"],
+      },
+    },
   },
   resolve: {
     alias: {

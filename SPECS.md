@@ -79,8 +79,10 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a request to `/`, when a valid saved locale exists, then the response redirects to that locale.
 4. Given a URL with an explicit locale prefix, when a different locale is saved, then the URL wins.
 5. Given any localized page, when it renders, then the alternate-locale link points at the corresponding localized slug and not at a concatenated URL.
+6. Given the language switcher in the site header, when it is used on any page, then the visitor lands on the same page in the other language — resolved on the server, because the two locales of an event have different slugs and only the database holds the pair. When that page has no published translation in the target language, the switcher lands on that language's event listing rather than on a 404.
+7. Given the switcher, when it renders, then the current language is marked rather than offered as a link, and the visible label is the language code with the flag as decoration beside it — a flag is a country, not a language.
 
-**Verification:** e2e `locale-routing.spec.ts`
+**Verification:** unit `i18n/alternate-path.test.ts`; integration `events/locale-switch.test.ts`; e2e `event-pages.spec.ts`
 
 #### BR-REQ-040-02 — No cross-locale content fallback
 
@@ -193,7 +195,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 4. Given an internal event, when `registration_opens_at` is absent, then registration opens when the event is published in that locale.
 5. Given a race with a gathering time and a gun time, when its page renders, then both are shown, each labelled, in the event's timezone; and when only one time is stated, only that one is shown. `starts_at` remains when the event begins and continues to drive ordering, the upcoming/past cut-off, the sitemap and the listing.
 6. Given a race start earlier than the event start, or later than the event end where one exists, when it is submitted, then the database refuses it.
-7. Given a map link, when it is stored, then it is a value the organizer supplied and is https; a `javascript:`, `data:` or plain-http link is refused by the database as well as by the form, and the link renders with `rel="noopener noreferrer"`. The application never assembles a map URL from the coordinates: `AGENTS.md` §8 forbids a hostname literal under `src/` and exempts no provider.
+7. Given an event with coordinates, when its page renders, then the meeting point and the address link to that exact point, and the `SportsEvent` block carries `geo` and `hasMap`. The link is built from `MAP_LINK_BASE_URL`, which is configuration: `AGENTS.md` §8 forbids a map hostname under `src/` and exempts no provider, so a club with no map service configured sees the meeting point as text rather than a guessed link.
+7a. Given coordinates, when they are saved, then latitude and longitude are present together and within ±90 and ±180; the database refuses half a pair, a value out of range, and a transposed pair. A stored `map_url` overrides the built link, must be https at the form and at the database, and renders with `rel="noopener noreferrer"`.
 8. Given two events, when both are marked as the featured event, then the database refuses the second; and when one is featured, the landing page leads with it, above the ordinary listing, ordered featured → race → soonest.
 
 **Verification:** integration `events/configuration.test.ts`; unit `events/zoned-time.test.ts`; e2e `event-pages.spec.ts`

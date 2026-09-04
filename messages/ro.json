@@ -1,6 +1,15 @@
 {
   "Site": {
-    "name": "Brașov Runners"
+    "name": "Brașov Runners",
+    "language": "Limbă",
+    "languageCode": {
+      "ro": "RO",
+      "en": "EN"
+    },
+    "languageName": {
+      "ro": "Română",
+      "en": "English"
+    }
   },
   "Home": {
     "title": "Brașov Runners",
@@ -99,7 +108,7 @@
       "raceStartsAt": "Startul cursei",
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către hartă",
-      "mapUrlHelp": "Lipește linkul pe care îl folosești deja. Trebuie să înceapă cu https://.",
+      "mapUrlHelp": "Opțional. Linkul se construiește din coordonate; completează aici doar dacă vrei o pagină anume. Trebuie să înceapă cu https://.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "saveEvent": "Salvează detaliile evenimentului",
@@ -123,7 +132,10 @@
         "costText": "Cost",
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare"
-      }
+      },
+      "latitude": "Latitudine",
+      "longitude": "Longitudine",
+      "coordinatesHelp": "Punctul exact de start, în grade zecimale — de exemplu 45.6427 și 25.5887. Copiază-le din hartă cu clic dreapta pe locul exact. Un nume de parc nu este un punct de start."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",

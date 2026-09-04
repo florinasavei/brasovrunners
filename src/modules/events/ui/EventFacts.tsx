@@ -3,7 +3,9 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { env } from "@/shared/config/env";
 import { distanceInKm } from "../domain/event-kind";
+import { mapLinkFor } from "../domain/map-link";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 
@@ -29,6 +31,9 @@ export default async function EventFacts({
 
   const distance = distanceInKm(event.distanceMeters);
   const state = registrationState(event, now);
+  // Coordinates first, a pasted URL as the override, and nothing at all when the club has
+  // neither — the meeting point is then plain text, as it was before.
+  const mapLink = mapLinkFor(event, env.MAP_LINK_BASE_URL);
 
   // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
   // local time regardless of where the page is opened.
@@ -63,18 +68,30 @@ export default async function EventFacts({
     facts.push({ label: t("startTime"), value: time(event.startsAt) });
   }
 
+  /**
+   * The map link is offered on the full page, never in a card.
+   *
+   * On the listing the whole card is one link (`CardLink`, for a 44px tap target), and an
+   * anchor inside an anchor is invalid HTML — the browser silently splits the outer one, which
+   * breaks the card and leaves a stray link a keyboard user lands on. The compact variant
+   * therefore shows the meeting point as text, and the map link waits for the detail page,
+   * where it is also on the address.
+   */
   facts.push({
     label: t("meetingPoint"),
-    value: event.mapUrl ? (
+    value: variant === "full" && mapLink ? (
       <>
         {event.locationName}{" "}
         <Link
-          href={event.mapUrl}
+          href={mapLink}
           target="_blank"
           // The link goes to whatever map service the club already uses. `noopener` and
           // `noreferrer` stop the opened page reaching back through `window.opener` and stop
           // it learning which page sent the visitor.
           rel="noopener noreferrer"
+          // A 44px target, like every other link on a phone (BR-REQ-041-01 criterion 6). Inline
+          // text is about 20px tall, which is a link you miss while holding a phone and a bag.
+          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
         >
           {t("openMap")}
         </Link>

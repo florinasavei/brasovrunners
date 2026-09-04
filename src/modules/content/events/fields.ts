@@ -50,20 +50,41 @@ export const translationFieldsSchema = z
 export type TranslationFields = z.infer<typeof translationFieldsSchema>;
 
 /**
+ * A coordinate as typed: decimal degrees, empty when not stated.
+ *
+ * Not `z.number()`, because the field arrives as a string and an empty one must mean "not
+ * stated" rather than 0 — and 0,0 is a real place in the Gulf of Guinea. Both halves are
+ * required together; the service and the database each refuse half a pair.
+ */
+const coordinate = (limit: number) =>
+  z
+    .string()
+    .trim()
+    .transform((value) => (value === "" ? null : value))
+    .nullable()
+    .refine(
+      (value) => value === null || (Number.isFinite(Number(value)) && Math.abs(Number(value)) <= limit),
+      { message: `must be a number between -${limit} and ${limit}` },
+    );
+
+/**
  * The event-level fields, as the form sends them.
  *
  * The two times arrive as wall-clock strings from `<input type="datetime-local">` — "10:00"
  * means ten o'clock in the event's own timezone, and only the service knows which timezone
  * that is, so the conversion happens there rather than here.
  *
- * `mapUrl` must be https at this layer and again at the database. Neither check is redundant:
- * this one gives the organizer a message, and the constraint is what holds when a value
- * arrives from a seed or a hand-written `UPDATE`.
+ * The coordinates are the meeting point itself, and the map link is built from them. `mapUrl`
+ * is the override for the case they cannot express, and must be https at this layer and again
+ * at the database. Neither check is redundant: this one gives the organizer a message, and the
+ * constraint is what holds when a value arrives from a seed or a hand-written `UPDATE`.
  */
 export const eventFieldsSchema = z
   .object({
     startsAtWallTime: z.string().trim().min(1),
     raceStartsAtWallTime: z.string().trim(),
+    latitude: coordinate(90),
+    longitude: coordinate(180),
     mapUrl: z
       .string()
       .trim()

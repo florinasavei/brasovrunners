@@ -42,6 +42,14 @@ async function seed() {
       raceStartsAt: new Date("2026-10-11T10:00:00+03:00"),
       // The one event the landing page leads with. The database refuses a second.
       featured: true,
+      /**
+       * Part of the placeholder, and marked as such in the excerpt: this is roughly Parcul
+       * Tractorul, not a start line the club has chosen. The other three events carry no
+       * coordinates at all, because inventing a start line for a real weekly run would send
+       * people to the wrong corner of the right park — AGENTS.md §1.2.
+       */
+      latitude: "45.6667",
+      longitude: "25.6167",
       distanceMeters: 10000,
       elevationGainMeters: 180,
       ro: {
@@ -140,9 +148,11 @@ async function seed() {
         startsAt: row.startsAt,
         raceStartsAt: "raceStartsAt" in row ? row.raceStartsAt : undefined,
         featured: "featured" in row ? row.featured : false,
+        latitude: "latitude" in row ? row.latitude : undefined,
+        longitude: "longitude" in row ? row.longitude : undefined,
         // No map link is seeded, and that is the rule working rather than an omission:
-        // AGENTS.md §8 forbids a hostname literal anywhere under `src/`, seeds included, so
-        // the organizer pastes theirs in the backoffice.
+        // AGENTS.md §8 forbids a hostname literal anywhere under `src/`, seeds included. The
+        // link is built from the coordinates above and `MAP_LINK_BASE_URL` instead.
         distanceMeters: row.distanceMeters,
         elevationGainMeters: row.elevationGainMeters,
         // Registration is not built: it needs the club's approved declaration and privacy

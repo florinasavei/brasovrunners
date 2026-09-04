@@ -97,6 +97,26 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 defaultValue={toWallTimeInput(event.raceStartsAt, event.timezone)}
                 slotProps={{ inputLabel: { shrink: true } }}
               />
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <TextField
+                  name="latitude"
+                  label={t("editor.latitude")}
+                  defaultValue={event.latitude ?? ""}
+                  inputMode="decimal"
+                  sx={{ flex: 1 }}
+                />
+                <TextField
+                  name="longitude"
+                  label={t("editor.longitude")}
+                  defaultValue={event.longitude ?? ""}
+                  inputMode="decimal"
+                  sx={{ flex: 1 }}
+                />
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                {t("editor.coordinatesHelp")}
+              </Typography>
+
               <TextField
                 name="mapUrl"
                 type="url"

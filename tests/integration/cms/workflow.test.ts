@@ -177,6 +177,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
             fields: {
               startsAtWallTime: "2026-10-11T09:00",
               raceStartsAtWallTime: "2026-10-11T10:00",
+              latitude: "",
+              longitude: "",
               mapUrl: "",
               featured: true,
             },
@@ -520,6 +522,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         fields: {
           startsAtWallTime: "2026-10-11T09:00",
           raceStartsAtWallTime: "2026-10-11T10:00",
+          latitude: "",
+          longitude: "",
           mapUrl: link,
           featured: true,
         },
@@ -533,6 +537,51 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(saved.updatedByStaffUserId).toBe(editor.id);
     });
 
+    it("saves the meeting point coordinates", async () => {
+      const { event } = await seedTranslation();
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        fields: {
+          startsAtWallTime: "2026-10-11T09:00",
+          raceStartsAtWallTime: "",
+          latitude: "45.6427",
+          longitude: "25.5887",
+          mapUrl: "",
+          featured: false,
+        },
+      });
+
+      expect(Number(saved.latitude)).toBeCloseTo(45.6427, 4);
+      expect(Number(saved.longitude)).toBeCloseTo(25.5887, 4);
+    });
+
+    it.each([
+      ["only a latitude", { latitude: "45.6427", longitude: "" }],
+      ["only a longitude", { latitude: "", longitude: "25.5887" }],
+      ["a latitude past the pole", { latitude: "95", longitude: "25.5887" }],
+      ["something that is not a number", { latitude: "nord", longitude: "25.5887" }],
+    ])("refuses %s with a message rather than a constraint", async (_name, coordinates) => {
+      const { event } = await seedTranslation();
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            fields: {
+              startsAtWallTime: "2026-10-11T09:00",
+              raceStartsAtWallTime: "",
+              ...coordinates,
+              mapUrl: "",
+              featured: false,
+            },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
     it("clears the race start when the field is emptied", async () => {
       const { event } = await seedTranslation();
       await saveEventFields(db, {
@@ -541,6 +590,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         fields: {
           startsAtWallTime: "2026-10-11T09:00",
           raceStartsAtWallTime: "2026-10-11T10:00",
+          latitude: "",
+          longitude: "",
           mapUrl: "",
           featured: false,
         },
@@ -552,6 +603,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         fields: {
           startsAtWallTime: "2026-10-11T09:00",
           raceStartsAtWallTime: "",
+          latitude: "",
+          longitude: "",
           mapUrl: "",
           featured: false,
         },
@@ -572,6 +625,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
             fields: {
               startsAtWallTime: "2026-10-11T09:00",
               raceStartsAtWallTime: "2026-10-11T08:00",
+              latitude: "",
+              longitude: "",
               mapUrl: "",
               featured: false,
             },
@@ -612,6 +667,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         fields: {
           startsAtWallTime: "2026-10-11T09:00",
           raceStartsAtWallTime: "",
+          latitude: "",
+          longitude: "",
           mapUrl: "",
           featured: true,
         },
@@ -622,6 +679,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         fields: {
           startsAtWallTime: "2026-11-11T09:00",
           raceStartsAtWallTime: "",
+          latitude: "",
+          longitude: "",
           mapUrl: "",
           featured: true,
         },

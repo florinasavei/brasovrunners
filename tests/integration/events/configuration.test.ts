@@ -120,6 +120,38 @@ describe("BR-REQ-011-01 event configuration", () => {
     });
   });
 
+  describe("coordinates are a pair, and each half has a range", () => {
+    it("stores a pair", async () => {
+      const event = await insertEvent({ latitude: "45.6427", longitude: "25.5887" });
+      expect(Number(event.latitude)).toBeCloseTo(45.6427, 4);
+      expect(Number(event.longitude)).toBeCloseTo(25.5887, 4);
+    });
+
+    it.each([
+      ["latitude alone", { latitude: "45.6427" }],
+      ["longitude alone", { longitude: "25.5887" }],
+    ])("refuses %s", async (_name, values) => {
+      // Half a coordinate is not a partly known location; it is a point in the Atlantic.
+      await expectViolation(insertEvent(values), {
+        code: SQLSTATE.CHECK_VIOLATION,
+        constraint: "events_coordinates_are_a_pair",
+      });
+    });
+
+    it.each([
+      ["latitude past the pole", { latitude: "95", longitude: "25.5" }],
+      ["longitude past the date line", { latitude: "45.6", longitude: "200" }],
+      // Brașov is 45.65, 25.60. Typed the other way round it is inside the valid range for
+      // longitude but not for latitude, which is exactly why the range check catches it.
+      ["a transposed pair", { latitude: "125.5887", longitude: "45.6427" }],
+    ])("refuses %s", async (_name, values) => {
+      await expectViolation(insertEvent(values), {
+        code: SQLSTATE.CHECK_VIOLATION,
+        constraint: "events_coordinates_in_range",
+      });
+    });
+  });
+
   describe("at most one event is featured, and the database is what says so", () => {
     it("accepts a single featured event", async () => {
       const event = await insertEvent({ featured: true });

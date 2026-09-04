@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
@@ -169,6 +169,38 @@ describe("BR-REQ-040-04 the backoffice keys the source builds dynamically", () =
     for (const role of STAFF_ROLES) {
       expect(roFlat[`Admin.roles.${role}`], `ro label for ${role}`).toBeDefined();
       expect(enFlat[`Admin.roles.${role}`], `en label for ${role}`).toBeDefined();
+    }
+  });
+
+  it("has a code and a name for every locale the switcher offers", async () => {
+    // The header interpolates both, once per locale, so a third locale would render
+    // "Site.languageCode.de" in the header of every page.
+    const { routing } = await import("@/i18n/routing");
+    for (const locale of routing.locales) {
+      expect(roFlat[`Site.languageCode.${locale}`], `ro code for ${locale}`).toBeDefined();
+      expect(enFlat[`Site.languageCode.${locale}`], `en code for ${locale}`).toBeDefined();
+      expect(roFlat[`Site.languageName.${locale}`], `ro name for ${locale}`).toBeDefined();
+      expect(enFlat[`Site.languageName.${locale}`], `en name for ${locale}`).toBeDefined();
+    }
+  });
+
+  it("names each language in its own words, identically in both catalogues", () => {
+    // An endonym is not translated: "Română" is what a Romanian speaker looks for in an
+    // English interface, which is the whole point of a language switcher.
+    expect(roFlat["Site.languageName.ro"]).toBe(enFlat["Site.languageName.ro"]);
+    expect(roFlat["Site.languageName.en"]).toBe(enFlat["Site.languageName.en"]);
+  });
+
+  it("has a flag file for every locale the switcher shows", async () => {
+    // `public/flags/` is generated from flag-icons by `yarn flags:sync`, so this catches both
+    // a locale added without a flag and a file renamed upstream — either of which renders a
+    // broken image in the header of every page.
+    const { routing } = await import("@/i18n/routing");
+    const flagOf: Record<string, string> = { ro: "ro", en: "gb" };
+
+    for (const locale of routing.locales) {
+      const file = path.join(process.cwd(), "public", "flags", `${flagOf[locale]}.svg`);
+      expect(existsSync(file), `flag for ${locale}: ${flagOf[locale]}.svg`).toBe(true);
     }
   });
 
