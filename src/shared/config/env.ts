@@ -28,6 +28,37 @@ export const envSchema = z
     // Optional only until WEEKEND.md step 2 lands the first table; then it is required.
     DATABASE_URL: z.url().optional(),
 
+    /**
+     * How a member of staff proves who they are (AGENTS.md §8, §13.1).
+     *
+     * `dev-switcher` is the seeded switcher: pick a synthetic identity from a list, no
+     * password, no provider. It is a development tool and nothing else, so it is refused
+     * outright in qa and production below.
+     *
+     * `disabled` means there is no way to sign in at all, which is the honest state of qa and
+     * production until the staff login lands (DECISIONS.md §24). The backoffice is not hidden
+     * there — it is unreachable, because every guarded call starts by asking who is signing
+     * this request and gets nobody.
+     *
+     * Left optional so the safe value is derived rather than typed: local and test get the
+     * switcher, every other environment gets nothing. An operator may still state it
+     * explicitly, and stating `dev-switcher` outside local or test fails at startup.
+     */
+    STAFF_AUTH_MODE: z.enum(["dev-switcher", "disabled"]).optional(),
+
+    /**
+     * Where a coordinate becomes a map link, e.g. a maps service's base URL.
+     *
+     * Configuration rather than a literal, because AGENTS.md §8 forbids a hostname anywhere
+     * under `src/` and exempts no provider. The application appends `?q=<lat>,<lng>`, which is
+     * the query Google Maps and OpenStreetMap both understand, so switching provider is a
+     * deployment change.
+     *
+     * Optional, and unset means no link is built from coordinates: a club that has not chosen
+     * a map service shows the meeting point as text, which is what it did before.
+     */
+    MAP_LINK_BASE_URL: z.url().optional(),
+
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
     EMAIL_DELIVERY_MODE: z.enum(["capture", "allowlist", "live"]).default("capture"),
     EMAIL_ALLOWLIST: allowlist,
@@ -45,6 +76,23 @@ export const envSchema = z
    */
   .superRefine((value, ctx) => {
     const { APP_ENV, EMAIL_DELIVERY_MODE, EMAIL_ALLOWLIST } = value;
+
+    /**
+     * The development staff switcher never runs where real content lives.
+     *
+     * AGENTS.md §13.1 permits a seeded switcher in local and test and requires it to be
+     * unavailable in qa and production. It hands out staff authority to whoever asks, so a
+     * process configured this way in qa is a backoffice with the lock taken off. Refused at
+     * startup, by the same reasoning as live email: a deployment that will not boot is noticed
+     * within seconds, and a permissive one is noticed after someone has used it.
+     */
+    if (value.STAFF_AUTH_MODE === "dev-switcher" && APP_ENV !== "local" && APP_ENV !== "test") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["STAFF_AUTH_MODE"],
+        message: `the development staff switcher is only permitted when APP_ENV is local or test; this process has APP_ENV=${APP_ENV}. AGENTS.md §13.1, BR-REQ-060-01.`,
+      });
+    }
 
     /**
      * Live delivery belongs to production alone.
@@ -113,7 +161,23 @@ export const envSchema = z
      * type ships (BR-REQ-080-01), production capturing email means participants never receive
      * a confirmation, and this check must be added with it.
      */
-  });
+  })
+  /**
+   * Derive the staff authentication mode when nobody stated one.
+   *
+   * Done here rather than with a Zod default so the safe value depends on the environment:
+   * a default of `dev-switcher` would enable the switcher in production the first time
+   * someone forgot the variable, and a default of `disabled` would mean every developer and
+   * the end-to-end suite must set it before they can sign in at all.
+   */
+  .transform((value) => ({
+    ...value,
+    STAFF_AUTH_MODE:
+      value.STAFF_AUTH_MODE ??
+      (value.APP_ENV === "local" || value.APP_ENV === "test"
+        ? ("dev-switcher" as const)
+        : ("disabled" as const)),
+  }));
 
 export type Env = z.infer<typeof envSchema>;
 

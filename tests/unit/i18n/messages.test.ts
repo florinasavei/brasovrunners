@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
@@ -142,6 +142,80 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
     for (const state of states) {
       expect(roFlat[`Event.registrationState.${state}`], `ro label for ${state}`).toBeDefined();
       expect(enFlat[`Event.registrationState.${state}`], `en label for ${state}`).toBeDefined();
+    }
+  });
+});
+
+/**
+ * The backoffice interpolates four sets of keys, and none of them is visible to the static
+ * scan above: statuses, transitions, roles and error codes are all built from a value. Each
+ * set has a single source of truth in the code, so the contract is checkable — and a missing
+ * one renders "Admin.errors.CONFLICT" to an organizer at the worst possible moment.
+ */
+describe("BR-REQ-040-04 the backoffice keys the source builds dynamically", () => {
+  it("has a label for every editorial status and every transition", async () => {
+    const { EDITORIAL_STATUSES } = await import("@/modules/staff-identity/domain/roles");
+    for (const status of EDITORIAL_STATUSES) {
+      expect(roFlat[`Admin.status.${status}`], `ro label for ${status}`).toBeDefined();
+      expect(enFlat[`Admin.status.${status}`], `en label for ${status}`).toBeDefined();
+      // Every status is also a possible destination of a transition button.
+      expect(roFlat[`Admin.transition.${status}`], `ro action for ${status}`).toBeDefined();
+      expect(enFlat[`Admin.transition.${status}`], `en action for ${status}`).toBeDefined();
+    }
+  });
+
+  it("has a label for every staff role", async () => {
+    const { STAFF_ROLES } = await import("@/modules/staff-identity/domain/roles");
+    for (const role of STAFF_ROLES) {
+      expect(roFlat[`Admin.roles.${role}`], `ro label for ${role}`).toBeDefined();
+      expect(enFlat[`Admin.roles.${role}`], `en label for ${role}`).toBeDefined();
+    }
+  });
+
+  it("has a code and a name for every locale the switcher offers", async () => {
+    // The header interpolates both, once per locale, so a third locale would render
+    // "Site.languageCode.de" in the header of every page.
+    const { routing } = await import("@/i18n/routing");
+    for (const locale of routing.locales) {
+      expect(roFlat[`Site.languageCode.${locale}`], `ro code for ${locale}`).toBeDefined();
+      expect(enFlat[`Site.languageCode.${locale}`], `en code for ${locale}`).toBeDefined();
+      expect(roFlat[`Site.languageName.${locale}`], `ro name for ${locale}`).toBeDefined();
+      expect(enFlat[`Site.languageName.${locale}`], `en name for ${locale}`).toBeDefined();
+    }
+  });
+
+  it("names each language in its own words, identically in both catalogues", () => {
+    // An endonym is not translated: "Română" is what a Romanian speaker looks for in an
+    // English interface, which is the whole point of a language switcher.
+    expect(roFlat["Site.languageName.ro"]).toBe(enFlat["Site.languageName.ro"]);
+    expect(roFlat["Site.languageName.en"]).toBe(enFlat["Site.languageName.en"]);
+  });
+
+  it("has a flag file for every locale the switcher shows", async () => {
+    // `public/flags/` is generated from flag-icons by `yarn flags:sync`, so this catches both
+    // a locale added without a flag and a file renamed upstream — either of which renders a
+    // broken image in the header of every page.
+    const { routing } = await import("@/i18n/routing");
+    const flagOf: Record<string, string> = { ro: "ro", en: "gb" };
+
+    for (const locale of routing.locales) {
+      const file = path.join(process.cwd(), "public", "flags", `${flagOf[locale]}.svg`);
+      expect(existsSync(file), `flag for ${locale}: ${flagOf[locale]}.svg`).toBe(true);
+    }
+  });
+
+  it("has a message for every domain error code the backoffice can be handed", () => {
+    // The codes are a union type, so they cannot be enumerated at runtime; they are listed
+    // here instead, and the list is short enough to keep honest.
+    for (const code of [
+      "UNAUTHENTICATED",
+      "FORBIDDEN",
+      "NOT_FOUND",
+      "VALIDATION_ERROR",
+      "CONFLICT",
+    ]) {
+      expect(roFlat[`Admin.errors.${code}`], `ro message for ${code}`).toBeDefined();
+      expect(enFlat[`Admin.errors.${code}`], `en message for ${code}`).toBeDefined();
     }
   });
 });

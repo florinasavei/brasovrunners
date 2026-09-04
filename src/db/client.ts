@@ -5,12 +5,14 @@ import * as emailActionTokensSchema from "./schema/email-action-tokens";
 import * as emailOutboxSchema from "./schema/email-outbox";
 import * as eventsSchema from "./schema/events";
 import * as participantsSchema from "./schema/participants";
+import * as staffUsersSchema from "./schema/staff-users";
 
 export const schema = {
   ...eventsSchema,
   ...participantsSchema,
   ...emailActionTokensSchema,
   ...emailOutboxSchema,
+  ...staffUsersSchema,
 };
 type Schema = typeof schema;
 

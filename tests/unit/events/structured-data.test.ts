@@ -21,7 +21,12 @@ function baseEvent(overrides: Partial<PublicEvent> = {}): PublicEvent {
     eventStatus: "SCHEDULED",
     startsAt: new Date("2026-09-20T05:00:00Z"),
     endsAt: null,
+    raceStartsAt: null,
     timezone: "Europe/Bucharest",
+    latitude: null,
+    longitude: null,
+    mapUrl: null,
+    featured: false,
     distanceMeters: 14000,
     elevationGainMeters: 600,
     registrationMode: "NONE",
@@ -128,5 +133,75 @@ describe("toOffsetIsoString", () => {
   it("handles midnight without emitting hour 24", () => {
     const result = toOffsetIsoString(new Date("2026-06-01T21:00:00Z"), "Europe/Bucharest");
     expect(result).toBe("2026-06-02T00:00:00+03:00");
+  });
+});
+
+/**
+ * BR-REQ-052-02 criterion 2 — two times, mapped to the two properties schema.org has.
+ *
+ * A race gathers at one time and starts at another. `startDate` must be the moment a runner
+ * has to be on the line, because that is what a search result shows; `doorTime` is when the
+ * event begins. The wrong way round would advertise the gathering as the start.
+ */
+describe("BR-REQ-052-02 the race start and the gathering", () => {
+  it("puts the race start in startDate and the event start in doorTime", () => {
+    const block = parsed(
+      sportsEventJsonLd(
+        baseEvent({
+          startsAt: new Date("2026-10-11T06:00:00Z"),
+          raceStartsAt: new Date("2026-10-11T07:00:00Z"),
+        }),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+
+    expect(block.startDate).toBe("2026-10-11T10:00:00+03:00");
+    expect(block.doorTime).toBe("2026-10-11T09:00:00+03:00");
+  });
+
+  it("falls back to the event start when the club has stated only one time", () => {
+    const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
+
+    expect(block.startDate).toBe("2026-09-20T08:00:00+03:00");
+    expect(block.doorTime).toBe(block.startDate);
+  });
+});
+
+/**
+ * BR-REQ-052-02 criterion 2 and BR-REQ-011-01 criterion 7 — the exact place.
+ *
+ * A place name is as ambiguous to a search engine as it is to a runner: a park is not a start
+ * line. `geo` is what lets a result show the right pin.
+ */
+describe("BR-REQ-052-02 the meeting point as coordinates", () => {
+  it("publishes geo when the club has stated coordinates", () => {
+    const block = parsed(
+      sportsEventJsonLd(
+        baseEvent({ latitude: "45.6427", longitude: "25.5887" }),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+
+    expect(block.location.geo).toEqual({
+      "@type": "GeoCoordinates",
+      latitude: 45.6427,
+      longitude: 25.5887,
+    });
+  });
+
+  it("omits geo entirely when it does not, rather than publishing a guess", () => {
+    const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
+    expect(block.location.geo).toBeUndefined();
+    expect(block.location.hasMap).toBeUndefined();
+  });
+
+  it("publishes the same map link the page renders", () => {
+    // The pasted override needs no configuration, so it is the case this test can assert
+    // without an environment; the built link is covered in `events/map-link.test.ts`.
+    const mapUrl = "https://maps.example.test/place/parcul-tractorul";
+    const block = parsed(sportsEventJsonLd(baseEvent({ mapUrl }), URL, "Brașov Runners"));
+    expect(block.location.hasMap).toBe(mapUrl);
   });
 });

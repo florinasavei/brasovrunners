@@ -1,6 +1,15 @@
 {
   "Site": {
-    "name": "Brașov Runners"
+    "name": "Brașov Runners",
+    "language": "Limbă",
+    "languageCode": {
+      "ro": "RO",
+      "en": "EN"
+    },
+    "languageName": {
+      "ro": "Română",
+      "en": "English"
+    }
   },
   "Home": {
     "title": "Brașov Runners",
@@ -12,13 +21,18 @@
     "intro": "Alergări, ture pe munte și antrenamente organizate de club.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
-    "pastNotice": "Acest eveniment a avut deja loc."
+    "pastNotice": "Acest eveniment a avut deja loc.",
+    "featured": "Evenimentul principal",
+    "featuredCallToAction": "Vezi detaliile cursei"
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
     "date": "Data",
     "startTime": "Ora de start",
+    "gatheringTime": "Ora de întâlnire",
+    "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
+    "openMap": "Vezi pe hartă",
     "address": "Adresă",
     "distance": "Distanță",
     "distanceKm": "{km} km",
@@ -45,6 +59,106 @@
       "OPEN": "Înscrierile sunt deschise",
       "CLOSED": "Înscrierile s-au închis",
       "EVENT_CANCELLED": "Evenimentul a fost anulat"
+    }
+  },
+  "Admin": {
+    "title": "Administrare",
+    "signedInAs": "Autentificat ca {name} — {role}",
+    "signOut": "Ieși din cont",
+    "saved": "Modificările au fost salvate.",
+    "backToEvents": "Înapoi la lista de evenimente",
+    "legalNotice": "Documentele legale — nota de confidențialitate, termenii și declarația — nu se editează aici. Versiunile noi se încarcă prin migrare, conform procedurii din documentație.",
+    "nav": {
+      "events": "Evenimente",
+      "staff": "Echipa"
+    },
+    "events": {
+      "empty": "Nu există niciun eveniment în baza de date.",
+      "featured": "Principal",
+      "preview": "Previzualizare"
+    },
+    "status": {
+      "DRAFT": "Ciornă",
+      "IN_REVIEW": "În verificare",
+      "PUBLISHED": "Publicat",
+      "ARCHIVED": "Arhivat"
+    },
+    "transition": {
+      "DRAFT": "Mută în ciornă",
+      "IN_REVIEW": "Trimite spre verificare",
+      "PUBLISHED": "Publică",
+      "ARCHIVED": "Arhivează"
+    },
+    "roles": {
+      "AUTHOR": "Autor",
+      "EDITOR": "Editor",
+      "ADMIN": "Administrator"
+    },
+    "errors": {
+      "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
+      "FORBIDDEN": "Rolul tău nu permite această acțiune.",
+      "NOT_FOUND": "Înregistrarea nu mai există.",
+      "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
+      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris."
+    },
+    "editor": {
+      "eventSection": "Detaliile evenimentului",
+      "startsAt": "Începutul evenimentului",
+      "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
+      "raceStartsAt": "Startul cursei",
+      "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
+      "mapUrl": "Link către hartă",
+      "mapUrlHelp": "Opțional. Linkul se construiește din coordonate; completează aici doar dacă vrei o pagină anume. Trebuie să înceapă cu https://.",
+      "featured": "Evenimentul principal al site-ului",
+      "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
+      "saveEvent": "Salvează detaliile evenimentului",
+      "eventFieldsReadOnly": "Doar un editor sau un administrator poate modifica orele, harta și evenimentul principal.",
+      "translationSection": "Conținut ({locale})",
+      "translationReadOnly": "Nu poți edita acest text: fie este publicat, fie aparține altui autor.",
+      "version": "versiunea {version}",
+      "liveWarning": "Acest text este publicat. Modificările devin publice imediat ce salvezi.",
+      "acknowledgeLive": "Am înțeles că modific conținut publicat.",
+      "saveTranslation": "Salvează textul",
+      "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
+      "slugLocked": "Pagina a fost publicată, așa că adresa rămâne neschimbată.",
+      "costHelp": "Text liber: „Gratuit”, „50 lei”. Lasă gol dacă nu s-a stabilit un cost.",
+      "fields": {
+        "title": "Titlu",
+        "slug": "Adresa paginii",
+        "excerpt": "Descriere scurtă",
+        "locationName": "Punct de întâlnire",
+        "locationAddress": "Adresă",
+        "difficultyLabel": "Dificultate",
+        "costText": "Cost",
+        "seoTitle": "Titlu pentru motoarele de căutare",
+        "seoDescription": "Descriere pentru motoarele de căutare"
+      },
+      "latitude": "Latitudine",
+      "longitude": "Longitudine",
+      "coordinatesHelp": "Punctul exact de start, în grade zecimale — de exemplu 45.6427 și 25.5887. Copiază-le din hartă cu clic dreapta pe locul exact. Un nume de parc nu este un punct de start."
+    },
+    "preview": {
+      "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
+      "backToEditor": "Înapoi la editare"
+    },
+    "signIn": {
+      "title": "Autentificare echipă",
+      "unavailable": "Autentificarea pentru echipă nu este încă disponibilă în acest mediu.",
+      "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale."
+    },
+    "staff": {
+      "title": "Echipa",
+      "inviteTitle": "Adaugă o persoană",
+      "email": "Adresă de email",
+      "name": "Nume",
+      "role": "Rol",
+      "preferredLocale": "Limbă preferată",
+      "invite": "Adaugă",
+      "inviteHelp": "Nu se trimite niciun email: platforma nu are încă domeniul de expediere. Persoana capătă acces la prima autentificare cu această adresă.",
+      "pending": "Nu s-a autentificat încă",
+      "you": "Tu",
+      "changeRole": "Schimbă rolul",
+      "revoke": "Retrage accesul"
     }
   },
   "NotFound": {

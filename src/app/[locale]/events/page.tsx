@@ -12,6 +12,7 @@ import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
@@ -51,6 +52,17 @@ export default async function EventsPage({ params }: Props) {
   const latestPast = upcoming.length === 0 ? await findLatestPastEvent(db, locale, now) : undefined;
   const events = upcoming.length > 0 ? upcoming : latestPast ? [latestPast] : [];
 
+  /**
+   * The club's lead event, shown in full above the list.
+   *
+   * Taken from the rows already fetched rather than queried again: `listUpcomingEvents` orders
+   * featured first, so if there is one it is the first row. It is then dropped from the list
+   * below — the same event as both the hero and the first card reads as a duplicate, not as
+   * emphasis.
+   */
+  const featured = upcoming.length > 0 && upcoming[0].featured ? upcoming[0] : undefined;
+  const listed = featured ? events.filter((event) => event.id !== featured.id) : events;
+
   return (
     <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
       {/*
@@ -73,11 +85,13 @@ export default async function EventsPage({ params }: Props) {
         </Alert>
       )}
 
-      {events.length === 0 ? (
-        <Alert severity="info">{t("empty")}</Alert>
+      {featured && <FeaturedEventHero event={featured} now={now} />}
+
+      {listed.length === 0 ? (
+        !featured && <Alert severity="info">{t("empty")}</Alert>
       ) : (
         <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
-          {events.map((event) => (
+          {listed.map((event) => (
             <Card key={event.id} component="li" variant="outlined">
               <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
                 <CardContent>

@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -11,6 +12,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
+import { mapLinkFor } from "@/modules/events/domain/map-link";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import { env } from "@/shared/config/env";
@@ -76,6 +78,7 @@ export default async function EventDetailPage({ params }: Props) {
   const t = await getTranslations("Event");
   const tSite = await getTranslations("Site");
   const now = new Date();
+  const mapLink = mapLinkFor(event, env.MAP_LINK_BASE_URL);
 
   return (
     <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
@@ -113,7 +116,29 @@ export default async function EventDetailPage({ params }: Props) {
           <Typography variant="body2" color="text.secondary">
             {t("address")}
           </Typography>
-          <Typography variant="body1">{event.locationAddress}</Typography>
+          <Typography variant="body1">
+            {/*
+              The address itself is the map link when the club has given one. One link rather
+              than an address followed by a second "open the map": the same destination twice
+              on one page is noise for a screen reader and for a crawler.
+
+              The URL is whatever the organizer pasted (AGENTS.md §8 forbids assembling one),
+              so it opens in a new tab with `rel="noopener noreferrer"` — the opened page can
+              then neither reach back through `window.opener` nor learn where it came from.
+            */}
+            {mapLink ? (
+              <MuiLink
+                href={mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+              >
+                {event.locationAddress}
+              </MuiLink>
+            ) : (
+              event.locationAddress
+            )}
+          </Typography>
         </Stack>
       )}
     </Container>

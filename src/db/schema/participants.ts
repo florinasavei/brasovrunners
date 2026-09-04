@@ -1,5 +1,5 @@
 import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { locale } from "./events";
+import { locale } from "./locale";
 
 /**
  * Participants (AGENTS.md §12.2).

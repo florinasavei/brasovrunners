@@ -20,6 +20,20 @@ export const routing = defineRouting({
     "/": "/",
     "/events": { ro: "/evenimente", en: "/events" },
     "/events/[slug]": { ro: "/evenimente/[slug]", en: "/events/[slug]" },
+
+    /**
+     * Staff routes. Localized like everything else (AGENTS.md §9.2) but never in public
+     * navigation, never in the sitemap, and disallowed in `robots.txt`.
+     *
+     * `/admin` keeps its English spelling in both locales: §9.2 maps it that way, and it is
+     * the word the club already uses for the backoffice.
+     */
+    "/sign-in": { ro: "/autentificare", en: "/sign-in" },
+    "/admin": "/admin",
+    "/admin/events/[id]": "/admin/events/[id]",
+    "/admin/staff": "/admin/staff",
+    /** The staff-only preview of a draft (BR-REQ-051-02). */
+    "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },
   },
 });
 

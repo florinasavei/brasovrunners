@@ -11,7 +11,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { locale } from "./events";
+import { locale } from "./locale";
 import { participants } from "./participants";
 
 /** The ten message types of AGENTS.md §16.3. No message may be sent that is not one of them. */

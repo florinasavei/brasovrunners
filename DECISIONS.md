@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1168,3 +1168,124 @@ comma; distances now go through next-intl's number formatter, which is what BR-R
 for. Neither was caught by types or by tests — both were caught by looking at the running page.
 
 Baseline bumped to `BR-V1.14-2026-09-03`.
+
+## 24. Decided — Auth.js alone for staff, no external identity provider (2026-09-04)
+
+Two documents disagreed, and the disagreement was encoded in a column name. `AGENTS.md` §13.1
+said "use the Auth.js Zitadel provider" and §12.1 called the column `zitadel_subject`, while
+`CLAUDE.md` and `WEEKEND.md` both recorded the direction as Auth.js alone with a server-side
+allowlist and no external IdP. Nothing had been built either way, so this was the last cheap
+moment to settle it: a column rename after rows exist is a migration nobody wants to write, and
+the name is what every later reader would have believed.
+
+**Decided: Auth.js alone. The `staff_users` table is the allowlist, and the column is
+`auth_subject`.** `AGENTS.md` §13.1 and §12.1 are corrected accordingly, along with the provider
+tables in §3.1, §7.1 and §7.2, `SETUP.md` §15, and the environment lists.
+
+The reasoning, in the order it mattered:
+
+- **Scale.** Zitadel is an identity platform. The club has, at most, a handful of staff
+  accounts, and it would be operating that platform — instances, projects, applications,
+  callback registrations per environment — for them. `AGENTS.md` §1.3 forbids exactly this kind
+  of structure without a population.
+- **Cost and ownership.** A custom domain on Zitadel sits on its paid tier (recorded in §20),
+  and every provider added is another account the club must own, pay for and recover
+  (`AGENTS.md` §24). The identity of five volunteers does not justify it.
+- **The provider was verified before it was dropped, not instead.** Auth.js does ship a Zitadel
+  provider — `@auth/core/providers/zitadel`, with `AUTH_ZITADEL_ID` and `AUTH_ZITADEL_SECRET` —
+  so this is a decision about what the club should run, not a discovery that the documented path
+  was impossible.
+- **Nothing about the boundary changes.** Participants still never receive accounts or passwords
+  (§10.3), the three roles are unchanged, and the server helpers are the ones §13.1 already
+  named: `getCurrentStaffUser`, `requireStaff`, `requireStaffRole`.
+
+**What was built, and what deliberately was not.** The table, the roles, the helpers, staff
+administration and the development switcher exist. The sign-in method does not, and that is the
+uncomfortable half of this decision: the method that suits volunteers with no passwords is an
+emailed link, and delivery to a real person needs the club's sending domain — the same blocker
+registration waits on. So `STAFF_AUTH_MODE` is `dev-switcher` in local and test and `disabled`
+everywhere else, where every staff request is answered by nobody and the backoffice returns 404.
+**The backoffice is therefore usable on a developer's machine and unusable on production until
+the domain exists.** Recorded plainly rather than papered over: the organizer story is complete
+except for the door.
+
+The switcher itself is guarded twice, because a development-only feature that reaches production
+is how a backoffice loses its lock: the process refuses to start with that mode outside local
+and test, and every function it exposes refuses again when it is called.
+
+**The invitation model that fell out of it.** With no external directory to consult, the table
+*is* the directory: an Administrator adds a colleague by email address and role, the row waits,
+and the first sign-in from that address binds the provider's subject to it. So `auth_subject` is
+nullable, `email` is unique and lowercased, and two checks hold the shape — an address that is
+not lowercase is refused, and a sign-in timestamp without a subject is refused. No row, no
+access, whatever any provider asserts. An Administrator cannot change their own role, remove
+their own access, or leave the club with no Administrator at all; those three refusals are the
+difference between a mistake and a locked-out club.
+
+## 25. Decided — the event half of the CMS, built during M1 rather than M5 (2026-09-04)
+
+`SPECS.md` §3 puts the mini CMS in M5, and `WEEKEND.md` defers it explicitly. It was built now
+anyway, and the reordering is recorded here rather than hidden by relabelling the requirements:
+BR-REQ-050-01, BR-REQ-051-01 and BR-REQ-051-02 keep `Release: M5` and gained a **Status** line
+naming the part that exists.
+
+**Why it could not wait.** Until this shipped, changing an event meant editing
+`src/db/seeds/pilot.ts` and re-running the seed — a developer, a laptop and a deploy for a
+sentence about a start time. The site exists so people can find the club's next race, and the
+club could not correct that race without a programmer. Everything else left in M1 is blocked on
+the domain or on approved legal text; this was blocked on nothing.
+
+**What shipped:** both of an event's times, its map link, the featured flag, and every editorial
+field on `event_translations` per locale, with DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED, a
+staff-only preview, and optimistic concurrency.
+
+**What did not, and why the boundary is exactly there:** no articles, static pages, galleries or
+media library, and **no rich text**. §11.3 makes the canonical body validated Tiptap JSON with an
+allowlisted schema, and a body editor built without that contract is the arbitrary-HTML problem
+the rule exists to prevent. Legal documents have no editor screen in any form (§11.1), and the
+backoffice says so in place of one.
+
+**Three decisions inside it worth keeping.**
+
+*The featured flag is a database constraint, not a convention.* A partial unique index over
+`featured` refuses a second featured row, in the same spirit as the pilot capacity guard.
+Application code that remembers to clear the previous flag is a race between two organizers, not
+a rule. Setting a new one clears the old inside a single transaction, so there is never an
+instant with two, and never a clear that survives a failed set.
+
+*The map link is stored, never assembled.* §8 forbids a hostname literal anywhere under `src/`
+and exempts no provider, so the application cannot build a maps URL from the latitude and
+longitude it already holds, nor allowlist a map host — `yarn docs:check` fails on the literal
+either way. The organizer pastes the link they already share. https is required at the form and
+again by a check constraint, so a `javascript:` URL cannot be stored by a seed or a hand-written
+`UPDATE` either, and the link renders with `rel="noopener noreferrer"`. The coordinates stay
+where they are and are not a substitute: they are a point, not the named place a club shares
+before a run.
+
+*A second time, without touching the first.* `starts_at` keeps its meaning exactly — when the
+event begins — because the ordering, the upcoming/past cut-off, the sitemap and the listing all
+read it, and redefining it would have moved every one of those. `race_starts_at` is the gun
+time, constrained to fall inside the event, and the page shows one time or two, each labelled.
+In the JSON-LD, `startDate` is the race start and `doorTime` is the event start: a search result
+showing the gathering time as the start is how somebody misses a race. The two times are
+converted in the event's own timezone, twice — a single pass uses the offset of the wrong
+instant, which is wrong by an hour on exactly the two Sundays a year the clocks change, and one
+of those is the last Sunday in March.
+
+**The concurrency rule got the test it actually needs.** BR-REQ-051-01 criterion 5 says a stale
+save is a conflict. Proving that requires two connections racing, and PGlite — the in-process
+PostgreSQL the rest of the suite runs on — has one. `tests/concurrency/` therefore runs against a
+real server through `yarn test:concurrency`, with its own Vitest configuration, excluded from
+`yarn check` for the same reason the end-to-end suite is: that gate has to work on a machine with
+no database. It fails loudly rather than skipping when `DATABASE_URL` is unset, because a
+concurrency suite that quietly passes with nothing connected is worse than no suite at all. The
+test holds one transaction open, watches the second organizer's save block on the row lock,
+commits the first, and asserts the second comes back as a conflict with the first save intact.
+
+**A cycle the schema created, and the file that broke it.** `events` needs `staff_users` for its
+attribution columns; `staff_users` needed the `locale` enum, which lived in `events`. Drizzle
+loads schema modules eagerly, so that is not a style problem — it is
+`Cannot access 'locale' before initialization` at migration time. The enum now lives in
+`src/db/schema/locale.ts`, which imports nothing.
+
+Baseline bumped to `BR-V1.15-2026-09-04`.

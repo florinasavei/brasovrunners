@@ -2968,6 +2968,7 @@ __metadata:
     drizzle-orm: "npm:0.45.2"
     eslint: "npm:9.39.5"
     eslint-config-next: "npm:16.3.4"
+    flag-icons: "npm:7.5.0"
     next: "npm:16.3.4"
     next-intl: "npm:4.14.2"
     pg: "npm:8.23.0"
@@ -4289,6 +4290,13 @@ __metadata:
     locate-path: "npm:^6.0.0"
     path-exists: "npm:^4.0.0"
   checksum: 10c0/062c5a83a9c02f53cdd6d175a37ecf8f87ea5bbff1fdfb828f04bfa021441bc7583e8ebc0872a4c1baab96221fb8a8a275a19809fb93fbc40bd69ec35634069a
+  languageName: node
+  linkType: hard
+
+"flag-icons@npm:7.5.0":
+  version: 7.5.0
+  resolution: "flag-icons@npm:7.5.0"
+  checksum: 10c0/c81e20c1751833882c95633349ba7e76e74d7d86c317e4ac2bac86589325430a3181913453fa3824edabaa1a84469f7ae4fd50c388027079048a5c3be438874a
   languageName: node
   linkType: hard
 

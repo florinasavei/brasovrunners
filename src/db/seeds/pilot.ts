@@ -32,16 +32,31 @@ async function seed() {
 
   const rows = [
     {
-      // The race the site exists for. Every detail here is a placeholder.
+      // The race the site exists for. Every detail here is a placeholder, and the excerpt says
+      // so in both languages: this row is now the featured event, so it is the first thing a
+      // visitor reads, and an invented date presented as real is worse than no page at all.
       kind: "RACE" as const,
-      startsAt: new Date("2026-10-11T10:00:00+03:00"),
+      // Two times, as a race has: gather at nine, gun at ten. `starts_at` is when the event
+      // begins and stays what the ordering and the listing read.
+      startsAt: new Date("2026-10-11T09:00:00+03:00"),
+      raceStartsAt: new Date("2026-10-11T10:00:00+03:00"),
+      // The one event the landing page leads with. The database refuses a second.
+      featured: true,
+      /**
+       * Part of the placeholder, and marked as such in the excerpt: this is roughly Parcul
+       * Tractorul, not a start line the club has chosen. The other three events carry no
+       * coordinates at all, because inventing a start line for a real weekly run would send
+       * people to the wrong corner of the right park — AGENTS.md §1.2.
+       */
+      latitude: "45.6667",
+      longitude: "25.6167",
       distanceMeters: 10000,
       elevationGainMeters: 180,
       ro: {
         slug: "crosul-aniversar-brasov-runners",
         title: "Crosul aniversar Brașov Runners",
         excerpt:
-          "Cursa aniversară a clubului, pe traseu de cros în jurul orașului. Toate nivelurile sunt binevenite.",
+          "EXEMPLU — data, distanța și punctul de întâlnire sunt provizorii. Cursa aniversară a clubului, pe traseu de cros în jurul orașului. Toate nivelurile sunt binevenite.",
         locationName: "Parcul Tractorul, zona de start",
         locationAddress: "Strada Nicolae Labiș, Brașov",
         difficultyLabel: "Mediu",
@@ -51,7 +66,7 @@ async function seed() {
         slug: "brasov-runners-anniversary-cross",
         title: "Brașov Runners Anniversary Cross",
         excerpt:
-          "The club's anniversary race, on a cross-country course around the city. All levels welcome.",
+          "SAMPLE — the date, the distance and the meeting point are placeholders. The club's anniversary race, on a cross-country course around the city. All levels welcome.",
         locationName: "Tractorul Park, start area",
         locationAddress: "Strada Nicolae Labiș, Brașov",
         difficultyLabel: "Moderate",
@@ -131,6 +146,13 @@ async function seed() {
       .values({
         kind: row.kind,
         startsAt: row.startsAt,
+        raceStartsAt: "raceStartsAt" in row ? row.raceStartsAt : undefined,
+        featured: "featured" in row ? row.featured : false,
+        latitude: "latitude" in row ? row.latitude : undefined,
+        longitude: "longitude" in row ? row.longitude : undefined,
+        // No map link is seeded, and that is the rule working rather than an omission:
+        // AGENTS.md §8 forbids a hostname literal anywhere under `src/`, seeds included. The
+        // link is built from the coordinates above and `MAP_LINK_BASE_URL` instead.
         distanceMeters: row.distanceMeters,
         elevationGainMeters: row.elevationGainMeters,
         // Registration is not built: it needs the club's approved declaration and privacy

@@ -5,8 +5,16 @@ import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
+import { staffUsers } from "@/db/schema/staff-users";
 
-const schema = { events, eventTranslations, participants, emailActionTokens, emailOutbox };
+const schema = {
+  events,
+  eventTranslations,
+  participants,
+  emailActionTokens,
+  emailOutbox,
+  staffUsers,
+};
 export type TestDatabase = PgliteDatabase<typeof schema>;
 
 /**
@@ -52,4 +60,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(eventTranslations);
   await db.delete(events);
   await db.delete(participants);
+  // Last: events and translations reference staff users, and although the foreign keys are
+  // ON DELETE SET NULL, deleting the parents first keeps the order honest about what owns what.
+  await db.delete(staffUsers);
 }

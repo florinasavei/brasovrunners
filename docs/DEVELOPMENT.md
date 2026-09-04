@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
 
 # Running this locally
 
-**Baseline `BR-V1.14-2026-09-03`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V1.15-2026-09-04`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -64,7 +64,7 @@ safe examples only — never a real value (`AGENTS.md` §8).
 ```bash
 docker compose up -d db   # local PostgreSQL on 5432
 yarn db:migrate           # applies src/db/migrations
-yarn db:seed              # three sample events, Romanian published, English draft
+yarn db:seed              # four sample events, Romanian and English published
 yarn dev                  # http://localhost:47821 → redirects to /ro
 ```
 
@@ -90,6 +90,7 @@ yarn check               docs:check + typecheck + lint + tests — the pre-commi
 yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
+yarn test:concurrency    the two-connection suite; needs the database running
 yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running
 yarn test:e2e:ui         the same, in Playwright's UI mode
@@ -100,6 +101,7 @@ yarn db:generate         regenerate migrations after editing src/db/schema/
 yarn db:migrate          apply migrations
 yarn db:studio           browse the database
 yarn db:seed             reset and reseed sample events
+yarn flags:sync          re-copy the country flags into public/flags/ (runs on install)
 yarn db:reset:local      drop both schemas, migrate and seed from nothing
 yarn release             versioned archive and share copies under dist/
 ```
@@ -146,8 +148,20 @@ overbooks.
 > Every concurrency requirement — BR-REQ-034-02 (twenty simultaneous confirmations against one
 > free place), BR-REQ-034-03, parallel waiting-list promotion — **must** run against a real
 > PostgreSQL server. Writing those against PGlite produces a green suite and an overbooked
-> event. When that work starts, add Docker or Testcontainers *alongside* this harness rather
-> than replacing it; these tests are fast and need no daemon, which is worth keeping.
+> event. Add Docker or Testcontainers *alongside* this harness rather than replacing it; these
+> tests are fast and need no daemon, which is worth keeping.
+
+**The first suite that needed the other kind of database.** `yarn test:concurrency` runs
+`tests/concurrency/` against a real PostgreSQL server, with two genuine connections, and proves
+BR-REQ-051-01 criterion 5: two organizers saving one event, one save refused as stale, the other
+surviving whole. It has its own configuration (`vitest.concurrency.config.mts`), it is excluded
+from `yarn test`, and it fails loudly rather than skipping when `DATABASE_URL` is unset — a
+concurrency suite that quietly passes with nothing connected is worse than no suite at all.
+
+```bash
+docker compose up -d db && yarn db:migrate
+yarn test:concurrency
+```
 
 **End-to-end tests are separate.** `yarn test:e2e` builds the app, starts the production
 server and drives a real browser at 320px and at desktop width, so it needs the database
@@ -160,6 +174,28 @@ Tests are named by the requirement they cover. `tests/unit/` holds pure rules;
 should use `expectViolation` from `tests/helpers/constraints.ts` — Drizzle wraps driver
 errors, so matching on the message would pass for any failure at all, including a typo in the
 query. The helper checks the SQLSTATE code and the constraint name instead.
+
+## Where the flags come from
+
+`public/flags/` is **generated** and git-ignored: `scripts/sync-flags.mjs` copies the 4:3 SVGs
+out of `flag-icons` on every `yarn install` and as the first half of `yarn build`. If the
+language switcher shows broken images, run `yarn flags:sync`.
+
+Only the SVG files are used, never the package's stylesheet — that CSS references all 271 flags
+as background images, which is a large file to ship for the two the header shows. The set is
+there because a country field needs hundreds; the switcher is its first use.
+
+## Signing in to the backoffice locally
+
+There is no staff login yet (`DECISIONS.md` §24), so local and test use the development
+switcher `AGENTS.md` §13.1 permits: open `/ro/autentificare`, pick one of three synthetic
+identities — Author, Editor, Administrator — and you are that role until you sign out. The
+identities are created on demand, so a migrated-but-unseeded database works.
+
+It is guarded twice. `STAFF_AUTH_MODE` defaults to `dev-switcher` in local and test and to
+`disabled` everywhere else, and a process that is *told* to use the switcher with
+`APP_ENV=qa` or `production` refuses to start. The backoffice is at `/ro/admin`; signed out, it
+redirects to the switcher locally and answers 404 where there is no way in.
 
 ## Where things live
 

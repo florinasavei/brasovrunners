@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -147,7 +147,7 @@ criteria for this runbook.
 - [ ] Create the DNS record the provider's domain screen asks for. Do not guess the record
       type; use what the screen shows.
 - [ ] Set `APP_BASE_URL=https://qa.<domain>` in the QA application environment and restart.
-- [ ] Zitadel QA: add the new callback and post-logout URLs and the new allowed origin.
+- [ ] Staff authentication QA: add the new callback and post-logout URLs and the new allowed origin. Auth.js derives these from `APP_BASE_URL`, so this is a configuration change and not a provider one.
       Keep the old entries until step 4.
 - [ ] Verify HTTPS resolves and `/api/health` responds.
 - [ ] Verify staff login completes end to end.
@@ -169,7 +169,7 @@ criteria for this runbook.
 - [ ] Create the apex and `www` DNS records.
 - [ ] Set `APP_BASE_URL=https://<domain>` in the production application and restart.
 - [ ] Configure the `www` to apex redirect so exactly one canonical host exists.
-- [ ] Zitadel production: add the new callback, post-logout, and origin entries.
+- [ ] Staff authentication production: the same callback, post-logout and origin entries, derived from `APP_BASE_URL`.
 
 ### Step 4 — Canonical cleanup
 
@@ -179,7 +179,7 @@ criteria for this runbook.
 - [ ] Confirm production allows indexing and QA still does not.
 - [ ] Confirm runner profile pages still carry `noindex, nofollow` and are absent from the
       sitemap.
-- [ ] Remove the provider default hostnames from Zitadel and from any allowlist.
+- [ ] Remove the provider default hostnames from every allowlist.
 - [ ] Decide whether the default hostnames stay reachable. Recommended: no, otherwise they
       are duplicate content.
 - [ ] Submit the production sitemap to Search Console.

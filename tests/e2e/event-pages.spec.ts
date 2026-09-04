@@ -114,3 +114,96 @@ test.describe("BR-REQ-040-02 no cross-locale fallback", () => {
     expect(response?.status()).toBe(404);
   });
 });
+
+/**
+ * The featured event, which is what the landing page leads with.
+ *
+ * The listing is the landing page, so this is shared chrome: a fixed width here breaks a
+ * 320px phone, which has already happened once with the header lockup (BR-REQ-041-01
+ * criterion 1).
+ */
+test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
+  test("shows the featured race above the list, with both of its times", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    const hero = page.getByRole("region", { name: /Crosul aniversar/ });
+    await expect(hero).toBeVisible();
+
+    const heroText = await hero.innerText();
+    // A race has two times, each labelled: the gathering and the gun.
+    expect(heroText).toContain("Ora de întâlnire");
+    expect(heroText).toContain("Startul cursei");
+    expect(heroText).toContain("Punct de întâlnire");
+    // The seeded race is a placeholder and says so, in the text a visitor reads first.
+    expect(heroText).toContain("EXEMPLU");
+  });
+
+  test("does not repeat the featured event in the list below it", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    const titles = await page.locator("main ul li h2").allInnerTexts();
+    expect(titles.filter((title) => title.includes("Crosul aniversar"))).toHaveLength(0);
+  });
+
+  test("still fits a 320px viewport with the hero on the page", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    const overflow = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+  });
+});
+
+/**
+ * BR-REQ-040-01 criterion 5 — the language switcher lands on the corresponding localized page.
+ *
+ * The header is shared chrome, so this runs at 320px as well as on the desktop project. The
+ * switch that matters is the one on an event page: the two locales have different slugs, and a
+ * switcher that swapped the prefix would 404.
+ */
+test.describe("BR-REQ-040-01 the language switcher", () => {
+  test("is in the header on every page, with the current language marked", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    const switcher = page.getByRole("navigation", { name: "Limbă" });
+    await expect(switcher).toBeVisible();
+    // Romanian is the default and this is a Romanian URL, so RO is stated rather than offered.
+    await expect(switcher.getByRole("link", { name: "English" })).toBeVisible();
+    await expect(switcher.getByRole("link", { name: "Română" })).toHaveCount(0);
+  });
+
+  test("switches an event page to the other language's own slug", async ({ page }) => {
+    await page.goto("/ro/evenimente/tura-pe-tampa");
+
+    await page.getByRole("link", { name: "English" }).click();
+
+    await expect(page).toHaveURL(/\/en\/events\/tampa-trail$/);
+    const body = await page.locator("body").innerText();
+    expect(body).toContain("Tâmpa trail run");
+    expect(body).not.toContain("Tură pe Tâmpa");
+  });
+
+  test("switches back, and the listing too", async ({ page }) => {
+    await page.goto("/en/events/tampa-trail");
+    await page.getByRole("link", { name: "Română" }).click();
+    await expect(page).toHaveURL(/\/ro\/evenimente\/tura-pe-tampa$/);
+
+    await page.goto("/ro/evenimente");
+    await page.getByRole("link", { name: "English" }).click();
+    await expect(page).toHaveURL(/\/en\/events$/);
+  });
+
+  test("does not push the header past a 320px viewport", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    const header = page.locator("header");
+    await expect(header).toBeVisible();
+    const overflow = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+  });
+});
