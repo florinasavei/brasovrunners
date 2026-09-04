@@ -6,7 +6,7 @@ import { findTranslationById } from "@/modules/content/events/repository";
 import {
   saveEventFields,
   saveEventTranslation,
-  transitionTranslation,
+  transitionEvent,
 } from "@/modules/content/events/service";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -18,6 +18,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * These call the service the Server Actions call, with an explicit actor, which is the point:
  * BR-REQ-060-01 criterion 4 asks that authorization be asserted at the server, and a test that
  * clicked a button would prove only that the button was hidden.
+ *
+ * Publication is one state for the whole event (`DECISIONS.md` §28), so the transitions below
+ * act on the event and the saves act on one language's text.
  */
 describe("BR-REQ-051-01 editorial workflow", () => {
   let db: TestDatabase;
@@ -52,7 +55,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       .returning();
   });
 
-  /** The fields a save must carry: the whole allowlisted set, as the form posts it. */
+  /** The fields a translation save must carry: the whole allowlisted set, as the form posts it. */
   const FIELDS = {
     slug: "crosul-aniversar",
     title: "Crosul aniversar",
@@ -65,32 +68,92 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     seoDescription: "Cursa aniversară a clubului.",
   };
 
-  async function seedTranslation(options: {
-    status?: "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "ARCHIVED";
-    authorId?: string | null;
-    publishedAt?: Date | null;
-    locale?: "ro" | "en";
-  } = {}) {
+  /** The event row as the form posts it — every column an organizer owns. */
+  const EVENT_FIELDS = {
+    kind: "RACE",
+    eventStatus: "SCHEDULED",
+    timezone: "Europe/Bucharest",
+    startsAtWallTime: "2026-10-11T09:00",
+    endsAtWallTime: "",
+    raceStartsAtWallTime: "",
+    latitude: "",
+    longitude: "",
+    mapUrl: "",
+    distanceMeters: "",
+    elevationGainMeters: "",
+    featured: false,
+    registrationMode: "NONE",
+    capacity: "",
+    registrationOpensAtWallTime: "",
+    registrationClosesAtWallTime: "",
+    declarationDocumentId: "",
+    externalProvider: "",
+    externalRegistrationUrl: "",
+  };
+
+  /**
+   * One event with a complete translation in each locale, unless a test asks for less.
+   *
+   * "Complete" is what publication requires, so the default has to satisfy it — a test that had
+   * to remember to fill in the English excerpt before publishing would be testing the fixture.
+   */
+  async function seedEvent(
+    options: {
+      status?: "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "ARCHIVED";
+      authorId?: string | null;
+      publishedAt?: Date | null;
+      slug?: string;
+      /** Fields to blank out on the English translation, to make it incomplete. */
+      englishMissing?: Partial<Record<"excerpt", null>>;
+      withoutEnglish?: boolean;
+    } = {},
+  ) {
+    const status = options.status ?? "DRAFT";
+    const slug = options.slug ?? FIELDS.slug;
+
     const [event] = await db
       .insert(events)
-      .values({ kind: "RACE", startsAt: new Date("2026-10-11T06:00:00Z") })
+      .values({
+        kind: "RACE",
+        startsAt: new Date("2026-10-11T06:00:00Z"),
+        editorialStatus: status,
+        publishedAt:
+          options.publishedAt ?? (status === "PUBLISHED" ? new Date("2026-09-01T00:00:00Z") : null),
+      })
       .returning();
+
+    const authorStaffUserId = options.authorId === undefined ? author.id : options.authorId;
 
     const [translation] = await db
       .insert(eventTranslations)
       .values({
         eventId: event.id,
-        locale: options.locale ?? "ro",
-        slug: FIELDS.slug,
+        locale: "ro",
+        slug,
         title: FIELDS.title,
+        excerpt: FIELDS.excerpt,
         locationName: FIELDS.locationName,
-        editorialStatus: options.status ?? "DRAFT",
-        authorStaffUserId: options.authorId === undefined ? author.id : options.authorId,
-        publishedAt: options.publishedAt ?? null,
+        authorStaffUserId,
       })
       .returning();
 
-    return { event, translation };
+    let english: typeof translation | undefined;
+    if (!options.withoutEnglish) {
+      [english] = await db
+        .insert(eventTranslations)
+        .values({
+          eventId: event.id,
+          locale: "en",
+          slug: `${slug}-en`,
+          title: "Anniversary cross",
+          excerpt: options.englishMissing?.excerpt === null ? null : "The club's own race.",
+          locationName: "Tractorul Park",
+          authorStaffUserId,
+        })
+        .returning();
+    }
+
+    return { event, translation, english };
   }
 
   /** The error code a call refuses with, or "no error" when it unexpectedly succeeded. */
@@ -106,7 +169,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
 
   describe("criterion 1 an Author edits their own drafts and submits for review", () => {
     it("saves an Author's own draft", async () => {
-      const { translation } = await seedTranslation();
+      const { translation } = await seedEvent();
 
       const saved = await saveEventTranslation(db, {
         actor: author,
@@ -120,7 +183,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("refuses an Author a colleague's draft", async () => {
-      const { translation } = await seedTranslation({ authorId: otherAuthor.id });
+      const { translation } = await seedEvent({ authorId: otherAuthor.id });
 
       expect(
         await codeOf(
@@ -135,12 +198,12 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("lets an Author submit their own draft for review", async () => {
-      const { translation } = await seedTranslation();
+      const { event } = await seedEvent();
 
-      const submitted = await transitionTranslation(db, {
+      const submitted = await transitionEvent(db, {
         actor: author,
-        translationId: translation.id,
-        expectedVersion: translation.version,
+        eventId: event.id,
+        expectedVersion: event.version,
         to: "IN_REVIEW",
       });
 
@@ -148,40 +211,34 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("refuses an Author who tries to publish, whatever the interface showed", async () => {
-      const { translation } = await seedTranslation({ status: "IN_REVIEW" });
+      const { event } = await seedEvent({ status: "IN_REVIEW" });
 
       expect(
         await codeOf(
-          transitionTranslation(db, {
+          transitionEvent(db, {
             actor: author,
-            translationId: translation.id,
-            expectedVersion: translation.version,
+            eventId: event.id,
+            expectedVersion: event.version,
             to: "PUBLISHED",
           }),
         ),
       ).toBe("FORBIDDEN");
 
-      const current = await findTranslationById(db, translation.id);
-      expect(current?.editorialStatus, "nothing was written").toBe("IN_REVIEW");
-      expect(current?.version).toBe(translation.version);
+      const [current] = await db.select().from(events).where(eq(events.id, event.id));
+      expect(current.editorialStatus, "nothing was written").toBe("IN_REVIEW");
+      expect(current.version).toBe(event.version);
     });
 
     it("refuses an Author the event row — the times, the map link, the featured flag", async () => {
-      const { event } = await seedTranslation();
+      const { event } = await seedEvent();
 
       expect(
         await codeOf(
           saveEventFields(db, {
             actor: author,
             eventId: event.id,
-            fields: {
-              startsAtWallTime: "2026-10-11T09:00",
-              raceStartsAtWallTime: "2026-10-11T10:00",
-              latitude: "",
-              longitude: "",
-              mapUrl: "",
-              featured: true,
-            },
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, featured: true },
           }),
         ),
       ).toBe("FORBIDDEN");
@@ -193,63 +250,105 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       ["editor", () => editor],
       ["administrator", () => admin],
     ])("lets an %s publish a reviewed draft", async (_name, actorOf) => {
-      const { translation } = await seedTranslation({ status: "IN_REVIEW" });
+      const { event } = await seedEvent({ status: "IN_REVIEW" });
       const now = new Date("2026-09-04T08:00:00Z");
 
-      const published = await transitionTranslation(db, {
+      const published = await transitionEvent(db, {
         actor: actorOf(),
-        translationId: translation.id,
-        expectedVersion: translation.version,
+        eventId: event.id,
+        expectedVersion: event.version,
         to: "PUBLISHED",
         now,
       });
 
       expect(published.editorialStatus).toBe("PUBLISHED");
       expect(published.publishedAt).toEqual(now);
-      expect(published.reviewedByStaffUserId).toBe(actorOf().id);
+      expect(published.updatedByStaffUserId).toBe(actorOf().id);
     });
 
-    it("unpublishes back to a draft, and the public queries stop returning it", async () => {
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
+    it("puts both languages live in the same moment", async () => {
+      const { event } = await seedEvent({ status: "IN_REVIEW" });
+
+      await transitionEvent(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        to: "PUBLISHED",
       });
 
       expect(await listPublishedEvents(db, "ro")).toHaveLength(1);
+      expect(await listPublishedEvents(db, "en")).toHaveLength(1);
+    });
 
-      await transitionTranslation(db, {
+    it("refuses to publish while a language is missing a field the public page renders", async () => {
+      const { event } = await seedEvent({ status: "IN_REVIEW", englishMissing: { excerpt: null } });
+
+      expect(
+        await codeOf(
+          transitionEvent(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            to: "PUBLISHED",
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+
+      const [current] = await db.select().from(events).where(eq(events.id, event.id));
+      expect(current.editorialStatus, "nothing went public").toBe("IN_REVIEW");
+    });
+
+    it("refuses to publish while a language has no translation at all", async () => {
+      const { event } = await seedEvent({ status: "IN_REVIEW", withoutEnglish: true });
+
+      expect(
+        await codeOf(
+          transitionEvent(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            to: "PUBLISHED",
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
+    it("unpublishes back to a draft, and the public queries stop returning it", async () => {
+      const { event } = await seedEvent({ status: "PUBLISHED" });
+
+      expect(await listPublishedEvents(db, "ro")).toHaveLength(1);
+
+      await transitionEvent(db, {
         actor: editor,
-        translationId: translation.id,
-        expectedVersion: translation.version,
+        eventId: event.id,
+        expectedVersion: event.version,
         to: "DRAFT",
       });
 
       expect(await listPublishedEvents(db, "ro")).toHaveLength(0);
+      expect(await listPublishedEvents(db, "en")).toHaveLength(0);
     });
 
-    it("keeps the first publication date when a translation is republished", async () => {
+    it("keeps the first publication date when an event is republished", async () => {
       const firstPublication = new Date("2026-09-01T00:00:00Z");
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: firstPublication,
-      });
+      const { event } = await seedEvent({ status: "PUBLISHED", publishedAt: firstPublication });
 
-      const draft = await transitionTranslation(db, {
+      const draft = await transitionEvent(db, {
         actor: editor,
-        translationId: translation.id,
-        expectedVersion: translation.version,
+        eventId: event.id,
+        expectedVersion: event.version,
         to: "DRAFT",
       });
-      const republished = await transitionTranslation(db, {
+      const reviewed = await transitionEvent(db, {
         actor: editor,
-        translationId: translation.id,
+        eventId: event.id,
         expectedVersion: draft.version,
         to: "IN_REVIEW",
       });
-      const finalState = await transitionTranslation(db, {
+      const finalState = await transitionEvent(db, {
         actor: editor,
-        translationId: translation.id,
-        expectedVersion: republished.version,
+        eventId: event.id,
+        expectedVersion: reviewed.version,
         to: "PUBLISHED",
         now: new Date("2026-09-20T00:00:00Z"),
       });
@@ -258,58 +357,24 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(finalState.publishedAt).toEqual(firstPublication);
     });
 
-    it("archives a published translation", async () => {
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
-      });
+    it("archives a published event", async () => {
+      const { event } = await seedEvent({ status: "PUBLISHED" });
 
-      const archived = await transitionTranslation(db, {
+      const archived = await transitionEvent(db, {
         actor: admin,
-        translationId: translation.id,
-        expectedVersion: translation.version,
+        eventId: event.id,
+        expectedVersion: event.version,
         to: "ARCHIVED",
       });
 
       expect(archived.editorialStatus).toBe("ARCHIVED");
       expect(await listPublishedEvents(db, "ro")).toHaveLength(0);
     });
-
-    it("publishes one locale without touching the other", async () => {
-      const { event, translation } = await seedTranslation({ status: "IN_REVIEW" });
-      const [english] = await db
-        .insert(eventTranslations)
-        .values({
-          eventId: event.id,
-          locale: "en",
-          slug: "anniversary-cross",
-          title: "Anniversary cross",
-          locationName: "Tractorul Park",
-          editorialStatus: "DRAFT",
-        })
-        .returning();
-
-      await transitionTranslation(db, {
-        actor: editor,
-        translationId: translation.id,
-        expectedVersion: translation.version,
-        to: "PUBLISHED",
-      });
-
-      expect(await listPublishedEvents(db, "ro")).toHaveLength(1);
-      // BR-REQ-040-02: the English page is a 404 until English is published in its own right.
-      expect(await listPublishedEvents(db, "en")).toHaveLength(0);
-      const untouched = await findTranslationById(db, english.id);
-      expect(untouched?.editorialStatus).toBe("DRAFT");
-    });
   });
 
   describe("criterion 3 an Author cannot edit published content", () => {
     it("refuses the save and writes nothing", async () => {
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
-      });
+      const { translation } = await seedEvent({ status: "PUBLISHED" });
 
       expect(
         await codeOf(
@@ -330,11 +395,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
   });
 
   describe("criterion 4 a save that affects live content is warned about first", () => {
-    it("refuses a save on published content when the warning was not answered", async () => {
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
-      });
+    it("refuses a save on a published event when the warning was not answered", async () => {
+      const { translation } = await seedEvent({ status: "PUBLISHED" });
 
       expect(
         await codeOf(
@@ -352,10 +414,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("accepts the same save once the warning is acknowledged", async () => {
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
-      });
+      const { translation } = await seedEvent({ status: "PUBLISHED" });
 
       const saved = await saveEventTranslation(db, {
         actor: editor,
@@ -369,7 +428,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("needs no acknowledgement for a draft, which nobody can read yet", async () => {
-      const { translation } = await seedTranslation();
+      const { translation } = await seedEvent();
 
       await expect(
         saveEventTranslation(db, {
@@ -384,7 +443,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
 
   describe("criterion 5 a stale save is a conflict", () => {
     it("rejects a second save that carries the version the first one replaced", async () => {
-      const { translation } = await seedTranslation();
+      const { translation } = await seedEvent();
 
       // Both organizers loaded version 1. The first save wins.
       await saveEventTranslation(db, {
@@ -411,32 +470,58 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("rejects a stale transition too, so publishing cannot skip a rewrite", async () => {
-      const { translation } = await seedTranslation({ status: "IN_REVIEW" });
+      const { event } = await seedEvent({ status: "IN_REVIEW" });
 
-      await saveEventTranslation(db, {
+      // Somebody else changed the event row — its times, say — after this page was rendered.
+      await saveEventFields(db, {
         actor: editor,
-        translationId: translation.id,
-        expectedVersion: translation.version,
-        fields: { ...FIELDS, title: "Rescris de editor" },
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, startsAtWallTime: "2026-10-11T10:00" },
       });
 
       expect(
         await codeOf(
-          transitionTranslation(db, {
+          transitionEvent(db, {
             actor: editor,
-            translationId: translation.id,
-            expectedVersion: translation.version,
+            eventId: event.id,
+            expectedVersion: event.version,
             to: "PUBLISHED",
           }),
         ),
       ).toBe("CONFLICT");
 
-      const current = await findTranslationById(db, translation.id);
-      expect(current?.editorialStatus).toBe("IN_REVIEW");
+      const [current] = await db.select().from(events).where(eq(events.id, event.id));
+      expect(current.editorialStatus).toBe("IN_REVIEW");
+    });
+
+    it("rejects a stale save of the event row", async () => {
+      const { event } = await seedEvent();
+
+      await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, distanceMeters: "10000" },
+      });
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, distanceMeters: "5000" },
+          }),
+        ),
+      ).toBe("CONFLICT");
+
+      const [current] = await db.select().from(events).where(eq(events.id, event.id));
+      expect(current.distanceMeters, "the first save survived intact").toBe(10000);
     });
 
     it("tells a vanished record apart from a stale one", async () => {
-      const { event, translation } = await seedTranslation();
+      const { event, translation } = await seedEvent();
       await db.delete(events).where(eq(events.id, event.id));
 
       expect(
@@ -453,8 +538,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
   });
 
   describe("a slug is editable before publication and stable afterwards", () => {
-    it("accepts a new slug while the translation has never been published", async () => {
-      const { translation } = await seedTranslation();
+    it("accepts a new slug while the event has never been published", async () => {
+      const { translation } = await seedEvent();
 
       const saved = await saveEventTranslation(db, {
         actor: author,
@@ -467,10 +552,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("refuses a new slug once the page has been public", async () => {
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
-      });
+      const { translation } = await seedEvent({ status: "PUBLISHED" });
 
       expect(
         await codeOf(
@@ -486,15 +568,12 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("keeps refusing after the page is unpublished, because the URL was still public", async () => {
-      const { translation } = await seedTranslation({
-        status: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
-      });
+      const { event, translation } = await seedEvent({ status: "PUBLISHED" });
 
-      const unpublished = await transitionTranslation(db, {
+      await transitionEvent(db, {
         actor: editor,
-        translationId: translation.id,
-        expectedVersion: translation.version,
+        eventId: event.id,
+        expectedVersion: event.version,
         to: "DRAFT",
       });
 
@@ -503,7 +582,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
           saveEventTranslation(db, {
             actor: editor,
             translationId: translation.id,
-            expectedVersion: unpublished.version,
+            expectedVersion: translation.version,
             fields: { ...FIELDS, slug: "alta-adresa" },
           }),
         ),
@@ -511,19 +590,19 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
   });
 
-  describe("the event row: two times, a map link and the featured flag", () => {
+  describe("the event row: every column an organizer owns", () => {
     it("saves both times in the event timezone and the map link", async () => {
-      const { event } = await seedTranslation();
+      const { event } = await seedEvent();
       const link = ["https:/", "maps.example.test", "brasov"].join("/");
 
       const saved = await saveEventFields(db, {
         actor: editor,
         eventId: event.id,
+        expectedVersion: event.version,
         fields: {
+          ...EVENT_FIELDS,
           startsAtWallTime: "2026-10-11T09:00",
           raceStartsAtWallTime: "2026-10-11T10:00",
-          latitude: "",
-          longitude: "",
           mapUrl: link,
           featured: true,
         },
@@ -537,20 +616,88 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(saved.updatedByStaffUserId).toBe(editor.id);
     });
 
-    it("saves the meeting point coordinates", async () => {
-      const { event } = await seedTranslation();
+    it("saves the kind, the status, the distance and the climb", async () => {
+      const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
         actor: editor,
         eventId: event.id,
+        expectedVersion: event.version,
         fields: {
-          startsAtWallTime: "2026-10-11T09:00",
-          raceStartsAtWallTime: "",
-          latitude: "45.6427",
-          longitude: "25.5887",
-          mapUrl: "",
-          featured: false,
+          ...EVENT_FIELDS,
+          kind: "TRAIL_RUN",
+          eventStatus: "CANCELLED",
+          distanceMeters: "14000",
+          elevationGainMeters: "600",
         },
+      });
+
+      expect(saved.kind).toBe("TRAIL_RUN");
+      expect(saved.eventStatus).toBe("CANCELLED");
+      expect(saved.distanceMeters).toBe(14000);
+      expect(saved.elevationGainMeters).toBe(600);
+    });
+
+    it("saves the end time and refuses one before the start", async () => {
+      const { event } = await seedEvent();
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, endsAtWallTime: "2026-10-11T12:00" },
+      });
+      expect(saved.endsAt?.toISOString()).toBe("2026-10-11T09:00:00.000Z");
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: saved.version,
+            fields: { ...EVENT_FIELDS, endsAtWallTime: "2026-10-11T08:00" },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
+    it("interprets the times in the timezone the same save sets", async () => {
+      const { event } = await seedEvent();
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, timezone: "UTC", startsAtWallTime: "2026-10-11T09:00" },
+      });
+
+      expect(saved.timezone).toBe("UTC");
+      expect(saved.startsAt.toISOString()).toBe("2026-10-11T09:00:00.000Z");
+    });
+
+    it("refuses a timezone the platform does not know", async () => {
+      const { event } = await seedEvent();
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, timezone: "Europe/Brasov" },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
+    it("saves the meeting point coordinates", async () => {
+      const { event } = await seedEvent();
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, latitude: "45.6427", longitude: "25.5887" },
       });
 
       expect(Number(saved.latitude)).toBeCloseTo(45.6427, 4);
@@ -563,51 +710,34 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       ["a latitude past the pole", { latitude: "95", longitude: "25.5887" }],
       ["something that is not a number", { latitude: "nord", longitude: "25.5887" }],
     ])("refuses %s with a message rather than a constraint", async (_name, coordinates) => {
-      const { event } = await seedTranslation();
+      const { event } = await seedEvent();
 
       expect(
         await codeOf(
           saveEventFields(db, {
             actor: editor,
             eventId: event.id,
-            fields: {
-              startsAtWallTime: "2026-10-11T09:00",
-              raceStartsAtWallTime: "",
-              ...coordinates,
-              mapUrl: "",
-              featured: false,
-            },
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, ...coordinates },
           }),
         ),
       ).toBe("VALIDATION_ERROR");
     });
 
-    it("clears the race start when the field is emptied", async () => {
-      const { event } = await seedTranslation();
-      await saveEventFields(db, {
+    it("clears the race start and the map link when the fields are emptied", async () => {
+      const { event } = await seedEvent();
+      const first = await saveEventFields(db, {
         actor: editor,
         eventId: event.id,
-        fields: {
-          startsAtWallTime: "2026-10-11T09:00",
-          raceStartsAtWallTime: "2026-10-11T10:00",
-          latitude: "",
-          longitude: "",
-          mapUrl: "",
-          featured: false,
-        },
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, raceStartsAtWallTime: "2026-10-11T10:00" },
       });
 
       const cleared = await saveEventFields(db, {
         actor: editor,
         eventId: event.id,
-        fields: {
-          startsAtWallTime: "2026-10-11T09:00",
-          raceStartsAtWallTime: "",
-          latitude: "",
-          longitude: "",
-          mapUrl: "",
-          featured: false,
-        },
+        expectedVersion: first.version,
+        fields: EVENT_FIELDS,
       });
 
       expect(cleared.raceStartsAt).toBeNull();
@@ -615,21 +745,15 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
 
     it("refuses a race start before the event begins, with a message rather than a constraint", async () => {
-      const { event } = await seedTranslation();
+      const { event } = await seedEvent();
 
       expect(
         await codeOf(
           saveEventFields(db, {
             actor: editor,
             eventId: event.id,
-            fields: {
-              startsAtWallTime: "2026-10-11T09:00",
-              raceStartsAtWallTime: "2026-10-11T08:00",
-              latitude: "",
-              longitude: "",
-              mapUrl: "",
-              featured: false,
-            },
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, raceStartsAtWallTime: "2026-10-11T08:00" },
           }),
         ),
       ).toBe("VALIDATION_ERROR");
@@ -638,19 +762,15 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     it.each(["javascript:alert(1)", "http://maps.example.test/brasov", "maps.example.test"])(
       "refuses %s as a map link",
       async (value) => {
-        const { event } = await seedTranslation();
+        const { event } = await seedEvent();
 
         expect(
           await codeOf(
             saveEventFields(db, {
               actor: editor,
               eventId: event.id,
-              fields: {
-                startsAtWallTime: "2026-10-11T09:00",
-                raceStartsAtWallTime: "",
-                mapUrl: value,
-                featured: false,
-              },
+              expectedVersion: event.version,
+              fields: { ...EVENT_FIELDS, mapUrl: value },
             }),
           ),
         ).toBe("VALIDATION_ERROR");
@@ -658,36 +778,142 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     );
 
     it("moves the featured flag off the previous event rather than failing", async () => {
-      const first = await seedTranslation();
-      const second = await seedTranslation({ locale: "en" });
+      const first = await seedEvent({ slug: "unu" });
+      const second = await seedEvent({ slug: "doi" });
 
       await saveEventFields(db, {
         actor: editor,
         eventId: first.event.id,
-        fields: {
-          startsAtWallTime: "2026-10-11T09:00",
-          raceStartsAtWallTime: "",
-          latitude: "",
-          longitude: "",
-          mapUrl: "",
-          featured: true,
-        },
+        expectedVersion: first.event.version,
+        fields: { ...EVENT_FIELDS, featured: true },
       });
       await saveEventFields(db, {
         actor: editor,
         eventId: second.event.id,
-        fields: {
-          startsAtWallTime: "2026-11-11T09:00",
-          raceStartsAtWallTime: "",
-          latitude: "",
-          longitude: "",
-          mapUrl: "",
-          featured: true,
-        },
+        expectedVersion: second.event.version,
+        fields: { ...EVENT_FIELDS, featured: true },
       });
 
       const featured = await db.select().from(events).where(eq(events.featured, true));
       expect(featured.map((event) => event.id)).toEqual([second.event.id]);
+    });
+  });
+
+  /**
+   * The registration block, which the pilot's capacity guard used to make untestable and the
+   * seed used to be the only way to set.
+   */
+  describe("the registration block", () => {
+    it("refuses capacity and a declaration on an event that does not register here", async () => {
+      const { event } = await seedEvent();
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, registrationMode: "NONE", capacity: "20" },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
+    it("refuses an internal event with no declaration to sign", async () => {
+      const { event } = await seedEvent();
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, registrationMode: "INTERNAL", capacity: "6" },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
+    it("refuses an external event with no link, and a link on any other mode", async () => {
+      const { event } = await seedEvent();
+      const link = ["https:/", "entries.example.test", "race"].join("/");
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, registrationMode: "EXTERNAL" },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, registrationMode: "NONE", externalRegistrationUrl: link },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
+    it("saves an external event with its provider and link", async () => {
+      const { event } = await seedEvent();
+      const link = ["https:/", "entries.example.test", "race"].join("/");
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: {
+          ...EVENT_FIELDS,
+          registrationMode: "EXTERNAL",
+          externalProvider: "Example Entries",
+          externalRegistrationUrl: link,
+        },
+      });
+
+      expect(saved.registrationMode).toBe("EXTERNAL");
+      expect(saved.externalRegistrationUrl).toBe(link);
+      expect(saved.externalProvider).toBe("Example Entries");
+    });
+
+    it("refuses a registration window that closes before it opens", async () => {
+      const { event } = await seedEvent();
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: {
+              ...EVENT_FIELDS,
+              registrationOpensAtWallTime: "2026-10-01T09:00",
+              registrationClosesAtWallTime: "2026-09-01T09:00",
+            },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
+    it.each(["0", "-3", "kilometri"])("refuses %s as a capacity", async (value) => {
+      const { event } = await seedEvent();
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: event.version,
+            fields: { ...EVENT_FIELDS, registrationMode: "INTERNAL", capacity: value },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
     });
   });
 });

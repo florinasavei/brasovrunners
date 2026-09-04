@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1394,3 +1394,178 @@ The reasoning:
   anything reaches a real participant; this is the same rule extended to legal text.
 
 Baseline bumped to `BR-V1.16-2026-09-04`.
+
+## 28. Decided — publication is one state per event, superseding the per-locale rule of §25 (2026-09-04)
+
+`AGENTS.md` §11.2 said "publishing per locale", and `event_translations.editorial_status` was
+where it lived: Romanian could be PUBLISHED while English was still a draft, and BR-REQ-040-02
+existed partly to describe what the public site must do in that state. That is reversed here.
+**An event is published or it is not, and both languages go live together.**
+
+**Why.** The per-locale rule solved a problem the club does not have. It exists for an editorial
+team large enough that one language's translation lags the other's by weeks — a newsroom, not a
+running club with three volunteers. What it actually produced was a race advertised in Romanian
+whose English page 404'd, which reads to an English-speaking visitor as a broken site rather than
+as unfinished content, and which nobody notices because the person who published Romanian was
+looking at the Romanian page. Publishing both together turns "the English half is missing" from a
+state the site has to survive into a thing the interface refuses to let you do.
+
+**What changed.**
+
+- `editorial_status` and `published_at` moved from `event_translations` to `events`, in migration
+  `0011`. `event_translations.version` stayed: a save of one language's text is still guarded on
+  its own row, and `events.version` was added so an event-level save or transition is guarded the
+  same way.
+- Reaching PUBLISHED requires a complete translation in **every** locale — every field a public
+  page renders, present in each (`fields.ts` `REQUIRED_PUBLIC_TRANSLATION_FIELDS`: title, slug,
+  meeting point, description). The transition refuses otherwise and names the language and the
+  fields.
+- The database asserts the two halves it can state honestly: a PUBLISHED event has a
+  `published_at`, and a translation's required fields are non-blank rather than merely NOT NULL.
+  The set-level rule cannot be a CHECK — it reads rows in another table — so it lives in
+  `transitionEvent` and has its own tests.
+- BR-REQ-040-02 was rewritten rather than left to be read the old way. The rule it protects is
+  unchanged and is now stronger: an unpublished event 404s in both languages, and a language with
+  no translation 404s in that language, but never by serving the other language's text.
+
+**What happened to rows already in the half-published state.** The migration carries the state up
+to the event and takes the conservative reading: an event becomes PUBLISHED only if it has a
+translation in each locale, all of them PUBLISHED, and a first-publication date to record.
+Anything else becomes a DRAFT — including an event that was live in Romanian only. That
+unpublishes a page somebody could read this morning, and that is the intended answer: the
+alternative is a Romanian event quietly beginning to serve an English stub, which is exactly what
+BR-REQ-040-02 forbids. `published_at` is carried across regardless of the resulting status,
+because slug stability keys on it and it is never cleared. In practice the blast radius was nil:
+QA's seed publishes both languages for every event.
+
+**Full CRUD came with it, and it is the larger half of the change.** §25 built an editor over
+three fields and left `src/db/seeds/pilot.ts` as the only way to set the rest. Now every column
+of `events` an organizer owns is editable through the backoffice — kind, event status, both times
+and the timezone, the end time, the coordinates, the map link, distance, climb, the featured flag,
+and the whole registration block including the capacity, the window and the approved declaration
+version an internal event points at — and there is a create form, a duplicate, an archive and a
+delete.
+
+Three decisions inside that worth keeping:
+
+*A new event needs both languages before it exists.* The create form asks for a title, a page
+address, a meeting point and a description in each. A form that let one language be skipped would
+produce an event that cannot be published, and nobody would remember why.
+
+*A duplicate copies the configuration and none of the standing.* Not the publication, not the
+first-publication date, not the featured flag, and not the slugs — the copy takes the first free
+`-2`, `-3` suffix in each language, asked of the database rather than assumed, because
+`UNIQUE(locale, slug)` would otherwise reject the whole copy. A copy that led the landing page the
+moment it was made is not a starting point, it is an incident.
+
+*Deleting is the Administrator's, and is refused for an event anybody has registered for.*
+Archiving is what an event that happened gets; deletion is for a row that should not exist —
+a duplicate, a mistake made five minutes ago. A registration carries the privacy-notice version
+its participant acknowledged and, once signed, the declaration they accepted; cascading those away
+to tidy up is destroying the evidence §10.8 exists to keep.
+
+Baseline bumped to `BR-V1.17-2026-09-04`.
+
+## 29. Decided — sample legal documents everywhere but production, superseding §27 (2026-09-04)
+
+§27 seeded a clearly marked two-sentence `PLACEHOLDER` version of each legal document in local
+and test only, and refused every other environment outright. This narrows that rule rather than
+widening it in spirit: **sample text is permitted in every environment except production, and
+production is refused hard.**
+
+**Why the old rule was wrong at the edge.** Registration correctly refuses when no approved
+privacy notice exists (BR-REQ-053-01), and QA had none. So the whole participant journey — the
+thing QA exists to let a colleague look at — was unreachable there, and the only way to see it was
+a developer's laptop. §27's reasoning was that invented legal text must never reach a real
+person's browser; QA is a system no real participant reaches, on a hostname nobody has been given.
+The line that matters is production, and it was drawn one environment too early.
+
+**Why production is different in kind, not in degree.** Everywhere else, sample text is a draft
+somebody is reviewing on a system nobody has entered a race on. In production it would be the
+wording a real person is told they have agreed to: text that says of itself that it has no legal
+effect, presented as the notice under which their data is processed. There is no configuration
+that makes that acceptable. `assertSampleLegalDocumentsAllowed` throws rather than skipping
+quietly — a seed that silently did nothing is indistinguishable from one that worked, and the
+difference matters on exactly one deployment — and the refusal has its own test.
+
+**What the samples are.** Three documents, `PRIVACY_NOTICE`, `TERMS` and `EVENT_DECLARATION`, in
+Romanian and English, each language written as its own complete text rather than translated
+sentence by sentence, and both marked as drafts awaiting one named reviewer. Two properties carry
+the whole thing:
+
+*Complete in structure, blank in substance.* Every section such a document normally carries is
+present; every club-specific fact is an `<ANGLE BRACKET>` placeholder rather than a plausible
+invention — the controller's legal name, address and contact, any representative, each retention
+period, the lawful basis for each purpose, the governing law. AGENTS.md §1.2 forbids inventing
+legal wording, and a well-formed invention is far more dangerous than a visible gap: a lawyer
+edits a concrete draft in an afternoon and never notices a fabricated retention period. The point
+is that the club faces a draft rather than a blank page, and that nobody can mistake the draft for
+the real thing.
+
+*The banner is in the rendered body, in both languages.* Not a code comment, not a column nobody
+renders: the first section of each document, on the public page, says that this is sample text,
+not approved by the club, not legal advice, and that it must be replaced before any real
+participant registers. The person who most needs to know is whoever opens the page.
+
+The privacy notice describes what this application actually does, read from the schema rather than
+guessed: the name, address and language a participant gives; the normalized and canonical forms of
+the address and why they exist; the consent for a name in results and the notice version it was
+given under; the lifecycle and every timestamp it records; the declaration acceptance and its
+hash; the transactional messages. The processors are named by role — database host, application
+host, email provider, staff identity provider — as `<PROVIDER>` placeholders. It says plainly that
+no medical information, emergency contact or data about minors is kept, because §12.13 has no
+tables for any.
+
+**The seed is version-aware rather than destructive.** Unlike the event seed, it never deletes:
+a version an acceptance references is immutable (§12.5), and QA will have acceptances against
+these rows. Re-running with unchanged text does nothing; re-running after the text changes inserts
+the next version, which is what a correction is.
+
+Baseline bumped to `BR-V1.17-2026-09-04`.
+
+## 30. Decided — a registration kind, so the queue can be exercised without ten mailboxes (2026-09-04)
+
+The waiting list is the part of the registration lifecycle nobody sees until it is too late to
+find a mistake in it. Exercising it by hand needs a capacity's worth of real inboxes, which nobody
+has, so in practice it was exercised only by tests.
+
+**Decided: `registrations.kind`, a database enum, `REAL` by default and `TEST`.** Not a "test
+user" account type — participants have no accounts at all by design (§10.3) — and not a fourth
+staff role. It is a property of the registration.
+
+**The rule that gives it its point: a test registration is a real registration in every way that
+affects the queue.** It goes through `modules/registrations/service.ts` like any other, occupies a
+place, expires on the same hold deadlines, and is promoted from the waiting list by the same
+allocator. `kind` appears in no condition inside the allocator or the capacity formula — that is
+the whole of it, and `tests/integration/registrations/test-kind.test.ts` asserts it by running the
+same scenario as each kind and comparing the transitions. A demonstration that behaved differently
+from the real thing would be worse than no demonstration: it would be a rehearsal of a system
+nobody ships.
+
+**The export omits them; every screen labels them.** Both were possible; the reasoning for the
+split is that context travels differently. Inside the backoffice, a chip sits next to the row and
+the person reading it is looking at this application. An export is a file that leaves: it is
+opened in a spreadsheet, sorted, filtered, and printed at a start line by a volunteer who never saw
+that screen, and a column they filtered away an hour ago is not a warning. A row that is not there
+cannot be miscounted.
+
+**It cannot exist in production, guarded twice** — in `test-registrations.ts` at the feature's own
+entrance, and again in `repository.ts` at the only statement that can write such a row. The same
+belt and braces §13.1 gives the development staff switcher, for the same reason: one guard
+eventually gets refactored away by somebody who can see only one of them.
+
+**The address is a third layer.** Synthetic participants use `@test.invalid`, reserved by RFC 2606
+so that it can never be registered or delivered to — the participant-side equivalent of the
+switcher's `.test` identities. `kind` carries the meaning; the domain is what guarantees that a
+bug in email-mode selection still cannot reach a stranger's inbox. Each gets a distinct local
+part, because `canonicalizeEmail` collapses dots and `+` tags for Gmail (BR-REQ-032-02) and
+because the per-event uniqueness index would refuse the second registration of one participant
+anyway.
+
+**It stops at email confirmation, deliberately.** The next step is signing the declaration, and
+§10.8 says staff cannot sign on a participant's behalf — stated flatly, with no exception for a
+participant who does not exist. So a test registration sits on a declaration hold exactly as a
+real one does: occupying a place, expiring on the same deadline, releasing it to the front of the
+queue when it lapses. That is the queue behaviour worth watching anyway.
+
+Baseline bumped to `BR-V1.17-2026-09-04`.

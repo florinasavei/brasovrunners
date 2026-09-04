@@ -22,10 +22,17 @@ test.describe("the build badge", () => {
     }
   });
 
-  test("shows when the code behind it was last changed", async ({ page }) => {
+  test("shows when the code behind it was last changed, to the minute", async ({ page }) => {
     await page.goto("/ro/evenimente");
-    // A year is the part that is stable across locales; the month name is not.
+    // A year is the part that is stable across locales; the month name is not. The time is
+    // what separates two deploys on the same afternoon.
     await expect(badge(page)).toHaveText(/\d{4}/);
+    await expect(badge(page)).toHaveText(/\d{2}:\d{2}/);
+  });
+
+  test("names the environment, so qa and production are never confused", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    await expect(badge(page)).toHaveText(/^(local|test|qa|production) · /);
   });
 
   test("does not swallow a tap in the corner it occupies", async ({ page }) => {

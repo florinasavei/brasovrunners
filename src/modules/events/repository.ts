@@ -51,8 +51,20 @@ const PUBLIC_COLUMNS = {
   costText: eventTranslations.costText,
   seoTitle: eventTranslations.seoTitle,
   seoDescription: eventTranslations.seoDescription,
-  publishedAt: eventTranslations.publishedAt,
+  // When the event was first published — one date for both languages now that publication is
+  // one state per event (`DECISIONS.md` §28).
+  publishedAt: events.publishedAt,
 };
+
+/**
+ * What every public query filters on: the event is published, and this locale has a translation.
+ *
+ * Publication moved to the event, so the status test is on `events`; the locale test is still
+ * the join, and it is what keeps BR-REQ-040-02 true — a locale with no translation row is a 404
+ * in that locale and never a fallback to the other language.
+ */
+const publishedIn = (locale: Locale) =>
+  and(eq(events.editorialStatus, "PUBLISHED"), eq(eventTranslations.locale, locale));
 
 /**
  * The row shape the public pages receive.
@@ -65,10 +77,10 @@ export type PublicEvent = Awaited<ReturnType<typeof listPublishedEvents>>[number
 /**
  * Events visible on the public site in one locale, soonest first.
  *
- * Only PUBLISHED translations are returned. BR-REQ-020-01 criterion 1 and BR-REQ-040-02:
- * a Draft or In review translation is a 404 in that locale, never a fallback to the other
- * language, so the locale filter and the status filter both belong in the query rather than
- * in the caller.
+ * Only published events are returned, and only in a locale that has a translation.
+ * BR-REQ-020-01 criterion 1 and BR-REQ-040-02: an event that is not published is a 404, and so
+ * is a locale with no translation of it — never a fallback to the other language. Both filters
+ * belong in the query rather than in the caller.
  *
  * A CANCELLED event is still listed — BR-REQ-020-01 criterion 2 requires it to render with a
  * visible cancelled status rather than vanish.
@@ -78,9 +90,7 @@ export async function listPublishedEvents(db: Database, locale: Locale) {
     .select(PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(
-      and(eq(eventTranslations.locale, locale), eq(eventTranslations.editorialStatus, "PUBLISHED")),
-    )
+    .where(publishedIn(locale))
     .orderBy(asc(events.startsAt));
 }
 
@@ -92,19 +102,15 @@ export async function listPublishedEvents(db: Database, locale: Locale) {
  * genuinely differ — `tura-pe-tampa` and `tampa-trail` are the same event — so a concatenated
  * URL is a 404 rather than a cosmetic problem.
  *
- * Draft locales are excluded, because advertising an alternate that 404s is worse than
- * advertising none (BR-REQ-040-02).
+ * An unpublished event yields nothing at all, because advertising an alternate that 404s is
+ * worse than advertising none (BR-REQ-040-02).
  */
 export async function findPublishedTranslations(db: Database, eventId: string) {
   return db
     .select({ locale: eventTranslations.locale, slug: eventTranslations.slug })
     .from(eventTranslations)
-    .where(
-      and(
-        eq(eventTranslations.eventId, eventId),
-        eq(eventTranslations.editorialStatus, "PUBLISHED"),
-      ),
-    );
+    .innerJoin(events, eq(events.id, eventTranslations.eventId))
+    .where(and(eq(eventTranslations.eventId, eventId), eq(events.editorialStatus, "PUBLISHED")));
 }
 
 /**
@@ -154,13 +160,7 @@ export async function listUpcomingEvents(db: Database, locale: Locale, now: Date
     .select(PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(
-      and(
-        eq(eventTranslations.locale, locale),
-        eq(eventTranslations.editorialStatus, "PUBLISHED"),
-        gte(eventEndsAt, now),
-      ),
-    )
+    .where(and(publishedIn(locale), gte(eventEndsAt, now)))
     .orderBy(FEATURED_FIRST, RACES_FIRST, asc(events.startsAt));
 }
 
@@ -176,13 +176,7 @@ export async function findLatestPastEvent(db: Database, locale: Locale, now: Dat
     .select(PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(
-      and(
-        eq(eventTranslations.locale, locale),
-        eq(eventTranslations.editorialStatus, "PUBLISHED"),
-        lt(eventEndsAt, now),
-      ),
-    )
+    .where(and(publishedIn(locale), lt(eventEndsAt, now)))
     .orderBy(desc(events.startsAt))
     .limit(1);
 
@@ -230,13 +224,7 @@ export async function findPublishedEventBySlug(db: Database, locale: Locale, slu
     .select(PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(
-      and(
-        eq(eventTranslations.locale, locale),
-        eq(eventTranslations.slug, slug),
-        eq(eventTranslations.editorialStatus, "PUBLISHED"),
-      ),
-    )
+    .where(and(publishedIn(locale), eq(eventTranslations.slug, slug)))
     .limit(1);
 
   return row;

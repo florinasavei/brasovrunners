@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V1.16-2026-09-04
+Baseline: BR-V1.17-2026-09-04
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -12,12 +12,15 @@ Authoritative/current root documentation:
 
 Licence: MIT, copyright Brașov Runners (LICENSE)
 
-Current mode: M1 complete in code - event pages, the full registration lifecycle, capacity and
-the waiting list, staff sign-in, legal document versioning, transactional email and a
-registrations backoffice all exist and are tested. What remains is account creation and DevOps,
-not application code: a Zitadel tenant, a Neon project, two Vercel projects, the club's .ro
-domain, a Mailgun account, and the club's approved privacy notice and declaration text.
-WEEKEND.md records the narrower pilot this replaced. Agents start at CLAUDE.md.
+Current mode: M1 complete in code - event pages, the whole of an event in the backoffice
+(create, duplicate, configure, publish, archive, delete), the full registration lifecycle,
+capacity and the waiting list, staff sign-in, legal document versioning, transactional email and
+a registrations backoffice all exist and are tested. QA is deployed and the participant journey
+can be walked there: every environment but production carries clearly marked sample legal text.
+What remains is account creation and DevOps, not application code: a Mailgun account, the club's
+.ro domain, the production Neon and Vercel projects, and the club's approved privacy notice,
+terms and declaration text. WEEKEND.md records the narrower pilot this replaced. Agents start at
+CLAUDE.md.
 
 Supporting files:
 - docs/PRACTICES.md                    practice guides: code priorities, delivery, mobile,

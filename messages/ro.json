@@ -103,12 +103,14 @@
         "CONFIRMED": "Confirmată",
         "CANCELLED": "Anulată",
         "EXPIRED": "Expirată"
-      }
+      },
+      "testKind": "Test"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
       "featured": "Principal",
-      "preview": "Previzualizare"
+      "preview": "Previzualizare",
+      "new": "Eveniment nou"
     },
     "status": {
       "DRAFT": "Ciornă",
@@ -147,9 +149,9 @@
       "saveEvent": "Salvează detaliile evenimentului",
       "eventFieldsReadOnly": "Doar un editor sau un administrator poate modifica orele, harta și evenimentul principal.",
       "translationSection": "Conținut ({locale})",
-      "translationReadOnly": "Nu poți edita acest text: fie este publicat, fie aparține altui autor.",
+      "translationReadOnly": "Nu poți edita acest text: evenimentul este publicat sau textul a fost scris de alt autor.",
       "version": "versiunea {version}",
-      "liveWarning": "Acest text este publicat. Modificările devin publice imediat ce salvezi.",
+      "liveWarning": "Evenimentul este publicat. Modificările devin publice în momentul salvării.",
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
       "saveTranslation": "Salvează textul",
       "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
@@ -168,7 +170,42 @@
       },
       "latitude": "Latitudine",
       "longitude": "Longitudine",
-      "coordinatesHelp": "Punctul exact de start, în grade zecimale — de exemplu 45.6427 și 25.5887. Copiază-le din hartă cu clic dreapta pe locul exact. Un nume de parc nu este un punct de start."
+      "coordinatesHelp": "Punctul exact de start, în grade zecimale — de exemplu 45.6427 și 25.5887. Copiază-le din hartă cu clic dreapta pe locul exact. Un nume de parc nu este un punct de start.",
+      "publicationSection": "Publicare",
+      "noTransitions": "Rolul tău nu poate muta acest eveniment din starea în care se află.",
+      "incompleteForPublication": "Ambele limbi trebuie completate înainte ca evenimentul să poată fi publicat. Lipsesc: {detail}.",
+      "newTitle": "Eveniment nou",
+      "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
+      "create": "Creează evenimentul",
+      "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
+      "kind": "Tip",
+      "eventStatus": "Starea evenimentului",
+      "timezone": "Fus orar",
+      "timezoneHelp": "Fusul în care sunt scrise orele de mai jos, de exemplu Europe/Bucharest.",
+      "endsAt": "Sfârșitul evenimentului",
+      "endsAtHelp": "Opțional. Lasă gol dacă s-a anunțat doar ora de start.",
+      "distanceMeters": "Distanță",
+      "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
+      "elevationGainMeters": "Diferență de nivel (m)",
+      "registrationSection": "Înscriere",
+      "registrationMode": "Modul de înscriere",
+      "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
+      "capacity": "Număr de locuri",
+      "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
+      "registrationOpensAt": "Înscrierile se deschid",
+      "registrationClosesAt": "Înscrierile se închid",
+      "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
+      "declarationDocument": "Declarația pe care o semnează participantul",
+      "declarationDocumentHelp": "Se alege dintre versiunile aprobate. Textul nu se editează niciodată aici — o versiune nouă vine printr-o migrare.",
+      "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
+      "declarationUnset": "Niciuna",
+      "externalProvider": "Organizator extern",
+      "externalRegistrationUrl": "Link de înscriere extern",
+      "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
+      "copySection": "Copiere și ștergere",
+      "duplicate": "Duplică",
+      "delete": "Șterge",
+      "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -178,7 +215,8 @@
       "title": "Autentificare echipă",
       "unavailable": "Autentificarea pentru echipă nu este încă disponibilă în acest mediu.",
       "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale.",
-      "withZitadel": "Autentificare cu Zitadel"
+      "withZitadel": "Autentificare cu Zitadel",
+      "footerLink": "Echipă"
     },
     "staff": {
       "title": "Echipa",
@@ -193,6 +231,23 @@
       "you": "Tu",
       "changeRole": "Schimbă rolul",
       "revoke": "Retrage accesul"
+    },
+    "eventStatus": {
+      "SCHEDULED": "Programat",
+      "CANCELLED": "Anulat",
+      "COMPLETED": "Încheiat"
+    },
+    "registrationMode": {
+      "NONE": "Fără înscriere",
+      "INTERNAL": "Înscriere aici",
+      "EXTERNAL": "Înscriere în altă parte"
+    },
+    "testRegistrations": {
+      "title": "Înscrieri de test",
+      "explanation": "Participanți sintetici, pe adrese rezervate @test.invalid, care nu pot primi niciodată e-mail. Trec prin același flux de trimitere și confirmare ca oricine, deci ocupă locuri și umplu lista de așteptare exact ca oamenii reali — și sunt excluse din exportul CSV și marcate peste tot unde apar. Indisponibile în producție.",
+      "count": "Câte",
+      "add": "Adaugă înscrieri de test",
+      "remove": "Șterge toate înscrierile de test"
     }
   },
   "NotFound": {

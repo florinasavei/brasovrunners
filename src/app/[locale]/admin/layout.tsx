@@ -11,8 +11,8 @@ import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { env } from "@/shared/config/env";
 import { signOutAction } from "./actions";
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
@@ -33,11 +33,12 @@ export const metadata: Metadata = {
  * is refused here for the pages, and again inside every Server Action, because a page guard
  * says nothing about a POST that arrives without ever rendering one.
  *
- * Signed out, the answer depends on whether there is any way to sign in at all. Where the
- * development switcher is available the visitor is sent to it; everywhere else — qa,
- * production, any deployment until the staff login lands — the backoffice answers 404, the
- * same as a route that does not exist. Announcing "sign in" on a site with no sign-in would be
- * an invitation to look for one.
+ * Signed out, the answer depends on whether there is any way to sign in at all. Where there is
+ * one — the development switcher locally, Zitadel in qa and production — the visitor is sent to
+ * it, and signing in lands them back in the backoffice rather than on whatever page the provider
+ * felt like. Where `STAFF_AUTH_MODE=disabled` there is no lock on the door at all, and the
+ * answer is 404: announcing "sign in" on a site with no sign-in would be an invitation to look
+ * for one.
  */
 export default async function AdminLayout({ children, params }: Props) {
   const { locale } = await params;
@@ -46,8 +47,8 @@ export default async function AdminLayout({ children, params }: Props) {
 
   const staffUser = await getCurrentStaffUser();
   if (!staffUser) {
-    if (isDevStaffSwitcherEnabled()) redirect(getPathname({ locale, href: "/sign-in" }));
-    notFound();
+    if (env.STAFF_AUTH_MODE === "disabled") notFound();
+    redirect(getPathname({ locale, href: "/sign-in" }));
   }
 
   const t = await getTranslations("Admin");

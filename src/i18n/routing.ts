@@ -54,6 +54,7 @@ export const routing = defineRouting({
      */
     "/sign-in": { ro: "/autentificare", en: "/sign-in" },
     "/admin": "/admin",
+    "/admin/events/new": "/admin/events/new",
     "/admin/events/[id]": "/admin/events/[id]",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",

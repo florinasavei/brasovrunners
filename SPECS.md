@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -87,17 +87,23 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 #### BR-REQ-040-02 — No cross-locale content fallback
 
 - **Source:** BR-BUS-040, BR-BUS-020
-- **Implements:** AGENTS.md §9.3
+- **Implements:** AGENTS.md §9.3, §11.2
 - **Priority:** MUST
 - **Release:** M1
+- **Status:** restated at `BR-V1.17-2026-09-04`. Publication is one state for the whole event
+  (`DECISIONS.md` §28), so the half-published event the earlier wording described — Romanian
+  live while English is a draft — can no longer occur. The rule itself is unchanged and
+  stronger: what a locale must never do is serve the other language's text.
 
 **Acceptance criteria**
 
-1. Given an event published in Romanian only, when `/en/events/<slug>` is requested, then the page does not display the Romanian body.
-2. Given the same event, when the English listing is requested, then the event is absent from it.
-3. Given the same event, when the sitemap is generated, then only the Romanian URL appears.
+1. Given an event that is not published, when either language's URL is requested, then both 404, and the event is absent from both listings and from the sitemap.
+2. Given a published event that has no translation in one language, when that language's URL for it is requested, then the page 404s and does not display the other language's body.
+3. Given the same event, when that language's listing is requested, then the event is absent from it, and the sitemap contains only the language it has a translation for.
+4. Given a published event with a translation in both languages, when it is unpublished, then both languages stop being reachable in the same moment.
+5. Given the language switcher on a page whose event has no translation in the target language, when it is used, then it lands on that language's event listing rather than on a 404.
 
-**Verification:** integration `content/locale-publication.test.ts`; e2e `event-page.spec.ts`
+**Verification:** integration `events/publication.test.ts`, `events/locale-switch.test.ts`; e2e `cms-publish.spec.ts`, `event-pages.spec.ts`
 
 #### BR-REQ-040-03 — Localized formatting and registration locale
 
@@ -661,6 +667,27 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 
 **Verification:** integration `backoffice/corrections.test.ts`
 
+#### BR-REQ-037-04 — The queue can be exercised without reaching anyone
+
+- **Source:** BR-BUS-037, BR-BUS-060
+- **Implements:** AGENTS.md §12.6, §10.6, §15.10
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built at `BR-V1.17-2026-09-04` (`DECISIONS.md` §30). No participant account type
+  is added and the staff role enum stays at three: this is a property of the registration.
+
+**Acceptance criteria**
+
+1. Given a registration of kind `TEST`, when it moves through the lifecycle, then it occupies a place, expires on the same hold deadlines, and is promoted from the waiting list by the same allocator as a `REAL` one; running the same scenario as each kind produces identical transitions.
+2. Given the capacity formula and the queue allocator, when they are read, then neither contains any condition on the kind.
+3. Given the CSV export, when it is produced, then `TEST` rows are absent from it.
+4. Given any screen that lists a registration, when a `TEST` row is shown, then it is labelled unmistakably.
+5. Given an Administrator in an environment other than production, when they add N test registrations to an event, then N synthetic participants go through the ordinary submission and confirmation path, each on a distinct address in a reserved domain that can never receive mail.
+6. Given the same Administrator, when they remove the test registrations for that event, then those rows and the synthetic participants behind them are deleted and every real registration is left standing.
+7. Given `APP_ENV=production`, when a test registration is attempted, then it is refused in two independent places.
+
+**Verification:** integration `registrations/test-kind.test.ts`
+
 #### BR-REQ-071-01 — Participant export
 
 - **Source:** BR-BUS-071, BR-BUS-070
@@ -733,9 +760,11 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §11.1, §11.4
 - **Priority:** MUST
 - **Release:** M5
-- **Status:** the event slice is built and in use; articles, static pages, galleries and the
-  Tiptap body contract of criterion 3 are not. Built during M1 by a recorded reordering of the
-  plan (`DECISIONS.md` §25), which is why the release field still reads M5.
+- **Status:** the event slice is built and in use — including creating, duplicating, archiving
+  and deleting an event, and every column an organizer owns (`BR-REQ-050-02`). Articles, static
+  pages, galleries and the Tiptap body contract of criterion 3 are not. Built during M1 by a
+  recorded reordering of the plan (`DECISIONS.md` §25, §28), which is why the release field
+  still reads M5.
 
 **Acceptance criteria**
 
@@ -745,22 +774,44 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 
 **Verification:** integration `cms/boundary.test.ts`
 
+#### BR-REQ-050-02 — An organizer owns the whole event, without a developer
+
+- **Source:** BR-BUS-050
+- **Implements:** AGENTS.md §11.1, §12.3
+- **Priority:** MUST
+- **Release:** M5
+- **Status:** built during M1 (`DECISIONS.md` §28). Until it existed, configuring an event meant
+  editing `src/db/seeds/pilot.ts` and re-running a seed.
+
+**Acceptance criteria**
+
+1. Given an Editor or an Administrator, when they create an event, then they supply its kind, its status, its times and time zone, its coordinates, its distance and climb, the featured flag and the whole registration block, plus a title, address and description in every language, and the event is created as a draft.
+2. Given an existing event, when it is edited, then every one of those fields is editable through the interface, and no field of `events` requires a developer.
+3. Given an event, when it is duplicated, then the copy is a draft, is not featured, has never been published, and carries its own page address in each language.
+4. Given an Administrator, when they delete an event that has no registration against it, then it and its translations are removed.
+5. Given an event that has any registration against it, when deletion is attempted, then it is refused with a reason and nothing is removed; archiving is the supported answer.
+6. Given an Author, when they attempt to create, duplicate or delete an event, then it is refused at the server.
+
+**Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`; e2e `cms-publish.spec.ts`
+
 #### BR-REQ-051-01 — Editorial workflow and permissions
 
 - **Source:** BR-BUS-051, BR-BUS-060
 - **Implements:** AGENTS.md §11.2, §13.1
 - **Priority:** MUST
 - **Release:** M5
-- **Status:** built for event translations during M1 (`DECISIONS.md` §25); it applies to
-  articles and pages when those exist.
+- **Status:** built for events during M1 (`DECISIONS.md` §25); it applies to articles and pages
+  when those exist. Criterion 2 changed at `BR-V1.17-2026-09-04`: publication is one state for
+  the whole event rather than one per language (`DECISIONS.md` §28).
 
 **Acceptance criteria**
 
 1. Given an Author, when they work in the CMS, then they can create and edit their own drafts and submit for review, and cannot publish.
-2. Given an Editor or Administrator, when they review a submission, then they can publish, unpublish, and archive per locale.
+2. Given an Editor or Administrator, when they review a submission, then they can publish, unpublish, and archive the event, and both languages go live or come down together.
 3. Given published content, when an Author attempts to edit it, then it is refused.
 4. Given a save that affects live content, when it is submitted, then the interface warns before it takes effect.
-5. Given two editors saving the same record, when the second save carries a stale version, then it is rejected as a conflict, and the first editor's save survives intact. This is verified with two real database connections, not the in-process test database, which is single-connection and cannot express the race.
+5. Given two editors saving the same record, when the second save carries a stale version, then it is rejected as a conflict, and the first editor's save survives intact. This is verified with two real database connections, not the in-process test database, which is single-connection and cannot express the race. The event row carries a version of its own, so a publish that races a change to the event is a conflict too.
+6. Given an event where any language is missing a field the public page renders, or has no translation at all, when publication is attempted, then it is refused with the language and the missing fields named, and nothing goes public.
 
 **Verification:** integration `cms/workflow.test.ts`; concurrency `cms-conflict.test.ts` (`yarn test:concurrency`); e2e `cms-publish.spec.ts`
 
@@ -847,6 +898,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a new version, when it becomes effective, then earlier acceptances continue to reference the version that was accepted.
 4. Given any staff role, when the CMS is used, then no interface edits legal document text.
 5. Given the public site, when any page renders, then the privacy notice and terms are reachable in the current locale.
+6. Given any environment other than production, when it is seeded, then a clearly marked sample version of each key exists, whose own rendered body opens — in both languages — with a banner saying that it is sample text, is not approved by the club, is not legal advice, and must be replaced before a real participant registers.
+7. Given `APP_ENV=production`, when the sample text is seeded, then it is refused outright rather than skipped quietly; the club's approved wording arrives through a migration, per `docs/RUNBOOKS.md` § Legal document version.
+8. Given a sample document, when it is read, then every club-specific fact — the controller's legal name, address and contact, any representative, retention periods, and the lawful basis for each purpose — is an obvious placeholder rather than an invented value.
 
 **Verification:** integration `legal/versions.test.ts`; e2e `legal-pages.spec.ts`
 
@@ -931,8 +985,10 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 5. Given an Administrator, when they administer staff, then they may add a colleague by email address and role, change a colleague's role, and revoke access; an Author or an Editor is refused every one of those operations.
 6. Given an Administrator, when they attempt to change their own role, remove their own access, or leave the club with no Administrator at all, then it is refused.
 7. Given the development staff switcher, when `APP_ENV` is qa or production, then it is unavailable, and a process configured to use it there does not start.
+8. Given an Author or an Editor, when they attempt to delete an event or to add or remove test registrations, then it is refused at the server; both are the Administrator's alone.
+9. Given `APP_ENV=production`, when a test registration is created by any path, then it is refused — at the feature's entrance and again at the statement that would write the row.
 
-**Verification:** integration `auth/role-boundaries.test.ts`; unit `staff/roles.test.ts`; e2e `cms-publish.spec.ts`
+**Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-070-01 — Participant data is never public
 

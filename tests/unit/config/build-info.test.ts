@@ -43,6 +43,14 @@ describe("formatLastUpdated", () => {
     expect(formatLastUpdated("en", FULL)).toContain("Sep");
   });
 
+  it("shows the time as well as the date, so two deploys in one afternoon differ", () => {
+    // 18:30 UTC is 21:30 in Bucharest in September. Written as a 24-hour clock in both
+    // languages, because an English badge reading "9:30 pm" next to a Romanian one reading
+    // "21:30" is two answers to one question.
+    expect(formatLastUpdated("ro", FULL)).toContain("21:30");
+    expect(formatLastUpdated("en", FULL)).toContain("21:30");
+  });
+
   it("fixes the timezone to the club's, so one build reads the same date to every reader", () => {
     // 22:30 UTC is already the next day in Bucharest (UTC+3 in September).
     const lateEvening: BuildInfo = { ...FULL, committedAt: "2026-09-04T22:30:00.000Z" };

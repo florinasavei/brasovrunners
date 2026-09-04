@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -272,6 +272,20 @@ Related requirement: `BR-REQ-053-01`.
 An AI agent may format approved text and prepare the migration. It must never write,
 paraphrase, translate, or "improve" the substance of legal wording.
 
+### Sample versions, and why the first approved one is not version 1
+
+Every environment except production is seeded with a clearly marked **sample** version of all
+three keys (`src/db/seeds/sample-legal-documents.ts`, `DECISIONS.md` §29): complete in structure,
+every club-specific fact a visible `<PLACEHOLDER>`, and a not-approved banner as the first section
+of each rendered page. Production is refused outright — the seed throws rather than skipping — so
+production carries nothing until this runbook is followed there.
+
+That means the club's first *approved* version is version 2 in an environment that already carries
+a sample, and version 1 in production. Version numbers are per key and per database, never reused,
+and step 1 below is where you find out which one to use. Do not delete the sample version to
+"start at 1": a version an acceptance references is immutable (§12.5), and QA will have
+acceptances against it.
+
 ### Before you start
 
 - [ ] The wording is approved by a named person, with the date recorded.
@@ -283,7 +297,8 @@ paraphrase, translate, or "improve" the substance of legal wording.
 ### Procedure
 
 1. **Choose the key and version.** `PRIVACY_NOTICE`, `TERMS`, or `EVENT_DECLARATION`, with
-   the next integer version for that key. Versions are never reused.
+   the next integer version for that key *in the database you are applying to* — which differs
+   between production and an environment carrying a sample. Versions are never reused.
 2. **Convert the approved text to Tiptap JSON** using the allowlisted schema. Do not paste
    arbitrary HTML.
 3. **Compute `content_sha256`** as the deterministic hash over the canonical serialized
@@ -307,7 +322,10 @@ paraphrase, translate, or "improve" the substance of legal wording.
 - [ ] `content_sha256` matches a recomputation from the stored JSON.
 - [ ] A new registration records the new privacy-notice version.
 - [ ] An existing accepted declaration still references its original version and hash.
-- [ ] No staff role can edit either version through any interface.
+- [ ] No staff role can edit either version through any interface. The event editor's declaration
+      field selects among approved versions and writes none of them.
+- [ ] For a declaration, every event that should use it points at the new
+      `declaration_document_id` — set from the event editor, not by hand.
 
 ### What must never happen
 

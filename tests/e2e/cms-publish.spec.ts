@@ -10,21 +10,28 @@ import { expect, test } from "@playwright/test";
  * E2E uses mock staff auth".
  *
  * The publishing journey mutates real rows, so each Playwright project works on a different
- * event: the two projects run in parallel, and two browsers unpublishing the same translation
- * would collide on the version guard — correctly, but as a flake rather than a finding.
+ * event: the two projects run in parallel, and two browsers unpublishing the same event would
+ * collide on the version guard — correctly, but as a flake rather than a finding.
  */
 
 /**
  * One event per project, and neither is read by another spec.
  *
- * The two Playwright projects run in parallel, so a journey that unpublishes an event would
- * otherwise 404 a page the other project is reading — and two browsers unpublishing the same
- * translation would collide on the version guard, correctly, but as a flake rather than a
- * finding. These two events are touched by this file alone.
+ * Publication is one state for the whole event now (`DECISIONS.md` §28), so unpublishing takes
+ * both languages off the site at once — which is exactly why two projects must not share an
+ * event.
  */
-const EVENT_BY_PROJECT: Record<string, { title: string; slug: string }> = {
-  mobile: { title: "Alergare de duminică", slug: "alergare-de-duminica-parcul-tractorul" },
-  desktop: { title: "Antrenament de intervale", slug: "antrenament-de-intervale-olimpia" },
+const EVENT_BY_PROJECT: Record<string, { title: string; slug: string; englishSlug: string }> = {
+  mobile: {
+    title: "Alergare de duminică",
+    slug: "alergare-de-duminica-parcul-tractorul",
+    englishSlug: "sunday-run-tractorul-park",
+  },
+  desktop: {
+    title: "Antrenament de intervale",
+    slug: "antrenament-de-intervale-olimpia",
+    englishSlug: "interval-session-olimpia",
+  },
 };
 
 async function signIn(page: import("@playwright/test").Page, identity: string) {
@@ -69,9 +76,12 @@ test.describe("BR-REQ-051-01 an Author may not publish", () => {
     await page.getByRole("link", { name: event.title }).first().click();
     await expect(page).toHaveURL(/\/admin\/events\//);
 
+    // Publication is the event's, so the control an Author must not see is the event's too.
+    await expect(page.getByRole("button", { name: "Publică" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Mută în ciornă" })).toHaveCount(0);
+
+    // And the reason the text is read-only is stated rather than the form simply being absent.
     const romanian = page.getByRole("region", { name: /Conținut \(RO\)/ });
-    await expect(romanian.getByRole("button", { name: "Publică" })).toHaveCount(0);
-    // And the reason is stated rather than the form simply being absent.
     await expect(romanian.getByText(/Nu poți edita acest text/)).toBeVisible();
   });
 
@@ -82,10 +92,46 @@ test.describe("BR-REQ-051-01 an Author may not publish", () => {
     const response = await page.goto("/ro/admin/staff");
     expect(response?.status()).toBe(404);
   });
+
+  test("refuses an Author the new-event form", async ({ page }) => {
+    await signIn(page, "Dev Author");
+    const response = await page.goto("/ro/admin/events/new");
+    expect(response?.status()).toBe(404);
+  });
 });
 
-test.describe("BR-REQ-051-01 an Editor publishes and unpublishes one locale", () => {
-  test("takes an event off the public site and puts it back", async ({ page }) => {
+test.describe("BR-REQ-050-02 an Editor creates an event without a developer", () => {
+  test("creates it in both languages, as a draft", async ({ page }) => {
+    // Its own slugs per project: the two projects run in parallel against one database, and
+    // `UNIQUE(locale, slug)` is not a race worth debugging in a browser.
+    const suffix = test.info().project.name;
+
+    await signIn(page, "Dev Editor");
+    await page.goto("/ro/admin/events/new");
+
+    // By field name rather than by label: MUI marks a required label with an asterisk, and the
+    // names are the contract the Server Action actually reads.
+    const field = (name: string) => page.locator(`[name="${name}"]`);
+
+    await field("startsAtWallTime").fill("2027-05-01T09:00");
+    await field("ro.title").fill(`Cros de probă ${suffix}`);
+    await field("ro.slug").fill(`cros-de-proba-${suffix}`);
+    await field("ro.locationName").fill("Parcul Tractorul");
+    await field("en.title").fill(`Trial cross ${suffix}`);
+    await field("en.slug").fill(`trial-cross-${suffix}`);
+    await field("en.locationName").fill("Tractorul Park");
+
+    await page.getByRole("button", { name: "Creează evenimentul" }).click();
+
+    // Straight to the new event's own page, as a draft: nothing is published by being created.
+    await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
+    await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: /Conținut \(EN\)/ })).toBeVisible();
+  });
+});
+
+test.describe("BR-REQ-051-01 an Editor publishes and unpublishes an event", () => {
+  test("takes an event off the public site in both languages and puts it back", async ({ page }) => {
     const event = EVENT_BY_PROJECT[test.info().project.name];
 
     await signIn(page, "Dev Editor");
@@ -95,41 +141,33 @@ test.describe("BR-REQ-051-01 an Editor publishes and unpublishes one locale", ()
     await expect(page).toHaveURL(/\/admin\/events\//);
     const editorUrl = page.url();
 
-    const romanian = page.getByRole("region", { name: /Conținut \(RO\)/ });
-    await expect(romanian.getByText("Publicat", { exact: true })).toBeVisible();
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
 
-    // Unpublish: the public page must stop existing in this locale.
-    await romanian.getByRole("button", { name: "Mută în ciornă" }).click();
+    // Unpublish: the public page must stop existing, in both languages together.
+    await page.getByRole("button", { name: "Mută în ciornă" }).click();
     await expect(page.getByText("Modificările au fost salvate.")).toBeVisible();
 
-    const whileDraft = await page.goto(`/ro/evenimente/${event.slug}`);
-    expect(whileDraft?.status()).toBe(404);
-
-    // The English translation was not touched: publication is per locale.
-    await page.goto(editorUrl);
-    const english = page.getByRole("region", { name: /Conținut \(EN\)/ });
-    await expect(english.getByText("Publicat", { exact: true })).toBeVisible();
+    expect((await page.goto(`/ro/evenimente/${event.slug}`))?.status()).toBe(404);
+    expect((await page.goto(`/en/events/${event.englishSlug}`))?.status()).toBe(404);
 
     // A staff preview still renders the draft, with a notice saying what it is.
     await page.goto(editorUrl);
+    const romanian = page.getByRole("region", { name: /Conținut \(RO\)/ });
     await romanian.getByRole("link", { name: "Previzualizare" }).click();
     await expect(page.getByText(/Previzualizare pentru echipă/)).toBeVisible();
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-      "content",
-      /noindex/,
-    );
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 
-    // Back through review to published, and the public page returns. Each step waits for the
+    // Back through review to published, and both public pages return. Each step waits for the
     // status to change before the next: a transition carries the version it was rendered with,
     // so clicking twice against one render is exactly the stale save the guard refuses.
     await page.goto(editorUrl);
-    await romanian.getByRole("button", { name: "Trimite spre verificare" }).click();
-    await expect(romanian.getByText("În verificare", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Trimite spre verificare" }).click();
+    await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
 
-    await romanian.getByRole("button", { name: "Publică" }).click();
-    await expect(romanian.getByText("Publicat", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Publică" }).click();
+    await expect(page.getByText("Publicat", { exact: true })).toBeVisible();
 
-    const republished = await page.goto(`/ro/evenimente/${event.slug}`);
-    expect(republished?.status()).toBe(200);
+    expect((await page.goto(`/ro/evenimente/${event.slug}`))?.status()).toBe(200);
+    expect((await page.goto(`/en/events/${event.englishSlug}`))?.status()).toBe(200);
   });
 });

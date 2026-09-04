@@ -78,6 +78,13 @@
       "when": 1788514995323,
       "tag": "0010_email_outbox_sent_at_allows_post_send_bounce",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788547201806,
+      "tag": "0011_event_publication_and_test_registrations",
+      "breakpoints": true
     }
   ]
 }

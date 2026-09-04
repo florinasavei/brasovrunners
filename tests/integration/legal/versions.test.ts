@@ -2,7 +2,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import * as legalDocumentsRepository from "@/modules/legal-documents/repository";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { seedPlaceholderLegalDocuments } from "@/db/seeds/legal-placeholder";
+import {
+  assertSampleLegalDocumentsAllowed,
+  SAMPLE_DOCUMENTS,
+} from "@/db/seeds/sample-legal-documents";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -127,16 +130,75 @@ describe("BR-REQ-053-01 legal document versions", () => {
   });
 });
 
-describe("BR-REQ-053-01 placeholder seed guard (DECISIONS.md §27)", () => {
+/**
+ * BR-REQ-053-01 — the sample documents, and the one environment that refuses them.
+ *
+ * `DECISIONS.md` §29 supersedes §27: sample text is permitted everywhere a real participant's
+ * browser cannot reach, which now includes qa, and production is refused hard. The refusal gets
+ * its own test because it is the whole of the difference between the two.
+ */
+describe("BR-REQ-053-01 sample legal documents (DECISIONS.md §29)", () => {
   const originalAppEnv = process.env.APP_ENV;
   afterEach(() => {
     process.env.APP_ENV = originalAppEnv;
   });
 
-  it("refuses to seed placeholder legal text into qa or production", async () => {
-    for (const APP_ENV of ["qa", "production"]) {
-      process.env.APP_ENV = APP_ENV;
-      await expect(seedPlaceholderLegalDocuments()).rejects.toThrow(/Refusing to seed/);
+  it("refuses production outright", () => {
+    process.env.APP_ENV = "production";
+    expect(() => assertSampleLegalDocumentsAllowed()).toThrow(/Refusing to seed/);
+  });
+
+  it.each(["local", "test", "qa"])("permits %s, where no real participant registers", (APP_ENV) => {
+    process.env.APP_ENV = APP_ENV;
+    expect(() => assertSampleLegalDocumentsAllowed()).not.toThrow();
+  });
+
+  it("covers all three keys in both languages", () => {
+    expect(SAMPLE_DOCUMENTS.map((document) => document.key).sort()).toEqual([
+      "EVENT_DECLARATION",
+      "PRIVACY_NOTICE",
+      "TERMS",
+    ]);
+    for (const document of SAMPLE_DOCUMENTS) {
+      expect(document.translations.map((t) => t.locale).sort(), document.key).toEqual(["en", "ro"]);
+    }
+  });
+
+  /**
+   * The banner is the point of the whole exercise: it has to be in the rendered body, in both
+   * languages, so that whoever opens the public page sees it. A code comment or a column
+   * nobody renders would not be seen by the person who most needs to.
+   */
+  it("opens every document, in both languages, with a visible not-approved banner", () => {
+    for (const document of SAMPLE_DOCUMENTS) {
+      for (const translation of document.translations) {
+        const [first] = translation.body.sections;
+        const text = [first.heading ?? "", ...first.paragraphs].join(" ");
+        expect(text, `${document.key} ${translation.locale}`).toMatch(
+          translation.locale === "ro" ? /TEXT DE EXEMPLU/ : /SAMPLE TEXT/,
+        );
+        expect(text, `${document.key} ${translation.locale} says it is not approved`).toMatch(
+          translation.locale === "ro" ? /NU a fost aprobat/ : /NOT been approved/,
+        );
+        expect(translation.title, `${document.key} ${translation.locale} title`).toMatch(
+          /EXEMPLU|SAMPLE/,
+        );
+      }
+    }
+  });
+
+  /** Club-specific facts are visible gaps, never plausible inventions (AGENTS.md §1.2). */
+  it("leaves every club-specific fact as an angle-bracket placeholder", () => {
+    for (const document of SAMPLE_DOCUMENTS) {
+      for (const translation of document.translations) {
+        const body = translation.body.sections
+          .flatMap((section) => [section.heading ?? "", ...section.paragraphs])
+          .join(" ");
+        expect(body, `${document.key} ${translation.locale}`).toMatch(/<[A-ZĂÂÎȘȚ][^>]*>/);
+        // The named reviewer the drafts are waiting on.
+        if (translation.locale === "en") expect(body).toMatch(/<REVIEWER NAME>/);
+        else expect(body).toMatch(/<NUME RECENZENT>/);
+      }
     }
   });
 });

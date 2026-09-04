@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { listUpcomingEvents } from "@/modules/events/repository";
@@ -34,14 +35,18 @@ describe("BR-REQ-011-01 event configuration", () => {
   }
 
   async function publish(eventId: string, slug: string) {
+    // Publication lives on the event now (`DECISIONS.md` §28), so publishing is a change to
+    // the event row and the translation is simply the language it is readable in.
+    await db
+      .update(events)
+      .set({ editorialStatus: "PUBLISHED", publishedAt: new Date("2026-09-01T00:00:00Z") })
+      .where(eq(events.id, eventId));
     await db.insert(eventTranslations).values({
       eventId,
       locale: "ro",
       slug,
       title: "Titlu",
       locationName: "Centru",
-      editorialStatus: "PUBLISHED",
-      publishedAt: new Date("2026-09-01T00:00:00Z"),
     });
   }
 

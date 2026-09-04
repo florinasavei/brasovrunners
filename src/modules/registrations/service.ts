@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { type Participant, participants } from "@/db/schema/participants";
-import type { Registration } from "@/db/schema/registrations";
+import type { Registration, RegistrationKind } from "@/db/schema/registrations";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { registrationState } from "@/modules/events/domain/registration-window";
@@ -226,6 +226,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   event: EventForRegistration,
   rawInput: unknown,
   now: Date,
+  /**
+   * `TEST` only ever arrives from `test-registrations.ts`, which is Administrator-only and
+   * refused in production. It changes nothing below this line: the same allocator, the same
+   * holds, the same queue — that is the entire point of it (AGENTS.md §12.6, `DECISIONS.md`
+   * §30). It is carried into the row so the export can leave it out and every list can label it.
+   */
+  kind: RegistrationKind = "REAL",
 ): Promise<SubmitRegistrationResult> {
   assertRegistrationOpen(event, now);
 
@@ -308,6 +315,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const created = await repo.insertPendingEmailRegistration(tx, {
       eventId: event.id,
       participantId: participant.id,
+      kind,
       locale: input.locale,
       registeredName: input.name,
       privacyNoticeVersion: privacyNotice.version,

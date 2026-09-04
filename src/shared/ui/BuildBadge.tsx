@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import { getLocale, getTranslations } from "next-intl/server";
 import { formatLastUpdated, formatVersion } from "@/shared/config/build-info";
+import { env } from "@/shared/config/env";
 
 /**
  * Which build is this, and when did the code behind it last change.
@@ -19,6 +20,16 @@ export default async function BuildBadge() {
 
   const version = formatVersion();
   const lastUpdated = formatLastUpdated(locale);
+
+  /**
+   * Which deployment this is, first.
+   *
+   * The commonest confusion this badge exists to settle is not "which build" but "which of the
+   * two sites am I looking at" — qa and production run the same code from the same repository
+   * on hostnames nobody memorises. `APP_ENV` is the one value that answers it, and it is the
+   * same value every safety rule in `shared/config/env.ts` keys on.
+   */
+  const parts = [env.APP_ENV, version, ...(lastUpdated ? [lastUpdated] : [])];
 
   return (
     <Box
@@ -47,7 +58,7 @@ export default async function BuildBadge() {
         fontVariantNumeric: "tabular-nums",
       }}
     >
-      {lastUpdated ? `${version} · ${lastUpdated}` : version}
+      {parts.join(" · ")}
     </Box>
   );
 }

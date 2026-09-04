@@ -103,7 +103,7 @@ export default async function PreviewEventPage({ params }: Props) {
     costText: translation.costText,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
-    publishedAt: translation.publishedAt,
+    publishedAt: event.publishedAt,
   };
 
   const mapLink = mapLinkFor(preview, env.MAP_LINK_BASE_URL);
@@ -111,7 +111,7 @@ export default async function PreviewEventPage({ params }: Props) {
   return (
     <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
       <Alert severity="warning" sx={{ mb: 3 }}>
-        {t("preview.notice", { status: t(`status.${translation.editorialStatus}`) })}
+        {t("preview.notice", { status: t(`status.${event.editorialStatus}`) })}
       </Alert>
 
       <Typography variant="body2" sx={{ mb: 2 }}>

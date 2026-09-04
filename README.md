@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -15,7 +15,7 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | --- | --- |
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
-| Code | M1 complete in code. Public event pages; a backoffice where an organizer edits, features, previews and publishes a race per language; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents with no invented text outside a developer's machine; ten transactional message types through the outbox; a registrations backoffice with a state-aware resend and CSV export; `/api/health`. See [`DECISIONS.md`](./DECISIONS.md) §26–§27. |
+| Code | M1 complete in code. Public event pages; a backoffice where an organizer creates, duplicates, configures, previews, publishes, archives and deletes a race, with every column an organizer owns and both languages going live together; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents, with clearly marked sample text everywhere but production and no invented text there at all; ten transactional message types through the outbox; a registrations backoffice with a state-aware resend, a CSV export and labelled test registrations for exercising the queue. See [`DECISIONS.md`](./DECISIONS.md) §26–§30. |
 | Priority | Account creation and DevOps, not application code: a Zitadel tenant, a Mailgun account, the `.ro` domain, the club's approved privacy notice and declaration text, and the production Neon and Vercel projects |
 | Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in works there through Zitadel, gated by the `staff_users` allowlist; email is still `capture`, so nothing transmits until a sending domain exists. Production is not created. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
@@ -481,16 +481,28 @@ The CMS is part of the same application and supports only real club needs:
 - a small media library;
 - optimistic concurrency so one editor cannot silently overwrite another.
 
-**What is built today** is the event half: both of an event's times, its map link, the featured
-flag, and every editorial field per language, with the Draft → In review → Published → Archived
-workflow, a staff-only preview, and a save that carries the version it was loaded with. It was
-built during M1 rather than M5, deliberately and on the record ([`DECISIONS.md`](./DECISIONS.md)
-§25); the requirements keep their M5 release field and carry a status line. Articles, static
-pages, galleries and the media library are not built.
+**What is built today** is the whole of an event: create it, duplicate last year's, set every
+column it carries — kind, event status, both times, the end time and the time zone, the
+coordinates, the map link, distance, climb, the featured flag, and the whole registration block
+including the capacity, the window and the approved declaration a participant signs — write both
+languages, preview it, publish it, archive it when it is over, delete one made by mistake. Draft →
+In review → Published → Archived belongs to the *event*: both languages go live together, and
+publishing is refused while either is incomplete ([`DECISIONS.md`](./DECISIONS.md) §28). Deleting
+is the Administrator's alone and is refused for an event anybody has registered for. Every save
+carries the version it was loaded with. It was built during M1 rather than M5, deliberately and on
+the record (§25, §28); the requirements keep their M5 release field and carry a status line.
+Articles, static pages, galleries and the media library are not built.
 
 Tiptap JSON is stored as the canonical editable body. Public rendering uses an allowlisted Tiptap schema; arbitrary HTML, scripts, remote embeds, collaboration cloud, comments, and paid editor extensions are excluded from V1.
 
-Legal documents (privacy notice, terms, and the event declaration) are versioned, Admin-controlled content stored outside the ordinary Author/Editor workflow. Their wording requires human approval. AI must not invent them. V1 has no editor screen for them; new versions arrive through [the legal document runbook](./docs/RUNBOOKS.md#legal-document-version).
+Legal documents (privacy notice, terms, and the event declaration) are versioned, Admin-controlled content stored outside the ordinary Author/Editor workflow. Their wording requires human approval. AI must not invent them. V1 has no editor screen for them; new versions arrive through [the legal document runbook](./docs/RUNBOOKS.md#legal-document-version). An event *points at* an approved declaration version from the editor, which is a selection and never an edit.
+
+Until the club approves its own wording, every environment except production carries a clearly
+marked **sample** set: complete in structure so the club or its lawyer edits a concrete draft
+rather than facing a blank page, every club-specific fact a visible `<PLACEHOLDER>`, and a
+not-approved banner as the first thing on each rendered page. Production is refused outright
+([`DECISIONS.md`](./DECISIONS.md) §29), and registration there correctly refuses everyone until
+the approved text is loaded.
 
 ## Read-only AI review
 

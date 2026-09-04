@@ -3,12 +3,32 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import {
   type Registration,
+  type RegistrationKind,
   type RegistrationStatus,
   registrations,
 } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { env } from "@/shared/config/env";
+import { DomainError } from "@/shared/errors/domain-error";
 import { allowedFromStatuses } from "./domain/state-machine";
+
+/**
+ * A `TEST` registration cannot be written in production, and this is the second place that is
+ * refused rather than the only one.
+ *
+ * The environment is the whole rule: a synthetic queue is a thing to look at on a system nobody
+ * has entered a real race on. In production the same row would occupy a place a person wanted,
+ * and would be indistinguishable from theirs on the start line.
+ */
+function assertKindIsAllowedHere(kind: RegistrationKind): void {
+  if (kind === "TEST" && env.APP_ENV === "production") {
+    throw new DomainError(
+      "FORBIDDEN",
+      "a test registration cannot be created in production; it would occupy a real place",
+    );
+  }
+}
 
 /**
  * Reading and writing `registrations` (AGENTS.md §12.6, §15).
@@ -61,10 +81,23 @@ export async function lockEventForCapacity<T extends Record<string, unknown>>(
   return row;
 }
 
+/** Every registration against one event, whatever its status or kind — what deletion asks. */
+export async function countRegistrationsForEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId));
+  return row?.count ?? 0;
+}
+
 export type InsertPendingRegistrationInput = {
   id?: string;
   eventId: string;
   participantId: string;
+  kind?: RegistrationKind;
   locale: "ro" | "en";
   registeredName: string;
   privacyNoticeVersion: number;
@@ -79,6 +112,12 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
   db: Database<T>,
   input: InsertPendingRegistrationInput,
 ): Promise<Registration> {
+  // The second of the two guards on `TEST` (`db/schema/registrations.ts`). The first is in
+  // `test-registrations.ts`, at the feature's own entrance; this one is at the only statement
+  // that can put such a row in the table at all, so a future caller that reaches the insert by
+  // some other path is refused too. One guard eventually gets refactored away.
+  assertKindIsAllowedHere(input.kind ?? "REAL");
+
   const [row] = await db
     .insert(registrations)
     .values({
@@ -86,6 +125,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       eventId: input.eventId,
       participantId: input.participantId,
       status: "PENDING_EMAIL_CONFIRMATION",
+      kind: input.kind ?? "REAL",
       locale: input.locale,
       registeredName: input.registeredName,
       privacyNoticeVersion: input.privacyNoticeVersion,
