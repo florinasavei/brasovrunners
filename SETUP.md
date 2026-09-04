@@ -1043,6 +1043,12 @@ Runtime checklist:
 - [ ] `yarn start` starts the production server.
 - [ ] Application honors `process.env.PORT`.
 - [ ] Repository pins a Node.js version the host currently supports, verified on the day.
+      `.nvmrc` pins the exact patch for developers and CI; `engines.node` states the major
+      only (`22.x`), because a host selects a major and refuses to install when asked for a
+      patch it does not ship.
+- [ ] `ENABLE_EXPERIMENTAL_COREPACK=1` set in each Vercel project, so `packageManager` is
+      honored and the build uses Yarn 4.18.0 rather than the image's bundled Yarn 1, which
+      cannot read this repository's lockfile.
 - [ ] No production dependency on Docker.
 - [ ] No durable uploads written to the app filesystem.
 - [ ] QA app has only QA credentials.
