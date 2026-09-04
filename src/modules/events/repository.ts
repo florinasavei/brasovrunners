@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -96,6 +96,80 @@ export async function findPublishedTranslations(db: Database, eventId: string) {
         eq(eventTranslations.editorialStatus, "PUBLISHED"),
       ),
     );
+}
+
+/**
+ * When an event stops being "upcoming".
+ *
+ * An event that started this morning and ends this afternoon is still today's event, so the
+ * comparison is against the end when there is one and the start otherwise. Written in SQL
+ * rather than filtered in the application so the ordering and the cut-off agree — a filter
+ * applied after `LIMIT` would silently return fewer rows than asked for.
+ */
+const eventEndsAt = sql`coalesce(${events.endsAt}, ${events.startsAt})`;
+
+/**
+ * Races outrank everything else, and only then does the date decide.
+ *
+ * The club's races are why this site exists: a visitor arrives to find the next one and enter
+ * it, and a training session that happens to fall sooner should not push it below the fold.
+ * PostgreSQL sorts `false` before `true`, so the comparison is ordered descending to put races
+ * at the top.
+ *
+ * This is a deliberate trade, not a neutral sort: a race three months out will sit above a
+ * community run tomorrow. That is the intended reading of the page — the race is the thing
+ * being advertised, the weekly run is the thing regulars already know about. If a specific
+ * event ever needs to outrank its own kind, that is an editorial `featured` flag on the table,
+ * not another clause here.
+ */
+const RACES_FIRST = desc(sql`${events.kind} = 'RACE'`);
+
+/**
+ * Published events that have not happened yet: races first, then soonest first.
+ *
+ * The listing shows these rather than everything: a page whose first card is last month's run
+ * reads as abandoned, which for a club whose events are its whole purpose is the worst thing
+ * the page can say. Past events stay published, stay linkable and stay in the sitemap — they
+ * are simply not what the listing leads with.
+ */
+export async function listUpcomingEvents(db: Database, locale: Locale, now: Date) {
+  return db
+    .select(PUBLIC_COLUMNS)
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    .where(
+      and(
+        eq(eventTranslations.locale, locale),
+        eq(eventTranslations.editorialStatus, "PUBLISHED"),
+        gte(eventEndsAt, now),
+      ),
+    )
+    .orderBy(RACES_FIRST, asc(events.startsAt));
+}
+
+/**
+ * The most recently finished published event, or undefined when the club has never held one.
+ *
+ * Between seasons there may be nothing scheduled. Rather than showing an empty page — which
+ * looks like a broken site rather than a quiet month — the listing falls back to the last
+ * event that happened, shown with its date so nobody mistakes it for an invitation.
+ */
+export async function findLatestPastEvent(db: Database, locale: Locale, now: Date) {
+  const [row] = await db
+    .select(PUBLIC_COLUMNS)
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    .where(
+      and(
+        eq(eventTranslations.locale, locale),
+        eq(eventTranslations.editorialStatus, "PUBLISHED"),
+        lt(eventEndsAt, now),
+      ),
+    )
+    .orderBy(desc(events.startsAt))
+    .limit(1);
+
+  return row;
 }
 
 /** One published event by its locale-scoped slug, or undefined when it should 404. */

@@ -21,20 +21,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of routing.locales) {
-    entries.push({
-      url: `${env.APP_BASE_URL}${getPathname({ locale, href: "/" })}`,
-      changeFrequency: "weekly",
-      priority: 1,
-    });
-
     const events = await listPublishedEvents(getDb(), locale);
 
-    // The events index is only worth listing where there is something on it.
+    /**
+     * The site root is deliberately absent: it redirects to the events listing, and listing a
+     * URL that answers 308 asks a crawler to discover the same page twice. The listing is the
+     * landing page, so it carries priority 1.
+     *
+     * It is only worth listing where there is something on it.
+     */
     if (events.length > 0) {
       entries.push({
         url: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
         changeFrequency: "weekly",
-        priority: 0.8,
+        priority: 1,
       });
     }
 

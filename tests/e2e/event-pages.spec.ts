@@ -83,15 +83,30 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
 });
 
 test.describe("BR-REQ-040-02 no cross-locale fallback", () => {
-  test("returns 404 for an event whose English translation is a draft", async ({ page }) => {
+  test("serves the English event page in English, not Romanian", async ({ page }) => {
+    // Every event is published in both languages. The rule this guards is not "English 404s"
+    // — it is that a locale never borrows the other language's words. The integration suite
+    // covers the Draft case, which needs a draft translation to exist.
     const response = await page.goto("/en/events/tampa-trail");
-    expect(response?.status()).toBe(404);
+    expect(response?.status()).toBe(200);
+
+    const body = await page.locator("body").innerText();
+    expect(body).toContain("Tâmpa trail run");
+    expect(body).not.toContain("Tură pe Tâmpa");
+    expect(body).not.toContain("Gratuit");
   });
 
   test("does not show the Romanian event in the English listing", async ({ page }) => {
     await page.goto("/en/events");
     const body = await page.locator("body").innerText();
     expect(body).not.toContain("Tură pe Tâmpa");
+  });
+
+  test("serves each locale at its own slug", async ({ page }) => {
+    // The slugs genuinely differ, so a URL built by swapping the locale prefix does not
+    // resolve. This is the failure BR-REQ-040-01 criterion 5 exists to prevent.
+    expect((await page.goto("/en/events/tura-pe-tampa"))?.status()).toBe(404);
+    expect((await page.goto("/ro/evenimente/tampa-trail"))?.status()).toBe(404);
   });
 
   test("returns 404 for an unknown slug rather than redirecting", async ({ page }) => {

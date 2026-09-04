@@ -10,7 +10,9 @@
   "Events": {
     "title": "Evenimente",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club.",
-    "empty": "Nu sunt evenimente publicate momentan. Revino în curând."
+    "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
+    "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
+    "pastNotice": "Acest eveniment a avut deja loc."
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",

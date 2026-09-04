@@ -13,8 +13,9 @@ wins for the pilot; §29 remains the plan for M1.
 **Romanian event pages, live on Vercel, read from Neon.** A list at `/ro/evenimente` and a
 detail page at `/ro/evenimente/<slug>` showing kind, date and time in Europe/Bucharest, meeting
 point, distance, and cost — as text, mobile-first. Two or three real upcoming events, seeded
-from a file. `/en/…` returns 404 because the English translation is Draft, which is exactly
-what BR-REQ-040-02 prescribes rather than a compromise.
+from a file. Both locales are published: the owner decided the site ships bilingual, so every
+event carries a complete English translation as well as a Romanian one. BR-REQ-040-02 is
+unchanged and still enforced — an unpublished locale is a 404, never a fallback.
 
 That replaces the Facebook post as the canonical event record. It is the half of M1 with zero
 legal risk, and it is useful to the club on Monday.
@@ -111,7 +112,7 @@ lane in `CLAUDE.md`.
 
 - The QA project's default `vercel.app` URL lists the seeded events at `/ro/evenimente` on a phone.
 - The production project does the same from `main`.
-- `/en/evenimente` is a 404, not a fallback.
+- `/en/events` serves English words, never Romanian ones under an English URL.
 - `yarn check` is green on the branch; CI is green on `qa`.
 - The six tests pass.
 - A club organizer has opened it on their own phone and not asked "where is the date".
@@ -125,7 +126,6 @@ lane in `CLAUDE.md`.
 | Staff login and the backoffice | Nothing to administer; events are seeded. Direction when built: Auth.js alone with a server-side allowlist, no external IdP | first registration |
 | Privacy notice and terms pages | No personal data is collected by the event pages. Needed the day registration opens | club approval |
 | Capacity and the waiting list | The pilot is uncapped and the DB enforces it. Half-built capacity overbooks in public | the locked transaction and its concurrency test |
-| English | Draft, so `/en` 404s. Never ship English chrome with Romanian body text | translated content |
 | CMS, media, profiles, races, bibs, results | M2–M5 | — |
 
 ## The email progression, corrected

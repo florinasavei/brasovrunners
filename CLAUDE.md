@@ -78,7 +78,10 @@ README index — application source under `src/` is not indexed and needs no REA
 
 Public Romanian event pages, running and tested. `/ro/evenimente` lists seeded events and
 `/ro/evenimente/<slug>` shows one, with `SportsEvent` JSON-LD, a sitemap and robots. English
-translations are Draft, so `/en/...` returns 404 — that is BR-REQ-040-02, not a gap.
+translations are published too: every event carries a complete Romanian and English
+translation. BR-REQ-040-02 still holds — an unpublished locale is a 404 and never a fallback
+to the other language — it simply no longer describes these rows. The site root redirects to
+the events listing, which is the landing page.
 
 Also built: email canonicalization with the `participants` table behind it, and the pilot
 capacity guard (the database refuses any non-null `capacity`).
@@ -90,7 +93,7 @@ caused them and the provider is called outside that transaction. The Mailgun ada
 declared and deliberately not wired — it throws rather than dropping mail — and startup refuses
 live delivery outside production.
 
-**217 unit and integration tests, 16 end-to-end.** `yarn test` needs no database — PGlite runs
+**243 unit and integration tests, 18 end-to-end.** `yarn test` needs no database — PGlite runs
 real PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed.
 
 Not built, each deferred with a reason in `WEEKEND.md`: registration, email delivery, staff
@@ -106,7 +109,7 @@ on the club's `.ro` domain and their approved privacy notice and declaration.
 | --- | --- | --- |
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
-| i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; `en` stays Draft |
+| i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | events, event_translations, participants; `docker-compose.yml` locally |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | not deployed yet |
 | Auth | staff only. Documented: Auth.js + Zitadel. Direction: Auth.js alone, no external IdP | deferred |

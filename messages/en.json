@@ -10,7 +10,9 @@
   "Events": {
     "title": "Events",
     "intro": "Runs, trail outings and training sessions organised by the club.",
-    "empty": "No events are published right now. Check back soon."
+    "empty": "No events are published right now. Check back soon.",
+    "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
+    "pastNotice": "This event has already taken place."
   },
   "Event": {
     "backToEvents": "Back to events",
