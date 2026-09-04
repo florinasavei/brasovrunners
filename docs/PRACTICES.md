@@ -2,7 +2,7 @@
 
 # Practice guides
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 ## About these guides
@@ -197,10 +197,11 @@ That comment stops a future agent from "fixing" a rule it thinks is a bug.
 
 Priority 1 is not delegable. Read every line of:
 
-- the capacity transaction and the queue allocator;
+- the capacity transaction and the queue allocator — including anything that touches
+  `registrations.kind`, whose whole point is that it changes nothing there;
 - email canonicalization;
 - action tokens, sessions, and role checks;
-- migrations;
+- migrations, and a migration that carries data from one column to another most of all;
 - anything producing or rendering legal text.
 
 Everything else gets normal review.

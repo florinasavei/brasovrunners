@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -616,6 +616,9 @@ Checklist:
 - [ ] Local role stored in PostgreSQL.
 - [ ] First Admin granted by controlled runbook after first login.
 - [ ] Mock staff switcher unavailable in QA/production.
+- [ ] A signed-out `/admin` goes to sign-in wherever a sign-in exists, and answers 404 only where
+      `STAFF_AUTH_MODE=disabled`; signing in lands back in the backoffice and signing out clears
+      the provider session as well as any development cookie.
 - [ ] Server role helpers tested.
 
 ## 16. Implement the mini CMS
@@ -663,13 +666,17 @@ Requirements:
 
 - server schema validation;
 - public static rendering using same allowlist;
-- optimistic integer version;
+- optimistic integer version, on the translation row and on the event row;
 - protected noindex preview;
-- per-locale publication;
+- **publication per event, not per locale** (`DECISIONS.md` §28): both languages go live
+  together, and PUBLISHED is refused while any locale is missing a field the public page renders;
+- create, duplicate, archive and delete an event, with every column of `events` editable;
+  deletion is Administrator-only and refused for an event with any registration against it;
 - Author/Editor/Admin permission matrix;
 - audit transitions;
 - published save warning;
-- declarations excluded from ordinary Author editing.
+- declarations excluded from ordinary Author editing; an event selects an approved version and
+  never edits one.
 
 ## 17. Implement participant email action tokens
 
@@ -720,8 +727,18 @@ Data rules:
 
 V1 has **no** declaration editor screen. New approved versions arrive through a
 migration or seed, following `docs/RUNBOOKS.md` § Legal document version. The backoffice
-shows legal documents read-only. Ordinary Authors and Editors cannot edit legal text, and
-no role may edit a version a participant has already accepted.
+shows legal documents read-only, and the event editor *selects* an approved declaration version
+for an internal event — a choice among versions, never an edit of one. Ordinary Authors and
+Editors cannot edit legal text, and no role may edit a version a participant has already
+accepted.
+
+Until the club approves its own wording, `yarn db:seed` loads a clearly marked **sample** version
+of all three keys in every environment except production: complete in structure, every
+club-specific fact a visible `<PLACEHOLDER>`, and a not-approved banner as the first section of
+each rendered page. Production is refused outright — the seed throws rather than skipping quietly
+— and registration there correctly refuses everyone until the approved text is loaded
+(`DECISIONS.md` §29). The sample seed never deletes: it inserts the next version when its text
+changes, because a version an acceptance references is immutable.
 
 The same mechanism serves the privacy notice and the terms (`legal_documents`, key
 `PRIVACY_NOTICE`, `TERMS`, `EVENT_DECLARATION`). Both legal routes must be reachable from
@@ -1000,8 +1017,8 @@ Checklist:
 - [ ] Pooled connection appropriate for runtime.
 - [ ] Direct/admin connection only where migration tooling requires.
 - [ ] Environment marker initialized.
-- [ ] QA synthetic seed.
-- [ ] Production never auto-seeded.
+- [ ] QA synthetic seed, including the sample legal documents (`DECISIONS.md` §29).
+- [ ] Production never auto-seeded, and the sample legal documents refuse it outright.
 - [ ] Backup/restore capability documented and tested before launch.
 - [ ] No production clone into QA.
 

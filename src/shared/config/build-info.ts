@@ -42,9 +42,12 @@ export function formatVersion(info: BuildInfo = buildInfo): string {
  * The "last updated" half, in the reader's own language.
  *
  * `Intl` rather than a hand-written month table: Romanian and English name months
- * differently, and the platform already knows both. Day and month only — an hour on a badge
- * invites the question of whose timezone it is, which nobody asking "is this the new one?"
- * needs answered.
+ * differently, and the platform already knows both.
+ *
+ * The time is shown as well as the date, and always in the club's own timezone — the same one
+ * every event time on this site is formatted in. Two deploys on the same afternoon are the
+ * ordinary case while a milestone is in progress, and a badge that reads the same for both
+ * cannot answer the only question it exists to answer.
  */
 export function formatLastUpdated(locale: string, info: BuildInfo = buildInfo): string | null {
   if (!info.committedAt) return null;
@@ -56,6 +59,9 @@ export function formatLastUpdated(locale: string, info: BuildInfo = buildInfo): 
     day: "numeric",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
     timeZone: "Europe/Bucharest",
   }).format(date);
 }

@@ -98,6 +98,59 @@ export async function findApprovedDocumentVersion<T extends Record<string, unkno
   return row;
 }
 
+/**
+ * The highest version of a key, whatever its approval state — what "the next version" counts
+ * from. A version number is never reused (`docs/RUNBOOKS.md` § Legal document version), so this
+ * is the only safe way to ask for one.
+ */
+export async function findLatestVersion<T extends Record<string, unknown>>(
+  db: Database<T>,
+  key: LegalDocumentKey,
+): Promise<{ id: string; version: number; contentSha256: string } | undefined> {
+  const [row] = await db
+    .select({
+      id: legalDocuments.id,
+      version: legalDocuments.version,
+      contentSha256: legalDocuments.contentSha256,
+    })
+    .from(legalDocuments)
+    .where(eq(legalDocuments.key, key))
+    .orderBy(desc(legalDocuments.version))
+    .limit(1);
+  return row;
+}
+
+/**
+ * Every approved version of a key, newest first, with its title in one locale — what the event
+ * editor offers when an organizer picks the declaration a participant will sign.
+ *
+ * A *selection*, never an edit: §11.1 keeps legal text out of the CMS entirely, and nothing
+ * here or in the editor can change a word of one of these rows.
+ */
+export async function listApprovedVersions<T extends Record<string, unknown>>(
+  db: Database<T>,
+  key: LegalDocumentKey,
+  locale: Locale,
+): Promise<Array<{ id: string; version: number; title: string; effectiveAt: Date }>> {
+  return db
+    .select({
+      id: legalDocuments.id,
+      version: legalDocuments.version,
+      title: legalDocumentTranslations.title,
+      effectiveAt: legalDocuments.effectiveAt,
+    })
+    .from(legalDocuments)
+    .innerJoin(
+      legalDocumentTranslations,
+      and(
+        eq(legalDocumentTranslations.legalDocumentId, legalDocuments.id),
+        eq(legalDocumentTranslations.locale, locale),
+      ),
+    )
+    .where(and(eq(legalDocuments.key, key), eq(legalDocuments.isApproved, true)))
+    .orderBy(desc(legalDocuments.version));
+}
+
 export async function insertLegalDocumentVersion<T extends Record<string, unknown>>(
   db: Database<T>,
   input: {

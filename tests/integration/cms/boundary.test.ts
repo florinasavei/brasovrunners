@@ -63,7 +63,6 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
         slug: FIELDS.slug,
         title: FIELDS.title,
         locationName: FIELDS.locationName,
-        editorialStatus: "DRAFT",
       })
       .returning();
     return translation;
@@ -95,9 +94,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
   });
 
   it.each([
-    ["the editorial status, which only a workflow transition may change", "editorialStatus"],
+    ["the editorial status, which lives on the event and only a transition may change", "editorialStatus"],
     ["the version, which is the concurrency guard itself", "version"],
-    ["capacity, which the pilot forbids outright", "capacity"],
+    ["capacity, which belongs to the event row rather than to one language", "capacity"],
     ["the record id", "id"],
     ["the rich-text body, which has no validated schema yet", "bodyJson"],
   ])("refuses a save that also posts %s", async (_name, field) => {
@@ -156,6 +155,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/",
       "/admin",
       "/admin/events/[id]",
+      "/admin/events/new",
       "/admin/registrations",
       "/admin/registrations/[id]",
       "/admin/staff",

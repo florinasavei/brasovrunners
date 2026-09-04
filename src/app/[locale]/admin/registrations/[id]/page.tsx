@@ -65,6 +65,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {registration.registeredName}
         </Typography>
         <Chip size="small" label={tr(`registrations.status.${registration.status}`)} />
+        {registration.kind === "TEST" && (
+          <Chip size="small" color="warning" label={tr("registrations.testKind")} />
+        )}
       </Stack>
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}

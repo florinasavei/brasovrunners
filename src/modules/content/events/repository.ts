@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { Database } from "@/db/types";
 
@@ -43,13 +43,7 @@ export async function findEventForEditing<T extends Record<string, unknown>>(
   const [event] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) return undefined;
 
-  const translations = await db
-    .select()
-    .from(eventTranslations)
-    .where(eq(eventTranslations.eventId, eventId))
-    .orderBy(asc(eventTranslations.locale));
-
-  return { event, translations };
+  return { event, translations: await listTranslationsForEvent(db, eventId) };
 }
 
 export async function findTranslationById<T extends Record<string, unknown>>(
@@ -62,6 +56,57 @@ export async function findTranslationById<T extends Record<string, unknown>>(
     .where(eq(eventTranslations.id, translationId))
     .limit(1);
   return row;
+}
+
+/**
+ * One translation and the event it belongs to, in one query.
+ *
+ * Editing a translation needs both now: the author is on the translation, but the editorial
+ * status and the first-publication date — what decides whether this is live content and whether
+ * the slug is still editable — moved to the event (`DECISIONS.md` §28).
+ */
+export async function findTranslationWithEventById<T extends Record<string, unknown>>(
+  db: Database<T>,
+  translationId: string,
+): Promise<{ event: EditableEvent; translation: EditableTranslation } | undefined> {
+  const [row] = await db
+    .select({ event: events, translation: eventTranslations })
+    .from(eventTranslations)
+    .innerJoin(events, eq(events.id, eventTranslations.eventId))
+    .where(eq(eventTranslations.id, translationId))
+    .limit(1);
+  return row;
+}
+
+/** Every locale's translation for one event, keyed by locale — what publication checks. */
+export async function listTranslationsForEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<EditableTranslation[]> {
+  return db
+    .select()
+    .from(eventTranslations)
+    .where(eq(eventTranslations.eventId, eventId))
+    .orderBy(asc(eventTranslations.locale));
+}
+
+/**
+ * The slugs already taken in one locale, among a candidate set.
+ *
+ * Duplicating an event has to invent slugs nobody is using, and `UNIQUE(locale, slug)` is what
+ * would otherwise reject the copy — asking first turns a constraint violation into a suffix.
+ */
+export async function findTakenSlugs<T extends Record<string, unknown>>(
+  db: Database<T>,
+  locale: "ro" | "en",
+  candidates: readonly string[],
+): Promise<Set<string>> {
+  if (candidates.length === 0) return new Set();
+  const rows = await db
+    .select({ slug: eventTranslations.slug })
+    .from(eventTranslations)
+    .where(and(eq(eventTranslations.locale, locale), inArray(eventTranslations.slug, [...candidates])));
+  return new Set(rows.map((row) => row.slug));
 }
 
 /**

@@ -27,7 +27,11 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
   async function seedDraft() {
     const [event] = await db
       .insert(events)
-      .values({ kind: "RACE", startsAt: new Date("2026-10-11T06:00:00Z") })
+      .values({
+        kind: "RACE",
+        startsAt: new Date("2026-10-11T06:00:00Z"),
+        editorialStatus: "DRAFT",
+      })
       .returning();
     await db.insert(eventTranslations).values([
       {
@@ -36,7 +40,6 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
         slug: "crosul-aniversar",
         title: "Crosul aniversar",
         locationName: "Parcul Tractorul",
-        editorialStatus: "DRAFT",
       },
       {
         eventId: event.id,
@@ -44,7 +47,6 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
         slug: "anniversary-cross",
         title: "Anniversary cross",
         locationName: "Tractorul Park",
-        editorialStatus: "IN_REVIEW",
       },
     ]);
     return event;
@@ -55,7 +57,7 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
 
     const preview = await findTranslationForPreview(db, event.id, "ro");
     expect(preview?.translation.title).toBe("Crosul aniversar");
-    expect(preview?.translation.editorialStatus).toBe("DRAFT");
+    expect(preview?.event.editorialStatus).toBe("DRAFT");
   });
 
   it("returns the locale that was asked for, and not the other one", async () => {
@@ -63,7 +65,7 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
 
     const english = await findTranslationForPreview(db, event.id, "en");
     expect(english?.translation.title).toBe("Anniversary cross");
-    expect(english?.translation.editorialStatus).toBe("IN_REVIEW");
+    expect(english?.event.editorialStatus).toBe("DRAFT");
   });
 
   it("returns nothing for an event that has no translation in that locale", async () => {

@@ -21,38 +21,47 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
   afterAll(async () => close());
   beforeEach(async () => resetTables(db));
 
-  async function seedEvent(enStatus: "DRAFT" | "PUBLISHED") {
+  /**
+   * Publication is one state per event now, so the case the switcher has to survive is a
+   * language with no translation at all rather than one still in draft (`DECISIONS.md` §28).
+   */
+  async function seedEvent(options: { withEnglish: boolean }) {
     const [event] = await db
       .insert(events)
-      .values({ kind: "TRAIL_RUN", startsAt: new Date("2026-09-20T05:00:00Z") })
+      .values({
+        kind: "TRAIL_RUN",
+        startsAt: new Date("2026-09-20T05:00:00Z"),
+        editorialStatus: "PUBLISHED",
+        publishedAt: new Date("2026-09-01T00:00:00Z"),
+      })
       .returning();
 
     await db.insert(eventTranslations).values([
       {
         eventId: event.id,
-        locale: "ro",
+        locale: "ro" as const,
         slug: "tura-pe-tampa",
         title: "Tură pe Tâmpa",
         locationName: "Stația de telecabină",
-        editorialStatus: "PUBLISHED",
-        publishedAt: new Date("2026-09-01T00:00:00Z"),
       },
-      {
-        eventId: event.id,
-        locale: "en",
-        slug: "tampa-trail",
-        title: "Tâmpa trail run",
-        locationName: "Cable car station",
-        editorialStatus: enStatus,
-        publishedAt: enStatus === "PUBLISHED" ? new Date("2026-09-01T00:00:00Z") : null,
-      },
+      ...(options.withEnglish
+        ? [
+            {
+              eventId: event.id,
+              locale: "en" as const,
+              slug: "tampa-trail",
+              title: "Tâmpa trail run",
+              locationName: "Cable car station",
+            },
+          ]
+        : []),
     ]);
 
     return event;
   }
 
   it("swaps to the other language's own slug, not the same slug under a new prefix", async () => {
-    await seedEvent("PUBLISHED");
+    await seedEvent({ withEnglish: true });
 
     expect(await resolveLocaleSwitch(db, "/ro/evenimente/tura-pe-tampa", "en")).toBe(
       "/en/events/tampa-trail",
@@ -62,11 +71,11 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
     );
   });
 
-  it("falls back to the listing when the other language is still a draft", async () => {
-    await seedEvent("DRAFT");
+  it("falls back to the listing when the event has no translation in the other language", async () => {
+    await seedEvent({ withEnglish: false });
 
-    // Linking to a draft locale would be a 404 (BR-REQ-040-02), which reads as a broken site
-    // rather than as unfinished content.
+    // Linking to a locale with no translation would be a 404 (BR-REQ-040-02), which reads as a
+    // broken site rather than as unfinished content.
     expect(await resolveLocaleSwitch(db, "/ro/evenimente/tura-pe-tampa", "en")).toBe("/en/events");
   });
 

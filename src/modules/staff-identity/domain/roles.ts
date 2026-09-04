@@ -22,6 +22,11 @@ export function isEditorial(role: StaffRole): boolean {
 /**
  * Content that is live, or has been submitted for someone else to judge, is out of an
  * Author's hands (§11.2: "Author cannot publish/edit Published").
+ *
+ * The status is the *event's* now, not the translation's: publication is one state per event
+ * (`DECISIONS.md` §28), so an Author's own draft is a draft of an unpublished event. The author
+ * is still per translation — an Author who wrote the Romanian half does not thereby own the
+ * English one.
  */
 export function canEditTranslation(
   role: StaffRole,
@@ -97,6 +102,34 @@ export function allowedTransitions(
  */
 export function canEditEventFields(role: StaffRole): boolean {
   return isEditorial(role);
+}
+
+/**
+ * Creating and duplicating an event is the same power as configuring one: what the club
+ * advertises, and now — since the registration block is part of the same row — whether it takes
+ * entries at all. An Author has drafts and nothing else (§10.2).
+ */
+export function canCreateEvent(role: StaffRole): boolean {
+  return isEditorial(role);
+}
+
+/**
+ * Deleting is the Administrator's alone, and it is the one editorial action that destroys
+ * rather than moves. Archiving is what an event that happened gets; deletion is for a row that
+ * should never have existed — a duplicate, a mistake made five minutes ago. An event with any
+ * registration against it is refused outright by the service, whoever asks.
+ */
+export function canDeleteEvent(role: StaffRole): boolean {
+  return role === "ADMIN";
+}
+
+/**
+ * Filling an event's queue with synthetic registrations reaches `registrations` and
+ * `participants`, which §10.2 reserves to the Administrator — and removing them deletes rows.
+ * The environment is the other half of the gate: never in production, refused twice.
+ */
+export function canManageTestRegistrations(role: StaffRole): boolean {
+  return role === "ADMIN";
 }
 
 /**

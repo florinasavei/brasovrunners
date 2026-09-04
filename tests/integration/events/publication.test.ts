@@ -14,11 +14,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * BR-REQ-020-01 — publication and cancellation visibility.
  * BR-REQ-040-02 — no cross-locale content fallback.
  *
- * The pilot ships Romanian only, with English left in Draft. That is not a shortcut: it is
- * the state the requirement prescribes, and these tests are what prove `/en` genuinely 404s
- * rather than quietly serving Romanian text under an English URL.
+ * Publication is one state for the whole event (`DECISIONS.md` §28): both languages go live
+ * together, and there is no half-published event any more. What BR-REQ-040-02 still forbids is
+ * unchanged and is what these tests prove: a locale with no translation of a published event is
+ * a 404 in that locale, never the other language's text under this language's URL.
  */
-describe("BR-REQ-020-01 / BR-REQ-040-02 publication per locale", () => {
+describe("BR-REQ-020-01 / BR-REQ-040-02 publication is per event", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 
@@ -29,68 +30,78 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication per locale", () => {
   beforeEach(async () => resetTables(db));
 
   async function seedEvent(options: {
-    roStatus?: "DRAFT" | "IN_REVIEW" | "PUBLISHED";
-    enStatus?: "DRAFT" | "IN_REVIEW" | "PUBLISHED";
+    editorialStatus?: "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "ARCHIVED";
+    locales?: ReadonlyArray<"ro" | "en">;
     eventStatus?: "SCHEDULED" | "CANCELLED" | "COMPLETED";
     startsAt?: Date;
     slug?: string;
     kind?: "COMMUNITY_RUN" | "TRAIL_RUN" | "RACE";
   }) {
+    const editorialStatus = options.editorialStatus ?? "PUBLISHED";
     const [event] = await db
       .insert(events)
       .values({
         kind: options.kind ?? "COMMUNITY_RUN",
         eventStatus: options.eventStatus ?? "SCHEDULED",
         startsAt: options.startsAt ?? new Date("2026-10-04T07:00:00Z"),
+        editorialStatus,
+        // The CHECK refuses a published event with no publication date, exactly as the
+        // transition does.
+        publishedAt: editorialStatus === "PUBLISHED" ? new Date("2026-09-01T00:00:00Z") : null,
       })
       .returning();
 
     const slug = options.slug ?? "alergare-de-duminica";
-    await db.insert(eventTranslations).values([
-      {
+    const rows = {
+      ro: {
         eventId: event.id,
-        locale: "ro",
+        locale: "ro" as const,
         slug,
         title: "Alergare de duminică",
+        excerpt: "Alergare relaxată prin parc.",
         locationName: "Parcul Tractorul",
-        editorialStatus: options.roStatus ?? "PUBLISHED",
       },
-      {
+      en: {
         eventId: event.id,
-        locale: "en",
+        locale: "en" as const,
         slug: `${slug}-en`,
         title: "Sunday run",
+        excerpt: "An easy run through the park.",
         locationName: "Tractorul Park",
-        editorialStatus: options.enStatus ?? "DRAFT",
       },
-    ]);
+    };
+
+    await db
+      .insert(eventTranslations)
+      .values((options.locales ?? ["ro", "en"]).map((locale) => rows[locale]));
 
     return event;
   }
 
-  it("lists a published Romanian translation", async () => {
+  it("lists a published event in both languages", async () => {
     await seedEvent({});
-    const list = await listPublishedEvents(db, "ro");
-    expect(list).toHaveLength(1);
-    expect(list[0].title).toBe("Alergare de duminică");
+    expect(await listPublishedEvents(db, "ro")).toHaveLength(1);
+    expect(await listPublishedEvents(db, "en")).toHaveLength(1);
   });
 
-  it("does not list the event in English while its English translation is a draft", async () => {
-    await seedEvent({});
+  it("does not list the event in a locale it has no translation for", async () => {
+    await seedEvent({ locales: ["ro"] });
+    expect(await listPublishedEvents(db, "ro")).toHaveLength(1);
     expect(await listPublishedEvents(db, "en")).toHaveLength(0);
   });
 
   it("does not fall back to Romanian content for an English request", async () => {
-    await seedEvent({ slug: "alergare-de-duminica" });
+    await seedEvent({ locales: ["ro"], slug: "alergare-de-duminica" });
     // The Romanian slug must not resolve under the English locale.
     expect(await findPublishedEventBySlug(db, "en", "alergare-de-duminica")).toBeUndefined();
   });
 
-  it.each(["DRAFT", "IN_REVIEW"] as const)(
-    "returns nothing for a %s translation, so the page 404s",
-    async (status) => {
-      await seedEvent({ roStatus: status });
+  it.each(["DRAFT", "IN_REVIEW", "ARCHIVED"] as const)(
+    "returns nothing in either language for a %s event, so the page 404s",
+    async (editorialStatus) => {
+      await seedEvent({ editorialStatus });
       expect(await listPublishedEvents(db, "ro")).toHaveLength(0);
+      expect(await listPublishedEvents(db, "en")).toHaveLength(0);
       expect(await findPublishedEventBySlug(db, "ro", "alergare-de-duminica")).toBeUndefined();
     },
   );
@@ -217,6 +228,36 @@ describe("BR-REQ-040-02 slug and translation uniqueness", () => {
       { code: SQLSTATE.UNIQUE_VIOLATION, constraint: "event_translations_event_locale_unique" },
     );
   });
+
+  /**
+   * The database's own half of "complete in both languages".
+   *
+   * The whole rule needs to read every locale's row at once and is asserted in
+   * `transitionEvent`; this is the part one row can state honestly, and it is what stops a
+   * blank string passing for a filled-in field.
+   */
+  it("rejects a translation whose required fields are blank rather than absent", async () => {
+    const a = await newEvent();
+    await expectViolation(
+      db.insert(eventTranslations).values({ ...translation(a.id, "ro", "unu"), title: "   " }),
+      {
+        code: SQLSTATE.CHECK_VIOLATION,
+        constraint: "event_translations_required_fields_present",
+      },
+    );
+  });
+
+  /** A published event without the date of its first publication cannot exist. */
+  it("rejects a published event with no publication date", async () => {
+    await expectViolation(
+      db.insert(events).values({
+        kind: "MEETUP",
+        startsAt: new Date("2026-10-04T07:00:00Z"),
+        editorialStatus: "PUBLISHED",
+      }),
+      { code: SQLSTATE.CHECK_VIOLATION, constraint: "events_published_has_a_publication_date" },
+    );
+  });
 });
 
 /**
@@ -237,34 +278,46 @@ describe("BR-REQ-040-01 criterion 5 alternate locales", () => {
   afterAll(async () => close());
   beforeEach(async () => resetTables(db));
 
-  async function seed(enStatus: "DRAFT" | "PUBLISHED") {
+  async function seed(options: {
+    editorialStatus?: "DRAFT" | "PUBLISHED";
+    locales?: ReadonlyArray<"ro" | "en">;
+  }) {
+    const editorialStatus = options.editorialStatus ?? "PUBLISHED";
     const [event] = await db
       .insert(events)
-      .values({ kind: "COMMUNITY_RUN", startsAt: new Date("2026-10-04T07:00:00Z") })
+      .values({
+        kind: "COMMUNITY_RUN",
+        startsAt: new Date("2026-10-04T07:00:00Z"),
+        editorialStatus,
+        publishedAt: editorialStatus === "PUBLISHED" ? new Date("2026-09-01T00:00:00Z") : null,
+      })
       .returning();
-    await db.insert(eventTranslations).values([
-      {
+
+    const rows = {
+      ro: {
         eventId: event.id,
-        locale: "ro",
+        locale: "ro" as const,
         slug: "alergare-de-duminica",
         title: "Alergare de duminică",
         locationName: "Parcul Tractorul",
-        editorialStatus: "PUBLISHED",
       },
-      {
+      en: {
         eventId: event.id,
-        locale: "en",
+        locale: "en" as const,
         slug: "sunday-run",
         title: "Sunday run",
         locationName: "Tractorul Park",
-        editorialStatus: enStatus,
       },
-    ]);
+    };
+
+    await db
+      .insert(eventTranslations)
+      .values((options.locales ?? ["ro", "en"]).map((locale) => rows[locale]));
     return event;
   }
 
-  it("returns each published locale with its own distinct slug", async () => {
-    const event = await seed("PUBLISHED");
+  it("returns each locale with its own distinct slug", async () => {
+    const event = await seed({});
     const translations = await findPublishedTranslations(db, event.id);
 
     const byLocale = Object.fromEntries(translations.map((t) => [t.locale, t.slug]));
@@ -273,14 +326,19 @@ describe("BR-REQ-040-01 criterion 5 alternate locales", () => {
     expect(byLocale.ro).not.toBe(byLocale.en);
   });
 
-  it("omits a locale whose translation is still a draft", async () => {
-    const event = await seed("DRAFT");
+  it("omits a locale the event has no translation for", async () => {
+    const event = await seed({ locales: ["ro"] });
     const translations = await findPublishedTranslations(db, event.id);
 
     expect(translations.map((t) => t.locale)).toEqual(["ro"]);
   });
 
-  it("returns nothing for an event that has no published translation at all", async () => {
+  it("returns nothing for an event that is not published", async () => {
+    const event = await seed({ editorialStatus: "DRAFT" });
+    expect(await findPublishedTranslations(db, event.id)).toEqual([]);
+  });
+
+  it("returns nothing for an event that has no translation at all", async () => {
     const [event] = await db
       .insert(events)
       .values({ kind: "MEETUP", startsAt: new Date("2026-10-04T07:00:00Z") })

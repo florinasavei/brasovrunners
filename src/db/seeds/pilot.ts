@@ -1,6 +1,8 @@
+import { sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { eventTranslations, events } from "@/db/schema/events";
-import { seedPlaceholderLegalDocuments } from "./legal-placeholder";
+import { registrations } from "@/db/schema/registrations";
+import { seedSampleLegalDocuments } from "./sample-legal-documents";
 
 /**
  * Pilot seed: the club's events, published in both languages.
@@ -20,12 +22,40 @@ import { seedPlaceholderLegalDocuments } from "./legal-placeholder";
  * with the club's real race before this reaches anyone — an invented date for a real event is
  * worse than no page at all.
  *
- * Safe to re-run: it clears both tables first. It refuses to touch production.
+ * Safe to re-run: it clears both tables first. It refuses to touch production, and it refuses
+ * to clear an environment somebody has registered on — see below.
  */
 async function seed() {
   const appEnv = process.env.APP_ENV ?? "local";
   if (appEnv === "production") {
     throw new Error("Refusing to seed production. AGENTS.md §7.7: production is never auto-seeded.");
+  }
+
+  /**
+   * The sample legal documents first, because an event that takes registrations references the
+   * declaration version a participant signs, and that row has to exist before the event does.
+   *
+   * DECISIONS.md §29 replaces §27: sample text everywhere but production, so QA can run the
+   * participant journey at all. `seedSampleLegalDocuments` refuses production itself; this call
+   * site never reaches it there either, because the whole seed refused above.
+   */
+  await seedSampleLegalDocuments();
+
+  /**
+   * Clearing the events is destructive, and once an environment has registrations it is
+   * destructive to somebody.
+   *
+   * `registrations` references `events`, so the delete below would fail on the foreign key
+   * anyway — but it would fail with a constraint name, halfway through, after the legal
+   * documents were already touched. Ask first, and say what to do instead.
+   */
+  const [registered] = await getDb()
+    .select({ count: sql<number>`count(*)::int` })
+    .from(registrations);
+  if ((registered?.count ?? 0) > 0) {
+    throw new Error(
+      `Refusing to clear ${registered?.count} registration(s) in APP_ENV=${appEnv}. Remove the test registrations from the backoffice, or reset the database (yarn db:reset:local), before re-seeding.`,
+    );
   }
 
   await getDb().delete(eventTranslations);
@@ -156,10 +186,20 @@ async function seed() {
         // link is built from the coordinates above and `MAP_LINK_BASE_URL` instead.
         distanceMeters: row.distanceMeters,
         elevationGainMeters: row.elevationGainMeters,
-        // Registration is not built: it needs the club's approved declaration and privacy
-        // notice, and email needs the domain. NONE is the honest state until then, and the
-        // pilot is uncapped by design — the database refuses a capacity anyway.
+        /**
+         * NONE, deliberately, for every seeded event.
+         *
+         * The registration block — the mode, the capacity, the window and the declaration
+         * version — is configured by an organizer through the backoffice, not here.
+         * `DECISIONS.md` §28: this file stopped being how an event is configured the moment the
+         * CRUD covered every column, and an event that arrived from a seed already taking
+         * entries would be one more thing nobody could change without a developer.
+         */
         registrationMode: "NONE",
+        // Publication is one state for the whole event now (`DECISIONS.md` §28): both languages
+        // go live together, and the date lives here rather than on each translation.
+        editorialStatus: "PUBLISHED" as const,
+        publishedAt,
       })
       .returning();
 
@@ -176,18 +216,11 @@ async function seed() {
           locationAddress: "locationAddress" in row[locale] ? row[locale].locationAddress : undefined,
           difficultyLabel: row[locale].difficultyLabel,
           costText: row[locale].costText,
-          editorialStatus: "PUBLISHED" as const,
-          publishedAt,
         })),
       );
   }
 
   console.log(`seeded ${rows.length} events, Romanian and English published, into APP_ENV=${appEnv}`);
-
-  // DECISIONS.md §27: never in qa or production — only ever called here, for local and test.
-  if (appEnv === "local" || appEnv === "test") {
-    await seedPlaceholderLegalDocuments();
-  }
 }
 
 seed()

@@ -111,6 +111,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               <CardContent>
                 <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
                   <Chip size="small" label={t(`registrations.status.${row.status}`)} />
+                  {/* Unmistakable wherever a registration is listed, so a demonstration queue is
+                      never read as real sign-ups (`DECISIONS.md` §30). The export takes the other
+                      route and omits these rows entirely. */}
+                  {row.kind === "TEST" && (
+                    <Chip size="small" color="warning" label={t("registrations.testKind")} />
+                  )}
                   <Chip
                     size="small"
                     variant="outlined"

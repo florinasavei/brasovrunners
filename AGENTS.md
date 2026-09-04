@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -873,6 +873,12 @@ Non-human routes are unprefixed:
 /api/health
 ```
 
+The staff routes are `/sign-in`, `/admin`, `/admin/events/new`, `/admin/events/[id]`,
+`/admin/staff`, `/admin/registrations`, `/admin/registrations/[id]` and `/preview/events/[id]`.
+Every one is locale-prefixed, none is in public navigation or the sitemap, and all are disallowed
+in `robots.txt`. A signed-out request to one is sent to sign-in where a sign-in exists and
+answered 404 where `STAFF_AUTH_MODE=disabled`; signing in lands back in the backoffice.
+
 ### 9.3 Messages and content
 
 - semantic keys, not English sentence keys;
@@ -938,8 +944,17 @@ type StaffRole = "AUTHOR" | "EDITOR" | "ADMIN";
 ```
 
 - Author: own/assigned drafts; submit review.
-- Editor: all editorial content; publish/unpublish/archive; event content/galleries.
-- Admin: registrations, participants, waitlist, declarations, profiles, exports, roles, operations.
+- Editor: all editorial content; publish/unpublish/archive; create, configure and duplicate
+  events; event content/galleries.
+- Admin: everything an Editor may, plus registrations, participants, waitlist, declarations,
+  profiles, exports, roles, operations; deleting an event; adding and removing test
+  registrations.
+
+Deleting an event is the Administrator's alone and is refused outright for an event with any
+registration against it, whatever its status or kind — archiving is the answer for an event that
+happened. `registrations` carries the privacy-notice version a participant acknowledged and, once
+signed, the declaration they accepted; cascading those away to tidy up a duplicate would destroy
+the evidence §10.8 exists to keep.
 
 Participant is not a staff role.
 
@@ -1170,6 +1185,11 @@ Validate HTTPS and provider host allowlist. Render safe external links with `rel
 
 Custom CMS inside application. No arbitrary route/layout/content-type creation.
 
+It does create, duplicate and remove *events*, which is the one content type that exists: every
+column of `events` an organizer owns is editable through it, so `src/db/seeds/pilot.ts` is no
+longer how an event is configured. The legal-document selection an internal event carries is a
+choice among approved versions and never an edit of one.
+
 Supported:
 
 - articles/announcements;
@@ -1194,7 +1214,13 @@ DRAFT -> IN_REVIEW -> PUBLISHED -> ARCHIVED
 - Editor/Admin: edit all, return to draft, publish, unpublish, archive.
 - Author cannot publish/edit Published.
 - Editor/Admin may edit live content after explicit warning.
-- publishing per locale.
+- **publishing is per event, not per locale** (`DECISIONS.md` §28, superseding the per-locale
+  rule this line used to state). `editorial_status` lives on `events`; both languages go live
+  together and come down together.
+- PUBLISHED requires a complete translation in every locale the site serves — every field a
+  public page renders, present in each. The transition refuses otherwise and names the language
+  and the fields; a CHECK asserts only what one row can see honestly, because the rule reads a
+  set of rows.
 - no scheduled publication/comments/full history/live collaboration.
 
 ### 11.3 Tiptap contract
@@ -1341,6 +1367,9 @@ events
 - race_id uuid null            -- M1 footprint for M2; null for events with no siblings
 - kind
 - event_status
+- editorial_status             -- publication, for the whole event: both locales go live together
+- published_at timestamptz null -- first publication; never cleared, so slugs stay stable
+- version integer              -- optimistic concurrency for the event row
 - starts_at timestamptz          -- when the event begins; for a race, the gathering
 - race_starts_at timestamptz null -- the gun time, when it differs from the event start
 - ends_at timestamptz null
@@ -1379,6 +1408,9 @@ Checks:
   plus `MAP_LINK_BASE_URL`, which is configuration;
 - at most one event carries `featured`, enforced by a partial unique index rather than by
   application code — two featured events would leave the landing page choosing one arbitrarily;
+- a PUBLISHED event has a `published_at`. The rest of "publishable" — a complete translation in
+  every locale — cannot be a CHECK, because it reads rows in another table, and is asserted in
+  `modules/content/events/service.ts#transitionEvent`;
 - non-negative distance/elevation;
 - positive capacity;
 - close not before open/not after start for internal;
@@ -1390,6 +1422,7 @@ Indexes:
 
 ```text
 (event_status, starts_at)
+(editorial_status, starts_at)
 (kind, starts_at)
 (registration_mode, starts_at)
 ```
@@ -1412,17 +1445,20 @@ event_translations
 - cover_alt_text null
 - seo_title null
 - seo_description null
-- editorial_status
 - author_staff_user_id null
 - reviewed_by_staff_user_id null
-- published_at null
 - version integer
 - created_at
 - updated_at
 
 UNIQUE(event_id, locale)
 UNIQUE(locale, slug)
+CHECK title, slug and location_name are non-blank, not merely NOT NULL
 ```
+
+`editorial_status` and `published_at` are deliberately absent: publication moved to `events`
+(`DECISIONS.md` §28). What stays here is the language's own text, its author, and its own
+`version` for the save guard.
 
 ### 12.5 Legal documents
 
@@ -1466,6 +1502,7 @@ registrations
 - event_id
 - participant_id
 - status
+- kind REAL|TEST NOT NULL DEFAULT REAL   -- a demonstration of the queue, never a person
 - locale
 - registered_name
 - privacy_notice_version integer NOT NULL
@@ -1490,10 +1527,25 @@ registrations
 UNIQUE(event_id, participant_id)
 UNIQUE(race_id, participant_id) WHERE race_id IS NOT NULL AND status IN (active statuses)   -- one distance per race
 INDEX(event_id, status)
+INDEX(event_id, kind)
 INDEX(participant_id, status)
 INDEX(event_id, waitlisted_at, id)
 INDEX(event_id, hold_expires_at)
 ```
+
+`kind` exists so the waiting list can be exercised without ten real mailboxes, and it carries
+three rules (`DECISIONS.md` §30):
+
+- **A `TEST` registration is a real registration to the queue.** It goes through
+  `modules/registrations/service.ts` like any other, occupies a place, expires on the same hold
+  deadlines and is promoted by the same allocator. `kind` MUST NOT appear in any condition inside
+  the allocator or the capacity formula of §10.6.
+- **It is excluded from what the club counts and labelled where it is listed.** The CSV export
+  omits `TEST` rows; every backoffice screen that lists a registration marks them.
+- **It cannot exist when `APP_ENV=production`**, refused in the feature's own module and again at
+  the insert. The synthetic participant's address is in `test.invalid` (RFC 2606), which can never
+  receive mail: `kind` carries the meaning, and the domain is what makes a bug in email-mode
+  selection harmless.
 
 ### 12.7 Declaration acceptances
 

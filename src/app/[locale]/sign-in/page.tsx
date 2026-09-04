@@ -6,10 +6,12 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { signIn } from "@/auth";
+import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { DEV_IDENTITIES, isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
+import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { signInAsDevIdentityAction } from "../admin/actions";
 
@@ -41,6 +43,10 @@ export default async function SignInPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
+  // Already signed in: there is nothing to do here, and a sign-in button shown to somebody who
+  // is signed in is how a redirect loop starts.
+  if (await getCurrentStaffUser()) redirect(getPathname({ locale, href: "/admin" }));
+
   const { error } = await searchParams;
   const t = await getTranslations("Admin");
 
@@ -60,7 +66,10 @@ export default async function SignInPage({ params, searchParams }: Props) {
         <form
           action={async () => {
             "use server";
-            await signIn("zitadel");
+            // Back to the backoffice, in the language the sign-in page was opened in. Without
+            // `redirectTo`, Auth.js returns the visitor to this page, which then sends them to
+            // Zitadel again — a signed-in visitor looking at a sign-in button.
+            await signIn("zitadel", { redirectTo: getPathname({ locale, href: "/admin" }) });
           }}
         >
           <Button type="submit" variant="contained" fullWidth>

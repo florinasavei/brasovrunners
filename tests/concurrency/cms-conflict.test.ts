@@ -4,7 +4,11 @@ import pg from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { saveEventTranslation, transitionTranslation } from "@/modules/content/events/service";
+import {
+  saveEventFields,
+  saveEventTranslation,
+  transitionEvent,
+} from "@/modules/content/events/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -43,10 +47,35 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
   let eventId: string;
   let translationId: string;
 
+  let eventVersion: number;
+
+  /** The event row as the form posts it, so a save here exercises the same path a page does. */
+  const EVENT_FIELDS = {
+    kind: "OTHER",
+    eventStatus: "SCHEDULED",
+    timezone: "Europe/Bucharest",
+    startsAtWallTime: "2026-10-11T09:00",
+    endsAtWallTime: "",
+    raceStartsAtWallTime: "",
+    latitude: "",
+    longitude: "",
+    mapUrl: "",
+    distanceMeters: "",
+    elevationGainMeters: "",
+    featured: false,
+    registrationMode: "NONE",
+    capacity: "",
+    registrationOpensAtWallTime: "",
+    registrationClosesAtWallTime: "",
+    declarationDocumentId: "",
+    externalProvider: "",
+    externalRegistrationUrl: "",
+  };
+
   const FIELDS = {
     slug: "concurrency-fixture",
     title: "Titlu inițial",
-    excerpt: "",
+    excerpt: "Descriere.",
     locationName: "Parcul Tractorul",
     locationAddress: "",
     difficultyLabel: "",
@@ -78,10 +107,17 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
 
     const [event] = await db
       .insert(events)
-      .values({ kind: "OTHER", startsAt: new Date("2026-10-11T06:00:00Z") })
+      .values({
+        kind: "OTHER",
+        startsAt: new Date("2026-10-11T06:00:00Z"),
+        editorialStatus: "IN_REVIEW",
+      })
       .returning();
     eventId = event.id;
+    eventVersion = event.version;
 
+    // Both locales, complete: publication requires every language to be finished, so a fixture
+    // with only Romanian would fail the publish for a reason this suite is not about.
     const [translation] = await db
       .insert(eventTranslations)
       .values({
@@ -89,12 +125,22 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
         locale: "ro",
         slug: FIELDS.slug,
         title: FIELDS.title,
+        excerpt: FIELDS.excerpt,
         locationName: FIELDS.locationName,
-        editorialStatus: "IN_REVIEW",
         authorStaffUserId: editor.id,
       })
       .returning();
     translationId = translation.id;
+
+    await db.insert(eventTranslations).values({
+      eventId: event.id,
+      locale: "en",
+      slug: `${FIELDS.slug}-en`,
+      title: "Concurrency fixture",
+      excerpt: "Description.",
+      locationName: "Tractorul Park",
+      authorStaffUserId: editor.id,
+    });
   });
 
   /** One connection of its own, with an open transaction, as a browser session would have. */
@@ -215,23 +261,28 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
     expect(current.version).toBe(2);
   });
 
-  it("refuses a publish that races an edit, so nothing goes live half-rewritten", async () => {
+  /**
+   * Publication moved to the event row (`DECISIONS.md` §28), so the race that matters is
+   * against the event's own version: one editor reconfigures the race — its times, its capacity
+   * — while another publishes the copy they were looking at a minute ago.
+   */
+  it("refuses a publish that races a change to the event, so nothing goes live half-changed", async () => {
     const writer = await session();
     const publisher = await session();
 
     try {
-      await saveEventTranslation(writer.db, {
+      await saveEventFields(writer.db, {
         actor: editor,
-        translationId,
-        expectedVersion: 1,
-        fields: { ...FIELDS, title: "Rescris chiar înainte de publicare" },
+        eventId,
+        expectedVersion: eventVersion,
+        fields: { ...EVENT_FIELDS, startsAtWallTime: "2026-10-11T11:00" },
       });
 
       const publish = codeOf(
-        transitionTranslation(publisher.db, {
+        transitionEvent(publisher.db, {
           actor: editor,
-          translationId,
-          expectedVersion: 1,
+          eventId,
+          expectedVersion: eventVersion,
           to: "PUBLISHED",
         }),
       );
@@ -244,12 +295,9 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
       await publisher.rollback().catch(() => undefined);
     }
 
-    const [current] = await db
-      .select()
-      .from(eventTranslations)
-      .where(eq(eventTranslations.id, translationId));
+    const [current] = await db.select().from(events).where(eq(events.id, eventId));
 
-    // The editor who published had not seen the rewrite, so the page did not go public.
+    // The editor who published had not seen the change, so the page did not go public.
     expect(current.editorialStatus).toBe("IN_REVIEW");
     expect(current.publishedAt).toBeNull();
   });

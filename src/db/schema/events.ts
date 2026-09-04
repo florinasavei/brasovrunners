@@ -59,6 +59,44 @@ export const events = pgTable(
     kind: eventKind("kind").notNull(),
     eventStatus: eventStatus("event_status").notNull().default("SCHEDULED"),
 
+    /**
+     * Publication, for the whole event rather than per language.
+     *
+     * This column used to live on `event_translations`, so Romanian could be PUBLISHED while
+     * English was still a draft. It no longer can: an event is published or it is not, and both
+     * languages go live together (`DECISIONS.md` §28, superseding the per-locale wording of
+     * AGENTS.md §11.2). BR-REQ-040-02 still forbids a cross-locale fallback — a locale with no
+     * translation row is a 404, and so is an event that is not PUBLISHED — but the half-published
+     * state that rule used to have to describe cannot occur any more.
+     *
+     * The rule that makes it safe is enforced in `content/events/service.ts#transitionEvent`:
+     * PUBLISHED requires a complete translation in every locale. A CHECK cannot say that
+     * honestly — it would have to read `event_translations` — so the only thing asserted here is
+     * what a CHECK *can* see: a published event carries the date it was first published.
+     */
+    editorialStatus: editorialStatus("editorial_status").notNull().default("DRAFT"),
+
+    /**
+     * When the event was first published — and it is never cleared.
+     *
+     * Unpublishing moves `editorial_status` back to DRAFT, which is what every public query
+     * reads, but the timestamp stays. It is the record of "this has been public at least once",
+     * which is what AGENTS.md §11.5 keys slug stability on: a slug is editable before first
+     * publication and stable afterwards, and clearing this on unpublish would hand back an
+     * editable slug for a URL people have already followed and search engines have indexed.
+     */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+
+    /**
+     * Optimistic concurrency for the event row (AGENTS.md §11.5, BR-REQ-051-01 criterion 5).
+     *
+     * The same guard `event_translations.version` gives a translation save, now that the event
+     * row carries publication and the whole registration block: two organizers configuring one
+     * race on a Sunday morning is the ordinary case, and last-write-wins would silently discard
+     * one of them. Incremented by every save and every transition.
+     */
+    version: integer("version").notNull().default(1),
+
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
 
@@ -114,7 +152,6 @@ export const events = pgTable(
      */
     featured: boolean("featured").notNull().default(false),
 
-    // Must stay NULL for the whole pilot. See the check constraint below.
     capacity: integer("capacity"),
 
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
@@ -210,6 +247,30 @@ export const events = pgTable(
       sql`${t.registrationOpensAt} IS NULL OR ${t.registrationClosesAt} IS NULL
           OR ${t.registrationClosesAt} >= ${t.registrationOpensAt}`,
     ),
+
+    /**
+     * A capacity is a number of places, so zero is not one.
+     *
+     * AGENTS.md §12.3 lists "positive capacity" among the checks; it could not be written while
+     * the pilot guard forced the column to stay NULL, and it matters now that an organizer types
+     * the number into a form. Capacity 0 would read as "unlimited is off, and nobody may enter",
+     * which is what `registration_mode = NONE` already says honestly.
+     */
+    check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
+
+    check("events_version_positive", sql`${t.version} >= 1`),
+
+    /**
+     * A published event has a first-publication date.
+     *
+     * The whole of "PUBLISHED requires both locales complete" cannot be a CHECK — the rows it
+     * would have to read are in another table — so this asserts the half that is honestly
+     * visible from here, and `content/events/service.ts` asserts the rest.
+     */
+    check(
+      "events_published_has_a_publication_date",
+      sql`${t.editorialStatus} <> 'PUBLISHED' OR ${t.publishedAt} IS NOT NULL`,
+    ),
     check("events_race_id_implies_race_kind", sql`${t.raceId} IS NULL OR ${t.kind} = 'RACE'`),
 
     /**
@@ -223,15 +284,21 @@ export const events = pgTable(
     uniqueIndex("events_only_one_featured").on(t.featured).where(sql`${t.featured}`),
 
     index("events_status_starts_at_idx").on(t.eventStatus, t.startsAt),
+    // Every public query filters on publication and orders by the start, now that publication
+    // is a column here rather than on the translation the query joins.
+    index("events_editorial_status_starts_at_idx").on(t.editorialStatus, t.startsAt),
     index("events_kind_starts_at_idx").on(t.kind, t.startsAt),
     index("events_registration_mode_starts_at_idx").on(t.registrationMode, t.startsAt),
   ],
 );
 
 /**
- * Event translations. One row per event per locale, each with its own editorial status so
- * Romanian can be published while English is still a draft (BR-REQ-040-02: no cross-locale
- * fallback — an unpublished locale is a 404, not the other language).
+ * Event translations. One row per event per locale.
+ *
+ * No editorial status here: publication is one state for the whole event (`events`
+ * `editorial_status`, `DECISIONS.md` §28), so both languages go live together and a
+ * half-published event cannot exist. BR-REQ-040-02 still holds — a locale with no translation
+ * row is a 404 in that locale and never a fallback to the other language.
  */
 export const eventTranslations = pgTable(
   "event_translations",
@@ -262,8 +329,6 @@ export const eventTranslations = pgTable(
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
 
-    editorialStatus: editorialStatus("editorial_status").notNull().default("DRAFT"),
-
     // AGENTS.md §12.4. The author is what turns "an Author edits their own drafts"
     // (BR-REQ-051-01 criterion 1) into a rule the server can check rather than a description.
     authorStaffUserId: uuid("author_staff_user_id").references(() => staffUsers.id, {
@@ -272,17 +337,6 @@ export const eventTranslations = pgTable(
     reviewedByStaffUserId: uuid("reviewed_by_staff_user_id").references(() => staffUsers.id, {
       onDelete: "set null",
     }),
-
-    /**
-     * When this locale was first published — and it is never cleared.
-     *
-     * Unpublishing moves `editorial_status` back to DRAFT, which is what every public query
-     * reads, but the timestamp stays. It is the record of "this has been public at least
-     * once", which is what AGENTS.md §11.5 keys slug stability on: a slug is editable before
-     * first publication and stable afterwards, and clearing this on unpublish would hand back
-     * an editable slug for a URL people have already followed and search engines have indexed.
-     */
-    publishedAt: timestamp("published_at", { withTimezone: true }),
 
     /**
      * Optimistic concurrency (AGENTS.md §11.5, BR-REQ-051-01 criterion 5).
@@ -301,6 +355,20 @@ export const eventTranslations = pgTable(
     // Slugs are scoped per locale, so `ro` and `en` may each use "crosul-brasovului".
     unique("event_translations_locale_slug_unique").on(t.locale, t.slug),
     check("event_translations_version_positive", sql`${t.version} >= 1`),
-    index("event_translations_status_idx").on(t.locale, t.editorialStatus),
+
+    /**
+     * The three fields every public page renders, present rather than blank.
+     *
+     * `NOT NULL` alone permits `''`, and a translation whose title is an empty string is what a
+     * half-filled second locale looks like. Publication requires a complete translation in every
+     * locale (`content/events/service.ts#transitionEvent`); this is the part of "complete" a
+     * CHECK can state honestly from inside one row.
+     */
+    check(
+      "event_translations_required_fields_present",
+      sql`length(btrim(${t.title})) > 0
+          AND length(btrim(${t.slug})) > 0
+          AND length(btrim(${t.locationName})) > 0`,
+    ),
   ],
 );

@@ -3,7 +3,11 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
-import { type RegistrationStatus, registrations } from "@/db/schema/registrations";
+import {
+  type RegistrationKind,
+  type RegistrationStatus,
+  registrations,
+} from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 
 /**
@@ -17,6 +21,7 @@ import type { Database } from "@/db/types";
 export type RegistrationListRow = {
   id: string;
   status: RegistrationStatus;
+  kind: RegistrationKind;
   registeredName: string;
   participantEmail: string;
   eventId: string;
@@ -25,19 +30,32 @@ export type RegistrationListRow = {
   confirmedAt: Date | null;
 };
 
+/**
+ * `excludeTest` is what the CSV export sets, and the reason it is a filter here rather than a
+ * column the caller drops.
+ *
+ * The decision (`DECISIONS.md` §30): the export **omits** `TEST` rows rather than labelling
+ * them. A label survives inside this application, where the chip sits next to the row; an
+ * export is a file that leaves it. It is opened in a spreadsheet, sorted, filtered, and printed
+ * at a start line by a volunteer who never saw this screen — and a column they filtered away an
+ * hour ago is not a warning. Every screen inside the backoffice labels them instead, because
+ * there the context travels with the row.
+ */
 export async function listRegistrationsForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
-  filters: { eventId?: string; status?: RegistrationStatus } = {},
+  filters: { eventId?: string; status?: RegistrationStatus; excludeTest?: boolean } = {},
 ): Promise<RegistrationListRow[]> {
   const conditions = [
     filters.eventId ? eq(registrations.eventId, filters.eventId) : undefined,
     filters.status ? eq(registrations.status, filters.status) : undefined,
+    filters.excludeTest ? eq(registrations.kind, "REAL") : undefined,
   ].filter((condition) => condition !== undefined);
 
   return db
     .select({
       id: registrations.id,
       status: registrations.status,
+      kind: registrations.kind,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,
@@ -61,6 +79,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
 export type RegistrationDetail = {
   id: string;
   status: RegistrationStatus;
+  kind: RegistrationKind;
   registeredName: string;
   participantEmail: string;
   eventId: string;
@@ -85,6 +104,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     .select({
       id: registrations.id,
       status: registrations.status,
+      kind: registrations.kind,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,

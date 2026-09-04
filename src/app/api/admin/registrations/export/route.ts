@@ -33,9 +33,16 @@ export async function GET(request: Request): Promise<Response> {
   const eventId = url.searchParams.get("eventId");
   const status = url.searchParams.get("status");
 
+  /**
+   * `TEST` rows are omitted, not labelled (`DECISIONS.md` §30). The export is the club's own
+   * count of who is coming: it leaves this application, is sorted and filtered in a spreadsheet,
+   * and is read at a start line by somebody who never saw the backoffice. A column that says
+   * "test" is one filter away from being gone; a row that is not there cannot be miscounted.
+   */
   const rows = await listRegistrationsForAdmin(getDb(), {
     eventId: eventId || undefined,
     status: isRegistrationStatus(status) ? status : undefined,
+    excludeTest: true,
   });
 
   const csv = buildRegistrationsCsv(

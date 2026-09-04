@@ -117,6 +117,15 @@ export async function ensureDevStaffUser<T extends Record<string, unknown>>(
     return bound;
   }
 
+  /**
+   * `onConflictDoNothing` and a re-read, rather than a bare insert.
+   *
+   * Two browsers signing in as the same synthetic identity in the same instant is not
+   * hypothetical: it is what `yarn test:e2e` does on a freshly reset database, where both
+   * Playwright projects reach this line before either has committed. A unique violation there
+   * is not a bug in anybody's code — it is the second one losing a race it should simply
+   * rejoin.
+   */
   const [created] = await db
     .insert(staffUsers)
     .values({
@@ -126,6 +135,16 @@ export async function ensureDevStaffUser<T extends Record<string, unknown>>(
       role: identity.role,
       firstSignedInAt: now,
     })
+    .onConflictDoNothing()
     .returning();
-  return created;
+  if (created) return created;
+
+  const [raced] = await db
+    .select()
+    .from(staffUsers)
+    .where(eq(staffUsers.email, identity.email))
+    .limit(1);
+  if (raced) return raced;
+
+  throw new DomainError("CONFLICT", `could not sign in as the ${key} development identity`);
 }

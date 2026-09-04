@@ -15,15 +15,28 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
-import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { describeIncompleteLocales } from "@/modules/content/events/service";
+import EventFieldsForm from "@/modules/content/events/ui/EventFieldsForm";
+import { listApprovedVersions } from "@/modules/legal-documents/repository";
+import { areTestRegistrationsAvailable } from "@/modules/registrations/test-registrations";
 import {
   allowedTransitions,
+  canDeleteEvent,
   canEditEventFields,
   canEditTranslation,
+  canManageTestRegistrations,
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { saveEventAction, saveTranslationAction, transitionAction } from "../../actions";
+import {
+  addTestRegistrationsAction,
+  deleteEventAction,
+  duplicateEventAction,
+  removeTestRegistrationsAction,
+  saveEventAction,
+  saveTranslationAction,
+  transitionEventAction,
+} from "../../actions";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -35,9 +48,14 @@ export const dynamic = "force-dynamic";
 /**
  * The one editing screen (BR-REQ-050-01, BR-REQ-051-01).
  *
- * Plain fields, one form per locale, and the event row above them. No rich text: the canonical
- * body is validated Tiptap JSON by AGENTS.md §11.3, and event bodies are plain fields, so an
- * editor for them would be an M5 content type built early and half.
+ * Plain fields: the event row with every column an organizer owns, then one form per language.
+ * No rich text — the canonical body is validated Tiptap JSON by AGENTS.md §11.3, and event
+ * bodies are plain fields, so an editor for them would be an M5 content type built early and
+ * half.
+ *
+ * Publication sits on the event rather than on either language (`DECISIONS.md` §28), so the
+ * workflow buttons are here, once, and the page says plainly when a language is not yet
+ * complete enough to publish.
  *
  * The interface hides what a role may not do, and that is a courtesy rather than the rule —
  * every button here is checked again in the action behind it. An Author sees no publish
@@ -51,11 +69,27 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const staffUser = await requireStaff();
   const { error, saved } = await searchParams;
 
-  const record = await findEventForEditing(getDb(), id);
+  const db = getDb();
+  const record = await findEventForEditing(db, id);
   if (!record) notFound();
   const { event, translations } = record;
 
+  const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
+
+  const transitions = allowedTransitions(
+    staffUser.role,
+    event.editorialStatus,
+    translations.some((translation) => translation.authorStaffUserId === staffUser.id),
+  );
+  const live = isLiveContent(event.editorialStatus);
+  const slugLocked = event.publishedAt !== null;
+  const incomplete = describeIncompleteLocales(translations);
+
+  // Administrator only, and never in production — the second half is the environment, and it is
+  // asserted again in the service and once more at the insert.
+  const mayFillTheQueue =
+    canManageTestRegistrations(staffUser.role) && areTestRegistrationsAvailable();
 
   return (
     <Stack spacing={4}>
@@ -68,71 +102,65 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
       {saved && <Alert severity="success">{t("saved")}</Alert>}
 
-      {/* The event row: the two times, the map link, and whether the site leads with it. */}
+      {/* Publication, for the whole event. */}
+      <Box component="section">
+        <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
+            {t("editor.publicationSection")}
+          </Typography>
+          <Chip size="small" label={t(`status.${event.editorialStatus}`)} />
+          <Chip size="small" variant="outlined" label={t("editor.version", { version: event.version })} />
+        </Stack>
+
+        {live && <Alert severity="warning" sx={{ mb: 2 }}>{t("editor.liveWarning")}</Alert>}
+
+        {incomplete.length > 0 && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            {t("editor.incompleteForPublication", {
+              detail: incomplete
+                .map((entry) => `${entry.locale.toUpperCase()}: ${entry.missing.join(", ")}`)
+                .join(" · "),
+            })}
+          </Alert>
+        )}
+
+        {transitions.length > 0 ? (
+          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+            {transitions.map((to) => (
+              <form action={transitionEventAction} key={to}>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="eventId" value={event.id} />
+                <input type="hidden" name="expectedVersion" value={event.version} />
+                <input type="hidden" name="to" value={to} />
+                <Button type="submit" size="small" variant="outlined">
+                  {t(`transition.${to}`)}
+                </Button>
+              </form>
+            ))}
+          </Stack>
+        ) : (
+          <Alert severity="info">{t("editor.noTransitions")}</Alert>
+        )}
+      </Box>
+
+      {/* The event row: every column an organizer owns. */}
       <Box component="section">
         <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
           {t("editor.eventSection")}
         </Typography>
 
         {canEditEventFields(staffUser.role) ? (
+          // A plain form around the Stack: `<Stack component="form" action={...}>` crashes in
+          // MUI 9.
           <form action={saveEventAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="eventId" value={event.id} />
+            {/* The version this form was rendered from. A save carrying a stale one is a
+                conflict, not an overwrite (BR-REQ-051-01 criterion 5). */}
+            <input type="hidden" name="expectedVersion" value={event.version} />
 
             <Stack spacing={2}>
-              <TextField
-                name="startsAtWallTime"
-                type="datetime-local"
-                label={t("editor.startsAt")}
-                helperText={t("editor.startsAtHelp", { timezone: event.timezone })}
-                defaultValue={toWallTimeInput(event.startsAt, event.timezone)}
-                slotProps={{ inputLabel: { shrink: true } }}
-                required
-              />
-              <TextField
-                name="raceStartsAtWallTime"
-                type="datetime-local"
-                label={t("editor.raceStartsAt")}
-                helperText={t("editor.raceStartsAtHelp")}
-                defaultValue={toWallTimeInput(event.raceStartsAt, event.timezone)}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField
-                  name="latitude"
-                  label={t("editor.latitude")}
-                  defaultValue={event.latitude ?? ""}
-                  inputMode="decimal"
-                  sx={{ flex: 1 }}
-                />
-                <TextField
-                  name="longitude"
-                  label={t("editor.longitude")}
-                  defaultValue={event.longitude ?? ""}
-                  inputMode="decimal"
-                  sx={{ flex: 1 }}
-                />
-              </Stack>
-              <Typography variant="body2" color="text.secondary">
-                {t("editor.coordinatesHelp")}
-              </Typography>
-
-              <TextField
-                name="mapUrl"
-                type="url"
-                label={t("editor.mapUrl")}
-                helperText={t("editor.mapUrlHelp")}
-                defaultValue={event.mapUrl ?? ""}
-                inputMode="url"
-              />
-              <FormControlLabel
-                control={<Checkbox name="featured" defaultChecked={event.featured} />}
-                label={t("editor.featured")}
-              />
-              <Typography variant="body2" color="text.secondary">
-                {t("editor.featuredHelp")}
-              </Typography>
-
+              <EventFieldsForm event={event} declarations={declarations} />
               <Box>
                 <Button type="submit" variant="contained">
                   {t("editor.saveEvent")}
@@ -145,22 +173,55 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         )}
       </Box>
 
+      {mayFillTheQueue && (
+        <Box component="section">
+          <Divider sx={{ mb: 3 }} />
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("testRegistrations.title")}
+          </Typography>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            {t("testRegistrations.explanation")}
+          </Alert>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: "flex-start" }}>
+            <form action={addTestRegistrationsAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={event.id} />
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <TextField
+                  name="count"
+                  label={t("testRegistrations.count")}
+                  defaultValue="3"
+                  inputMode="numeric"
+                  size="small"
+                  sx={{ width: 120 }}
+                />
+                <Button type="submit" variant="outlined" size="small">
+                  {t("testRegistrations.add")}
+                </Button>
+              </Stack>
+            </form>
+
+            <form action={removeTestRegistrationsAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={event.id} />
+              <Button type="submit" variant="outlined" size="small" color="warning">
+                {t("testRegistrations.remove")}
+              </Button>
+            </form>
+          </Stack>
+        </Box>
+      )}
+
       {translations.map((translation) => {
         const mayEdit = canEditTranslation(
           staffUser.role,
           {
-            editorialStatus: translation.editorialStatus,
+            editorialStatus: event.editorialStatus,
             authorStaffUserId: translation.authorStaffUserId,
           },
           staffUser.id,
         );
-        const transitions = allowedTransitions(
-          staffUser.role,
-          translation.editorialStatus,
-          translation.authorStaffUserId === staffUser.id,
-        );
-        const live = isLiveContent(translation.editorialStatus);
-        const slugLocked = translation.publishedAt !== null;
 
         return (
           // Each locale is a named region, so a screen reader — and an end-to-end test —
@@ -180,7 +241,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               >
                 {t("editor.translationSection", { locale: translation.locale.toUpperCase() })}
               </Typography>
-              <Chip size="small" label={t(`status.${translation.editorialStatus}`)} />
               <Chip
                 size="small"
                 variant="outlined"
@@ -197,20 +257,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               </Link>
             </Typography>
 
-            {/* BR-REQ-051-01 criterion 4: warn before a save that changes live content. */}
-            {live && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
-                {t("editor.liveWarning")}
-              </Alert>
-            )}
-
             {mayEdit ? (
               <form action={saveTranslationAction}>
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 <input type="hidden" name="translationId" value={translation.id} />
-                {/* The version this form was rendered from. A save carrying a stale one is a
-                    conflict, not an overwrite (BR-REQ-051-01 criterion 5). */}
                 <input type="hidden" name="expectedVersion" value={translation.version} />
                 {/* A locked slug is not sent by the disabled field, so it is sent here. */}
                 {slugLocked && <input type="hidden" name="slug" value={translation.slug} />}
@@ -272,6 +323,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     minRows={2}
                   />
 
+                  {/* BR-REQ-051-01 criterion 4: warn before a save that changes live content. */}
                   {live && (
                     <FormControlLabel
                       control={<Checkbox name="acknowledgeLiveEdit" />}
@@ -289,26 +341,41 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             ) : (
               <Alert severity="info">{t("editor.translationReadOnly")}</Alert>
             )}
-
-            {transitions.length > 0 && (
-              <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}>
-                {transitions.map((to) => (
-                  <form action={transitionAction} key={to}>
-                    <input type="hidden" name="uiLocale" value={locale} />
-                    <input type="hidden" name="eventId" value={event.id} />
-                    <input type="hidden" name="translationId" value={translation.id} />
-                    <input type="hidden" name="expectedVersion" value={translation.version} />
-                    <input type="hidden" name="to" value={to} />
-                    <Button type="submit" size="small" variant="outlined">
-                      {t(`transition.${to}`)}
-                    </Button>
-                  </form>
-                ))}
-              </Stack>
-            )}
           </Box>
         );
       })}
+
+      <Box component="section">
+        <Divider sx={{ mb: 3 }} />
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
+          {t("editor.copySection")}
+        </Typography>
+
+        <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 1 }}>
+          <form action={duplicateEventAction}>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="eventId" value={event.id} />
+            <Button type="submit" variant="outlined" size="small">
+              {t("editor.duplicate")}
+            </Button>
+          </form>
+
+          {/* Deletion is the Administrator's alone, and the service refuses any event that has
+              a registration against it — archive is the answer for an event that happened. */}
+          {canDeleteEvent(staffUser.role) && (
+            <form action={deleteEventAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={event.id} />
+              <Button type="submit" variant="outlined" size="small" color="error">
+                {t("editor.delete")}
+              </Button>
+            </form>
+          )}
+        </Stack>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {t("editor.deleteHelp")}
+        </Typography>
+      </Box>
     </Stack>
   );
 }

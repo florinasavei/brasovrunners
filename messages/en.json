@@ -103,12 +103,14 @@
         "CONFIRMED": "Confirmed",
         "CANCELLED": "Cancelled",
         "EXPIRED": "Expired"
-      }
+      },
+      "testKind": "Test"
     },
     "events": {
       "empty": "There is no event in the database.",
       "featured": "Featured",
-      "preview": "Preview"
+      "preview": "Preview",
+      "new": "New event"
     },
     "status": {
       "DRAFT": "Draft",
@@ -147,9 +149,9 @@
       "saveEvent": "Save the event details",
       "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
       "translationSection": "Content ({locale})",
-      "translationReadOnly": "You cannot edit this text: it is either published or written by another author.",
+      "translationReadOnly": "You cannot edit this text: the event is published, or the text was written by another author.",
       "version": "version {version}",
-      "liveWarning": "This text is published. Your changes become public the moment you save.",
+      "liveWarning": "This event is published. Your changes become public the moment you save.",
       "acknowledgeLive": "I understand that I am editing published content.",
       "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
@@ -168,7 +170,42 @@
       },
       "latitude": "Latitude",
       "longitude": "Longitude",
-      "coordinatesHelp": "The exact start point, in decimal degrees — for example 45.6427 and 25.5887. Right-click the spot on a map to copy them. A park name is not a start line."
+      "coordinatesHelp": "The exact start point, in decimal degrees — for example 45.6427 and 25.5887. Right-click the spot on a map to copy them. A park name is not a start line.",
+      "publicationSection": "Publication",
+      "noTransitions": "Your role cannot move this event from its current state.",
+      "incompleteForPublication": "Both languages must be complete before this event can be published. Missing: {detail}.",
+      "newTitle": "New event",
+      "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
+      "create": "Create the event",
+      "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
+      "kind": "Kind",
+      "eventStatus": "Event status",
+      "timezone": "Time zone",
+      "timezoneHelp": "The zone the times below are typed in, e.g. Europe/Bucharest.",
+      "endsAt": "Event end",
+      "endsAtHelp": "Optional. Leave empty when the club has stated only a start.",
+      "distanceMeters": "Distance",
+      "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
+      "elevationGainMeters": "Elevation gain (m)",
+      "registrationSection": "Registration",
+      "registrationMode": "Registration mode",
+      "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
+      "capacity": "Capacity",
+      "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
+      "registrationOpensAt": "Registration opens",
+      "registrationClosesAt": "Registration closes",
+      "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
+      "declarationDocument": "Declaration a participant signs",
+      "declarationDocumentHelp": "Chosen from the approved versions. This text is never edited here — a new version arrives through a migration.",
+      "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
+      "declarationUnset": "None",
+      "externalProvider": "External organiser",
+      "externalRegistrationUrl": "External registration link",
+      "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
+      "copySection": "Copy and removal",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -178,7 +215,8 @@
       "title": "Staff sign-in",
       "unavailable": "Staff sign-in is not available in this environment yet.",
       "developmentOnly": "Development identities, on a local machine and in tests only. These are not real people.",
-      "withZitadel": "Sign in with Zitadel"
+      "withZitadel": "Sign in with Zitadel",
+      "footerLink": "Staff"
     },
     "staff": {
       "title": "Staff",
@@ -193,6 +231,23 @@
       "you": "You",
       "changeRole": "Change role",
       "revoke": "Revoke access"
+    },
+    "eventStatus": {
+      "SCHEDULED": "Scheduled",
+      "CANCELLED": "Cancelled",
+      "COMPLETED": "Completed"
+    },
+    "registrationMode": {
+      "NONE": "No registration",
+      "INTERNAL": "Registration here",
+      "EXTERNAL": "Registration elsewhere"
+    },
+    "testRegistrations": {
+      "title": "Test registrations",
+      "explanation": "Synthetic participants on reserved @test.invalid addresses, which can never receive mail. They go through the ordinary submission and confirmation path, so they occupy places and fill the waiting list exactly as real people do — and they are left out of the CSV export and labelled everywhere they are listed. Not available in production.",
+      "count": "How many",
+      "add": "Add test registrations",
+      "remove": "Remove all test registrations"
     }
   },
   "NotFound": {

@@ -39,9 +39,22 @@ describe("BR-REQ-034-01 capacity is a real, internal-only value", () => {
     expect(row.capacity).toBeNull();
   });
 
-  it.each([0, 1, 30, 1000])("accepts and stores capacity %i on an internal event", async (capacity) => {
+  it.each([1, 30, 1000])("accepts and stores capacity %i on an internal event", async (capacity) => {
     const [row] = await db.insert(events).values({ ...internalEvent, capacity }).returning();
     expect(row.capacity).toBe(capacity);
+  });
+
+  /**
+   * AGENTS.md §12.3 lists "positive capacity" among the checks, and it could not be written
+   * while the pilot guard forced the column to stay NULL. It matters now that an organizer
+   * types the number into a form: capacity 0 would read as "unlimited is off, and nobody may
+   * enter", which is what `registration_mode = NONE` already says honestly.
+   */
+  it.each([0, -1])("refuses capacity %i, which is not a number of places", async (capacity) => {
+    await expectViolation(db.insert(events).values({ ...internalEvent, capacity }), {
+      code: SQLSTATE.CHECK_VIOLATION,
+      constraint: "events_capacity_positive",
+    });
   });
 
   it("accepts a capacity added by a later update, not only at insert", async () => {

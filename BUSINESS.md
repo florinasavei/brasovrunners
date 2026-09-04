@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -186,11 +186,20 @@ race only groups.
 
 ### BR-BUS-020 — Event publication
 
-An event is public only when its content for that language is published.
+An event is published or it is not, and both languages go live together. Publishing is a decision
+about the event, not about a language: the club advertises a race, not a Romanian race and an
+English one.
 
-Romanian and English may be published independently. An unavailable English translation must not display Romanian text as if it were English.
+Publishing is refused while either language is incomplete, and the interface says which language
+and which fields. That is the same rule the club would apply by hand — a page that reads as
+half-translated in one language is worse than a page that is not there yet.
 
-Cancelled events remain visible with a clear cancelled status when that information is still useful to visitors.
+An event that has no translation in a language simply does not exist in that language: the page
+is not found, the listing does not carry it, and the sitemap does not list it. It must never
+display the other language's text as if it were a translation.
+
+Cancelled events remain visible with a clear cancelled status when that information is still
+useful to visitors.
 
 ### BR-BUS-030 — Registration modes
 
@@ -421,9 +430,12 @@ Legal documents — the privacy notice, the terms, and the event declaration —
 content. No staff role edits them here in any form; new versions are loaded by the maintainer
 following a written procedure, and the backoffice may only show them.
 
-The event half of this is built and in use: an organizer edits a race, marks it as featured,
-previews it and publishes it, per language, without a developer. Articles, static pages,
-galleries and the media library are not built yet.
+The event half of this is built and in use, and it is now the whole of an event: an organizer
+creates a race, sets its times, its place, its distance and whether it takes entries at all,
+duplicates last year's to make this year's, previews it, publishes it, archives it when it is
+over, and deletes one made by mistake — without a developer. Deleting is refused for an event
+anybody has registered for; archiving is the answer there. Articles, static pages, galleries and
+the media library are not built yet.
 
 ### BR-BUS-051 — Editorial workflow
 
@@ -431,8 +443,11 @@ Editorial statuses are:
 
 - **Draft:** work in progress and not public.
 - **In review:** submitted by an author for an editor.
-- **Published:** visible publicly in that language.
+- **Published:** visible publicly, in every language the item has.
 - **Archived:** no longer active and not public.
+
+The status belongs to the event, not to one of its languages: publishing puts Romanian and
+English live in the same moment, and unpublishing takes both down.
 
 An author creates and updates drafts and submits them for review. An editor or administrator decides what is published.
 
@@ -471,13 +486,20 @@ Each legal or declaration document has a version and effective date. A registrat
 
 Changing a declaration creates a new version. It does not rewrite the historical record of people who accepted an earlier version.
 
+Until the club approves its own wording, every environment except production carries a clearly
+marked **sample** privacy notice, terms and declaration: complete in structure so the club or its
+lawyer can edit a concrete draft rather than face a blank page, and blank in substance so nothing
+in them can be mistaken for a decision the club made. Each one says so at the top of its own
+page, in both languages. Production carries none, and registration there correctly refuses
+everyone until the approved text is loaded.
+
 ### BR-BUS-060 — Staff roles and least privilege
 
 | Staff role | Main purpose |
 | --- | --- |
 | Author | Write and translate drafts |
-| Editor | Review and publish content; manage event content |
-| Admin | Manage participants, waiting lists, declarations, roles, exports, profiles, and operations |
+| Editor | Review and publish content; create, configure and duplicate events |
+| Admin | Everything an editor may, plus participants, waiting lists, declarations, roles, exports, profiles, operations, and deleting an event |
 
 Only an administrator manages the staff list: they add a colleague by email address and role,
 change a role, and revoke access. Adding someone does not send them anything yet — the platform
@@ -489,6 +511,12 @@ never be left without an administrator: those refusals exist so the club cannot 
 of its own backoffice.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
+
+An administrator can also fill an event's queue with clearly labelled **test registrations**, so
+the waiting list can be watched working without ten real mailboxes, and remove them again so the
+demonstration is repeatable. They behave exactly like real entries — they take places and are
+promoted in turn — and they are left out of every count the club is given. They cannot be created
+in production at all, and the addresses behind them can never receive mail.
 
 ### BR-BUS-070 — Participant privacy
 
