@@ -6,11 +6,13 @@ import { createCaptureAdapter } from "@/infrastructure/email/capture-adapter";
 import { createEmailSender, type EmailSender } from "@/infrastructure/email/delivery";
 import { MAX_SEND_ATTEMPTS } from "@/modules/notifications/domain/retry";
 import {
+  applyMailgunEvent,
   claimOutboxBatch,
   enqueueEmail,
   type OutboxRow,
   processOutboxBatch,
 } from "@/modules/notifications/outbox";
+import { eq } from "drizzle-orm";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -26,7 +28,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const NOW = new Date("2026-09-03T10:00:00.000Z");
 
 /** Stands in for BR-REQ-080-01's templates, which do not exist and must not be invented. */
-function render(row: OutboxRow): OutgoingEmail {
+async function render(row: OutboxRow): Promise<OutgoingEmail> {
   return {
     to: row.recipientEmail,
     subject: `test-${row.messageType}`,
@@ -418,6 +420,64 @@ describe("BR-REQ-080-02 transactional outbox", () => {
       expect(afterTimeout).toHaveLength(1);
       // The stranded attempt still counted, so a message that kills its worker cannot loop.
       expect(afterTimeout[0].attemptCount).toBe(2);
+    });
+  });
+
+  describe("AGENTS.md §16.5 Mailgun delivery webhook", () => {
+    async function queueSent(providerMessageId: string) {
+      const row = await queueOne({ idempotencyKey: `provider:${providerMessageId}` });
+      await db
+        .update(emailOutbox)
+        .set({ status: "SENT", sentAt: NOW, providerMessageId })
+        .where(eq(emailOutbox.id, row!.id));
+      return row!.id;
+    }
+
+    it("marks the row COMPLAINED on a complaint event", async () => {
+      const id = await queueSent("mailgun-msg-1");
+      await applyMailgunEvent(db, { providerMessageId: "mailgun-msg-1", event: "complained", reason: null });
+
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, id));
+      expect(row.status).toBe("COMPLAINED");
+    });
+
+    it("marks the row BOUNCED on a permanent failure, with the sanitized reason recorded", async () => {
+      const id = await queueSent("mailgun-msg-2");
+      await applyMailgunEvent(db, {
+        providerMessageId: "mailgun-msg-2",
+        event: "permanent_fail",
+        reason: "mailbox does not exist",
+      });
+
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, id));
+      expect(row.status).toBe("BOUNCED");
+      expect(row.lastError).toBe("mailbox does not exist");
+    });
+
+    it("leaves the row untouched for delivery/engagement events this schema does not track", async () => {
+      const id = await queueSent("mailgun-msg-3");
+
+      for (const event of ["delivered", "opened", "clicked", "unsubscribed", "temporary_fail"] as const) {
+        await applyMailgunEvent(db, { providerMessageId: "mailgun-msg-3", event, reason: null });
+      }
+
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, id));
+      expect(row.status).toBe("SENT");
+    });
+
+    it("is idempotent: the same event applied twice leaves the same terminal state", async () => {
+      const id = await queueSent("mailgun-msg-4");
+      await applyMailgunEvent(db, { providerMessageId: "mailgun-msg-4", event: "permanent_fail", reason: "bounce" });
+      await applyMailgunEvent(db, { providerMessageId: "mailgun-msg-4", event: "permanent_fail", reason: "bounce" });
+
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, id));
+      expect(row.status).toBe("BOUNCED");
+    });
+
+    it("does nothing for an unknown provider message id", async () => {
+      await expect(
+        applyMailgunEvent(db, { providerMessageId: "no-such-id", event: "complained", reason: null }),
+      ).resolves.toBeUndefined();
     });
   });
 });

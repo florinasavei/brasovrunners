@@ -1,0 +1,1 @@
+ALTER TABLE "events" DROP CONSTRAINT "events_capacity_must_be_null_during_pilot";

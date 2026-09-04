@@ -13,6 +13,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { locale } from "./locale";
 import { participants } from "./participants";
+import { registrations } from "./registrations";
+import { staffUsers } from "./staff-users";
 
 /** The ten message types of AGENTS.md §16.3. No message may be sent that is not one of them. */
 export const emailMessageType = pgEnum("email_message_type", [
@@ -67,8 +69,9 @@ export const emailOutbox = pgTable(
     participantId: uuid("participant_id").references(() => participants.id, {
       onDelete: "cascade",
     }),
-    // No foreign key until `registrations` exists; see the same note on email_action_tokens.
-    registrationId: uuid("registration_id"),
+    registrationId: uuid("registration_id").references(() => registrations.id, {
+      onDelete: "cascade",
+    }),
 
     messageType: emailMessageType("message_type").notNull(),
     locale: locale("locale").notNull(),
@@ -81,9 +84,10 @@ export const emailOutbox = pgTable(
 
     idempotencyKey: text("idempotency_key").notNull().unique(),
 
-    // Populated when a staff member asked for this message (§12.11). No foreign key until
-    // `staff_users` exists.
-    requestedByStaffUserId: uuid("requested_by_staff_user_id"),
+    // Populated when a staff member asked for this message (§12.11).
+    requestedByStaffUserId: uuid("requested_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
     isManualResend: boolean("is_manual_resend").notNull().default(false),
 
     status: emailOutboxStatus("status").notNull().default("PENDING"),
@@ -101,11 +105,19 @@ export const emailOutbox = pgTable(
   (t) => [
     check("email_outbox_attempt_count_non_negative", sql`${t.attemptCount} >= 0`),
 
-    // `sent_at` is the answer to "when did this leave"; a row that claims a time without the
-    // status, or the status without a time, would make the backoffice history a guess.
+    /**
+     * `sent_at` is the answer to "when did this leave", and it is set at most once, by
+     * `processOutboxBatch` — never cleared afterward, the same discipline
+     * `event_translations.published_at` follows. A row cannot claim SENT without a time,
+     * and cannot claim it while still pending or exhausted (`PENDING`/`PROCESSING`/`FAILED`
+     * never sent anything). `BOUNCED`/`COMPLAINED` are the one case that goes either way
+     * (AGENTS.md §16.5): a message the provider rejected outright never has one, and a
+     * message a webhook reports as bounced *after* delivery keeps the one it already had.
+     */
     check(
       "email_outbox_sent_at_matches_status",
-      sql`(${t.status} = 'SENT') = (${t.sentAt} IS NOT NULL)`,
+      sql`(${t.status} <> 'SENT' OR ${t.sentAt} IS NOT NULL)
+          AND (${t.status} NOT IN ('PENDING', 'PROCESSING', 'FAILED') OR ${t.sentAt} IS NULL)`,
     ),
 
     // AGENTS.md §12.11 names both indexes: the worker's claim query and the per-registration

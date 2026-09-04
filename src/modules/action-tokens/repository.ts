@@ -26,10 +26,12 @@ import {
  * `now` is always a parameter and never `new Date()` inside a rule. Expiry is a business
  * deadline (`docs/PRACTICES.md`: time-dependent logic takes an injected clock), and a test
  * that has to sleep to observe expiry is a test nobody runs.
+ *
+ * Every function is generic over the caller's schema, like `modules/content/events/repository.ts`:
+ * `notifications/render.ts` issues a token from inside the outbox's own transaction, which has
+ * no reason to know this module's schema shape ahead of time, and a fixed one here would not
+ * structurally match a caller's differently-scoped fixed schema.
  */
-
-type Schema = { emailActionTokens: typeof emailActionTokens };
-type Db = Database<Schema>;
 
 /** What a caller may see about a token. Never the hash, and never the secret. */
 export type ActionTokenContext = {
@@ -85,8 +87,8 @@ const CONTEXT_COLUMNS = {
  * If the two ever drift, the insert below fails loudly rather than leaving a second live
  * token behind.
  */
-export async function issueActionToken(
-  db: Db,
+export async function issueActionToken<T extends Record<string, unknown>>(
+  db: Database<T>,
   params: {
     participantId: string;
     registrationId: string | null;
@@ -166,8 +168,8 @@ export async function issueActionToken(
  * rate-limited validation attempts. The token space is not guessable, but an unbounded
  * endpoint that hashes and queries per request is still a free amplifier.
  */
-export async function readActionTokenContext(
-  db: Db,
+export async function readActionTokenContext<T extends Record<string, unknown>>(
+  db: Database<T>,
   params: { secret: string; purpose: EmailActionTokenPurpose; now: Date },
 ): Promise<ActionTokenResult> {
   const { secret, purpose, now } = params;
@@ -221,8 +223,8 @@ export async function readActionTokenContext(
  * The classification query afterwards runs only when nothing was updated. It exists to give
  * the log a reason; the caller still shows the participant one generic message (§13.2).
  */
-export async function consumeActionToken(
-  db: Db,
+export async function consumeActionToken<T extends Record<string, unknown>>(
+  db: Database<T>,
   params: { secret: string; purpose: EmailActionTokenPurpose; now: Date },
 ): Promise<ActionTokenResult> {
   const { secret, purpose, now } = params;

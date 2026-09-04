@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.15-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.16-2026-09-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -313,7 +313,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 | Validation | Zod at application boundaries |
 | ORM | Drizzle ORM |
 | Database | PostgreSQL; Neon for QA/production |
-| Staff authentication | Auth.js alone, `staff_users` as the server-side allowlist; no external identity provider (§13.1) |
+| Staff authentication | Auth.js with the Zitadel OAuth provider; `staff_users` is the server-side allowlist — an unknown Zitadel account is refused (§13.1, `DECISIONS.md` §26) |
 | Participant access | Hashed, expiring, purpose-scoped email action tokens |
 | Email | Mailgun behind adapter and PostgreSQL outbox |
 | Storage | Cloudflare R2 behind adapter |
@@ -373,7 +373,7 @@ Public pages must look like a local running community, not a default MUI dashboa
               Mailgun QA                  Mailgun PROD
 ```
 
-Staff authentication runs inside the application (Auth.js, no external provider) and is used only by staff. Public participant actions are handled by this application's email-token boundary.
+Staff authentication runs through Auth.js and the Zitadel OAuth provider and is used only by staff; `staff_users` remains the server-side allowlist. Public participant actions are handled by this application's email-token boundary.
 
 Local and test use local/disposable infrastructure and fake/capture adapters.
 
@@ -621,13 +621,13 @@ type AppEnvironment = "local" | "test" | "qa" | "production";
 | --- | --- | --- | --- | --- | --- |
 | local | Local PostgreSQL | Development switcher | Capture | Local/fake | Synthetic |
 | test | Disposable PostgreSQL | Development switcher | Capture | Fake | Disposable |
-| qa | Dedicated Neon | Auth.js; disabled until the sign-in method ships | Capture/allowlist | Dedicated R2 | Persistent synthetic |
-| production | Dedicated Neon | Auth.js; disabled until the sign-in method ships | Live | Dedicated R2 | Authorized real |
+| qa | Dedicated Neon | Auth.js + Zitadel, once the tenant exists; `disabled` until then | Capture/allowlist | Dedicated R2 | Persistent synthetic |
+| production | Dedicated Neon | Auth.js + Zitadel, once the tenant exists; `disabled` until then | Live | Dedicated R2 | Authorized real |
 
 ### 7.2 Provider modes
 
 ```ts
-type StaffAuthMode = "dev-switcher" | "disabled";
+type StaffAuthMode = "dev-switcher" | "provider" | "disabled";
 type EmailDeliveryMode = "capture" | "allowlist" | "live";
 type StorageMode = "local" | "fake" | "r2";
 ```
@@ -638,8 +638,8 @@ Required combinations:
 | --- | --- | --- | --- |
 | local | dev-switcher | capture | local |
 | test | dev-switcher | capture | fake |
-| qa | disabled until sign-in ships | capture or allowlist | r2 |
-| production | disabled until sign-in ships | live | r2 |
+| qa | provider (Zitadel), once the tenant exists; disabled until then | capture or allowlist | r2 |
+| production | provider (Zitadel), once the tenant exists; disabled until then | live | r2 |
 
 Startup rejects unsafe combinations.
 
@@ -777,10 +777,11 @@ Rules:
   the provider is a deployment decision rather than a code one — which is what keeps the
   hostname out of `src/`. Unset, the meeting point renders as text with no link: a missing map
   is a missing convenience, and a guessed one sends runners somewhere else;
-- `STAFF_AUTH_MODE` is `dev-switcher` or `disabled`. Unset, it derives: the switcher in local
-  and test, nothing anywhere else. Stating `dev-switcher` outside local or test fails at
-  startup, for the same reason live email does — a permissive deployment is noticed after
-  someone has used it, and a process that will not boot is noticed in seconds.
+- `STAFF_AUTH_MODE` is `dev-switcher`, `provider`, or `disabled`. Unset, it derives: the
+  switcher in local and test, `disabled` everywhere else. Stating `dev-switcher` outside local
+  or test fails at startup, for the same reason live email does — a permissive deployment is
+  noticed after someone has used it, and a process that will not boot is noticed in seconds.
+  `provider` requires `AUTH_SECRET` and the Zitadel variables (§13.1, `DECISIONS.md` §26).
 
 Business timing defaults belong in typed config/constants with tests:
 
@@ -1259,7 +1260,7 @@ Use PostgreSQL UUID primary keys unless accepted repository convention differs. 
 ```text
 staff_users
 - id uuid PK
-- auth_subject text UNIQUE null      -- the provider's immutable subject; null until first sign-in
+- zitadel_subject text UNIQUE null   -- Zitadel's immutable subject claim; null until first sign-in
 - email text UNIQUE NOT NULL         -- lowercased; the allowlist key
 - display_name text NOT NULL
 - preferred_locale ro|en NOT NULL DEFAULT ro
@@ -1275,11 +1276,12 @@ Checks:
 - `email = lower(email)`;
 - a subject and a first sign-in are present together or not at all.
 
-No passwords/provider tokens.
+No passwords/provider tokens — Zitadel holds credentials, this table holds only the subject
+claim it issues once someone signs in.
 
-The column is `auth_subject`, not a provider name: staff authentication is Auth.js alone with
-this table as the server-side allowlist, and no external identity provider (§13.1,
-`DECISIONS.md` §24).
+The column is `zitadel_subject`: staff authentication is Auth.js with the Zitadel OAuth
+provider, and this table is the server-side allowlist regardless of what Zitadel asserts
+(§13.1, `DECISIONS.md` §26).
 
 The row is the invitation. An Administrator adds a colleague by email and role before that
 person has ever signed in; the first sign-in binds the provider's subject to the waiting row.
@@ -1688,20 +1690,21 @@ Do not add participant auth/password/account-provider tables, questions, medical
 
 ### 13.1 Staff authentication
 
-Use Auth.js, with `staff_users` as the server-side allowlist. **No external identity
-provider.** The Zitadel provider that earlier baselines named was dropped before any of it was
-built: a club of volunteers would be operating an identity platform for at most a handful of
-staff accounts, and the column that would have encoded it is now `auth_subject` (§12.1,
-`DECISIONS.md` §24). Do not hand-roll OIDC, token exchange, session or logout.
+Use Auth.js, with the Zitadel OAuth provider and `staff_users` as the server-side allowlist
+(`DECISIONS.md` §26 — this reverses §24, which was never shipped to anyone). An unknown
+Zitadel account is refused before a session is ever issued, whatever token it presents: the
+allowlist is asserted in the `signIn` callback, not merely in what the interface renders. Do
+not hand-roll OIDC, token exchange, session or logout — Auth.js does all three.
 
 Verify the installed and current official documentation for callback paths, environment
-variable names, session strategy, logout and claims before writing any of it.
+variable names, session strategy, logout and claims before writing any of it. Both sign-in
+methods a volunteer might use (password, passwordless) are configured in Zitadel's own login
+policy, never in this application.
 
-The sign-in method itself is not built yet, and the reason is the same one registration waits
-on: the only method that suits volunteers with no passwords is an emailed link, and delivery to
-a real person needs the club's sending domain. Until then `STAFF_AUTH_MODE=disabled` is the
-honest state of qa and production: every guarded call asks who is signing the request and gets
-nobody, so the backoffice answers 404 rather than being hidden.
+`STAFF_AUTH_MODE=provider` is the real thing; `disabled` is the safe default for an environment
+nobody has turned it on for yet — every guarded call asks who is signing the request and gets
+nobody, so the backoffice answers 404 rather than being hidden. Standing up the Zitadel tenant
+itself is an account-creation task (`SETUP.md`), not application code.
 
 Local/test may provide a development-only seeded staff switcher:
 
@@ -1710,10 +1713,10 @@ Local/test may provide a development-only seeded staff switcher:
 - synthetic identities, marked as such in the data;
 - same authorization helpers as the real thing.
 
-After provider login:
+After Zitadel sign-in:
 
-1. read the immutable subject claim;
-2. require a verified email when the provider supplies one;
+1. read the immutable subject claim (`account.providerAccountId`);
+2. require a verified email (`profile.email_verified`);
 3. find the `staff_users` row by subject, or by the invited email address on a first sign-in,
    and bind the subject to it. Never create a row for an address nobody invited;
 4. update safe email/display name;

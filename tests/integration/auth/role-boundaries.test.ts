@@ -118,7 +118,7 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
       expect(invited.displayName).toBe("Ana");
       expect(invited.role).toBe("EDITOR");
       // No provider subject until they actually sign in — and no password, ever.
-      expect(invited.authSubject).toBeNull();
+      expect(invited.zitadelSubject).toBeNull();
       expect(invited.firstSignedInAt).toBeNull();
       expect(Object.keys(invited)).not.toContain("password");
     });
@@ -273,7 +273,7 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
       expect(second.id).toBe(first.id);
       expect(first.role).toBe("EDITOR");
       // Marked as synthetic in the data itself, not only in a comment.
-      expect(first.authSubject?.startsWith("dev:")).toBe(true);
+      expect(first.zitadelSubject?.startsWith("dev:")).toBe(true);
     });
 
     it("offers one identity per role, and no more", async () => {

@@ -2,12 +2,13 @@
 
 # Runbooks
 
-**Baseline `BR-V1.15-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.16-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
 | --- | --- |
 | [Repository bootstrap](#repository-bootstrap) | Once, at the first push |
+| [Staff sign-in: Zitadel tenant](#staff-sign-in-zitadel-tenant) | Once per environment, before that environment's staff can sign in for real |
 | [Domain binding](#domain-binding) | Once, at the end of M1 before launch |
 | [Legal document version](#legal-document-version) | Whenever an approved privacy, terms, or declaration version changes |
 
@@ -121,6 +122,46 @@ maintainer's own branches and credentials.
 - No `yarn.lock`. There are no dependencies yet.
 - No secrets, no `.env`. `.env.example` arrives with PR 1.
 - No pinned action SHAs in the workflow. Pin them in PR 1 per `SETUP.md` §5 once verified.
+
+
+---
+
+## Staff sign-in: Zitadel tenant
+
+Run once per environment (qa, production), before that environment's `STAFF_AUTH_MODE` is set
+to `provider`. Nothing here touches application code — `DECISIONS.md` §26 and `AGENTS.md`
+§13.1 are the reasoning; this is the account-creation checklist that follows from them.
+
+### Prerequisites
+
+- [ ] A Zitadel tenant (organization) owned by the club's account, not a personal one.
+- [ ] Two recovery-capable owners have access to it.
+
+### Steps
+
+- [ ] Create one Zitadel application per environment (qa, production) — never share one
+      application's credentials across environments, the same reasoning `AGENTS.md` §7.3 gives
+      for separate Vercel projects.
+- [ ] Verify the current Auth.js documentation for the exact redirect/callback URL shape it
+      expects before configuring it in Zitadel — do not assume last year's path.
+- [ ] Set the redirect and post-logout URLs from that environment's `APP_BASE_URL`.
+- [ ] Enable whichever sign-in methods the club wants (password, passwordless) in Zitadel's own
+      login policy. This application does not choose between them.
+- [ ] Invite each staff member in the backoffice first (`/admin/staff`, an Administrator, by
+      email and role) — the row is the allowlist entry, and a Zitadel account for an address
+      nobody invited is refused however valid its token is.
+- [ ] Set `AUTH_SECRET` (a fresh random value, not shared across environments),
+      `AUTH_ZITADEL_ID`, `AUTH_ZITADEL_SECRET`, `AUTH_ZITADEL_ISSUER`, and
+      `STAFF_AUTH_MODE=provider` in that environment's application settings, and restart.
+- [ ] Verify a real staff member can sign in end to end, and that an address nobody invited is
+      refused.
+- [ ] Verify the development switcher refuses to start in this environment
+      (`STAFF_AUTH_MODE=dev-switcher` must fail at boot outside local and test).
+
+### Rollback
+
+Set `STAFF_AUTH_MODE=disabled` and restart. The backoffice returns 404 to every staff request —
+the same honest state it was in before the tenant existed. No `staff_users` row is affected.
 
 
 ---

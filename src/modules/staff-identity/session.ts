@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { auth } from "@/auth";
 import { getDb } from "@/db/client";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -18,10 +19,10 @@ import { findStaffUserById } from "./repository";
  * `next/headers` is what keeps this on the server: importing it from a Client Component is a
  * build error, so no bundle can contain this module by accident.
  *
- * There is no real staff login yet (DECISIONS.md §24). With `STAFF_AUTH_MODE=disabled` — every
- * environment except local and test — `getCurrentStaffUser` returns null for every request,
- * so the backoffice answers nobody. That is the correct answer while the door has no lock,
- * and it is enforced here rather than by omitting the routes.
+ * With `STAFF_AUTH_MODE=disabled` — the default everywhere until an operator turns on
+ * `provider` for that environment (DECISIONS.md §26) — `getCurrentStaffUser` returns null for
+ * every request, so the backoffice answers nobody. That is the correct answer while the door
+ * has no lock, and it is enforced here rather than by omitting the routes.
  */
 
 /**
@@ -36,15 +37,25 @@ import { findStaffUserById } from "./repository";
 export const DEV_STAFF_COOKIE = "br_dev_staff";
 
 export async function getCurrentStaffUser(): Promise<StaffUser | null> {
-  if (!isDevStaffSwitcherEnabled()) return null;
+  if (isDevStaffSwitcherEnabled()) {
+    const id = (await cookies()).get(DEV_STAFF_COOKIE)?.value;
+    if (!id) return null;
 
-  const id = (await cookies()).get(DEV_STAFF_COOKIE)?.value;
-  if (!id) return null;
+    // A cookie naming a staff user who has since been removed is not a session. Revoking
+    // access has to take effect on the next request, not at the next sign-in.
+    return (await findStaffUserById(getDb(), id)) ?? null;
+  }
 
-  // A cookie naming a staff user who has since been removed is not a session. Revoking
-  // access has to take effect on the next request, not at the next sign-in.
-  const staffUser = await findStaffUserById(getDb(), id);
-  return staffUser ?? null;
+  if (env.STAFF_AUTH_MODE === "provider") {
+    const session = await auth();
+    if (!session?.staffUserId) return null;
+
+    // Re-read the row rather than trusting the token: a role change or a revoked access
+    // takes effect on the very next request, not when the session eventually expires.
+    return (await findStaffUserById(getDb(), session.staffUserId)) ?? null;
+  }
+
+  return null;
 }
 
 export async function requireStaff(): Promise<StaffUser> {

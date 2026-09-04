@@ -2,7 +2,9 @@ import { and, eq, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { inReadOnlyTransaction } from "@/db/read-only";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
+import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
+import { registrations } from "@/db/schema/registrations";
 import { hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import {
   consumeActionToken,
@@ -23,6 +25,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const NOW = new Date("2026-09-03T10:00:00.000Z");
 const IN_TWO_DAYS = new Date("2026-09-05T10:00:00.000Z");
 const REGISTRATION_ID = "11111111-1111-4111-8111-111111111111";
+// Every other fixed registration id this file uses as an opaque token scope. Each needs its
+// own event, because `registrations` allows only one row per (event, participant).
+const OTHER_FIXED_REGISTRATION_IDS = [
+  "22222222-2222-4222-8222-222222222222",
+  "33333333-3333-4333-8333-333333333333",
+];
 
 describe("BR-REQ-036-02 email action tokens", () => {
   let db: TestDatabase;
@@ -33,6 +41,32 @@ describe("BR-REQ-036-02 email action tokens", () => {
     ({ db, close } = await createTestDatabase());
   });
   afterAll(async () => close());
+
+  /**
+   * A registration these tests can point a token at. This file tests the token module in
+   * isolation, not registration behaviour, so the registration's own fields are minimal and
+   * valid rather than meaningful — the token's `registration_id` foreign key just needs
+   * somewhere real to point.
+   */
+  async function seedRegistration(id: string) {
+    const [event] = await db
+      .insert(events)
+      .values({ kind: "COMMUNITY_RUN", startsAt: new Date("2026-10-01T09:00:00.000Z") })
+      .returning();
+
+    await db.insert(registrations).values({
+      id,
+      eventId: event.id,
+      participantId,
+      status: "PENDING_EMAIL_CONFIRMATION",
+      locale: "ro",
+      registeredName: "Ana Pop",
+      privacyNoticeVersion: 1,
+      privacyAcknowledgedAt: NOW,
+      resultsNameConsent: false,
+      resultsConsentVersion: 1,
+    });
+  }
 
   beforeEach(async () => {
     await resetTables(db);
@@ -48,6 +82,10 @@ describe("BR-REQ-036-02 email action tokens", () => {
       })
       .returning();
     participantId = participant.id;
+
+    for (const id of [REGISTRATION_ID, ...OTHER_FIXED_REGISTRATION_IDS]) {
+      await seedRegistration(id);
+    }
   });
 
   /** A registration-scoped token, which is every purpose except MANAGE_PROFILE. */

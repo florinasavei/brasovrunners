@@ -28,7 +28,7 @@ export async function resolveLocaleSwitch(
 
   if (!parsed) return listing;
 
-  if (parsed.route === "/events/[slug]") {
+  if (parsed.route === "/events/[slug]" || parsed.route === "/events/[slug]/register") {
     const slug = parsed.params.slug;
     if (!slug) return listing;
 
@@ -41,15 +41,31 @@ export async function resolveLocaleSwitch(
 
     return getPathname({
       locale: target,
-      href: { pathname: "/events/[slug]", params: { slug: sibling.slug } },
+      href: { pathname: parsed.route, params: { slug: sibling.slug } },
     });
   }
 
   // The staff routes carry an id rather than a slug, and an id is the same in both languages.
-  if (parsed.route === "/admin/events/[id]" || parsed.route === "/preview/events/[id]") {
+  if (
+    parsed.route === "/admin/events/[id]" ||
+    parsed.route === "/preview/events/[id]" ||
+    parsed.route === "/admin/registrations/[id]"
+  ) {
     const id = parsed.params.id;
     if (!id) return listing;
     return getPathname({ locale: target, href: { pathname: parsed.route, params: { id } } });
+  }
+
+  // An email-token link is opaque and locale-independent — the same secret works from either
+  // language's URL, and switching language must not reissue or invalidate it.
+  if (
+    parsed.route === "/registrations/confirm/[token]" ||
+    parsed.route === "/registrations/declare/[token]" ||
+    parsed.route === "/registrations/manage/[token]"
+  ) {
+    const token = parsed.params.token;
+    if (!token) return listing;
+    return getPathname({ locale: target, href: { pathname: parsed.route, params: { token } } });
   }
 
   return getPathname({ locale: target, href: parsed.route });

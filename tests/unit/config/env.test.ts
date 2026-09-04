@@ -35,3 +35,48 @@ describe("BR-REQ-101-02 environment validation", () => {
     }
   });
 });
+
+/**
+ * BR-REQ-060-01 criterion 7 — the development staff switcher never runs where real content
+ * lives — plus the new `provider` mode's own startup guard (AGENTS.md §13.1, DECISIONS.md §26).
+ */
+describe("staff authentication mode", () => {
+  const ZITADEL = {
+    AUTH_SECRET: "not-a-real-secret",
+    AUTH_ZITADEL_ID: "client-id",
+    AUTH_ZITADEL_SECRET: "client-secret",
+    AUTH_ZITADEL_ISSUER: "https://example.zitadel.cloud",
+  };
+
+  it("derives dev-switcher in local and test, and disabled everywhere else", () => {
+    expect(envSchema.parse({ APP_ENV: "local" }).STAFF_AUTH_MODE).toBe("dev-switcher");
+    expect(envSchema.parse({ APP_ENV: "test" }).STAFF_AUTH_MODE).toBe("dev-switcher");
+    expect(envSchema.parse({ APP_ENV: "qa" }).STAFF_AUTH_MODE).toBe("disabled");
+    expect(envSchema.parse({ APP_ENV: "production" }).STAFF_AUTH_MODE).toBe("disabled");
+  });
+
+  it("refuses the development switcher outside local and test", () => {
+    for (const APP_ENV of ["qa", "production"] as const) {
+      expect(() => envSchema.parse({ APP_ENV, STAFF_AUTH_MODE: "dev-switcher" })).toThrow(
+        /development staff switcher is only permitted/,
+      );
+    }
+  });
+
+  it("accepts provider mode with every Zitadel credential present", () => {
+    for (const APP_ENV of ["qa", "production"] as const) {
+      expect(() =>
+        envSchema.parse({ APP_ENV, STAFF_AUTH_MODE: "provider", ...ZITADEL }),
+      ).not.toThrow();
+    }
+  });
+
+  it("refuses provider mode missing any one Zitadel credential", () => {
+    for (const missing of Object.keys(ZITADEL)) {
+      const partial = { ...ZITADEL, [missing]: undefined };
+      expect(() =>
+        envSchema.parse({ APP_ENV: "qa", STAFF_AUTH_MODE: "provider", ...partial }),
+      ).toThrow(/STAFF_AUTH_MODE=provider requires/);
+    }
+  });
+});

@@ -20,6 +20,30 @@ export const routing = defineRouting({
     "/": "/",
     "/events": { ro: "/evenimente", en: "/events" },
     "/events/[slug]": { ro: "/evenimente/[slug]", en: "/events/[slug]" },
+    "/events/[slug]/register": { ro: "/evenimente/[slug]/inscriere", en: "/events/[slug]/register" },
+
+    /**
+     * The three email-token landing pages (AGENTS.md §13.2, §13.3 scopes verify/complete/
+     * manage). Three routes rather than one generic one, because a token's own purpose lives
+     * in the database row and reading a GET link must not require guessing it — matching the
+     * scope names the token itself carries.
+     */
+    "/registrations/confirm/[token]": {
+      ro: "/inregistrari/confirmare/[token]",
+      en: "/registrations/confirm/[token]",
+    },
+    "/registrations/declare/[token]": {
+      ro: "/inregistrari/declaratie/[token]",
+      en: "/registrations/declare/[token]",
+    },
+    "/registrations/manage/[token]": {
+      ro: "/inregistrari/gestionare/[token]",
+      en: "/registrations/manage/[token]",
+    },
+
+    /** The two public legal routes (§9.2), linked from the footer in both locales. */
+    "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
+    "/legal/terms": { ro: "/termeni", en: "/terms" },
 
     /**
      * Staff routes. Localized like everything else (AGENTS.md §9.2) but never in public
@@ -32,6 +56,8 @@ export const routing = defineRouting({
     "/admin": "/admin",
     "/admin/events/[id]": "/admin/events/[id]",
     "/admin/staff": "/admin/staff",
+    "/admin/registrations": "/admin/registrations",
+    "/admin/registrations/[id]": "/admin/registrations/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },
   },

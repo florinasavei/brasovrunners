@@ -10,6 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { participants } from "./participants";
+import { registrations } from "./registrations";
 
 /**
  * The five purposes from AGENTS.md §12.8. A database enum, so a token issued for a purpose
@@ -38,9 +39,6 @@ export type EmailActionTokenPurpose = (typeof emailActionTokenPurpose.enumValues
  * that stored the raw secret by mistake would be rejected by PostgreSQL rather than reviewed
  * into production. The secret exists in one place only: the email that was sent.
  *
- * `registration_id` carries no foreign key yet because `registrations` does not exist. That
- * matches how `events.declaration_document_id` waits for `legal_documents`: a column now, the
- * constraint in the migration that creates the table it points at.
  */
 export const emailActionTokens = pgTable(
   "email_action_tokens",
@@ -53,7 +51,9 @@ export const emailActionTokens = pgTable(
 
     // Null for MANAGE_PROFILE, which is scoped to the participant rather than to one
     // registration (AGENTS.md §13.3). The CHECK below makes that an invariant, not a habit.
-    registrationId: uuid("registration_id"),
+    registrationId: uuid("registration_id").references(() => registrations.id, {
+      onDelete: "cascade",
+    }),
 
     purpose: emailActionTokenPurpose("purpose").notNull(),
 

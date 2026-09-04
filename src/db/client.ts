@@ -1,10 +1,15 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { env } from "@/shared/config/env";
+import * as declarationAcceptancesSchema from "./schema/declaration-acceptances";
 import * as emailActionTokensSchema from "./schema/email-action-tokens";
 import * as emailOutboxSchema from "./schema/email-outbox";
 import * as eventsSchema from "./schema/events";
+import * as jobRunsSchema from "./schema/job-runs";
+import * as legalDocumentsSchema from "./schema/legal-documents";
 import * as participantsSchema from "./schema/participants";
+import * as rateLimitSchema from "./schema/rate-limit";
+import * as registrationsSchema from "./schema/registrations";
 import * as staffUsersSchema from "./schema/staff-users";
 
 export const schema = {
@@ -13,6 +18,11 @@ export const schema = {
   ...emailActionTokensSchema,
   ...emailOutboxSchema,
   ...staffUsersSchema,
+  ...legalDocumentsSchema,
+  ...registrationsSchema,
+  ...declarationAcceptancesSchema,
+  ...jobRunsSchema,
+  ...rateLimitSchema,
 };
 type Schema = typeof schema;
 
