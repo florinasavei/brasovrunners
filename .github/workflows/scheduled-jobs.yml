@@ -1,0 +1,73 @@
+name: scheduled-jobs
+
+# The external scheduler AGENTS.md §16.2 requires. Not a watchdog over an in-process
+# interval — there is no in-process interval, because this application deploys to Vercel
+# serverless functions, which have no persistent process for one to live in. This workflow
+# is therefore the only thing that drains the email outbox and expires stale holds.
+#
+# GitHub Actions rather than Vercel Cron: the Hobby plan fires cron once per day, which is
+# useless for a 30-minute declaration hold. Actions' own floor is five minutes, and its
+# schedules are best-effort under load — acceptable precisely because §16.2 makes every job
+# idempotent and evaluates expiry against `now` at read time, so a late run delays a
+# notification rather than corrupting a queue.
+#
+# One environment per job matrix entry so a second Vercel project (production) is a row,
+# not a copy of this file. Secrets are per environment in GitHub, mirroring how they are
+# per project in Vercel: SETUP.md §3, `Brașov Runners / Scheduler QA`.
+
+on:
+  schedule:
+    # Every five minutes: the outbox wants one to five, maintenance about five (§16.2).
+    - cron: "*/5 * * * *"
+  # So a run can be forced while debugging without waiting for the next tick.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # A slow run must not overlap the next tick. The endpoints are safe to retry, but two
+  # concurrent claims of the same outbox batch is wasted work, not a useful one.
+  group: scheduled-jobs-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  poke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: qa
+            base_url_secret: QA_APP_BASE_URL
+            job_secret: QA_JOB_SECRET
+    steps:
+      - name: Email outbox
+        env:
+          BASE_URL: ${{ secrets[matrix.base_url_secret] }}
+          JOB_SECRET: ${{ secrets[matrix.job_secret] }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$JOB_SECRET" ]; then
+            echo "::notice::${{ matrix.name }} is not configured; skipping"
+            exit 0
+          fi
+          # --fail so a non-2xx is a failed run rather than a green tick over a 401.
+          curl --fail --silent --show-error --max-time 60 \
+            -X POST "$BASE_URL/api/internal/jobs/email-outbox" \
+            -H "Authorization: Bearer $JOB_SECRET"
+
+      - name: Registration maintenance
+        # Runs even if the outbox call failed: expiring a hold and sending a message are
+        # independent duties, and a stuck outbox must not also freeze the waiting list.
+        if: always()
+        env:
+          BASE_URL: ${{ secrets[matrix.base_url_secret] }}
+          JOB_SECRET: ${{ secrets[matrix.job_secret] }}
+        run: |
+          if [ -z "$BASE_URL" ] || [ -z "$JOB_SECRET" ]; then
+            echo "::notice::${{ matrix.name }} is not configured; skipping"
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 60 \
+            -X POST "$BASE_URL/api/internal/jobs/registration-maintenance" \
+            -H "Authorization: Bearer $JOB_SECRET"

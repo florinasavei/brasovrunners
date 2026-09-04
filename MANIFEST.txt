@@ -31,6 +31,7 @@ Supporting files:
 - scripts/sync-flags.mjs               yarn flags:sync: copies country flags into public/flags/
 - .githooks/pre-commit                 runs yarn check, blocks a failing commit
 - .github/workflows/docs-check.yml     yarn check in CI, read-only permissions
+- .github/workflows/scheduled-jobs.yml every five minutes, calls both job endpoints per environment
 - .github/CODEOWNERS                   review ownership of the root documents
 - .github/pull_request_template.md     per-PR checks including the documentation sync checklist
 - vitest.config.mts                    unit and database tests; no database needed

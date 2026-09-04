@@ -16,8 +16,8 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
 | Code | M1 complete in code. Public event pages; a backoffice where an organizer edits, features, previews and publishes a race per language; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents with no invented text outside a developer's machine; ten transactional message types through the outbox; a registrations backoffice with a state-aware resend and CSV export; `/api/health`. See [`DECISIONS.md`](./DECISIONS.md) §26–§27. |
-| Priority | Account creation and DevOps, not application code: a Zitadel tenant, a Neon project, two Vercel projects, the `.ro` domain, a Mailgun account, and the club's approved privacy notice and declaration text |
-| Now | Deployed nowhere yet. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
+| Priority | Account creation and DevOps, not application code: a Zitadel tenant, a Mailgun account, the `.ro` domain, the club's approved privacy notice and declaration text, and the production Neon and Vercel projects |
+| Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in there is `disabled` and email is `capture`, so the backoffice 404s and nothing transmits — both the honest state until a tenant and a sending domain exist. Production is not created. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -94,6 +94,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
+| [`.github/workflows/scheduled-jobs.yml`](./.github/workflows/scheduled-jobs.yml) | Every five minutes, calls each environment's email-outbox and registration-maintenance endpoints with that environment's `JOB_SECRET`. The only thing that runs them: serverless functions have no persistent process for an interval (`AGENTS.md` §16.2) |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review ownership of the root documents |
 | [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
 | [`package.json`](./package.json) | Scripts and exact-pinned dependencies; `yarn check` is the aggregate gate |
@@ -622,6 +623,7 @@ content/
 .github/
   workflows/
     docs-check.yml
+    scheduled-jobs.yml
   CODEOWNERS
   pull_request_template.md
 
