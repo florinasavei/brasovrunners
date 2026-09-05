@@ -29,8 +29,8 @@ waiting on.
 | --- | --- | --- | --- | --- |
 | **Vercel** | Hobby | Both applications. One project per environment, function region `fra1` | vercel.com/dashboard | QA live; production project **not created** |
 | **Neon** | Free | PostgreSQL, Frankfurt. Region is fixed at project creation | console.neon.tech | QA project live, migrated, seeded; production project **not created** |
-| **Zitadel** | *to record* | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | the tenant's own console | QA tenant live, `STAFF_AUTH_MODE=provider` |
-| **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, and the delivery webhook | app.mailgun.com | **Not created** |
+| **Zitadel** | *to record* | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | `brasov-runners-8iqx8c.eu1.zitadel.cloud/ui/console` | QA tenant live, `STAFF_AUTH_MODE=provider`; own mail through Mailgun SMTP (`smtp.mailgun.org:587`, US sandbox, working 2026-09-05) |
+| **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
 | **Domain registrar** | *not chosen* | `<domain>` and its DNS | — | **Not registered** |
 | **Cloudflare R2** | *not chosen* | Media, when a non-developer needs to upload | — | Deferred (`AGENTS.md` §17) |
@@ -75,6 +75,18 @@ Two sharp edges:
   authorized-recipient list is literal and will refuse that address unless it was authorized in
   exactly that spelling. Authorize what the tester will actually type.
 
+**The sandbox is in Mailgun's US region, and a region is chosen per domain at creation.**
+Proven rather than assumed on 2026-09-05: an SMTP AUTH probe with the sandbox's own credentials
+answered `235` on `smtp.mailgun.org` and `535` on `smtp.eu.mailgun.org`. The console's EU badge
+switches which region you are *looking at*; it does not move a domain. Two things follow. The
+API base is `https://api.mailgun.net/v3` — the EU host rejects these credentials, and the adapter
+maps that `401` to a **permanent** failure, so a misconfigured region silently kills every message
+rather than retrying it. And message bodies, event logs and suppressions for anything sent
+through this sandbox rest in the US, while the database rests in Frankfurt — acceptable for
+colleagues testing QA, an owner decision to record before a real participant's address goes
+through it. **The club's own sending domain should be created in the EU region**, which costs
+nothing at creation and cannot be changed afterwards.
+
 **Lift, without waiting for the club's domain:** verify **any** domain already owned — a
 subdomain of a personal one is enough — as a Mailgun sending domain, and the cap disappears.
 `MAILGUN_DOMAIN` is configuration; swapping it later for `<domain>` is one environment variable
@@ -91,18 +103,41 @@ button, this stops being grey.**
 which runs the literal `yarn start` contract and needs no code change, because BR-REQ-101-01
 keeps the application portable and CI exercises that path.
 
-### 4. Nothing runs on a schedule except GitHub Actions
+### 4. The only scheduler fires about every two hours, not every five minutes
 
 Serverless functions have no persistent process, so there is no in-process interval, and Hobby
 cron fires once a day with hour-level jitter — useless for a 30-minute declaration hold. The only
-thing that drains the outbox and expires holds is `.github/workflows/scheduled-jobs.yml`, every
-five minutes (`AGENTS.md` §16.2).
+thing that drains the outbox and expires holds is `.github/workflows/scheduled-jobs.yml`, asking
+for `cron: */5` (`AGENTS.md` §16.2).
 
-**Risks to confirm rather than assume:** GitHub documents that scheduled workflows are disabled
-on repositories after a period of inactivity, and that schedules are delayed under load. A club
-site that goes quiet for a season is exactly the case that would trip the first. `/api/health`
-reports `degraded` when a job is stale, which is the detection; **there is no alert on it yet** —
-somebody has to look. Worth confirming the exact inactivity window before the club depends on it.
+**Measured, not assumed (2026-09-05).** In the fifteen hours to 09:35Z the workflow fired **six**
+times on its schedule — 18:32, 21:01, 23:00, 00:52, 05:18, 09:10 UTC — gaps of 1h52 to 3h52
+against a five-minute cron. GitHub delays scheduled workflows under load, and what this
+repository actually gets is roughly two hours. Two consequences, worst first:
+
+- **A confirmation email can sit in the outbox for hours.** The participant registers and hears
+  nothing until the next fire. Nothing is corrupted — hold expiry is evaluated inside every
+  capacity transaction (`AGENTS.md` §10.6), so a late run delays a message rather than
+  overbooking an event — but a closed-group test is unrunnable at this cadence, and so is a real
+  one.
+- **`/api/health` reports `degraded` nearly always**, because the 15-minute staleness threshold in
+  `src/modules/jobs/health.ts` is three times tighter than the cadence actually delivered. The
+  signal the missing alert below would watch is currently stuck on.
+
+**Lift:** either an external HTTP cron service calling the same two endpoints — `SETUP.md` §26's
+own third option, one free account, no code change — or draining the outbox on the request that
+enqueued it (Next 16 `after()`), which is application code and a decision against §16.2. Not yet
+decided; the owner picks.
+
+**Three things confirmed on the way, so they are not rediscovered.** Scheduled workflows run only
+from the **default branch**, which here is `qa` — that is why the schedule fires at all. Every
+scheduled run before `QA_APP_BASE_URL` and `QA_JOB_SECRET` existed (created 2026-09-05T02:34Z)
+was a **green skip**, which is exactly the failure `DECISIONS.md` §31 records, and the two runs
+straight after it returned **401** until the Vercel project's own `JOB_SECRET` matched, at about
+05:47Z — a green tick is not evidence that a job ran. And GitHub documents that scheduled
+workflows are disabled on repositories after a period of inactivity: still unconfirmed, still the
+case a club site quiet for a season would trip, and **there is still no alert on `degraded`** —
+somebody has to look.
 
 ### 5. Neon Free scales to zero
 

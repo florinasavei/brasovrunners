@@ -106,6 +106,13 @@
       "when": 1788596674436,
       "tag": "0014_shared_event_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1788603561329,
+      "tag": "0015_race_entry_details",
+      "breakpoints": true
     }
   ]
 }

@@ -60,6 +60,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
         status: "PENDING_DECLARATION",
         locale: "ro",
         registeredName: "Ana Pop",
+        displayName: "Ana P.",
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: NOW,
         resultsNameConsent: false,

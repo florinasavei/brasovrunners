@@ -13,6 +13,7 @@ import type { Locale } from "@/i18n/routing";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { allowedFromStatuses } from "./domain/state-machine";
+import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
 /**
  * A `TEST` registration cannot be written in production, and this is the second place that is
@@ -120,6 +121,8 @@ export type InsertPendingRegistrationInput = {
   createdByStaffUserId?: string | null;
   locale: "ro" | "en";
   registeredName: string;
+  /** BR-REQ-031-04. Absent for a row an organizer typed from a telephone call. */
+  details?: RegistrationEntryDetails;
   privacyNoticeVersion: number;
   privacyAcknowledgedAt: Date;
   raceId: string | null;
@@ -151,6 +154,30 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       createdByStaffUserId: input.createdByStaffUserId ?? null,
       locale: input.locale,
       registeredName: input.registeredName,
+
+      // BR-REQ-031-04. Every detail may be absent; the display name may not, and is derived
+      // rather than defaulted to the legal name — see `resolveDisplayName`.
+      firstName: input.details?.firstName ?? null,
+      lastName: input.details?.lastName ?? null,
+      displayName: resolveDisplayName({
+        displayName: input.details?.displayName,
+        firstName: input.details?.firstName,
+        lastName: input.details?.lastName,
+        legalName: input.registeredName,
+      }),
+      birthDate: input.details?.birthDate ?? null,
+      sex: input.details?.sex ?? null,
+      nationality: input.details?.nationality ?? null,
+      city: input.details?.city ?? null,
+      phone: input.details?.phone ?? null,
+      emergencyContactName: input.details?.emergencyContactName ?? null,
+      emergencyContactPhone: input.details?.emergencyContactPhone ?? null,
+      clubName: input.details?.clubName ?? null,
+      tshirtSize: input.details?.tshirtSize ?? null,
+      healthNotes: input.details?.healthNotes ?? null,
+      healthConsentVersion: input.details?.healthConsentVersion ?? null,
+      healthConsentAt: input.details?.healthConsentAt ?? null,
+
       privacyNoticeVersion: input.privacyNoticeVersion,
       privacyAcknowledgedAt: input.privacyAcknowledgedAt,
       raceId: input.raceId,
@@ -217,9 +244,11 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 export async function listPublicStartList<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<Array<{ registeredName: string }>> {
+): Promise<Array<{ displayName: string }>> {
   return db
-    .select({ registeredName: registrations.registeredName })
+    // BR-REQ-039-02: the display name, never the legal one. The select list is the guarantee
+    // — widening it is what tests/privacy/public-surface.test.ts refuses.
+    .select({ displayName: registrations.displayName })
     .from(registrations)
     .where(
       and(

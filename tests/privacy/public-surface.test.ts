@@ -4,6 +4,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { listPublicStartList } from "@/modules/registrations/repository";
+import { resolveDisplayName } from "@/modules/registrations/names";
 import { expectViolation, SQLSTATE } from "../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../helpers/db";
 
@@ -59,6 +60,7 @@ async function createRegistration(
     email: string;
     status?: typeof registrations.$inferInsert.status;
     kind?: "REAL" | "TEST";
+    displayName?: string;
     listOptOut?: boolean;
     confirmedAt?: Date;
   },
@@ -82,6 +84,7 @@ async function createRegistration(
     kind: input.kind ?? "REAL",
     locale: "ro",
     registeredName: input.name,
+    displayName: input.displayName ?? resolveDisplayName({ legalName: input.name }),
     privacyNoticeVersion: 1,
     privacyAcknowledgedAt: NOW,
     resultsNameConsent: false,
@@ -153,7 +156,7 @@ describe("BR-REQ-039-01 what the start list may contain", () => {
 
     // Bogdan confirmed first, so Bogdan is first — the order is a fact about the people, not
     // about insertion.
-    expect(listed.map((row) => row.registeredName)).toEqual(["Bogdan Ionescu", "Ana Popescu"]);
+    expect(listed.map((row) => row.displayName)).toEqual(["Bogdan Ionescu", "Ana Popescu"]);
   });
 
   it("returns the name and nothing else — no email, no status, no identifier", async () => {
@@ -164,8 +167,24 @@ describe("BR-REQ-039-01 what the start list may contain", () => {
 
     // The select list is the guarantee. A future join that widened it would fail here rather
     // than on the day somebody's address appeared on a race page.
-    expect(Object.keys(row)).toEqual(["registeredName"]);
+    expect(Object.keys(row)).toEqual(["displayName"]);
     expect(JSON.stringify(row)).not.toContain("@");
+  });
+
+  it("publishes the display name and never the legal name (BR-REQ-039-02)", async () => {
+    const event = await createEvent();
+    await createRegistration(event.id, {
+      name: "Ana Maria Popescu",
+      email: "ana.maria@example.org",
+      displayName: "Ana P.",
+    });
+
+    const listed = await listPublicStartList(db, event.id);
+
+    expect(listed).toEqual([{ displayName: "Ana P." }]);
+    // The whole point of the pair of columns: a name on an identity document does not become
+    // public because somebody entered a race.
+    expect(JSON.stringify(listed)).not.toContain("Popescu");
   });
 
   it("does not list a TEST registration even when it is the only confirmed one", async () => {

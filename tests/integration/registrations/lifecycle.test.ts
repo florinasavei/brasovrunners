@@ -86,7 +86,15 @@ async function createInternalEvent(
 
 function submissionInput(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    name: "Ana Pop",
+    firstName: "Ana",
+    lastName: "Pop",
+    birthDate: "1990-05-17",
+    sex: "UNSPECIFIED",
+    nationality: "RO",
+    city: "Brașov",
+    phone: "+40711111111",
+    emergencyContactName: "Contact Urgență",
+    emergencyContactPhone: "+40722222222",
     email: "ana@example.ro",
     locale: "ro",
     privacyAcknowledged: true,

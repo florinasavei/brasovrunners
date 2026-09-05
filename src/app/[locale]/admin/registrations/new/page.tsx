@@ -47,6 +47,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
 
   const { eventId, error } = await searchParams;
   const t = await getTranslations("Admin");
+  const rt = await getTranslations("Registration");
   const format = await getFormatter();
   const events = await listEventsAcceptingRegistrations(getDb(), locale);
 
@@ -93,7 +94,21 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               ))}
             </TextField>
 
-            <TextField name="name" label={t("registrations.participantName")} required />
+            <TextField name="firstName" label={rt("firstName")} required />
+          <TextField name="lastName" label={rt("lastName")} required />
+
+          {/*
+            BR-REQ-031-04 criterion 5. Everything below the name is optional here and
+            required on the public form: an organizer is writing down a telephone call, and
+            a registration recorded with gaps beats one refused for them.
+          */}
+          <TextField name="displayName" label={rt("displayName")} />
+          <TextField name="birthDate" type="date" label={rt("birthDate")} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField name="city" label={rt("city")} />
+          <TextField name="phone" type="tel" label={rt("phone")} />
+          <TextField name="emergencyContactName" label={rt("emergencyContactName")} />
+          <TextField name="emergencyContactPhone" type="tel" label={rt("emergencyContactPhone")} />
+          <TextField name="clubName" label={rt("clubName")} />
             <TextField
               name="email"
               type="email"

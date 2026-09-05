@@ -215,7 +215,35 @@ An external event does not create a local participant registration unless a late
 
 Internal registration does not require a participant login, password, or account of any kind.
 
-The participant supplies a full name and email address, and acknowledges the current approved privacy notice before the registration is accepted. The acknowledged privacy-notice version is recorded with the registration.
+The participant supplies the details a race needs and acknowledges the current approved privacy
+notice before the registration is accepted. The acknowledged privacy-notice version is recorded
+with the registration.
+
+What is asked, and why each one is there:
+
+- **legal name** — first and last. This is the name the declaration is signed with and the name
+  on any list the club must hand to an authority;
+- **public display name** — what a start list or a results table shows. It is the legal name
+  by default, because that is what a start list normally says and what the club prints. The
+  form carries a collapsed section for changing it, so somebody who would rather appear as
+  "Ana P." — or under the name everyone at the club actually uses — says so there, without
+  changing the name their declaration is signed with. Appearing nowhere at all is a different
+  question, asked separately;
+- **date of birth** — age categories are worked out against the day of the race, so the platform
+  stores the date and never a number that would be wrong a year later;
+- **sex** — race categories. Female, male, or unspecified;
+- **nationality** and **city** — results and the club's own record of who it reaches;
+- **telephone**, and an **emergency contact** name and number — the organizer needs to reach
+  somebody on the day. Required for that reason;
+- **t-shirt size** and **club or team** — optional, and only useful when there is a shirt.
+
+An organizer entering a registration for somebody who telephoned may leave unknown details
+blank. Refusing the row would lose the registration; an incomplete one can be completed later.
+
+**Health information is asked separately, or not at all.** Anything about a medical condition,
+an allergy or a medication is a special category of personal data. It is optional, it carries
+its own consent worded on its own, it appears on no public page, it is left out of the
+registrations export, and withdrawing the consent erases the text rather than hiding it.
 
 Control of the email address is confirmed through an emailed link before the registration can progress. The confirmation link is valid for 48 hours. When it is not used in time the registration expires, and the person may start again while registration is still open.
 

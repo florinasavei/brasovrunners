@@ -124,6 +124,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
         status: "PENDING_EMAIL_CONFIRMATION",
         locale: "ro",
         registeredName: emailLocalPart,
+        displayName: emailLocalPart,
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: NOW,
         resultsNameConsent: false,
