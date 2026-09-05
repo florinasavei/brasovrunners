@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.21-2026-09-05 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.21-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -726,8 +726,9 @@ other participant link uses — never by a password.
 3. Given a token, when it is past its expiry, used, or invalidated, then it is rejected.
 4. Given any GET request carrying a token, when it is handled, then no state is mutated.
 5. Given a new token for the same purpose and registration, when it is issued, then previous active tokens for that purpose are invalidated.
+6. Given repeated validation attempts presenting the same token, when they exceed the limit for the window, then further attempts are refused with the same generic response an unknown token receives, and the limit is keyed on the token's hash rather than on the caller.
 
-**Verification:** integration `tokens/action-tokens.test.ts`
+**Verification:** integration `tokens/action-tokens.test.ts`, `tokens/token-throttle.test.ts`
 
 ### 4.7 Backoffice
 
@@ -1274,8 +1275,9 @@ other participant link uses — never by a password.
 3. Given a job invocation, when it completes, then a `job_runs` row records the outcome.
 4. Given a job that has not succeeded within its agreed threshold, when the health endpoint is read, then it reports degraded.
 5. Given a job endpoint, when it is called without a valid `JOB_SECRET` or scheduler identity, then it is refused.
+6. Given a job endpoint called with a valid secret more often than the limit for the window, then further calls are refused with `429` and a `Retry-After`; and given calls refused at criterion 5, then they are not counted against that limit.
 
-**Verification:** integration `jobs/maintenance.test.ts`
+**Verification:** integration `jobs/maintenance.test.ts`, `jobs/job-throttle.test.ts`
 
 ---
 

@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.21-2026-09-05`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -274,7 +274,7 @@ Things already decided and owed, so they are not rediscovered.
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |
 | An alert on `/api/health` going `degraded` | The health check is the detection; nothing watches it | this page, limit 4 |
-| Rate limiting on token validation and uploads | §19.4 names five surfaces; submission and admin resend are built, token validation and uploads are not | `AGENTS.md` §19.4 |
+| Rate limiting on uploads | §19.4 names five surfaces. Four are built — submission, admin resend, token validation and the job endpoints. Uploads are the fifth and there is nothing to guard yet: media storage is deferred (`AGENTS.md` §17) | `AGENTS.md` §19.4 |
 
 ---
 

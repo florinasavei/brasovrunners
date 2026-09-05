@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.21-2026-09-05 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.21-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2542,6 +2542,21 @@ Protect:
 - uploads/auth-adjacent routes.
 
 Use platform-native or small database-backed throttle. Do not add Redis solely for V1. Avoid persisting raw IP longer than necessary; never use IP/device as participant identity.
+
+The key is stored, so it MUST be something the application already holds about the action, never
+an IP or a device. One key per surface, and each names what is actually being defended:
+
+| Surface | Key | What it stops |
+| --- | --- | --- |
+| Registration submission | the canonical email identity (§10.4) | one person flooding one mailbox; `+tag` variants are one allowance |
+| Admin resend | the registration id | two organizers, or one loop, filling a participant's inbox |
+| Token validation | the presented token's **hash**, never the secret | one email link hammered in a retry loop. Not enumeration: a 32-byte secret is not guessed |
+| Job endpoints | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
+| Uploads | not built; media storage is deferred (§17) | — |
+
+A refusal MUST NOT tell the caller which defence it tripped where the surface already answers
+generically: registration submission returns its usual generic response (§15.1) and token
+validation returns the one invalid-or-expired answer of §13.2.
 
 ### 19.5 Public profile safety
 

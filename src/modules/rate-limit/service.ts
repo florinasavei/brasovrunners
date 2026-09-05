@@ -12,12 +12,16 @@ import { retryAfterSeconds, windowStart } from "./domain/window";
  *
  * **The key is never an IP address.** §19.4 forbids IP or device as participant identity, and
  * the key is persisted here, so what goes in is something the application already knows about
- * the actor: a canonical email, a registration id. That choice also makes the limit mean
+ * the actor: a canonical email, a registration id, a token hash, a job name. That choice also makes the limit mean
  * something — throttling an address stops one person flooding one mailbox, which is the abuse
  * this actually has.
  */
 
-export type RateLimitScope = "registration-submit" | "admin-resend";
+export type RateLimitScope =
+  | "registration-submit"
+  | "admin-resend"
+  | "token-validate"
+  | "job-invoke";
 
 /**
  * What each guarded action allows, as data.
@@ -25,6 +29,9 @@ export type RateLimitScope = "registration-submit" | "admin-resend";
  * Deliberately generous. These exist to stop a script and a mailbox flood, not to police a
  * person who mistyped their address and tried again — and a limit a real user can hit is a
  * support request that costs more than the abuse it prevented.
+ *
+ * `/devs` renders this map directly rather than restating it, so a scope added here is a
+ * scope a maintainer can see in the deployment. Add one and there is nothing else to update.
  */
 export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: number }> = {
   // Five submissions per hour for one email identity. A participant registering, mistyping and
@@ -34,6 +41,34 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   // protected is one participant's inbox, and two organizers clicking resend at the same
   // moment is the case that should be caught.
   "admin-resend": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * BR-REQ-036-02, §19.4's third surface. Keyed on the **presented token's hash**, which is
+   * what `modules/action-tokens/throttle.ts` computes and what the tokens table already
+   * stores — so this adds no new secret at rest and no IP.
+   *
+   * The threat is one token being hammered, not enumeration: 32 random bytes is not guessed,
+   * and a per-IP limit would key on something §19.4 forbids to defend against nothing. Ten
+   * per hour is well above the handful a real participant produces — a link scanner's
+   * prefetch, the page load, a reload or two, then the POST — and well below useful.
+   */
+  "token-validate": { limit: 10, windowMs: 60 * 60_000 },
+  /**
+   * §19.4's fifth surface, read as auth-adjacent: `JOB_SECRET` says *who*, and nothing until
+   * now said *how often*. A leaked secret was an unlimited outbox drain — every message the
+   * club will ever send, into somebody else's hands and out of Mailgun's daily allowance in
+   * one afternoon.
+   *
+   * Keyed on the job name, so the bucket is the endpoint itself rather than a caller: there
+   * is exactly one legitimate caller and no identity to key on beyond the secret already
+   * checked. Thirty an hour against a scheduler asking for twelve (a five-minute cron) and actually
+   * delivering roughly one every two hours (`docs/PLATFORM.md` limit 4) leaves room for a
+   * manual run and a catch-up burst, and still bounds the damage.
+   *
+   * Counted only after the secret has been verified, so an unauthenticated flood cannot fill
+   * the bucket and lock the real scheduler out — a guard that can be used to disable the
+   * thing it guards is worse than none.
+   */
+  "job-invoke": { limit: 30, windowMs: 60 * 60_000 },
 };
 
 export type RateLimitVerdict = {

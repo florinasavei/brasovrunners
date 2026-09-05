@@ -492,7 +492,7 @@
       }
     },
     "rateLimits": "Limite de frecvență",
-    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune, per identitate, într-o fereastră fixă. O limită atinsă arată ca „site-ul nu merge” fără să fie nimic stricat.",
+    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune protejată într-o fereastră fixă, per cheie — o identitate de e-mail, o înscriere, un link din e-mail sau o sarcină programată. O limită atinsă arată ca „site-ul nu merge” fără să fie nimic stricat.",
     "roles": "Roluri",
     "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
     "youAre": "rolul tău",

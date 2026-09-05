@@ -492,7 +492,7 @@
       }
     },
     "rateLimits": "Rate limits",
-    "rateLimitsIntro": "How many attempts each action accepts, per identity, in a fixed window. A limit somebody is hitting looks like \"the site is broken\" without anything being broken.",
+    "rateLimitsIntro": "How many attempts each guarded action accepts in a fixed window, per key — an email identity, a registration, one email link, or one job. A limit somebody is hitting looks like \"the site is broken\" without anything being broken.",
     "roles": "Roles",
     "rolesIntro": "Each role can do everything the one below it can, plus one thing more. The line that matters is between Technical and Admin: from there up, participant data is visible.",
     "youAre": "your role",

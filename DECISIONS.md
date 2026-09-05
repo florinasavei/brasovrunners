@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.21-2026-09-05 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.21-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2061,3 +2061,69 @@ roles, and it would touch every query rather than one file. If the club asks, th
 decision with its own migration.
 
 Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+## 39. Decided — the throttle covers every surface that exists, and the key is never a caller (2026-09-05)
+
+`AGENTS.md` §19.4 names five surfaces to protect. Two were built in `BR-V1.19`; the debt table in
+`docs/PLATFORM.md` carried the rest. Two of the three remaining are real endpoints today, so they
+are guarded now. The fifth, uploads, has nothing behind it: media storage is deferred (§17).
+
+### Token validation is keyed on the token, not on whoever presents it
+
+The obvious reading of "rate-limit token validation" is a brute-force defence, and it is the wrong
+one. An action token is 32 random bytes (`token-secret.ts`); nobody guesses one, and a limit that
+made guessing harder would be defending against a threat that does not exist. Worse, that reading
+leads straight to a per-IP key — and `rate_limit_buckets.key` is *persisted*, so a per-IP throttle
+would write visitors' addresses into the database to defend against nothing, which §19.4 forbids
+in the same sentence it asks for the limit.
+
+The threat that does exist is **one token being hammered**. A link that reached a mailing list, a
+scanner in a retry loop, a captured URL replayed: each request is a SHA-256, an indexed query and
+a serverless invocation the club pays for. So the key is the presented token's **hash** — one
+bucket per link. A hammered link cannot slow anybody else's, and the hash is precisely what
+`email_action_tokens` already stores, so this adds no secret at rest. Keying on the secret would
+have put working links in a stolen backup, which is the thing §14.5 and the hashing exist to
+prevent.
+
+**Ten per hour, at the route boundary.** Not in `action-tokens/repository.ts`, where its own
+comment had invited it, for two reasons that only appear when you try:
+`readActionTokenContext` runs inside a read-only transaction and PostgreSQL refuses a write in
+one; and `consumeAndSignDeclaration` calls `consumeActionToken` twice for a single click — once
+for `COMPLETE_DECLARATION`, once for `WAITLIST_OFFER` (§15.7) — so a throttle there would charge
+one participant two attempts on the only surface where the actor is definitely a human. It lives
+in `modules/action-tokens/throttle.ts`, called once per request from
+`registrations/token-actions.ts`, and outside the caller's transaction so a rollback cannot erase
+the count. A throttle a failing request resets is a throttle an attacker resets by failing.
+
+A refusal returns `TOKEN_NOT_FOUND`. That is not a shortcut: §13.2 already required one generic
+invalid-or-expired answer, so telling a stranger "you are being rate limited" would be new
+information this application had decided not to give.
+
+### The job endpoints authenticate and now also throttle
+
+`JOB_SECRET` answers *who*. Nothing answered *how often*, and that gap is worth more than it
+looks: an unlimited outbox drain is every message the club will ever send, in somebody else's
+hands, and Mailgun's daily allowance gone in an afternoon (`docs/PLATFORM.md`, limit 1 of the
+four that bite).
+
+Keyed on the **job name** — one bucket per endpoint, not per caller, because there is exactly one
+legitimate caller and no identity to key on beyond the secret already checked. Thirty an hour,
+against a scheduler asking for twelve and actually delivering about one every two hours
+(`docs/PLATFORM.md` limit 4), leaves room for a manual run and a catch-up burst. Each endpoint
+gets its own bucket: a hammered maintenance run must not stop confirmations going out.
+
+**Counted after the secret check, never before.** This is the one ordering that matters here. A
+bucket an unauthenticated caller can fill is a way to switch the club's scheduler off with a
+loop and no credentials — a strictly worse outage than the flood it would be refusing, and it is
+asserted end to end in `tests/integration/jobs/job-throttle.test.ts` rather than left as a
+comment.
+
+### What was deliberately not built
+
+**A shared refusal helper for the two job routes.** §1.5 abstracts on the third occurrence, not
+the second. Four lines twice, each naming its own job, reads better than an indirection.
+
+**Per-IP limiting anywhere.** Named here so it is not proposed again as an improvement. §19.4
+forbids IP as participant identity, and this table persists its key.
+
+Baseline bumped to `BR-V1.21-2026-09-05`.
