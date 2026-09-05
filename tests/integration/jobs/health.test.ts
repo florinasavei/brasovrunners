@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { jobRuns } from "@/db/schema/job-runs";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { processOutboxBatch } from "@/modules/notifications/outbox";
+import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /** AGENTS.md §12.12, §16.2 — job liveness reporting. */
@@ -15,6 +17,40 @@ describe("job health reporting", () => {
   });
   afterAll(async () => close());
   beforeEach(async () => resetTables(db));
+
+  /**
+   * Every scheduled job records its own run, and the check is that health goes green after it.
+   *
+   * The outbox did not, for three baselines: the endpoint called `processOutboxBatch` and wrote
+   * no `job_runs` row, so `/api/health` reported `never_run` for a job that had been running
+   * every five minutes. A permanently yellow health check is one people stop reading — which is
+   * exactly what happened. Asserted per job name, from the same entry point the route calls.
+   */
+  it.each([
+    [
+      "registration-maintenance",
+      (database: TestDatabase) => runRegistrationMaintenance(database, NOW),
+    ],
+    [
+      "email-outbox",
+      (database: TestDatabase) =>
+        processOutboxBatch(database, {
+          sender: { send: async () => ({ outcome: "sent" as const, providerMessageId: "none" }) },
+          render: async () => {
+            throw new Error("no message is claimed, so nothing renders");
+          },
+          now: NOW,
+        }),
+    ],
+  ])("records a run for %s, so health can report it", async (jobName, run) => {
+    expect((await checkJobHealth(db, jobName, NOW)).status).toBe("never_run");
+
+    await run(db);
+
+    const health = await checkJobHealth(db, jobName, NOW);
+    expect(health.status, `${jobName} must be ok after a run`).toBe("ok");
+    expect(health.lastFinishedAt).not.toBeNull();
+  });
 
   it("reports never_run when no row exists for the job", async () => {
     const health = await checkJobHealth(db, "registration-maintenance", NOW);
