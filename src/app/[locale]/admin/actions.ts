@@ -5,13 +5,12 @@ import { redirect } from "next/navigation";
 import { signOut } from "@/auth";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
-import type { Locale } from "@/i18n/routing";
+import { type Locale, routing } from "@/i18n/routing";
 import {
   createEvent,
   deleteEvent,
   duplicateEvent,
-  saveEventFields,
-  saveEventTranslation,
+  saveEventAndTranslations,
   transitionEvent,
 } from "@/modules/content/events/service";
 import {
@@ -61,7 +60,10 @@ function backTo(path: string, outcome: { error?: string; saved?: string }): neve
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
-  redirect(query ? `${path}?${query}` : path);
+  // `#admin-alert` so the browser lands on the outcome rather than at the top of a long page,
+  // where a one-line alert about a save that failed is easy to walk straight past. Every
+  // backoffice page gives that id to its alert region; it costs no JavaScript.
+  redirect(query ? `${path}?${query}#admin-alert` : path);
 }
 
 function outcomeOf(error: unknown): { error: string } {
@@ -80,61 +82,67 @@ function editorPath(locale: Locale, eventId: string): string {
  * The whole event row as the form sends it — one reader, so the create form and the edit form
  * cannot drift apart in what they post. Every value stays a string here; `fields.ts` is what
  * turns "" into "not stated" and refuses the rest.
+ *
+ * The names are namespaced `event.*` because the editor is one form carrying the event row and
+ * both languages together (`EventFieldsForm`, `TranslationFieldsForm`).
  */
 function eventFieldsFrom(form: FormData) {
+  const value = (field: string) => text(form, `event.${field}`);
+
   return {
-    kind: text(form, "kind"),
-    eventStatus: text(form, "eventStatus"),
-    timezone: text(form, "timezone"),
-    startsAtWallTime: text(form, "startsAtWallTime"),
-    endsAtWallTime: text(form, "endsAtWallTime"),
-    raceStartsAtWallTime: text(form, "raceStartsAtWallTime"),
-    latitude: text(form, "latitude"),
-    longitude: text(form, "longitude"),
-    mapUrl: text(form, "mapUrl"),
-    distanceMeters: text(form, "distanceMeters"),
-    elevationGainMeters: text(form, "elevationGainMeters"),
-    featured: form.get("featured") === "on",
-    registrationMode: text(form, "registrationMode"),
-    capacity: text(form, "capacity"),
-    registrationOpensAtWallTime: text(form, "registrationOpensAtWallTime"),
-    registrationClosesAtWallTime: text(form, "registrationClosesAtWallTime"),
-    declarationDocumentId: text(form, "declarationDocumentId"),
-    externalProvider: text(form, "externalProvider"),
-    externalRegistrationUrl: text(form, "externalRegistrationUrl"),
+    kind: value("kind"),
+    eventStatus: value("eventStatus"),
+    timezone: value("timezone"),
+    startsAtWallTime: value("startsAtWallTime"),
+    endsAtWallTime: value("endsAtWallTime"),
+    raceStartsAtWallTime: value("raceStartsAtWallTime"),
+    latitude: value("latitude"),
+    longitude: value("longitude"),
+    // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
+    locationName: value("locationName"),
+    locationAddress: value("locationAddress"),
+    difficultyLabel: value("difficultyLabel"),
+    costText: value("costText"),
+    mapUrl: value("mapUrl"),
+    distanceMeters: value("distanceMeters"),
+    elevationGainMeters: value("elevationGainMeters"),
+    featured: form.get("event.featured") === "on",
+    registrationMode: value("registrationMode"),
+    capacity: value("capacity"),
+    registrationOpensAtWallTime: value("registrationOpensAtWallTime"),
+    registrationClosesAtWallTime: value("registrationClosesAtWallTime"),
+    declarationDocumentId: value("declarationDocumentId"),
+    // A checkbox, so an absent value is HIDDEN — the safe half of a disclosure switch.
+    participantListVisibility:
+      form.get("event.participantListVisibility") === "on" ? "NAMES" : "HIDDEN",
+    externalProvider: value("externalProvider"),
+    externalRegistrationUrl: value("externalRegistrationUrl"),
   };
 }
 
-export async function saveTranslationAction(form: FormData): Promise<void> {
-  const locale = toLocale(form.get("uiLocale"));
-  const path = editorPath(locale, text(form, "eventId"));
+/**
+ * One language's text, read back out of the single form.
+ *
+ * A locale the actor may not edit renders no inputs at all, so `translationId` is absent and
+ * this returns `undefined` — the save then carries nothing for that language rather than an
+ * empty one, which is what would overwrite somebody's text with blanks.
+ */
+function translationFieldsFrom(form: FormData, locale: Locale) {
+  const value = (field: string) => text(form, `translations.${locale}.${field}`);
+  const translationId = value("translationId");
+  if (translationId === "") return undefined;
 
-  let outcome: { error?: string; saved?: string };
-  try {
-    const actor = await requireStaff();
-    await saveEventTranslation(getDb(), {
-      actor,
-      translationId: text(form, "translationId"),
-      expectedVersion: Number(text(form, "expectedVersion")),
-      acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
-      fields: {
-        slug: text(form, "slug"),
-        title: text(form, "title"),
-        excerpt: text(form, "excerpt"),
-        locationName: text(form, "locationName"),
-        locationAddress: text(form, "locationAddress"),
-        difficultyLabel: text(form, "difficultyLabel"),
-        costText: text(form, "costText"),
-        seoTitle: text(form, "seoTitle"),
-        seoDescription: text(form, "seoDescription"),
-      },
-    });
-    outcome = { saved: "translation" };
-  } catch (error) {
-    outcome = outcomeOf(error);
-  }
-
-  backTo(path, outcome);
+  return {
+    translationId,
+    expectedVersion: Number(value("expectedVersion")),
+    fields: {
+      slug: value("slug"),
+      title: value("title"),
+      excerpt: value("excerpt"),
+      seoTitle: value("seoTitle"),
+      seoDescription: value("seoDescription"),
+    },
+  };
 }
 
 /** Publication is per event now, so this moves the event and not one of its languages. */
@@ -160,7 +168,18 @@ export async function transitionEventAction(form: FormData): Promise<void> {
   backTo(path, outcome);
 }
 
-export async function saveEventAction(form: FormData): Promise<void> {
+/**
+ * The editor's one save (BR-REQ-051-01).
+ *
+ * One form, one button, one transaction: the event row and every language the actor may edit,
+ * or a CONFLICT and nothing at all. It replaced a settings save and one save per language,
+ * which was three separate chances to lose an edit and two version guards that went stale the
+ * moment the first save succeeded.
+ *
+ * `event.expectedVersion` is absent for an Author, who sees no settings panel; the service then
+ * writes no event row rather than assuming a version.
+ */
+export async function saveEventAndTranslationsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
@@ -168,11 +187,17 @@ export async function saveEventAction(form: FormData): Promise<void> {
   let outcome: { error?: string; saved?: string };
   try {
     const actor = await requireStaff();
-    await saveEventFields(getDb(), {
+    const editsEventRow = text(form, "event.expectedVersion") !== "";
+
+    await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
-      expectedVersion: Number(text(form, "expectedVersion")),
-      fields: eventFieldsFrom(form),
+      fields: editsEventRow ? eventFieldsFrom(form) : undefined,
+      expectedVersion: editsEventRow ? Number(text(form, "event.expectedVersion")) : undefined,
+      translations: routing.locales
+        .map((contentLocale) => translationFieldsFrom(form, contentLocale))
+        .filter((entry) => entry !== undefined),
+      acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
     });
     outcome = { saved: "event" };
   } catch (error) {
@@ -195,16 +220,14 @@ export async function createEventAction(form: FormData): Promise<void> {
         ...eventFieldsFrom(form),
         translations: {
           ro: {
-            slug: text(form, "ro.slug"),
-            title: text(form, "ro.title"),
-            excerpt: text(form, "ro.excerpt"),
-            locationName: text(form, "ro.locationName"),
+            slug: text(form, "translations.ro.slug"),
+            title: text(form, "translations.ro.title"),
+            excerpt: text(form, "translations.ro.excerpt"),
           },
           en: {
-            slug: text(form, "en.slug"),
-            title: text(form, "en.title"),
-            excerpt: text(form, "en.excerpt"),
-            locationName: text(form, "en.locationName"),
+            slug: text(form, "translations.en.slug"),
+            title: text(form, "translations.en.title"),
+            excerpt: text(form, "translations.en.excerpt"),
           },
         },
       },

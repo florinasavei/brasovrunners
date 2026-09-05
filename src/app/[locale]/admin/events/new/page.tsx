@@ -31,6 +31,11 @@ export const dynamic = "force-dynamic";
  * requires a complete translation in every locale (`DECISIONS.md` §28), and a form that lets
  * one language be skipped produces an event that cannot be published and nobody remembers why.
  *
+ * Only what differs between the languages is asked twice: the title, the page address and the
+ * short description. The meeting point, the address, the difficulty and the cost are asked once,
+ * above, because they are one fact about the event rather than a translation of one
+ * (`DECISIONS.md` §36).
+ *
  * The rest of the fields are the same component the editor uses, so nothing is configurable
  * after creation that could not be set at creation — `src/db/seeds/pilot.ts` stopped being how
  * an event is configured the moment this existed.
@@ -75,23 +80,18 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               </Typography>
               <Stack spacing={2}>
                 <TextField
-                  name={`${contentLocale}.title`}
+                  name={`translations.${contentLocale}.title`}
                   label={t("editor.fields.title")}
                   required
                 />
                 <TextField
-                  name={`${contentLocale}.slug`}
+                  name={`translations.${contentLocale}.slug`}
                   label={t("editor.fields.slug")}
                   helperText={t("editor.slugHelp")}
                   required
                 />
                 <TextField
-                  name={`${contentLocale}.locationName`}
-                  label={t("editor.fields.locationName")}
-                  required
-                />
-                <TextField
-                  name={`${contentLocale}.excerpt`}
+                  name={`translations.${contentLocale}.excerpt`}
                   label={t("editor.fields.excerpt")}
                   helperText={t("editor.excerptHelp")}
                   multiline

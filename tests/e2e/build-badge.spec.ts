@@ -5,7 +5,12 @@ import { expect, test } from "@playwright/test";
  *
  * A fixed element in the bottom-right corner is exactly the kind of thing that is fine on a
  * desktop and covers a link on a phone, so the interesting assertions here are the mobile
- * ones: it must not swallow a tap, and it must not widen the document.
+ * ones: it must stay small, it must not act on a single tap, and it must not widen the
+ * document.
+ *
+ * It is also the staff entrance now — a double-click, or `Enter` when focused — which is why
+ * the "does not swallow a tap" assertion changed shape: the badge does receive pointer events
+ * where a sign-in exists, and what protects the corner is that one tap does nothing at all.
  *
  * These run against the seeded database, so `docker compose up -d db && yarn db:seed` first.
  */
@@ -51,8 +56,10 @@ test.describe("the build badge", () => {
   test("names a version on every page, in both locales", async ({ page }) => {
     for (const path of ["/ro/evenimente", "/en/events", "/ro/confidentialitate"]) {
       await page.goto(path);
-      // Either the baseline and a commit, or the "dev" fallback when a build had no git.
-      await expect(badge(page)).toHaveText(/BR-V\d+\.\d+|dev/);
+      // The exact build moved out of the visible text and into the title, so the corner label
+      // stays two facts rather than four. Either the baseline and a commit, or the "dev"
+      // fallback when a build had no git.
+      await expect(badge(page)).toHaveAttribute("title", /BR-V\d+\.\d+|dev/);
     }
   });
 
@@ -66,26 +73,55 @@ test.describe("the build badge", () => {
 
   test("names the environment, so qa and production are never confused", async ({ page }) => {
     await page.goto("/ro/evenimente");
-    await expect(badge(page)).toHaveText(/^(local|test|qa|production) · /);
+    // Production omits the prefix — there it is noise, and everywhere else it is the point.
+    await expect(badge(page)).toHaveText(/^(local|test|qa) · /);
   });
 
-  test("does not swallow a tap in the corner it occupies", async ({ page }) => {
+  test("does nothing on a single tap in the corner it occupies", async ({ page }) => {
     await page.goto("/ro/evenimente");
 
-    // `pointer-events: none` is what makes this true — assert the behaviour, not the
-    // declaration, so a refactor that keeps the effect keeps passing.
+    // The badge receives pointer events now, because a double-click on it opens staff sign-in.
+    // What keeps it from being a trap on a 320px screen — where the corner is also where a
+    // thumb lands — is that one tap does nothing at all.
+    await badge(page).click();
+    await expect(page).toHaveURL(/\/ro\/evenimente$/);
+  });
+
+  test("stays small enough not to cover the corner of the page", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
     const box = await badge(page).boundingBox();
+    const viewport = page.viewportSize();
     expect(box).not.toBeNull();
-    const atBadge = await page.evaluate(
-      ([x, y]) => {
-        const el = document.elementFromPoint(x, y);
-        return el?.closest("[aria-label]")?.getAttribute("aria-label") ?? null;
-      },
-      [box!.x + box!.width / 2, box!.y + box!.height / 2],
-    );
-    // `?? ""` because the usual pass is `null` — the point hits page content with no labelled
-    // ancestor at all, which is the same success as hitting something that is not the badge.
-    expect(atBadge ?? "").not.toMatch(/versiunea site-ului|website version/i);
+    expect(viewport).not.toBeNull();
+    // A label, not a panel: at 320px it may not take more than half the width, and it is one
+    // line of small text tall.
+    expect(box!.width).toBeLessThanOrEqual(viewport!.width * 0.75);
+    expect(box!.height).toBeLessThanOrEqual(40);
+  });
+
+  test("is the staff entrance: a double-click opens sign-in, and so does Enter", async ({
+    page,
+  }) => {
+    // The footer's "Staff" link is gone; this replaced it. Not a security measure — the
+    // backoffice is guarded on the server on every request — but the club's public pages no
+    // longer advertise a backoffice to everybody who reads them.
+    await page.goto("/ro/evenimente");
+    await badge(page).dblclick();
+    await expect(page).toHaveURL(/\/ro\/autentificare$/);
+
+    await page.goto("/ro/evenimente");
+    await badge(page).focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/ro\/autentificare$/);
+  });
+
+  test("no longer offers a staff link in the footer", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    const footer = page.getByRole("contentinfo");
+    await expect(footer.getByRole("link", { name: /echipă|staff/i })).toHaveCount(0);
+    // The two public legal routes are still there — AGENTS.md §9.2 requires them in the footer.
+    await expect(footer.getByRole("link", { name: /confidențialitate/i })).toBeVisible();
   });
 
   test("does not widen the document past the viewport", async ({ page }) => {

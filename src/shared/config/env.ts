@@ -78,6 +78,34 @@ export const envSchema = z
     EMAIL_ALLOWLIST: allowlist,
     MAILGUN_API_KEY: z.string().min(1).optional(),
     MAILGUN_DOMAIN: z.string().min(1).optional(),
+    /**
+     * Mailgun's API base, e.g. its US or EU region endpoint.
+     *
+     * Configuration for the same reason `MAP_LINK_BASE_URL` is: §8 forbids a hostname under
+     * `src/` and exempts no provider. It also happens to matter — Mailgun's EU region is a
+     * different host, and a club whose participants are European may need it.
+     */
+    MAILGUN_API_BASE_URL: z.url().optional(),
+
+    /**
+     * Who the club's email comes from, and where a reply goes (AGENTS.md §8, §16.4).
+     *
+     * Configuration rather than a literal, because a sending address contains a hostname and
+     * §8 exempts no provider. It is also what lets one build run against a Mailgun sandbox
+     * today and the club's own domain later without a line of code changing.
+     *
+     * Both are optional and both have a working default: the address falls back to
+     * `noreply@<MAILGUN_DOMAIN>`, which is valid on a sandbox from the moment the account
+     * exists. The club's real sender name and address are an owner decision (`BUSINESS.md`
+     * §9) and can be filled in whenever they are made.
+     */
+    EMAIL_FROM_ADDRESS: z.email().optional(),
+    EMAIL_FROM_NAME: z.string().min(1).max(120).default("Brașov Runners"),
+    /**
+     * Absent means a reply goes to the from address, which for `noreply@` means nowhere.
+     * Setting this to a mailbox the club actually reads is the whole of "people can reply".
+     */
+    EMAIL_REPLY_TO: z.email().optional(),
     // Verifies inbound Mailgun webhooks (AGENTS.md §16.5) — a separate secret from the API
     // key, since the two prove different things: one authenticates outbound calls this
     // application makes, the other authenticates inbound calls Mailgun makes to it.
@@ -177,11 +205,14 @@ export const envSchema = z
 
     // A mode that can transmit needs credentials. Missing ones would surface as a failed send
     // per message rather than as a deployment that did not start.
-    if (EMAIL_DELIVERY_MODE !== "capture" && (!value.MAILGUN_API_KEY || !value.MAILGUN_DOMAIN)) {
+    if (
+      EMAIL_DELIVERY_MODE !== "capture" &&
+      (!value.MAILGUN_API_KEY || !value.MAILGUN_DOMAIN || !value.MAILGUN_API_BASE_URL)
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["MAILGUN_API_KEY"],
-        message: `EMAIL_DELIVERY_MODE=${EMAIL_DELIVERY_MODE} requires MAILGUN_API_KEY and MAILGUN_DOMAIN.`,
+        message: `EMAIL_DELIVERY_MODE=${EMAIL_DELIVERY_MODE} requires MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_API_BASE_URL.`,
       });
     }
 

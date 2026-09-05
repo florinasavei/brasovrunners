@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.18-2026-09-04`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.19-2026-09-05`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -70,6 +70,8 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 | No registration without an approved declaration and privacy notice, and never invented legal text in production. Everywhere else carries clearly marked *sample* text — complete in structure, every club-specific fact a visible `<PLACEHOLDER>`, with a not-approved banner in its own rendered body. Production is refused hard, and the refusal has a test. | `AGENTS.md` §10.8, §29; BR-REQ-053-01; `DECISIONS.md` §29 |
 | Publication is one state per event: both languages go live together, and PUBLISHED requires a complete translation in every locale. A locale with no translation is a 404, never the other language's text. | `AGENTS.md` §11.2, BR-REQ-040-02, `DECISIONS.md` §28 |
 | A test registration behaves exactly like a real one in the queue — `kind` appears in no condition in the allocator or the capacity formula — is omitted from every count the club is given, and cannot exist in production. | `AGENTS.md` §12.6, BR-REQ-037-04, `DECISIONS.md` §30 |
+| A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, confirmed and not opted out, and never switched on before the approved privacy notice describes it. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
+| Staff may enter, rename and cancel a registration, and nothing else. No verified-email edit, no participant merge, no delete, and no staff-signed declaration. | `AGENTS.md` §15.11, BR-REQ-037-03, BR-REQ-037-05 |
 | Participants never get passwords or accounts. Staff-only auth. | `AGENTS.md` §10.3, §13 |
 | Email action links: token hashed at rest, single use, GET never mutates. | `AGENTS.md` §12.8, BR-REQ-036-02 |
 | Every absolute URL derives from `APP_BASE_URL`. No hostname literal in `src/`, and the club's domain appears in no file except `SETUP.md` §26 — `docs:check` fails otherwise. | `AGENTS.md` §8, BR-REQ-101-02 |
@@ -101,6 +103,20 @@ translations are published too: every event carries a complete Romanian and Engl
 translation. BR-REQ-040-02 still holds — an unpublished locale is a 404 and never a fallback
 to the other language. The site root redirects to the events listing, which is the landing page.
 
+**Registration has a door.** `modules/events/ui/RegistrationCta.tsx` is the one control, on the
+featured hero and on the event page, rendering exactly one state: the organizer's own link for an
+event registered elsewhere, a primary button and the free places for an open one, the waiting list
+when it is full, and a sentence — opening date, closed, cancelled — where there is no button to
+offer. The count is the allocator's own formula (`readPublicAvailability`), never a second one.
+Until `BR-V1.19` the whole lifecycle was built, tested and unreachable: the route existed and no
+file under `src/` linked to it.
+
+**A public participant list, built and switched off.** `events.participant_list_visibility` is
+`HIDDEN` for every event and `NAMES` publishes the registered names of confirmed, real, not
+opted-out participants and nothing else. It may not be turned on until the club's approved privacy
+notice describes the disclosure — the sample notice carries the paragraph with placeholders
+(BR-REQ-039-01, `DECISIONS.md` §32).
+
 **The backoffice, and the whole of an event in it.** An organizer signs in, creates a race or
 duplicates last year's, sets every column the row carries — kind, event status, both times, the
 end time and the timezone, the coordinates, the map link, distance, climb, the featured flag, and
@@ -112,8 +128,14 @@ archiving is the answer there. Three staff roles asserted on the server, staff a
 an Administrator, DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED **for the event** — both languages go
 live together, and PUBLISHED is refused while either is incomplete — and a save that carries the
 version it was loaded with, on the translation *and* on the event row, so a second organizer's
-save is a CONFLICT rather than an overwrite. Built ahead of its milestone on purpose:
-`DECISIONS.md` §25, §28. Staff sign-in is Auth.js with the Zitadel OAuth provider
+save is a CONFLICT rather than an overwrite. The editor is **one form and one save** now —
+Publication, then Settings, then Content as one tabbed panel per language — writing the event row
+and both translations in a single transaction, where a stale version anywhere fails the whole save
+and writes none of it. Only what a translator would change is entered per language: the title, the
+page address, the short description and the two SEO fields. The meeting point, the street address,
+the difficulty and the cost are one value for the whole event (`AGENTS.md` §11.7, `DECISIONS.md`
+§36), which means the English page shows them in the club's own words — the accepted trade, and
+the next baseline owes migration `0015` to drop the columns they left behind. Built ahead of its milestone on purpose: `DECISIONS.md` §25, §28. Staff sign-in is Auth.js with the Zitadel OAuth provider
 (`DECISIONS.md` §26, reversing §24, which was never shipped to anyone). `STAFF_AUTH_MODE=provider`
 is the real thing; local and test still use the development switcher of `AGENTS.md` §13.1, and any
 environment without a Zitadel tenant runs `STAFF_AUTH_MODE=disabled`, answering 404 to every staff
@@ -151,9 +173,17 @@ to live in, so the external scheduler is the only mechanism, not a fallback. The
 adapter itself is still declared and deliberately not wired — it throws rather than dropping
 mail — and startup still refuses live delivery outside production.
 
-**A registrations backoffice.** List and filter by event and status, one registration's full
-timeline, a resend that can only ever send what §15.8 allows for the current status, and a CSV
-export with formula-neutralized cells (§15.10). Administrator only, asserted on the server.
+**A registrations backoffice that can change a registration, within three moves.** List and
+filter by event and status, one registration's full timeline, a resend that can only ever send
+what §15.8 allows for the current status, and a CSV export with formula-neutralized cells
+(§15.10). Beyond reading: **enter** a registration for somebody who asked in person — the same
+allocator, the same queue position, the same unconfirmed start, `source = STAFF` and the organizer
+on the row; **correct** the registered name, and nothing else, because the verified address is the
+identity; and **cancel**, which is what "remove them" means, releasing the place to the front of
+the waiting list. There is no delete and no fourth move. Every one of the three writes an
+`audit_logs` row. A staff-entered registration reaches CONFIRMED only when the participant signs
+the declaration from their own email — consent cannot be relayed (BR-REQ-037-03, BR-REQ-037-05,
+`DECISIONS.md` §33). Administrator only, asserted on the server.
 
 **Test registrations, so the queue can be watched working.** `registrations.kind` is `REAL` or
 `TEST`; an Administrator fills an event's queue with synthetic participants on `@test.invalid`
@@ -167,7 +197,7 @@ labelled everywhere it is listed, and cannot exist when `APP_ENV=production`, re
 down, when a job is stale or has never run, because a stalled scheduler delays a notification
 rather than breaking the site.
 
-**604 unit and integration tests, 60 end-to-end runs (30 per viewport project), and five
+**668 unit and integration tests, 86 end-to-end runs (43 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -887,7 +887,10 @@ Logical/public route mapping includes:
 
 Staff routes are localized like everything else but never appear in public navigation or the
 sitemap, are disallowed in `robots.txt`, and are served with `X-Robots-Tag: noindex` and a
-private, no-store cache policy. The preview renders the translation of the locale in its own
+private, no-store cache policy. The site footer carried a "Staff" link until
+`DECISIONS.md` §34; the way in is the build badge now — a double-click, or `Enter` when it has
+focus, and inert where `STAFF_AUTH_MODE=disabled`. No user-visible string names the identity
+provider: `signIn("zitadel", …)` is code, and the button says what it does. The preview renders the translation of the locale in its own
 URL: previewing one language through another language's chrome shows the organizer a page that
 does not exist.
 
@@ -924,7 +927,12 @@ answered 404 where `STAFF_AUTH_MODE=disabled`; signing in lands back in the back
 ### 9.3 Messages and content
 
 - semantic keys, not English sentence keys;
-- no hard-coded user-facing strings;
+- no hard-coded user-facing strings, with one bounded exception: the backoffice's enum labels
+  (editorial status, transitions, staff roles, event status, registration mode, registration
+  status) are Romanian constants in `modules/staff-identity/domain/staff-labels.ts`, typed
+  `Record<Enum, string>` so a new enum value is a compile error. `DECISIONS.md` §35. Everything a
+  visitor or a participant reads — including `Event.kind.*`, which both the public pages and the
+  backoffice use — stays in both catalogues;
 - CI checks key/interpolation parity;
 - enum/error codes stay language-neutral;
 - production missing-key fallback logs without PII;
@@ -1219,6 +1227,28 @@ type SocialProvider =
 
 Validate HTTPS and provider host allowlist. Render safe external links with `rel="noopener noreferrer nofollow"`.
 
+### 10.10 Public participant list
+
+The event page MAY publish who is coming. It is a disclosure of personal data, and every rule
+below exists because of that (BR-BUS-039, BR-REQ-039-01).
+
+- `events.participant_list_visibility` is `HIDDEN` by default and MUST stay the default for
+  every new and every duplicated event. A copy never inherits it: the decision was made about
+  the people who entered the original;
+- `NAMES` is refused unless `registration_mode = INTERNAL`, in the service and again as a CHECK.
+  For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
+- the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
+  ordered by `confirmed_at` then `id`. The select list is the registered name and nothing else —
+  no address, no status, no identifier, and no count of anything unconfirmed;
+- `registrations.list_opt_out` is the participant's own refusal, asked on every registration
+  form whatever the event's current setting is: a list can be switched on months later, and a
+  question nobody put to that person cannot be answered on their behalf;
+- it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
+  sample notice carries the paragraph with the club's facts as placeholders (§29,
+  `DECISIONS.md` §29);
+- `tests/privacy/public-surface.test.ts` is where these are asserted. That file may be extended
+  and MUST NOT be weakened.
+
 ---
 
 ## 11. Mini CMS
@@ -1316,6 +1346,28 @@ CMS cannot create routes. Privacy, terms, and declarations are legal documents u
 ### 11.6 AI-assisted content
 
 AI output stays Draft and human reviewed. Never invent results, quotes, sponsors, safety instructions, or legal text. No automatic publication.
+
+### 11.7 What is per language, and what is not
+
+An event has two kinds of field, and the split is "would a translator change this?" rather than
+"which screen shows it" (`DECISIONS.md` §36):
+
+- **Per language** (`event_translations`): title, slug, excerpt, `seo_title`, `seo_description`,
+  and the M5 body. These are writing, and a translator changes every one of them.
+- **One value for the whole event** (`events`): everything factual, including
+  `location_name`, `location_address`, `difficulty_label` and `cost_text`. A street address is
+  identical word for word in both languages, and the meeting point, the difficulty and the cost
+  are one decision the club made once. Asking for them twice was asking the same question twice.
+
+The accepted consequence, and it is a real one: those four render on the English page in the
+club's own words, so `/en/events/...` shows "Parcul Tractorul" and "Gratuit". That is **not** a
+cross-locale fallback — nothing is borrowing the other language's row — and BR-REQ-040-02 is
+unchanged: a locale with no translation is still a 404 and still never shows the other language's
+*text*. It is a single value the club wrote once, and `tests/e2e/event-pages.spec.ts` asserts it
+stays that way so nobody splits the columns back apart by accident.
+
+`location_name` is required by `content/events/fields.ts` on every save and by `transitionEvent`
+before publication. The column is nullable only so it could be added to rows that predate it.
 
 ---
 
@@ -1422,6 +1474,10 @@ events
 - featured boolean NOT NULL DEFAULT false
 - distance_meters integer null
 - elevation_gain_meters integer null
+- location_name text null       -- §11.7; one value for both languages, required before publishing
+- location_address text null    -- §11.7
+- difficulty_label text null    -- §11.7
+- cost_text text null           -- §11.7; "Gratuit", "50 lei"
 - capacity integer null
 - registration_mode
 - registration_opens_at timestamptz null
@@ -1429,6 +1485,7 @@ events
 - declaration_document_id uuid null   -- references a legal_documents row with key EVENT_DECLARATION
 - external_provider text null
 - external_registration_url text null
+- participant_list_visibility HIDDEN|NAMES NOT NULL DEFAULT HIDDEN  -- §10.10; a disclosure, off by default
 - cover_media_asset_id uuid null
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid
@@ -1458,7 +1515,8 @@ Checks:
 - close not before open/not after start for internal;
 - capacity/declaration internal only;
 - approved declaration required internal;
-- external HTTPS/provider fields external only.
+- external HTTPS/provider fields external only;
+- `participant_list_visibility = NAMES` only on an INTERNAL event.
 
 Indexes:
 
@@ -1480,10 +1538,10 @@ event_translations
 - title
 - excerpt
 - body_json jsonb
-- location_name
-- location_address null
-- difficulty_label null
-- cost_text null                -- localized wording: "Gratuit", "Free", "50 lei"
+- location_name                 -- DEPRECATED, dropped in the release after BR-V1.19; see §11.7
+- location_address null         -- DEPRECATED
+- difficulty_label null         -- DEPRECATED
+- cost_text null                -- DEPRECATED
 - cover_alt_text null
 - seo_title null
 - seo_description null
@@ -1499,8 +1557,13 @@ CHECK title, slug and location_name are non-blank, not merely NOT NULL
 ```
 
 `editorial_status` and `published_at` are deliberately absent: publication moved to `events`
-(`DECISIONS.md` §28). What stays here is the language's own text, its author, and its own
-`version` for the save guard.
+(`DECISIONS.md` §28). The four deprecated columns above moved to `events` for a different reason
+(§11.7, `DECISIONS.md` §36): they were the same fact entered twice rather than a translation of
+it. They are still written — a copy of the event-row value — and still named by the CHECK, because
+a drop ships in the release after the code that stopped needing it (§7.6). Nothing reads them.
+
+What stays here is the language's own text — title, slug, excerpt, the two SEO fields and the M5
+body — its author, and its own `version` for the save guard.
 
 ### 12.5 Legal documents
 
@@ -1550,8 +1613,11 @@ registrations
 - privacy_notice_version integer NOT NULL
 - privacy_acknowledged_at timestamptz NOT NULL
 - race_id uuid null                    -- denormalized from the event for the race-level uniqueness index
+- source PUBLIC|STAFF NOT NULL DEFAULT PUBLIC   -- who put the row here (BR-REQ-037-05)
+- created_by_staff_user_id uuid null           -- the organizer who entered it, ON DELETE SET NULL
 - results_name_consent boolean NOT NULL
 - results_consent_version integer NOT NULL
+- list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
 - bib_number integer null              -- M1 footprint; assigned in M2, unique per race, enforced in the assignment transaction
 - submitted_at
 - email_confirmed_at null
@@ -1773,6 +1839,16 @@ INDEX(job_name, started_at)
 when the last successful run of a job is older than its agreed threshold.
 
 Do not put email body, raw token, declaration body, or full participant export in audit metadata.
+
+`audit_logs` is written by exactly one module — `modules/audit/repository.ts`, called from
+`modules/registrations/admin-service.ts` — and is insert-only: nothing updates or deletes a row.
+Three actions exist: `registration.created_by_staff`, `registration.name_corrected` and
+`registration.cancelled_by_staff`. The action is a closed union in code rather than free text, so
+a typo cannot produce a row nothing will ever find. The row is written immediately after the
+change rather than inside its transaction, because each change runs through the registration
+allocator, which owns the transaction around the event-row lock (§10.6); reaching into it would
+mean a second write path into `registrations`, which §15 exists to prevent. The bounded
+consequence: a crash between the two loses an audit row, and never invents one.
 
 ### 12.13 Deferred tables
 
@@ -2129,6 +2205,33 @@ Resend never changes state or marks declaration accepted.
 - authorized short-lived response;
 - audit;
 - no public storage/log body.
+
+### 15.11 Staff-entered registration and administrative corrections
+
+The three administrative changes to a registration, and there is no fourth (BR-REQ-037-03,
+BR-REQ-037-05):
+
+1. **Entering one.** `createRegistrationByStaff` calls the same `submitRegistration` the public
+   form calls, with `source = STAFF` and the organizer's id. Identical allocator, identical
+   event-row lock, identical position in the queue, identical `PENDING_EMAIL_CONFIRMATION`
+   start. The participant receives the ordinary verification email and signs the declaration
+   from their own link: nothing here can reach CONFIRMED, because §10.8 says nobody signs a
+   declaration for somebody else. The organizer must confirm on the form that they are relaying
+   a request; the service refuses the whole registration without it.
+2. **Correcting the registered name.** One text column, audited with its previous value. There
+   is no verified-email edit and no participant merge (§10.3, BR-REQ-037-03 criterion 2): the
+   verified address is the identity, and a typo is fixed by cancelling and registering again.
+3. **Cancelling.** The same `unregister` a participant's own link uses, with
+   `cancellation_source = ADMIN`, so the place is released inside the locked transaction and
+   offered to the front of the waiting list (§15.5, §15.6). A status §10.5 gives no edge to
+   CANCELLED from — `PENDING_EMAIL_CONFIRMATION` — is refused with a sentence rather than a bare
+   conflict; such a row holds no place and lapses after 48 hours on its own.
+
+There is no delete. A registration records what somebody agreed to and when.
+
+Every one of the three writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+`registrations`, a staff-signed declaration, a staff-confirmed registration, or a staff-entered
+row that is allocated ahead of anybody already waiting.
 
 ---
 

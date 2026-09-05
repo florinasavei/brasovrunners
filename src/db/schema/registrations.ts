@@ -15,6 +15,7 @@ import {
 import { events } from "./events";
 import { locale } from "./locale";
 import { participants } from "./participants";
+import { staffUsers } from "./staff-users";
 
 /** AGENTS.md §10.5. */
 export const registrationStatus = pgEnum("registration_status", [
@@ -76,6 +77,22 @@ export const registrationKind = pgEnum("registration_kind", ["REAL", "TEST"]);
 export type RegistrationKind = (typeof registrationKind.enumValues)[number];
 
 /**
+ * Who put this row in the table: the participant, or an organizer on their behalf
+ * (BR-REQ-037-05).
+ *
+ * People phone the club, catch an organizer after a run, or have no email of their own to hand.
+ * A registration entered by staff is still that person's registration, so it goes through the
+ * same allocator, occupies a place in the same order, and starts in the same
+ * `PENDING_EMAIL_CONFIRMATION` state — it never jumps the queue and it never arrives confirmed,
+ * because confirming means signing a declaration and nobody may sign one for somebody else
+ * (AGENTS.md §10.8). What this column changes is only the record of how the row got here, next
+ * to `created_by_staff_user_id` and the `audit_logs` entry that names the organizer.
+ */
+export const registrationSource = pgEnum("registration_source", ["PUBLIC", "STAFF"]);
+
+export type RegistrationSource = (typeof registrationSource.enumValues)[number];
+
+/**
  * Registrations (AGENTS.md §12.6; BR-REQ-030-01 through BR-REQ-036-02).
  *
  * Priority-1 code: this table is what `AGENTS.md` §10.5's state machine and §10.6's capacity
@@ -107,6 +124,22 @@ export const registrations = pgTable(
     // REAL by default, so every row written before this column existed — and every row written
     // by the ordinary public form — is somebody's registration without anything having to say so.
     kind: registrationKind("kind").notNull().default("REAL"),
+
+    // PUBLIC by default, so every row written before this column existed — and every row the
+    // public form writes — says how it arrived without anything having to set it.
+    source: registrationSource("source").notNull().default("PUBLIC"),
+    /**
+     * The organizer who entered it, when one did.
+     *
+     * `ON DELETE SET NULL`, like `events.created_by_staff_user_id`: removing somebody from the
+     * staff list must not delete a participant's registration, and a row whose creator has left
+     * the club still says it was staff-entered through `source`. That is also why the two are
+     * not tied together by a CHECK — the constraint would fire on the day an account is removed.
+     */
+    createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
+
     locale: locale("locale").notNull(),
     registeredName: text("registered_name").notNull(),
 
@@ -120,6 +153,18 @@ export const registrations = pgTable(
 
     resultsNameConsent: boolean("results_name_consent").notNull(),
     resultsConsentVersion: integer("results_consent_version").notNull(),
+
+    /**
+     * "Keep my name off the public start list" (BR-REQ-039-01).
+     *
+     * A separate answer from `results_name_consent`, which is about the *results* after the
+     * event, and deliberately shaped the other way round: the club decides per event whether a
+     * start list is published at all (`events.participant_list_visibility`, HIDDEN by default),
+     * and this is one participant's refusal within an event that publishes one. Two questions,
+     * two columns — folding them together would mean a person who wants to be listed at the
+     * start line and not in a permanent results table cannot say so.
+     */
+    listOptOut: boolean("list_opt_out").notNull().default(false),
 
     // M1 footprint only. Assignment is an M2 feature with its own uniqueness-per-race
     // transaction; the CHECK below keeps this column physically empty until that exists,

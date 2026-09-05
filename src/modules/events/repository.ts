@@ -42,13 +42,17 @@ const PUBLIC_COLUMNS = {
   registrationClosesAt: events.registrationClosesAt,
   externalRegistrationUrl: events.externalRegistrationUrl,
   externalProvider: events.externalProvider,
+  // Whether this event publishes a start list at all (BR-REQ-039-01). The names themselves are
+  // a separate query, made only when this says NAMES.
+  participantListVisibility: events.participantListVisibility,
+  // The same event in either language (`DECISIONS.md` §36): one value, on the event row.
+  locationName: events.locationName,
+  locationAddress: events.locationAddress,
+  difficultyLabel: events.difficultyLabel,
+  costText: events.costText,
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,
-  locationName: eventTranslations.locationName,
-  locationAddress: eventTranslations.locationAddress,
-  difficultyLabel: eventTranslations.difficultyLabel,
-  costText: eventTranslations.costText,
   seoTitle: eventTranslations.seoTitle,
   seoDescription: eventTranslations.seoDescription,
   // When the event was first published — one date for both languages now that publication is
@@ -207,7 +211,7 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
     .select({
       locale: eventTranslations.locale,
       title: eventTranslations.title,
-      locationName: eventTranslations.locationName,
+      locationName: events.locationName,
       startsAt: events.startsAt,
       timezone: events.timezone,
     })

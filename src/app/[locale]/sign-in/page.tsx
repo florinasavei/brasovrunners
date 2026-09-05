@@ -14,6 +14,7 @@ import { DEV_IDENTITIES, isDevStaffSwitcherEnabled } from "@/modules/staff-ident
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { signInAsDevIdentityAction } from "../admin/actions";
+import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -73,7 +74,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
           }}
         >
           <Button type="submit" variant="contained" fullWidth>
-            {t("signIn.withZitadel")}
+            {t("signIn.action")}
           </Button>
         </form>
       ) : isDevStaffSwitcherEnabled() ? (
@@ -85,7 +86,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="identity" value={identity.key} />
               <Button type="submit" variant="outlined" fullWidth>
-                {identity.displayName} · {t(`roles.${identity.role}`)}
+                {identity.displayName} · {STAFF_ROLE_LABEL[identity.role]}
               </Button>
             </form>
           ))}

@@ -62,7 +62,9 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   const data: TemplateData = {
     participantName: participant?.defaultName ?? "",
     eventTitle: eventDetails?.title,
-    eventLocationName: eventDetails?.locationName,
+    // Nullable on the event row now that the meeting point is one value for the whole event
+    // (`DECISIONS.md` §36); the template already renders nothing for an absent field.
+    eventLocationName: eventDetails?.locationName ?? undefined,
     eventStartsAtFormatted: eventDetails
       ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
           dateStyle: "long",

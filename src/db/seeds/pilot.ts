@@ -83,46 +83,47 @@ async function seed() {
       longitude: "25.6167",
       distanceMeters: 10000,
       elevationGainMeters: 180,
+      /**
+       * One value for both languages (`DECISIONS.md` §36).
+       *
+       * The place, the difficulty and the cost are the same fact whichever language the page is
+       * read in, so they are the club's own words once rather than a translation twice. The
+       * English page shows them exactly as typed, which is the trade the owner chose over
+       * entering every event's meeting point twice.
+       */
+      locationName: "Parcul Tractorul, zona de start",
+      locationAddress: "Strada Nicolae Labiș, Brașov",
+      difficultyLabel: "Mediu",
+      costText: "Gratuit",
       ro: {
         slug: "crosul-aniversar-brasov-runners",
         title: "Crosul aniversar Brașov Runners",
         excerpt:
           "EXEMPLU — data, distanța și punctul de întâlnire sunt provizorii. Cursa aniversară a clubului, pe traseu de cros în jurul orașului. Toate nivelurile sunt binevenite.",
-        locationName: "Parcul Tractorul, zona de start",
-        locationAddress: "Strada Nicolae Labiș, Brașov",
-        difficultyLabel: "Mediu",
-        costText: "Gratuit",
       },
       en: {
         slug: "brasov-runners-anniversary-cross",
         title: "Brașov Runners Anniversary Cross",
         excerpt:
           "SAMPLE — the date, the distance and the meeting point are placeholders. The club's anniversary race, on a cross-country course around the city. All levels welcome.",
-        locationName: "Tractorul Park, start area",
-        locationAddress: "Strada Nicolae Labiș, Brașov",
-        difficultyLabel: "Moderate",
-        costText: "Free",
       },
     },
     {
       kind: "COMMUNITY_RUN" as const,
       startsAt: new Date("2026-09-13T07:00:00+03:00"),
       distanceMeters: 8000,
+      locationName: "Parcul Tractorul, intrarea principală",
+      difficultyLabel: "Ușor",
+      costText: "Gratuit",
       ro: {
         slug: "alergare-de-duminica-parcul-tractorul",
         title: "Alergare de duminică",
         excerpt: "Alergare relaxată prin parc, ritm de conversație. Vino cum ești.",
-        locationName: "Parcul Tractorul, intrarea principală",
-        difficultyLabel: "Ușor",
-        costText: "Gratuit",
       },
       en: {
         slug: "sunday-run-tractorul-park",
         title: "Sunday run",
         excerpt: "An easy run through the park at conversation pace. Come as you are.",
-        locationName: "Tractorul Park, main entrance",
-        difficultyLabel: "Easy",
-        costText: "Free",
       },
     },
     {
@@ -130,41 +131,35 @@ async function seed() {
       startsAt: new Date("2026-09-20T08:00:00+03:00"),
       distanceMeters: 14000,
       elevationGainMeters: 600,
+      locationName: "Stația de telecabină Tâmpa",
+      difficultyLabel: "Mediu",
+      costText: "Gratuit",
       ro: {
         slug: "tura-pe-tampa",
         title: "Tură pe Tâmpa",
         excerpt: "Urcare pe Tâmpa și retur. Bocanci sau pantofi de trail recomandați.",
-        locationName: "Stația de telecabină Tâmpa",
-        difficultyLabel: "Mediu",
-        costText: "Gratuit",
       },
       en: {
         slug: "tampa-trail",
         title: "Tâmpa trail run",
         excerpt: "Up Tâmpa and back. Hiking boots or trail shoes recommended.",
-        locationName: "Tâmpa cable car station",
-        difficultyLabel: "Moderate",
-        costText: "Free",
       },
     },
     {
       kind: "INTERVAL_SESSION" as const,
       startsAt: new Date("2026-09-24T18:30:00+03:00"),
+      locationName: "Stadionul Olimpia",
+      difficultyLabel: "Avansat",
+      costText: "Gratuit",
       ro: {
         slug: "antrenament-de-intervale-olimpia",
         title: "Antrenament de intervale",
         excerpt: "Serii pe pistă, toate nivelurile. Încălzire în grup la 18:30.",
-        locationName: "Stadionul Olimpia",
-        difficultyLabel: "Avansat",
-        costText: "Gratuit",
       },
       en: {
         slug: "interval-session-olimpia",
         title: "Interval session",
         excerpt: "Track repeats, all levels. Group warm-up at 18:30.",
-        locationName: "Olimpia Stadium",
-        difficultyLabel: "Advanced",
-        costText: "Free",
       },
     },
   ];
@@ -186,6 +181,11 @@ async function seed() {
         // link is built from the coordinates above and `MAP_LINK_BASE_URL` instead.
         distanceMeters: row.distanceMeters,
         elevationGainMeters: row.elevationGainMeters,
+        // The same event in either language (`DECISIONS.md` §36).
+        locationName: row.locationName,
+        locationAddress: "locationAddress" in row ? row.locationAddress : undefined,
+        difficultyLabel: row.difficultyLabel,
+        costText: row.costText,
         /**
          * NONE, deliberately, for every seeded event.
          *
@@ -212,10 +212,10 @@ async function seed() {
           slug: row[locale].slug,
           title: row[locale].title,
           excerpt: row[locale].excerpt,
-          locationName: row[locale].locationName,
-          locationAddress: "locationAddress" in row[locale] ? row[locale].locationAddress : undefined,
-          difficultyLabel: row[locale].difficultyLabel,
-          costText: row[locale].costText,
+          // A copy of the event row's value, not a translation: `event_translations
+          // .location_name` is still NOT NULL until the drop ships in the next release
+          // (AGENTS.md §7.6). Nothing reads it.
+          locationName: row.locationName,
         })),
       );
   }

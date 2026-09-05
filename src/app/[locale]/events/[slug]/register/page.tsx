@@ -101,6 +101,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             control={<Checkbox name="resultsNameConsent" />}
             label={t("resultsNameConsent")}
           />
+          {/*
+            BR-REQ-039-01. Asked on every form, including for an event that publishes no start
+            list today: an organizer can switch one on months later, and a question nobody put
+            to this person cannot be answered on their behalf afterwards. The label says "if
+            the club publishes one" for exactly that reason.
+          */}
+          <FormControlLabel
+            control={<Checkbox name="listOptOut" />}
+            label={t("listOptOut")}
+          />
 
           <Button type="submit" variant="contained">
             {t("submit")}

@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import type { PublicEvent } from "../repository";
 import EventFacts from "./EventFacts";
+import RegistrationCta from "./RegistrationCta";
 
 /**
  * The event the club is leading with, above the ordinary listing.
@@ -67,9 +68,19 @@ export default async function FeaturedEventHero({
 
       <EventFacts event={event} now={now} />
 
-      <Box sx={{ mt: 3 }}>
+      {/*
+        Registration first, details second.
+
+        The lead event is here because somebody arrived to enter it, so the primary button is
+        the one that starts that — and when registration is not open, this renders the sentence
+        saying so, or nothing at all. "See the details" then steps down to outlined: two filled
+        buttons side by side is two primary actions, which is none.
+      */}
+      <RegistrationCta event={event} now={now} />
+
+      <Box sx={{ mt: 2 }}>
         <ButtonLink
-          variant="contained"
+          variant="outlined"
           // 44px is the minimum tap target BR-REQ-041-01 criterion 6 names; MUI's medium
           // button is 36.5px, which passes on a mouse and fails on a thumb.
           sx={{ minHeight: 44 }}

@@ -153,6 +153,9 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
         locale,
         privacyAcknowledged: true,
         resultsNameConsent: false,
+        // A synthetic row is never on a public start list anyway (`listPublicStartList`
+        // filters `kind = REAL`), and asking it to opt out would state a preference nobody has.
+        listOptOut: false,
         honeypot: "",
         renderedAt: new Date(now.getTime() - RENDERED_SECONDS_AGO * 1000).toISOString(),
       },

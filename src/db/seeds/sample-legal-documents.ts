@@ -97,7 +97,16 @@ const privacyNoticeRo: LegalDocumentBody = {
       ],
     },
     {
-      heading: "5. Ciclul de viață al înscrierii",
+      heading: "5. Lista publică de participanți",
+      paragraphs: [
+        "Pentru un anumit eveniment, clubul poate alege să publice pe pagina evenimentului lista persoanelor care și-au confirmat înscrierea. Când face asta, se publică numele scris de tine în formular și nimic altceva: nicio adresă de e-mail, nimic despre înscrierile neconfirmate și nicio altă informație.",
+        "Publicarea nu este pornită din oficiu. Fiecare eveniment pornește fără listă publică, iar clubul o activează separat, pentru evenimentul acela, dacă decide astfel.",
+        "Formularul de înscriere are o căsuță prin care ceri ca numele tău să nu apară pe această listă. O poți bifa la înscriere, iar mai târziu poți cere oricând scoaterea numelui, scriind la <CONTACT>.",
+        "Temeiul legal al publicării: <TEMEI LEGAL — a se completa de club>. Cât timp rămâne lista publică: <PERIOADĂ>.",
+      ],
+    },
+    {
+      heading: "6. Ciclul de viață al înscrierii",
       paragraphs: [
         "O înscriere trece prin stări: în așteptarea confirmării adresei de e-mail, în așteptarea declarației, pe lista de așteptare, cu loc oferit, confirmată, anulată sau expirată.",
         "Platforma păstrează momentul fiecărei schimbări: când ai trimis formularul, când ai confirmat adresa, când ai intrat pe lista de așteptare, când ți s-a oferit un loc, când expiră rezervarea, când s-a confirmat, când s-a anulat și de către cine, când a expirat și din ce motiv.",
@@ -105,7 +114,7 @@ const privacyNoticeRo: LegalDocumentBody = {
       ],
     },
     {
-      heading: "6. Declarația pe proprie răspundere",
+      heading: "7. Declarația pe proprie răspundere",
       paragraphs: [
         "Pentru evenimentele cu înscriere prin această platformă, confirmarea presupune acceptarea unei declarații. Se păstrează: numele scris de tine ca semnătură, versiunea declarației acceptate, o amprentă criptografică (SHA-256) a textului exact și momentul acceptării.",
         "Nu se păstrează date medicale, contacte de urgență sau date despre minori. Platforma nu are astfel de câmpuri.",
@@ -113,7 +122,7 @@ const privacyNoticeRo: LegalDocumentBody = {
       ],
     },
     {
-      heading: "7. E-mailurile tranzacționale",
+      heading: "8. E-mailurile tranzacționale",
       paragraphs: [
         "Platforma trimite doar mesaje legate de înscrierea ta: confirmarea adresei, invitația de a semna declarația, confirmarea locului, oferta de pe lista de așteptare, anularea și expirarea.",
         "Nu trimitem mesaje de marketing prin această platformă.",
@@ -121,7 +130,7 @@ const privacyNoticeRo: LegalDocumentBody = {
       ],
     },
     {
-      heading: "8. Cine mai prelucrează datele",
+      heading: "9. Cine mai prelucrează datele",
       paragraphs: [
         "Platforma folosește furnizori care prelucrează datele în numele clubului, în calitate de persoane împuternicite:",
         "Găzduirea bazei de date: <FURNIZOR>, regiune <REGIUNE>.",
@@ -132,13 +141,13 @@ const privacyNoticeRo: LegalDocumentBody = {
       ],
     },
     {
-      heading: "9. Transferuri în afara Spațiului Economic European",
+      heading: "10. Transferuri în afara Spațiului Economic European",
       paragraphs: [
         "<A se completa de club: dacă vreunul dintre furnizorii de mai sus prelucrează datele în afara SEE, se indică țara și mecanismul de transfer — de exemplu clauzele contractuale standard.>",
       ],
     },
     {
-      heading: "10. Cât timp păstrăm datele",
+      heading: "11. Cât timp păstrăm datele",
       paragraphs: [
         "Înscrierile și dovezile de acceptare a declarației: <PERIOADĂ DE PĂSTRARE>.",
         "Datele participantului (nume, adresă de e-mail): <PERIOADĂ DE PĂSTRARE>.",
@@ -147,7 +156,7 @@ const privacyNoticeRo: LegalDocumentBody = {
       ],
     },
     {
-      heading: "11. Drepturile tale",
+      heading: "12. Drepturile tale",
       paragraphs: [
         "Ai dreptul de acces la datele tale, dreptul la rectificare, dreptul la ștergere, dreptul la restricționarea prelucrării, dreptul la portabilitatea datelor și dreptul de a te opune prelucrării întemeiate pe interesul legitim.",
         "Când prelucrarea se bazează pe consimțământ, ai dreptul de a-l retrage oricând, fără ca acest lucru să afecteze legalitatea prelucrării făcute înainte de retragere.",
@@ -156,25 +165,25 @@ const privacyNoticeRo: LegalDocumentBody = {
       ],
     },
     {
-      heading: "12. Plângeri",
+      heading: "13. Plângeri",
       paragraphs: [
         "Dacă nu ești mulțumit de felul în care îți sunt prelucrate datele, poți depune o plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal. Date de contact ale autorității: <CONTACT AUTORITATE>.",
       ],
     },
     {
-      heading: "13. Cookie-uri și date tehnice",
+      heading: "14. Cookie-uri și date tehnice",
       paragraphs: [
         "<A se completa de club, după verificarea a ceea ce folosește efectiv site-ul la momentul aprobării.> Platforma folosește un cookie pentru limba aleasă și un cookie de sesiune pentru membrii echipei clubului care se autentifică. Participanții nu se autentifică și nu primesc cont.",
         "Platforma nu stochează adresa IP și nici agentul de utilizator odată cu acceptarea declarației.",
       ],
     },
     {
-      heading: "14. Modificări ale acestei note",
+      heading: "15. Modificări ale acestei note",
       paragraphs: [
         "Fiecare versiune a acestei note are un număr, o dată de intrare în vigoare și o amprentă a conținutului. O înscriere reține versiunea pe care ai confirmat-o, iar versiunile anterioare rămân disponibile pentru înscrierile care le referă.",
       ],
     },
-    { heading: "15. Contact", paragraphs: ["<CONTACT>"] },
+    { heading: "16. Contact", paragraphs: ["<CONTACT>"] },
     { heading: "Stare și recenzie", paragraphs: REVIEW_NOTE_RO },
   ],
 };
@@ -214,7 +223,16 @@ const privacyNoticeEn: LegalDocumentBody = {
       ],
     },
     {
-      heading: "5. The registration lifecycle",
+      heading: "5. The public participant list",
+      paragraphs: [
+        "For a particular event, the club may choose to publish on the event page the list of people who have confirmed their registration. When it does, what is published is the name you gave on the form and nothing else: no email address, nothing about registrations that were never confirmed, and no other information.",
+        "It is not on by default. Every event starts with no public list, and the club switches it on separately, for that event, if it decides to.",
+        "The registration form has a box you tick to keep your name off that list. You can tick it when you register, and you can ask for your name to be removed at any time afterwards by writing to <CONTACT>.",
+        "Legal basis for publishing: <LEGAL BASIS — to be completed by the club>. How long the list stays public: <PERIOD>.",
+      ],
+    },
+    {
+      heading: "6. The registration lifecycle",
       paragraphs: [
         "A registration moves through states: waiting on email confirmation, waiting on the declaration, on the waiting list, holding an offered place, confirmed, cancelled, or expired.",
         "The platform keeps the moment of each change: when you submitted the form, when you confirmed your address, when you joined the waiting list, when a place was offered to you, when that hold expires, when it was confirmed, when it was cancelled and by whom, and when it expired and for what reason.",
@@ -222,7 +240,7 @@ const privacyNoticeEn: LegalDocumentBody = {
       ],
     },
     {
-      heading: "6. The event declaration",
+      heading: "7. The event declaration",
       paragraphs: [
         "For events registered through this platform, confirmation requires accepting a declaration. What is kept is: the name you type as your signature, the version of the declaration you accepted, a cryptographic fingerprint (SHA-256) of the exact text, and the moment you accepted it.",
         "No medical information, emergency contact, or information about minors is kept. The platform has no such fields.",
@@ -230,7 +248,7 @@ const privacyNoticeEn: LegalDocumentBody = {
       ],
     },
     {
-      heading: "7. Transactional email",
+      heading: "8. Transactional email",
       paragraphs: [
         "The platform sends only messages about your own registration: confirming your address, asking you to sign the declaration, confirming your place, offering a place from the waiting list, cancellation, and expiry.",
         "No marketing is sent through this platform.",
@@ -238,7 +256,7 @@ const privacyNoticeEn: LegalDocumentBody = {
       ],
     },
     {
-      heading: "8. Who else processes the data",
+      heading: "9. Who else processes the data",
       paragraphs: [
         "The platform relies on providers who process the data on the club's behalf, as processors:",
         "Database hosting: <PROVIDER>, region <REGION>.",
@@ -249,13 +267,13 @@ const privacyNoticeEn: LegalDocumentBody = {
       ],
     },
     {
-      heading: "9. Transfers outside the European Economic Area",
+      heading: "10. Transfers outside the European Economic Area",
       paragraphs: [
         "<To be completed by the club: where any provider above processes data outside the EEA, name the country and the transfer mechanism — for example standard contractual clauses.>",
       ],
     },
     {
-      heading: "10. How long we keep it",
+      heading: "11. How long we keep it",
       paragraphs: [
         "Registrations and declaration acceptance records: <RETENTION PERIOD>.",
         "Participant details (name, email address): <RETENTION PERIOD>.",
@@ -264,7 +282,7 @@ const privacyNoticeEn: LegalDocumentBody = {
       ],
     },
     {
-      heading: "11. Your rights",
+      heading: "12. Your rights",
       paragraphs: [
         "You have the right of access to your data, the right to rectification, the right to erasure, the right to restrict processing, the right to data portability, and the right to object to processing based on legitimate interests.",
         "Where processing is based on consent, you may withdraw it at any time, without affecting the lawfulness of processing carried out before you withdrew.",
@@ -273,25 +291,25 @@ const privacyNoticeEn: LegalDocumentBody = {
       ],
     },
     {
-      heading: "12. Complaints",
+      heading: "13. Complaints",
       paragraphs: [
         "If you are unhappy with how your data is handled, you may complain to the Romanian National Supervisory Authority for Personal Data Processing. Authority contact details: <AUTHORITY CONTACT>.",
       ],
     },
     {
-      heading: "13. Cookies and technical data",
+      heading: "14. Cookies and technical data",
       paragraphs: [
         "<To be completed by the club, after checking what the site actually uses at the moment of approval.> The platform uses a cookie for the language you chose, and a session cookie for members of the club's staff who sign in. Participants do not sign in and get no account.",
         "The platform does not store an IP address or a user agent alongside a declaration acceptance.",
       ],
     },
     {
-      heading: "14. Changes to this notice",
+      heading: "15. Changes to this notice",
       paragraphs: [
         "Every version of this notice carries a number, an effective date, and a fingerprint of its content. A registration records the version you acknowledged, and earlier versions remain available for the registrations that reference them.",
       ],
     },
-    { heading: "15. Contact", paragraphs: ["<CONTACT>"] },
+    { heading: "16. Contact", paragraphs: ["<CONTACT>"] },
     { heading: "Status and review", paragraphs: REVIEW_NOTE_EN },
   ],
 };

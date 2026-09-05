@@ -57,6 +57,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
         locale,
         privacyAcknowledged: form.get("privacyAcknowledged") === "on",
         resultsNameConsent: form.get("resultsNameConsent") === "on",
+        listOptOut: form.get("listOptOut") === "on",
         honeypot: text(form, "honeypot"),
         renderedAt: text(form, "renderedAt"),
       },

@@ -63,6 +63,7 @@ describe("BR-REQ-080-01 outbox renderer", () => {
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: NOW,
         resultsNameConsent: false,
+        listOptOut: false,
         resultsConsentVersion: 1,
         holdExpiresAt: new Date(NOW.getTime() + 30 * 60_000),
       })

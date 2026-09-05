@@ -42,10 +42,6 @@ export const translationFieldsSchema = z
     }),
     title: z.string().trim().min(1).max(200),
     excerpt: optionalText(500),
-    locationName: z.string().trim().min(1).max(200),
-    locationAddress: optionalText(300),
-    difficultyLabel: optionalText(80),
-    costText: optionalText(120),
     seoTitle: optionalText(200),
     seoDescription: optionalText(320),
   })
@@ -161,6 +157,19 @@ export const eventFieldsSchema = z
     raceStartsAtWallTime: z.string().trim(),
     latitude: coordinate(90),
     longitude: coordinate(180),
+
+    /**
+     * The four facts that are the same event in either language (`DECISIONS.md` §36).
+     *
+     * The meeting point is required here rather than nullable, even though the column accepts
+     * null: the column has to tolerate rows written before it existed, and every save from this
+     * form fills it. A public event page without a meeting point is missing the one fact a
+     * runner actually needs.
+     */
+    locationName: z.string().trim().min(1).max(200),
+    locationAddress: optionalText(300),
+    difficultyLabel: optionalText(80),
+    costText: optionalText(120),
     mapUrl: httpsUrl("a map link must start with https://"),
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
@@ -174,6 +183,15 @@ export const eventFieldsSchema = z
     registrationOpensAtWallTime: z.string().trim(),
     registrationClosesAtWallTime: z.string().trim(),
     declarationDocumentId: optionalUuid,
+    /**
+     * Whether the event page publishes who is coming (BR-REQ-039-01).
+     *
+     * In the allowlist deliberately: it is an organizer's decision about the club's own event,
+     * and the alternative — a developer setting a column — is exactly what `DECISIONS.md` §28
+     * removed. The service refuses `NAMES` on anything but an INTERNAL event, and so does the
+     * database.
+     */
+    participantListVisibility: z.enum(["HIDDEN", "NAMES"]),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })
@@ -193,7 +211,6 @@ const newTranslationSchema = translationFieldsSchema.pick({
   slug: true,
   title: true,
   excerpt: true,
-  locationName: true,
 });
 
 export const newEventSchema = eventFieldsSchema.extend({
@@ -207,15 +224,14 @@ export type NewEventInput = z.infer<typeof newEventSchema>;
  *
  * Deliberately short. A missing address, difficulty, cost or SEO override is a fact the club has
  * not stated, and requiring one would push an organizer into inventing it — AGENTS.md §1.2. A
- * missing title, slug, meeting point or description is a page that reads as half-translated in
- * one of the two languages, which is precisely what publishing both together is for.
+ * missing title, slug or description is a page that reads as half-translated in one of the two
+ * languages, which is precisely what publishing both together is for.
+ *
+ * The meeting point left this list when it left the table (`DECISIONS.md` §36): it is one value
+ * for the whole event now, so "is it complete" is a question about the event rather than about
+ * each language, and `service.ts#missingPublicEventFields` is where it is asked.
  */
-export const REQUIRED_PUBLIC_TRANSLATION_FIELDS = [
-  "title",
-  "slug",
-  "locationName",
-  "excerpt",
-] as const;
+export const REQUIRED_PUBLIC_TRANSLATION_FIELDS = ["title", "slug", "excerpt"] as const;
 
 export type RequiredPublicTranslationField = (typeof REQUIRED_PUBLIC_TRANSLATION_FIELDS)[number];
 

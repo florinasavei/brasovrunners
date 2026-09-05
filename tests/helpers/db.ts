@@ -1,6 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
+import { auditLogs } from "@/db/schema/audit-logs";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
@@ -13,6 +14,7 @@ import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
 
 const schema = {
+  auditLogs,
   events,
   eventTranslations,
   participants,
@@ -66,6 +68,7 @@ export async function createTestDatabase(): Promise<{
 
 /** Truncate every table so one test cannot see another's rows. Children before parents. */
 export async function resetTables(db: TestDatabase): Promise<void> {
+  await db.delete(auditLogs);
   await db.delete(declarationAcceptances);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);

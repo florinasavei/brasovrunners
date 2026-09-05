@@ -64,6 +64,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
       privacyNoticeVersion: 1,
       privacyAcknowledgedAt: NOW,
       resultsNameConsent: false,
+      listOptOut: false,
       resultsConsentVersion: 1,
     });
   }

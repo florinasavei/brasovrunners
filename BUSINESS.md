@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -351,6 +351,17 @@ The recommended resend follows the current state:
 
 A resend creates a new delivery record and a new action token where needed. It must not duplicate the registration, change its state, extend an offer without an explicit Admin action, or silently bypass declaration requirements.
 
+An organizer may also **enter a registration for somebody** who asks in person, on the phone,
+or after a run. It is that person's registration, not the club's: it takes its place in the same
+order as one made online, it starts unconfirmed, and the participant receives the ordinary email
+and signs the declaration themselves. Nobody signs a declaration for somebody else, and the
+organizer confirms on the form that they are relaying a request rather than inventing one.
+
+The three administrative changes to a registration are entering one, correcting the name it
+carries, and cancelling it. There is no fourth, and there is no delete: a registration records
+what somebody agreed to and when, so "remove them" means cancelled, which releases the place to
+the first person waiting. Each of the three is recorded with who did it and when.
+
 The verified email is the participant identity. Staff must not overwrite a verified email directly or merge participant records in V1. An unverified typo is handled by cancelling the pending registration and restarting with the correct address. A verified identity change requires a later explicit verification workflow; it is never performed by an unaudited database edit.
 
 ### BR-BUS-038 — Optional public runner profile
@@ -380,12 +391,42 @@ Rules:
 - profiles (M4) are public by direct URL but excluded from the public sitemap and runner directory, and served with `noindex, nofollow`;
 - Strava support is an outbound profile link only, not OAuth or activity synchronization.
 
+### BR-BUS-039 — Public participant list
+
+For a particular event, the club may choose to publish on the event page the names of the
+people who have confirmed a place. This is a disclosure of personal data, not a display
+setting, and it is treated as one.
+
+Rules:
+
+- **off unless the club turns it on, for one event at a time.** Every event is created with no
+  public list, and no event acquires one by being copied from an event that had one;
+- only people who have **confirmed** appear. Somebody part-way through registering has not
+  agreed to anything yet, and publishing that they tried is a disclosure they never made;
+- **the registered name and nothing else.** No email address, no status, no place number, no
+  count of who is still deciding, and nothing at all about a waiting list;
+- **a participant may keep their own name off it.** The registration form asks, in plain words,
+  on every event — including one with no list today, because the club may add one later and a
+  question nobody was asked cannot be answered on their behalf. A participant may also ask
+  afterwards, by writing to the club;
+- **it may not be switched on until the approved privacy notice describes it.** The sample
+  notice carries the paragraph with the club's facts left as placeholders; the approved wording
+  is the club's to write;
+- an event registered elsewhere never publishes a list here: those entries are the other
+  organizer's, and this platform holds none of them;
+- a demonstration registration is never a person and never appears (BR-BUS-037).
+
+Names are listed in the order people confirmed — the one order that is a fact about them
+rather than an accident of storage.
+
 ### BR-BUS-040 — Bilingual experience
 
 Romanian and English are supported from V1.
 
 - Romanian is the default language.
-- Navigation, forms, validation messages, action pages, emails, declarations, and editorial content are localized.
+- Navigation, forms, validation messages, action pages, emails, declarations, and editorial content are localized. This is about the **public site** and the email participants receive.
+- The backoffice is the club's own tool, used by a handful of people who all speak Romanian, and its labels for the club's own vocabulary — a publication state, a staff role, a registration state — are written once, in Romanian. Two copies of the same seven words made the screen harder to work on rather than easier.
+- **What is written twice is only what a translator would change**: the title, the page address, the short description and the two search-engine fields. The time, the type, the capacity, the meeting point, the street address, the difficulty and the cost are one answer for the whole event, given once. Those last four used to be asked per language, and the second answer was not a translation — it was the same fact again. The trade the club accepted: the English page shows those four in the club's own words.
 - Content may exist in Romanian before an English translation is ready.
 - Public URLs identify the language.
 - Dates and numbers are formatted for the selected language.

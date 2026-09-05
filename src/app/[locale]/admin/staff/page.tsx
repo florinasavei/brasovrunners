@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { canManageStaff, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
+import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
 import { changeStaffRoleAction, inviteStaffAction, revokeStaffAction } from "../actions";
@@ -59,8 +60,10 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {t("staff.title")}
       </Typography>
 
-      {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
-      {saved && <Alert severity="success">{t("saved")}</Alert>}
+      <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
+        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {saved && <Alert severity="success">{t("saved")}</Alert>}
+      </Box>
 
       <Box component="section">
         <Typography variant="h3" sx={{ fontSize: "1rem", mb: 2 }}>
@@ -75,7 +78,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             <TextField name="role" label={t("staff.role")} defaultValue="AUTHOR" select required>
               {STAFF_ROLES.map((role) => (
                 <MenuItem key={role} value={role}>
-                  {t(`roles.${role}`)}
+                  {STAFF_ROLE_LABEL[role]}
                 </MenuItem>
               ))}
             </TextField>
@@ -104,7 +107,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
           <Card key={member.id} component="li" variant="outlined">
             <CardContent>
               <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                <Chip size="small" label={t(`roles.${member.role}`)} />
+                <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />
                 {member.firstSignedInAt === null && (
                   <Chip size="small" variant="outlined" label={t("staff.pending")} />
                 )}
@@ -137,7 +140,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                       >
                         {STAFF_ROLES.map((role) => (
                           <MenuItem key={role} value={role}>
-                            {t(`roles.${role}`)}
+                            {STAFF_ROLE_LABEL[role]}
                           </MenuItem>
                         ))}
                       </TextField>
@@ -150,7 +153,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   <form action={revokeStaffAction}>
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="staffUserId" value={member.id} />
-                    <Button type="submit" size="small" color="error" variant="outlined">
+                    <Button type="submit" size="small" color="error" variant="outlined" sx={{ minHeight: 44 }}>
                       {t("staff.revoke")}
                     </Button>
                   </form>
