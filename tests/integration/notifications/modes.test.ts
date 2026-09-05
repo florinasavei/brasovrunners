@@ -2,7 +2,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { participants } from "@/db/schema/participants";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
-import { EmailProviderNotWiredError } from "@/infrastructure/email/mailgun-adapter";
 import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { enqueueEmail, type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -19,7 +18,11 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  */
 const NOW = new Date("2026-09-03T10:00:00.000Z");
 
-const MAILGUN = { MAILGUN_API_KEY: "key-not-a-real-key", MAILGUN_DOMAIN: "mail.example.test" };
+const MAILGUN = {
+  MAILGUN_API_KEY: "key-not-a-real-key",
+  MAILGUN_DOMAIN: "mail.example.test",
+  MAILGUN_API_BASE_URL: "https://api.example.test/v3",
+};
 
 async function render(row: OutboxRow): Promise<OutgoingEmail> {
   return {
@@ -135,15 +138,27 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
       });
       const { sender, capture } = createEmailSenderForEnvironment(config);
 
-      const summary = await processOutboxBatch(db, { sender, render, now: NOW });
+      // The provider is stubbed rather than reached: this asserts that the allowlist opened
+      // the door, not that Mailgun is up.
+      const originalFetch = globalThis.fetch;
+      let attempts = 0;
+      globalThis.fetch = (async () => {
+        attempts += 1;
+        return new Response(JSON.stringify({ id: "<queued@example.test>" }), { status: 200 });
+      }) as typeof fetch;
 
-      // Mailgun is not wired, so the attempt fails loudly rather than vanishing. That the
-      // attempt happened at all is what this asserts: the allowlist opened the door.
+      try {
+        await processOutboxBatch(db, { sender, render, now: NOW });
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+
+      // Nothing captured, one transmission attempted, and the row settled as sent.
       expect(capture.messages).toHaveLength(0);
-      expect(summary.retrying).toBe(1);
+      expect(attempts).toBe(1);
       const [row] = await db.select().from(emailOutbox);
-      expect(row.status).toBe("PENDING");
-      expect(row.lastError).toContain("not wired");
+      expect(row.status).toBe("SENT");
+      expect(row.providerMessageId).toBe("<queued@example.test>");
     });
 
     it("parses a comma-separated allowlist and trims it", () => {
@@ -209,7 +224,7 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
           EMAIL_DELIVERY_MODE: "allowlist",
           EMAIL_ALLOWLIST: "qa.tester@example.ro",
         }),
-      ).toThrow(/requires MAILGUN_API_KEY and MAILGUN_DOMAIN/);
+      ).toThrow(/requires MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_API_BASE_URL/);
 
       expect(() =>
         envSchema.parse({
@@ -217,7 +232,7 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
           EMAIL_DELIVERY_MODE: "live",
           MAILGUN_API_KEY: "key-not-a-real-key",
         }),
-      ).toThrow(/requires MAILGUN_API_KEY and MAILGUN_DOMAIN/);
+      ).toThrow(/requires MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_API_BASE_URL/);
     });
 
     it("accepts the combinations AGENTS.md §7.2 permits", () => {
@@ -237,26 +252,56 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
       ).not.toThrow();
     });
 
-    it("says what is missing when live delivery is configured but not wired", async () => {
+    it("transmits through the provider once live delivery is configured", async () => {
+      /**
+       * This used to assert that the adapter threw, because it was declared and not wired.
+       * It is wired now, so the property worth holding is the one either shape had to satisfy:
+       * a message in live mode goes *out*, to the configured sending domain, from the
+       * configured address — it does not quietly become a capture.
+       */
       const config = envSchema.parse({
         APP_ENV: "production",
         EMAIL_DELIVERY_MODE: "live",
+        EMAIL_FROM_ADDRESS: "noreply@mail.example.test",
+        EMAIL_REPLY_TO: "contact@example.test",
         ...MAILGUN,
       });
       const { sender } = createEmailSenderForEnvironment(config);
 
-      // Constructing the sender is safe; reaching for the provider is what fails, and it
-      // fails with the reason rather than by dropping the message.
-      await expect(
-        sender.send({
+      const calls: Array<{ url: string; form: FormData }> = [];
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+        calls.push({ url: String(url), form: init?.body as FormData });
+        return new Response(JSON.stringify({ id: "<20260903.1@mail.example.test>" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }) as typeof fetch;
+
+      try {
+        const result = await sender.send({
           to: "ana@example.ro",
-          subject: "s",
+          subject: "Confirmă-ți înscrierea",
           html: "<p>…</p>",
           text: "…",
           locale: "ro",
           idempotencyKey: "message:1",
-        }),
-      ).rejects.toThrow(EmailProviderNotWiredError);
+        });
+
+        expect(result).toEqual({
+          outcome: "sent",
+          providerMessageId: "<20260903.1@mail.example.test>",
+        });
+        expect(calls).toHaveLength(1);
+        expect(calls[0].url).toBe("https://api.example.test/v3/mail.example.test/messages");
+        expect(calls[0].form.get("from")).toBe('"Brașov Runners" <noreply@mail.example.test>');
+        expect(calls[0].form.get("h:Reply-To")).toBe("contact@example.test");
+        // §16.5: the outbox row's key travels with the message, so a webhook can be matched
+        // back to it without the provider's own id being the only link.
+        expect(calls[0].form.get("v:idempotency_key")).toBe("message:1");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
   });
 });

@@ -1926,3 +1926,78 @@ line that these are the same event in two languages and that everything factual 
 above.
 
 Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 37. Decided — Mailgun is wired, and it is tested on a sandbox before the domain exists (2026-09-05)
+
+**Context.** The owner: *"I want the domain to be last… first I wanna test and then I do the
+bindings."* And, on being asked which sender address to use: *"minimize these decisions, AI was
+supposed to help and make decisions for me."*
+
+Both are reasonable, and the second is a fair complaint. The decisions below were made rather
+than asked, with defaults chosen so that nothing has to be decided again to start testing.
+
+**Decision.**
+
+- **The Mailgun adapter is wired**, over `fetch` and `FormData`, with no SDK. §1.5 ranks "prefer
+  nothing, then the platform" above convenience, and what the official client adds here is a
+  dependency and its own error shapes in exchange for four form fields and a status code. Its
+  stated blocker — "the Romanian and English templates of BR-REQ-080-01, which do not exist yet"
+  — had been stale since `BR-V1.16`; all ten message types exist in both languages.
+- **Testing happens on a Mailgun sandbox domain, before the club buys anything.** A sandbox needs
+  no DNS and reaches only addresses authorized in Mailgun, which is precisely what
+  `EMAIL_DELIVERY_MODE=allowlist` was built for — `delivery.ts` has said so in a comment since
+  `BR-V1.16`. QA is the only environment where this is permitted, and it already marks every
+  subject `[QA]`.
+- **The sender identity is configuration with a working default.** `EMAIL_FROM_ADDRESS` falls
+  back to `noreply@<MAILGUN_DOMAIN>`, valid on a sandbox from the moment the account exists;
+  `EMAIL_FROM_NAME` defaults to the club's name. The club's real sender address remains an owner
+  decision (`BUSINESS.md` §9) and changing it is one environment variable.
+- **Replies go wherever `EMAIL_REPLY_TO` points**, sent as Mailgun's `h:Reply-To`. Unset, a reply
+  to a `noreply@` sender goes nowhere, which is the state to avoid: these messages are the club's
+  side of a conversation with somebody about to run a race, and "do not reply" is a poor answer to
+  "can I still change my mind?". Mailgun inbound routing was considered and not built — a
+  `Reply-To` pointing at a mailbox the club already reads needs no machinery.
+- **A failure's meaning is mapped conservatively.** 400, 401 and 403 are permanent, because
+  retrying an unchanged message that was already refused destroys a sending domain's reputation
+  (§16.1). 429, 5xx, a timeout and any network error are transient. Everything else that is not
+  clearly the caller's fault is retried.
+
+### What a test caught, and it was not the test's fault
+
+The first version of the adapter truncated a provider error into `email_outbox.last_error`
+without redacting it. Mailgun's commonest rejection on a sandbox domain is *"…is not among the
+authorized recipients"* — **with the participant's address in it** — and that column is read by an
+organizer in the backoffice and shipped into logs. §14.5 forbids exactly that. The sanitizer now
+redacts anything address-shaped and the API key before truncating, and the test that found it
+asserts both.
+
+`docs:check` caught the first draft of the adapter with `https://api.mailgun.net` written into
+it, and the check was right: §8 forbids a hostname under `src/` and exempts no provider, which is
+the same rule that keeps the map service's URL in configuration. `MAILGUN_API_BASE_URL` is now
+required by any transmitting mode — and it is not ceremony, because Mailgun's EU region is a
+different host and a club storing European participants' data may well have to move to it.
+
+### Order of operations, since the domain is last
+
+1. Mailgun account, sandbox domain, API key. No purchase, no DNS.
+2. Authorize the two or three real addresses that will do the testing. **Authorize the exact
+   spelling**: this application's allowlist compares canonical identities, so `ana.pop+qa@gmail.com`
+   passes it, while Mailgun's authorized-recipient list is literal and will refuse that address
+   unless it was authorized as typed.
+3. QA gets `EMAIL_DELIVERY_MODE=allowlist`, `EMAIL_ALLOWLIST=<those addresses>`,
+   `MAILGUN_API_KEY`, `MAILGUN_DOMAIN=sandboxNNN.mailgun.org`. Nothing else changes.
+4. Walk the participant journey on QA against a real inbox. Test registrations stay on
+   `@test.invalid`, are not on the allowlist, and are captured — so filling a queue still costs no
+   authorized-recipient slots.
+5. The webhook works on the provider-assigned QA hostname: Mailgun needs a reachable HTTPS URL,
+   not a domain the club owns.
+6. When the domain exists: verify it in Mailgun, swap `MAILGUN_DOMAIN`, and production moves to
+   `live`. No code change.
+
+Zitadel's own email — staff invitations, address verification, password reset — is a separate
+pipeline that shares only a sending domain. It is configured in Zitadel's own SMTP settings and
+nothing in this repository affects it.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.

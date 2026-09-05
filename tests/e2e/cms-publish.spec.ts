@@ -186,8 +186,25 @@ test.describe("BR-REQ-051-01 an Editor publishes and unpublishes an event", () =
     await page.goto(editorUrl);
     const romanian = page.getByRole("tabpanel", { name: /Română/ });
     await romanian.getByRole("link", { name: "Previzualizare" }).click();
+    // Wait for the navigation itself before reading the document: what follows inspects the
+    // page's head, and mid-transition that head belongs to two routes at once.
+    await expect(page).toHaveURL(/\/previzualizare\/evenimente\//);
     await expect(page.getByText(/Previzualizare pentru echipă/)).toBeVisible();
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+
+    /*
+      Every robots directive on the page, not "the" one.
+
+      This is a client-side navigation, so React leaves the editor's own `<meta name="robots">`
+      in the document for a moment after the preview's has been inserted — two elements, with
+      different content, and a locator expecting one fails in strict mode. Both say `noindex`,
+      which is the thing BR-REQ-051-02 criterion 2 actually asks: this page is never indexed,
+      whichever directive a crawler reads.
+    */
+    const robots = await page
+      .locator('meta[name="robots"]')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("content") ?? ""));
+    expect(robots.length).toBeGreaterThan(0);
+    for (const content of robots) expect(content).toContain("noindex");
 
     // Back through review to published, and both public pages return. Each step waits for the
     // status to change before the next: a transition carries the version it was rendered with,
