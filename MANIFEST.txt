@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V1.17-2026-09-04
+Baseline: BR-V1.18-2026-09-04
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -28,6 +28,8 @@ Supporting files:
                                        launch checklist
 - docs/RUNBOOKS.md                     repository bootstrap, domain binding, legal document version
 - docs/history/ORIGINAL_PLAN_2026-08.md  original planning input, not authoritative
+- scripts/db-migrate.mjs               yarn db:migrate:env: migrate one named environment
+- scripts/smoke.mjs                    yarn smoke: /api/health as an exit code, ends every deploy
 - scripts/docs-check.mjs               documentation synchronization check
 - scripts/release.mjs                  yarn release: versioned folder, archive, share copies
 - scripts/setup.mjs                    yarn setup: installs the tracked git hooks
@@ -35,6 +37,7 @@ Supporting files:
 - .githooks/pre-commit                 runs yarn check, blocks a failing commit
 - .github/workflows/docs-check.yml     yarn check in CI, read-only permissions
 - .github/workflows/scheduled-jobs.yml every five minutes, calls both job endpoints per environment
+- .github/workflows/migrate.yml        applies migrations to qa automatically, to production gated
 - .github/CODEOWNERS                   review ownership of the root documents
 - .github/pull_request_template.md     per-PR checks including the documentation sync checklist
 - vitest.config.mts                    unit and database tests; no database needed

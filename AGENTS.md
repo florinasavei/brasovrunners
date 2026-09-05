@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -699,6 +699,11 @@ QA:
 - `X-Robots-Tag: noindex, nofollow` and restrictive robots;
 - no production canonical/sitemap URLs;
 - visible QA badge in Admin;
+- **a notice on every public page saying this is not the club's real site**, stated as "not
+  production" rather than "qa" so a fifth environment gets it by default rather than being
+  silently mistaken for the real thing. QA runs the same code, the same design and the same
+  seeded events on a hostname nobody recognises: a visitor sent a link has no way to tell, and
+  will register for a race on a system whose data the next seed deletes;
 - captured/allowlisted email only;
 - separate webhook/job secrets;
 - no production storage/auth/database access;
@@ -714,6 +719,38 @@ QA:
 - use expand/contract when app/schema overlap is possible;
 - failed migration blocks deployment;
 - rollback considers schema/data compatibility.
+
+**The mechanism** (`DECISIONS.md` §31). None of the above says who runs a migration against a
+deployed database, and for a while nothing did — a release went out carrying code whose migration
+had not been applied, and every public page returned 500 while the health check reported the
+database fine.
+
+- `yarn db:migrate:env <local|qa|production>` (`scripts/db-migrate.mjs`) is the only supported
+  way. It takes the environment as an argument rather than the connection string from the
+  ambient shell, prints the target host with credentials masked and the exact pending
+  migrations before applying anything, refuses production without `--yes`, and exits non-zero
+  on failure.
+- `.github/workflows/migrate.yml` runs it. QA applies automatically when a migration lands on
+  `qa`; production is a reviewed `workflow_dispatch`. It uses GitHub Environments rather than
+  repository secrets specifically because a required reviewer is the "gated" half of this
+  section and a repository secret cannot provide one.
+- `yarn smoke <base-url>` (`scripts/smoke.mjs`) turns `/api/health` into an exit code, and every
+  deployment ends with it. "The build went green" and "the site works" are different statements.
+
+**Ordering, and why expand/contract is not optional here.** A push to `qa` starts the Vercel
+build and the migration at the same moment, so for a few seconds the deployed code and the
+schema disagree. That window is harmless for an additive migration and guaranteed breakage for a
+destructive one, which is what "use expand/contract when app/schema overlap is possible" means in
+practice:
+
+- a migration that only **adds** may ship in the same release as the code that uses it;
+- a migration that **drops or renames** ships in the release *after* the code that stopped
+  using the old shape. The drop is its own migration, in its own pull request.
+
+**Drift is detected, not assumed.** `next.config.ts` inlines the journal's head into the build,
+and `/api/health` compares it with what the database records as applied: `behind` is reported as
+`down` with a 503, because in that state the site is already failing. `select 1` succeeds against
+a stale schema, which is why the database check alone was not enough.
 
 ### 7.7 Reset and seed
 
@@ -872,6 +909,11 @@ Non-human routes are unprefixed:
 /api/internal/jobs/registration-maintenance
 /api/health
 ```
+
+`/login` is an alias, not a route: the proxy redirects it to the sign-in path — unprefixed, so
+next-intl negotiates the language exactly as it does for an unprefixed `/admin`
+(`src/i18n/aliases.ts`). An alias never gets a page of its own, because two URLs rendering one
+page is the duplicate-content problem canonical tags exist to solve.
 
 The staff routes are `/sign-in`, `/admin`, `/admin/events/new`, `/admin/events/[id]`,
 `/admin/staff`, `/admin/registrations`, `/admin/registrations/[id]` and `/preview/events/[id]`.

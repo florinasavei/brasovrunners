@@ -1,3 +1,5 @@
+import { ALIAS_SEGMENTS } from "@/i18n/aliases";
+
 /**
  * Which URLs are staff-only, and therefore never indexed and never publicly cached.
  *
@@ -22,6 +24,9 @@ const PRIVATE_SEGMENTS: readonly string[] = [
   "previzualizare",
   "sign-in",
   "autentificare",
+  // The aliases people type, so the redirect itself carries the same headers as its
+  // destination (`src/i18n/aliases.ts`).
+  ...ALIAS_SEGMENTS,
 ];
 
 export function isPrivatePath(pathname: string): boolean {

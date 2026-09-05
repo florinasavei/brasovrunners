@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1569,3 +1569,77 @@ real one does: occupying a place, expiring on the same deadline, releasing it to
 queue when it lapses. That is the queue behaviour worth watching anyway.
 
 Baseline bumped to `BR-V1.17-2026-09-04`.
+
+## 31. Decided — deployment is a procedure with a mechanism, not a habit (2026-09-04)
+
+`BR-V1.17` merged to `qa`, Vercel built it, the build went green, and every public page returned
+500. The cause was not in the change: migration `0011` had never been applied to the QA database,
+so code that selects `events.published_at` was running against a schema that has no such column.
+
+**Nothing in this repository applied migrations to a deployed database.** `yarn db:migrate` runs
+against whatever `DATABASE_URL` `.env.local` happens to hold; CI runs it against a disposable
+container; the Vercel build does not run it at all. The QA database had been migrated exactly
+once, by hand, months of commits ago, using an incantation recorded in a comment in a git-ignored
+file. `AGENTS.md` §7.6 already said "QA before production" and "production migration is
+explicit/gated/observable" — it simply never said by what, and a step with no mechanism is a step
+that eventually does not happen.
+
+Two things made it worse than it needed to be, and both are fixed here.
+
+**`/api/health` reported `database: ok` throughout.** It ran `select 1`, which succeeds perfectly
+well against a stale schema. The one endpoint whose job is to say whether a deployment works was
+green while the deployment was entirely broken, so the only symptom was a 500 with nothing to
+point at.
+
+**Migration `0011` dropped two columns in the same release as the code change.** §7.6 already
+asks for expand/contract "when app/schema overlap is possible", and a push to `qa` starts the
+Vercel build and any migration at the same instant, so overlap is not merely possible — it is
+guaranteed for a few seconds. An additive migration survives that window. A destructive one
+cannot, in either direction: old code breaks on the new schema, and new code breaks on the old.
+
+### What was built
+
+- **`scripts/db-migrate.mjs`, run as `yarn db:migrate:env <local|qa|production>`.** The target
+  environment is an argument, so the connection string cannot be whatever was exported in this
+  shell; it prints the host with credentials masked and the exact pending migrations before
+  applying anything; production requires `--yes`; it exits non-zero on failure. It deliberately
+  does not read `drizzle.config.ts`, because that file loads `.env.local` and a migration tool
+  whose target depends on which dotenv file is present is the accident being prevented.
+- **`.github/workflows/migrate.yml`.** QA applies automatically when a migration lands on `qa`;
+  production is a reviewed `workflow_dispatch`. It uses **GitHub Environments rather than
+  repository secrets**, unlike `scheduled-jobs.yml`, for one reason: the secret could live either
+  way, but a required reviewer is the "gated" half of §7.6 and only an Environment provides one.
+- **Schema-drift detection in `/api/health`.** `next.config.ts` inlines the journal's head into
+  the build — the same pattern the build badge already uses — and `checkSchemaVersion` compares
+  it against Drizzle's own bookkeeping table. `behind` reports `down` with a 503, because in that
+  state the site is already failing. `ahead` is degraded rather than down: that is what a
+  rollback looks like, and whether it breaks anything depends on what the migration did.
+- **`scripts/smoke.mjs`, run as `yarn smoke <base-url>`.** `/api/health` as an exit code, run by
+  the workflow after a migration and by a person after any deploy. When the schema is behind it
+  says so and names the migration, because that is the failure whose remedy is a command rather
+  than an investigation.
+- **`yarn db:seed:legal`.** A second, smaller consequence of the same incident: the sample legal
+  documents could only be seeded by `pilot.ts`, which deletes every event and translation first.
+  That is right on a laptop and destructive on an environment an organizer has been editing, so
+  QA had no privacy notice and registration there refused everyone — nobody was going to run the
+  seed that would wipe their work. The legal seed now has its own entry point and never deletes.
+- **`docs/RUNBOOKS.md` § Deploy a release**, which is the procedure itself, and the ordering rule
+  written as the thing a person actually decides: an additive migration ships with its code, a
+  drop ships in the release after.
+
+### What was deliberately not built
+
+**Migrating from the Vercel build, or from application startup.** It would have prevented this
+exact incident and it is forbidden by §7.6 for better reasons than this one: a build runs on
+every preview deployment of every branch, so a preview of an unmerged experiment would migrate
+the shared database, and a destructive migration would then run because somebody opened a pull
+request. Startup is worse — it runs because a page was requested. The mechanism has to be
+something a person or a reviewed workflow triggers, which is what the above is.
+
+**Blocking the Vercel deploy on the migration.** GitHub Actions cannot order itself against
+Vercel's own trigger, and building that coupling would mean taking deployment away from Vercel
+entirely. The honest answer is the ordering rule plus detection: with expand/contract the overlap
+window is harmless, and when somebody gets it wrong the health check says which migration is
+missing within seconds instead of after an afternoon.
+
+Baseline bumped to `BR-V1.18-2026-09-04`.

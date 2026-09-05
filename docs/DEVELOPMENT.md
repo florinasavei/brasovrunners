@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
 
 # Running this locally
 
-**Baseline `BR-V1.17-2026-09-04`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V1.18-2026-09-04`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -93,6 +93,9 @@ yarn test:integration    database tests only
 yarn test:concurrency    the two-connection suite; needs the database running
 yarn test:watch          re-run on change
 yarn test:e2e            browser tests, mobile and desktop; needs the database running
+yarn db:seed:legal       the sample legal documents alone; never deletes, safe on a live database
+yarn db:migrate:env      apply migrations to one named environment (local|qa|production)
+yarn smoke               ask a deployment's /api/health whether it actually works
 yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn typecheck           tsc --noEmit
 yarn lint                ESLint

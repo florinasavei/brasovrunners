@@ -10,6 +10,7 @@ import Box from "@mui/material/Box";
 import { env } from "@/shared/config/env";
 import { routing } from "@/i18n/routing";
 import BuildBadge from "@/shared/ui/BuildBadge";
+import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
 import SiteFooter from "@/shared/ui/SiteFooter";
 import SiteHeader from "@/shared/ui/SiteHeader";
 import AppTheme from "@/theme/AppTheme";
@@ -78,6 +79,9 @@ export default async function LocaleLayout({ children, params }: Props) {
               {/* Not a <main>: every page already renders its own via `component="main"` on
                   its root Container, and a document may have only one. */}
               <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+                {/* Above the header, because it has to be read before anything below it is
+                    mistaken for the club's real website. */}
+                <EnvironmentNotice />
                 <SiteHeader />
                 <Box sx={{ flex: 1 }}>{children}</Box>
                 <SiteFooter />

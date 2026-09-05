@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1019,6 +1019,11 @@ Checklist:
 - [ ] Environment marker initialized.
 - [ ] QA synthetic seed, including the sample legal documents (`DECISIONS.md` §29).
 - [ ] Production never auto-seeded, and the sample legal documents refuse it outright.
+- [ ] Migrations are applied by `.github/workflows/migrate.yml`, never by hand and never by a
+      build. Each GitHub **Environment** (`qa`, `production`) holds two secrets:
+      `DATABASE_URL` — that environment's own database, the direct (non-pooled) URL migration
+      tooling wants — and `APP_BASE_URL`, which the post-migration smoke check reads.
+      `production` has a required reviewer; `qa` does not.
 - [ ] Backup/restore capability documented and tested before launch.
 - [ ] No production clone into QA.
 

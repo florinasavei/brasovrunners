@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -81,6 +81,8 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`LICENSE`](./LICENSE) | MIT, copyright Brașov Runners; the club owns the platform per BR-BUS-101 |
 | [`MANIFEST.txt`](./MANIFEST.txt) | One-page handoff summary of the baseline and the headline decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
+| [`scripts/db-migrate.mjs`](./scripts/db-migrate.mjs) | `yarn db:migrate:env <local\|qa\|production>` — the only supported way to migrate a deployed database. Prints the target and the pending migrations before applying; production needs `--yes` (`AGENTS.md` §7.6) |
+| [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
 | [`scripts/db-reset-local.mjs`](./scripts/db-reset-local.mjs) | `yarn db:reset:local`: drops both schemas, migrates and seeds; refuses any non-local database |
@@ -94,6 +96,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
+| [`.github/workflows/migrate.yml`](./.github/workflows/migrate.yml) | Applies committed migrations to a deployed database: automatically to QA when one lands on `qa`, and to production only as a reviewed manual run. GitHub Environments hold the per-environment `DATABASE_URL` |
 | [`.github/workflows/scheduled-jobs.yml`](./.github/workflows/scheduled-jobs.yml) | Every five minutes, calls each environment's email-outbox and registration-maintenance endpoints with that environment's `JOB_SECRET`. The only thing that runs them: serverless functions have no persistent process for an interval (`AGENTS.md` §16.2) |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review ownership of the root documents |
 | [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
