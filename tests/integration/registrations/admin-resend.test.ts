@@ -33,7 +33,7 @@ describe("AGENTS.md §15.8 admin resend", () => {
 
     const [admin] = await db
       .insert(staffUsers)
-      .values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .values({ email: "superadmin@dev.test", displayName: "Admin", role: "ADMIN" })
       .returning();
     adminId = admin.id;
 
@@ -83,7 +83,7 @@ describe("AGENTS.md §15.8 admin resend", () => {
   });
 
   it("refuses an Author or Editor", async () => {
-    for (const role of ["AUTHOR", "EDITOR"] as const) {
+    for (const role of ["CONTRIBUTOR", "MODERATOR"] as const) {
       await expect(
         resendRegistrationMessage(db, { id: adminId, role }, registrationId, NOW),
       ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "FORBIDDEN");

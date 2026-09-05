@@ -94,7 +94,7 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
 
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "concurrency@dev.test", displayName: "Concurrency", role: "EDITOR" })
+      .values({ email: "concurrency@dev.test", displayName: "Concurrency", role: "MODERATOR" })
       .returning();
   });
 

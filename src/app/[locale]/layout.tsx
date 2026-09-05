@@ -69,6 +69,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   }
   setRequestLocale(locale);
 
+  const site = await getTranslations({ locale, namespace: "Site" });
+
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
     <html lang={locale} suppressHydrationWarning>
@@ -76,12 +78,47 @@ export default async function LocaleLayout({ children, params }: Props) {
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
             <NextIntlClientProvider>
-              {/* Not a <main>: every page already renders its own via `component="main"` on
+              {/* Not a <main>: every page already renders its own via `id="main" component="main"` on
                   its root Container, and a document may have only one. */}
               <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
                 {/* Above the header, because it has to be read before anything below it is
                     mistaken for the club's real website. */}
                 <EnvironmentNotice />
+                {/*
+                  Skip to the content. Every page renders its own `id="main" component="main"`,
+                  so `#main` is a stable target, and a keyboard reader no longer has to
+                  tab through the lockup, the sections and the language switcher on
+                  every single page before reaching what they came for.
+
+                  Visually hidden until focused: the standard pattern, and it must not
+                  be `display: none`, which would take it out of the tab order and
+                  defeat the whole point.
+                */}
+                <Box
+                  component="a"
+                  href="#main"
+                  sx={{
+                    position: "absolute",
+                    left: -10000,
+                    top: 0,
+                    // A literal, not a theme callback: this is a Server Component, and a
+                    // function in `sx` cannot cross into a Client Component. Above MUI's
+                    // tooltip layer (1500), which is the highest thing this site renders.
+                    zIndex: 1600,
+                    "&:focus": {
+                      left: 8,
+                      top: 8,
+                      px: 2,
+                      py: 1,
+                      bgcolor: "background.paper",
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                    },
+                  }}
+                >
+                  {site("skipToContent")}
+                </Box>
                 <SiteHeader />
                 <Box sx={{ flex: 1 }}>{children}</Box>
                 <SiteFooter />

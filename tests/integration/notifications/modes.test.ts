@@ -144,7 +144,7 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
       let attempts = 0;
       globalThis.fetch = (async () => {
         attempts += 1;
-        return new Response(JSON.stringify({ id: "<queued@example.test>" }), { status: 200 });
+        return new Response(JSON.stringify({ id: "queued@example.test" }), { status: 200 });
       }) as typeof fetch;
 
       try {
@@ -158,7 +158,7 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
       expect(attempts).toBe(1);
       const [row] = await db.select().from(emailOutbox);
       expect(row.status).toBe("SENT");
-      expect(row.providerMessageId).toBe("<queued@example.test>");
+      expect(row.providerMessageId).toBe("queued@example.test");
     });
 
     it("parses a comma-separated allowlist and trims it", () => {
@@ -290,7 +290,7 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
 
         expect(result).toEqual({
           outcome: "sent",
-          providerMessageId: "<20260903.1@mail.example.test>",
+          providerMessageId: "20260903.1@mail.example.test",
         });
         expect(calls).toHaveLength(1);
         expect(calls[0].url).toBe("https://api.example.test/v3/mail.example.test/messages");

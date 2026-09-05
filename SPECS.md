@@ -1156,6 +1156,25 @@ other participant link uses — never by a password.
 
 **Verification:** e2e `seo.spec.ts`; accessibility audit in CI
 
+#### BR-REQ-090-04 — A deployment can say what it is configured to do
+
+- **Source:** BR-BUS-090, BR-BUS-101
+- **Implements:** AGENTS.md §9.2, §8, §14.5
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built. `/devs`, Administrator only.
+
+**Acceptance criteria**
+
+1. Given an Administrator, when `/devs` is requested, then it names the environment, the build, the mode of each configured subsystem, and for each mode the variables that mode requires with whether each is set.
+2. Given any variable, when the page renders, then its **name** appears and its **value never does** — no key, no connection string, no secret, in the markup or in the page's data.
+3. Given a subsystem missing something its own mode requires, when the page renders, then it is marked as blocked and the missing variables are named.
+4. Given `EMAIL_DELIVERY_MODE=capture` on a deployed environment, when the page renders, then it is reported as limited rather than correct, because captured messages on a serverless host reach nobody.
+5. Given an Author or an Editor, when `/devs` is requested, then the response is 404, the same answer a route that does not exist gives.
+6. Given the route, when a crawler requests it, then it is disallowed in `robots.txt`, carries `noindex`, and is served with a private, no-store cache policy.
+
+**Verification:** unit `diagnostics/configuration.test.ts`; unit `seo/private-paths.test.ts`
+
 #### BR-REQ-100-01 — AI reviewer permission boundary
 
 - **Source:** BR-BUS-100
@@ -1290,7 +1309,7 @@ other participant link uses — never by a password.
 | BR-BUS-071 | BR-REQ-071-01 |
 | BR-BUS-072 | BR-REQ-072-01 |
 | BR-BUS-080 | BR-REQ-080-01, BR-REQ-080-02, BR-REQ-080-03, BR-REQ-080-04, BR-REQ-037-02 |
-| BR-BUS-090 | BR-REQ-090-01, BR-REQ-090-02, BR-REQ-090-03, BR-REQ-080-03 |
+| BR-BUS-090 | BR-REQ-090-01, BR-REQ-090-02, BR-REQ-090-03, BR-REQ-090-04, BR-REQ-080-03 |
 | BR-BUS-100 | BR-REQ-100-01 |
 | BR-BUS-101 | BR-REQ-101-01, BR-REQ-101-02 |
 

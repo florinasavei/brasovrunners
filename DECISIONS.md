@@ -2001,3 +2001,63 @@ pipeline that shares only a sending domain. It is configured in Zitadel's own SM
 nothing in this repository affects it.
 
 Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 38. Decided — five staff roles that nest, and where the personal-data line falls (2026-09-05)
+
+**Context.** The owner asked for a hierarchy: *"superadmin (me), admins (Amalia & Marius),
+moderator (Dani: can edit events and approve edits) and contributors (can propose edits but needs
+approval)… superuser - admin - dev - moderator - contributor"*.
+
+Three roles existed — AUTHOR, EDITOR, ADMIN — and the workflow they drove was already the right
+shape: an author edits their own drafts and submits them, an editor approves. What was missing
+was the two ends: somebody above ADMIN who alone decides who is on the staff, and a role for
+technical help that does not come with the participant list.
+
+**Decision.** `CONTRIBUTOR < MODERATOR < DEV < ADMIN < SUPERADMIN`, strictly nesting, with the
+rank written in exactly one place and every capability expressed as `atLeast(role, MINIMUM)`.
+
+That last part is the load-bearing bit. A capability written as a list of roles is a capability
+somebody forgets to add the next role to; a threshold inherits correctly by construction.
+`session.ts` kept its own second copy of the rank and now imports the one in `domain/roles.ts`.
+
+### The two decisions inside the decision
+
+**What DEV is for.** The owner named it in the hierarchy and did not describe it, so it is
+defined here: DEV is a moderator plus the configuration report, and **no participant data**. The
+line between DEV and ADMIN is exactly personal data — below it is the club's own content and its
+own configuration, at and above it are the people who registered. That is what makes it possible
+to give somebody technical access to diagnose a problem without handing them the club's
+participant list, which is the actual reason to have the role at all. It is why `/devs` sits at
+DEV rather than at ADMIN.
+
+**Every existing ADMIN migrates to SUPERADMIN.** Staff administration moved from ADMIN to
+SUPERADMIN, so mapping ADMIN to ADMIN would have removed a power those accounts have today — and
+could have left the club with nobody able to manage staff at all. A role migration must never
+take away access somebody already had. Demoting Amalia and Marius to ADMIN afterwards is a click;
+being locked out of the staff screen is not.
+
+### What the change found
+
+`canManageStaff` was doing two jobs. The registrations list, the detail page, the CSV export and
+the new-registration form all gated on it — so "may read the participant list" and "may decide
+who is on the staff" were the same permission. Splitting them into `canManageRegistrations`
+(ADMIN) and `canManageStaff` (SUPERADMIN) is what the hierarchy required, and it is a real
+tightening: an administrator can now read every registration and still cannot promote themselves.
+
+The lockout guards moved with it. They counted `role = 'ADMIN'`; they count SUPERADMIN now,
+because the role that can be lost is the one that can administer staff.
+
+Drizzle's generated migration would have aborted on real data — it casts the old column straight
+into the new enum, and `'AUTHOR'` is not a value in it. `0016` is hand-written: remap while the
+column is still `text`, then convert.
+
+### What was deliberately not built
+
+**Per-event or per-section permissions.** "Dani moderates the trail races, Amalia the road races"
+is a real thing clubs want and a different model entirely — it is authorization on rows, not on
+roles, and it would touch every query rather than one file. If the club asks, that is its own
+decision with its own migration.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.

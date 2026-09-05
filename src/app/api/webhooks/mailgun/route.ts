@@ -18,7 +18,12 @@ export async function POST(request: Request): Promise<Response> {
 
   let body: {
     signature?: MailgunSignature;
-    "event-data"?: { event?: string; message?: { headers?: { "message-id"?: string } }; reason?: string };
+    "event-data"?: {
+      event?: string;
+      message?: { headers?: { "message-id"?: string } };
+      reason?: string;
+      severity?: string;
+    };
   };
   try {
     body = await request.json();
@@ -43,6 +48,8 @@ export async function POST(request: Request): Promise<Response> {
       // Sanitized: a short reason, never Mailgun's full event payload or a message body
       // (§14.5, and `outbox.ts`'s own `sanitizeProviderError` reasoning).
       reason: typeof eventData?.reason === "string" ? eventData.reason.slice(0, 200) : null,
+      // `failed` alone does not say whether the provider has given up; this does.
+      severity: typeof eventData?.severity === "string" ? eventData.severity : null,
     });
   }
 

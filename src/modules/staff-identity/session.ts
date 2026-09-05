@@ -5,7 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { DomainError } from "@/shared/errors/domain-error";
 import { env } from "@/shared/config/env";
 import { isDevStaffSwitcherEnabled } from "./dev-switcher";
-import { type StaffRole } from "./domain/roles";
+import { type StaffRole, atLeast } from "./domain/roles";
 import { findStaffUserById } from "./repository";
 
 /**
@@ -70,19 +70,16 @@ export async function requireStaff(): Promise<StaffUser> {
 }
 
 /**
- * Rank order, and why it is a rank at all.
+ * A coarse gate: "at least this role".
  *
- * §10.2 describes three roles whose powers nest: an Editor may do everything an Author may,
- * an Administrator everything an Editor may. So `requireStaffRole("EDITOR")` means "at least
- * an Editor". It is a coarse gate — the interesting rules are conditional on the content
- * itself ("their own drafts") and live in `domain/roles.ts`, which every service consults
- * after this one has answered.
+ * The hierarchy itself lives in `domain/roles.ts` and is imported rather than restated — this
+ * file used to keep its own copy of the rank, which is one rule in two places and exactly the
+ * thing §1.5 forbids. The interesting rules are conditional on the content itself ("their own
+ * drafts") and live there too; every service consults them after this one has answered.
  */
-const RANK: Record<StaffRole, number> = { AUTHOR: 0, EDITOR: 1, ADMIN: 2 };
-
 export async function requireStaffRole(minimum: StaffRole): Promise<StaffUser> {
   const staffUser = await requireStaff();
-  if (RANK[staffUser.role] < RANK[minimum]) {
+  if (!atLeast(staffUser.role, minimum)) {
     throw new DomainError(
       "FORBIDDEN",
       `role ${staffUser.role} is below the required ${minimum}`,

@@ -24,7 +24,9 @@ import type { Database } from "@/db/types";
 export type AuditAction =
   | "registration.created_by_staff"
   | "registration.name_corrected"
-  | "registration.cancelled_by_staff";
+  | "registration.cancelled_by_staff"
+  /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
+  | "registration.resend_rate_limited";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;

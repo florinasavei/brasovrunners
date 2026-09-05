@@ -14,7 +14,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
-import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { createRegistrationAction } from "../actions";
 
@@ -43,7 +43,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canManageStaff(actor.role)) notFound();
+  if (!canManageRegistrations(actor.role)) notFound();
 
   const { eventId, error } = await searchParams;
   const t = await getTranslations("Admin");

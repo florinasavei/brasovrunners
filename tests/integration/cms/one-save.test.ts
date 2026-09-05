@@ -70,11 +70,11 @@ beforeEach(async () => {
   await resetTables(db);
   [editor] = await db
     .insert(staffUsers)
-    .values({ email: "editor@dev.test", displayName: "Editor", role: "EDITOR" })
+    .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
     .returning();
   [author] = await db
     .insert(staffUsers)
-    .values({ email: "author@dev.test", displayName: "Author", role: "AUTHOR" })
+    .values({ email: "contributor@dev.test", displayName: "Author", role: "CONTRIBUTOR" })
     .returning();
 });
 

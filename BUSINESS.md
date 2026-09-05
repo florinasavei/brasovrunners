@@ -564,20 +564,35 @@ everyone until the approved text is loaded.
 
 ### BR-BUS-060 — Staff roles and least privilege
 
-| Staff role | Main purpose |
-| --- | --- |
-| Author | Write and translate drafts |
-| Editor | Review and publish content; create, configure and duplicate events |
-| Admin | Everything an editor may, plus participants, waiting lists, declarations, roles, exports, profiles, operations, and deleting an event |
+Five roles, and **they nest**: each can do everything the one below it can, plus one thing more.
+That property matters more than the individual grants — a permission is a threshold rather than a
+list of roles, so adding a role later cannot silently take one away.
 
-Only an administrator manages the staff list: they add a colleague by email address and role,
+| Staff role | Adds, on top of the role below |
+| --- | --- |
+| Contributor | Writes and translates drafts, and submits their own for approval. Proposes; does not decide |
+| Moderator | Edits any event and approves — publishing, unpublishing, archiving. The club's editorial hands |
+| Technical (dev) | The configuration report at `/devs`. **No participant data** |
+| Admin | Registrations, participants, waiting lists, exports, test registrations, and deleting an event |
+| Superadmin | The staff list itself: who is here and what they may do |
+
+**The line that matters is between Technical and Admin, and it is personal data.** Everything up
+to Technical is about the club's own content and its own configuration; everything from Admin up
+is about the people who registered. That is what lets the club give somebody technical help
+without also giving them the participant list.
+
+The top of the hierarchy is defined by one capability: only a superadmin manages the staff list.
+A role that could grant itself a higher one would make every rule beneath it decorative — so an
+admin may read every participant record and still cannot change who else may.
+
+Only a superadmin manages the staff list: they add a colleague by email address and role,
 change a role, and revoke access. Adding someone does not send them anything yet — the platform
 has no sending domain — so the entry simply waits, and access begins at that person's first
 sign-in with that address. Nobody outside the list can sign in at all.
 
-An administrator cannot change their own role or remove their own access, and the club can
-never be left without an administrator: those refusals exist so the club cannot lock itself out
-of its own backoffice.
+A superadmin cannot change their own role or remove their own access, and the club can never be
+left without a superadmin: those refusals exist so the club cannot lock itself out of its own
+backoffice.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
 

@@ -63,7 +63,11 @@ export default async function AdminLayout({ children, params }: Props) {
             href: getPathname({ locale, href: "/admin/registrations" }),
             label: t("nav.registrations"),
           },
+          { href: getPathname({ locale, href: "/admin/legal" }), label: t("nav.legal") },
           { href: getPathname({ locale, href: "/admin/staff" }), label: t("nav.staff") },
+          // What this deployment is configured to do (BR-REQ-090-04). Its own route rather
+          // than a backoffice page: it is read by whoever is holding the hosting dashboard.
+          { href: getPathname({ locale, href: "/devs" }), label: t("nav.devs") },
         ]
       : []),
   ];
@@ -74,7 +78,7 @@ export default async function AdminLayout({ children, params }: Props) {
       and wrong for a list of registrations with a status, a date, an address and an event title
       on every row — at `md` those wrap into four lines each and the list stops being scannable.
     */
-    <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
+    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}

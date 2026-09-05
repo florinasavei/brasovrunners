@@ -83,7 +83,7 @@ export default async function EventDetailPage({ params }: Props) {
   const mapLink = mapLinkFor(event, env.MAP_LINK_BASE_URL);
 
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
       <JsonLd data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"))} />
 
       <Typography variant="body2" sx={{ mb: 2 }}>

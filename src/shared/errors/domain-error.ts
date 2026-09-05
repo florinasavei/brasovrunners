@@ -19,10 +19,20 @@ export type DomainErrorCode =
 export class DomainError extends Error {
   readonly code: DomainErrorCode;
 
-  constructor(code: DomainErrorCode, message: string) {
+  /**
+   * The field names a VALIDATION_ERROR is about — names only, never values.
+   *
+   * A generic "check your details" tells somebody nothing about which of eleven boxes is
+   * wrong, and the boundary that renders it cannot invent the list. Field *names* are safe
+   * to carry across it in a way a message built from user input would not be (§14.5).
+   */
+  readonly fields: readonly string[];
+
+  constructor(code: DomainErrorCode, message: string, fields: readonly string[] = []) {
     super(message);
     this.name = "DomainError";
     this.code = code;
+    this.fields = fields;
   }
 }
 

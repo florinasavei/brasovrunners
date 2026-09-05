@@ -37,15 +37,15 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
     await resetTables(db);
     [author] = await db
       .insert(staffUsers)
-      .values({ email: "author@dev.test", displayName: "Author", role: "AUTHOR" })
+      .values({ email: "contributor@dev.test", displayName: "Author", role: "CONTRIBUTOR" })
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "editor@dev.test", displayName: "Editor", role: "EDITOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
     [admin] = await db
       .insert(staffUsers)
-      .values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .values({ email: "superadmin@dev.test", displayName: "Admin", role: "ADMIN" })
       .returning();
   });
 

@@ -141,11 +141,11 @@ describe("registrations.kind — a test registration is a real one to the queue"
     await approveLegalDocuments(db, NOW);
     [admin] = await db
       .insert(staffUsers)
-      .values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .values({ email: "superadmin@dev.test", displayName: "Admin", role: "ADMIN" })
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "editor@dev.test", displayName: "Editor", role: "EDITOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
   });
 

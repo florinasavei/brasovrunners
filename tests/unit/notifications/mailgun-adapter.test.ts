@@ -52,9 +52,12 @@ describe("BR-REQ-080-01 what the adapter sends", () => {
 
     const result = await adapter().send(MESSAGE);
 
+    // AGENTS.md §16.5: stored without the angle brackets the send response wraps it in,
+    // because the delivery webhook reports `message.headers.message-id` without them and
+    // `applyMailgunEvent` matches exactly. Stored the other way, no bounce ever lands.
     expect(result).toEqual({
       outcome: "sent",
-      providerMessageId: "<20260903.1@sandbox.example.test>",
+      providerMessageId: "20260903.1@sandbox.example.test",
     });
 
     const form = calls[0].init.body as FormData;

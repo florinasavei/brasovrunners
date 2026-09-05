@@ -25,7 +25,8 @@ import type { StaffRole } from "./domain/roles";
 
 const DEV_SUBJECT_PREFIX = "dev:";
 
-export type DevIdentityKey = "author" | "editor" | "admin";
+/** One key per role. `role-boundaries.test.ts` asserts the set matches `STAFF_ROLES`. */
+export type DevIdentityKey = "contributor" | "moderator" | "dev" | "admin" | "superadmin";
 
 type DevIdentity = {
   key: DevIdentityKey;
@@ -36,19 +37,31 @@ type DevIdentity = {
 };
 
 export const DEV_IDENTITIES: readonly DevIdentity[] = [
+  /**
+   * One per role, and the test in `role-boundaries.test.ts` holds it to that: a role with no
+   * identity here is a role nobody can exercise locally, which is how a permission boundary
+   * goes untested until it is wrong in production.
+   */
   {
-    key: "author",
-    zitadelSubject: `${DEV_SUBJECT_PREFIX}author`,
-    email: "dev-author@dev.test",
-    displayName: "Dev Author",
-    role: "AUTHOR",
+    key: "contributor",
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}contributor`,
+    email: "dev-contributor@dev.test",
+    displayName: "Dev Contributor",
+    role: "CONTRIBUTOR",
   },
   {
-    key: "editor",
-    zitadelSubject: `${DEV_SUBJECT_PREFIX}editor`,
-    email: "dev-editor@dev.test",
-    displayName: "Dev Editor",
-    role: "EDITOR",
+    key: "moderator",
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}moderator`,
+    email: "dev-moderator@dev.test",
+    displayName: "Dev Moderator",
+    role: "MODERATOR",
+  },
+  {
+    key: "dev",
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}dev`,
+    email: "dev-dev@dev.test",
+    displayName: "Dev Technical",
+    role: "DEV",
   },
   {
     key: "admin",
@@ -57,7 +70,16 @@ export const DEV_IDENTITIES: readonly DevIdentity[] = [
     displayName: "Dev Administrator",
     role: "ADMIN",
   },
+  {
+    key: "superadmin",
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}superadmin`,
+    email: "dev-superadmin@dev.test",
+    displayName: "Dev Superadministrator",
+    role: "SUPERADMIN",
+  },
 ] as const;
+
+
 
 /** The server guard. Nothing in this file does anything unless this is true. */
 export function isDevStaffSwitcherEnabled(): boolean {

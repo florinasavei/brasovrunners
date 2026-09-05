@@ -113,6 +113,13 @@
       "when": 1788603561329,
       "tag": "0015_race_entry_details",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788629885550,
+      "tag": "0016_staff_role_hierarchy",
+      "breakpoints": true
     }
   ]
 }

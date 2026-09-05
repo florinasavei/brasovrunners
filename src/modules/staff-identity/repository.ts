@@ -96,13 +96,13 @@ export async function deleteStaffUser<T extends Record<string, unknown>>(
  * Used to refuse the removal or demotion of the last one. Counted in the database rather than
  * by loading the list, because the answer is a number and the list is personal data.
  */
-export async function countAdministrators<T extends Record<string, unknown>>(
+export async function countSuperadministrators<T extends Record<string, unknown>>(
   db: Database<T>,
 ): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(staffUsers)
-    .where(eq(staffUsers.role, "ADMIN"));
+    .where(eq(staffUsers.role, "SUPERADMIN"));
   return row?.count ?? 0;
 }
 

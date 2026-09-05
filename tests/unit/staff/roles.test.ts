@@ -27,7 +27,7 @@ describe("BR-REQ-051-01 criterion 1 an Author works on their own drafts", () => 
   it("lets an Author edit a draft they wrote", () => {
     expect(
       canEditTranslation(
-        "AUTHOR",
+        "CONTRIBUTOR",
         { editorialStatus: "DRAFT", authorStaffUserId: AUTHOR_ID },
         AUTHOR_ID,
       ),
@@ -37,7 +37,7 @@ describe("BR-REQ-051-01 criterion 1 an Author works on their own drafts", () => 
   it("refuses an Author a colleague's draft", () => {
     expect(
       canEditTranslation(
-        "AUTHOR",
+        "CONTRIBUTOR",
         { editorialStatus: "DRAFT", authorStaffUserId: OTHER_ID },
         AUTHOR_ID,
       ),
@@ -48,7 +48,7 @@ describe("BR-REQ-051-01 criterion 1 an Author works on their own drafts", () => 
     // Once submitted the piece belongs to the reviewer, or the review is of a moving target.
     expect(
       canEditTranslation(
-        "AUTHOR",
+        "CONTRIBUTOR",
         { editorialStatus: "IN_REVIEW", authorStaffUserId: AUTHOR_ID },
         AUTHOR_ID,
       ),
@@ -56,38 +56,38 @@ describe("BR-REQ-051-01 criterion 1 an Author works on their own drafts", () => 
   });
 
   it("lets an Author submit their own draft for review and nothing else", () => {
-    expect(allowedTransitions("AUTHOR", "DRAFT", true)).toEqual(["IN_REVIEW"]);
-    expect(allowedTransitions("AUTHOR", "DRAFT", false)).toEqual([]);
-    expect(allowedTransitions("AUTHOR", "IN_REVIEW", true)).toEqual([]);
-    expect(allowedTransitions("AUTHOR", "PUBLISHED", true)).toEqual([]);
+    expect(allowedTransitions("CONTRIBUTOR", "DRAFT", true)).toEqual(["IN_REVIEW"]);
+    expect(allowedTransitions("CONTRIBUTOR", "DRAFT", false)).toEqual([]);
+    expect(allowedTransitions("CONTRIBUTOR", "IN_REVIEW", true)).toEqual([]);
+    expect(allowedTransitions("CONTRIBUTOR", "PUBLISHED", true)).toEqual([]);
   });
 });
 
 describe("BR-REQ-051-01 criterion 3 published content is out of an Author's hands", () => {
   it.each(["PUBLISHED", "ARCHIVED"] as const)("refuses an Author a %s translation", (status) => {
     expect(
-      canEditTranslation("AUTHOR", { editorialStatus: status, authorStaffUserId: AUTHOR_ID }, AUTHOR_ID),
+      canEditTranslation("CONTRIBUTOR", { editorialStatus: status, authorStaffUserId: AUTHOR_ID }, AUTHOR_ID),
     ).toBe(false);
   });
 
   it("never lets an Author publish, whatever the starting status", () => {
     for (const from of EDITORIAL_STATUSES) {
-      expect(canTransition("AUTHOR", from, "PUBLISHED", true), `from ${from}`).toBe(false);
+      expect(canTransition("CONTRIBUTOR", from, "PUBLISHED", true), `from ${from}`).toBe(false);
     }
   });
 });
 
 describe("BR-REQ-051-01 criterion 2 an Editor or Administrator publishes", () => {
-  it.each(["EDITOR", "ADMIN"] as const)("lets %s publish a reviewed draft", (role) => {
+  it.each(["MODERATOR", "ADMIN"] as const)("lets %s publish a reviewed draft", (role) => {
     expect(canTransition(role, "IN_REVIEW", "PUBLISHED", false)).toBe(true);
   });
 
-  it.each(["EDITOR", "ADMIN"] as const)("lets %s unpublish and archive", (role) => {
+  it.each(["MODERATOR", "ADMIN"] as const)("lets %s unpublish and archive", (role) => {
     expect(canTransition(role, "PUBLISHED", "DRAFT", false)).toBe(true);
     expect(canTransition(role, "PUBLISHED", "ARCHIVED", false)).toBe(true);
   });
 
-  it.each(["EDITOR", "ADMIN"] as const)("lets %s edit any status", (role) => {
+  it.each(["MODERATOR", "ADMIN"] as const)("lets %s edit any status", (role) => {
     for (const status of EDITORIAL_STATUSES) {
       expect(
         canEditTranslation(role, { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
@@ -129,15 +129,20 @@ describe("BR-REQ-051-01 criterion 4 live content is content that is published", 
 });
 
 describe("BR-REQ-060-01 what each role may reach", () => {
-  it("reserves staff administration to an Administrator", () => {
-    expect(canManageStaff("ADMIN")).toBe(true);
-    expect(canManageStaff("EDITOR")).toBe(false);
-    expect(canManageStaff("AUTHOR")).toBe(false);
+  it("reserves staff administration to the Superadministrator", () => {
+    // The top of the hierarchy is defined by this one capability: a role that could grant
+    // itself a higher one would make every rule above it decorative. An Administrator reads the
+    // whole participant list and still cannot change who else may.
+    expect(canManageStaff("SUPERADMIN")).toBe(true);
+    expect(canManageStaff("ADMIN")).toBe(false);
+    expect(canManageStaff("DEV")).toBe(false);
+    expect(canManageStaff("MODERATOR")).toBe(false);
+    expect(canManageStaff("CONTRIBUTOR")).toBe(false);
   });
 
   it("reserves the event row — times, map link, featured — to editorial roles", () => {
     expect(canEditEventFields("ADMIN")).toBe(true);
-    expect(canEditEventFields("EDITOR")).toBe(true);
-    expect(canEditEventFields("AUTHOR")).toBe(false);
+    expect(canEditEventFields("MODERATOR")).toBe(true);
+    expect(canEditEventFields("CONTRIBUTOR")).toBe(false);
   });
 });

@@ -49,7 +49,8 @@ export async function resolveLocaleSwitch(
   if (
     parsed.route === "/admin/events/[id]" ||
     parsed.route === "/preview/events/[id]" ||
-    parsed.route === "/admin/registrations/[id]"
+    parsed.route === "/admin/registrations/[id]" ||
+    parsed.route === "/admin/legal/[id]"
   ) {
     const id = parsed.params.id;
     if (!id) return listing;

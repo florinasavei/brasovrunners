@@ -113,7 +113,7 @@ export default async function PreviewEventPage({ params }: Props) {
   const mapLink = mapLinkFor(preview, env.MAP_LINK_BASE_URL);
 
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
       <Alert severity="warning" sx={{ mb: 3 }}>
         {t("preview.notice", { status: EDITORIAL_STATUS_LABEL[event.editorialStatus] })}
       </Alert>

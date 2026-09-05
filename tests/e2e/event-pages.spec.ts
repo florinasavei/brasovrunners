@@ -217,4 +217,35 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
   });
+
+  test("carries navigation that marks the section you are in", async ({ page }) => {
+    await page.goto("/ro/evenimente/tura-pe-tampa");
+
+    // The signpost an event page had none of: before this, the only way back to the listing
+    // was the logo, which is a convention rather than something a visitor reads.
+    const nav = page.getByRole("navigation", { name: "Navigare principală" });
+    const events = nav.getByRole("link", { name: "Evenimente" });
+    await expect(events).toBeVisible();
+
+    // Marked current on a page *inside* the section, not only on its index.
+    await expect(nav.locator("[aria-current='page']")).toHaveCount(1);
+
+    // BR-REQ-041-01 criterion 6, on the control every page now carries.
+    const box = await events.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    await events.click();
+    await expect(page).toHaveURL(/\/ro\/evenimente$/);
+  });
+
+  test("offers a skip link before the header", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    // Focusing the first tabbable element must reach it: hidden off-screen, never display:none,
+    // or it leaves the tab order and the whole point is lost.
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Sari la conținut" });
+    await expect(skip).toBeFocused();
+    await expect(page.locator("#main")).toHaveCount(1);
+  });
 });

@@ -64,7 +64,7 @@ export default async function EventsPage({ params }: Props) {
   const listed = featured ? events.filter((event) => event.id !== featured.id) : events;
 
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
       {/*
         BR-REQ-052-02 criterion 1 asks the homepage to carry one SportsOrganization block, and
         this page is now the homepage — the site root redirects here. Incomplete by design:

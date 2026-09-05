@@ -22,18 +22,19 @@ credential lives, never the credential.
 
 ## Accounts and plans
 
-Fill a blank the day the account is created. A row that says "not created" is a row somebody is
+Four accounts exist today: **Vercel, Neon, Mailgun and Zitadel**, plus GitHub. Cloudflare R2 and
+the domain registrar have no account yet. A row that says "not created" is a row somebody is
 waiting on.
 
 | Service | Plan / SKU | What it holds | Console | State |
 | --- | --- | --- | --- | --- |
-| **Vercel** | Hobby | Both applications. One project per environment, function region `fra1` | vercel.com/dashboard | QA live; production project **not created** |
+| **Vercel** | Hobby | Account exists. Both applications. One project per environment, function region `fra1` | vercel.com/dashboard | QA live; production project **not created** |
 | **Neon** | Free | PostgreSQL, Frankfurt. Region is fixed at project creation | console.neon.tech | QA project live, migrated, seeded; production project **not created** |
 | **Zitadel** | *to record* | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | `brasov-runners-8iqx8c.eu1.zitadel.cloud/ui/console` | QA tenant live, `STAFF_AUTH_MODE=provider`; own mail through Mailgun SMTP (`smtp.mailgun.org:587`, US sandbox, working 2026-09-05) |
 | **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
 | **Domain registrar** | *not chosen* | `<domain>` and its DNS | — | **Not registered** |
-| **Cloudflare R2** | *not chosen* | Media, when a non-developer needs to upload | — | Deferred (`AGENTS.md` §17) |
+| **Cloudflare R2** | *no account* | Media, when a non-developer needs to upload | — | **Not signed up.** Deferred (`AGENTS.md` §17); its figures below are reference for the day it is needed |
 
 Hostnames: `SETUP.md` §26, which is the only file allowed to name one.
 Secrets: each Vercel project's own environment; the two GitHub Environments used by
@@ -41,6 +42,70 @@ Secrets: each Vercel project's own environment; the two GitHub Environments used
 environment contributes what.
 
 ---
+
+## Subscriptions, limits and cost — checked 2026-09-05
+
+**How these were established, because it matters for how far to trust them.** Each vendor was
+researched against its own pricing and documentation pages, then a second, independent pass tried
+to *refute* every figure. That pass earned its place: it caught a fabricated quotation and several
+tier-attribution errors in the first pass. What survived is below. Vendor pricing changes without
+notice — **re-check before spending, and update the date in this heading when you do.**
+
+### What each service gives away, and what the first upgrade costs
+
+| Service | Free plan | What it includes | First paid tier |
+| --- | --- | --- | --- |
+| **Mailgun** | Free, $0 | **100 emails/day.** Sandbox: 5 authorized recipients. 1 day log retention, 2 API keys, 1 inbound route. No monthly figure is published | **Basic $15/mo** — 10,000 emails/mo, **and no daily limit**. Then Foundation $35/mo (50k), Scale $90/mo (100k) |
+| **Vercel** | Hobby, $0 | 100 GB bandwidth, 1M function invocations, 1M edge requests, 100 deployments/day, 1 concurrent build, 300s max function duration | **Pro $20/month per developer seat.** Viewer seats free and unlimited. $20 usage credit included; overage uncapped by default |
+| **Neon** | Free, $0 | 0.5 GB storage/project, **100 CU-hours/month**, 5 GB egress, 10 branches, autoscale 0.25–2 CU | **Launch** — usage-based, no monthly minimum: $0.106/CU-hour, $0.35/GB-month. Instant restore billed separately at $0.20/GB-month |
+| **Zitadel** | Free, $0 | **100 daily active users**, 5,000 management API requests, 1 instance, **1 administrator**, **0 custom domains**, 1 day audit trail | Paid tier — required for a custom domain and for more than one administrator |
+| **GitHub Actions** | Free | **Unlimited on public repositories** — standard runners consume no minutes. Private: 2,000 min/month | Metered only for private repos or larger runners. Team $4/user/month |
+| **Cloudflare R2** *(no account yet)* | Included allowance | 10 GB-month storage, 1M Class A ops, 10M Class B ops, **egress always $0** | Usage-based: $0.015/GB-month storage, $4.50/M Class A, $0.36/M Class B |
+
+Running cost today: **€0 plus the domain**, because nothing has been upgraded. The table below is
+what changes that.
+
+### The four that will actually bite this club
+
+**1. Mailgun's 100 emails/day is the binding constraint on registration day.** This application
+sends **three emails per completed registration** — verify the address, sign the declaration,
+confirmed — and a waitlisted entrant costs two more. So the free plan supports roughly **33
+registrations per day**, and a race that opens entries to a hundred people exceeds it before
+lunch. Basic at $15/mo removes the daily limit and includes 10,000/month. **Budget one month of
+Basic per race, not a permanent subscription.**
+
+**2. Vercel Hobby cannot run the scheduler, and fails loudly.** Hobby cron is limited to *once
+per day*, and a more frequent expression **fails at deploy time**, not at runtime. This is the
+documented reason `.github/workflows/scheduled-jobs.yml` exists. GitHub's own cron minimum is 5
+minutes, so five minutes is the floor either way.
+
+**3. Vercel Hobby cannot connect to a Git organization's repository.** "You can either switch to
+an existing Team or create a new one." BR-BUS-101 requires the repository to move to a
+club-owned organization — **doing that forces a paid Vercel plan**, or a move to the recorded
+fallback. That is a dependency nobody had noticed between two things the club wants.
+
+**4. Zitadel Free includes zero custom domains and one administrator.** Staff sign-in on the
+club's own domain, and a second person able to administer identity, both need a paid tier. At
+three to five staff the DAU cap (100) is irrelevant; these two are not.
+
+### Two more worth knowing
+
+- **Exceeding a Hobby cap pauses the feature for 30 days and you cannot buy your way out.** Not a
+  bill — an outage with a fixed sentence. Upgrade *before* the window, never during it.
+- **Vercel Pro is per seat.** Three organizers who deploy is $60/month. Viewer seats are free and
+  can see dashboards and deployments, so only people who actually deploy need a paid seat.
+
+### The commercial clause, precisely
+
+Vercel's fair-use guidelines define commercial usage as any deployment "used for the purpose of
+financial gain of **anyone** involved in **any part of the production** of the project" — which
+catches a paid developer, not only a paying visitor. The first listed example is "any method of
+requesting or processing payment from visitors of the site".
+
+**A donate button alone sits inside a donations carve-out. A race entry fee does not.** The day
+the club charges for entry, Hobby stops being defensible, and the choice is Pro or the fallback
+already recorded in `DECISIONS.md` — Render Free in Frankfurt, which runs the literal `yarn start`
+contract and needs no code change.
 
 ## Limits that constrain the club, worst first
 
@@ -158,6 +223,46 @@ recovery-capable access to every account in the table above.
 
 ---
 
+## Registration day: surge on purpose, then come back down
+
+The club's load is not a curve, it is a spike. A race opens and a few hundred people arrive in an
+hour; the rest of the month is a handful of visitors a day. Paying for the spike all year is the
+expensive mistake, and being throttled during the spike is the embarrassing one.
+
+**Rate limiting is the first line, and it is free.** It is what stops one script, one retry loop
+or one accidental double-submit from turning into the traffic that makes an upgrade necessary.
+The current policy is on `/devs`, read from the code rather than restated. Raising a plan to
+absorb load that a limit should have refused is paying for abuse.
+
+### Before a registration window opens
+
+- [ ] Read `/devs`. Everything blocked or limited there will be worse under load, not better.
+- [ ] Confirm the scheduled jobs actually ran in the last ten minutes. Under a spike the outbox
+      is what delivers confirmations, and it runs about every two hours here (limit 4) — that is
+      the single worst thing about a busy registration day, and it is not fixed by any upgrade in
+      this table.
+- [ ] Check Mailgun's remaining monthly allowance against the number of people you expect. Each
+      registration sends at least two messages: verify, then confirm.
+- [ ] Decide the capacity **before** opening, not during. A capacity raised mid-window reallocates
+      the waiting list, which is correct and surprising.
+
+### What to bump, and in what order
+
+| If | Bump | Back down |
+| --- | --- | --- |
+| A few hundred registrations expected | Nothing. This is well inside every free tier | — |
+| Mailgun's monthly allowance is close | Mailgun tier, for that month | The month after |
+| The database is the bottleneck — slow pages, connection errors | Neon, to an always-on compute | After the window closes |
+| Vercel throttles or the club takes money | Vercel Pro | Only if it was purely for load |
+
+Bump one thing, watch, bump the next. Two at once means never learning which one was binding.
+
+### Coming back down
+
+The point of a temporary bump is that it is temporary, and nothing will remind you. Put the
+downgrade date in the same place as the upgrade — and record both in the cost table below, so
+next year's registration window starts from what actually happened rather than from memory.
+
 ## Scheduled debt
 
 Things already decided and owed, so they are not rediscovered.
@@ -169,15 +274,20 @@ Things already decided and owed, so they are not rediscovered.
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |
 | An alert on `/api/health` going `degraded` | The health check is the detection; nothing watches it | this page, limit 4 |
+| Rate limiting on token validation and uploads | §19.4 names five surfaces; submission and admin resend are built, token validation and uploads are not | `AGENTS.md` §19.4 |
 
 ---
 
 ## Cost
 
-Recorded per service the day a paid plan is taken. Everything in the table above is currently on
-a free plan or not yet created, so the platform's running cost is the domain registration and
-nothing else — **which is worth re-checking against limits 3 and 5 before that is relied on.**
+Nothing is on a paid plan today, so the running cost is the domain registration alone. Record a
+row the day a plan is taken **and the day it is dropped** — a temporary upgrade nobody reverses is
+the expensive failure here.
 
-| Service | Plan | Cost | Renews |
-| --- | --- | --- | --- |
-| *to fill* | | | |
+| Service | Plan | Cost | Taken | Dropped |
+| --- | --- | --- | --- | --- |
+| *none yet* | | | | |
+
+Expected first spend, in the order it will arrive: the domain (annual, registrar's price), then
+one month of Mailgun Basic ($15) around the first real race, then a Vercel paid plan if and only
+if the repository moves to a club organization or the club starts charging entry.

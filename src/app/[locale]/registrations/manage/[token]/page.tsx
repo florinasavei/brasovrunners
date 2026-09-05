@@ -33,7 +33,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
 
   if (done) {
     return (
-      <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
         <Alert severity="success">{t("manage.done")}</Alert>
       </Container>
     );
@@ -43,7 +43,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
     invalid || started ? { ok: false as const } : await readRegistrationTokenContext(token, "MANAGE_REGISTRATION");
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("manage.title")}
       </Typography>

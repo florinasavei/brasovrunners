@@ -350,21 +350,51 @@ export type MailgunEventType =
  */
 export async function applyMailgunEvent(
   db: Db,
-  params: { providerMessageId: string; event: MailgunEventType; reason: string | null },
+  params: {
+    providerMessageId: string;
+    event: MailgunEventType;
+    reason: string | null;
+    /**
+     * Mailgun's current payload reports one `failed` event and distinguishes the two cases
+     * with this field. The legacy `permanent_fail`/`temporary_fail` names are still handled
+     * below, so both shapes work and neither has to be guessed at.
+     */
+    severity?: string | null;
+  },
 ): Promise<void> {
+  /**
+   * Which failures are final, and why the distinction is not cosmetic.
+   *
+   * A `failed` event with `severity: temporary` is a greylist or a full mailbox — the
+   * provider is still trying. Marking that BOUNCED abandons a message that was about to
+   * arrive, and BOUNCED is terminal: this outbox never retries out of it. So `failed` is
+   * permanent only when the provider says so, and anything else is left alone.
+   */
+  const permanent =
+    params.event === "permanent_fail" ||
+    (params.event === "failed" && params.severity !== "temporary");
+
   const status: EmailOutboxStatus | null =
     params.event === "complained"
       ? "COMPLAINED"
-      : params.event === "permanent_fail" || params.event === "failed"
+      : permanent
         ? "BOUNCED"
         : null;
 
-  // A transient failure (`temporary_fail`) is Mailgun's own retry in progress — this
-  // application's outbox has its own retry policy and does not need to react to Mailgun's.
   if (status === null) return;
 
+  /**
+   * Both spellings of the id, because rows written before `normalizeProviderMessageId`
+   * existed still carry Mailgun's bracketed form. Matching both means a bounce for one of
+   * those older messages still lands, and no migration has to rewrite stored provider ids.
+   */
   await db
     .update(emailOutbox)
     .set({ status, lockedAt: null, nextAttemptAt: null, lastError: params.reason })
-    .where(eq(emailOutbox.providerMessageId, params.providerMessageId));
+    .where(
+      or(
+        eq(emailOutbox.providerMessageId, params.providerMessageId),
+        eq(emailOutbox.providerMessageId, `<${params.providerMessageId}>`),
+      ),
+    );
 }

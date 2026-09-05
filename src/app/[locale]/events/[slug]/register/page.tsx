@@ -23,7 +23,7 @@ import { submitRegistrationAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ submitted?: string; error?: string }>;
+  searchParams: Promise<{ submitted?: string; error?: string; fields?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -61,13 +61,31 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   );
   if (state !== "OPEN") notFound();
 
-  const { submitted, error } = await searchParams;
+  const { submitted, error, fields } = await searchParams;
+
+  /**
+   * Which boxes to mark, when the server rejected the form.
+   *
+   * Names only — nothing typed goes into a URL. Reaching this at all should be rare: every
+   * constraint below is also a native one, so a browser refuses the submission first and
+   * points at the offending field without a round trip. This is the fallback for the cases
+   * the browser cannot know about, and for a form posted without JavaScript or by a bot.
+   */
+  const invalid = new Set((fields ?? "").split(",").filter(Boolean));
+
+  // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
+  const latestBirthDate = now.toISOString().slice(0, 10);
+  const earliestBirthDate = new Date(
+    Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate()),
+  )
+    .toISOString()
+    .slice(0, 10);
   const t = await getTranslations("Registration");
   // Names from the platform, order from the reader's own collation (`countries.ts`).
   const countries = countryOptions(locale, (code) => countryName(code, locale));
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title", { event: event.title })}
       </Typography>
@@ -90,7 +108,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           />
           <input type="hidden" name="renderedAt" value={now.toISOString()} />
 
-          {error && <Alert severity="error">{t("errors.generic")}</Alert>}
+          {error && (
+            <Alert severity="error">
+              {invalid.size > 0
+                ? t("errors.fields", {
+                    fields: [...invalid].map((name) => t(`fieldNames.${name}`)).join(", "),
+                  })
+                : t("errors.generic")}
+            </Alert>
+          )}
 
           <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
             {t("sections.about")}
@@ -105,6 +131,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               name="firstName"
+              error={invalid.has("firstName")}
               label={t("firstName")}
               required
               autoComplete="given-name"
@@ -112,6 +139,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             />
             <TextField
               name="lastName"
+              error={invalid.has("lastName")}
               label={t("lastName")}
               required
               autoComplete="family-name"
@@ -159,7 +187,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             label={t("birthDate")}
             helperText={t("birthDateHelp")}
             required
-            slotProps={{ inputLabel: { shrink: true } }}
+            error={invalid.has("birthDate")}
+            slotProps={{
+              inputLabel: { shrink: true },
+              // The same bounds the schema applies, so a date in the future is refused by
+              // the date picker itself rather than by a round trip that says nothing useful.
+              htmlInput: { min: earliestBirthDate, max: latestBirthDate },
+            }}
           />
 
           <TextField name="sex" label={t("sex")} select required defaultValue="UNSPECIFIED">
@@ -176,14 +210,40 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             ))}
           </TextField>
 
-          <TextField name="city" label={t("city")} required autoComplete="address-level2" />
+          <TextField
+            name="city"
+            label={t("city")}
+            required
+            autoComplete="address-level2"
+            error={invalid.has("city")}
+          />
 
           <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
             {t("sections.contact")}
           </Typography>
 
-          <TextField name="email" type="email" label={t("email")} required autoComplete="email" />
-          <TextField name="phone" type="tel" label={t("phone")} required autoComplete="tel" />
+          <TextField
+            name="email"
+            type="email"
+            label={t("email")}
+            required
+            autoComplete="email"
+            error={invalid.has("email")}
+          />
+          {/*
+            A deliberately permissive pattern: a runner from anywhere may enter, and refusing
+            a valid foreign number is a worse failure than accepting one nobody rings. It
+            exists so the browser catches a typed word before the server has to.
+          */}
+          <TextField
+            name="phone"
+            type="tel"
+            label={t("phone")}
+            required
+            autoComplete="tel"
+            error={invalid.has("phone")}
+            slotProps={{ htmlInput: { pattern: "[0-9+()./\\s-]{3,40}", minLength: 3, maxLength: 40 } }}
+          />
 
           {/* Required because somebody has to be reachable if a runner is not (BR-BUS-031). */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -192,6 +252,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               label={t("emergencyContactName")}
               required
               fullWidth
+              error={invalid.has("emergencyContactName")}
             />
             <TextField
               name="emergencyContactPhone"
@@ -199,6 +260,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               label={t("emergencyContactPhone")}
               required
               fullWidth
+              error={invalid.has("emergencyContactPhone")}
+              slotProps={{ htmlInput: { pattern: "[0-9+()./\\s-]{3,40}", minLength: 3, maxLength: 40 } }}
             />
           </Stack>
 
