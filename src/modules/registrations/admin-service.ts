@@ -5,10 +5,11 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
-import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus } from "./domain/state-machine";
@@ -28,7 +29,7 @@ import { type EventForRegistration, submitRegistration, unregister } from "./ser
  * change to make atomic with anything.
  */
 function assertAdministrator(actor: Pick<StaffUser, "role">): void {
-  if (!canManageStaff(actor.role)) {
+  if (!canManageRegistrations(actor.role)) {
     throw new DomainError(
       "FORBIDDEN",
       `role ${actor.role} may not resend registration email; AGENTS.md §10.2 reserves it to ADMIN`,
@@ -46,6 +47,37 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
 
   const registration = await findRegistrationById(db, registrationId);
   if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
+
+  /**
+   * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
+   * recorded."
+   *
+   * Keyed on the registration rather than the administrator, because what is being protected is
+   * one participant's inbox — two organizers both clicking resend is exactly the case to catch,
+   * and it is invisible if each of them has their own allowance.
+   *
+   * Checked before the message type is derived so a throttled resend does nothing at all, and
+   * refused with a real error rather than a generic success: this caller is an authenticated
+   * Administrator looking at the screen, so there is nothing to leak and everything to gain
+   * from saying what happened.
+   */
+  const verdict = await consumeRateLimit(db, "admin-resend", registrationId, now);
+  if (!verdict.allowed) {
+    await recordAuditEvent(db, {
+      actorStaffUserId: actor.id,
+      participantId: registration.participantId,
+      action: "registration.resend_rate_limited",
+      entityType: "registration",
+      entityId: registrationId,
+      metadata: { count: verdict.count, limit: verdict.limit },
+      now,
+    });
+
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `this registration has had ${verdict.count} resends in the last hour; wait ${verdict.retryAfter} seconds`,
+    );
+  }
 
   const messageType = deriveAllowedResendMessageType(registration.status);
   if (!messageType) {

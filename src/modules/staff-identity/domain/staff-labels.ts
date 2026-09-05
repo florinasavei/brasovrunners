@@ -36,9 +36,11 @@ export const EDITORIAL_TRANSITION_LABEL: Record<EditorialStatus, string> = {
 };
 
 export const STAFF_ROLE_LABEL: Record<StaffRole, string> = {
-  AUTHOR: "Autor",
-  EDITOR: "Editor",
+  CONTRIBUTOR: "Colaborator",
+  MODERATOR: "Moderator",
+  DEV: "Tehnic",
   ADMIN: "Administrator",
+  SUPERADMIN: "Administrator principal",
 };
 
 export const EVENT_STATUS_LABEL: Record<"SCHEDULED" | "CANCELLED" | "COMPLETED", string> = {

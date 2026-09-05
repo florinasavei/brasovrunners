@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { DEV_IDENTITIES, ensureDevStaffUser } from "@/modules/staff-identity/dev-switcher";
+import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { findStaffUserById, listStaffUsers } from "@/modules/staff-identity/repository";
 import {
   changeStaffRole,
@@ -38,15 +39,15 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
     await resetTables(db);
     [author] = await db
       .insert(staffUsers)
-      .values({ email: "author@dev.test", displayName: "Author", role: "AUTHOR" })
+      .values({ email: "contributor@dev.test", displayName: "Author", role: "CONTRIBUTOR" })
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "editor@dev.test", displayName: "Editor", role: "EDITOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
     [admin] = await db
       .insert(staffUsers)
-      .values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .values({ email: "superadmin@dev.test", displayName: "Admin", role: "SUPERADMIN" })
       .returning();
   });
 
@@ -110,13 +111,13 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
       const invited = await inviteStaffUser(db, admin, {
         email: "Ana@Dev.test",
         displayName: "Ana",
-        role: "EDITOR",
+        role: "MODERATOR",
       });
 
       // The address is the allowlist key, so it is stored lowercased and nothing else is.
       expect(invited.email).toBe("ana@dev.test");
       expect(invited.displayName).toBe("Ana");
-      expect(invited.role).toBe("EDITOR");
+      expect(invited.role).toBe("MODERATOR");
       // No provider subject until they actually sign in — and no password, ever.
       expect(invited.zitadelSubject).toBeNull();
       expect(invited.firstSignedInAt).toBeNull();
@@ -124,7 +125,7 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
     });
 
     it("refuses a second invitation for the same address, however it is capitalized", async () => {
-      await inviteStaffUser(db, admin, { email: "ana@dev.test", displayName: "Ana", role: "AUTHOR" });
+      await inviteStaffUser(db, admin, { email: "ana@dev.test", displayName: "Ana", role: "CONTRIBUTOR" });
 
       expect(
         await codeOf(
@@ -135,11 +136,11 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
 
     it("refuses an invitation that is not an address or has no name", async () => {
       expect(
-        await codeOf(inviteStaffUser(db, admin, { email: "ana", displayName: "Ana", role: "AUTHOR" })),
+        await codeOf(inviteStaffUser(db, admin, { email: "ana", displayName: "Ana", role: "CONTRIBUTOR" })),
       ).toBe("VALIDATION_ERROR");
       expect(
         await codeOf(
-          inviteStaffUser(db, admin, { email: "ana@dev.test", displayName: "  ", role: "AUTHOR" }),
+          inviteStaffUser(db, admin, { email: "ana@dev.test", displayName: "  ", role: "CONTRIBUTOR" }),
         ),
       ).toBe("VALIDATION_ERROR");
       expect(
@@ -150,8 +151,8 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
     });
 
     it("changes a colleague's role", async () => {
-      const promoted = await changeStaffRole(db, admin, author.id, "EDITOR");
-      expect(promoted.role).toBe("EDITOR");
+      const promoted = await changeStaffRole(db, admin, author.id, "MODERATOR");
+      expect(promoted.role).toBe("MODERATOR");
     });
 
     it("revokes access without taking the work with it", async () => {
@@ -184,42 +185,42 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
 
   describe("the club cannot be locked out of its own backoffice", () => {
     it("refuses an Administrator their own role change", async () => {
-      expect(await codeOf(changeStaffRole(db, admin, admin.id, "AUTHOR"))).toBe("FORBIDDEN");
+      expect(await codeOf(changeStaffRole(db, admin, admin.id, "CONTRIBUTOR"))).toBe("FORBIDDEN");
     });
 
     it("refuses an Administrator their own removal", async () => {
       expect(await codeOf(revokeStaffUser(db, admin, admin.id))).toBe("FORBIDDEN");
     });
 
-    it("refuses the demotion of the last Administrator", async () => {
+    it("refuses the demotion of the last Superadministrator", async () => {
       const [second] = await db
         .insert(staffUsers)
-        .values({ email: "second@dev.test", displayName: "Second admin", role: "ADMIN" })
+        .values({ email: "second@dev.test", displayName: "Second admin", role: "SUPERADMIN" })
         .returning();
 
       // Two administrators: one may demote the other.
-      await changeStaffRole(db, second, admin.id, "EDITOR");
+      await changeStaffRole(db, second, admin.id, "MODERATOR");
 
       // One left, and nobody can take the last one away.
-      expect(await codeOf(changeStaffRole(db, second, second.id, "EDITOR"))).toBe("FORBIDDEN");
-      const [onlyAdmin] = await db.select().from(staffUsers).where(eq(staffUsers.role, "ADMIN"));
+      expect(await codeOf(changeStaffRole(db, second, second.id, "MODERATOR"))).toBe("FORBIDDEN");
+      const [onlyAdmin] = await db.select().from(staffUsers).where(eq(staffUsers.role, "SUPERADMIN"));
       expect(onlyAdmin.id).toBe(second.id);
     });
 
-    it("refuses the removal of the last Administrator even by another Administrator", async () => {
+    it("refuses the removal of the last Superadministrator even by another Administrator", async () => {
       const [second] = await db
         .insert(staffUsers)
-        .values({ email: "second@dev.test", displayName: "Second admin", role: "ADMIN" })
+        .values({ email: "second@dev.test", displayName: "Second admin", role: "SUPERADMIN" })
         .returning();
 
       await revokeStaffUser(db, second, admin.id);
       // `second` is now the only one; revoking them is refused, and self-removal already is.
-      const [remaining] = await db.select().from(staffUsers).where(eq(staffUsers.role, "ADMIN"));
+      const [remaining] = await db.select().from(staffUsers).where(eq(staffUsers.role, "SUPERADMIN"));
       expect(remaining.id).toBe(second.id);
 
       const [third] = await db
         .insert(staffUsers)
-        .values({ email: "third@dev.test", displayName: "Third", role: "ADMIN" })
+        .values({ email: "third@dev.test", displayName: "Third", role: "SUPERADMIN" })
         .returning();
       await revokeStaffUser(db, third, second.id);
       expect(await codeOf(revokeStaffUser(db, third, third.id))).toBe("FORBIDDEN");
@@ -231,14 +232,14 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
       await expectViolation(
         db
           .insert(staffUsers)
-          .values({ email: "admin@dev.test", displayName: "Impostor", role: "ADMIN" }),
+          .values({ email: "superadmin@dev.test", displayName: "Impostor", role: "ADMIN" }),
         { code: SQLSTATE.UNIQUE_VIOLATION },
       );
     });
 
     it("refuses an address that is not lowercased", async () => {
       await expectViolation(
-        db.insert(staffUsers).values({ email: "Ana@Dev.test", displayName: "Ana", role: "AUTHOR" }),
+        db.insert(staffUsers).values({ email: "Ana@Dev.test", displayName: "Ana", role: "CONTRIBUTOR" }),
         { code: SQLSTATE.CHECK_VIOLATION, constraint: "staff_users_email_is_lowercase" },
       );
     });
@@ -257,7 +258,7 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
         db.insert(staffUsers).values({
           email: "ana@dev.test",
           displayName: "Ana",
-          role: "AUTHOR",
+          role: "CONTRIBUTOR",
           firstSignedInAt: new Date(),
         }),
         { code: SQLSTATE.CHECK_VIOLATION, constraint: "staff_users_signed_in_has_subject" },
@@ -267,21 +268,21 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
 
   describe("the development staff switcher (AGENTS.md §13.1)", () => {
     it("creates a synthetic identity on demand and returns the same row next time", async () => {
-      const first = await ensureDevStaffUser(db, "editor");
-      const second = await ensureDevStaffUser(db, "editor");
+      const first = await ensureDevStaffUser(db, "moderator");
+      const second = await ensureDevStaffUser(db, "moderator");
 
       expect(second.id).toBe(first.id);
-      expect(first.role).toBe("EDITOR");
+      expect(first.role).toBe("MODERATOR");
       // Marked as synthetic in the data itself, not only in a comment.
       expect(first.zitadelSubject?.startsWith("dev:")).toBe(true);
     });
 
     it("offers one identity per role, and no more", async () => {
-      expect(DEV_IDENTITIES.map((identity) => identity.role).sort()).toEqual([
-        "ADMIN",
-        "AUTHOR",
-        "EDITOR",
-      ]);
+      // Against the enum rather than a written-out list: a role added without a development
+      // identity is a permission boundary nobody can exercise locally.
+      expect(DEV_IDENTITIES.map((identity) => identity.role).sort()).toEqual(
+        [...STAFF_ROLES].sort(),
+      );
       // Reserved by RFC 6761: these addresses can never be registered or delivered to, and
       // the `dev-` prefix keeps them out of the way of a real colleague's address.
       for (const identity of DEV_IDENTITIES) {

@@ -34,7 +34,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     await resetTables(db);
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "editor@dev.test", displayName: "Editor", role: "EDITOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
   });
 
@@ -160,6 +160,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/registrations/[id]",
       "/admin/registrations/new",
       "/admin/staff",
+      "/devs",
       "/events",
       "/events/[slug]",
       "/events/[slug]/register",

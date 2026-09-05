@@ -20,7 +20,7 @@ import {
 } from "@/modules/registrations/admin-repository";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
-import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
@@ -41,7 +41,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canManageStaff(actor.role)) notFound();
+  if (!canManageRegistrations(actor.role)) notFound();
 
   const db = getDb();
   const registration = await findRegistrationDetailForAdmin(db, id);

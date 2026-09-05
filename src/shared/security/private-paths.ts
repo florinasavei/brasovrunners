@@ -20,6 +20,9 @@ import { ALIAS_SEGMENTS } from "@/i18n/aliases";
  */
 const PRIVATE_SEGMENTS: readonly string[] = [
   "admin",
+  // The configuration report. Not secret — it holds no value — but a map of what a deployment
+  // is missing, which is not something to hand a crawler.
+  "devs",
   "preview",
   "previzualizare",
   "sign-in",

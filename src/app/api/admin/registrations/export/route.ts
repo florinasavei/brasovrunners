@@ -3,7 +3,7 @@ import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
-import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -25,7 +25,7 @@ export async function GET(request: Request): Promise<Response> {
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canManageStaff(actor.role)) {
+  if (!canManageRegistrations(actor.role)) {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
   }
 

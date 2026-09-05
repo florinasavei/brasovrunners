@@ -887,7 +887,15 @@ Logical/public route mapping includes:
 
 Staff routes are localized like everything else but never appear in public navigation or the
 sitemap, are disallowed in `robots.txt`, and are served with `X-Robots-Tag: noindex` and a
-private, no-store cache policy. The site footer carried a "Staff" link until
+private, no-store cache policy.
+
+`/devs` is one of them (BR-REQ-090-04): the same spelling in both locales, Administrator only,
+and it reports what this deployment is *configured* to do — the mode of each subsystem, and for
+each mode the variables it requires with whether each is set. It MUST NOT render a value. The
+page maps `env` to booleans before anything else runs and `modules/diagnostics/configuration.ts`
+receives only those, so there is no path from a secret to the markup rather than a convention
+against printing one (§8, §14.5). `/api/health` stays the machine-readable answer about a
+process that is already running; this is the answer about the configuration it started from. The site footer carried a "Staff" link until
 `DECISIONS.md` §34; the way in is the build badge now — a double-click, or `Enter` when it has
 focus, and inert where `STAFF_AUTH_MODE=disabled`. No user-visible string names the identity
 provider: `signIn("zitadel", …)` is code, and the button says what it does. The preview renders the translation of the locale in its own
@@ -989,24 +997,35 @@ Rules:
 
 ### 10.2 Staff roles
 
-```ts
-type StaffRole = "AUTHOR" | "EDITOR" | "ADMIN";
+Five roles, ordered, each a superset of the one before it:
+
+```text
+CONTRIBUTOR  own drafts; submit them for approval
+MODERATOR    edit any event; approve, publish, unpublish, archive
+DEV          + the configuration report (/devs). No participant data
+ADMIN        + registrations, participants, exports, test registrations, delete an event
+SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
 
-- Author: own/assigned drafts; submit review.
-- Editor: all editorial content; publish/unpublish/archive; create, configure and duplicate
-  events; event content/galleries.
-- Admin: everything an Editor may, plus registrations, participants, waitlist, declarations,
-  profiles, exports, roles, operations; deleting an event; adding and removing test
-  registrations.
+`modules/staff-identity/domain/roles.ts` is the single place this order is written. Every
+capability is `atLeast(role, MINIMUM)` rather than a list of roles, which is what makes the
+hierarchy a property rather than a convention: a role added later inherits correctly, and no
+grant can be forgotten. `session.ts` imports that rank rather than keeping its own — it used to
+keep a second copy, which is one rule in two places.
 
-Deleting an event is the Administrator's alone and is refused outright for an event with any
-registration against it, whatever its status or kind — archiving is the answer for an event that
-happened. `registrations` carries the privacy-notice version a participant acknowledged and, once
-signed, the declaration they accepted; cascading those away to tidy up a duplicate would destroy
-the evidence §10.8 exists to keep.
+The boundary that carries the most weight is **DEV | ADMIN, and it is personal data**. Below it
+is the club's own content and its own configuration; at and above it are the people who
+registered. `/devs` therefore sits at DEV: it reports which variables are set and never a value,
+so it can be given to somebody helping with the platform without also handing over the
+participant list.
 
-Participant is not a staff role.
+`canManageStaff` is SUPERADMIN and nothing else, and it defines the top: a role that could grant
+itself a higher one makes every rule below it decorative. The lockout guards key on that same
+role — the last SUPERADMIN can be neither demoted nor removed, by themselves or by anybody else.
+
+MUST NOT: a capability written as a list of roles; a second copy of the rank; a screen that
+gates on `canManageStaff` when what it actually needs is `canManageRegistrations` — the two were
+one function until `BR-V1.19` and the registrations screens were reading the wrong one.
 
 ### 10.3 Participant identity
 

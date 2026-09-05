@@ -39,19 +39,19 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     await resetTables(db);
     [author] = await db
       .insert(staffUsers)
-      .values({ email: "author@dev.test", displayName: "Author", role: "AUTHOR" })
+      .values({ email: "contributor@dev.test", displayName: "Author", role: "CONTRIBUTOR" })
       .returning();
     [otherAuthor] = await db
       .insert(staffUsers)
-      .values({ email: "other@dev.test", displayName: "Other author", role: "AUTHOR" })
+      .values({ email: "other@dev.test", displayName: "Other author", role: "CONTRIBUTOR" })
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "editor@dev.test", displayName: "Editor", role: "EDITOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
       .returning();
     [admin] = await db
       .insert(staffUsers)
-      .values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" })
+      .values({ email: "superadmin@dev.test", displayName: "Admin", role: "ADMIN" })
       .returning();
   });
 

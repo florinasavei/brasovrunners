@@ -54,6 +54,11 @@ export const routing = defineRouting({
      */
     "/sign-in": { ro: "/autentificare", en: "/sign-in" },
     "/admin": "/admin",
+    /**
+     * What this deployment is configured to do (BR-REQ-090-04). Administrator only, and the
+     * same spelling in both locales: it is read by whoever is holding the hosting dashboard.
+     */
+    "/devs": "/devs",
     "/admin/events/new": "/admin/events/new",
     "/admin/events/[id]": "/admin/events/[id]",
     "/admin/staff": "/admin/staff",

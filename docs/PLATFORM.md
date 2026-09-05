@@ -42,6 +42,32 @@ environment contributes what.
 
 ---
 
+## Upgrade triggers — what to buy, and what tells you to buy it
+
+The table above says what plan each service is on. This says **what to watch, what it looks like
+when the plan runs out, and what the next step costs**. Fill a "current" cell the day you check
+it; a blank is a number nobody has looked at, which is the state most of them are in.
+
+| Service | Plan now | The limit that binds | Symptom when you hit it | Next step |
+| --- | --- | --- | --- | --- |
+| **Vercel** | Hobby | **Non-commercial use only.** Not a meter — a licence term | Nothing technical. An email from Vercel, at a time of their choosing | Pro. Or Render Free in Frankfurt, already chosen as the fallback and requiring no code change |
+| **Vercel** | Hobby | Function invocations and bandwidth per month — *current allowance not checked* | Deployments throttled or the project paused | Pro |
+| **Neon** | Free | Compute hours and storage — *current allowance not checked* | The database refuses connections, or the branch is suspended. Every page 500s | A paid Neon plan, or another Postgres in Frankfurt |
+| **Neon** | Free | Scale-to-zero | First request after idle is slow. Colleagues call it "the site is slow" | A plan with an always-on compute |
+| **Mailgun** | *to record* | Sandbox: **5 authorized recipients**. Verified domain: monthly send allowance — *not checked* | Sandbox: mail to anybody else is refused. Beyond the allowance: refused or billed | Verify a domain (removes the 5-recipient cap); then a paid tier for volume |
+| **Zitadel** | *to record* | Users, or actions per month — *not checked* | Staff cannot sign in | A paid tier. At three to five staff this is the least likely to bind |
+| **GitHub Actions** | Free (public repo) | Scheduled workflows are **delayed under load**, and disabled after repository inactivity | The outbox stops draining. `/api/health` says `degraded`, and **nothing alerts on it** | Measured at roughly two-hourly here — see limit 4. A paid runner does not fix scheduling delay; a different scheduler would |
+| **Domain** | *not registered* | — | — | Registrar fee, annual |
+
+**The one that will bind first is not on a meter.** It is Vercel's non-commercial clause, and it
+binds the day the club takes money rather than the day a counter fills. Everything else in this
+table is a number that grows with the club; that one is a switch.
+
+**Two numbers to actually go and read**, because they are the ones that would hurt and nobody has
+checked them: Neon Free's compute-hour allowance, and Mailgun's monthly send allowance on
+whatever plan the account is on. Both are five minutes in a dashboard and both change what
+"production-ready" means.
+
 ## Limits that constrain the club, worst first
 
 The point of this page. Each one is a thing the club cannot currently do, why, and what it would
@@ -158,6 +184,46 @@ recovery-capable access to every account in the table above.
 
 ---
 
+## Registration day: surge on purpose, then come back down
+
+The club's load is not a curve, it is a spike. A race opens and a few hundred people arrive in an
+hour; the rest of the month is a handful of visitors a day. Paying for the spike all year is the
+expensive mistake, and being throttled during the spike is the embarrassing one.
+
+**Rate limiting is the first line, and it is free.** It is what stops one script, one retry loop
+or one accidental double-submit from turning into the traffic that makes an upgrade necessary.
+The current policy is on `/devs`, read from the code rather than restated. Raising a plan to
+absorb load that a limit should have refused is paying for abuse.
+
+### Before a registration window opens
+
+- [ ] Read `/devs`. Everything blocked or limited there will be worse under load, not better.
+- [ ] Confirm the scheduled jobs actually ran in the last ten minutes. Under a spike the outbox
+      is what delivers confirmations, and it runs about every two hours here (limit 4) — that is
+      the single worst thing about a busy registration day, and it is not fixed by any upgrade in
+      this table.
+- [ ] Check Mailgun's remaining monthly allowance against the number of people you expect. Each
+      registration sends at least two messages: verify, then confirm.
+- [ ] Decide the capacity **before** opening, not during. A capacity raised mid-window reallocates
+      the waiting list, which is correct and surprising.
+
+### What to bump, and in what order
+
+| If | Bump | Back down |
+| --- | --- | --- |
+| A few hundred registrations expected | Nothing. This is well inside every free tier | — |
+| Mailgun's monthly allowance is close | Mailgun tier, for that month | The month after |
+| The database is the bottleneck — slow pages, connection errors | Neon, to an always-on compute | After the window closes |
+| Vercel throttles or the club takes money | Vercel Pro | Only if it was purely for load |
+
+Bump one thing, watch, bump the next. Two at once means never learning which one was binding.
+
+### Coming back down
+
+The point of a temporary bump is that it is temporary, and nothing will remind you. Put the
+downgrade date in the same place as the upgrade — and record both in the cost table below, so
+next year's registration window starts from what actually happened rather than from memory.
+
 ## Scheduled debt
 
 Things already decided and owed, so they are not rediscovered.
@@ -169,6 +235,7 @@ Things already decided and owed, so they are not rediscovered.
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |
 | An alert on `/api/health` going `degraded` | The health check is the detection; nothing watches it | this page, limit 4 |
+| Rate limiting on token validation and uploads | §19.4 names five surfaces; submission and admin resend are built, token validation and uploads are not | `AGENTS.md` §19.4 |
 
 ---
 

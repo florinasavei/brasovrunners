@@ -101,7 +101,8 @@
       "events": "Evenimente",
       "registrations": "Înscrieri",
       "staff": "Echipa",
-      "legal": "Documente legale"
+      "legal": "Documente legale",
+      "devs": "Configurație"
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -152,7 +153,8 @@
       "audit": {
         "registration.created_by_staff": "Înscriere adăugată de echipă",
         "registration.name_corrected": "Nume corectat",
-        "registration.cancelled_by_staff": "Anulată de echipă"
+        "registration.cancelled_by_staff": "Anulată de echipă",
+        "registration.resend_rate_limited": "Retrimitere limitată"
       },
       "locale": {
         "ro": "Română",
@@ -420,6 +422,86 @@
       "action": "Anulează înscrierea",
       "done": "Înscrierea a fost anulată.",
       "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată."
+    }
+  },
+  "Devs": {
+    "title": "Configurația acestui mediu",
+    "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",
+    "environment": "Mediu",
+    "buildUnknown": "versiune necunoscută",
+    "configuration": "Configurație",
+    "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
+    "runtime": "Starea în acest moment",
+    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
+    "schema": "Schema bazei de date",
+    "overall": {
+      "ok": "Totul este configurat coerent.",
+      "limited": "Funcționează, dar face mai puțin decât probabil te aștepți. Vezi punctele marcate mai jos.",
+      "blocked": "Ceva îi lipsește acestui mediu ca să pornească sau ca să funcționeze. Vezi punctele roșii de mai jos."
+    },
+    "status": {
+      "ok": "În regulă",
+      "limited": "Limitat",
+      "blocked": "Blocat"
+    },
+    "jobStatus": {
+      "ok": "rulează",
+      "stale": "întârziat",
+      "never_run": "nu a rulat niciodată"
+    },
+    "checks": {
+      "emailCaptureLocal": {
+        "title": "E-mail",
+        "body": "Mesajele sunt păstrate în memorie și nu pleacă nicăieri. Este singurul mod permis local și în teste."
+      },
+      "emailCaptureDeployed": {
+        "title": "E-mail",
+        "body": "Mesajele sunt păstrate în memorie și nu pleacă nicăieri — iar pe un mediu găzduit nimeni nu le poate citi, pentru că procesul dispare. Cine se înscrie aici nu primește niciodată e-mailul de confirmare. Pentru livrare reală: EMAIL_DELIVERY_MODE=allowlist, împreună cu EMAIL_ALLOWLIST și cele trei variabile Mailgun."
+      },
+      "emailAllowlist": {
+        "title": "E-mail",
+        "body": "Se transmite doar către adresele din EMAIL_ALLOWLIST; restul sunt capturate. Fiecare adresă trebuie să fie și „authorized recipient” în Mailgun, scrisă exact la fel."
+      },
+      "emailLive": {
+        "title": "E-mail",
+        "body": "Se transmite către oricine. Permis doar în producție."
+      },
+      "staffProvider": {
+        "title": "Autentificarea echipei",
+        "body": "Prin furnizorul de identitate. Accesul rămâne decis de tabela staff_users, nu de furnizor."
+      },
+      "staffDevSwitcher": {
+        "title": "Autentificarea echipei",
+        "body": "Identități de dezvoltare, doar local și în teste. Nu sunt persoane reale."
+      },
+      "staffDisabled": {
+        "title": "Autentificarea echipei",
+        "body": "Nu există nicio cale de intrare: orice rută de administrare răspunde 404. Corect pentru un mediu fără furnizor configurat."
+      },
+      "jobs": {
+        "title": "Joburi programate",
+        "body": "Singurul lucru care golește coada de e-mail și expiră rezervările. Fără JOB_SECRET endpointurile refuză orice apel, iar simptomul nu este o eroare — este e-mail care nu ajunge niciodată."
+      },
+      "webhook": {
+        "title": "Webhook Mailgun",
+        "body": "Cum ajunge un bounce înapoi la înscriere. Fără cheia de semnătură, cererile sunt refuzate și starea livrării rămâne necunoscută."
+      },
+      "mapLink": {
+        "title": "Link către hartă",
+        "body": "Opțional. Fără el, punctul de întâlnire rămâne text simplu, fără link — comportament documentat, nu defect."
+      }
+    },
+    "rateLimits": "Limite de frecvență",
+    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune, per identitate, într-o fereastră fixă. O limită atinsă arată ca „site-ul nu merge” fără să fie nimic stricat.",
+    "roles": "Roluri",
+    "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
+    "youAre": "rolul tău",
+    "roleSummary": {
+      "CONTRIBUTOR": "propune texte și le trimite spre aprobare",
+      "MODERATOR": "editează orice eveniment și aprobă",
+      "DEV": "plus pagina de configurare. Fără date despre participanți",
+      "ADMIN": "plus înscrieri, participanți, export, ștergerea unui eveniment",
+      "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
     }
   }
 }

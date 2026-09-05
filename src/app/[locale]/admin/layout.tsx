@@ -65,6 +65,9 @@ export default async function AdminLayout({ children, params }: Props) {
           },
           { href: getPathname({ locale, href: "/admin/legal" }), label: t("nav.legal") },
           { href: getPathname({ locale, href: "/admin/staff" }), label: t("nav.staff") },
+          // What this deployment is configured to do (BR-REQ-090-04). Its own route rather
+          // than a backoffice page: it is read by whoever is holding the hosting dashboard.
+          { href: getPathname({ locale, href: "/devs" }), label: t("nav.devs") },
         ]
       : []),
   ];

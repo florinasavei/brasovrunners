@@ -19,7 +19,7 @@ import {
 } from "@/modules/registrations/admin-repository";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
-import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 
@@ -50,7 +50,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canManageStaff(actor.role)) notFound();
+  if (!canManageRegistrations(actor.role)) notFound();
 
   const { eventId, status } = await searchParams;
   const db = getDb();

@@ -12,6 +12,7 @@ import { findCurrentApprovedDocument } from "@/modules/legal-documents/repositor
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findOrCreateParticipant, markEmailVerified } from "@/modules/participants/repository";
+import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
@@ -335,6 +336,25 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   }
 
   const identity = canonicalizeEmail(input.email);
+
+  /**
+   * The throttle of AGENTS.md §19.4, keyed on the canonical identity rather than an address as
+   * typed — otherwise `ana.pop+1@`, `ana.pop+2@` and `anapop@` are three allowances for one
+   * mailbox, which is the flood this exists to stop.
+   *
+   * Refused the same way the honeypot and the timing check are refused: the generic success of
+   * BR-REQ-031-01 criterion 3. A distinct "you are being rate limited" would tell a script
+   * exactly which defence it tripped and how long to wait, and the participant whose first
+   * submission worked has already had their email.
+   *
+   * Staff-entered registrations skip it, like the spam checks above: an Administrator adding
+   * people at a desk is the case this must not obstruct, and they are already authenticated
+   * and authorized.
+   */
+  if (origin.source === "PUBLIC") {
+    const verdict = await consumeRateLimit(db, "registration-submit", identity.canonicalEmail, now);
+    if (!verdict.allowed) return { ok: true };
+  }
 
   /**
    * The legal name of record, and the details beside it (BR-REQ-031-04, BR-REQ-031-05).

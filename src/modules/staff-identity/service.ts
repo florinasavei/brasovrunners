@@ -4,7 +4,7 @@ import type { Database } from "@/db/types";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canManageStaff, STAFF_ROLES, type StaffRole } from "./domain/roles";
 import {
-  countAdministrators,
+  countSuperadministrators,
   deleteStaffUser,
   findStaffUserByEmail,
   findStaffUserById,
@@ -43,7 +43,7 @@ function assertAdministrator(actor: StaffUser): void {
   if (!canManageStaff(actor.role)) {
     throw new DomainError(
       "FORBIDDEN",
-      `role ${actor.role} may not administer staff; AGENTS.md §10.2 reserves roles to ADMIN`,
+      `role ${actor.role} may not administer staff; AGENTS.md §10.2 reserves roles to SUPERADMIN`,
     );
   }
 }
@@ -94,14 +94,18 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
    * Two refusals that exist to keep the club out of a locked backoffice.
    *
    * An Administrator cannot change their own role: the usual way this goes wrong is someone
-   * "tidying up" their own account to EDITOR and discovering nobody can undo it. And the last
+   * "tidying up" their own account to MODERATOR and discovering nobody can undo it. And the last
    * Administrator cannot be demoted, because staff administration is the only door back in.
    */
   if (target.id === actor.id) {
     throw new DomainError("FORBIDDEN", "an administrator cannot change their own role");
   }
-  if (target.role === "ADMIN" && role !== "ADMIN" && (await countAdministrators(db)) <= 1) {
-    throw new DomainError("CONFLICT", "the last administrator cannot be demoted");
+  if (
+    target.role === "SUPERADMIN" &&
+    role !== "SUPERADMIN" &&
+    (await countSuperadministrators(db)) <= 1
+  ) {
+    throw new DomainError("CONFLICT", "the last superadministrator cannot be demoted");
   }
 
   const updated = await updateStaffUserRole(db, targetId, role);
@@ -130,8 +134,8 @@ export async function revokeStaffUser<T extends Record<string, unknown>>(
   if (target.id === actor.id) {
     throw new DomainError("FORBIDDEN", "an administrator cannot remove their own access");
   }
-  if (target.role === "ADMIN" && (await countAdministrators(db)) <= 1) {
-    throw new DomainError("CONFLICT", "the last administrator cannot be removed");
+  if (target.role === "SUPERADMIN" && (await countSuperadministrators(db)) <= 1) {
+    throw new DomainError("CONFLICT", "the last superadministrator cannot be removed");
   }
 
   await deleteStaffUser(db, targetId);

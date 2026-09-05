@@ -92,7 +92,7 @@ test.describe("BR-REQ-060-01 the backoffice refuses an anonymous request", () =>
 
 test.describe("BR-REQ-051-01 an Author may not publish", () => {
   test("shows an Author no publish control on published content", async ({ page }) => {
-    await signIn(page, "Dev Author");
+    await signIn(page, "Dev Contributor");
     await page.goto("/ro/admin");
 
     const event = EVENT_BY_PROJECT[test.info().project.name];
@@ -112,7 +112,7 @@ test.describe("BR-REQ-051-01 an Author may not publish", () => {
   });
 
   test("refuses an Author the staff page", async ({ page }) => {
-    await signIn(page, "Dev Author");
+    await signIn(page, "Dev Contributor");
     // 404, the same answer a route that does not exist gives: an Author is not told that the
     // staff list is there and refused.
     const response = await page.goto("/ro/admin/staff");
@@ -120,7 +120,7 @@ test.describe("BR-REQ-051-01 an Author may not publish", () => {
   });
 
   test("refuses an Author the new-event form", async ({ page }) => {
-    await signIn(page, "Dev Author");
+    await signIn(page, "Dev Contributor");
     const response = await page.goto("/ro/admin/events/new");
     expect(response?.status()).toBe(404);
   });
@@ -134,7 +134,7 @@ test.describe("BR-REQ-050-02 an Editor creates an event without a developer", ()
     // spec people stop running.
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
 
-    await signIn(page, "Dev Editor");
+    await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin/events/new");
 
     // By field name rather than by label: MUI marks a required label with an asterisk, and the
@@ -166,7 +166,7 @@ test.describe("BR-REQ-051-01 an Editor publishes and unpublishes an event", () =
   test("takes an event off the public site in both languages and puts it back", async ({ page }) => {
     const event = EVENT_BY_PROJECT[test.info().project.name];
 
-    await signIn(page, "Dev Editor");
+    await signIn(page, "Dev Moderator");
     await page.getByRole("link", { name: event.title }).first().click();
     // Wait for the navigation before reading the URL: taken too early, this is still the list,
     // and every later `goto` in the test would quietly reload the wrong page.

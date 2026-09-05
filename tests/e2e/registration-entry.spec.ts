@@ -85,7 +85,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
   test("walks hero → register → submitted, and shows the free places on the way", async ({
     page,
   }) => {
-    await signIn(page, "Dev Editor");
+    await signIn(page, "Dev Moderator");
     await ensureRegistrationIsOpen(page);
 
     await page.goto("/ro/evenimente");
@@ -147,7 +147,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
   });
 
   test("offers the same door on the event's own page", async ({ page }) => {
-    await signIn(page, "Dev Editor");
+    await signIn(page, "Dev Moderator");
     await ensureRegistrationIsOpen(page);
 
     await page.goto(`/ro/evenimente/${FEATURED.slug}`);
