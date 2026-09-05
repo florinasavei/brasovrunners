@@ -7,6 +7,7 @@ import {
 import type { Database, Transaction } from "@/db/types";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
+import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import {
   MAX_SEND_ATTEMPTS,
   nextAttemptAt,
@@ -209,12 +210,21 @@ export type OutboxBatchSummary = {
  *
  * A render failure is permanent. A template that throws on this row's payload will throw on
  * every retry, and five more attempts only delay the moment someone looks at it.
+ *
+ * The run is recorded in `job_runs`, here rather than in the route, for the same reason
+ * `runRegistrationMaintenance` records its own: `/api/health` reads that table to report a
+ * stalled scheduler (§12.12, §16.2), and a caller that forgot to write the row would leave the
+ * check reporting `never_run` for a job that has been running perfectly every five minutes. It
+ * did exactly that until BR-V1.19 — the endpoint recorded nothing, so the health check could
+ * never go green, and a health check that is permanently yellow is one people stop reading.
  */
 export async function processOutboxBatch(
   db: Db,
   params: { sender: EmailSender; render: EmailRenderer; now: Date; batchSize?: number },
 ): Promise<OutboxBatchSummary> {
   const { sender, render, now, batchSize = 20 } = params;
+
+  const jobRunId = await startJobRun(db, "email-outbox", now);
 
   const claimed = await claimOutboxBatch(db, { now, batchSize });
   const summary: OutboxBatchSummary = {
@@ -289,6 +299,15 @@ export async function processOutboxBatch(
       .where(eq(emailOutbox.id, row.id));
     summary.retrying += 1;
   }
+
+  // `itemsProcessed` is what was claimed, and `errorCount` the outcomes that need a person:
+  // a retry is the mechanism working, a failure or a bounce is not.
+  await finishJobRun(
+    db,
+    jobRunId,
+    { itemsProcessed: summary.claimed, errorCount: summary.failed + summary.bounced },
+    new Date(),
+  );
 
   return summary;
 }
