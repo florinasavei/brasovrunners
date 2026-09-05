@@ -42,6 +42,23 @@ export const editorialStatus = pgEnum("editorial_status", [
 export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL", "EXTERNAL"]);
 
 /**
+ * Whether the event page publishes who is coming (BR-REQ-039-01, AGENTS.md §12.3).
+ *
+ * `HIDDEN` is the default and the only value any existing row has, because publishing the names
+ * of the people who entered a race is a disclosure of their personal data — not a display
+ * option. The club turns it on per event, knowing what it is turning on, and the approved
+ * privacy notice has to say that it happens before it may be turned on at all.
+ *
+ * `NAMES` is the whole of the other setting: the registered name, and nothing else. There is no
+ * value here that publishes an email, a status, a bib or a count of who has not confirmed —
+ * those would each be a different disclosure, and adding one is a change to this enum with a
+ * decision behind it rather than a flag somebody sets.
+ */
+export const participantListVisibility = pgEnum("participant_list_visibility", ["HIDDEN", "NAMES"]);
+
+export type ParticipantListVisibility = (typeof participantListVisibility.enumValues)[number];
+
+/**
  * Events.
  *
  * The full M1 column set from AGENTS.md §12.3 is present even though the pilot reads only a
@@ -143,6 +160,33 @@ export const events = pgTable(
     elevationGainMeters: integer("elevation_gain_meters"),
 
     /**
+     * The four facts that are the same event in either language (`DECISIONS.md` §36).
+     *
+     * They lived on `event_translations` and were typed twice — and the second copy was not a
+     * translation, it was the same fact again: the street address is identical word for word,
+     * and the meeting point, the difficulty and the cost are one thing the club decided once.
+     * An organizer filling an event in was answering the same question in two panels.
+     *
+     * The accepted consequence, recorded rather than discovered later: these render on the
+     * English page in whatever words the club typed, so `/en/events/...` shows "Parcul
+     * Tractorul" and "Gratuit". That is the club's own vocabulary for its own places, and the
+     * owner chose it over retyping. The title, the page address, the short description and the
+     * two SEO fields stay per language, because those genuinely are translations.
+     *
+     * Nullable at the database, required by `content/events/fields.ts` on every save: the column
+     * has to accept the rows that existed before the migration that added it, and
+     * `transitionEvent` refuses to publish an event whose meeting point is still blank.
+     */
+    locationName: text("location_name"),
+    locationAddress: text("location_address"),
+    difficultyLabel: text("difficulty_label"),
+    /**
+     * Free text: "Gratuit", "50 lei". Null means the club has not stated a cost, and the page
+     * then says nothing about it rather than guessing that the event is free.
+     */
+    costText: text("cost_text"),
+
+    /**
      * The one event the landing page leads with, or none.
      *
      * At most one row may carry it, and that is enforced by the partial unique index below
@@ -163,6 +207,18 @@ export const events = pgTable(
 
     externalProvider: text("external_provider"),
     externalRegistrationUrl: text("external_registration_url"),
+
+    /**
+     * Off, until the club decides otherwise for one specific event (BR-REQ-039-01).
+     *
+     * The default is the rule, not a convenience: every event that exists today, and every event
+     * created after this column, publishes nobody. Switching it on is a deliberate act in the
+     * backoffice, and a participant can still keep their own name off the page
+     * (`registrations.list_opt_out`).
+     */
+    participantListVisibility: participantListVisibility("participant_list_visibility")
+      .notNull()
+      .default("HIDDEN"),
 
     // AGENTS.md §12.3. Nullable because every row that exists today was written by a seed
     // rather than by a person, and inventing an author for it would be a lie in the trail.
@@ -258,6 +314,19 @@ export const events = pgTable(
      */
     check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
 
+    /**
+     * A start list can only be published for an event this platform actually registers.
+     *
+     * For `NONE` there are no participants to list, and for `EXTERNAL` the people who entered
+     * are the other organizer's — the club holds no registrations for them and must not appear
+     * to publish any. Set here as well as in the service for the reason every other check on
+     * this table is: a seed or a hand-written `UPDATE` reaches this column too.
+     */
+    check(
+      "events_participant_list_internal_only",
+      sql`${t.participantListVisibility} = 'HIDDEN' OR ${t.registrationMode} = 'INTERNAL'`,
+    ),
+
     check("events_version_positive", sql`${t.version} >= 1`),
 
     /**
@@ -314,16 +383,23 @@ export const eventTranslations = pgTable(
     excerpt: text("excerpt"),
     bodyJson: jsonb("body_json"),
 
+    /**
+     * DEPRECATED, and dropped in the release after this one.
+     *
+     * These four moved to `events` (`DECISIONS.md` §36) because they are the same fact in both
+     * languages, not a translation of it. Nothing reads them any more: every query takes them
+     * from the event row.
+     *
+     * They are still *written* — `createEvent` and `duplicateEvent` copy the event-row value
+     * into every translation — for one reason only, and it disappears with the columns: this
+     * table's `NOT NULL` and its `event_translations_required_fields_present` CHECK still name
+     * `location_name`, and AGENTS.md §7.6 ships a drop in the release after the code that stops
+     * needing it, so that a rollback finds a schema its code can still run against.
+     */
     locationName: text("location_name").notNull(),
     locationAddress: text("location_address"),
     difficultyLabel: text("difficulty_label"),
     coverAltText: text("cover_alt_text"),
-
-    // Free text, per locale: "Gratuit" / "Free", or "50 lei". BR-REQ-041-01 criterion 2 and
-    // BR-REQ-070-03 criterion 2 both require cost to be readable as text on the event page,
-    // and it is localized wording rather than a number, so it belongs on the translation.
-    // Null means the club has not stated a cost; the page then says nothing about it rather
-    // than guessing that the event is free.
     costText: text("cost_text"),
 
     seoTitle: text("seo_title"),

@@ -58,6 +58,7 @@ export const routing = defineRouting({
     "/admin/events/[id]": "/admin/events/[id]",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
+    "/admin/registrations/new": "/admin/registrations/new",
     "/admin/registrations/[id]": "/admin/registrations/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },

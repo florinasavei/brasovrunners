@@ -85,6 +85,27 @@
       "when": 1788547201806,
       "tag": "0011_event_publication_and_test_registrations",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788589635582,
+      "tag": "0012_participant_start_list",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788591218330,
+      "tag": "0013_audit_log_and_staff_registrations",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788596674436,
+      "tag": "0014_shared_event_fields",
+      "breakpoints": true
     }
   ]
 }

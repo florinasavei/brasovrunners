@@ -59,11 +59,17 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
     raceStartsAtWallTime: "",
     latitude: "",
     longitude: "",
+    // One value for the whole event now (`DECISIONS.md` §36).
+    locationName: "Parcul Tractorul",
+    locationAddress: "",
+    difficultyLabel: "",
+    costText: "",
     mapUrl: "",
     distanceMeters: "",
     elevationGainMeters: "",
     featured: false,
     registrationMode: "NONE",
+    participantListVisibility: "HIDDEN" as const,
     capacity: "",
     registrationOpensAtWallTime: "",
     registrationClosesAtWallTime: "",
@@ -76,10 +82,6 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
     slug: "concurrency-fixture",
     title: "Titlu inițial",
     excerpt: "Descriere.",
-    locationName: "Parcul Tractorul",
-    locationAddress: "",
-    difficultyLabel: "",
-    costText: "",
     seoTitle: "",
     seoDescription: "",
   };
@@ -126,7 +128,7 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
         slug: FIELDS.slug,
         title: FIELDS.title,
         excerpt: FIELDS.excerpt,
-        locationName: FIELDS.locationName,
+        locationName: "Parcul Tractorul",
         authorStaffUserId: editor.id,
       })
       .returning();
@@ -138,7 +140,7 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
       slug: `${FIELDS.slug}-en`,
       title: "Concurrency fixture",
       excerpt: "Description.",
-      locationName: "Tractorul Park",
+      locationName: "Parcul Tractorul",
       authorStaffUserId: editor.id,
     });
   });

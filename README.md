@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -15,7 +15,7 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | --- | --- |
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
-| Code | M1 complete in code. Public event pages; a backoffice where an organizer creates, duplicates, configures, previews, publishes, archives and deletes a race, with every column an organizer owns and both languages going live together; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents, with clearly marked sample text everywhere but production and no invented text there at all; ten transactional message types through the outbox; a registrations backoffice with a state-aware resend, a CSV export and labelled test registrations for exercising the queue. See [`DECISIONS.md`](./DECISIONS.md) §26–§30. |
+| Code | M1 complete in code. Public event pages; a backoffice where an organizer creates, duplicates, configures, previews, publishes, archives and deletes a race, with every column an organizer owns and both languages going live together; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents, with clearly marked sample text everywhere but production and no invented text there at all; ten transactional message types through the outbox; a registrations backoffice that can enter, rename and cancel a registration — and nothing else — each with an audit row, and a CSV export and labelled test registrations for exercising the queue. Registration is reachable from the public pages, and a public participant list exists and is switched off everywhere until the club's approved privacy notice describes it. See [`DECISIONS.md`](./DECISIONS.md) §26–§34. |
 | Priority | Account creation and DevOps, not application code: a Zitadel tenant, a Mailgun account, the `.ro` domain, the club's approved privacy notice and declaration text, and the production Neon and Vercel projects |
 | Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in works there through Zitadel, gated by the `staff_users` allowlist; email is still `capture`, so nothing transmits until a sending domain exists. Production is not created. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
@@ -204,7 +204,8 @@ The platform lets people:
 
 - discover Brașov Runners meetups, community runs, events, and races;
 - read useful event information in Romanian or English;
-- see the exact number of currently available places for capped events;
+- see the exact number of currently available places for capped events, and enter from the event page or the featured event on the landing page;
+- ask to be left off the public participant list, on any event, whether or not that event publishes one;
 - register without creating an account or password;
 - confirm control of their email address;
 - sign the approved event declaration before becoming confirmed;
@@ -216,7 +217,9 @@ The platform lets people:
 
 The club can:
 
-- manage events, capacity, registrations, waiting lists, declarations, and transactional email from one backoffice;
+- manage events, capacity, registrations, waiting lists, declarations, and transactional email from one backoffice, saving an event's settings and both languages together in one save;
+- enter a registration for somebody who asks in person, on the phone, or after a run — it takes its place in the same queue as one made online, and the participant still confirms and signs for themselves;
+- publish the names of the people coming to a particular event, once the approved privacy notice says so, with any participant able to keep their own name off it;
 - resend the email appropriate to a participant's current registration state;
 - cancel, safely restart, waitlist, or promote registrations with an audit trail; a restart re-enters the flow at the correct step for the participant's verification state and never lands directly on Confirmed;
 - let approved contributors write and publish content through a small built-in CMS;

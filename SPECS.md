@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -90,10 +90,13 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §9.3, §11.2
 - **Priority:** MUST
 - **Release:** M1
-- **Status:** restated at `BR-V1.18-2026-09-04`. Publication is one state for the whole event
-  (`DECISIONS.md` §28), so the half-published event the earlier wording described — Romanian
-  live while English is a draft — can no longer occur. The rule itself is unchanged and
-  stronger: what a locale must never do is serve the other language's text.
+- **Status:** restated by `DECISIONS.md` §28, and bounded by §36. Publication is one state for
+  the whole event, so the half-published event the earlier wording described — Romanian live
+  while English is a draft — can no longer occur. The rule itself is unchanged and stronger:
+  what a locale must never do is serve the other language's *text*.
+  §36 draws the line explicitly: the meeting point, the street address, the difficulty and the
+  cost are one value for the whole event, not a translation, so the English page showing the
+  club's own words for them is a single stored value rather than a fallback to another row.
 
 **Acceptance criteria**
 
@@ -102,6 +105,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given the same event, when that language's listing is requested, then the event is absent from it, and the sitemap contains only the language it has a translation for.
 4. Given a published event with a translation in both languages, when it is unpublished, then both languages stop being reachable in the same moment.
 5. Given the language switcher on a page whose event has no translation in the target language, when it is used, then it lands on that language's event listing rather than on a 404.
+6. Given an event's meeting point, street address, difficulty or cost, when either language's page renders, then it shows the one value stored on the event — this is a shared field, not a translation, and not a fallback (AGENTS.md §11.7).
 
 **Verification:** integration `events/publication.test.ts`, `events/locale-switch.test.ts`; e2e `cms-publish.spec.ts`, `event-pages.spec.ts`
 
@@ -126,12 +130,18 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §9.3
 - **Priority:** MUST
 - **Release:** M1
+- **Status:** amended, and recorded in `DECISIONS.md` §35. The rule is about the **public site**,
+  which is fully bilingual and stays so. The backoffice's enum labels — editorial status,
+  transitions, staff roles, event status, registration mode, registration status — are Romanian
+  only and live in `modules/staff-identity/domain/staff-labels.ts` rather than in either
+  catalogue.
 
 **Acceptance criteria**
 
 1. Given the message catalogs, when CI runs, then `ro.json` and `en.json` have identical key sets and identical interpolation placeholders.
 2. Given a missing key in production, when a page renders, then the failure is logged without participant data and the page still renders.
-3. Given the source tree, when CI runs, then no user-facing string literal exists outside the message catalogs.
+3. Given the source tree, when CI runs, then no user-facing string literal exists outside the message catalogs — except the backoffice enum labels named in the status above, which are Romanian constants typed `Record<Enum, string>`, so a new enum value is a compile error rather than a raw token on a screen.
+4. Given either catalogue, when CI runs, then it carries none of those enum labels: one copy of the club's own vocabulary, not two kept in step by a test.
 
 **Verification:** CI check `i18n-parity`; unit `i18n/messages.test.ts`
 
@@ -303,6 +313,28 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a released place and a concurrent new registration, when both transactions run, then the waiting entry wins deterministically.
 
 **Verification:** integration `capacity/queue-priority.test.ts`
+
+#### BR-REQ-039-01 — The public participant list is opt-out, off by default, and names only
+
+- **Source:** BR-BUS-039, BR-BUS-070
+- **Implements:** AGENTS.md §10.10, §12.3, §12.6
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §32; switched off in every
+  environment. The wording of the approved privacy notice that would allow the club to switch it
+  on is still the club's to write, and until it exists the setting stays HIDDEN everywhere.
+
+**Acceptance criteria**
+
+1. Given a newly created or newly duplicated event, when its participant-list setting is read, then it is `HIDDEN`.
+2. Given an event whose setting is `HIDDEN`, when its public page renders, then nothing about who is registered appears — no list, no heading and no count.
+3. Given an event whose setting is `NAMES`, when its public page renders, then it lists the registered name of every `CONFIRMED`, `REAL` registration that has not opted out, ordered by confirmation time, and nothing else about any of them.
+4. Given a registration that is not `CONFIRMED`, of kind `TEST`, or opted out, when the list renders, then that person does not appear and no count reveals them.
+5. Given the registration form, when it renders, then it offers a plainly worded opt-out, on every event, whatever that event's current setting is.
+6. Given an event whose registration mode is not `INTERNAL`, when `NAMES` is saved, then it is refused by the service and again by a database constraint.
+7. Given the public queries, when they are read, then no participant email address can be returned by any of them.
+
+**Verification:** integration `privacy/public-surface.test.ts`
 
 ### 4.3 Participant identity
 
@@ -655,17 +687,21 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 #### BR-REQ-037-03 — Administrative corrections are bounded
 
 - **Source:** BR-BUS-037
-- **Implements:** AGENTS.md §14, §10.3
+- **Implements:** AGENTS.md §14, §10.3, §15.11
 - **Priority:** MUST
 - **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §33. The three administrative changes to a
+  registration are entering one, correcting its name, and cancelling it; there is deliberately no
+  fourth, and no delete.
 
 **Acceptance criteria**
 
 1. Given a registration, when an administrator corrects the participant name, then the change is audited.
 2. Given the backoffice, when it renders, then it offers no verified-email edit and no participant merge.
 3. Given any administrative state change, when it completes, then an audit row records actor, action, entity, and time.
+4. Given a cancellation by an administrator, when it commits, then the released place is offered to the front of the waiting list, exactly as a participant's own cancellation is.
 
-**Verification:** integration `backoffice/corrections.test.ts`
+**Verification:** integration `registrations/staff-crud.test.ts`
 
 #### BR-REQ-037-04 — The queue can be exercised without reaching anyone
 
@@ -673,7 +709,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §12.6, §10.6, §15.10
 - **Priority:** SHOULD
 - **Release:** M1
-- **Status:** built at `BR-V1.18-2026-09-04` (`DECISIONS.md` §30). No participant account type
+- **Status:** built, and recorded in `DECISIONS.md` §30. No participant account type
   is added and the staff role enum stays at three: this is a property of the registration.
 
 **Acceptance criteria**
@@ -687,6 +723,26 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 7. Given `APP_ENV=production`, when a test registration is attempted, then it is refused in two independent places.
 
 **Verification:** integration `registrations/test-kind.test.ts`
+
+#### BR-REQ-037-05 — An Administrator registers somebody who asked in person
+
+- **Source:** BR-BUS-037, BR-BUS-060
+- **Implements:** AGENTS.md §15.11, §12.6, §12.12
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §33.
+
+**Acceptance criteria**
+
+1. Given an Administrator and an event whose registration mode is `INTERNAL`, when they enter a name and an email, then a registration is created in `PENDING_EMAIL_CONFIRMATION`, of kind `REAL` and source `STAFF`, carrying the staff user who entered it.
+2. Given that registration, when it is created, then the participant receives the ordinary verification email and nothing about it is confirmed by staff.
+3. Given a full event with a waiting list, when an Administrator enters a registration and its address is confirmed, then it joins the back of that waiting list and no existing entry loses its position.
+4. Given the form, when the relay confirmation is not ticked, then the registration is refused and nothing is written.
+5. Given an address that already holds an active registration for that event, when an Administrator enters it, then they are told so plainly rather than receiving the public form's generic answer.
+6. Given an Author or an Editor, when any of this is attempted, then it is refused.
+7. Given any of these changes, when it completes, then an `audit_logs` row records the actor, the action, the entity and the time.
+
+**Verification:** integration `registrations/staff-crud.test.ts`
 
 #### BR-REQ-071-01 — Participant export
 
@@ -801,7 +857,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Priority:** MUST
 - **Release:** M5
 - **Status:** built for events during M1 (`DECISIONS.md` §25); it applies to articles and pages
-  when those exist. Criterion 2 changed at `BR-V1.18-2026-09-04`: publication is one state for
+  when those exist. Criterion 2 changed with `DECISIONS.md` §28: publication is one state for
   the whole event rather than one per language (`DECISIONS.md` §28).
 
 **Acceptance criteria**
@@ -1142,8 +1198,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 | BR-BUS-034 | BR-REQ-034-01, BR-REQ-034-02, BR-REQ-034-03, BR-REQ-052-02, BR-REQ-090-03 |
 | BR-BUS-035 | BR-REQ-035-01, BR-REQ-035-02, BR-REQ-035-03, BR-REQ-035-04, BR-REQ-035-05, BR-REQ-034-03, BR-REQ-090-03 |
 | BR-BUS-036 | BR-REQ-036-01, BR-REQ-036-02 |
-| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
+| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
 | BR-BUS-038 | BR-REQ-038-01, BR-REQ-038-02, BR-REQ-038-03 |
+| BR-BUS-039 | BR-REQ-039-01 |
 | BR-BUS-040 | BR-REQ-040-01, BR-REQ-040-02, BR-REQ-040-03, BR-REQ-040-04 |
 | BR-BUS-041 | BR-REQ-041-01 |
 | BR-BUS-050 | BR-REQ-050-01 |
@@ -1151,7 +1208,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 | BR-BUS-052 | BR-REQ-052-01, BR-REQ-052-02, BR-REQ-070-03, BR-REQ-070-02 |
 | BR-BUS-053 | BR-REQ-053-01, BR-REQ-033-02, BR-REQ-031-02 |
 | BR-BUS-060 | BR-REQ-060-01, BR-REQ-051-01 |
-| BR-BUS-070 | BR-REQ-070-01, BR-REQ-070-02, BR-REQ-070-03, BR-REQ-036-02, BR-REQ-038-01, BR-REQ-041-01, BR-REQ-071-01, BR-REQ-072-01 |
+| BR-BUS-070 | BR-REQ-070-01, BR-REQ-070-02, BR-REQ-070-03, BR-REQ-036-02, BR-REQ-038-01, BR-REQ-039-01, BR-REQ-041-01, BR-REQ-071-01, BR-REQ-072-01 |
 | BR-BUS-071 | BR-REQ-071-01 |
 | BR-BUS-072 | BR-REQ-072-01 |
 | BR-BUS-080 | BR-REQ-080-01, BR-REQ-080-02, BR-REQ-080-03, BR-REQ-080-04, BR-REQ-037-02 |

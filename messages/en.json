@@ -11,6 +11,8 @@
       "en": "English"
     },
     "buildBadgeLabel": "Website version and when it was last updated",
+    "buildBadgeSignIn": "Double-click, or press Enter, to sign in as staff.",
+    "lastBuild": "last build",
     "environmentNotice": {
       "label": "Notice about this version of the site",
       "title": "Test site ({environment}) — this is not the club's real website.",
@@ -58,6 +60,22 @@
       "RACE": "Race",
       "OTHER": "Other"
     },
+    "startList": {
+      "title": "Who's coming",
+      "empty": "Nobody has confirmed a place yet.",
+      "note": "Only people who confirmed their registration and did not ask to be left out are listed here."
+    },
+    "cta": {
+      "register": "Register for this event",
+      "joinWaitingList": "Join the waiting list",
+      "external": "Register on the organiser's site",
+      "externalWithProvider": "Register on {provider}",
+      "placesRemaining": "{count, plural, one {# place left} other {# places left}}",
+      "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
+      "opensOn": "Registration opens on {date}.",
+      "closed": "Registration has closed for this event.",
+      "cancelled": "The event has been cancelled, so registration has stopped."
+    },
     "registrationState": {
       "NOT_APPLICABLE": "No registration needed",
       "EXTERNAL": "Register on the organiser's site",
@@ -100,39 +118,61 @@
       "expired": "Expired",
       "declaration": "Declaration signed",
       "outboxHistory": "Email history",
-      "status": {
-        "PENDING_EMAIL_CONFIRMATION": "Waiting on email confirmation",
-        "PENDING_DECLARATION": "Waiting on declaration",
-        "WAITLISTED": "Waitlisted",
-        "WAITLIST_OFFERED": "Offer active",
-        "CONFIRMED": "Confirmed",
-        "CANCELLED": "Cancelled",
-        "EXPIRED": "Expired"
+      "testKind": "Test",
+      "enteredByStaff": "Entered by staff",
+      "new": "Add a registration",
+      "newTitle": "Add a registration",
+      "newExplanation": "For somebody who asked in person, on the phone, or after a run. It enters exactly like a registration the participant made themselves: the same order for places, the same waiting list, the same starting state. They receive the ordinary confirmation email and sign the declaration themselves — nobody can sign one for somebody else.",
+      "noEventsAcceptingRegistrations": "No event takes registrations through the platform. Set the registration mode to \"Register here\" on the event page.",
+      "event": "Event",
+      "participantName": "Participant name",
+      "participantEmail": "Participant email address",
+      "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
+      "participantLocale": "Language we write to them in",
+      "participantLocaleHelp": "The language of every email about this registration.",
+      "listOptOut": "They do not want to appear on the public participant list",
+      "relayConfirmation": "I confirm this person asked me to register them.",
+      "create": "Add the registration",
+      "viewForEvent": "See this event's registrations",
+      "correctName": "Correct the name",
+      "correctNameHelp": "Only the name can be corrected. The email address is the participant's identity and is never changed here: for a wrong address, cancel the registration and add it again with the right one.",
+      "saveName": "Save the name",
+      "cancelTitle": "Cancel the registration",
+      "cancelReason": "Reason",
+      "cancelAction": "Cancel the registration",
+      "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
+      "auditTrail": "What staff did",
+      "auditActorRemoved": "account removed",
+      "audit": {
+        "registration.created_by_staff": "Registration entered by staff",
+        "registration.name_corrected": "Name corrected",
+        "registration.cancelled_by_staff": "Cancelled by staff"
       },
-      "testKind": "Test"
+      "locale": {
+        "ro": "Română",
+        "en": "English"
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
       "featured": "Featured",
       "preview": "Preview",
+      "edit": "Edit",
+      "moreActions": "More actions",
       "new": "New event"
     },
-    "status": {
-      "DRAFT": "Draft",
-      "IN_REVIEW": "In review",
-      "PUBLISHED": "Published",
-      "ARCHIVED": "Archived"
-    },
-    "transition": {
-      "DRAFT": "Move to draft",
-      "IN_REVIEW": "Submit for review",
-      "PUBLISHED": "Publish",
-      "ARCHIVED": "Archive"
-    },
-    "roles": {
-      "AUTHOR": "Author",
-      "EDITOR": "Editor",
-      "ADMIN": "Administrator"
+    "confirm": {
+      "cancel": "Never mind",
+      "duplicateTitle": "Duplicate this event?",
+      "duplicateBody": "A copy is created as a draft, with its own page addresses. It is not featured and it is not published.",
+      "deleteTitle": "Delete this event?",
+      "deleteBody": "Deleting is permanent. Only an event nobody has registered for can be deleted; for one that has happened, archive it instead.",
+      "archiveTitle": "Archive this event?",
+      "archiveBody": "The event comes off the site, in both languages. You can bring it back later by sending it through review and publishing it again.",
+      "removeTestTitle": "Remove the test registrations?",
+      "removeTestBody": "Every test registration for this event is deleted, along with the synthetic participants behind them. Real registrations are left untouched.",
+      "cancelRegistrationTitle": "Cancel this registration?",
+      "cancelRegistrationBody": "The place is released immediately and offered to the first person on the waiting list. The registration itself is kept, marked cancelled."
     },
     "errors": {
       "UNAUTHENTICATED": "Your session has ended. Sign in again.",
@@ -176,6 +216,12 @@
       "latitude": "Latitude",
       "longitude": "Longitude",
       "coordinatesHelp": "The exact start point, in decimal degrees — for example 45.6427 and 25.5887. Right-click the spot on a map to copy them. A park name is not a start line.",
+      "sharedFieldHelp": "The same in both languages. Filled in once.",
+      "contentHelp": "The same event, in two languages. Only the words change here; the time, the place, the difficulty and the cost are in Settings above and are shared by both.",
+      "tabIncomplete": "incomplete",
+      "settingsSection": "Settings",
+      "contentSection": "Content",
+      "save": "Save",
       "publicationSection": "Publication",
       "noTransitions": "Your role cannot move this event from its current state.",
       "incompleteForPublication": "Both languages must be complete before this event can be published. Missing: {detail}.",
@@ -204,6 +250,8 @@
       "declarationDocumentHelp": "Chosen from the approved versions. This text is never edited here — a new version arrives through a migration.",
       "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
       "declarationUnset": "None",
+      "participantList": "Publish the participant list on the event page",
+      "participantListHelp": "Publishes the names of the people who confirmed their registration and did not ask to be left out. No email addresses, and nothing about unconfirmed registrations. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on.",
       "externalProvider": "External organiser",
       "externalRegistrationUrl": "External registration link",
       "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
@@ -220,8 +268,7 @@
       "title": "Staff sign-in",
       "unavailable": "Staff sign-in is not available in this environment yet.",
       "developmentOnly": "Development identities, on a local machine and in tests only. These are not real people.",
-      "withZitadel": "Sign in with Zitadel",
-      "footerLink": "Staff"
+      "action": "Sign in"
     },
     "staff": {
       "title": "Staff",
@@ -236,16 +283,6 @@
       "you": "You",
       "changeRole": "Change role",
       "revoke": "Revoke access"
-    },
-    "eventStatus": {
-      "SCHEDULED": "Scheduled",
-      "CANCELLED": "Cancelled",
-      "COMPLETED": "Completed"
-    },
-    "registrationMode": {
-      "NONE": "No registration",
-      "INTERNAL": "Registration here",
-      "EXTERNAL": "Registration elsewhere"
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -271,6 +308,7 @@
     "privacyPrefix": "I have read and agree to the",
     "privacyLinkLabel": "privacy notice",
     "resultsNameConsent": "I agree to my name appearing in public results",
+    "listOptOut": "Keep my name off the public participant list, if the club publishes one for this event",
     "submit": "Submit registration",
     "submitted": "Check your email to confirm your registration.",
     "errors": {

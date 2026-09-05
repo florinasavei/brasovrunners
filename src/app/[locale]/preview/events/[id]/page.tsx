@@ -16,6 +16,7 @@ import { mapLinkFor } from "@/modules/events/domain/map-link";
 import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
+import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
@@ -94,13 +95,16 @@ export default async function PreviewEventPage({ params }: Props) {
     registrationClosesAt: event.registrationClosesAt,
     externalRegistrationUrl: event.externalRegistrationUrl,
     externalProvider: event.externalProvider,
+    participantListVisibility: event.participantListVisibility,
+    // One value for the whole event (`DECISIONS.md` §36), so the preview reads them from the
+    // event row exactly as the public page does.
+    locationName: event.locationName,
+    locationAddress: event.locationAddress,
+    difficultyLabel: event.difficultyLabel,
+    costText: event.costText,
     slug: translation.slug,
     title: translation.title,
     excerpt: translation.excerpt,
-    locationName: translation.locationName,
-    locationAddress: translation.locationAddress,
-    difficultyLabel: translation.difficultyLabel,
-    costText: translation.costText,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
@@ -111,7 +115,7 @@ export default async function PreviewEventPage({ params }: Props) {
   return (
     <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
       <Alert severity="warning" sx={{ mb: 3 }}>
-        {t("preview.notice", { status: t(`status.${event.editorialStatus}`) })}
+        {t("preview.notice", { status: EDITORIAL_STATUS_LABEL[event.editorialStatus] })}
       </Alert>
 
       <Typography variant="body2" sx={{ mb: 2 }}>

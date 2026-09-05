@@ -9,9 +9,11 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { getPathname, Link } from "@/i18n/navigation";
+import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import AdminTabs, { type AdminTab } from "@/modules/staff-identity/ui/AdminTabs";
 import { env } from "@/shared/config/env";
 import { signOutAction } from "./actions";
 
@@ -53,8 +55,26 @@ export default async function AdminLayout({ children, params }: Props) {
 
   const t = await getTranslations("Admin");
 
+  const tabs: AdminTab[] = [
+    { href: getPathname({ locale, href: "/admin" }), label: t("nav.events") },
+    ...(staffUser.role === "ADMIN"
+      ? [
+          {
+            href: getPathname({ locale, href: "/admin/registrations" }),
+            label: t("nav.registrations"),
+          },
+          { href: getPathname({ locale, href: "/admin/staff" }), label: t("nav.staff") },
+        ]
+      : []),
+  ];
+
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 5 } }}>
+    /*
+      Wider than the public site, and only here. `md` is right for an event page a person reads
+      and wrong for a list of registrations with a status, a date, an address and an event title
+      on every row — at `md` those wrap into four lines each and the list stops being scannable.
+    */
+    <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
@@ -65,7 +85,10 @@ export default async function AdminLayout({ children, params }: Props) {
             {t("title")}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t("signedInAs", { name: staffUser.displayName, role: t(`roles.${staffUser.role}`) })}
+            {t("signedInAs", {
+              name: staffUser.displayName,
+              role: STAFF_ROLE_LABEL[staffUser.role],
+            })}
           </Typography>
         </Box>
 
@@ -77,13 +100,15 @@ export default async function AdminLayout({ children, params }: Props) {
         </form>
       </Stack>
 
-      <Stack direction="row" spacing={2} sx={{ mb: 3, flexWrap: "wrap", gap: 1 }}>
-        <Link href="/admin">{t("nav.events")}</Link>
-        {staffUser.role === "ADMIN" && (
-          <Link href="/admin/registrations">{t("nav.registrations")}</Link>
-        )}
-        {staffUser.role === "ADMIN" && <Link href="/admin/staff">{t("nav.staff")}</Link>}
-      </Stack>
+      {/*
+        The same role gating as the three bare links this replaces: a section an Administrator
+        alone may open is not offered to anybody else, and the page behind it answers 404 to a
+        typed URL regardless (BR-REQ-060-01).
+
+        The hrefs are resolved here, on the server, because `getPathname` is a server function —
+        the island only decides which of them is the current one.
+      */}
+      <AdminTabs items={tabs} />
 
       {/* AGENTS.md §11.1: legal documents are not CMS content and have no editor screen. */}
       <Alert severity="info" sx={{ mb: 3 }}>

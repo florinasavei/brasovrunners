@@ -7,6 +7,10 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_KINDS } from "@/modules/events/domain/event-kind";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import {
+  EVENT_STATUS_LABEL,
+  REGISTRATION_MODE_LABEL,
+} from "@/modules/staff-identity/domain/staff-labels";
 import type { EditableEvent } from "../repository";
 
 /**
@@ -15,6 +19,10 @@ import type { EditableEvent } from "../repository";
  * One component for the create form and the edit form, so the two cannot drift in what they
  * post — `actions.ts#eventFieldsFrom` reads exactly these names, and a field renamed here and
  * not there would silently start saving "not stated".
+ *
+ * Every name is namespaced `event.<column>`. The editor is one form carrying the event row and
+ * both languages at once, and `translations.ro.title` and `event.startsAtWallTime` cannot
+ * collide when each says which half of the event it belongs to.
  *
  * It renders the inputs, not the `<form>`: `<Stack component="form" action={...}>` crashes in
  * MUI 9, so every caller wraps a plain `<form>` around this.
@@ -48,7 +56,7 @@ export default async function EventFieldsForm({
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
           select
-          name="kind"
+          name="event.kind"
           label={t("editor.kind")}
           defaultValue={event?.kind ?? "COMMUNITY_RUN"}
           sx={{ flex: 1 }}
@@ -62,7 +70,7 @@ export default async function EventFieldsForm({
         </TextField>
         <TextField
           select
-          name="eventStatus"
+          name="event.eventStatus"
           label={t("editor.eventStatus")}
           defaultValue={event?.eventStatus ?? "SCHEDULED"}
           sx={{ flex: 1 }}
@@ -70,14 +78,14 @@ export default async function EventFieldsForm({
         >
           {EVENT_STATUSES.map((status) => (
             <MenuItem key={status} value={status}>
-              {t(`eventStatus.${status}`)}
+              {EVENT_STATUS_LABEL[status]}
             </MenuItem>
           ))}
         </TextField>
       </Stack>
 
       <TextField
-        name="timezone"
+        name="event.timezone"
         label={t("editor.timezone")}
         helperText={t("editor.timezoneHelp")}
         defaultValue={zone}
@@ -85,7 +93,7 @@ export default async function EventFieldsForm({
       />
 
       <TextField
-        name="startsAtWallTime"
+        name="event.startsAtWallTime"
         type="datetime-local"
         label={t("editor.startsAt")}
         helperText={t("editor.startsAtHelp", { timezone: zone })}
@@ -94,7 +102,7 @@ export default async function EventFieldsForm({
         required
       />
       <TextField
-        name="raceStartsAtWallTime"
+        name="event.raceStartsAtWallTime"
         type="datetime-local"
         label={t("editor.raceStartsAt")}
         helperText={t("editor.raceStartsAtHelp")}
@@ -102,7 +110,7 @@ export default async function EventFieldsForm({
         slotProps={{ inputLabel: { shrink: true } }}
       />
       <TextField
-        name="endsAtWallTime"
+        name="event.endsAtWallTime"
         type="datetime-local"
         label={t("editor.endsAt")}
         helperText={t("editor.endsAtHelp")}
@@ -110,16 +118,49 @@ export default async function EventFieldsForm({
         slotProps={{ inputLabel: { shrink: true } }}
       />
 
+      {/*
+        The place, and the two facts about taking part, once (`DECISIONS.md` §36).
+        These used to sit in each language's panel and be typed twice — and the second copy was
+        never a translation, it was the same answer again.
+      */}
+      <TextField
+        name="event.locationName"
+        label={t("editor.fields.locationName")}
+        helperText={t("editor.sharedFieldHelp")}
+        defaultValue={event?.locationName ?? ""}
+        required
+      />
+      <TextField
+        name="event.locationAddress"
+        label={t("editor.fields.locationAddress")}
+        defaultValue={event?.locationAddress ?? ""}
+      />
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
-          name="latitude"
+          name="event.difficultyLabel"
+          label={t("editor.fields.difficultyLabel")}
+          defaultValue={event?.difficultyLabel ?? ""}
+          sx={{ flex: 1 }}
+        />
+        <TextField
+          name="event.costText"
+          label={t("editor.fields.costText")}
+          helperText={t("editor.costHelp")}
+          defaultValue={event?.costText ?? ""}
+          sx={{ flex: 1 }}
+        />
+      </Stack>
+
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+        <TextField
+          name="event.latitude"
           label={t("editor.latitude")}
           defaultValue={event?.latitude ?? ""}
           inputMode="decimal"
           sx={{ flex: 1 }}
         />
         <TextField
-          name="longitude"
+          name="event.longitude"
           label={t("editor.longitude")}
           defaultValue={event?.longitude ?? ""}
           inputMode="decimal"
@@ -131,7 +172,7 @@ export default async function EventFieldsForm({
       </Typography>
 
       <TextField
-        name="mapUrl"
+        name="event.mapUrl"
         type="url"
         label={t("editor.mapUrl")}
         helperText={t("editor.mapUrlHelp")}
@@ -141,7 +182,7 @@ export default async function EventFieldsForm({
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
-          name="distanceMeters"
+          name="event.distanceMeters"
           label={t("editor.distanceMeters")}
           helperText={t("editor.distanceMetersHelp")}
           defaultValue={event?.distanceMeters ?? ""}
@@ -149,7 +190,7 @@ export default async function EventFieldsForm({
           sx={{ flex: 1 }}
         />
         <TextField
-          name="elevationGainMeters"
+          name="event.elevationGainMeters"
           label={t("editor.elevationGainMeters")}
           defaultValue={event?.elevationGainMeters ?? ""}
           inputMode="numeric"
@@ -158,7 +199,7 @@ export default async function EventFieldsForm({
       </Stack>
 
       <FormControlLabel
-        control={<Checkbox name="featured" defaultChecked={event?.featured ?? false} />}
+        control={<Checkbox name="event.featured" defaultChecked={event?.featured ?? false} />}
         label={t("editor.featured")}
       />
       <Typography variant="body2" color="text.secondary">
@@ -173,7 +214,7 @@ export default async function EventFieldsForm({
 
       <TextField
         select
-        name="registrationMode"
+        name="event.registrationMode"
         label={t("editor.registrationMode")}
         helperText={t("editor.registrationModeHelp")}
         defaultValue={event?.registrationMode ?? "NONE"}
@@ -181,13 +222,13 @@ export default async function EventFieldsForm({
       >
         {REGISTRATION_MODES.map((mode) => (
           <MenuItem key={mode} value={mode}>
-            {t(`registrationMode.${mode}`)}
+            {REGISTRATION_MODE_LABEL[mode]}
           </MenuItem>
         ))}
       </TextField>
 
       <TextField
-        name="capacity"
+        name="event.capacity"
         label={t("editor.capacity")}
         helperText={t("editor.capacityHelp")}
         defaultValue={event?.capacity ?? ""}
@@ -196,7 +237,7 @@ export default async function EventFieldsForm({
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
-          name="registrationOpensAtWallTime"
+          name="event.registrationOpensAtWallTime"
           type="datetime-local"
           label={t("editor.registrationOpensAt")}
           defaultValue={toWallTimeInput(event?.registrationOpensAt ?? null, zone)}
@@ -204,7 +245,7 @@ export default async function EventFieldsForm({
           sx={{ flex: 1 }}
         />
         <TextField
-          name="registrationClosesAtWallTime"
+          name="event.registrationClosesAtWallTime"
           type="datetime-local"
           label={t("editor.registrationClosesAt")}
           defaultValue={toWallTimeInput(event?.registrationClosesAt ?? null, zone)}
@@ -223,7 +264,7 @@ export default async function EventFieldsForm({
       */}
       <TextField
         select
-        name="declarationDocumentId"
+        name="event.declarationDocumentId"
         label={t("editor.declarationDocument")}
         helperText={
           declarations.length === 0
@@ -240,15 +281,36 @@ export default async function EventFieldsForm({
         ))}
       </TextField>
 
+      {/*
+        The start list, off unless somebody deliberately turns it on (BR-REQ-039-01).
+
+        A checkbox rather than a select, because there are two values and one of them is a
+        disclosure: an unchecked box is `HIDDEN`, which is what an absent field must mean. The
+        help text says what turning it on actually publishes, in the words a participant would
+        read, because that is the decision being made here.
+      */}
+      <FormControlLabel
+        control={
+          <Checkbox
+            name="event.participantListVisibility"
+            defaultChecked={event?.participantListVisibility === "NAMES"}
+          />
+        }
+        label={t("editor.participantList")}
+      />
+      <Typography variant="body2" color="text.secondary">
+        {t("editor.participantListHelp")}
+      </Typography>
+
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
-          name="externalProvider"
+          name="event.externalProvider"
           label={t("editor.externalProvider")}
           defaultValue={event?.externalProvider ?? ""}
           sx={{ flex: 1 }}
         />
         <TextField
-          name="externalRegistrationUrl"
+          name="event.externalRegistrationUrl"
           type="url"
           label={t("editor.externalRegistrationUrl")}
           defaultValue={event?.externalRegistrationUrl ?? ""}

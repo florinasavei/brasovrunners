@@ -127,6 +127,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: NOW,
         resultsNameConsent: false,
+        listOptOut: false,
         resultsConsentVersion: 1,
       })
       .returning();

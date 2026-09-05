@@ -91,6 +91,7 @@ function submissionInput(overrides: Partial<Record<string, unknown>> = {}) {
     locale: "ro",
     privacyAcknowledged: true,
     resultsNameConsent: true,
+    listOptOut: false,
     honeypot: "",
     renderedAt: new Date(NOW.getTime() - 10_000).toISOString(),
     ...overrides,

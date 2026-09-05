@@ -15,6 +15,8 @@ import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/e
 import { mapLinkFor } from "@/modules/events/domain/map-link";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import RegistrationCta from "@/modules/events/ui/RegistrationCta";
+import StartList from "@/modules/events/ui/StartList";
 import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
 
@@ -111,6 +113,9 @@ export default async function EventDetailPage({ params }: Props) {
       <Divider sx={{ my: 3 }} />
       <EventFacts event={event} now={now} />
 
+      {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
+      <RegistrationCta event={event} now={now} />
+
       {event.locationAddress && (
         <Stack sx={{ mt: 3 }}>
           <Typography variant="body2" color="text.secondary">
@@ -141,6 +146,9 @@ export default async function EventDetailPage({ params }: Props) {
           </Typography>
         </Stack>
       )}
+
+      {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
+      <StartList event={event} />
     </Container>
   );
 }

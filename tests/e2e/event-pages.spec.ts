@@ -93,7 +93,18 @@ test.describe("BR-REQ-040-02 no cross-locale fallback", () => {
     const body = await page.locator("body").innerText();
     expect(body).toContain("Tâmpa trail run");
     expect(body).not.toContain("Tură pe Tâmpa");
-    expect(body).not.toContain("Gratuit");
+    // The excerpt is a translation and must be the English one.
+    expect(body).toContain("Up Tâmpa and back");
+    expect(body).not.toContain("Urcare pe Tâmpa");
+
+    /*
+      The meeting point, the difficulty and the cost are deliberately NOT translated: they are
+      one value for the whole event (`DECISIONS.md` §36), so the English page shows the club's
+      own words. That is the accepted trade for not entering every event's place twice, and it
+      is asserted here so nobody "fixes" it back into two columns by accident.
+    */
+    expect(body).toContain("Stația de telecabină Tâmpa");
+    expect(body).toContain("Gratuit");
   });
 
   test("does not show the Romanian event in the English listing", async ({ page }) => {

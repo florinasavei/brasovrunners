@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1643,3 +1643,286 @@ window is harmless, and when somebody gets it wrong the health check says which 
 missing within seconds instead of after an afternoon.
 
 Baseline bumped to `BR-V1.18-2026-09-04`.
+
+---
+
+## 32. Decided — the public participant list exists, and is off (2026-09-05)
+
+**Context.** The event page said nothing about who was coming, and the club asked for a start
+list: the ordinary thing a race page carries, and the thing that makes a small club's event look
+like an event. The data is already in the database — a `CONFIRMED` registration carries the name
+the participant typed.
+
+That is exactly what makes it a decision rather than a screen. Publishing those names is a
+disclosure of personal data by the club, under a privacy notice that is presently sample text
+with `<PLACEHOLDER>` facts and no approval from anybody. `AGENTS.md` §10.8 and §29 already say
+the club's own wording is the club's to write, and BR-REQ-053-01 already refuses registration in
+production while nothing is approved.
+
+**Decision.** Build the whole thing, and ship it switched off.
+
+- `events.participant_list_visibility` is `HIDDEN` | `NAMES`, default `HIDDEN`. Every event that
+  exists has it; every event created or duplicated after it has it. A duplicate never inherits
+  `NAMES` — the decision was made about the people who entered the original event, not about a
+  copy of its columns.
+- The published set is `CONFIRMED`, `REAL`, not opted out, in confirmation order, and the select
+  list is the registered name alone. Not "the name for now": there is no query behind this page
+  that can return an address, a status, an identifier or a count of who is still deciding, and
+  `tests/privacy/public-surface.test.ts` fails if one appears.
+- `registrations.list_opt_out` is the participant's own refusal, and the form asks **on every
+  event**, including the ones with no list today. An organizer can switch a list on months after
+  somebody registered, and a question that was never put to that person cannot be answered later
+  on their behalf. The label says "if the club publishes one" for that reason.
+- `NAMES` is refused for `NONE` and `EXTERNAL`, in the service and again as a CHECK. For `NONE`
+  there is nobody to list; for `EXTERNAL` the entrants are the other organizer's and the club
+  holds none of them.
+- The sample privacy notice gains section 5, "the public participant list", describing the
+  disclosure with the legal basis and the retention period as placeholders.
+
+### The open question, which is the club's and not this repository's
+
+**The approved privacy notice must describe this before the switch may be used.** No environment
+has an approved notice at all, so nothing is blocked today; what is being recorded is that
+turning it on is not a UI decision. The wording — the legal basis for publishing, and how long a
+list stays up — is section 5 of the sample notice, with the facts in angle brackets. Until the
+club or its adviser fills those in and approves the version, `HIDDEN` is the only correct value
+everywhere, which is what it already is.
+
+### Why opt-out rather than opt-in
+
+Opt-in is the safer default in the abstract, and it is the wrong shape here. The event-level
+switch is already an opt-in — by the club, deliberately, per event, with the disclosure spelled
+out next to the checkbox — and a second opt-in underneath it would produce a start list that is
+mostly absent and therefore useless, which is how a feature ends up switched on with the list
+padded by hand. The participant's control is real: it is asked on the form, before they submit,
+and it can be exercised afterwards through the club. That is recorded here rather than argued
+again later.
+
+### What was deliberately not built
+
+**A count of who has not confirmed.** "12 registered, 8 confirmed" is a second disclosure with a
+second decision behind it, and it tells a reader something about people who never agreed to
+appear at all. The free-place count the CTA shows is a different number: it is about the event's
+capacity, not about anybody.
+
+**Removing a name from the backoffice.** A participant who asks to be taken off is handled by
+the club today, and the correction path for it belongs with the rest of the registration
+corrections (BR-REQ-037-03) rather than as a one-off button here.
+
+Baseline bumped to `BR-V1.19-2026-09-05`.
+
+---
+
+## 33. Decided — the registrations backoffice can change a registration, within three moves (2026-09-05)
+
+**Context.** The registrations screen could list, filter, export and resend. It could not change
+anything, which meant the club's actual working day — somebody asks to be signed up after a run,
+somebody's name is spelled wrong on the start list, somebody drops out by text message — ended
+with "ask a developer". The owner's words: "not much I can do with the registrations list, I
+need a full CRUD on them."
+
+The obvious reading of that request is dangerous, and the interesting part of this decision is
+what "full" was allowed to mean.
+
+**Decision.** Three administrative changes exist, and no fourth.
+
+- **Create.** `createRegistrationByStaff` calls the same `submitRegistration` the public form
+  calls. The same allocator, the same event-row lock, the same place in the queue, the same
+  `PENDING_EMAIL_CONFIRMATION` start. `source = STAFF` and `created_by_staff_user_id` record how
+  the row arrived, and `tests/integration/registrations/staff-crud.test.ts` asserts that a
+  staff-entered registration lands behind everyone already waiting.
+- **Update.** The registered name, and nothing else. No verified-email edit and no participant
+  merge, which is BR-REQ-037-03 criterion 2 asking for exactly that absence: the verified address
+  *is* the identity (§10.3), and a typo is fixed by cancelling and registering again.
+- **Delete.** There is none. "Remove this registration" means cancelled — the same transition a
+  participant makes from their own link, with `cancellation_source = ADMIN`, releasing the place
+  to the front of the waiting list. A registration is the record of what somebody agreed to and
+  when; deleting it would destroy the evidence §10.8 exists to keep, and `deleteEvent` already
+  refuses an event that has one for the same reason.
+
+`audit_logs` arrives with them. AGENTS.md §12.12 has described the table since the first
+baseline and nothing ever created it; it was owed the moment the backoffice started changing
+things rather than only reading them.
+
+### Consent cannot be forged, and this is where that was decided
+
+A staff-entered registration reaches `CONFIRMED` by exactly one route: the participant opens the
+link in their own email and signs the declaration. Nothing in the admin service touches that
+transition, and there is no argument that could make it. §10.8 is unambiguous — staff cannot sign
+on a participant's behalf — and the whole feature is built so that the queue cannot tell a
+staff-entered registration from an online one.
+
+The privacy notice is the harder half. The row carries `privacy_notice_version` and
+`privacy_acknowledged_at`, both NOT NULL, and the person at the desk did not click a checkbox.
+Rejected: leaving them null (the column is the record of which version applies, and a null is a
+registration nobody can later say anything about), and inventing a separate "acknowledged by
+staff" version scheme (a second consent model for six registrations a year). Decided: the
+organizer ticks one box saying they are relaying a request from that person — the service refuses
+the registration without it, so the box is binding rather than decorative — and the `audit_logs`
+row names who ticked it. What the columns then record is honest: this version was in force, and
+this member of staff is on record as having relayed it.
+
+### The open question, for the club rather than for this repository
+
+**There is no way to discard a registration whose address was never confirmed.** §10.5 has no
+edge from `PENDING_EMAIL_CONFIRMATION` to `CANCELLED`, deliberately: such a row occupies no
+place and expires by itself after 48 hours. An organizer who mistypes an address at a desk
+therefore has to wait it out, and the interface says so rather than failing with a bare conflict.
+Adding that edge is a change to the state machine and to §10.5, with the matrix that implies, and
+it should be made only if the club actually finds the 48 hours a problem.
+
+### What was deliberately not built
+
+**Exceptional waiting-list promotion (BR-REQ-035-05).** It is a real requirement and it is not
+one of the three above: promoting one person over another is a different act from correcting a
+name, and it needs its own reason field, its own audit action and its own thinking about what it
+does to the people it skipped.
+
+**Removing one name from a published start list.** BR-REQ-039-01's opt-out is set at
+registration, and a later request goes through the club today. The button belongs with this
+group of corrections when it exists, not as a one-off on the public page.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 34. Decided — the staff entrance is the build badge, not a link in the footer (2026-09-05)
+
+**Context.** Every public page carried a "Staff" link in the footer, and the sign-in button read
+"Sign in with Zitadel". Neither is wrong exactly, and both are things a small club's website
+should not say. The link advertises a backoffice to every visitor for the benefit of three people
+who already know the URL; the button names an identity provider the club has no relationship
+with — Zitadel is an implementation detail of how the three of them get in, and a person reading
+it learns only that there is something else they are supposed to recognise.
+
+**Decision.**
+
+- **The footer link is gone.** `SiteFooter` renders the two public legal routes and nothing else,
+  which is what AGENTS.md §9.2 actually requires of it.
+- **The build badge is the way in.** A double-click on it, or `Enter` when it has focus, opens
+  `/sign-in`. A single click does nothing: the badge sits in the bottom-right corner, which on a
+  320px screen is where a thumb lands, and a fixed element that navigates on one tap is a trap
+  rather than a shortcut. Where `STAFF_AUTH_MODE=disabled` the badge stays exactly what it was —
+  a label with `pointerEvents: "none"` — because there is no door to open.
+- **The badge says less.** The visible text is the environment (except in production, where it is
+  noise) and when the code was last changed. The baseline and the commit moved into its `title`
+  and its accessible name: four facts in a corner label is three too many to read at a glance,
+  and `/api/health` reports the same values exactly to anybody who needs them.
+- **The sign-in button reads "Autentificare" / "Sign in".** The provider id in
+  `signIn("zitadel", …)` is code and stays; no user-visible string names it.
+
+**This is not a security change, and must not be read as one.** The backoffice is guarded on the
+server on every request (BR-REQ-060-01 criterion 4), `robots.txt` disallows the path, and a link
+to a locked door was never a weakness. What changed is what the club's public pages advertise.
+For the same reason the badge is a `role="button"` with an accessible name that says what the
+gesture does: a control only a sighted mouse user can discover would be a worse answer than a
+discreet one everybody can reach.
+
+### What was deliberately not built
+
+**A keyboard shortcut, or a URL only staff know.** Both are the same mistake in a smaller font:
+an entrance whose safety depends on nobody finding it. The guard is the server, and it already
+holds.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 35. Decided — the backoffice's enum labels are Romanian, once (2026-09-05)
+
+**Context.** The owner, mid-way through `BR-V1.19`: *"enums and stuff should not be in 2
+languages, the entire bilingual admin management is confusing."*
+
+They are right about the cost. `Admin.status.PUBLISHED` existed in `ro.json` and again in
+`en.json`, and so did the transitions, the staff roles, the event status, the registration mode
+and the seven registration statuses — six enums, two copies each, kept in step by a parity test,
+for a screen three people in one club use, all of whom speak Romanian. Every one of those pairs
+is a place where a change has to be made twice and a review has to check both.
+
+**Decision.** Those six sets of labels move out of both catalogues into
+`modules/staff-identity/domain/staff-labels.ts`, in Romanian, as `Record<Enum, string>` — so
+adding a value to an enum is a TypeScript error at the label map rather than a raw token
+appearing on an organizer's screen.
+
+**What did not change, and this is the whole boundary.** The public site is fully bilingual and
+stays so: every word a visitor or a participant reads, on a page or in an email, is a key in both
+catalogues. `Event.kind.*` is the edge case and it stays in the catalogues, because a public page
+reads it too — the rule is "who is reading it", not "which screen renders it". Error messages stay
+bilingual as well; they are sentences addressed to a person, not names for the club's own
+vocabulary.
+
+The backoffice itself is still locale-prefixed and still reachable at `/en/admin`; what an English
+URL now gets is English chrome with Romanian names for Romanian things. That is the smaller,
+reversible half of the owner's question. **The larger one — whether the backoffice should be
+Romanian-only, with no `/en/admin` at all — is deliberately still open**, and the owner asked for
+it to be considered separately from this baseline.
+
+BR-REQ-040-04 is amended rather than quietly broken: criterion 3 gains the exception in words,
+criterion 4 is new and asserts the catalogues carry none of these labels, and
+`tests/unit/i18n/messages.test.ts` checks the label maps against the enums instead of checking two
+copies against each other. That is a stronger test than the one it replaced — the old one proved
+the two files agreed, and could not prove either of them was complete.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 36. Decided — what is written twice is only what a translator would change (2026-09-05)
+
+**Context.** The owner, on the backoffice: *"I have to do everything twice… the common stuff
+should be just 1 time, it's not like the English version of the event has a different time or a
+different type than the Romanian version, just the descriptions should be different."*
+
+The times, the type, the capacity and the registration window were already on the event row and
+entered once. What was still being asked twice was `event_translations`: the meeting point, the
+street address, the difficulty and the cost. The club's own seed proves the point — the street
+address is byte-for-byte identical in both rows, and "Mediu"/"Moderate" and "Gratuit"/"Free" are
+one decision the club made once, wearing two words.
+
+**Decision.** `location_name`, `location_address`, `difficulty_label` and `cost_text` move to
+`events`. What stays per language is what a translator would actually change: the title, the page
+address, the short description and the two search-engine fields.
+
+The split is now a question with an answer rather than an accident of which table a column landed
+in: **would a translator change this?** A title yes; a street address no.
+
+### The consequence, accepted rather than discovered
+
+Those four render on the English page in the club's own words. `/en/events/tampa-trail` shows
+"Stația de telecabină Tâmpa" and "Gratuit". The owner was shown this before choosing and chose it
+over entering every event's meeting point twice.
+
+It is worth being precise about what it is not. It is **not** a cross-locale fallback, and
+BR-REQ-040-02 is unchanged: nothing borrows another row, a locale with no translation is still a
+404, and no English page will ever show a Romanian *title* or *description*. It is one stored
+value, written once, rendered wherever it is asked for. `tests/e2e/event-pages.spec.ts` now
+asserts exactly that, so a later reader who thinks they have found a translation bug finds the
+decision instead.
+
+The alternative that keeps both — difficulty as an enum and cost as an amount-or-free, each
+rendered per locale from the message catalogue — was offered and not chosen. It remains the way
+to get the English words back without reintroducing the retyping, if the club ever wants them.
+
+### Expand and contract, because this is a move and not an addition
+
+Migration `0014` **adds** the four columns and carries the values up from the Romanian
+translation. It does **not** drop the old ones: AGENTS.md §7.6 ships a drop in the release *after*
+the code that stopped needing it, so a rollback finds a schema its code can still run against.
+Until that release, `event_translations.location_name` is still NOT NULL and still named by
+`event_translations_required_fields_present`, so `createEvent` and `duplicateEvent` keep writing a
+*copy* of the event-row value into every translation. Nothing reads it. **The next baseline owes
+migration `0015`: drop the four columns and that CHECK's third clause.**
+
+`location_name` is required by the field schema on every save and by `transitionEvent` before
+publication; the column is nullable only so it could be added to rows that predate it.
+
+### The tabs, while we were here
+
+The content tabs said "Conținut (RO)" and "Conținut (EN)", which named the panel and said nothing
+about whether anybody had filled it in — so a missing English translation was found at the moment
+publication was refused, which is the worst moment to find it. They now read "Română" and
+"English", carry an "incomplet" mark when that language is not ready, and the section says in one
+line that these are the same event in two languages and that everything factual is in Settings
+above.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.

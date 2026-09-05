@@ -65,6 +65,7 @@ describe("AGENTS.md §15.8 admin resend", () => {
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: NOW,
         resultsNameConsent: false,
+        listOptOut: false,
         resultsConsentVersion: 1,
       })
       .returning();

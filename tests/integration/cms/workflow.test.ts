@@ -60,13 +60,12 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     slug: "crosul-aniversar",
     title: "Crosul aniversar",
     excerpt: "Cursa clubului.",
-    locationName: "Parcul Tractorul",
-    locationAddress: "Strada Nicolae Labiș",
-    difficultyLabel: "Mediu",
-    costText: "Gratuit",
     seoTitle: "Crosul aniversar Brașov Runners",
     seoDescription: "Cursa aniversară a clubului.",
   };
+
+  /** The meeting point is the event's now, not each language's (`DECISIONS.md` §36). */
+  const MEETING_POINT = "Parcul Tractorul";
 
   /** The event row as the form posts it — every column an organizer owns. */
   const EVENT_FIELDS = {
@@ -78,11 +77,17 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     raceStartsAtWallTime: "",
     latitude: "",
     longitude: "",
+    // One value for the whole event now (`DECISIONS.md` §36).
+    locationName: "Parcul Tractorul",
+    locationAddress: "",
+    difficultyLabel: "",
+    costText: "",
     mapUrl: "",
     distanceMeters: "",
     elevationGainMeters: "",
     featured: false,
     registrationMode: "NONE",
+    participantListVisibility: "HIDDEN" as const,
     capacity: "",
     registrationOpensAtWallTime: "",
     registrationClosesAtWallTime: "",
@@ -116,6 +121,8 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       .values({
         kind: "RACE",
         startsAt: new Date("2026-10-11T06:00:00Z"),
+        // The meeting point is the event's now, and publication requires it (`DECISIONS.md` §36).
+        locationName: MEETING_POINT,
         editorialStatus: status,
         publishedAt:
           options.publishedAt ?? (status === "PUBLISHED" ? new Date("2026-09-01T00:00:00Z") : null),
@@ -132,7 +139,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         slug,
         title: FIELDS.title,
         excerpt: FIELDS.excerpt,
-        locationName: FIELDS.locationName,
+        locationName: MEETING_POINT,
         authorStaffUserId,
       })
       .returning();
@@ -147,7 +154,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
           slug: `${slug}-en`,
           title: "Anniversary cross",
           excerpt: options.englishMissing?.excerpt === null ? null : "The club's own race.",
-          locationName: "Tractorul Park",
+          locationName: MEETING_POINT,
           authorStaffUserId,
         })
         .returning();

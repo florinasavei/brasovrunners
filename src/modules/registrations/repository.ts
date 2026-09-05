@@ -4,6 +4,7 @@ import { events } from "@/db/schema/events";
 import {
   type Registration,
   type RegistrationKind,
+  type RegistrationSource,
   type RegistrationStatus,
   registrations,
 } from "@/db/schema/registrations";
@@ -81,6 +82,23 @@ export async function lockEventForCapacity<T extends Record<string, unknown>>(
   return row;
 }
 
+/**
+ * One event's row, unlocked — what the backoffice needs to build an `EventForRegistration`
+ * before handing it to the allocator.
+ *
+ * Deliberately not `lockEventForCapacity`: that takes `FOR UPDATE` for the length of the
+ * caller's transaction, and a page or an action that is only *about* to call the allocator has
+ * no transaction to hold it in and nothing to serialize yet. The lock is taken inside the
+ * allocator, where the decision is made.
+ */
+export async function findEventForAllocation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+) {
+  const [row] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+  return row;
+}
+
 /** Every registration against one event, whatever its status or kind — what deletion asks. */
 export async function countRegistrationsForEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -98,6 +116,8 @@ export type InsertPendingRegistrationInput = {
   eventId: string;
   participantId: string;
   kind?: RegistrationKind;
+  source?: RegistrationSource;
+  createdByStaffUserId?: string | null;
   locale: "ro" | "en";
   registeredName: string;
   privacyNoticeVersion: number;
@@ -105,6 +125,7 @@ export type InsertPendingRegistrationInput = {
   raceId: string | null;
   resultsNameConsent: boolean;
   resultsConsentVersion: number;
+  listOptOut: boolean;
   now: Date;
 };
 
@@ -126,6 +147,8 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       participantId: input.participantId,
       status: "PENDING_EMAIL_CONFIRMATION",
       kind: input.kind ?? "REAL",
+      source: input.source ?? "PUBLIC",
+      createdByStaffUserId: input.createdByStaffUserId ?? null,
       locale: input.locale,
       registeredName: input.registeredName,
       privacyNoticeVersion: input.privacyNoticeVersion,
@@ -133,6 +156,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       raceId: input.raceId,
       resultsNameConsent: input.resultsNameConsent,
       resultsConsentVersion: input.resultsConsentVersion,
+      listOptOut: input.listOptOut,
       submittedAt: input.now,
       createdAt: input.now,
       updatedAt: input.now,
@@ -168,6 +192,44 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
     .where(and(eq(registrations.id, params.id), inArray(registrations.status, fromStatuses)))
     .returning();
   return row;
+}
+
+/**
+ * The public start list of one event (BR-REQ-039-01).
+ *
+ * Four filters, and each one is a rule rather than a preference:
+ *
+ *   - `CONFIRMED` only. Anything earlier is somebody who has not finished registering, and
+ *     publishing that they tried is a disclosure they never completed. It is also why no count
+ *     of anything unconfirmed is returned here — there is nothing to count it from.
+ *   - `REAL` only. A synthetic row demonstrating the queue is not a person and must never
+ *     appear on a page a person reads (AGENTS.md §12.6).
+ *   - not opted out. The participant's own refusal, and it is checked in the query rather than
+ *     filtered afterwards, so a caller cannot forget.
+ *   - the registered name, and nothing else. No email, no status, no identifier — the select
+ *     list is the guarantee, the same discipline `events/repository.ts#PUBLIC_COLUMNS` uses,
+ *     and `tests/privacy/public-surface.test.ts` asserts it stays that way.
+ *
+ * Ordered by when each person confirmed, which is the one order that is a fact about them
+ * rather than an accident of the database, and stable — `id` breaks a tie between two
+ * confirmations in the same instant.
+ */
+export async function listPublicStartList<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<Array<{ registeredName: string }>> {
+  return db
+    .select({ registeredName: registrations.registeredName })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.status, "CONFIRMED"),
+        eq(registrations.kind, "REAL"),
+        eq(registrations.listOptOut, false),
+      ),
+    )
+    .orderBy(asc(registrations.confirmedAt), asc(registrations.id));
 }
 
 export type OccupiedCountsRow = {

@@ -33,5 +33,10 @@ export async function resendRegistrationEmailAction(form: FormData): Promise<voi
     }
   }
 
-  redirect(outcome === "sent" ? `${path}?resent=1` : `${path}?error=${outcome.error}`);
+  // `#admin-alert`, like every other backoffice redirect: land on the outcome.
+  redirect(
+    outcome === "sent"
+      ? `${path}?resent=1#admin-alert`
+      : `${path}?error=${outcome.error}#admin-alert`,
+  );
 }

@@ -147,28 +147,46 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
 });
 
 /**
- * The backoffice interpolates four sets of keys, and none of them is visible to the static
- * scan above: statuses, transitions, roles and error codes are all built from a value. Each
- * set has a single source of truth in the code, so the contract is checkable — and a missing
- * one renders "Admin.errors.CONFLICT" to an organizer at the worst possible moment.
+ * The backoffice interpolates keys the static scan above cannot see, because they are built
+ * from a value: an error code, a locale. Each set has a single source of truth in the code, so
+ * the contract is checkable — and a missing one renders "Admin.errors.CONFLICT" to an organizer
+ * at the worst possible moment.
+ *
+ * The backoffice's *enum* labels are no longer among them. Editorial status, transitions, staff
+ * roles, event status, registration mode and registration status moved out of both catalogues
+ * into `modules/staff-identity/domain/staff-labels.ts`, in Romanian only (`DECISIONS.md` §35).
+ * Their exhaustiveness is checked below, against the enums themselves rather than against two
+ * copies of the same words.
  */
 describe("BR-REQ-040-04 the backoffice keys the source builds dynamically", () => {
-  it("has a label for every editorial status and every transition", async () => {
-    const { EDITORIAL_STATUSES } = await import("@/modules/staff-identity/domain/roles");
-    for (const status of EDITORIAL_STATUSES) {
-      expect(roFlat[`Admin.status.${status}`], `ro label for ${status}`).toBeDefined();
-      expect(enFlat[`Admin.status.${status}`], `en label for ${status}`).toBeDefined();
-      // Every status is also a possible destination of a transition button.
-      expect(roFlat[`Admin.transition.${status}`], `ro action for ${status}`).toBeDefined();
-      expect(enFlat[`Admin.transition.${status}`], `en action for ${status}`).toBeDefined();
-    }
-  });
+  it("has a Romanian label for every backoffice enum value, and no second copy", async () => {
+    const { EDITORIAL_STATUSES, STAFF_ROLES } = await import(
+      "@/modules/staff-identity/domain/roles"
+    );
+    const labels = await import("@/modules/staff-identity/domain/staff-labels");
+    const { registrationStatus } = await import("@/db/schema/registrations");
 
-  it("has a label for every staff role", async () => {
-    const { STAFF_ROLES } = await import("@/modules/staff-identity/domain/roles");
+    for (const status of EDITORIAL_STATUSES) {
+      expect(labels.EDITORIAL_STATUS_LABEL[status], `label for ${status}`).toBeTruthy();
+      // Every status is also a possible destination of a transition button, and the word for
+      // the action is not the word for the state.
+      expect(labels.EDITORIAL_TRANSITION_LABEL[status], `action for ${status}`).toBeTruthy();
+    }
     for (const role of STAFF_ROLES) {
-      expect(roFlat[`Admin.roles.${role}`], `ro label for ${role}`).toBeDefined();
-      expect(enFlat[`Admin.roles.${role}`], `en label for ${role}`).toBeDefined();
+      expect(labels.STAFF_ROLE_LABEL[role], `label for ${role}`).toBeTruthy();
+    }
+    for (const status of registrationStatus.enumValues) {
+      expect(labels.REGISTRATION_STATUS_LABEL[status], `label for ${status}`).toBeTruthy();
+    }
+
+    // And the catalogues no longer carry them: two copies of the same seven words is what this
+    // move removed, so a key creeping back in is a regression rather than a nicety.
+    for (const key of Object.keys(roFlat)) {
+      expect(
+        /^Admin\.(status|transition|roles|eventStatus|registrationMode)\./.test(key) ||
+          key.startsWith("Admin.registrations.status."),
+        `${key} belongs in staff-labels.ts, not in the catalogues`,
+      ).toBe(false);
     }
   });
 

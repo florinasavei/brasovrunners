@@ -5,6 +5,7 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import {
   type RegistrationKind,
+  type RegistrationSource,
   type RegistrationStatus,
   registrations,
 } from "@/db/schema/registrations";
@@ -22,6 +23,8 @@ export type RegistrationListRow = {
   id: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
+  /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
+  source: RegistrationSource;
   registeredName: string;
   participantEmail: string;
   eventId: string;
@@ -56,6 +59,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
+      source: registrations.source,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,
@@ -80,6 +84,8 @@ export type RegistrationDetail = {
   id: string;
   status: RegistrationStatus;
   kind: RegistrationKind;
+  /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
+  source: RegistrationSource;
   registeredName: string;
   participantEmail: string;
   eventId: string;
@@ -105,6 +111,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
+      source: registrations.source,
       registeredName: registrations.registeredName,
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,
@@ -195,4 +202,32 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
       and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, registrations.locale)),
     )
     .orderBy(asc(eventTranslations.title));
+}
+
+/**
+ * The events an Administrator can enter a registration against (BR-REQ-037-05).
+ *
+ * `registration_mode = INTERNAL` is the whole filter: an event registered elsewhere or not at
+ * all has no queue here to put anybody in, and offering it in the list would produce a form
+ * whose only possible outcome is the allocator refusing it. Ordered soonest first, because the
+ * one somebody is asking about at a desk is almost always the next one.
+ */
+export async function listEventsAcceptingRegistrations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  locale: "ro" | "en",
+): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string }>> {
+  return db
+    .select({
+      id: events.id,
+      title: eventTranslations.title,
+      startsAt: events.startsAt,
+      timezone: events.timezone,
+    })
+    .from(events)
+    .leftJoin(
+      eventTranslations,
+      and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)),
+    )
+    .where(eq(events.registrationMode, "INTERNAL"))
+    .orderBy(asc(events.startsAt));
 }

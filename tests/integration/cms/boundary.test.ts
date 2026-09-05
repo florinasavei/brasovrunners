@@ -42,13 +42,12 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     slug: "crosul-aniversar",
     title: "Crosul aniversar",
     excerpt: "",
-    locationName: "Parcul Tractorul",
-    locationAddress: "",
-    difficultyLabel: "",
-    costText: "",
     seoTitle: "",
     seoDescription: "",
   };
+
+  /** The meeting point is the event's now, not each language's (`DECISIONS.md` §36). */
+  const MEETING_POINT = "Parcul Tractorul";
 
   async function seedDraft() {
     const [event] = await db
@@ -62,7 +61,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
         locale: "ro",
         slug: FIELDS.slug,
         title: FIELDS.title,
-        locationName: FIELDS.locationName,
+        locationName: MEETING_POINT,
       })
       .returning();
     return translation;
@@ -80,12 +79,11 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
 
   it("accepts exactly the editorial fields the model has", () => {
     const parsed = translationFieldsSchema.parse(FIELDS);
+    // The four that left are on the event row now: the meeting point, the street address, the
+    // difficulty and the cost are one value for the whole event (`DECISIONS.md` §36). What is
+    // left here is what genuinely differs between two languages.
     expect(Object.keys(parsed).sort()).toEqual([
-      "costText",
-      "difficultyLabel",
       "excerpt",
-      "locationAddress",
-      "locationName",
       "seoDescription",
       "seoTitle",
       "slug",
@@ -141,10 +139,10 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       actor: editor,
       translationId: translation.id,
       expectedVersion: translation.version,
-      fields: { ...FIELDS, costText: "", excerpt: "" },
+      fields: { ...FIELDS, seoTitle: "", excerpt: "" },
     });
 
-    expect(saved.costText).toBeNull();
+    expect(saved.seoTitle).toBeNull();
     expect(saved.excerpt).toBeNull();
   });
 
@@ -158,6 +156,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/events/new",
       "/admin/registrations",
       "/admin/registrations/[id]",
+      "/admin/registrations/new",
       "/admin/staff",
       "/events",
       "/events/[slug]",

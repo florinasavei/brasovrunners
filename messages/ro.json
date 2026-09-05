@@ -11,6 +11,8 @@
       "en": "English"
     },
     "buildBadgeLabel": "Versiunea site-ului și data ultimei actualizări",
+    "buildBadgeSignIn": "Dublu clic, sau Enter, pentru autentificarea echipei.",
+    "lastBuild": "ultima actualizare",
     "environmentNotice": {
       "label": "Anunț despre această versiune a site-ului",
       "title": "Site de test ({environment}) — acesta nu este site-ul real al clubului.",
@@ -58,6 +60,22 @@
       "RACE": "Cursă",
       "OTHER": "Alt tip"
     },
+    "startList": {
+      "title": "Cine vine",
+      "empty": "Încă nu și-a confirmat nimeni participarea.",
+      "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei."
+    },
+    "cta": {
+      "register": "Înscrie-te la eveniment",
+      "joinWaitingList": "Intră pe lista de așteptare",
+      "external": "Înscrie-te pe site-ul organizatorului",
+      "externalWithProvider": "Înscrie-te pe {provider}",
+      "placesRemaining": "{count, plural, one {# loc liber} few {# locuri libere} other {# de locuri libere}}",
+      "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
+      "opensOn": "Înscrierile se deschid pe {date}.",
+      "closed": "Înscrierile s-au închis pentru acest eveniment.",
+      "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit."
+    },
     "registrationState": {
       "NOT_APPLICABLE": "Nu este necesară înscrierea",
       "EXTERNAL": "Înscriere pe site-ul organizatorului",
@@ -100,39 +118,61 @@
       "expired": "Expirată",
       "declaration": "Declarație semnată",
       "outboxHistory": "Istoric email",
-      "status": {
-        "PENDING_EMAIL_CONFIRMATION": "Așteaptă confirmarea emailului",
-        "PENDING_DECLARATION": "Așteaptă semnarea declarației",
-        "WAITLISTED": "Pe lista de așteptare",
-        "WAITLIST_OFFERED": "Ofertă activă",
-        "CONFIRMED": "Confirmată",
-        "CANCELLED": "Anulată",
-        "EXPIRED": "Expirată"
+      "testKind": "Test",
+      "enteredByStaff": "Adăugată de echipă",
+      "new": "Adaugă o înscriere",
+      "newTitle": "Adaugă o înscriere",
+      "newExplanation": "Pentru cineva care a cerut personal, la telefon sau după o alergare. Înscrierea intră exact ca una făcută de participant: aceeași ordine la locuri, aceeași listă de așteptare și aceeași stare de început. Persoana primește e-mailul obișnuit de confirmare și semnează singură declarația — nimeni nu poate semna în locul altcuiva.",
+      "noEventsAcceptingRegistrations": "Niciun eveniment nu primește înscrieri prin platformă. Setează modul de înscriere pe „Înscriere aici” în pagina evenimentului.",
+      "event": "Evenimentul",
+      "participantName": "Numele participantului",
+      "participantEmail": "Adresa de e-mail a participantului",
+      "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
+      "participantLocale": "Limba în care îi scriem",
+      "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
+      "listOptOut": "Persoana nu vrea să apară pe lista publică de participanți",
+      "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu.",
+      "create": "Adaugă înscrierea",
+      "viewForEvent": "Vezi înscrierile acestui eveniment",
+      "correctName": "Corectează numele",
+      "correctNameHelp": "Se poate corecta doar numele. Adresa de e-mail este identitatea participantului și nu se schimbă de aici: pentru o adresă greșită, anulează înscrierea și adaug-o din nou cu adresa corectă.",
+      "saveName": "Salvează numele",
+      "cancelTitle": "Anulează înscrierea",
+      "cancelReason": "Motivul",
+      "cancelAction": "Anulează înscrierea",
+      "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
+      "auditTrail": "Ce a făcut echipa",
+      "auditActorRemoved": "cont șters",
+      "audit": {
+        "registration.created_by_staff": "Înscriere adăugată de echipă",
+        "registration.name_corrected": "Nume corectat",
+        "registration.cancelled_by_staff": "Anulată de echipă"
       },
-      "testKind": "Test"
+      "locale": {
+        "ro": "Română",
+        "en": "English"
+      }
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
       "featured": "Principal",
       "preview": "Previzualizare",
+      "edit": "Editează",
+      "moreActions": "Alte acțiuni",
       "new": "Eveniment nou"
     },
-    "status": {
-      "DRAFT": "Ciornă",
-      "IN_REVIEW": "În verificare",
-      "PUBLISHED": "Publicat",
-      "ARCHIVED": "Arhivat"
-    },
-    "transition": {
-      "DRAFT": "Mută în ciornă",
-      "IN_REVIEW": "Trimite spre verificare",
-      "PUBLISHED": "Publică",
-      "ARCHIVED": "Arhivează"
-    },
-    "roles": {
-      "AUTHOR": "Autor",
-      "EDITOR": "Editor",
-      "ADMIN": "Administrator"
+    "confirm": {
+      "cancel": "Renunță",
+      "duplicateTitle": "Duplici evenimentul?",
+      "duplicateBody": "Se creează o copie, ca ciornă, cu adrese proprii. Nu devine evenimentul principal și nu este publicată.",
+      "deleteTitle": "Ștergi evenimentul?",
+      "deleteBody": "Ștergerea este definitivă. Se poate șterge doar un eveniment la care nu s-a înscris nimeni; pentru unul care a avut loc, arhivează-l.",
+      "archiveTitle": "Arhivezi evenimentul?",
+      "archiveBody": "Evenimentul dispare de pe site, în ambele limbi. Îl poți readuce mai târziu, trecându-l din nou prin verificare și publicare.",
+      "removeTestTitle": "Ștergi înscrierile de test?",
+      "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
+      "cancelRegistrationTitle": "Anulezi înscrierea?",
+      "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”."
     },
     "errors": {
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
@@ -176,6 +216,12 @@
       "latitude": "Latitudine",
       "longitude": "Longitudine",
       "coordinatesHelp": "Punctul exact de start, în grade zecimale — de exemplu 45.6427 și 25.5887. Copiază-le din hartă cu clic dreapta pe locul exact. Un nume de parc nu este un punct de start.",
+      "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
+      "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
+      "tabIncomplete": "incomplet",
+      "settingsSection": "Setări",
+      "contentSection": "Conținut",
+      "save": "Salvează",
       "publicationSection": "Publicare",
       "noTransitions": "Rolul tău nu poate muta acest eveniment din starea în care se află.",
       "incompleteForPublication": "Ambele limbi trebuie completate înainte ca evenimentul să poată fi publicat. Lipsesc: {detail}.",
@@ -204,6 +250,8 @@
       "declarationDocumentHelp": "Se alege dintre versiunile aprobate. Textul nu se editează niciodată aici — o versiune nouă vine printr-o migrare.",
       "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
       "declarationUnset": "Niciuna",
+      "participantList": "Publică lista participanților pe pagina evenimentului",
+      "participantListHelp": "Publică numele persoanelor care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei. Nu se publică adrese de e-mail și nimic despre înscrierile neconfirmate. Este o divulgare de date cu caracter personal: nota de confidențialitate aprobată trebuie să o menționeze înainte ca opțiunea să fie bifată.",
       "externalProvider": "Organizator extern",
       "externalRegistrationUrl": "Link de înscriere extern",
       "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
@@ -220,8 +268,7 @@
       "title": "Autentificare echipă",
       "unavailable": "Autentificarea pentru echipă nu este încă disponibilă în acest mediu.",
       "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale.",
-      "withZitadel": "Autentificare cu Zitadel",
-      "footerLink": "Echipă"
+      "action": "Autentificare"
     },
     "staff": {
       "title": "Echipa",
@@ -236,16 +283,6 @@
       "you": "Tu",
       "changeRole": "Schimbă rolul",
       "revoke": "Retrage accesul"
-    },
-    "eventStatus": {
-      "SCHEDULED": "Programat",
-      "CANCELLED": "Anulat",
-      "COMPLETED": "Încheiat"
-    },
-    "registrationMode": {
-      "NONE": "Fără înscriere",
-      "INTERNAL": "Înscriere aici",
-      "EXTERNAL": "Înscriere în altă parte"
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -271,6 +308,7 @@
     "privacyPrefix": "Am citit și sunt de acord cu",
     "privacyLinkLabel": "nota de confidențialitate",
     "resultsNameConsent": "Sunt de acord ca numele meu să apară în rezultatele publice",
+    "listOptOut": "Nu vreau ca numele meu să apară pe lista publică de participanți, dacă clubul publică una pentru acest eveniment",
     "submit": "Trimite înscrierea",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "errors": {

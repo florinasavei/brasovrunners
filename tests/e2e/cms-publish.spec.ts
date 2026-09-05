@@ -104,8 +104,11 @@ test.describe("BR-REQ-051-01 an Author may not publish", () => {
     await expect(page.getByRole("button", { name: "Mută în ciornă" })).toHaveCount(0);
 
     // And the reason the text is read-only is stated rather than the form simply being absent.
-    const romanian = page.getByRole("region", { name: /Conținut \(RO\)/ });
+    const romanian = page.getByRole("tabpanel", { name: /Română/ });
     await expect(romanian.getByText(/Nu poți edita acest text/)).toBeVisible();
+
+    // An Author owns no settings either, and the panel says so rather than being missing.
+    await expect(page.getByText(/Doar un editor sau un administrator/)).toBeVisible();
   });
 
   test("refuses an Author the staff page", async ({ page }) => {
@@ -138,20 +141,24 @@ test.describe("BR-REQ-050-02 an Editor creates an event without a developer", ()
     // names are the contract the Server Action actually reads.
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    await field("startsAtWallTime").fill("2027-05-01T09:00");
-    await field("ro.title").fill(`Cros de probă ${suffix}`);
-    await field("ro.slug").fill(`cros-de-proba-${suffix}`);
-    await field("ro.locationName").fill("Parcul Tractorul");
-    await field("en.title").fill(`Trial cross ${suffix}`);
-    await field("en.slug").fill(`trial-cross-${suffix}`);
-    await field("en.locationName").fill("Tractorul Park");
+    // The names are namespaced now: the editor is one form carrying the event row and both
+    // languages, so `event.*` and `translations.<locale>.*` say which half each field belongs to.
+    await field("event.startsAtWallTime").fill("2027-05-01T09:00");
+    // The meeting point is asked once, in Settings: it is the same place whichever language the
+    // page is read in (`DECISIONS.md` §36).
+    await field("event.locationName").fill("Parcul Tractorul");
+    await field("translations.ro.title").fill(`Cros de probă ${suffix}`);
+    await field("translations.ro.slug").fill(`cros-de-proba-${suffix}`);
+    await field("translations.en.title").fill(`Trial cross ${suffix}`);
+    await field("translations.en.slug").fill(`trial-cross-${suffix}`);
 
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
 
     // Straight to the new event's own page, as a draft: nothing is published by being created.
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
     await expect(page.getByText("Ciornă", { exact: true })).toBeVisible();
-    await expect(page.getByRole("region", { name: /Conținut \(EN\)/ })).toBeVisible();
+    // The content panels are tabs now, one per language, Romanian first.
+    await expect(page.getByRole("tab", { name: /English/ })).toBeVisible();
   });
 });
 
@@ -177,7 +184,7 @@ test.describe("BR-REQ-051-01 an Editor publishes and unpublishes an event", () =
 
     // A staff preview still renders the draft, with a notice saying what it is.
     await page.goto(editorUrl);
-    const romanian = page.getByRole("region", { name: /Conținut \(RO\)/ });
+    const romanian = page.getByRole("tabpanel", { name: /Română/ });
     await romanian.getByRole("link", { name: "Previzualizare" }).click();
     await expect(page.getByText(/Previzualizare pentru echipă/)).toBeVisible();
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);

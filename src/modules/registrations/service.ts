@@ -1,6 +1,10 @@
 import { eq } from "drizzle-orm";
 import { type Participant, participants } from "@/db/schema/participants";
-import type { Registration, RegistrationKind } from "@/db/schema/registrations";
+import type {
+  Registration,
+  RegistrationKind,
+  RegistrationSource,
+} from "@/db/schema/registrations";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { registrationState } from "@/modules/events/domain/registration-window";
@@ -9,7 +13,7 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findOrCreateParticipant, markEmailVerified } from "@/modules/participants/repository";
 import { DomainError } from "@/shared/errors/domain-error";
-import { computeOccupied, hasDirectAvailability } from "./domain/capacity";
+import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import { declarationSigningSchema, registrationSubmissionSchema } from "./fields";
@@ -181,15 +185,46 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   }
 }
 
+// --- §10.6 The public free-place count ---------------------------------------------------------
+
+/**
+ * The places a new registrant could receive right now (BR-REQ-034-01).
+ *
+ * A read, and only a read: §10.6 says the public count "never mutates state", so this does not
+ * expire a lapsed hold on the way past — `countOccupied` compares `hold_expires_at` against
+ * `now` itself, which is what makes criterion 3 true without writing anything. It takes no lock
+ * for the same reason: nothing is being decided here, and a page that blocked behind a
+ * confirmation's row lock would be slower for no gain in truth. The number can be one place
+ * stale the instant it is rendered, and the allocator is what actually holds the guarantee.
+ *
+ * This is the same formula the allocator uses, called from the same module, because a second
+ * one written for the page is how a site ends up advertising a place that does not exist.
+ * `kind` appears in neither: a `TEST` registration occupies a place exactly like a real one, so
+ * the count a visitor reads is the count they can actually get (AGENTS.md §12.6).
+ */
+export async function readPublicAvailability<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: { id: string; capacity: number | null },
+  now: Date,
+): Promise<number | null> {
+  if (event.capacity === null) return null;
+
+  const occupied = computeOccupied(await repo.countOccupied(db, event.id, now));
+  const eligibleWaitlisted = await repo.countEligibleWaitlisted(db, event.id);
+  return computePublicAvailability({ capacity: event.capacity, occupied, eligibleWaitlisted });
+}
+
 // --- Spam defenses (AGENTS.md §19.4, WEEKEND.md) ---------------------------------------------
 
 /** Below this, a submission is answered as if it never happened at all — never with a distinct
  * error, which would tell a bot which check it tripped. */
 const MIN_SUBMISSION_SECONDS = 3;
 
-function looksLikeSpam(input: { honeypot: string; renderedAt: string }, now: Date): boolean {
-  if (input.honeypot !== "") return true;
-  const renderedAt = new Date(input.renderedAt);
+function looksLikeSpam(input: { honeypot?: string; renderedAt?: string }, now: Date): boolean {
+  if ((input.honeypot ?? "") !== "") return true;
+  // An absent value parses to `Invalid Date`, which the guard below rejects — a public
+  // submission that lost its timestamp is treated as a bot rather than waved through.
+  const renderedAt = new Date(input.renderedAt ?? "");
   if (Number.isNaN(renderedAt.getTime())) return true;
   return now.getTime() - renderedAt.getTime() < MIN_SUBMISSION_SECONDS * 1000;
 }
@@ -197,6 +232,23 @@ function looksLikeSpam(input: { honeypot: string; renderedAt: string }, now: Dat
 // --- §15.1 Registration submission ------------------------------------------------------------
 
 export type SubmitRegistrationResult = { ok: true };
+
+/**
+ * How this submission arrived: the public form, or an organizer entering it for somebody
+ * (BR-REQ-037-05, `DECISIONS.md` §33).
+ *
+ * It changes two things and no others: the spam defenses below, which have nothing to time or
+ * to hide a honeypot in when a member of staff types the form; and the two columns that record
+ * who put the row there. Every rule about places, order and consent is identical, which is the
+ * whole point — a staff-entered registration is that person's registration, and the queue must
+ * not be able to tell the difference.
+ */
+export type RegistrationOrigin = {
+  source: RegistrationSource;
+  createdByStaffUserId?: string | null;
+};
+
+const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
 
 async function enqueueVerificationEmail<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -233,6 +285,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * §30). It is carried into the row so the export can leave it out and every list can label it.
    */
   kind: RegistrationKind = "REAL",
+  origin: RegistrationOrigin = PUBLIC_ORIGIN,
 ): Promise<SubmitRegistrationResult> {
   assertRegistrationOpen(event, now);
 
@@ -245,7 +298,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   }
   const input = parsed.data;
 
-  if (looksLikeSpam(input, now)) return { ok: true };
+  // Only the public form is defended this way. A staff-entered registration has no rendered
+  // page behind it to have timed and no hidden field for a bot to fill, and the person typing
+  // it has already been authenticated and authorized as an Administrator.
+  if (origin.source === "PUBLIC" && looksLikeSpam(input, now)) return { ok: true };
 
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!privacyNotice) {
@@ -276,6 +332,11 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       privacyAcknowledgedAt: now,
       resultsNameConsent: input.resultsNameConsent,
       resultsConsentVersion: privacyNotice.version,
+      listOptOut: input.listOptOut,
+      // Carried on a restart too: the row should say who put this registration here *now*, not
+      // who put an earlier, cancelled one here months ago.
+      source: origin.source,
+      createdByStaffUserId: origin.createdByStaffUserId ?? null,
     };
 
     if (existing) {
@@ -323,6 +384,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       raceId: event.raceId,
       resultsNameConsent: input.resultsNameConsent,
       resultsConsentVersion: privacyNotice.version,
+      listOptOut: input.listOptOut,
+      source: origin.source,
+      createdByStaffUserId: origin.createdByStaffUserId ?? null,
       now,
     });
     await enqueueVerificationEmail(tx, participant, created, now);

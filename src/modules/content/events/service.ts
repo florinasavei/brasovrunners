@@ -242,6 +242,15 @@ function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
     );
   }
 
+  if (fields.participantListVisibility === "NAMES" && fields.registrationMode !== "INTERNAL") {
+    // For NONE there are no participants to list, and for EXTERNAL the people who entered are
+    // the other organizer's — the club holds no registrations for them (BR-REQ-039-01).
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "a start list can only be published for an event that takes registrations here",
+    );
+  }
+
   if (fields.registrationMode === "EXTERNAL") {
     if (fields.externalRegistrationUrl === null) {
       throw new DomainError(
@@ -269,6 +278,10 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     latitude: fields.latitude,
     longitude: fields.longitude,
     mapUrl: fields.mapUrl,
+    locationName: fields.locationName,
+    locationAddress: fields.locationAddress,
+    difficultyLabel: fields.difficultyLabel,
+    costText: fields.costText,
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     featured: fields.featured,
@@ -277,6 +290,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     registrationOpensAt: times.registrationOpensAt,
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
+    participantListVisibility: fields.participantListVisibility,
     externalProvider: fields.externalProvider,
     externalRegistrationUrl: fields.externalRegistrationUrl,
   };
@@ -324,19 +338,29 @@ export type SaveTranslationInput = {
   now?: Date;
 };
 
-export async function saveEventTranslation<T extends Record<string, unknown>>(
+/**
+ * One translation's checks and its guarded write, against whatever database handle the caller
+ * holds — a transaction, when the whole-event save is running.
+ *
+ * Extracted so the single-translation entry point and the one-form save cannot drift: the slug
+ * rule, the live-edit acknowledgement and the authorship rule are written once and both paths
+ * run them.
+ */
+async function applyTranslationSave<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: SaveTranslationInput,
+  input: {
+    actor: Actor;
+    event: EditableEvent;
+    current: EditableTranslation;
+    expectedVersion: number;
+    fields: unknown;
+    acknowledgeLiveEdit?: boolean;
+    now: Date;
+  },
 ): Promise<EditableTranslation> {
-  const now = input.now ?? new Date();
+  assertMayEdit(input.actor, input.event, input.current);
 
-  const record = await findTranslationWithEventById(db, input.translationId);
-  if (!record) throw new DomainError("NOT_FOUND", "no such event translation");
-  const { event, translation: current } = record;
-
-  assertMayEdit(input.actor, event, current);
-
-  if (isLiveContent(event.editorialStatus) && input.acknowledgeLiveEdit !== true) {
+  if (isLiveContent(input.event.editorialStatus) && input.acknowledgeLiveEdit !== true) {
     throw new DomainError(
       "VALIDATION_ERROR",
       "this event is published; confirm the warning before saving live content",
@@ -354,7 +378,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
    * exceptional change with a redirect plan; there are no redirects yet, so there is no
    * exception yet either.
    */
-  if (event.publishedAt !== null && fields.slug !== current.slug) {
+  if (input.event.publishedAt !== null && fields.slug !== input.current.slug) {
     throw new DomainError(
       "FORBIDDEN",
       "the slug of a published translation cannot be changed; it is a public URL",
@@ -363,17 +387,37 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
 
   return updateTranslationWithVersionGuard(
     db,
-    input.translationId,
+    input.current.id,
     input.expectedVersion,
     {
       ...fields,
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
-      authorStaffUserId: current.authorStaffUserId ?? input.actor.id,
+      authorStaffUserId: input.current.authorStaffUserId ?? input.actor.id,
     },
-    now,
+    input.now,
   );
+}
+
+export async function saveEventTranslation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: SaveTranslationInput,
+): Promise<EditableTranslation> {
+  const now = input.now ?? new Date();
+
+  const record = await findTranslationWithEventById(db, input.translationId);
+  if (!record) throw new DomainError("NOT_FOUND", "no such event translation");
+
+  return applyTranslationSave(db, {
+    actor: input.actor,
+    event: record.event,
+    current: record.translation,
+    expectedVersion: input.expectedVersion,
+    fields: input.fields,
+    acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+    now,
+  });
 }
 
 // --- Publication ----------------------------------------------------------------------------
@@ -388,6 +432,17 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
  * they can see honestly: a published event has a publication date, and a translation's required
  * fields are not blank strings.
  */
+/**
+ * What the *event* itself is missing before it can be published (`DECISIONS.md` §36).
+ *
+ * The meeting point is one value for the whole event now, so its completeness is not a per-locale
+ * question any more. Every save through this module fills it; this catches a row written before
+ * the column existed and never saved since.
+ */
+export function missingPublicEventFields(event: Pick<EditableEvent, "locationName">): string[] {
+  return (event.locationName ?? "").trim() === "" ? ["locationName"] : [];
+}
+
 export function describeIncompleteLocales(
   translations: readonly EditableTranslation[],
 ): Array<{ locale: string; missing: string[] }> {
@@ -448,6 +503,14 @@ export async function transitionEvent<T extends Record<string, unknown>>(
   };
 
   if (input.to === "PUBLISHED") {
+    const missingOnEvent = missingPublicEventFields(current);
+    if (missingOnEvent.length > 0) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        `the event is missing ${missingOnEvent.join(", ")} and cannot be published`,
+      );
+    }
+
     const incomplete = describeIncompleteLocales(translations);
     if (incomplete.length > 0) {
       throw new DomainError(
@@ -532,6 +595,109 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   });
 }
 
+export type SaveEventAndTranslationsInput = {
+  actor: Actor;
+  eventId: string;
+  /**
+   * The event row's fields, or `undefined` when the actor may not edit them.
+   *
+   * An Author may write the text of their own draft and may not touch the event row (§10.2), so
+   * the editor renders no settings fields for them and this save writes none. `undefined` means
+   * "not part of this save" and never "clear these columns".
+   */
+  fields?: unknown;
+  /** Only needed when `fields` is present: the version the settings panel was rendered from. */
+  expectedVersion?: number;
+  /** One entry per language the actor may edit; a read-only language posts nothing. */
+  translations: ReadonlyArray<{ translationId: string; expectedVersion: number; fields: unknown }>;
+  acknowledgeLiveEdit?: boolean;
+  now?: Date;
+};
+
+/**
+ * The editor's single save: the event row and every language, in one transaction
+ * (BR-REQ-051-01).
+ *
+ * Six forms and two save buttons were what this replaced, and the reason for the change is not
+ * tidiness — it is that "save the settings, then save Romanian, then save English" is three
+ * chances to lose an edit, three version guards a person has to reason about separately, and
+ * two of them silently stale the moment the first one succeeds. One transaction has one answer:
+ * everything is written, or a CONFLICT is raised and nothing is.
+ *
+ * The version guards do not change. Each row still carries the version its panel was rendered
+ * from, `updateEventWithVersionGuard` and `updateTranslationWithVersionGuard` are the same two
+ * statements as before, and a stale version on *any* of them throws inside the transaction —
+ * which rolls back the rest. That is stricter than the old behaviour and deliberately so: half a
+ * save is exactly the state criterion 5 exists to prevent.
+ */
+export async function saveEventAndTranslations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: SaveEventAndTranslationsInput,
+): Promise<void> {
+  const now = input.now ?? new Date();
+
+  const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
+  if (!current) throw new DomainError("NOT_FOUND", "no such event");
+
+  const existingTranslations = await listTranslationsForEvent(db, input.eventId);
+
+  // Parsed and checked before the transaction opens, so a malformed form never holds a row lock
+  // while the organizer's browser is told what is wrong with it.
+  const parsedEventFields =
+    input.fields === undefined ? undefined : parseOrThrow(eventFieldsSchema, input.fields);
+  if (parsedEventFields) {
+    if (!canEditEventFields(input.actor.role)) {
+      throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
+    }
+    assertCoherentRegistrationBlock(parsedEventFields);
+  }
+  const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
+
+  await db.transaction(async (tx) => {
+    if (parsedEventFields && times) {
+      /**
+       * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
+       * BR-REQ-034-02 criterion 3). Counted inside the transaction so a confirmation landing
+       * between the count and the write cannot slip past it.
+       */
+      if (parsedEventFields.capacity !== null) {
+        const occupied = computeOccupied(await countOccupied(tx, input.eventId, now));
+        if (parsedEventFields.capacity < occupied) {
+          throw new DomainError(
+            "VALIDATION_ERROR",
+            `capacity: ${occupied} places are already taken; capacity cannot be lowered below that`,
+          );
+        }
+      }
+
+      if (parsedEventFields.featured) await clearFeaturedExcept(tx, input.eventId, now);
+
+      await updateEventWithVersionGuard(
+        tx,
+        input.eventId,
+        input.expectedVersion as number,
+        { ...eventColumnsFrom(parsedEventFields, times), updatedByStaffUserId: input.actor.id },
+        now,
+      );
+    }
+
+    for (const submitted of input.translations) {
+      const existing = existingTranslations.find((row) => row.id === submitted.translationId);
+      if (!existing) throw new DomainError("NOT_FOUND", "no such event translation");
+
+      await applyTranslationSave(tx, {
+        actor: input.actor,
+        event: current,
+        current: existing,
+        expectedVersion: submitted.expectedVersion,
+        fields: submitted.fields,
+        acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+        now,
+      });
+    }
+  });
+}
+
 export type CreateEventInput = {
   actor: Actor;
   fields: unknown;
@@ -579,6 +745,15 @@ export async function createEvent<T extends Record<string, unknown>>(
         eventId: event.id,
         locale,
         ...parsed.translations[locale],
+        /**
+         * A copy, not a translation, and it goes away with the column.
+         *
+         * `event_translations.location_name` is still NOT NULL and still named by
+         * `event_translations_required_fields_present`; the drop ships in the release after this
+         * one (AGENTS.md §7.6). Nothing reads it — every query takes the meeting point from the
+         * event row — so this exists only to keep the insert legal until then.
+         */
+        locationName: parsed.locationName,
         authorStaffUserId: input.actor.id,
         createdAt: now,
         updatedAt: now,
@@ -638,6 +813,10 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         latitude: source.latitude,
         longitude: source.longitude,
         mapUrl: source.mapUrl,
+        locationName: source.locationName,
+        locationAddress: source.locationAddress,
+        difficultyLabel: source.difficultyLabel,
+        costText: source.costText,
         distanceMeters: source.distanceMeters,
         elevationGainMeters: source.elevationGainMeters,
         featured: false,
@@ -646,6 +825,9 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         registrationOpensAt: source.registrationOpensAt,
         registrationClosesAt: source.registrationClosesAt,
         declarationDocumentId: source.declarationDocumentId,
+        // Never copied: publishing names is a decision about the people who entered *that*
+        // event, and the copy has none. It starts HIDDEN like every other new event.
+        participantListVisibility: "HIDDEN" as const,
         externalProvider: source.externalProvider,
         externalRegistrationUrl: source.externalRegistrationUrl,
         editorialStatus: "DRAFT",
@@ -665,11 +847,10 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         title: translation.title,
         excerpt: translation.excerpt,
         bodyJson: translation.bodyJson,
-        locationName: translation.locationName,
-        locationAddress: translation.locationAddress,
-        difficultyLabel: translation.difficultyLabel,
+        // The deprecated copy again, from the source event row rather than from the source
+        // translation, so a duplicate never carries a value the original no longer has.
+        locationName: source.locationName ?? translation.locationName,
         coverAltText: translation.coverAltText,
-        costText: translation.costText,
         seoTitle: translation.seoTitle,
         seoDescription: translation.seoDescription,
         authorStaffUserId: input.actor.id,

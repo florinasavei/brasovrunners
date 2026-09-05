@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -10,7 +11,7 @@ import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
   listEventsWithRegistrations,
@@ -19,6 +20,7 @@ import {
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 type Props = {
@@ -66,18 +68,33 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
 
   return (
     <Stack spacing={3}>
+      {/* Every backoffice page gives this id to its alert region; the Server Actions redirect
+          to `#admin-alert` so the browser lands on the outcome. This page has no outcome of its
+          own — the anchor exists so a redirect that lands here still scrolls somewhere real. */}
+      <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }} />
       <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("nav.registrations")}
         </Typography>
-        <Button
-          component="a"
-          href={`/api/admin/registrations/export${eventId ? `?eventId=${eventId}` : ""}`}
-          variant="outlined"
-          size="small"
-        >
-          {t("registrations.export")}
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+          {/* BR-REQ-037-05: somebody asked at a run, and the club types it in for them. */}
+          <Button
+            component="a"
+            href={`${getPathname({ locale, href: "/admin/registrations/new" })}${eventId ? `?eventId=${eventId}` : ""}`}
+            variant="contained"
+            size="small"
+          >
+            {t("registrations.new")}
+          </Button>
+          <Button
+            component="a"
+            href={`/api/admin/registrations/export${eventId ? `?eventId=${eventId}` : ""}`}
+            variant="outlined"
+            size="small"
+          >
+            {t("registrations.export")}
+          </Button>
+        </Stack>
       </Stack>
 
       <Stack component="form" direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
@@ -93,7 +110,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
           {registrationStatus.enumValues.map((value) => (
             <MenuItem key={value} value={value}>
-              {t(`registrations.status.${value}`)}
+              {REGISTRATION_STATUS_LABEL[value]}
             </MenuItem>
           ))}
         </TextField>
@@ -110,7 +127,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             <Card key={row.id} component="li" variant="outlined">
               <CardContent>
                 <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                  <Chip size="small" label={t(`registrations.status.${row.status}`)} />
+                  <Chip size="small" label={REGISTRATION_STATUS_LABEL[row.status]} />
                   {/* Unmistakable wherever a registration is listed, so a demonstration queue is
                       never read as real sign-ups (`DECISIONS.md` §30). The export takes the other
                       route and omits these rows entirely. */}
