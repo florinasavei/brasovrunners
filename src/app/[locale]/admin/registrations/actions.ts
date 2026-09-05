@@ -55,6 +55,14 @@ function outcomeOf(error: unknown): { error: string } {
   throw error;
 }
 
+/** An unanswered field on the staff form is absent, not empty (BR-REQ-031-04 criterion 5). */
+function optional(form: FormData, key: string): string | undefined {
+  const value = form.get(key);
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}
+
 export async function createRegistrationAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
@@ -67,7 +75,31 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
       actor,
       {
         eventId,
-        name: text(form, "name"),
+        firstName: text(form, "firstName"),
+        lastName: text(form, "lastName"),
+        // BR-REQ-031-04 criterion 5: blank is a legitimate answer here. `optional` turns an
+        // empty field into `undefined` so the staff schema sees an absent value rather than
+        // an empty string it would have to reject.
+        details: {
+          displayName: optional(form, "displayName"),
+          birthDate: optional(form, "birthDate"),
+          sex: optional(form, "sex") as "FEMALE" | "MALE" | "UNSPECIFIED" | undefined,
+          nationality: optional(form, "nationality"),
+          city: optional(form, "city"),
+          phone: optional(form, "phone"),
+          emergencyContactName: optional(form, "emergencyContactName"),
+          emergencyContactPhone: optional(form, "emergencyContactPhone"),
+          clubName: optional(form, "clubName"),
+          tshirtSize: optional(form, "tshirtSize") as
+            | "NONE"
+            | "XS"
+            | "S"
+            | "M"
+            | "L"
+            | "XL"
+            | "XXL"
+            | undefined,
+        },
         email: text(form, "email"),
         locale: toLocale(form.get("participantLocale")),
         listOptOut: form.get("listOptOut") === "on",

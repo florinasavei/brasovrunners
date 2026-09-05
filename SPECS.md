@@ -402,6 +402,84 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 
 **Verification:** integration `registrations/confirmation-ttl.test.ts`
 
+#### BR-REQ-031-04 — Race entry details
+
+- **Source:** BR-BUS-031
+- **Implements:** AGENTS.md §12.6, §15.1
+- **Priority:** MUST
+- **Release:** M1
+
+**Acceptance criteria**
+
+1. Given the public registration form, when it renders, then it asks for first name, last name, public display name, date of birth, sex, nationality, city, phone, emergency contact name, emergency contact phone, t-shirt size and club, and still offers no password field and no login link.
+2. Given a public submission missing any of first name, last name, date of birth, sex, nationality, city, phone, emergency contact name or emergency contact phone, when it is posted, then it is rejected and no registration row is created.
+3. Given an accepted public submission whose display name is blank, when the row is inspected, then the display name equals the legal name, and is never empty. Shortening it is the participant's own choice, offered in a collapsed section of the form and never applied for them.
+4. Given a date of birth in the future, or earlier than 120 years before the event, when it is posted, then it is rejected.
+5. Given a registration an organizer enters for somebody who asked in person (BR-REQ-037-05), when a detail is unknown, then it may be left blank and the registration is still accepted — an organizer records what the person said on the telephone, and refusing the row would lose the registration entirely.
+6. Given any stored registration, when the legal name is read, then it is the pair of name fields, and the declaration is signed against that name and not against the display name.
+
+**Verification:** integration `registrations/entry-details.test.ts`; e2e `registration-submit.spec.ts`
+
+#### BR-REQ-031-05 — Health information is consented separately and never published
+
+- **Source:** BR-BUS-031, BR-BUS-053
+- **Implements:** AGENTS.md §12.6, §14.5, §15.10
+- **Priority:** MUST
+- **Release:** M1
+
+Health data is a special category under GDPR Article 9. It is collected because a race organizer
+may need it on the day, and it is therefore kept apart from every other field: its own consent,
+its own absence from the export, and no public surface at all.
+
+**Acceptance criteria**
+
+1. Given the registration form, when it renders, then the health field is optional and carries its own explicit consent checkbox, worded separately from the privacy-notice acknowledgment.
+2. Given a submission carrying health text without that consent ticked, when it is posted, then it is rejected and no registration row is created.
+3. Given an accepted submission with health text, when the row is inspected, then it stores the consent version and a server timestamp alongside the text.
+4. Given the registrations CSV export, when it is produced, then the health column is absent.
+5. Given any public page, including the participant list and any event page, when it renders, then no health text appears in the markup under any condition.
+6. Given a participant who withdraws the consent, when the registration is inspected afterwards, then the health text is cleared rather than merely flagged.
+
+**Verification:** integration `registrations/health-consent.test.ts`; privacy `public-surface.test.ts`
+
+#### BR-REQ-036-03 — A participant can see where they are
+
+- **Source:** BR-BUS-031, BR-BUS-035, BR-BUS-036
+- **Implements:** AGENTS.md §10.5, §12.8, §16.3
+- **Priority:** MUST
+- **Release:** M1
+
+A registration moves through six states and, until this exists, the only evidence a participant
+has of any of them is whichever email happened to arrive. Participants have no accounts
+(BR-BUS-031), so the page is reached by the same single-use-minted, hashed action token every
+other participant link uses — never by a password.
+
+**Acceptance criteria**
+
+1. Given any registration email, when it renders, then it carries a link to that registration's status page.
+2. Given a valid status link, when it is opened, then the page names the event, the current state in the participant's own locale, and the one action that is theirs to take next — or states plainly that there is nothing to do.
+3. Given a waitlisted registration, when the status page renders, then it states the position in the queue.
+4. Given a status page, when it renders, then it shows no other participant's name, address, position or count.
+5. Given an invalid, expired or already-used token, when the page is opened, then it renders the same generic message as every other participant token surface, revealing nothing about whether the registration exists.
+6. Given the status page, when it is requested by any method, then it mutates nothing (AGENTS.md §12.8).
+
+**Verification:** integration `registrations/status-page.test.ts`; e2e `registration-status.spec.ts`
+
+#### BR-REQ-039-02 — The public list publishes the display name
+
+- **Source:** BR-BUS-039
+- **Implements:** AGENTS.md §10.10, §12.6
+- **Priority:** MUST
+- **Release:** M1
+
+**Acceptance criteria**
+
+1. Given an event whose participant list is `NAMES`, when the list renders, then each row is the registration's display name and nothing else.
+2. Given a registration whose display name differs from its legal name, when the list renders, then the legal name appears nowhere in the markup.
+3. Given the rules of BR-REQ-039-01, when the list renders, then they are unchanged: confirmed and real registrations only, opt-outs excluded, ordered by confirmation.
+
+**Verification:** privacy `public-surface.test.ts`
+
 #### BR-REQ-032-01 — Whitespace and case are ignored
 
 - **Source:** BR-BUS-032

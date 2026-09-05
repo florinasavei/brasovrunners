@@ -258,6 +258,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         status: "CANCELLED",
         locale: "ro",
         registeredName: "Ana",
+        displayName: "Ana",
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: new Date(),
         raceId: null,

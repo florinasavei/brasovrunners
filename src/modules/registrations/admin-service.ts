@@ -120,7 +120,25 @@ async function eventForRegistration<T extends Record<string, unknown>>(
 
 export type CreateRegistrationByStaffInput = {
   eventId: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  /**
+   * BR-REQ-031-04 criterion 5. An organizer writes down what somebody said on the telephone;
+   * a date of birth they were never told must not cost the club the registration. The row
+   * can be completed later, a refusal cannot be undone.
+   */
+  details?: {
+    displayName?: string;
+    birthDate?: string;
+    sex?: "FEMALE" | "MALE" | "UNSPECIFIED";
+    nationality?: string;
+    city?: string;
+    phone?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    clubName?: string;
+    tshirtSize?: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL";
+  };
   email: string;
   locale: Locale;
   listOptOut: boolean;
@@ -187,7 +205,9 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     db,
     event,
     {
-      name: input.name,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      ...input.details,
       email: input.email,
       locale: input.locale,
       // The organizer confirmed above that they are relaying a request. That relay is what the

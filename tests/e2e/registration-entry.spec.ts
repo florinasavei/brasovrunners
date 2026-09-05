@@ -115,9 +115,27 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     // event is a duplicate, and would be answered with the same generic success — which would
     // make this assertion pass while proving nothing.
     const address = `e2e-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;
-    await page.locator('[name="name"]').fill("Ana Popescu");
+    // BR-REQ-031-04: every field the public form insists on. Filled through the rendered
+    // page rather than posted directly, so a field added to the schema without being added
+    // to the form fails here instead of on a race morning.
+    await page.locator('[name="firstName"]').fill("Ana");
+    await page.locator('[name="lastName"]').fill("Popescu");
     await page.locator('[name="email"]').fill(address);
+    await page.locator('[name="birthDate"]').fill("1990-05-17");
+    await page.locator('[name="city"]').fill("Brașov");
+
+    // Sex, nationality and t-shirt size are MUI selects — a hidden input and a listbox, not
+    // a <select> — and all three carry a default the schema accepts. Left untouched on
+    // purpose: this asserts that somebody who fills in only the text fields is still
+    // accepted, which is what most people will actually do.
+    await page.locator('[name="phone"]').fill("+40711111111");
+    await page.locator('[name="emergencyContactName"]').fill("Ion Popescu");
+    await page.locator('[name="emergencyContactPhone"]').fill("+40722222222");
     await page.locator('[name="privacyAcknowledged"]').check();
+
+    // BR-REQ-039-02: the display name is behind a collapsed <details>, closed by default,
+    // and left alone here — a submission that never opens it must still be accepted, and the
+    // stored display name is then the legal name.
 
     // The submission timing check answers a too-fast form with the same generic success it
     // gives a real one, so a test that submitted immediately would pass without ever creating

@@ -303,7 +303,6 @@
   },
   "Registration": {
     "title": "Înscriere: {event}",
-    "name": "Nume complet",
     "email": "Adresă de email",
     "privacyPrefix": "Am citit și sunt de acord cu",
     "privacyLinkLabel": "nota de confidențialitate",
@@ -313,7 +312,42 @@
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "errors": {
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
-    }
+    },
+    "sections": {
+      "about": "Despre tine",
+      "contact": "Contact",
+      "race": "Cursa",
+      "health": "Informații medicale (opțional)",
+      "consents": "Acorduri"
+    },
+    "firstName": "Prenume",
+    "lastName": "Nume de familie",
+    "displayName": "Nume afișat public",
+    "displayNameHelp": "Implicit, pe lista de participanți și în rezultate apare numele tău complet. Dacă preferi altceva — de exemplu „Ana P.” — scrie-l aici. Dacă nu vrei să apari deloc pe listă, bifează opțiunea de mai jos.",
+    "birthDate": "Data nașterii",
+    "birthDateHelp": "Categoriile de vârstă se calculează la data cursei.",
+    "sex": "Sex",
+    "sexOptions": {
+      "FEMALE": "Feminin",
+      "MALE": "Masculin",
+      "UNSPECIFIED": "Prefer să nu spun"
+    },
+    "nationality": "Naționalitate",
+    "city": "Oraș",
+    "phone": "Telefon",
+    "emergencyContactName": "Persoană de contact în caz de urgență",
+    "emergencyContactPhone": "Telefonul persoanei de contact",
+    "tshirtSize": "Mărime tricou",
+    "tshirtSizes": {
+      "NONE": "Fără tricou"
+    },
+    "clubName": "Club sau echipă",
+    "optional": "Opțional",
+    "healthNotes": "Afecțiuni, alergii sau medicație",
+    "healthNotesHelp": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor în ziua cursei. Poți lăsa gol.",
+    "healthConsent": "Sunt de acord ca aceste informații medicale să fie păstrate și folosite doar pentru siguranța mea în ziua cursei",
+    "displayNameToggle": "Vrei să apari public sub alt nume?",
+    "displayNamePlaceholder": "Ana P."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

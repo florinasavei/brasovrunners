@@ -61,6 +61,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
       status: "PENDING_EMAIL_CONFIRMATION",
       locale: "ro",
       registeredName: "Ana Pop",
+      displayName: "Ana P.",
       privacyNoticeVersion: 1,
       privacyAcknowledgedAt: NOW,
       resultsNameConsent: false,

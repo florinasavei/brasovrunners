@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   pgEnum,
@@ -90,6 +91,30 @@ export type RegistrationKind = (typeof registrationKind.enumValues)[number];
  */
 export const registrationSource = pgEnum("registration_source", ["PUBLIC", "STAFF"]);
 
+/**
+ * Race category, not identity (BR-BUS-031, BR-REQ-031-04).
+ *
+ * Three values because a race has categories and a person may decline to be sorted into one.
+ * `UNSPECIFIED` is a real answer, not a missing one: a registration that carries it is
+ * complete, and a results table simply lists that runner outside the two category tables.
+ */
+export const registrationSex = pgEnum("registration_sex", ["FEMALE", "MALE", "UNSPECIFIED"]);
+
+export type RegistrationSex = (typeof registrationSex.enumValues)[number];
+
+/** Only ever useful when there is a shirt, which is why `NONE` is a value and not a null. */
+export const registrationTshirtSize = pgEnum("registration_tshirt_size", [
+  "NONE",
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+]);
+
+export type RegistrationTshirtSize = (typeof registrationTshirtSize.enumValues)[number];
+
 export type RegistrationSource = (typeof registrationSource.enumValues)[number];
 
 /**
@@ -141,7 +166,64 @@ export const registrations = pgTable(
     }),
 
     locale: locale("locale").notNull(),
+    /**
+     * The legal name of record — first and last, joined (BR-REQ-031-04 criterion 6).
+     *
+     * Composed at write time from `first_name` and `last_name` rather than derived at read
+     * time, because this is the string the declaration was signed against and §10.5 invariant 11
+     * makes declaration acceptance a historical fact: a later correction to the parts must not
+     * silently rewrite what somebody agreed to. Everything that means "this participant's legal
+     * name" — the declaration, the emails, the backoffice — reads this column.
+     */
     registeredName: text("registered_name").notNull(),
+
+    /**
+     * Race entry details (BR-REQ-031-04). Nullable in the database, required by the *public*
+     * form.
+     *
+     * Not a weaker rule than it looks: BR-REQ-031-04 criterion 5 is why. An organizer entering
+     * a registration for somebody who telephoned records what that person said, and a missing
+     * date of birth must not cost the club the registration. The public path enforces presence
+     * in `fields.ts`; the staff path deliberately does not, and `display_name` is the one
+     * exception below because it can always be derived.
+     */
+    firstName: text("first_name"),
+    lastName: text("last_name"),
+
+    /**
+     * What a start list or a results table publishes (BR-REQ-039-02).
+     *
+     * NOT NULL and non-empty, unlike its neighbours, because it is always derivable: a blank one
+     * becomes a first name and a last initial before the insert. Publishing the legal name
+     * because a field was left empty is exactly the disclosure §10.10 exists to prevent.
+     */
+    displayName: text("display_name").notNull(),
+
+    birthDate: date("birth_date"),
+    sex: registrationSex("sex"),
+    /** ISO 3166-1 alpha-2, rendered per locale by `Intl.DisplayNames` — no country-name table. */
+    nationality: text("nationality"),
+    city: text("city"),
+
+    phone: text("phone"),
+    emergencyContactName: text("emergency_contact_name"),
+    emergencyContactPhone: text("emergency_contact_phone"),
+
+    clubName: text("club_name"),
+    tshirtSize: registrationTshirtSize("tshirt_size"),
+
+    /**
+     * Health information (BR-REQ-031-05). GDPR Article 9 special category.
+     *
+     * Kept beside its own consent rather than under the privacy-notice acknowledgment, because
+     * Article 9 wants a separate and explicit one. Three consequences are enforced elsewhere and
+     * named here so they are not lost: the CSV export omits it (`csv.ts`), no public surface
+     * renders it (`tests/privacy/public-surface.test.ts`), and withdrawing consent clears the
+     * text rather than flagging it.
+     */
+    healthNotes: text("health_notes"),
+    healthConsentVersion: integer("health_consent_version"),
+    healthConsentAt: timestamp("health_consent_at", { withTimezone: true }),
 
     privacyNoticeVersion: integer("privacy_notice_version").notNull(),
     privacyAcknowledgedAt: timestamp("privacy_acknowledged_at", { withTimezone: true }).notNull(),
@@ -207,6 +289,20 @@ export const registrations = pgTable(
     index("registrations_event_hold_expires_at_idx").on(t.eventId, t.holdExpiresAt),
 
     check("registrations_bib_number_not_assigned_in_m1", sql`${t.bibNumber} IS NULL`),
+
+    // NOT NULL permits '', and an empty display name on a published start list is the legal
+    // name leaking or a blank row. Neither is acceptable, so the emptiness is refused here too.
+    check("registrations_display_name_present", sql`length(btrim(${t.displayName})) > 0`),
+
+    /**
+     * Health text cannot exist without the consent that permits holding it (BR-REQ-031-05
+     * criterion 2), and withdrawing consent clears the text (criterion 6) — which is the same
+     * statement read the other way round, so one constraint covers both directions.
+     */
+    check(
+      "registrations_health_consent_present",
+      sql`${t.healthNotes} IS NULL OR (${t.healthConsentAt} IS NOT NULL AND ${t.healthConsentVersion} IS NOT NULL)`,
+    ),
 
     // Each pair is written together at exactly one moment (§15.5, §15.7) and never
     // independently, so either both are set or neither is.

@@ -62,6 +62,7 @@ describe("AGENTS.md §15.8 admin resend", () => {
         status: "PENDING_EMAIL_CONFIRMATION",
         locale: "ro",
         registeredName: "Ana Pop",
+        displayName: "Ana P.",
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: NOW,
         resultsNameConsent: false,

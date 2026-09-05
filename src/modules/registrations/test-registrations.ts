@@ -142,15 +142,35 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
   let created = 0;
   for (let index = 1; index <= input.count; index += 1) {
     const email = `test-${batch}-${index}@${TEST_PARTICIPANT_EMAIL_DOMAIN}`;
-    const name = `Test Runner ${batch}-${index}`;
+
+    /**
+     * A synthetic row carries a full set of entry details (BR-REQ-031-04).
+     *
+     * Not decoration. `kind` appears in no condition in the allocator or the capacity
+     * formula, and the point of that rule is that a TEST registration exercises the same
+     * code a real one does — including the validation. Feeding these rows through a relaxed
+     * schema would mean the queue was being watched through a path no participant takes.
+     */
+    const firstName = "Test";
+    const lastName = `Runner ${batch}-${index}`;
 
     await submitRegistration(
       db,
       event,
       {
-        name,
+        firstName,
+        lastName,
         email,
         locale,
+        birthDate: "1990-01-01",
+        sex: "UNSPECIFIED",
+        nationality: "RO",
+        city: "Brașov",
+        phone: "+40000000000",
+        emergencyContactName: "Test Contact",
+        emergencyContactPhone: "+40000000000",
+        tshirtSize: "NONE",
+        healthConsent: false,
         privacyAcknowledged: true,
         resultsNameConsent: false,
         // A synthetic row is never on a public start list anyway (`listPublicStartList`

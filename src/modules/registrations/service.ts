@@ -16,7 +16,16 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
-import { declarationSigningSchema, registrationSubmissionSchema } from "./fields";
+import {
+  declarationSigningSchema,
+  registrationSubmissionSchema,
+  staffRegistrationSubmissionSchema,
+} from "./fields";
+import {
+  composeLegalName,
+  resolveDisplayName,
+  type RegistrationEntryDetails,
+} from "./names";
 import * as repo from "./repository";
 
 /**
@@ -289,7 +298,19 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 ): Promise<SubmitRegistrationResult> {
   assertRegistrationOpen(event, now);
 
-  const parsed = registrationSubmissionSchema.safeParse(rawInput);
+  /**
+   * Which details are insisted on depends on who is filling the form in, and on nothing
+   * else (BR-REQ-031-04 criterion 5).
+   *
+   * A person entering their own registration answers every question. An organizer writing
+   * down what somebody said on the telephone may not have been told a date of birth, and
+   * refusing the row would lose the registration rather than improve the record. `kind` is
+   * deliberately not consulted here: a TEST row carries a full set of synthetic details and
+   * goes through exactly the path a real one does (AGENTS.md §12.6).
+   */
+  const schema =
+    origin.source === "STAFF" ? staffRegistrationSubmissionSchema : registrationSubmissionSchema;
+  const parsed = schema.safeParse(rawInput);
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -313,8 +334,36 @@ export async function submitRegistration<T extends Record<string, unknown>>(
 
   const identity = canonicalizeEmail(input.email);
 
+  /**
+   * The legal name of record, and the details beside it (BR-REQ-031-04, BR-REQ-031-05).
+   *
+   * Composed once, here, so the declaration, the emails and the backoffice all read one string
+   * rather than three call sites each joining the parts their own way. The health consent
+   * carries the privacy notice's version, the same way `resultsConsentVersion` does: the
+   * wording a person agreed to is a historical fact, not the wording currently approved.
+   */
+  const legalName = composeLegalName(input.firstName, input.lastName);
+  const healthNotes = input.healthConsent && input.healthNotes ? input.healthNotes : null;
+  const details: RegistrationEntryDetails = {
+    firstName: input.firstName,
+    lastName: input.lastName,
+    displayName: input.displayName ?? null,
+    birthDate: input.birthDate ?? null,
+    sex: input.sex ?? null,
+    nationality: input.nationality ?? null,
+    city: input.city ?? null,
+    phone: input.phone ?? null,
+    emergencyContactName: input.emergencyContactName ?? null,
+    emergencyContactPhone: input.emergencyContactPhone ?? null,
+    clubName: input.clubName ?? null,
+    tshirtSize: input.tshirtSize,
+    healthNotes,
+    healthConsentVersion: healthNotes ? privacyNotice.version : null,
+    healthConsentAt: healthNotes ? now : null,
+  };
+
   await db.transaction(async (tx) => {
-    const participant = await findOrCreateParticipant(tx, identity, input.name, input.locale, now);
+    const participant = await findOrCreateParticipant(tx, identity, legalName, input.locale, now);
     const existing = await repo.findRegistrationByEventAndParticipant(tx, event.id, participant.id);
 
     if (existing && isActiveStatus(existing.status)) {
@@ -327,7 +376,16 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     }
 
     const carriedFields = {
-      registeredName: input.name,
+      registeredName: legalName,
+      // A restart records what the person answered *now*. Carrying last year's t-shirt size
+      // forward because a cancelled row happened to hold one is not a kindness.
+      ...details,
+      displayName: resolveDisplayName({
+        displayName: input.displayName,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        legalName,
+      }),
       privacyNoticeVersion: privacyNotice.version,
       privacyAcknowledgedAt: now,
       resultsNameConsent: input.resultsNameConsent,
@@ -378,7 +436,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       participantId: participant.id,
       kind,
       locale: input.locale,
-      registeredName: input.name,
+      registeredName: legalName,
+      details,
       privacyNoticeVersion: privacyNotice.version,
       privacyAcknowledgedAt: now,
       raceId: event.raceId,

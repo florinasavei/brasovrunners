@@ -40,8 +40,8 @@ export default async function StartList({ event }: { event: PublicEvent }) {
             {participants.map((participant, index) => (
               // The name is not unique — two people called Ana Popescu may both be running —
               // so the position in the confirmed order is what identifies the row to React.
-              <Typography component="li" variant="body1" key={`${index}-${participant.registeredName}`}>
-                {participant.registeredName}
+              <Typography component="li" variant="body1" key={`${index}-${participant.displayName}`}>
+                {participant.displayName}
               </Typography>
             ))}
           </Stack>
