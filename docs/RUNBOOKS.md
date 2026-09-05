@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -11,6 +11,7 @@
 | [Staff sign-in: Zitadel tenant](#staff-sign-in-zitadel-tenant) | Once per environment, before that environment's staff can sign in for real |
 | [Domain binding](#domain-binding) | Once, at the end of M1 before launch |
 | [Legal document version](#legal-document-version) | Whenever an approved privacy, terms, or declaration version changes |
+| [Deploy a release](#deploy-a-release) | Every merge to `qa`, and every promotion to `main` |
 
 
 ---
@@ -248,6 +249,87 @@ criteria for this runbook.
 Set `APP_BASE_URL` back to the provider default hostname and restart. Certificates and DNS
 records can stay in place. Because no application code references the domain, nothing else
 needs undoing.
+
+
+---
+
+## Deploy a release
+
+Every merge to `qa` and every promotion to `main`. Short, because the parts that used to be
+remembered are now enforced — but read the ordering rule once, because it is the only part a
+person still has to get right.
+
+Related: `AGENTS.md` §6.3, §6.4, §7.6; `DECISIONS.md` §31.
+
+### The rule that prevents the incident
+
+A push to `qa` starts the Vercel build and the migration workflow at the same moment. For a few
+seconds the deployed code and the schema disagree. So:
+
+| The migration | Ships |
+| --- | --- |
+| Adds a column, table, index or constraint | In the same release as the code that uses it |
+| Drops or renames anything | In the release **after** the code that stopped using it, as its own migration and its own pull request |
+
+That is `AGENTS.md` §7.6's expand/contract rule, stated as the thing you actually decide. Get it
+right and the overlap window is harmless; get it wrong and the site returns 500 for as long as
+the two disagree.
+
+### Deploying to QA
+
+1. **Merge the pull request into `qa`.** Vercel builds; if the change touched
+   `src/db/migrations/**`, `.github/workflows/migrate.yml` applies it to the QA database at the
+   same time.
+2. **Watch the migrate run** if there was one. It prints the target host, the pending
+   migrations, and the head it finished on. A failure exits non-zero and the run is red.
+3. **Smoke it.** The workflow does this automatically where the environment has an
+   `APP_BASE_URL` secret; do it by hand otherwise:
+
+   ```bash
+   yarn smoke https://<the QA hostname from SETUP.md §26>
+   ```
+
+   `ok` is what you want. `degraded` immediately after a deploy is normal — the scheduled jobs
+   tick every five minutes and report as stale until the first one lands. Anything else, read
+   the report: it names which of the database, the schema and the jobs is unhappy.
+4. **If the schema is behind**, the smoke output says so and names the migration. Run the
+   migrate workflow for `qa` from the Actions tab, then smoke again. This is the state that used
+   to present as an unexplained 500 on the landing page.
+
+### Deploying to production
+
+Everything above, plus the gate. `AGENTS.md` §6.4 is the promotion flow; this is the database
+half of it.
+
+1. **Confirm QA has accepted the change**, including the migration.
+2. **Open the `qa → main` release PR.** Review the complete diff *and the migration plan* — the
+   pending list the QA run printed is that plan.
+3. **Merge with a merge commit.** Do not squash: §6.4 preserves ancestry.
+4. **Run the migrate workflow manually**, choosing `production`. It waits for the environment's
+   required reviewer. Production is never migrated by a push.
+5. **Smoke production**, and this time without `--allow-degraded` once the schedulers have had a
+   tick.
+
+### Applying a migration by hand
+
+For a one-off — a new environment, a database being repaired — the same script the workflow runs:
+
+```powershell
+$env:DATABASE_URL_QA = "<that environment's direct connection string>"
+yarn db:migrate:env qa
+Remove-Item Env:\DATABASE_URL_QA
+```
+
+It prints what it will do before it does it. `production` additionally requires `--yes`.
+
+### What must never happen
+
+- Migrating from the Vercel build command or from application startup (`AGENTS.md` §7.6). A
+  destructive migration must never run because somebody requested a page.
+- A drop shipped in the same release as the code change that made it possible.
+- A deployment finished without a smoke check. "The build went green" is not "the site works".
+- `yarn db:seed` against a deployed database: it deletes every event and translation before
+  re-seeding. Use `yarn db:seed:legal` for the sample legal documents alone.
 
 
 ---

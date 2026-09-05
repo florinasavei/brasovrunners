@@ -10,7 +10,12 @@
       "ro": "Română",
       "en": "English"
     },
-    "buildBadgeLabel": "Website version and when it was last updated"
+    "buildBadgeLabel": "Website version and when it was last updated",
+    "environmentNotice": {
+      "label": "Notice about this version of the site",
+      "title": "Test site ({environment}) — this is not the club's real website.",
+      "body": "Everything here is sample data for trying the site out, and it may be deleted at any time. Please do not use it to register for a real event. The club's official website is coming soon, at its own address."
+    }
   },
   "Home": {
     "title": "Brașov Runners",

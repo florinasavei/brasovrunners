@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.17-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.18-2026-09-04`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -90,7 +90,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §9.3, §11.2
 - **Priority:** MUST
 - **Release:** M1
-- **Status:** restated at `BR-V1.17-2026-09-04`. Publication is one state for the whole event
+- **Status:** restated at `BR-V1.18-2026-09-04`. Publication is one state for the whole event
   (`DECISIONS.md` §28), so the half-published event the earlier wording described — Romanian
   live while English is a draft — can no longer occur. The rule itself is unchanged and
   stronger: what a locale must never do is serve the other language's text.
@@ -673,7 +673,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §12.6, §10.6, §15.10
 - **Priority:** SHOULD
 - **Release:** M1
-- **Status:** built at `BR-V1.17-2026-09-04` (`DECISIONS.md` §30). No participant account type
+- **Status:** built at `BR-V1.18-2026-09-04` (`DECISIONS.md` §30). No participant account type
   is added and the staff role enum stays at three: this is a property of the registration.
 
 **Acceptance criteria**
@@ -801,7 +801,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Priority:** MUST
 - **Release:** M5
 - **Status:** built for events during M1 (`DECISIONS.md` §25); it applies to articles and pages
-  when those exist. Criterion 2 changed at `BR-V1.17-2026-09-04`: publication is one state for
+  when those exist. Criterion 2 changed at `BR-V1.18-2026-09-04`: publication is one state for
   the whole event rather than one per language (`DECISIONS.md` §28).
 
 **Acceptance criteria**

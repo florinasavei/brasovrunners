@@ -1,5 +1,6 @@
 import createMiddleware from "next-intl/middleware";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { resolveAliasRedirect } from "@/i18n/aliases";
 import { routing } from "@/i18n/routing";
 import { isPrivatePath } from "@/shared/security/private-paths";
 
@@ -16,9 +17,30 @@ const intlProxy = createMiddleware(routing);
  * anonymous request to the backoffice, an error page (BR-REQ-051-02 criterion 2).
  */
 export default function proxy(request: NextRequest) {
+  const url = new URL(request.url);
+
+  /**
+   * Aliases first, before locale negotiation.
+   *
+   * `/login` is not a route, so next-intl would prefix it into `/ro/login` and hand the visitor
+   * a 404 — which reads as "there is no backoffice here" rather than "that is not its name".
+   * Resolved here so both `/login` and `/ro/login` land on the real sign-in path.
+   */
+  const alias = resolveAliasRedirect(url.pathname);
+  if (alias) {
+    const target = new URL(alias, url);
+    target.search = url.search;
+    const redirect = NextResponse.redirect(target);
+    // The redirect is a response of its own, and it is a staff path: it must not be indexed or
+    // cached any more than the page it points at.
+    redirect.headers.set("X-Robots-Tag", "noindex, nofollow");
+    redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+    return redirect;
+  }
+
   const response = intlProxy(request);
 
-  if (isPrivatePath(new URL(request.url).pathname)) {
+  if (isPrivatePath(url.pathname)) {
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     // `private` keeps it out of every shared cache; `no-store` keeps it out of the browser's
     // too, so a draft does not sit in the back button after the organizer signs out.

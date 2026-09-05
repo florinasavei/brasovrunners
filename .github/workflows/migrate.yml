@@ -1,0 +1,87 @@
+name: migrate
+
+# Applies the committed migrations to a deployed database (AGENTS.md §7.6).
+#
+# This exists because nothing else did, and the gap had teeth: §7.6 forbids migrating from a
+# build or from application startup — a destructive migration must never run because somebody
+# requested a page — so the step was a manual one, and a manual step is a step that gets
+# skipped. It was, once: a deployment went out selecting columns its migration had not added,
+# and the QA landing page returned 500 while `/api/health` reported the database fine, because
+# `select 1` succeeds against a stale schema. `DECISIONS.md` §31.
+#
+# **GitHub Environments, not repository secrets**, unlike `scheduled-jobs.yml`. The secret could
+# live either way; the gate cannot. §7.6 requires a production migration to be "explicit, gated
+# and observable", and a required reviewer on the `production` environment is the only one of
+# those three that a repository secret cannot provide. Each environment holds one secret named
+# `DATABASE_URL`, pointing at that environment's own database — Neon's direct (non-pooled) URL,
+# which is what migration tooling wants.
+#
+# QA applies automatically when a migration lands on `qa`; production is always a deliberate
+# `workflow_dispatch`, reviewed, after QA has accepted it.
+
+on:
+  push:
+    branches: [qa]
+    # Only when a migration actually changed. Every other push to `qa` leaves the schema alone,
+    # and a workflow that runs on all of them would be noise nobody reads.
+    paths:
+      - "src/db/migrations/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Which database to migrate
+        type: choice
+        options: [qa, production]
+        default: qa
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  # Two migrations against one database at once is not a race worth having. Never cancel a
+  # run in progress: a half-applied migration is worse than a queued one.
+  group: migrate-${{ inputs.environment || 'qa' }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'qa' }}
+
+    # Job level, not step level: a step's own `env:` is not in scope for that step's `if:`, so
+    # the conditional smoke below would never run if these were declared beside it.
+    env:
+      DATABASE_URL_QA: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_PRODUCTION: ${{ secrets.DATABASE_URL }}
+      APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Corepack must be enabled before setup-node, or the yarn cache probe has no yarn.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - run: yarn install --immutable
+
+      # The script prints the target host with credentials masked and the pending migrations
+      # before it applies anything, so the run log is the "observable" half of §7.6. It exits
+      # non-zero on failure, which is what makes "a failed migration blocks deployment" true
+      # rather than aspirational.
+      - name: Apply migrations
+        run: yarn db:migrate:env ${{ inputs.environment || 'qa' }} --yes
+
+      # Ask the deployment itself whether it works, rather than trusting that a green migration
+      # and a green build add up to a working site — which is exactly the assumption that failed.
+      # Degraded is accepted: the scheduled jobs tick every five minutes, so a recently deployed
+      # environment legitimately reports them as stale for a few minutes.
+      - name: Smoke the environment
+        # Skipped rather than failed where the environment has no APP_BASE_URL secret yet: the
+        # migration is the point of this workflow, and a missing smoke target is a setup gap.
+        if: ${{ env.APP_BASE_URL != '' }}
+        run: yarn smoke "$APP_BASE_URL" --allow-degraded

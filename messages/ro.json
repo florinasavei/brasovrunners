@@ -10,7 +10,12 @@
       "ro": "Română",
       "en": "English"
     },
-    "buildBadgeLabel": "Versiunea site-ului și data ultimei actualizări"
+    "buildBadgeLabel": "Versiunea site-ului și data ultimei actualizări",
+    "environmentNotice": {
+      "label": "Anunț despre această versiune a site-ului",
+      "title": "Site de test ({environment}) — acesta nu este site-ul real al clubului.",
+      "body": "Tot ce vezi aici sunt date de probă, pentru încercarea site-ului, și pot fi șterse oricând. Te rugăm să nu îl folosești pentru a te înscrie la un eveniment real. Site-ul oficial al clubului urmează, la adresa lui proprie."
+    }
   },
   "Home": {
     "title": "Brașov Runners",

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.17-2026-09-04 -->
+<!-- PROJECT_BASELINE: BR-V1.18-2026-09-04 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.17-2026-09-04`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.18-2026-09-04`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -37,7 +37,11 @@ yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs t
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
 yarn check        docs:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
-yarn db:migrate   apply migrations · db:seed sample events · db:studio browse
+yarn db:migrate   apply migrations locally · db:seed sample events · db:studio browse
+yarn db:seed:legal  the sample legal documents alone; never deletes, safe on a live database
+yarn db:migrate:env  apply migrations to local|qa|production — the only supported way to
+                  migrate a deployed database (AGENTS.md §7.6, DECISIONS.md §31)
+yarn smoke        ask a deployment's /api/health whether it works; ends every deploy
 yarn release      versioned archive and share copies under dist/
 ```
 
@@ -203,7 +207,7 @@ database or secrets. `SETUP.md` §26 and `docs/RUNBOOKS.md` are the procedures.
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | QA project live, migrated and seeded; production project not created |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | QA deployed on its provider hostname, tracking `qa`; production project not created |
-| Jobs | No in-process interval — serverless has no process for one. `.github/workflows/scheduled-jobs.yml` calls both endpoints every five minutes with each environment's `JOB_SECRET` | built; QA secrets set per `SETUP.md` §26 |
+| Jobs | No in-process interval — serverless has no process for one. `.github/workflows/scheduled-jobs.yml` calls both endpoints every five minutes with each environment's `JOB_SECRET` | built, and **never yet run**: `QA_APP_BASE_URL` and `QA_JOB_SECRET` are not set, so every run since it was created has logged "qa is not configured; skipping" and exited green. `/api/health` reports both jobs as `never_run` for exactly that reason. Nothing drains the QA outbox until those two secrets exist |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
 | Storage | Documented: R2 behind the four-method adapter in `AGENTS.md` §17. Direction: `public/` until a non-developer uploads | deferred |

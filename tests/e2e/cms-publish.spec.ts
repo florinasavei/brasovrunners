@@ -53,6 +53,29 @@ test.describe("BR-REQ-060-01 the backoffice refuses an anonymous request", () =>
     await expect(page.getByRole("heading", { name: "Administrare" })).toHaveCount(0);
   });
 
+  /**
+   * The URLs a person types. `/admin` and `/sign-in` already worked unprefixed because next-intl
+   * resolves an internal route name to each locale's own path; `/login` answered 404, which
+   * reads as "there is no backoffice here" rather than "that is not its name".
+   */
+  // A loop rather than `test.each`, which Playwright's runner does not have.
+  //
+  // The unprefixed forms negotiate the locale from the browser's own Accept-Language, so they
+  // are allowed to land on either language's sign-in path — Playwright sends `en`. A path that
+  // states its locale must honour it.
+  for (const [path, expected] of [
+    ["/admin", /\/(ro\/autentificare|en\/sign-in)$/],
+    ["/login", /\/(ro\/autentificare|en\/sign-in)$/],
+    ["/en/login", /\/en\/sign-in$/],
+    ["/ro/login", /\/ro\/autentificare$/],
+  ] as const) {
+    test(`sends ${path} to the sign-in page`, async ({ page }) => {
+      const response = await page.goto(path);
+      await expect(page).toHaveURL(expected);
+      expect(response?.status()).toBe(200);
+    });
+  }
+
   test("refuses a draft preview to a signed-out visitor", async ({ page }) => {
     // The id does not have to exist: authorization is asserted before anything is read, so an
     // anonymous request never learns whether it does.
@@ -102,9 +125,11 @@ test.describe("BR-REQ-051-01 an Author may not publish", () => {
 
 test.describe("BR-REQ-050-02 an Editor creates an event without a developer", () => {
   test("creates it in both languages, as a draft", async ({ page }) => {
-    // Its own slugs per project: the two projects run in parallel against one database, and
-    // `UNIQUE(locale, slug)` is not a race worth debugging in a browser.
-    const suffix = test.info().project.name;
+    // Unique per project *and* per run: the two projects run in parallel against one database,
+    // and `UNIQUE(locale, slug)` would otherwise make the second run of the suite fail on rows
+    // the first one created. A spec that only passes against a freshly seeded database is a
+    // spec people stop running.
+    const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
 
     await signIn(page, "Dev Editor");
     await page.goto("/ro/admin/events/new");

@@ -13,6 +13,40 @@ import { expect, test } from "@playwright/test";
 const badge = (page: import("@playwright/test").Page) =>
   page.getByLabel(/versiunea site-ului|website version/i);
 
+/**
+ * The other half of "which site am I looking at": the badge answers it for whoever knows to
+ * look in the corner, and this answers it for a visitor who does not.
+ */
+test.describe("the environment notice", () => {
+  test("tells a visitor this is not the club's real site, in both languages", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    await expect(page.getByText(/nu este site-ul real al clubului/i)).toBeVisible();
+
+    await page.goto("/en/events");
+    await expect(page.getByText(/not the club's real website/i)).toBeVisible();
+  });
+
+  test("sits above the header, so it is read before anything below it", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    const notice = await page.getByRole("complementary").first().boundingBox();
+    const header = await page.getByRole("banner").first().boundingBox();
+    expect(notice).not.toBeNull();
+    expect(header).not.toBeNull();
+    expect(notice!.y).toBeLessThan(header!.y);
+  });
+
+  test("does not push the page past a 320px viewport", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+
+    const overflow = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+  });
+});
+
 test.describe("the build badge", () => {
   test("names a version on every page, in both locales", async ({ page }) => {
     for (const path of ["/ro/evenimente", "/en/events", "/ro/confidentialitate"]) {

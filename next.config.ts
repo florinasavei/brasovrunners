@@ -21,6 +21,26 @@ function git(...args: string[]): string | undefined {
 }
 
 /**
+ * The migration this build expects the database to be on.
+ *
+ * Read from Drizzle's own journal, which is the same file the migrator writes its bookkeeping
+ * from, so there is no second place to keep in sync. `/api/health` compares it against what the
+ * database says has been applied, which is what turns "the landing page 500s" into "the database
+ * is one migration behind this build" (`DECISIONS.md` §31).
+ */
+function readMigrationHead(): { tag: string; when: string } {
+  try {
+    const journal = JSON.parse(
+      readFileSync(new URL("./src/db/migrations/meta/_journal.json", import.meta.url), "utf8"),
+    ) as { entries?: Array<{ tag: string; when: number }> };
+    const head = journal.entries?.at(-1);
+    return head ? { tag: head.tag, when: String(head.when) } : { tag: "", when: "" };
+  } catch {
+    return { tag: "", when: "" };
+  }
+}
+
+/**
  * The documentation baseline, read from the top heading of CHANGELOG.md — the same value
  * `docs:check` already forces to agree across every root document, so this reads the one
  * source rather than adding a second place to keep in sync.
@@ -39,6 +59,7 @@ const commitSha = process.env.VERCEL_GIT_COMMIT_SHA ?? git("rev-parse", "HEAD") 
 // The commit's own date, not the build's: "last updated" means when the code changed, and a
 // rebuild of an unchanged commit should not claim the site was updated today.
 const commitDate = git("log", "-1", "--format=%cI") ?? "";
+const migrationHead = readMigrationHead();
 
 const nextConfig: NextConfig = {
   /**
@@ -49,6 +70,8 @@ const nextConfig: NextConfig = {
     BUILD_BASELINE: readBaseline(),
     BUILD_COMMIT: commitSha.slice(0, 7),
     BUILD_COMMITTED_AT: commitDate,
+    BUILD_MIGRATION_TAG: migrationHead.tag,
+    BUILD_MIGRATION_WHEN: migrationHead.when,
   },
 
   // Nothing host-specific belongs here. The app must run with `yarn build && yarn start`
