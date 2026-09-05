@@ -82,6 +82,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`MANIFEST.txt`](./MANIFEST.txt) | One-page handoff summary of the baseline and the headline decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
 | [`scripts/db-migrate.mjs`](./scripts/db-migrate.mjs) | `yarn db:migrate:env <local\|qa\|production>` — the only supported way to migrate a deployed database. Prints the target and the pending migrations before applying; production needs `--yes` (`AGENTS.md` §7.6) |
+| [`scripts/email-probe.ts`](./scripts/email-probe.ts) | `yarn email:probe [--fail] <address>` — sends one message through the real Mailgun adapter, to an address typed on the command line. Exercises the provider half of `AGENTS.md` §16 (key, region, sending domain, and the transient/permanent mapping) without going near the outbox |
 | [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |

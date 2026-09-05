@@ -4,6 +4,7 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Container from "@mui/material/Container";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -161,32 +162,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             slotProps={{ inputLabel: { shrink: true } }}
           />
 
-          {/* Native selects: no combobox state, no client island of our own (AGENTS.md §1.5). */}
-          <TextField
-            name="sex"
-            label={t("sex")}
-            select
-            required
-            defaultValue="UNSPECIFIED"
-            slotProps={{ select: { native: true } }}
-          >
-            <option value="FEMALE">{t("sexOptions.FEMALE")}</option>
-            <option value="MALE">{t("sexOptions.MALE")}</option>
-            <option value="UNSPECIFIED">{t("sexOptions.UNSPECIFIED")}</option>
+          <TextField name="sex" label={t("sex")} select required defaultValue="UNSPECIFIED">
+            <MenuItem value="FEMALE">{t("sexOptions.FEMALE")}</MenuItem>
+            <MenuItem value="MALE">{t("sexOptions.MALE")}</MenuItem>
+            <MenuItem value="UNSPECIFIED">{t("sexOptions.UNSPECIFIED")}</MenuItem>
           </TextField>
 
-          <TextField
-            name="nationality"
-            label={t("nationality")}
-            select
-            required
-            defaultValue="RO"
-            slotProps={{ select: { native: true } }}
-          >
+          <TextField name="nationality" label={t("nationality")} select required defaultValue="RO">
             {countries.map((country) => (
-              <option key={country.code} value={country.code}>
+              <MenuItem key={country.code} value={country.code}>
                 {country.label}
-              </option>
+              </MenuItem>
             ))}
           </TextField>
 
@@ -220,20 +206,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             {t("sections.race")}
           </Typography>
 
-          <TextField
-            name="tshirtSize"
-            label={t("tshirtSize")}
-            select
-            defaultValue="NONE"
-            slotProps={{ select: { native: true } }}
-          >
-            <option value="NONE">{t("tshirtSizes.NONE")}</option>
-            <option value="XS">XS</option>
-            <option value="S">S</option>
-            <option value="M">M</option>
-            <option value="L">L</option>
-            <option value="XL">XL</option>
-            <option value="XXL">XXL</option>
+          <TextField name="tshirtSize" label={t("tshirtSize")} select defaultValue="NONE">
+            <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
+            {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
+              <MenuItem key={size} value={size}>
+                {size}
+              </MenuItem>
+            ))}
           </TextField>
 
           <TextField name="clubName" label={t("clubName")} helperText={t("optional")} />
