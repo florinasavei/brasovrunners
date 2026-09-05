@@ -454,6 +454,49 @@ describe("BR-REQ-080-02 transactional outbox", () => {
       expect(row.lastError).toBe("mailbox does not exist");
     });
 
+    it("does not bounce a failure the provider is still retrying", async () => {
+      // AGENTS.md §16.5. Mailgun's current payload reports one `failed` event and puts the
+      // distinction in `severity`; its own example of a temporary one is a 421 greylist.
+      // BOUNCED is terminal here, so treating that as permanent abandons a message that was
+      // about to arrive.
+      const id = await queueSent("mailgun-msg-temp");
+      await applyMailgunEvent(db, {
+        providerMessageId: "mailgun-msg-temp",
+        event: "failed",
+        severity: "temporary",
+        reason: "greylisted",
+      });
+
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, id));
+      expect(row.status).toBe("SENT");
+    });
+
+    it("bounces a failure the provider has given up on", async () => {
+      const id = await queueSent("mailgun-msg-perm");
+      await applyMailgunEvent(db, {
+        providerMessageId: "mailgun-msg-perm",
+        event: "failed",
+        severity: "permanent",
+        reason: "mailbox does not exist",
+      });
+
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, id));
+      expect(row.status).toBe("BOUNCED");
+    });
+
+    it("still matches a row stored with the provider's bracketed id", async () => {
+      // Rows written before the adapter normalized the id carry `<...>`; a webhook reports it
+      // without. Matching both is what saves those rows from needing a migration.
+      const id = await queueSent("<mailgun-msg-legacy@sandbox.test>");
+      await applyMailgunEvent(db, {
+        providerMessageId: "mailgun-msg-legacy@sandbox.test",
+        event: "permanent_fail",
+        reason: null,
+      });
+
+      const [row] = await db.select().from(emailOutbox).where(eq(emailOutbox.id, id));
+      expect(row.status).toBe("BOUNCED");
+    });
     it("leaves the row untouched for delivery/engagement events this schema does not track", async () => {
       const id = await queueSent("mailgun-msg-3");
 

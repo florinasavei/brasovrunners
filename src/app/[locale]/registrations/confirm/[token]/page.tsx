@@ -35,7 +35,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
 
   if (done) {
     return (
-      <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
         <Alert severity="success">{t("confirm.done")}</Alert>
       </Container>
     );
@@ -44,7 +44,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   const context = invalid ? { ok: false as const } : await readRegistrationTokenContext(token, "VERIFY_REGISTRATION_EMAIL");
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("confirm.title")}
       </Typography>

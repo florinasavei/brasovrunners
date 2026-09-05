@@ -60,6 +60,8 @@ export const routing = defineRouting({
     "/admin/registrations": "/admin/registrations",
     "/admin/registrations/new": "/admin/registrations/new",
     "/admin/registrations/[id]": "/admin/registrations/[id]",
+    "/admin/legal": "/admin/legal",
+    "/admin/legal/[id]": "/admin/legal/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },
   },

@@ -17,6 +17,11 @@
       "label": "Notice about this version of the site",
       "title": "Test site ({environment}) — this is not the club's real website.",
       "body": "Everything here is sample data for trying the site out, and it may be deleted at any time. Please do not use it to register for a real event. The club's official website is coming soon, at its own address."
+    },
+    "skipToContent": "Skip to content",
+    "nav": {
+      "label": "Main navigation",
+      "events": "Events"
     }
   },
   "Home": {
@@ -95,7 +100,8 @@
     "nav": {
       "events": "Events",
       "registrations": "Registrations",
-      "staff": "Staff"
+      "staff": "Staff",
+      "legal": "Legal documents"
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -290,6 +296,30 @@
       "count": "How many",
       "add": "Add test registrations",
       "remove": "Remove all test registrations"
+    },
+    "legal": {
+      "title": "Legal documents",
+      "intro": "The privacy notice, the terms, and the declaration participants sign. Readable here; not editable.",
+      "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
+      "document": "Document",
+      "version": "Version",
+      "state": "State",
+      "languages": "Languages",
+      "usage": "In use",
+      "effectiveAt": "Effective from",
+      "approved": "Approved",
+      "draft": "Draft",
+      "keys": {
+        "PRIVACY_NOTICE": "Privacy notice",
+        "TERMS": "Terms and conditions",
+        "EVENT_DECLARATION": "Participant declaration"
+      },
+      "referenced": "{signatures} signatures · {events} events",
+      "unreferenced": "Not yet used",
+      "immutabilityNotice": "A version that has been used cannot be changed: participants signed exactly that text. A change means a new version, loaded through the documented procedure.",
+      "readOnlyNotice": "This page is read-only. Legal text is not edited from the backoffice.",
+      "backToList": "Back to legal documents",
+      "noTranslations": "This version has no text yet."
     }
   },
   "NotFound": {
@@ -311,7 +341,8 @@
     "submit": "Submit registration",
     "submitted": "Check your email to confirm your registration.",
     "errors": {
-      "generic": "The registration could not be submitted. Check what you entered and try again."
+      "generic": "The registration could not be submitted. Check what you entered and try again.",
+      "fields": "Please check these fields: {fields}."
     },
     "sections": {
       "about": "About you",
@@ -347,7 +378,25 @@
     "healthNotesHelp": "Only what an organizer would need to know if you needed help on race day. You may leave this empty.",
     "healthConsent": "I agree that this health information may be kept and used only for my safety on race day",
     "displayNameToggle": "Want to appear publicly under a different name?",
-    "displayNamePlaceholder": "Ana P."
+    "displayNamePlaceholder": "Ana P.",
+    "fieldNames": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "displayName": "Public display name",
+      "email": "Email address",
+      "birthDate": "Date of birth",
+      "sex": "Sex",
+      "nationality": "Nationality",
+      "city": "City",
+      "phone": "Phone",
+      "emergencyContactName": "Emergency contact",
+      "emergencyContactPhone": "Emergency contact phone",
+      "tshirtSize": "T-shirt size",
+      "clubName": "Club or team",
+      "healthNotes": "Health information",
+      "healthConsent": "Health information consent",
+      "privacyAcknowledged": "Privacy notice"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

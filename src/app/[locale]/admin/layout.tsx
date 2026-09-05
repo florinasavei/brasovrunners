@@ -63,6 +63,7 @@ export default async function AdminLayout({ children, params }: Props) {
             href: getPathname({ locale, href: "/admin/registrations" }),
             label: t("nav.registrations"),
           },
+          { href: getPathname({ locale, href: "/admin/legal" }), label: t("nav.legal") },
           { href: getPathname({ locale, href: "/admin/staff" }), label: t("nav.staff") },
         ]
       : []),
@@ -74,7 +75,7 @@ export default async function AdminLayout({ children, params }: Props) {
       and wrong for a list of registrations with a status, a date, an address and an event title
       on every row — at `md` those wrap into four lines each and the list stops being scannable.
     */
-    <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
+    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}

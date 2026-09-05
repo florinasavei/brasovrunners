@@ -154,6 +154,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin",
       "/admin/events/[id]",
       "/admin/events/new",
+      "/admin/legal",
+      "/admin/legal/[id]",
       "/admin/registrations",
       "/admin/registrations/[id]",
       "/admin/registrations/new",
@@ -171,14 +173,37 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     ]);
   });
 
-  it("has no editor for legal documents in any form", () => {
-    // AGENTS.md §11.1: the privacy notice, the terms and the declaration are Admin-controlled
-    // versioned content that arrives through a migration. No field here writes legal text, and
-    // no route above edits one.
+  it("has no editor for legal documents in any form", async () => {
+    // AGENTS.md §11.1, §12.5: the privacy notice, the terms and the declaration are
+    // Admin-controlled versioned content that arrives through a migration. No CMS field
+    // writes legal text, and nothing in the backoffice changes a word of a version.
     const editableFields = Object.keys(translationFieldsSchema.parse(FIELDS));
     for (const legal of ["privacyNotice", "terms", "declaration", "legalBody"]) {
       expect(editableFields, `${legal} must not be editable`).not.toContain(legal);
     }
-    expect(Object.keys(routing.pathnames)).not.toContain("/admin/legal");
+
+    /**
+     * This used to assert that no route was called `/admin/legal` at all, which is a weaker
+     * statement than the rule it stands for: a name is not a capability, and a blocklist of
+     * folder names is dodged by renaming a folder. Reading a legal document in the backoffice
+     * breaks nothing — the club has to be able to see what its participants are signing.
+     *
+     * What must stay impossible is *writing* one from a request. So the assertion is now
+     * about the two things that would make it possible, and both are checked directly:
+     * no route that edits, and no write function reachable from one.
+     */
+    const legalRoutes = Object.keys(routing.pathnames).filter((route) => route.startsWith("/admin/legal"));
+    for (const route of legalRoutes) {
+      expect(route, `${route} must not be an editing route`).not.toMatch(/\/(new|edit|delete)$/);
+    }
+
+    const repository = await import("@/modules/legal-documents/repository");
+    const writers = Object.keys(repository).filter((name) => /^(update|delete|approve|edit)/.test(name));
+    expect(writers, "the legal-documents repository must export no way to change a version").toEqual([]);
+
+    // `insertLegalDocumentVersion` is the single exception, and it is deliberate: a *new*
+    // version is how legal text changes (`docs/RUNBOOKS.md` § Legal document version).
+    // Inserting never mutates what somebody already signed.
+    expect(Object.keys(repository)).toContain("insertLegalDocumentVersion");
   });
 });

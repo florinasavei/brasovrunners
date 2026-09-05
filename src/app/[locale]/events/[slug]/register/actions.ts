@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { findEventForRegistrationById, findPublishedEventBySlug } from "@/modules/events/repository";
+import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -16,6 +17,7 @@ function text(form: FormData, name: string): string {
   const value = form.get(name);
   return typeof value === "string" ? value : "";
 }
+
 
 /**
  * The registration form's submit handler (BR-REQ-030-01, BR-REQ-031-01, BR-REQ-033-01).
@@ -51,20 +53,16 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
         raceId: internalEvent.raceId,
         publishedAt: publicEvent.publishedAt,
       },
-      {
-        name: text(form, "name"),
-        email: text(form, "email"),
-        locale,
-        privacyAcknowledged: form.get("privacyAcknowledged") === "on",
-        resultsNameConsent: form.get("resultsNameConsent") === "on",
-        listOptOut: form.get("listOptOut") === "on",
-        honeypot: text(form, "honeypot"),
-        renderedAt: text(form, "renderedAt"),
-      },
+      readRegistrationForm(form, locale),
       new Date(),
     );
   } catch (error) {
-    if (isDomainError(error)) redirect(`${path}?error=${error.code}`);
+    if (isDomainError(error)) {
+      // Field names, never values: nothing a participant typed goes into a URL, which is
+      // logged by every proxy between here and them (§14.5).
+      const fields = error.fields.length > 0 ? `&fields=${error.fields.join(",")}` : "";
+      redirect(`${path}?error=${error.code}${fields}`);
+    }
     throw error;
   }
 

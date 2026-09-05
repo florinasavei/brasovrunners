@@ -17,6 +17,11 @@
       "label": "Anunț despre această versiune a site-ului",
       "title": "Site de test ({environment}) — acesta nu este site-ul real al clubului.",
       "body": "Tot ce vezi aici sunt date de probă, pentru încercarea site-ului, și pot fi șterse oricând. Te rugăm să nu îl folosești pentru a te înscrie la un eveniment real. Site-ul oficial al clubului urmează, la adresa lui proprie."
+    },
+    "skipToContent": "Sari la conținut",
+    "nav": {
+      "label": "Navigare principală",
+      "events": "Evenimente"
     }
   },
   "Home": {
@@ -95,7 +100,8 @@
     "nav": {
       "events": "Evenimente",
       "registrations": "Înscrieri",
-      "staff": "Echipa"
+      "staff": "Echipa",
+      "legal": "Documente legale"
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -290,6 +296,30 @@
       "count": "Câte",
       "add": "Adaugă înscrieri de test",
       "remove": "Șterge toate înscrierile de test"
+    },
+    "legal": {
+      "title": "Documente legale",
+      "intro": "Nota de confidențialitate, termenii și declarația pe care o semnează participanții. Se pot citi aici; nu se pot modifica.",
+      "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
+      "document": "Document",
+      "version": "Versiune",
+      "state": "Stare",
+      "languages": "Limbi",
+      "usage": "Folosit",
+      "effectiveAt": "În vigoare de la",
+      "approved": "Aprobat",
+      "draft": "Ciornă",
+      "keys": {
+        "PRIVACY_NOTICE": "Nota de confidențialitate",
+        "TERMS": "Termeni și condiții",
+        "EVENT_DECLARATION": "Declarația participantului"
+      },
+      "referenced": "{signatures} semnături · {events} evenimente",
+      "unreferenced": "Nefolosit încă",
+      "immutabilityNotice": "O versiune folosită nu mai poate fi modificată: participanții au semnat exact acel text. O modificare înseamnă o versiune nouă, încărcată prin procedura din documentație.",
+      "readOnlyNotice": "Această pagină este doar pentru citire. Textul legal nu se editează din backoffice.",
+      "backToList": "Înapoi la documentele legale",
+      "noTranslations": "Această versiune nu are încă niciun text."
     }
   },
   "NotFound": {
@@ -311,7 +341,8 @@
     "submit": "Trimite înscrierea",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "errors": {
-      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
+      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
+      "fields": "Verifică aceste câmpuri: {fields}."
     },
     "sections": {
       "about": "Despre tine",
@@ -347,7 +378,25 @@
     "healthNotesHelp": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor în ziua cursei. Poți lăsa gol.",
     "healthConsent": "Sunt de acord ca aceste informații medicale să fie păstrate și folosite doar pentru siguranța mea în ziua cursei",
     "displayNameToggle": "Vrei să apari public sub alt nume?",
-    "displayNamePlaceholder": "Ana P."
+    "displayNamePlaceholder": "Ana P.",
+    "fieldNames": {
+      "firstName": "Prenume",
+      "lastName": "Nume de familie",
+      "displayName": "Nume afișat public",
+      "email": "Adresă de email",
+      "birthDate": "Data nașterii",
+      "sex": "Sex",
+      "nationality": "Naționalitate",
+      "city": "Oraș",
+      "phone": "Telefon",
+      "emergencyContactName": "Persoană de contact în caz de urgență",
+      "emergencyContactPhone": "Telefonul persoanei de contact",
+      "tshirtSize": "Mărime tricou",
+      "clubName": "Club sau echipă",
+      "healthNotes": "Informații medicale",
+      "healthConsent": "Acordul pentru informațiile medicale",
+      "privacyAcknowledged": "Nota de confidențialitate"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

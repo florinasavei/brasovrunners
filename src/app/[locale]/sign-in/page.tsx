@@ -52,7 +52,7 @@ export default async function SignInPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" sx={{ fontSize: { xs: "1.5rem", sm: "2rem" }, mb: 2 }}>
         {t("signIn.title")}
       </Typography>

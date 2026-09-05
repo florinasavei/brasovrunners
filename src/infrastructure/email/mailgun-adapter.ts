@@ -65,6 +65,25 @@ const REQUEST_TIMEOUT_MS = 15_000;
 
 type MailgunAccepted = { id?: string; message?: string };
 
+/**
+ * Mailgun's two spellings of one message id, reduced to one (AGENTS.md §16.5).
+ *
+ * The send response returns the id in RFC 5322 form, angle brackets included. The delivery
+ * webhook reports the same message as `message.headers.message-id`, *without* them.
+ * `applyMailgunEvent` finds the outbox row by an exact match on this value, so storing the
+ * response's spelling means no webhook ever matches: a bounce updates zero rows and reports
+ * success, and the row sits at SENT for a message that was rejected.
+ *
+ * Verified against the live provider before this was written, not inferred from the docs.
+ */
+function normalizeProviderMessageId(id: string | undefined): string | undefined {
+  const trimmed = id?.trim();
+  if (!trimmed) return undefined;
+  return trimmed.startsWith("<") && trimmed.endsWith(">")
+    ? trimmed.slice(1, -1)
+    : trimmed;
+}
+
 /** Anything shaped like an address. Deliberately greedy: a false positive costs a word of
  * context in an error message, a false negative stores somebody's address. */
 const EMAIL_SHAPED = /[^\s<>"']+@[^\s<>"']+\.[^\s<>"',;)]+/g;
@@ -139,7 +158,8 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
           outcome: "sent",
           // Mailgun always returns an id for an accepted message; the fallback exists so a
           // surprising response shape is still a send that happened rather than an exception.
-          providerMessageId: accepted.id ?? `mailgun:${message.idempotencyKey}`,
+          providerMessageId:
+            normalizeProviderMessageId(accepted.id) ?? `mailgun:${message.idempotencyKey}`,
         };
       }
 

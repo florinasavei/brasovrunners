@@ -12,6 +12,7 @@ import {
 } from "@/theme/brand";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
+import SiteNav from "./SiteNav";
 
 /**
  * The site header: the mark, the club's name, and a way back to the first page.
@@ -49,10 +50,20 @@ export default async function SiteHeader() {
         borderBottom: 1,
         borderColor: "divider",
         bgcolor: "background.paper",
+        /**
+         * Sticky, because an event page is long and the way out of it should not depend on
+         * scrolling back. `sticky` rather than `fixed`: it stays in the flow, so nothing
+         * below needs a matching top offset and no page can slide underneath it.
+         *
+         * The environment notice above is deliberately *not* sticky — it is read once.
+         */
+        position: "sticky",
+        top: 0,
+        zIndex: 1100,
       }}
     >
       <Container
-        maxWidth="sm"
+        maxWidth="md"
         sx={{
           display: "flex",
           alignItems: "center",
@@ -66,6 +77,7 @@ export default async function SiteHeader() {
           py: 1,
         }}
       >
+        <Box sx={{ order: 1 }}>
         <LogoLink label={t("name")}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -106,9 +118,23 @@ export default async function SiteHeader() {
             {WORDMARK}
           </Typography>
         </LogoLink>
+        </Box>
 
-        {/* Pushed to the end of whichever row it lands on. */}
-        <Box sx={{ ml: "auto" }}>
+        {/*
+          The sections sit next to the club's name, where navigation is looked for, and the
+          language sits at the far end, where a setting belongs. They were briefly grouped
+          together at the end, which read as two settings rather than a place to go.
+
+          At 320px the lockup fills the first row and the sections take the whole of a
+          second, aligned under the name rather than crammed against the right edge.
+          Wrapping rather than shrinking: an overflow costs the page a sideways scrollbar
+          (BR-REQ-041-01 criterion 1), a wrap costs one row of height.
+        */}
+        <Box sx={{ order: { xs: 3, sm: 2 }, flexBasis: { xs: "100%", sm: "auto" }, ml: { sm: 2 } }}>
+          <SiteNav />
+        </Box>
+
+        <Box sx={{ order: { xs: 2, sm: 3 }, ml: "auto" }}>
           <LocaleSwitcher />
         </Box>
       </Container>

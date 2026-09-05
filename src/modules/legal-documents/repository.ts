@@ -1,4 +1,6 @@
-import { and, desc, eq, lte } from "drizzle-orm";
+import { and, desc, eq, lte, sql } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { events } from "@/db/schema/events";
 import {
   legalDocumentTranslations,
   legalDocuments,
@@ -151,6 +153,101 @@ export async function listApprovedVersions<T extends Record<string, unknown>>(
     .orderBy(desc(legalDocuments.version));
 }
 
+/**
+ * Every version of every key, for the backoffice — approved or not, with both locales'
+ * titles and a count of the registrations that already reference it.
+ *
+ * The reference count is the whole reason this exists rather than `listApprovedVersions`.
+ * §12.5 makes a referenced version immutable, and a screen that shows the text without
+ * showing whether anybody has signed against it invites exactly the edit that rule forbids.
+ * Reading it here means the answer is a fact on the page, not a warning in a document.
+ */
+export type LegalDocumentVersionRow = {
+  id: string;
+  key: LegalDocumentKey;
+  version: number;
+  isApproved: boolean;
+  effectiveAt: Date;
+  approvedByStaffUserId: string | null;
+  locales: string[];
+  acceptanceCount: number;
+  eventCount: number;
+};
+
+export async function listVersionsForBackoffice<T extends Record<string, unknown>>(
+  db: Database<T>,
+): Promise<LegalDocumentVersionRow[]> {
+  const rows = await db
+    .select({
+      id: legalDocuments.id,
+      key: legalDocuments.key,
+      version: legalDocuments.version,
+      isApproved: legalDocuments.isApproved,
+      effectiveAt: legalDocuments.effectiveAt,
+      approvedByStaffUserId: legalDocuments.approvedByStaffUserId,
+      locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
+      acceptanceCount: sql<number>`(select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})`,
+      eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
+    })
+    .from(legalDocuments)
+    .leftJoin(
+      legalDocumentTranslations,
+      eq(legalDocumentTranslations.legalDocumentId, legalDocuments.id),
+    )
+    .groupBy(legalDocuments.id)
+    .orderBy(legalDocuments.key, desc(legalDocuments.version));
+
+  return rows;
+}
+
+/**
+ * One version's text in every locale it has, for reading in the backoffice.
+ *
+ * Approved or not: an unapproved draft is exactly what somebody needs to look at before
+ * approving it, and refusing to render one would make the approval a decision taken blind.
+ */
+export async function findVersionWithTranslations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  id: string,
+): Promise<
+  | {
+      id: string;
+      key: LegalDocumentKey;
+      version: number;
+      isApproved: boolean;
+      effectiveAt: Date;
+      contentSha256: string;
+      translations: Array<{ locale: string; title: string; body: unknown }>;
+    }
+  | undefined
+> {
+  const [document] = await db
+    .select({
+      id: legalDocuments.id,
+      key: legalDocuments.key,
+      version: legalDocuments.version,
+      isApproved: legalDocuments.isApproved,
+      effectiveAt: legalDocuments.effectiveAt,
+      contentSha256: legalDocuments.contentSha256,
+    })
+    .from(legalDocuments)
+    .where(eq(legalDocuments.id, id))
+    .limit(1);
+
+  if (!document) return undefined;
+
+  const translations = await db
+    .select({
+      locale: legalDocumentTranslations.locale,
+      title: legalDocumentTranslations.title,
+      body: legalDocumentTranslations.bodyJson,
+    })
+    .from(legalDocumentTranslations)
+    .where(eq(legalDocumentTranslations.legalDocumentId, id))
+    .orderBy(legalDocumentTranslations.locale);
+
+  return { ...document, translations };
+}
 export async function insertLegalDocumentVersion<T extends Record<string, unknown>>(
   db: Database<T>,
   input: {

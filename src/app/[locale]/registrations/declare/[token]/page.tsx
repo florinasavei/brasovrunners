@@ -41,7 +41,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
 
   if (done) {
     return (
-      <Container component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
       </Container>
     );
@@ -57,7 +57,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     : undefined;
 
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("declare.title")}
       </Typography>

@@ -315,6 +315,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     throw new DomainError(
       "VALIDATION_ERROR",
       parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+      // Paths only. The messages above are for logs; these reach a rendered page.
+      [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")))],
     );
   }
   const input = parsed.data;
