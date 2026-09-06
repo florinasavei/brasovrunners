@@ -112,7 +112,8 @@
       "registrations": "Înscrieri",
       "staff": "Echipa",
       "legal": "Documente legale",
-      "devs": "Configurație"
+      "devs": "Configurație",
+      "tasks": "De făcut"
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -352,6 +353,73 @@
       "readOnlyNotice": "Această pagină este doar pentru citire. Textul legal nu se editează din backoffice.",
       "backToList": "Înapoi la documentele legale",
       "noTranslations": "Această versiune nu are încă niciun text."
+    },
+    "tasks": {
+      "title": "Ce mai este de făcut",
+      "intro": "Ce lipsește ca platforma să poată primi înscrieri reale. Fiecare linie este citită din sistem, nu bifată de mână.",
+      "blockingSummary": "Blochează înscrierile reale: {count}.",
+      "nothingBlocking": "Nimic nu blochează înscrierile. Restul sunt îmbunătățiri.",
+      "state": {
+        "blocking": "Blochează",
+        "open": "De făcut",
+        "done": "Gata"
+      },
+      "owner": {
+        "club": "Clubul",
+        "developer": "Dezvoltatorul"
+      },
+      "costsTitle": "Costuri",
+      "costsIntro": "Cifrele sunt cele din docs/PLATFORM.md, verificate la furnizori. Nu sunt estimări.",
+      "costUnknown": "de stabilit",
+      "items": {
+        "approveLegalText": {
+          "title": "Aprobă textele legale",
+          "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierile sunt refuzate. Procedura: docs/RUNBOOKS.md § Legal document version.",
+          "done": "Textele aprobate de club sunt publicate."
+        },
+        "liveEmail": {
+          "title": "Email către participanți reali",
+          "todo": "Acum mesajele fie sunt reținute, fie ajung doar la maximum 5 adrese autorizate în sandbox-ul Mailgun. Pentru toți participanții este nevoie de domeniul clubului, verificat în Mailgun.",
+          "done": "Emailurile ajung la participanți."
+        },
+        "registerDomain": {
+          "title": "Înregistrează domeniul .ro",
+          "todo": "Site-ul funcționează, dar pe adresa furnizorului. Domeniul propriu este și condiția pentru emailuri către oricine. Comanda  face partea tehnică.",
+          "done": "Site-ul răspunde pe domeniul clubului."
+        },
+        "publishEvents": {
+          "title": "Publică evenimente",
+          "todo": "Nu este publicat niciun eveniment, deci vizitatorii văd o listă goală.",
+          "done": "Există evenimente publicate."
+        },
+        "scheduler": {
+          "title": "Programatorul de sarcini",
+          "todo": "Sarcinile programate nu au rulat recent: emailurile nu pleacă și locurile rezervate nu expiră. Aceasta este o problemă tehnică.",
+          "done": "Sarcinile rulează la timp."
+        }
+      },
+      "costs": {
+        "vercel": {
+          "name": "Găzduire (Vercel)",
+          "note": "planul Hobby, gratuit. Trecerea la Pro costă 20 $/lună de persoană care publică."
+        },
+        "neon": {
+          "name": "Baza de date (Neon)",
+          "note": "planul gratuit."
+        },
+        "mailgun": {
+          "name": "Email (Mailgun)",
+          "note": "sandbox gratuit, limitat la 5 destinatari. Planul plătit devine necesar pentru volume reale."
+        },
+        "domain": {
+          "name": "Domeniu .ro",
+          "note": "costul anual depinde de registrar; se plătește o dată pe an."
+        },
+        "zitadel": {
+          "name": "Autentificare (Zitadel)",
+          "note": "planul gratuit."
+        }
+      }
     }
   },
   "NotFound": {

@@ -180,7 +180,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives ADMIN the registrations and the legal documents, but not staff administration", () => {
     const sections = visibleAdminSections("ADMIN");
 
-    expect(sections).toEqual(["events", "registrations", "legal", "devs"]);
+    expect(sections).toEqual(["events", "registrations", "tasks", "legal", "devs"]);
     // An Administrator reads every registration and still cannot promote themselves.
     expect(sections).not.toContain("staff");
   });
@@ -189,6 +189,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(visibleAdminSections("SUPERADMIN")).toEqual([
       "events",
       "registrations",
+      "tasks",
       "legal",
       "staff",
       "devs",

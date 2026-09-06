@@ -29,6 +29,7 @@ Supporting files:
 - docs/RUNBOOKS.md                     repository bootstrap, domain binding, legal document version
 - docs/history/ORIGINAL_PLAN_2026-08.md  original planning input, not authoritative
 - scripts/db-migrate.mjs               yarn db:migrate:env: migrate one named environment
+- scripts/bind-domain.mjs              yarn domain:bind: hostnames, APP_BASE_URL, the DNS records
 - scripts/smoke.mjs                    yarn smoke: /api/health as an exit code, ends every deploy
 - scripts/docs-check.mjs               documentation synchronization check
 - scripts/release.mjs                  yarn release: versioned folder, archive, share copies

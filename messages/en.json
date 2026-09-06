@@ -112,7 +112,8 @@
       "registrations": "Registrations",
       "staff": "Staff",
       "legal": "Legal documents",
-      "devs": "Configuration"
+      "devs": "Configuration",
+      "tasks": "To do"
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -352,6 +353,73 @@
       "readOnlyNotice": "This page is read-only. Legal text is not edited from the backoffice.",
       "backToList": "Back to legal documents",
       "noTranslations": "This version has no text yet."
+    },
+    "tasks": {
+      "title": "What is still to do",
+      "intro": "What is missing before the platform can take real entries. Every line is read from the system, not ticked by hand.",
+      "blockingSummary": "Blocking real registrations: {count}.",
+      "nothingBlocking": "Nothing is blocking registrations. The rest are improvements.",
+      "state": {
+        "blocking": "Blocking",
+        "open": "To do",
+        "done": "Done"
+      },
+      "owner": {
+        "club": "The club",
+        "developer": "The developer"
+      },
+      "costsTitle": "Costs",
+      "costsIntro": "These figures come from docs/PLATFORM.md, checked against the providers. They are not estimates.",
+      "costUnknown": "to be decided",
+      "items": {
+        "approveLegalText": {
+          "title": "Approve the legal text",
+          "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone. The procedure is docs/RUNBOOKS.md § Legal document version.",
+          "done": "The club’s approved wording is published."
+        },
+        "liveEmail": {
+          "title": "Email to real participants",
+          "todo": "Messages are either captured or reach at most 5 authorised addresses in the Mailgun sandbox. Reaching every participant needs the club’s domain, verified in Mailgun.",
+          "done": "Email reaches participants."
+        },
+        "registerDomain": {
+          "title": "Register the .ro domain",
+          "todo": "The site works, but on the provider’s address. The club’s own domain is also what unlocks email to anyone.  does the technical half.",
+          "done": "The site answers on the club’s domain."
+        },
+        "publishEvents": {
+          "title": "Publish events",
+          "todo": "No event is published, so visitors see an empty list.",
+          "done": "Events are published."
+        },
+        "scheduler": {
+          "title": "The scheduled jobs",
+          "todo": "The scheduled jobs have not run recently: email does not go out and held places do not expire. This one is technical.",
+          "done": "The jobs are running on time."
+        }
+      },
+      "costs": {
+        "vercel": {
+          "name": "Hosting (Vercel)",
+          "note": "the Hobby plan, free. Moving to Pro costs $20/month per person who deploys."
+        },
+        "neon": {
+          "name": "Database (Neon)",
+          "note": "the free plan."
+        },
+        "mailgun": {
+          "name": "Email (Mailgun)",
+          "note": "the free sandbox, capped at 5 recipients. A paid plan becomes necessary for real volume."
+        },
+        "domain": {
+          "name": ".ro domain",
+          "note": "the yearly cost depends on the registrar; paid once a year."
+        },
+        "zitadel": {
+          "name": "Sign-in (Zitadel)",
+          "note": "the free plan."
+        }
+      }
     }
   },
   "NotFound": {

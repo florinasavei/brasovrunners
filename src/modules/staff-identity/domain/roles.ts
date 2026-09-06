@@ -243,13 +243,15 @@ export function canManageStaff(role: StaffRole): boolean {
  * section a lower one is. `tests/unit/staff/roles.test.ts` asserts it across every pair, which
  * is the assertion that would have caught the original defect.
  */
-export const ADMIN_SECTIONS = ["events", "registrations", "legal", "staff", "devs"] as const;
+export const ADMIN_SECTIONS = ["events", "registrations", "tasks", "legal", "staff", "devs"] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
   return [
     "events" as const,
     ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
+    // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
+    ...(canManageRegistrations(role) ? (["tasks"] as const) : []),
     ...(atLeast(role, "ADMIN") ? (["legal"] as const) : []),
     ...(canManageStaff(role) ? (["staff"] as const) : []),
     ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
