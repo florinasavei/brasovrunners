@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.24-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.24-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1058,13 +1058,37 @@ other participant link uses — never by a password.
 1. Given a legal document key, when a version is approved, then it carries a version number, an effective date, an approval record, a content hash, and Romanian and English bodies.
 2. Given a version that a participant has accepted, when any edit is attempted, then it is rejected.
 3. Given a new version, when it becomes effective, then earlier acceptances continue to reference the version that was accepted.
-4. Given any staff role, when the CMS is used, then no interface edits legal document text.
+4. Given a version that is approved or referenced, when any interface attempts to change its text, then it is refused — editing is confined to unapproved, unreferenced drafts (BR-REQ-053-02).
 5. Given the public site, when any page renders, then the privacy notice and terms are reachable in the current locale.
 6. Given any environment other than production, when it is seeded, then a clearly marked sample version of each key exists, whose own rendered body opens — in both languages — with a banner saying that it is sample text, is not approved by the club, is not legal advice, and must be replaced before a real participant registers.
-7. Given `APP_ENV=production`, when the sample text is seeded, then it is refused outright rather than skipped quietly; the club's approved wording arrives through a migration, per `docs/RUNBOOKS.md` § Legal document version.
+7. Given `APP_ENV=production`, when the sample text is seeded, then it is refused outright rather than skipped quietly; the club's approved wording is written in the backoffice (BR-REQ-053-02) or, where a migration is preferred, per `docs/RUNBOOKS.md` § Legal document version.
 8. Given a sample document, when it is read, then every club-specific fact — the controller's legal name, address and contact, any representative, retention periods, and the lawful basis for each purpose — is an obvious placeholder rather than an invented value.
 
 **Verification:** integration `legal/versions.test.ts`; e2e `legal-pages.spec.ts`
+
+#### BR-REQ-053-02 — The club writes its own legal text
+
+- **Source:** BR-BUS-053
+- **Implements:** AGENTS.md §12.5, §11.1, §10.2
+- **Priority:** MUST
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §46. It narrows BR-REQ-053-01 criterion 4
+  rather than reversing it: what may never be edited is a version somebody has accepted, and
+  requiring a developer and a migration to *create* one was an accident of that rule rather than
+  a consequence of it.
+
+**Acceptance criteria**
+
+1. Given an Administrator, when they write a new version of a legal document, then it is created as the next version number for that key, unapproved, with its content hash computed from the text saved.
+2. Given a draft that is unapproved and unreferenced, when it is rewritten, then the text and the content hash are replaced together, and neither can describe the other's contents.
+3. Given a version that is approved, when an edit is attempted, then it is refused with a conflict and the words are unchanged.
+4. Given a version that a participant has accepted or an event points at, when an edit is attempted, then it is refused with a conflict.
+5. Given a draft, when it is approved, then it becomes public from the moment of approval, records who approved it, and can no longer be edited.
+6. Given an approved version, when approval is attempted again, then it is refused.
+7. Given a document written in only one language, or with an empty body in either, when it is saved, then it is refused — a public page cannot fall back to the other language (BR-REQ-040-02).
+8. Given any role below the one that administers staff, when any of this is attempted, then it is refused.
+
+**Verification:** integration `legal/editor.test.ts`
 
 ### 4.10 Transactional email
 
@@ -1332,7 +1356,7 @@ other participant link uses — never by a password.
 | BR-BUS-050 | BR-REQ-050-01 |
 | BR-BUS-051 | BR-REQ-051-01, BR-REQ-051-02 |
 | BR-BUS-052 | BR-REQ-052-01, BR-REQ-052-02, BR-REQ-070-03, BR-REQ-070-02 |
-| BR-BUS-053 | BR-REQ-053-01, BR-REQ-033-02, BR-REQ-031-02 |
+| BR-BUS-053 | BR-REQ-053-01, BR-REQ-053-02, BR-REQ-033-02, BR-REQ-031-02 |
 | BR-BUS-060 | BR-REQ-060-01, BR-REQ-051-01 |
 | BR-BUS-070 | BR-REQ-070-01, BR-REQ-070-02, BR-REQ-070-03, BR-REQ-036-02, BR-REQ-038-01, BR-REQ-039-01, BR-REQ-041-01, BR-REQ-071-01, BR-REQ-072-01 |
 | BR-BUS-071 | BR-REQ-071-01 |

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.24-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.24-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1290,10 +1290,20 @@ Supported:
 - media selection/upload.
 
 Legal documents (privacy notice, terms, event declaration) are Admin-controlled
-versioned content, not ordinary Author content. V1 has no editor screen for them: new
-versions arrive through a migration or seed following
-`docs/RUNBOOKS.md` § Legal document version. The backoffice shows them read-only. No staff
-role may edit a version that a participant has already accepted.
+versioned content, not ordinary Author content. The backoffice **writes** them and never
+**rewrites** them (`DECISIONS.md` §46, BR-REQ-053-02): an Administrator drafts a version, reads
+it, approves it, and from that moment its words are fixed. A correction is the next version.
+
+What must never happen is an edit to a version a participant has accepted — their acceptance
+row points at those words, and changing them would leave every signature describing text nobody
+agreed to. That is asserted in one place, `legal-documents/service.ts#assertStillADraft`, which
+refuses an approved version, one with an acceptance, and one an event points at. The repository
+exports no update, delete or approve function at all, so there is no way to a bare UPDATE that
+skips it.
+
+The seed and the migration path both still exist for the cases that want them — sample text
+outside production (`DECISIONS.md` §29) and a migration where one is preferred
+(`docs/RUNBOOKS.md` § Legal document version).
 
 ### 11.2 Editorial workflow
 

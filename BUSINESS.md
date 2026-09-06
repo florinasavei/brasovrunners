@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.24-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.24-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.

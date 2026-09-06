@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.24-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.24-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2445,3 +2445,51 @@ separately because a failure here is untidiness that no participant would notice
 the whole run failed for it would make `/api/health` cry wolf.
 
 Baseline bumped to `BR-V1.24-2026-09-06`.
+
+---
+
+## 46. Decided — the club writes its own legal text; immutability is about acceptance, not authorship (2026-09-06)
+
+**Status:** Decided. Narrows §6.7 and `AGENTS.md` §12.5; BR-REQ-053-01 criterion 4 is rewritten
+rather than removed.
+
+The rule said V1 has no editor screen for legal documents, and the reasoning behind it was
+sound: a participant signed version 3, `declaration_acceptances` records that they signed
+version 3, and rewriting its words afterwards would leave every one of those signatures
+pointing at text nobody ever agreed to.
+
+But the rule was broader than its reason. It also prevented *creating* a version, which put a
+developer and a migration on the critical path of a decision that is entirely the club's — and
+the club's approved wording was, at the time this was written, the single item still blocking a
+real registration on a deployed and otherwise working system. Nothing about immutability
+requires that a lawyer's paragraph reach the database through a pull request.
+
+### The line, stated once
+
+A version is a **draft** until approved. A draft may be rewritten freely. The moment it is
+approved — or accepted by a participant, or pointed at by an event — it is frozen, and a
+correction is the next version. Approval is one-way: un-approving would mean somebody could
+accept a version on Monday that the club treats as never in force by Wednesday, while their
+acceptance row still says they signed it.
+
+That is asserted in exactly one function, `service.ts#assertStillADraft`, and the repository
+deliberately exports no update, delete or approve at all — so there is no path to a bare UPDATE
+that skips the check. `tests/integration/cms/boundary.test.ts` asserts that shape as a property
+rather than trusting it.
+
+### The editor is a textarea, and that is a decision
+
+The body is structured JSON, and the Tiptap contract that will eventually own it is M5. Pulling
+that dependency forward to type a privacy notice would decide the body schema for the wrong
+reason. So the format is the one everybody already writes in: a blank line between paragraphs,
+`## ` for a heading, converted by `domain/body-text.ts`, which round-trips — nothing an
+organizer typed is reshaped behind their back.
+
+### What did not change
+
+Inventing legal wording is still forbidden (§1.2), and the editor says so above the fields every
+time it is opened. Sample text still refuses to seed in production (§29). Both languages are
+still required before a version can exist at all, because BR-REQ-040-02 forbids falling back to
+the other and the alternative to both is a public page that cannot render.
+
+Baseline bumped to `BR-V1.25-2026-09-06`.

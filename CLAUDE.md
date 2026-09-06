@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.24-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.24-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.25-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -143,8 +143,11 @@ request. Everywhere there *is* a way in, a signed-out `/admin` goes to sign-in a
 the backoffice afterwards.
 
 **Legal documents.** `legal_documents`/`legal_document_translations` (§12.5), immutable once
-referenced, with no editor screen in any form — an event *selects* an approved declaration
-version; nothing in the backoffice edits a word of one. Every environment except production is
+approved or referenced. The backoffice **writes** them and never **rewrites** them
+(`DECISIONS.md` §46): an Administrator drafts a version, reads it, approves it, and from that
+moment its words are fixed — a correction is the next version, and an event *selects* an
+approved declaration rather than editing one. The club no longer needs a developer to publish
+its own wording, which was the last thing standing between a real runner and a registration. Every environment except production is
 seeded with a full **sample** privacy notice, terms and declaration in both languages: complete in
 structure, every club-specific fact a visible `<PLACEHOLDER>`, and a not-approved banner as the
 first thing on the rendered page. Production is refused outright (`DECISIONS.md` §29, superseding
