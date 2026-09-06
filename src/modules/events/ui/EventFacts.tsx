@@ -80,8 +80,15 @@ export default async function EventFacts({
   facts.push({
     label: t("meetingPoint"),
     value: variant === "full" && mapLink ? (
-      <>
-        {event.locationName}{" "}
+      /*
+        A wrapping flex row rather than inline text, because the link is 44px tall by design
+        and inline text is not: after a place name it wrapped onto its own line with the
+        trailing space still attached, which read as a mistake rather than as a second thing to
+        tap. As a flex row it shares the line where there is room and drops below cleanly where
+        there is not, which on a 390px screen is most place names.
+      */
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>
+        <span>{event.locationName}</span>
         <Link
           href={mapLink}
           target="_blank"
@@ -95,7 +102,7 @@ export default async function EventFacts({
         >
           {t("openMap")}
         </Link>
-      </>
+      </Box>
     ) : (
       event.locationName
     ),
