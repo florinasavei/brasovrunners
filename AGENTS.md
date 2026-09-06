@@ -2306,14 +2306,26 @@ Capacity and queue correctness come from transaction-time expiry evaluation (§1
 job exists to send expiry messages, promote the queue on an otherwise idle event, and
 retry the outbox.
 
-Invocation has two layers:
+Invocation has two layers, and on a serverless host the first of them does not exist:
 
-- primary: an in-process interval inside the persistent application calling the same
-  internal handler, permitted because correctness does not depend on it;
-- watchdog: an external scheduler posting to the job endpoints with `JOB_SECRET`, at
-  roughly five minutes for maintenance and one to five minutes for the outbox.
+- primary: an external scheduler posting to the job endpoints with `JOB_SECRET`, at roughly
+  five minutes for maintenance and one to five minutes for the outbox. This deploys to
+  serverless functions (§7), which have no persistent process for an in-process interval to
+  live in, so the external caller is the only mechanism rather than a watchdog over one;
+- backstop: a second, independent caller on the same endpoints, because the jobs are
+  idempotent and two callers cost one wasted query while one caller that stops costs a
+  participant their place in the queue.
 
-The scheduler is named in `SETUP.md` §26. Changing it must not change business logic.
+**A scheduler that fires late is a promptness failure, never a correctness one**, and the
+distinction decides how much to spend on it. Expiry is evaluated against `now` on every read
+(§10.6), so a two-hour gap releases a place two hours late — it does not release it to the
+wrong person. What a late run delays is the *message*: the offer email the next runner is
+already entitled to. Choose the primary caller on that basis, and measure it with
+`/api/health` rather than with the scheduler's own dashboard: `stale` there is the only report
+that reflects what the application actually saw.
+
+The scheduler is named in `SETUP.md` §26, which also records what GitHub Actions' `schedule`
+trigger measured on this repository. Changing it must not change business logic.
 
 ### 16.3 Message types
 

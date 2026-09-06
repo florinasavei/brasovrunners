@@ -1118,6 +1118,40 @@ merged before an environment exists. Both values must match that Vercel project'
 variables exactly — a mismatched secret shows up as a 401 in the workflow log and as a
 `stale` job in `/api/health`, never as silent inaction.
 
+**GitHub Actions is the backstop, not the clock.** Measured on this repository, its `schedule`
+trigger fired roughly every **two hours** rather than every five minutes: every run succeeded,
+and the gaps between them were 01:13Z, 23:22Z, 21:41Z, 19:33Z, 17:40Z. GitHub documents
+`schedule` as best-effort and delays it under load, which a low-activity private repository
+sees constantly. Nothing is broken and nothing is incorrect — expiry is evaluated against `now`
+on every read (`AGENTS.md` §16.2, §10.6) — but a 30-minute declaration hold can then sit expired
+for two hours before its place is released, and the waitlisted runner behind it waits that long
+for an offer that was already theirs.
+
+So the primary caller is an **external HTTP pinger**, and the workflow stays as the thing that
+still runs when the pinger's own account lapses. Any service that can POST on a schedule with a
+header will do; the club needs no paid plan for it. Per environment, two monitors:
+
+```text
+POST <APP_BASE_URL>/api/internal/jobs/email-outbox               every 5 minutes
+POST <APP_BASE_URL>/api/internal/jobs/registration-maintenance   every 5 minutes
+Header: Authorization: Bearer <that environment's JOB_SECRET>
+```
+
+Checklist:
+
+- [ ] The monitor sends **POST**, not GET. A GET reaches the route and is refused; §12.8's rule
+      that GET never mutates is what makes that safe, and a monitor left on GET looks green
+      while nothing runs.
+- [ ] The secret is the same string as that Vercel project's `JOB_SECRET`, and it is stored in
+      the password manager under `Brașov Runners / Scheduler QA` or `/ Scheduler Production`
+      (§3), never in a monitor's public status page.
+- [ ] Production uses its own monitor and its own secret. One monitor pointed at both
+      environments is one leaked credential away from being both.
+- [ ] Failure alerting goes to a real inbox: a pinger that has quietly stopped is
+      indistinguishable, from the outside, from a scheduler that never fired.
+- [ ] Verify with `/api/health`: both jobs move from `stale` to `ok` within a few minutes, and
+      that is the acceptance test for this step, not a green dashboard on the pinger.
+
 Choose the external scheduler before Phase 5. Vercel Hobby cron runs once per day with
 hour-level jitter (Vercel's published limits, checked 2026-09-02), which is too coarse for
 maintenance every five minutes, so it is not the trigger. GitHub Actions `schedule`
