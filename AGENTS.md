@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.24-2026-09-06 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.24-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2316,7 +2316,14 @@ Registration maintenance:
   `expiry_reason = EVENT_STARTED`;
 - call fill available spots;
 - bounded/idempotent/observable;
-- record a `job_runs` row for every invocation.
+- record a `job_runs` row for every invocation;
+- prune the rows whose purpose is spent (`DECISIONS.md` §45): `job_runs` past 30 days,
+  `rate_limit_buckets` past 1 day, spent or long-expired `email_action_tokens` past 30 days, and
+  `SENT` `email_outbox` rows past 90 days. Last in the run and in its own `try`/`catch`, because
+  expiring a hold is the duty and tidying is not, and a failed sweep MUST NOT fail the run.
+  `registrations`, `participants`, `declaration_acceptances`, `audit_logs` and `events` are
+  never swept: how long the club keeps a runner's entry is a policy question for the club, and
+  erasing one person is §15.11's own action.
 
 The maintenance job is a delivery and liveness mechanism, not a correctness mechanism.
 Capacity and queue correctness come from transaction-time expiry evaluation (§10.6). The

@@ -1,4 +1,5 @@
 import type { Database } from "@/db/types";
+import { pruneExpiredRows, totalPruned } from "@/modules/jobs/retention";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
@@ -21,7 +22,7 @@ import { fillAvailableSpots } from "./service";
 export async function runRegistrationMaintenance<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-): Promise<{ eventsProcessed: number; errorCount: number }> {
+): Promise<{ eventsProcessed: number; errorCount: number; prunedRows: number }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
   const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now);
@@ -62,12 +63,28 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     }
   }
 
+  /**
+   * The retention sweep, last and in its own try/catch.
+   *
+   * It rides on this job because it needs no scheduler of its own: four tables whose oldest
+   * rows are meaningless, swept by something that already runs every five minutes. Last,
+   * because expiring a hold is the job's actual duty and deleting month-old rows must never
+   * delay it. Caught separately, because a failure here is untidiness — nothing a participant
+   * or an organizer would notice — and it must not mark the whole run as failed.
+   */
+  let prunedRows = 0;
+  try {
+    prunedRows = totalPruned(await pruneExpiredRows(db, now));
+  } catch {
+    errorCount += 1;
+  }
+
   await finishJobRun(
     db,
     jobRunId,
-    { itemsProcessed: eventIds.length + lapsedEmailConfirmations, errorCount },
+    { itemsProcessed: eventIds.length + lapsedEmailConfirmations + prunedRows, errorCount },
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount };
+  return { eventsProcessed: eventIds.length, errorCount, prunedRows };
 }

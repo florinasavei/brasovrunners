@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.24-2026-09-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.24-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2395,3 +2395,53 @@ Erasing is Administrator-only, asks for a reason, and says plainly that it canno
 it is meant to be the heavier of the two, because it is.
 
 Baseline bumped to `BR-V1.23-2026-09-06`.
+
+---
+
+## 45. Decided — a retention sweep deletes what is spent, and never what belongs to a person (2026-09-06)
+
+**Status:** Decided.
+
+The owner asked for hard deletes "to keep the DB light". Two answers, because the request
+contains two different things.
+
+**Deletes here were already hard.** Erasing a registration (§44) is `DELETE`, and cancelling is
+a status rather than a hidden row: nothing in this schema is soft-deleted, so there was no
+tombstone to sweep up.
+
+**What actually grows is mechanism, not data.** Measured against the QA database, the whole
+thing is under a megabyte and `job_runs` holds 67 rows — but it gains one every five minutes
+whether or not anybody registers. That is 288 a day and roughly 105,000 a year, to answer a
+question that only ever reads the newest row. Three other tables grow with traffic and then
+never shrink: throttle buckets whose window has passed, action tokens that are spent, and
+messages sent months ago.
+
+So the sweep takes four tables and no others:
+
+| Table | Window | Why that window |
+| --- | --- | --- |
+| `job_runs` | 30 days | `/api/health` and `/devs` read the newest run only |
+| `rate_limit_buckets` | 1 day | a bucket outside its window can never be read again |
+| `email_action_tokens` | 30 days, spent or long expired | the row holds a hash and a link, and cannot be accepted again |
+| `email_outbox` | 90 days, `SENT` only | a delivered row keeps the recipient's address; a bounced one is evidence |
+
+Two of those are privacy improvements rather than housekeeping. A sent message keeps a
+participant's address and a token keeps the link between a participant and a registration;
+holding either for years because nothing deleted them was not a decision anybody made.
+
+### What it must never touch, and why that is not squeamishness
+
+`registrations`, `participants`, `declaration_acceptances`, `audit_logs` and `events` are
+untouched, and a test asserts it ten years past every window. **How long the club keeps a
+runner's entry after a race is a policy question with legal weight**, and it belongs to the club
+(`BUSINESS.md` §9) rather than to a sweep that runs every five minutes and would answer it by
+accident. Erasing one person is §44: deliberate, per-row, audited, and asked for.
+
+### Where it runs
+
+Inside the registration-maintenance job, last, in its own `try`/`catch`. Last because expiring a
+hold is that job's actual duty and deleting month-old rows must never delay it; caught
+separately because a failure here is untidiness that no participant would notice, and marking
+the whole run failed for it would make `/api/health` cry wolf.
+
+Baseline bumped to `BR-V1.24-2026-09-06`.
