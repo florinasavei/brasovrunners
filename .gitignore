@@ -44,3 +44,5 @@ npm-debug.log*
 
 # Copied from flag-icons by scripts/sync-flags.mjs on install and on build.
 /public/flags/
+.vercel
+.env*

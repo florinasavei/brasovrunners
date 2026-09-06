@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2338,3 +2338,60 @@ posts the field, and silently calling it "not stated" would hide a stale or tamp
 instead of refusing it.
 
 Baseline bumped to `BR-V1.22-2026-09-06`.
+
+---
+
+## 44. Decided — a registration can be erased, because cancelling was never an answer to "remove me" (2026-09-06)
+
+**Status:** Decided. Supersedes the "there is no delete" of §33 and of `AGENTS.md` §15.11.
+
+§33 settled that staff may enter, rename and cancel a registration and nothing else, on the
+reasoning that a registration records what somebody agreed to and when, so "remove them" means
+cancelled — the place goes back to the queue and the record stays. That is right for the case it
+was thought about: a runner who drops out.
+
+It is wrong for the case it was not. A cancelled registration still holds a name, an email
+address and a signed declaration. Somebody who writes to the club asking to be removed from its
+records is not asking to be cancelled, and "we cannot delete you" is not an answer the club may
+give. A rule that forbids erasure is not a safeguard; it is a defect with a principle in front
+of it.
+
+The owner asked for this twice. The first refusal cited §15.11 correctly and stopped there,
+which was the mistake — the rule deserved re-examining rather than restating.
+
+### What erasing does, and the order it does it in
+
+Each step is load-bearing and the order is not arbitrary:
+
+1. **Release the place through the ordinary allocator** (`unregister`), so a deletion behaves in
+   the queue exactly as a withdrawal does. Deleting the row first would strand the place until
+   something noticed the count no longer matched, and the person at the front of the waiting
+   list would pay for the difference.
+2. **Write the `audit_logs` row second**, while the registration still exists to be described.
+3. **Delete the declaration acceptance and the registration last**, in one transaction. Action
+   tokens and outbox rows cascade at the database.
+
+No message is sent. A deletion is not a notification, and the person who asked for it does not
+want one.
+
+### What the audit row may say
+
+Who, when, why, and the status it was in. **Never the name and never the address** — those are
+what the deletion exists to remove, and a log that keeps a copy of them has not erased anything.
+It survives the row it describes because `audit_logs.entity_id` carries no foreign key, which
+was already true and is now load-bearing rather than incidental.
+
+### Why the declaration acceptance goes too
+
+It is the record of a consent given by a person who is being erased. Keeping it would preserve
+exactly the link the erasure is meant to break. The count of accepted declarations is not worth
+more than the request.
+
+### What is still refused
+
+No verified-email edit and no participant merge (§10.3): the verified address is the identity,
+and a typo is still fixed by cancelling and registering again. No staff-signed declaration.
+Erasing is Administrator-only, asks for a reason, and says plainly that it cannot be undone —
+it is meant to be the heavier of the two, because it is.
+
+Baseline bumped to `BR-V1.23-2026-09-06`.

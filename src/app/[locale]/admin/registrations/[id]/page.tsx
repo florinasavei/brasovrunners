@@ -1,6 +1,8 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -24,7 +26,7 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import { cancelRegistrationAction, correctRegisteredNameAction } from "../actions";
+import { cancelRegistrationAction, correctRegisteredNameAction, deleteRegistrationAction } from "../actions";
 import { resendRegistrationEmailAction } from "./actions";
 
 type Props = {
@@ -168,6 +170,37 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               />
             </Stack>
           </form>
+
+          {/*
+            Erasure, not withdrawal (BR-REQ-037-06). Deliberately below cancel and styled as the
+            heavier of the two: for a runner who simply drops out, cancelling is right and keeps
+            the record. This is for the case cancelling cannot answer — somebody asking to be
+            removed — and it takes the declaration with it.
+          */}
+          <Box component="details" sx={{ mt: 3, border: 1, borderColor: "error.light", borderRadius: 1, px: 2, "& > summary": { cursor: "pointer", py: 1.5, listStyle: "revert" } }}>
+            <Typography component="summary" variant="subtitle2" color="error.main">
+              {tr("registrations.deleteTitle")}
+            </Typography>
+            <form action={deleteRegistrationAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="registrationId" value={registration.id} />
+              <Stack spacing={2} sx={{ pb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {tr("registrations.deleteHelp")}
+                </Typography>
+                <TextField name="reason" label={tr("registrations.deleteReason")} required />
+                <FormControlLabel
+                  control={<Checkbox name="confirm" required />}
+                  label={tr("registrations.deleteConfirm")}
+                />
+                <Box>
+                  <Button type="submit" color="error" variant="contained">
+                    {tr("registrations.deleteAction")}
+                  </Button>
+                </Box>
+              </Stack>
+            </form>
+          </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             {tr("registrations.cancelHelp")}
           </Typography>

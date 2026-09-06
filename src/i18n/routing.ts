@@ -72,6 +72,7 @@ export const routing = defineRouting({
     "/admin/events/[id]": "/admin/events/[id]",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
+    "/admin/tasks": "/admin/tasks",
     "/admin/registrations/new": "/admin/registrations/new",
     "/admin/registrations/[id]": "/admin/registrations/[id]",
     "/admin/legal": "/admin/legal",

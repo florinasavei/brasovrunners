@@ -19,6 +19,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
 import { countryName } from "@/modules/registrations/names";
+import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { submitRegistrationAction } from "./actions";
 
 type Props = {
@@ -89,6 +90,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       <Typography variant="h1" gutterBottom>
         {t("title", { event: event.title })}
       </Typography>
+
+      {/* Where they are in the journey, and what happens next — the same component every page
+          of this flow renders, so the answer never depends on which page they are looking at. */}
+      <RegistrationJourney current={submitted ? "confirm" : "details"} />
 
       {submitted ? (
         <Stack spacing={2}>

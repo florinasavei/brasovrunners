@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -371,4 +372,68 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
   });
 
   return cancelled;
+}
+
+/**
+ * Erase a registration, and everything that points at it (BR-REQ-037-06, `DECISIONS.md` §44).
+ *
+ * This did not exist, and its absence was itself a defect. §15.11 permitted entering, renaming
+ * and cancelling and nothing more, on the reasoning that cancelling is what "remove them"
+ * means — true for a runner who withdraws, and not true at all for the case the rule forgot:
+ * somebody exercising their right to erasure. A cancelled registration keeps their name, their
+ * address and their declaration. "We cannot delete you" is not an answer the club can give.
+ *
+ * What it is careful about:
+ *
+ * - **Cancel first, delete second.** A registration that occupied a place has it released to
+ *   the front of the waiting list before the row goes, through the ordinary allocator, so the
+ *   queue behaves exactly as it would for a withdrawal. Deleting the row alone would strand
+ *   the place until the next maintenance sweep noticed the count no longer matched.
+ * - **The audit row is written before the delete and survives it.** `audit_logs.entity_id`
+ *   carries no foreign key precisely so a record of the deletion outlives the thing deleted.
+ *   It records who, when, why, and the status it was in — never the name or the address, which
+ *   are what the deletion exists to remove.
+ * - **The declaration acceptance goes too.** It is deleted explicitly, in the same
+ *   transaction, because its foreign key does not cascade and because a consent record for a
+ *   person who no longer exists is the thing being erased, not evidence to keep.
+ *
+ * Tokens and outbox rows cascade at the database. Nothing here writes email: a deletion is not
+ * a message, and the participant who asked for it does not want one.
+ */
+export async function deleteRegistrationByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  reason: string,
+  now: Date,
+): Promise<void> {
+  assertAdministrator(actor);
+
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+
+  // Releasing the place is a capacity decision, so it goes through `unregister` and takes the
+  // event lock the same way every other one does (§10.6). Only for a row that holds a place:
+  // a lapsed or already-cancelled registration holds nothing to give back.
+  if (canTransition(current.status, "CANCELLED")) {
+    const event = await eventForRegistration(db, current.eventId);
+    await unregister(db, event, registrationId, "ADMIN", now);
+  }
+
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: current.participantId,
+    action: "registration.deleted_by_staff",
+    entityType: "registration",
+    entityId: registrationId,
+    // The status it was in, and why — not who it was. The row exists to show that a deletion
+    // happened and who authorised it, not to keep a copy of what was deleted.
+    metadata: { from: current.status, reason: reason.trim().slice(0, 500) },
+    now,
+  });
+
+  await db.transaction(async (tx) => {
+    await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, registrationId));
+    await tx.delete(registrations).where(eq(registrations.id, registrationId));
+  });
 }

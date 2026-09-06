@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -773,9 +773,10 @@ other participant link uses — never by a password.
 - **Implements:** AGENTS.md §14, §10.3, §15.11
 - **Priority:** MUST
 - **Release:** M1
-- **Status:** built, and recorded in `DECISIONS.md` §33. The three administrative changes to a
-  registration are entering one, correcting its name, and cancelling it; there is deliberately no
-  fourth, and no delete.
+- **Status:** built, and recorded in `DECISIONS.md` §33. The administrative changes to a
+  registration are entering one, correcting its name, cancelling it, and — since `DECISIONS.md`
+  §44 — erasing it (BR-REQ-037-06). There is deliberately no fifth: no verified-email edit and
+  no participant merge.
 
 **Acceptance criteria**
 
@@ -824,6 +825,28 @@ other participant link uses — never by a password.
 5. Given an address that already holds an active registration for that event, when an Administrator enters it, then they are told so plainly rather than receiving the public form's generic answer.
 6. Given an Author or an Editor, when any of this is attempted, then it is refused.
 7. Given any of these changes, when it completes, then an `audit_logs` row records the actor, the action, the entity and the time.
+
+**Verification:** integration `registrations/staff-crud.test.ts`
+
+#### BR-REQ-037-06 — An Administrator erases a registration
+
+- **Source:** BR-BUS-037, BR-BUS-070
+- **Implements:** AGENTS.md §15.11, §12.12, §10.3
+- **Priority:** MUST
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §44, which supersedes the "there is no
+  delete" of §33. Cancelling keeps the row, which is right for a withdrawal and wrong for an
+  erasure request; this is the second case.
+
+**Acceptance criteria**
+
+1. Given a registration that holds a place, when an Administrator erases it, then the place is released through the ordinary allocator and offered to the front of the waiting list before the row is removed.
+2. Given a registration with a signed declaration, when it is erased, then the declaration acceptance is deleted with it, and so are its action tokens and queued messages.
+3. Given any erasure, when it completes, then an `audit_logs` row records the actor, the reason, the status it was in and the time — and contains neither the participant's name nor their address.
+4. Given that audit row, when the registration no longer exists, then the row is still readable: it carries no foreign key to the thing it describes.
+5. Given an erasure, when it completes, then no message is sent to the participant.
+6. Given any role below Administrator, when an erasure is attempted, then it is refused and nothing is removed.
+7. Given an unknown registration, when an erasure is attempted, then it is refused rather than reported as a silent success.
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 
@@ -1301,7 +1324,7 @@ other participant link uses — never by a password.
 | BR-BUS-034 | BR-REQ-034-01, BR-REQ-034-02, BR-REQ-034-03, BR-REQ-052-02, BR-REQ-090-03 |
 | BR-BUS-035 | BR-REQ-035-01, BR-REQ-035-02, BR-REQ-035-03, BR-REQ-035-04, BR-REQ-035-05, BR-REQ-034-03, BR-REQ-090-03 |
 | BR-BUS-036 | BR-REQ-036-01, BR-REQ-036-02 |
-| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
+| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
 | BR-BUS-038 | BR-REQ-038-01, BR-REQ-038-02, BR-REQ-038-03 |
 | BR-BUS-039 | BR-REQ-039-01 |
 | BR-BUS-040 | BR-REQ-040-01, BR-REQ-040-02, BR-REQ-040-03, BR-REQ-040-04 |

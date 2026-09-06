@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -385,10 +385,22 @@ order as one made online, it starts unconfirmed, and the participant receives th
 and signs the declaration themselves. Nobody signs a declaration for somebody else, and the
 organizer confirms on the form that they are relaying a request rather than inventing one.
 
-The three administrative changes to a registration are entering one, correcting the name it
-carries, and cancelling it. There is no fourth, and there is no delete: a registration records
-what somebody agreed to and when, so "remove them" means cancelled, which releases the place to
-the first person waiting. Each of the three is recorded with who did it and when.
+The administrative changes to a registration are entering one, correcting the name it carries,
+cancelling it, and erasing it. Each is recorded with who did it and when.
+
+**Cancelling and erasing are different answers to different questions.** A runner who drops out
+is cancelled: the place goes to the first person waiting, and the record of what they agreed to
+stays, which is what the club needs if a question comes up later. A person who asks to be
+removed from the club's records is erased: their registration and the declaration they signed
+are deleted outright, the place is released the same way, and what remains is a line in the log
+saying an administrator deleted a registration on a date and why — not who it was.
+
+The second one exists because the first cannot answer it. A cancelled registration still holds
+a name, an email address and a signed declaration, so "we cancelled you" is not a reply to
+somebody asking to be forgotten, and "we cannot remove you" is not a reply the club may give.
+
+Erasing is deliberately the heavier action: it asks for a reason, it says plainly that it cannot
+be undone, and it is available to an Administrator alone.
 
 The verified email is the participant identity. Staff must not overwrite a verified email directly or merge participant records in V1. An unverified typo is handled by cancelling the pending registration and restarting with the correct address. A verified identity change requires a later explicit verification workflow; it is never performed by an unaudited database edit.
 

@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -193,6 +193,25 @@ criteria for this runbook.
 - [ ] DNS management location decided, and access recorded in the password manager.
 - [ ] Both Vercel projects running on their default hostnames with green health checks.
 - [ ] Two recovery-capable owners have access to the registrar.
+
+### The scriptable half
+
+Most of step 1 and step 3 is one command, so the day the domain finally exists is a paste of DNS
+records rather than an afternoon across five consoles:
+
+```bash
+yarn domain:bind qa qa.<domain>              # dry run: prints what it would change
+yarn domain:bind qa qa.<domain> --apply      # adds the hostname, sets APP_BASE_URL
+```
+
+It adds the hostnames to the Vercel project, sets `APP_BASE_URL` — the single source of every
+absolute URL the application emits (`AGENTS.md` §8), which is why nothing else needs editing —
+and prints both the DNS records to create and the two consoles it deliberately does not touch.
+It does not redeploy: `APP_BASE_URL` reaches a running application only on a new deployment, and
+when that happens is the operator's call.
+
+Needs `npx vercel login` once. The checklist below is still the record of what was done, and the
+steps the script prints are the same ones.
 
 ### Step 1 — QA first
 

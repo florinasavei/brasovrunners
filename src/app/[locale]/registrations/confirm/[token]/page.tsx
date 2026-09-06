@@ -7,6 +7,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
 import { confirmEmailAction } from "./actions";
 
@@ -36,6 +37,9 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   if (done) {
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+        {/* Confirmed is not finished: the declaration is still to sign, and the hold that
+            protects their place is running. Saying "done" alone loses people here. */}
+        <RegistrationJourney current="declare" />
         <Alert severity="success">{t("confirm.done")}</Alert>
       </Container>
     );
@@ -48,6 +52,8 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("confirm.title")}
       </Typography>
+
+      <RegistrationJourney current="confirm" />
 
       {!context.ok ? (
         <Alert severity="warning">{t("invalidOrExpired")}</Alert>
