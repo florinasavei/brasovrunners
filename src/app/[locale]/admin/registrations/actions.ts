@@ -8,6 +8,7 @@ import {
   cancelRegistrationByStaff,
   correctRegisteredName,
   createRegistrationByStaff,
+  deleteRegistrationByStaff,
 } from "@/modules/registrations/admin-service";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -150,4 +151,22 @@ export async function cancelRegistrationAction(form: FormData): Promise<void> {
   }
 
   backTo(detailPath(locale, registrationId), outcome);
+}
+
+export async function deleteRegistrationAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date());
+    outcome = { saved: "registrationDeleted" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  // Always back to the list, never to the detail page: on success that page describes a row
+  // that no longer exists, and a 404 is a poor way to learn a deletion worked.
+  backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }

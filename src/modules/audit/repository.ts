@@ -25,6 +25,12 @@ export type AuditAction =
   | "registration.created_by_staff"
   | "registration.name_corrected"
   | "registration.cancelled_by_staff"
+  /**
+   * Erasure (BR-REQ-037-06). The one action whose audit row outlives the thing it describes:
+   * `entity_id` carries no foreign key, so this survives the delete and is the only remaining
+   * evidence that the registration existed and who authorised its removal.
+   */
+  | "registration.deleted_by_staff"
   /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
   | "registration.resend_rate_limited";
 

@@ -171,7 +171,14 @@
       "locale": {
         "ro": "Română",
         "en": "English"
-      }
+      },
+      "deleteTitle": "Șterge definitiv",
+      "deleteHelp": "Șterge înscrierea și declarația semnată, definitiv. Locul este eliberat către lista de așteptare, iar în jurnal rămâne cine a șters și de ce — nu și datele persoanei. Folosește-o pentru o cerere de ștergere a datelor; pentru o retragere obișnuită, anulează.",
+      "deleteReason": "Motivul ștergerii",
+      "deleteAction": "Șterge definitiv",
+      "deleteConfirm": "Confirm că această ștergere este definitivă",
+      "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
+      "rowActions": "Acțiuni"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -432,6 +439,19 @@
       "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
       "prompt": "Nu a ajuns mesajul?",
       "linkLabel": "Trimite-l din nou"
+    },
+    "journey": {
+      "steps": {
+        "details": "Datele tale",
+        "confirm": "Confirmă emailul",
+        "declare": "Semnează declarația"
+      },
+      "now": {
+        "details": "Completează formularul. După trimitere îți scriem pe email ca să confirmi adresa.",
+        "confirm": "Ți-am trimis un email cu un link de confirmare. Poate dura până la 5 minute să ajungă — verifică și folderul de spam înainte să te înscrii din nou.",
+        "declare": "Mai rămâne un pas: citește și semnează declarația. Locul tău este rezervat 30 de minute.",
+        "done": "Înscrierea ta este confirmată. Ne vedem la start!"
+      }
     }
   },
   "Registrations": {

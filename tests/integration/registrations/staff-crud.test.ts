@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -15,10 +16,12 @@ import {
   cancelRegistrationByStaff,
   correctRegisteredName,
   createRegistrationByStaff,
+  deleteRegistrationByStaff,
 } from "@/modules/registrations/admin-service";
 import {
   confirmEmail,
   type EventForRegistration,
+  signDeclaration,
   submitRegistration,
 } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -431,5 +434,93 @@ describe("BR-REQ-037-03 cancelling on the club's behalf", () => {
     expect(await codeOf(cancelRegistrationByStaff(db, editor, holder.id, "no", NOW))).toBe(
       "FORBIDDEN",
     );
+  });
+});
+
+/**
+ * BR-REQ-037-06 — erasure.
+ *
+ * Cancelling keeps the row: the name, the address and the signed declaration all stay, which is
+ * right for a runner who withdraws and wrong for one who asks to be removed. These tests are
+ * about the second case, and about the three things that must remain true after the row is gone:
+ * the place goes back to the queue, the audit trail survives, and nothing else does.
+ */
+describe("BR-REQ-037-06 an Administrator erases a registration", () => {
+  it("removes the row, its declaration acceptance, and its queued email", async () => {
+    const event = await createInternalEvent(10);
+    const registration = await registerPublicly(event, "erase@example.ro");
+    await signDeclaration(db, event, registration.id, { accepted: true, typedName: "Runner" }, NOW);
+
+    const [acceptanceBefore] = await db
+      .select()
+      .from(declarationAcceptances)
+      .where(eq(declarationAcceptances.registrationId, registration.id));
+    expect(acceptanceBefore).toBeDefined();
+
+    await deleteRegistrationByStaff(db, admin, registration.id, "erasure request", NOW);
+
+    expect(
+      await db.select().from(registrations).where(eq(registrations.id, registration.id)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(declarationAcceptances)
+        .where(eq(declarationAcceptances.registrationId, registration.id)),
+    ).toHaveLength(0);
+    // Cascades at the database rather than here, and this is what proves it.
+    expect(
+      await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, registration.id)),
+    ).toHaveLength(0);
+  });
+
+  it("leaves an audit row that outlives the registration it describes", async () => {
+    const event = await createInternalEvent(10);
+    const registration = await registerPublicly(event, "audited@example.ro");
+
+    await deleteRegistrationByStaff(db, admin, registration.id, "asked to be removed", NOW);
+
+    const [entry] = await db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.entityId, registration.id));
+    expect(entry.action).toBe("registration.deleted_by_staff");
+    expect(entry.actorStaffUserId).toBe(admin.id);
+    expect(entry.metadataJson).toMatchObject({ reason: "asked to be removed" });
+    // The point of the row: it names who and why, and never what was erased.
+    expect(JSON.stringify(entry.metadataJson)).not.toContain("audited@example.ro");
+  });
+
+  it("releases the place to the front of the waiting list", async () => {
+    const event = await createInternalEvent(1);
+    const holder = await registerPublicly(event, "holder@example.ro");
+    const waiting = await registerPublicly(event, "waiting@example.ro");
+    expect(waiting.status).toBe("WAITLISTED");
+
+    await deleteRegistrationByStaff(db, admin, holder.id, "erasure request", NOW);
+
+    const [promoted] = await db.select().from(registrations).where(eq(registrations.id, waiting.id));
+    // The whole reason deletion goes through the allocator rather than straight to DELETE: the
+    // place a deleted registration held belongs to whoever was waiting for it.
+    expect(promoted.status).toBe("WAITLIST_OFFERED");
+  });
+
+  it("refuses any role below Administrator", async () => {
+    const event = await createInternalEvent(10);
+    const registration = await registerPublicly(event, "protected@example.ro");
+
+    await expect(
+      deleteRegistrationByStaff(db, editor, registration.id, "no", NOW),
+    ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "FORBIDDEN");
+
+    expect(
+      await db.select().from(registrations).where(eq(registrations.id, registration.id)),
+    ).toHaveLength(1);
+  });
+
+  it("refuses an unknown registration rather than reporting a silent success", async () => {
+    await expect(
+      deleteRegistrationByStaff(db, admin, "00000000-0000-0000-0000-000000000000", "x", NOW),
+    ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "NOT_FOUND");
   });
 });

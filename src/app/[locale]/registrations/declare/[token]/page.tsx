@@ -14,6 +14,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
+import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
 import { signDeclarationAction } from "./actions";
 
@@ -42,6 +43,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   if (done) {
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+        {/* Waitlisted is not the end of the journey — it is a place in a queue, and the
+            declaration is already signed — so both outcomes render the finished stepper. */}
+        <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
       </Container>
     );
@@ -61,6 +65,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("declare.title")}
       </Typography>
+
+      <RegistrationJourney current="declare" />
 
       {!context.ok || !declaration ? (
         <Alert severity="warning">{t("invalidOrExpired")}</Alert>

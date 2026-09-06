@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.22-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.23-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -71,7 +71,7 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 | Publication is one state per event: both languages go live together, and PUBLISHED requires a complete translation in every locale. A locale with no translation is a 404, never the other language's text. | `AGENTS.md` §11.2, BR-REQ-040-02, `DECISIONS.md` §28 |
 | A test registration behaves exactly like a real one in the queue — `kind` appears in no condition in the allocator or the capacity formula — is omitted from every count the club is given, and cannot exist in production. | `AGENTS.md` §12.6, BR-REQ-037-04, `DECISIONS.md` §30 |
 | A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, confirmed and not opted out, and never switched on before the approved privacy notice describes it. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
-| Staff may enter, rename and cancel a registration, and nothing else. No verified-email edit, no participant merge, no delete, and no staff-signed declaration. | `AGENTS.md` §15.11, BR-REQ-037-03, BR-REQ-037-05 |
+| Staff may enter, rename, cancel and erase a registration, and nothing else. No verified-email edit, no participant merge, and no staff-signed declaration. Erasing releases the place through the allocator and leaves an audit row that names who and why but never who was erased. | `AGENTS.md` §15.11, BR-REQ-037-03, BR-REQ-037-05, BR-REQ-037-06 |
 | Participants never get passwords or accounts. Staff-only auth. | `AGENTS.md` §10.3, §13 |
 | Email action links: token hashed at rest, single use, GET never mutates. | `AGENTS.md` §12.8, BR-REQ-036-02 |
 | Every absolute URL derives from `APP_BASE_URL`. No hostname literal in `src/`, and the club's domain appears in no file except `SETUP.md` §26 — `docs:check` fails otherwise. | `AGENTS.md` §8, BR-REQ-101-02 |
@@ -180,8 +180,9 @@ what §15.8 allows for the current status, and a CSV export with formula-neutral
 allocator, the same queue position, the same unconfirmed start, `source = STAFF` and the organizer
 on the row; **correct** the registered name, and nothing else, because the verified address is the
 identity; and **cancel**, which is what "remove them" means, releasing the place to the front of
-the waiting list. There is no delete and no fourth move. Every one of the three writes an
-`audit_logs` row. A staff-entered registration reaches CONFIRMED only when the participant signs
+the waiting list; and **erase**, for somebody who asks to be removed rather than to withdraw,
+which takes the declaration with it and is the one thing cancelling cannot do. Every one of the
+four writes an `audit_logs` row. A staff-entered registration reaches CONFIRMED only when the participant signs
 the declaration from their own email — consent cannot be relayed (BR-REQ-037-03, BR-REQ-037-05,
 `DECISIONS.md` §33). Administrator only, asserted on the server.
 

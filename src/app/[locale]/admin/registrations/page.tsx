@@ -2,7 +2,9 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -19,9 +21,13 @@ import {
 } from "@/modules/registrations/admin-repository";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
+import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
+import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { cancelRegistrationAction, deleteRegistrationAction } from "./actions";
+import { resendRegistrationEmailAction } from "./[id]/actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -29,6 +35,15 @@ type Props = {
 };
 
 export const dynamic = "force-dynamic";
+
+/** Shared by the two destructive disclosures, so they cannot drift apart visually. */
+const DISCLOSURE = {
+  border: 1,
+  borderColor: "divider",
+  borderRadius: 1,
+  px: 2,
+  "& > summary": { cursor: "pointer", py: 1, listStyle: "revert" },
+} as const;
 
 function isRegistrationStatus(value: string | undefined): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
@@ -148,6 +163,82 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 <Typography variant="body2" color="text.secondary">
                   {row.participantEmail} · {row.eventTitle ?? row.eventId}
                 </Typography>
+
+                {/*
+                  The three things §15.11 permits, reachable from the row itself. An organizer
+                  with somebody waiting at a desk was opening a registration, acting, going
+                  back, and losing their filters each time.
+
+                  Both destructive ones are behind a `<details>` and ask for a reason, which is
+                  written to `audit_logs`. Native disclosure rather than a dialog: it needs no
+                  client island, it works with JavaScript off, and the reason field is the
+                  confirmation step — you cannot fire either action by mistyping a click.
+                */}
+                <Stack spacing={1} sx={{ mt: 2 }}>
+                  {deriveAllowedResendMessageType(row.status) && (
+                    <form action={resendRegistrationEmailAction}>
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="registrationId" value={row.id} />
+                      <Button type="submit" size="small" variant="outlined">
+                        {t("registrations.resend")}
+                      </Button>
+                    </form>
+                  )}
+
+                  {canTransition(row.status, "CANCELLED") && (
+                    <Box component="details" sx={DISCLOSURE}>
+                      <Typography component="summary" variant="body2">
+                        {t("registrations.cancelTitle")}
+                      </Typography>
+                      <form action={cancelRegistrationAction}>
+                        <input type="hidden" name="uiLocale" value={locale} />
+                        <input type="hidden" name="registrationId" value={row.id} />
+                        <Stack spacing={1} sx={{ pb: 2 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("registrations.cancelHelp")}
+                          </Typography>
+                          <TextField
+                            name="reason"
+                            label={t("registrations.cancelReason")}
+                            size="small"
+                            required
+                          />
+                          <Button type="submit" size="small" color="warning" variant="outlined">
+                            {t("registrations.cancelAction")}
+                          </Button>
+                        </Stack>
+                      </form>
+                    </Box>
+                  )}
+
+                  <Box component="details" sx={DISCLOSURE}>
+                    <Typography component="summary" variant="body2">
+                      {t("registrations.deleteTitle")}
+                    </Typography>
+                    <form action={deleteRegistrationAction}>
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="registrationId" value={row.id} />
+                      <Stack spacing={1} sx={{ pb: 2 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {t("registrations.deleteHelp")}
+                        </Typography>
+                        <TextField
+                          name="reason"
+                          label={t("registrations.deleteReason")}
+                          size="small"
+                          required
+                        />
+                        <FormControlLabel
+                          control={<Checkbox name="confirm" required />}
+                          label={t("registrations.deleteConfirm")}
+                        />
+                        <Button type="submit" size="small" color="error" variant="contained">
+                          {t("registrations.deleteAction")}
+                        </Button>
+                      </Stack>
+                    </form>
+                  </Box>
+                </Stack>
               </CardContent>
             </Card>
           ))}

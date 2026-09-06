@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2253,11 +2253,28 @@ BR-REQ-037-05):
    CANCELLED from — `PENDING_EMAIL_CONFIRMATION` — is refused with a sentence rather than a bare
    conflict; such a row holds no place and lapses after 48 hours on its own.
 
-There is no delete. A registration records what somebody agreed to and when.
+4. **Erasing.** Administrator only, and not the same thing as cancelling. Cancelling keeps the
+   row — the name, the address, the signed declaration — which is right for a runner who
+   withdraws and is exactly wrong for one who asks to be removed. This rule previously said
+   "there is no delete", and that made "we cannot delete you" the club's only possible answer
+   to an erasure request, which is not an answer it may give (`DECISIONS.md` §44).
 
-Every one of the three writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
-`registrations`, a staff-signed declaration, a staff-confirmed registration, or a staff-entered
-row that is allocated ahead of anybody already waiting.
+   The order is fixed and each step is load-bearing: release the place through the ordinary
+   allocator first, so the queue behaves as it does for any withdrawal; write the `audit_logs`
+   row second, while the registration still exists to be described; delete the declaration
+   acceptance and the registration last, in one transaction. Tokens and outbox rows cascade at
+   the database. No message is sent — a deletion is not a notification, and the person who
+   asked for it does not want one.
+
+   The audit row records who, when, why, and the status it was in, and **never the name or the
+   address**: those are what the deletion exists to remove. It survives because
+   `audit_logs.entity_id` carries no foreign key (§12.12), which is the whole reason it does
+   not.
+
+Every one of the four writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+`registrations`, a staff-signed declaration, a staff-confirmed registration, a staff-entered
+row that is allocated ahead of anybody already waiting, or a delete that skips the allocator and
+strands the place it held.
 
 ---
 

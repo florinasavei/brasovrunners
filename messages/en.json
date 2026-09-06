@@ -171,7 +171,14 @@
       "locale": {
         "ro": "Română",
         "en": "English"
-      }
+      },
+      "deleteTitle": "Delete permanently",
+      "deleteHelp": "Deletes the registration and the signed declaration, permanently. The place is released to the waiting list, and the log keeps who deleted it and why — not the person’s data. Use it for an erasure request; for an ordinary withdrawal, cancel instead.",
+      "deleteReason": "Reason for deletion",
+      "deleteAction": "Delete permanently",
+      "deleteConfirm": "I confirm this deletion is permanent",
+      "registrationDeleted": "The registration was permanently deleted.",
+      "rowActions": "Actions"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -432,6 +439,19 @@
       "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
       "prompt": "Did the message not arrive?",
       "linkLabel": "Send it again"
+    },
+    "journey": {
+      "steps": {
+        "details": "Your details",
+        "confirm": "Confirm your email",
+        "declare": "Sign the declaration"
+      },
+      "now": {
+        "details": "Fill in the form. We will then email you to confirm your address.",
+        "confirm": "We have sent you a confirmation link. It can take up to 5 minutes to arrive — check your spam folder before registering again.",
+        "declare": "One step left: read and sign the declaration. Your place is held for 30 minutes.",
+        "done": "Your registration is confirmed. See you at the start!"
+      }
     }
   },
   "Registrations": {
