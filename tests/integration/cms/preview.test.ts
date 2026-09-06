@@ -39,14 +39,12 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
         locale: "ro",
         slug: "crosul-aniversar",
         title: "Crosul aniversar",
-        locationName: "Parcul Tractorul",
       },
       {
         eventId: event.id,
         locale: "en",
         slug: "anniversary-cross",
         title: "Anniversary cross",
-        locationName: "Tractorul Park",
       },
     ]);
     return event;

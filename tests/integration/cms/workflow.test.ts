@@ -139,7 +139,6 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         slug,
         title: FIELDS.title,
         excerpt: FIELDS.excerpt,
-        locationName: MEETING_POINT,
         authorStaffUserId,
       })
       .returning();
@@ -154,7 +153,6 @@ describe("BR-REQ-051-01 editorial workflow", () => {
           slug: `${slug}-en`,
           title: "Anniversary cross",
           excerpt: options.englishMissing?.excerpt === null ? null : "The club's own race.",
-          locationName: MEETING_POINT,
           authorStaffUserId,
         })
         .returning();

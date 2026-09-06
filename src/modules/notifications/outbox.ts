@@ -10,6 +10,7 @@ import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import {
   MAX_SEND_ATTEMPTS,
+  nextAllowanceResetAt,
   nextAttemptAt,
   PROCESSING_LOCK_TIMEOUT_MS,
   sanitizeProviderError,
@@ -196,6 +197,14 @@ export type OutboxBatchSummary = {
   claimed: number;
   sent: number;
   retrying: number;
+  /**
+   * Held back because the provider's own allowance is spent, and scheduled for the reset
+   * rather than for the ordinary backoff. Counted apart from `retrying` because the two mean
+   * opposite things to whoever is watching a registration window: `retrying` is a hiccup,
+   * `deferred` is "the club has sent as much as its plan allows today, and the rest goes out
+   * tomorrow unless somebody upgrades" (`docs/PLATFORM.md`, limit 1).
+   */
+  deferred: number;
   failed: number;
   bounced: number;
 };
@@ -231,6 +240,7 @@ export async function processOutboxBatch(
     claimed: claimed.length,
     sent: 0,
     retrying: 0,
+    deferred: 0,
     failed: 0,
     bounced: 0,
   };
@@ -273,6 +283,30 @@ export async function processOutboxBatch(
 
     const error = sanitizeProviderError(result.error);
 
+    /**
+     * The allowance is spent, not the message rejected. Nothing was transmitted.
+     *
+     * Scheduled for the reset the adapter names, or the next daily one, instead of the
+     * one-to-thirty-two-minute backoff below — which would spend all six attempts inside the
+     * hour and mark a perfectly good confirmation FAILED. The attempt still counts, so this
+     * stays bounded at six days rather than becoming a message that retries forever.
+     *
+     * Checked before `permanent_failure` only for reading order; the outcomes are disjoint.
+     */
+    if (result.outcome === "throttled") {
+      await db
+        .update(emailOutbox)
+        .set({
+          status: "PENDING",
+          lockedAt: null,
+          nextAttemptAt: result.retryAfter ?? nextAllowanceResetAt(now),
+          lastError: error,
+        })
+        .where(eq(emailOutbox.id, row.id));
+      summary.deferred += 1;
+      continue;
+    }
+
     if (result.outcome === "permanent_failure") {
       // BR-REQ-080-02 criterion 4: a permanent failure is not retried. Suppressing *further*
       // messages to that address needs the provider's webhook verdict (BR-REQ-080-04), which
@@ -300,8 +334,10 @@ export async function processOutboxBatch(
     summary.retrying += 1;
   }
 
-  // `itemsProcessed` is what was claimed, and `errorCount` the outcomes that need a person:
-  // a retry is the mechanism working, a failure or a bounce is not.
+  // `itemsProcessed` is what was claimed, and `errorCount` the outcomes that need a person: a
+  // retry is the mechanism working, a failure or a bounce is not. A deferral is the mechanism
+  // working too — the plan's limit, not a fault — so it is not an error; `/devs` shows the
+  // volume against the allowance, which is where that belongs.
   await finishJobRun(
     db,
     jobRunId,

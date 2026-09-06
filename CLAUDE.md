@@ -135,7 +135,7 @@ and writes none of it. Only what a translator would change is entered per langua
 page address, the short description and the two SEO fields. The meeting point, the street address,
 the difficulty and the cost are one value for the whole event (`AGENTS.md` §11.7, `DECISIONS.md`
 §36), which means the English page shows them in the club's own words — the accepted trade, and
-the next baseline owes migration `0015` to drop the columns they left behind. Built ahead of its milestone on purpose: `DECISIONS.md` §25, §28. Staff sign-in is Auth.js with the Zitadel OAuth provider
+migration `0017` has since dropped the columns they left behind. Built ahead of its milestone on purpose: `DECISIONS.md` §25, §28. Staff sign-in is Auth.js with the Zitadel OAuth provider
 (`DECISIONS.md` §26, reversing §24, which was never shipped to anyone). `STAFF_AUTH_MODE=provider`
 is the real thing; local and test still use the development switcher of `AGENTS.md` §13.1, and any
 environment without a Zitadel tenant runs `STAFF_AUTH_MODE=disabled`, answering 404 to every staff
@@ -197,7 +197,20 @@ labelled everywhere it is listed, and cannot exist when `APP_ENV=production`, re
 down, when a job is stale or has never run, because a stalled scheduler delays a notification
 rather than breaking the site.
 
-**668 unit and integration tests, 86 end-to-end runs (43 per viewport project), and five
+**The guards are finished, and the pool is bounded in time.** §19.4 named five surfaces and
+guarded two; token validation is now keyed on the presented token's *hash* — the threat is one
+link hammered, not enumeration — and the job endpoints are throttled per job name, counted only
+after `JOB_SECRET` verifies. Uploads are the fifth and have nothing behind them yet. The database
+pool sets `statement_timeout` and `idle_in_transaction_session_timeout`: its size was never the
+risk (`docs/PLATFORM.md` § "Connections are not the ceiling" does the arithmetic), one unbounded
+query holding a serverless function for 300 seconds was. And a **spent Mailgun allowance now
+defers a message instead of discarding it** — the provider refuses a spent daily cap with the
+same 400 it uses for a malformed message, which the adapter called permanent, so on the club's
+busiest day every message queued after the cap was thrown away (`DECISIONS.md` §40). `/devs`
+shows the volume against the allowance before a window opens, and explains every configuration
+enum rather than only reporting its value (§41).
+
+**737 unit and integration tests, 90 end-to-end runs (45 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a

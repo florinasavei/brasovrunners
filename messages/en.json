@@ -167,7 +167,8 @@
       "preview": "Preview",
       "edit": "Edit",
       "moreActions": "More actions",
-      "new": "New event"
+      "new": "New event",
+      "registrations": "Registrations"
     },
     "confirm": {
       "cancel": "Never mind",
@@ -502,6 +503,44 @@
       "DEV": "plus the configuration page. No participant data",
       "ADMIN": "plus registrations, participants, exports, deleting an event",
       "SUPERADMIN": "plus staff administration: who has access and what they may do"
+    },
+    "settings": "Settings",
+    "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",
+    "emailVolume": "Email volume today",
+    "emailVolumeIntro": "Three messages per completed registration, against the provider's daily allowance. Check this before opening a registration window, not after. Counted from midnight UTC.",
+    "emailVolumeHeadroom": "{remaining} of {allowance} messages left today.",
+    "registrationsToday": "Registrations today",
+    "testRegistrations": "test",
+    "projectedMessages": "Projected messages",
+    "queuedMessages": "Queued today",
+    "sentMessages": "Sent today",
+    "inUse": "in use",
+    "setting": {
+      "APP_ENV": {
+        "what": "Which deployment this is. It — not NODE_ENV — decides every environment-dependent rule: whether live email may be sent, whether the development sign-in switcher is permitted, and whether sample legal text and test registrations may exist at all.",
+        "values": {
+          "local": "A developer's own machine. Email is captured and never transmitted; the sign-in switcher is available; sample legal text is seeded.",
+          "test": "The automated suites. Same guarantees as local, and nothing here ever reaches a person.",
+          "qa": "The shared deployment colleagues try things on. Real database, real sign-in, and email either captured or restricted to an allowlist — never open delivery.",
+          "production": "The club's real site. The only environment permitted to send live email, and the only one that refuses sample legal text and test registrations outright."
+        }
+      },
+      "EMAIL_DELIVERY_MODE": {
+        "what": "How far a message actually goes once the outbox renders it. This is the guard between a test system and a stranger's inbox, and startup refuses any combination that would cross it.",
+        "values": {
+          "capture": "Nothing is transmitted. Messages are held in memory — which on a deployed serverless host means they reach nobody at all, so registration looks broken to anyone but a developer.",
+          "allowlist": "Real delivery, but only to the addresses in EMAIL_ALLOWLIST; everything else is captured. This is what a Mailgun sandbox domain is, and it is how a small closed group tests the whole journey safely.",
+          "live": "Real delivery to whoever registered. Permitted only when APP_ENV is production; stating it anywhere else fails at startup."
+        }
+      },
+      "STAFF_AUTH_MODE": {
+        "what": "How a member of staff proves who they are. Participants never sign in at all — this is the backoffice door only, and the staff_users table decides who may come through it regardless of which mode is set.",
+        "values": {
+          "dev-switcher": "A local shortcut that lets a developer become any role without an identity provider. Permitted only when APP_ENV is local or test; stating it elsewhere fails at startup.",
+          "provider": "The real thing: Auth.js with Zitadel. The provider proves the address, and the staff_users allowlist decides whether that address may in.",
+          "disabled": "There is no way in. Every staff route answers 404 rather than a refusal, so the backoffice is unreachable rather than merely hidden. This is the correct setting for any environment with no identity provider configured."
+        }
+      }
     }
   }
 }

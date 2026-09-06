@@ -52,7 +52,11 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
   async function seedDraft() {
     const [event] = await db
       .insert(events)
-      .values({ kind: "RACE", startsAt: new Date("2026-10-11T06:00:00Z") })
+      .values({
+        kind: "RACE",
+        startsAt: new Date("2026-10-11T06:00:00Z"),
+        locationName: MEETING_POINT,
+      })
       .returning();
     const [translation] = await db
       .insert(eventTranslations)
@@ -61,7 +65,6 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
         locale: "ro",
         slug: FIELDS.slug,
         title: FIELDS.title,
-        locationName: MEETING_POINT,
       })
       .returning();
     return translation;

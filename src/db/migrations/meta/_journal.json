@@ -120,6 +120,13 @@
       "when": 1788629885550,
       "tag": "0016_staff_role_hierarchy",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788635033724,
+      "tag": "0017_drop_deprecated_event_translation_columns",
+      "breakpoints": true
     }
   ]
 }

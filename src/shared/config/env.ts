@@ -1,5 +1,6 @@
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { z } from "zod";
+import { APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES } from "./env-enums";
 
 // AGENTS.md §7.1: APP_ENV is the environment identity; NODE_ENV is not.
 // AGENTS.md §8: APP_BASE_URL is the single source of every absolute URL the app emits.
@@ -23,8 +24,17 @@ const allowlist = z
 
 export const envSchema = z
   .object({
-    APP_ENV: z.enum(["local", "test", "qa", "production"]).default("local"),
-    APP_BASE_URL: z.url().default("http://localhost:3000"),
+    APP_ENV: z.enum(APP_ENVIRONMENTS).default("local"),
+    /**
+     * The default is the port `yarn dev` actually starts on (`scripts/dev.mjs`), not 3000.
+     *
+     * It said 3000 and the dev server has never used it — `scripts/dev.mjs` picks 47821,
+     * deliberately far from 3000, 5173, 8000 and 8080 so it does not collide with another
+     * project. Every absolute URL this application emits derives from this value (§8), so the
+     * mismatch meant a locally rendered confirmation link pointed at a port with nothing
+     * listening on it, and the developer who clicked it learned nothing about their change.
+     */
+    APP_BASE_URL: z.url().default("http://localhost:47821"),
     // Optional only until WEEKEND.md step 2 lands the first table; then it is required.
     DATABASE_URL: z.url().optional(),
 
@@ -49,7 +59,7 @@ export const envSchema = z
      * switcher, every other environment gets nothing until stated. Stating `dev-switcher`
      * outside local or test fails at startup.
      */
-    STAFF_AUTH_MODE: z.enum(["dev-switcher", "provider", "disabled"]).optional(),
+    STAFF_AUTH_MODE: z.enum(STAFF_AUTH_MODES).optional(),
 
     // Auth.js (AGENTS.md §13.1). Required together when STAFF_AUTH_MODE=provider.
     AUTH_SECRET: z.string().min(1).optional(),
@@ -74,7 +84,7 @@ export const envSchema = z
     MAP_LINK_BASE_URL: z.url().optional(),
 
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
-    EMAIL_DELIVERY_MODE: z.enum(["capture", "allowlist", "live"]).default("capture"),
+    EMAIL_DELIVERY_MODE: z.enum(EMAIL_DELIVERY_MODES).default("capture"),
     EMAIL_ALLOWLIST: allowlist,
     MAILGUN_API_KEY: z.string().min(1).optional(),
     MAILGUN_DOMAIN: z.string().min(1).optional(),

@@ -128,7 +128,6 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
         slug: FIELDS.slug,
         title: FIELDS.title,
         excerpt: FIELDS.excerpt,
-        locationName: "Parcul Tractorul",
         authorStaffUserId: editor.id,
       })
       .returning();
@@ -140,7 +139,6 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
       slug: `${FIELDS.slug}-en`,
       title: "Concurrency fixture",
       excerpt: "Description.",
-      locationName: "Parcul Tractorul",
       authorStaffUserId: editor.id,
     });
   });

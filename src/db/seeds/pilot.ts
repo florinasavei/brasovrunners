@@ -212,10 +212,6 @@ async function seed() {
           slug: row[locale].slug,
           title: row[locale].title,
           excerpt: row[locale].excerpt,
-          // A copy of the event row's value, not a translation: `event_translations
-          // .location_name` is still NOT NULL until the drop ships in the next release
-          // (AGENTS.md §7.6). Nothing reads it.
-          locationName: row.locationName,
         })),
       );
   }

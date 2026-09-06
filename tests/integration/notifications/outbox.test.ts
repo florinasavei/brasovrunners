@@ -209,7 +209,7 @@ describe("BR-REQ-080-02 transactional outbox", () => {
 
       const summary = await processOutboxBatch(db, { sender, render, now: NOW });
 
-      expect(summary).toEqual({ claimed: 1, sent: 1, retrying: 0, failed: 0, bounced: 0 });
+      expect(summary).toEqual({ claimed: 1, sent: 1, retrying: 0, deferred: 0, failed: 0, bounced: 0 });
       const [row] = await db.select().from(emailOutbox);
       expect(row.status).toBe("SENT");
       expect(row.sentAt).toEqual(NOW);
@@ -239,7 +239,7 @@ describe("BR-REQ-080-02 transactional outbox", () => {
 
       const summary = await processOutboxBatch(db, { sender, render, now: NOW });
 
-      expect(summary).toEqual({ claimed: 1, sent: 0, retrying: 1, failed: 0, bounced: 0 });
+      expect(summary).toEqual({ claimed: 1, sent: 0, retrying: 1, deferred: 0, failed: 0, bounced: 0 });
       const [row] = await db.select().from(emailOutbox);
       expect(row.status).toBe("PENDING");
       expect(row.attemptCount).toBe(1);
@@ -335,6 +335,51 @@ describe("BR-REQ-080-02 transactional outbox", () => {
     });
   });
 
+  /**
+   * The registration-day case. `docs/PLATFORM.md` limit 1: Mailgun Free allows 100 messages a
+   * day and this application sends three per completed registration, so a race opening entries
+   * crosses the cap before lunch — and everything queued behind it must still go out, not be
+   * thrown away, and not burn six attempts inside the hour trying.
+   */
+  describe("a throttled failure waits for the allowance, and is not a bounce", () => {
+    it("stays PENDING and is scheduled past the ordinary backoff", async () => {
+      await queueOne();
+      const sender = recordingSender({
+        outcome: "throttled",
+        error: "mailgun 400: Domain <domain> is not allowed to send: recipient limit exceeded",
+      });
+
+      const summary = await processOutboxBatch(db, { sender, render, now: NOW });
+
+      expect(summary).toEqual({
+        claimed: 1,
+        sent: 0,
+        retrying: 0,
+        deferred: 1,
+        failed: 0,
+        bounced: 0,
+      });
+
+      const [row] = await db.select().from(emailOutbox);
+      // Not BOUNCED, which is terminal — this message is still owed to a participant.
+      expect(row.status).toBe("PENDING");
+      expect(row.nextAttemptAt).not.toBeNull();
+      // Past the whole six-attempt backoff schedule, which runs out in about an hour.
+      expect(row.nextAttemptAt!.getTime()).toBeGreaterThan(NOW.getTime() + 60 * 60_000);
+    });
+
+    it("honours a reset time the adapter knows", async () => {
+      await queueOne();
+      const retryAfter = new Date(NOW.getTime() + 4 * 60 * 60_000);
+      const sender = recordingSender({ outcome: "throttled", error: "429", retryAfter });
+
+      await processOutboxBatch(db, { sender, render, now: NOW });
+
+      const [row] = await db.select().from(emailOutbox);
+      expect(row.nextAttemptAt?.toISOString()).toBe(retryAfter.toISOString());
+    });
+  });
+
   describe("criterion 4 — a permanent failure is not retried", () => {
     it("marks the row BOUNCED and schedules nothing", async () => {
       await queueOne();
@@ -345,7 +390,7 @@ describe("BR-REQ-080-02 transactional outbox", () => {
 
       const summary = await processOutboxBatch(db, { sender, render, now: NOW });
 
-      expect(summary).toEqual({ claimed: 1, sent: 0, retrying: 0, failed: 0, bounced: 1 });
+      expect(summary).toEqual({ claimed: 1, sent: 0, retrying: 0, deferred: 0, failed: 0, bounced: 1 });
       const [row] = await db.select().from(emailOutbox);
       expect(row.status).toBe("BOUNCED");
       expect(row.nextAttemptAt).toBeNull();

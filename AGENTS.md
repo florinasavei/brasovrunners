@@ -1557,10 +1557,6 @@ event_translations
 - title
 - excerpt
 - body_json jsonb
-- location_name                 -- DEPRECATED, dropped in the release after BR-V1.19; see §11.7
-- location_address null         -- DEPRECATED
-- difficulty_label null         -- DEPRECATED
-- cost_text null                -- DEPRECATED
 - cover_alt_text null
 - seo_title null
 - seo_description null
@@ -1572,14 +1568,16 @@ event_translations
 
 UNIQUE(event_id, locale)
 UNIQUE(locale, slug)
-CHECK title, slug and location_name are non-blank, not merely NOT NULL
+CHECK title and slug are non-blank, not merely NOT NULL
 ```
 
 `editorial_status` and `published_at` are deliberately absent: publication moved to `events`
-(`DECISIONS.md` §28). The four deprecated columns above moved to `events` for a different reason
-(§11.7, `DECISIONS.md` §36): they were the same fact entered twice rather than a translation of
-it. They are still written — a copy of the event-row value — and still named by the CHECK, because
-a drop ships in the release after the code that stopped needing it (§7.6). Nothing reads them.
+(`DECISIONS.md` §28). `location_name`, `location_address`, `difficulty_label` and `cost_text` were
+here and are gone (migration `0017`, §11.7, `DECISIONS.md` §36): they were the same fact entered
+twice rather than a translation of it, so they live on `events`, and `location_name` was the
+CHECK's third clause. The columns outlived the code that read them by one release, which is what
+§7.6 requires — for that release a rollback had to find a schema the previous code could still run
+against.
 
 What stays here is the language's own text — title, slug, excerpt, the two SEO fields and the M5
 body — its author, and its own `version` for the save guard.

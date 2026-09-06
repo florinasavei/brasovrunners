@@ -1913,6 +1913,11 @@ Until that release, `event_translations.location_name` is still NOT NULL and sti
 *copy* of the event-row value into every translation. Nothing reads it. **The next baseline owes
 migration `0015`: drop the four columns and that CHECK's third clause.**
 
+**Done in `BR-V1.21`, as migration `0017`.** 0015 and 0016 were taken by work that shipped
+in between, so the number this section predicted is not the number it got. The drop itself is
+exactly as described: the four columns and the CHECK's third clause, one release after the
+code stopped reading them, per §7.6.
+
 `location_name` is required by the field schema on every save and by `transitionEvent` before
 publication; the column is nullable only so it could be added to rows that predate it.
 
@@ -2127,3 +2132,165 @@ the second. Four lines twice, each naming its own job, reads better than an indi
 forbids IP as participant identity, and this table persists its key.
 
 Baseline bumped to `BR-V1.21-2026-09-05`.
+
+## 40. Decided — a spent allowance defers a message; it does not throw it away (2026-09-05)
+
+`docs/PLATFORM.md` has said since `BR-V1.19` that Mailgun Free's 100 messages a day is the limit
+that binds on registration day. What it had never said is what actually *happens* when the club
+crosses it, and the answer turned out to be the worst available one.
+
+### The defect, because its shape will recur with the next provider
+
+Mailgun refuses a send whose account allowance is spent with the **same HTTP 400** it uses for a
+malformed message: `Domain <domain> is not allowed to send: recipient limit exceeded`. The
+adapter mapped every 400 to `permanent_failure`, which the outbox records as `BOUNCED`, which is
+terminal — nothing ever retries out of it.
+
+So on the club's busiest day, every message queued after the cap would have been **discarded**.
+Not delayed: discarded, silently, while the registrations themselves committed perfectly well and
+the participants waited for confirmations that no longer existed anywhere. Three messages per
+completed registration against a hundred a day is about 33 registrations, so a race opening
+entries to a hundred people would have reached that before lunch.
+
+### Why the mapping alone was not the fix
+
+Reclassifying it as `transient_failure` looked like a one-line change and would not have worked.
+The retry schedule is bounded exponential — 1, 2, 4, 8, 16, 32 minutes, six attempts — and spends
+itself in about an hour. A message queued when a **daily** cap was reached would have burned all
+six attempts by mid-afternoon and been marked `FAILED` around ninety minutes later, roughly eight
+hours before the allowance it was waiting for came back.
+
+Two guards were in tension and both are real: retries must be bounded, because an unbounded retry
+against a provider that is rejecting messages is how a sending domain's reputation is spent
+(§16.1, §16.5); and a confirmation the club owes a participant must not be thrown away because of
+a limit that clears at midnight.
+
+### The decision: a fourth outcome, on a day scale
+
+`SendResult` gains `throttled` — *the provider refused because this account's allowance is spent,
+and nothing was transmitted*. It is not a shade of transient and the distinction is the point:
+
+- **Nothing left the building**, so no reputation was spent and there is nothing to back off from.
+- **What there is, is a reset to wait for.** The outbox leaves the row `PENDING` and schedules the
+  next attempt for just after the next UTC midnight (`nextAllowanceResetAt`), or for the instant
+  the adapter names if it knows one.
+- **The attempt still counts.** Six attempts a day apart outlast any daily cap and keep this
+  bounded: a message nobody has delivered in six days needs a person, which is the same judgment
+  `MAX_SEND_ATTEMPTS` already makes on its own scale. It does not become a message that retries
+  forever.
+- **A deferral is not an error.** `job_runs.errorCount` counts failures and bounces, not
+  deferrals, because a plan's limit is the plan working as bought. `/devs` shows the volume
+  against the allowance, which is where that belongs.
+
+UTC midnight is an assumption, stated rather than buried: Mailgun publishes the daily limit and
+not the instant it resets. Being wrong costs one attempt out of six, not a message.
+
+### The narrow pattern is a guard, not a detail
+
+Only a 400 whose body carries **limit** language moves out of permanent. Widening it to "not
+allowed to send" would sweep in a disabled domain and — worse — the sandbox's own "is not among
+the authorized recipients", and retrying *those* once a day forever is precisely the reputation
+cost the permanent/transient split exists to prevent. Both directions are asserted in
+`tests/unit/notifications/mailgun-classification.test.ts`, and neither may be relaxed to make the
+other pass.
+
+429 is deliberately left transient. It is Mailgun's *hourly* rate limit, which clears within the
+hour; deferring it to the next daily reset would delay a confirmation by a day to avoid waiting a
+minute.
+
+### And it is visible before the day, not after it
+
+`/devs` now carries the arithmetic `docs/PLATFORM.md` could only describe: registrations today ×
+3 against the daily allowance, with what is left of today, amber when the projection exceeds the
+remainder and red when it is spent. Test registrations are counted and counted **separately** —
+§12.6 keeps them out of every count the *club* is given, and this is not one of those: it is an
+operator's forecast of what will reach the provider, and a synthetic participant on an
+`@test.invalid` address consumes the allowance exactly like a real one. A number that excluded
+them would be the only number on the page that was wrong.
+
+Baseline stays `BR-V1.21-2026-09-05`; this section is part of that bump.
+
+## 41. Decided — the diagnostics page explains a setting, not just its value (2026-09-05)
+
+`/devs` could say which mode a deployment was in and had no way to say what the alternatives
+were, or what choosing one would do. Somebody asking "what else could `EMAIL_DELIVERY_MODE` be,
+and what would that mean?" had to open the source — which defeats a page whose whole purpose is
+that nobody should have to.
+
+The values now live in `shared/config/env-enums.ts`, defined **once**: `env.ts` builds its
+`z.enum` from those arrays and `/devs` renders them. Before this, a second list would have been a
+second place to forget, and a diagnostics page that lies about what the process accepts is worse
+than no diagnostics page.
+
+Each setting and each of its values carries a sentence saying what it is and what it does, in
+`messages/*.json` under `Devs.setting.*` — not in the module, which `env.ts` imports and which
+therefore runs before anything is translated, and because §9.3 keeps user-facing prose out of
+code anyway. The value in force is marked rather than merely listed.
+
+**Nothing here can print a value.** The page pairs a list of allowed *tokens* with the current
+setting it already held; no secret is in scope, which is the same structural argument
+`modules/diagnostics/configuration.ts` makes for itself.
+
+Also corrected on the way, because it was the same class of mistake: `APP_BASE_URL` defaulted to
+`http://localhost:3000` and `scripts/dev.mjs` has always started the dev server on **47821**,
+deliberately far from 3000, 5173, 8000 and 8080 so it does not collide with another project.
+Every absolute URL this application emits derives from `APP_BASE_URL` (§8), so a locally rendered
+confirmation link pointed at a port with nothing listening on it. The default is the real port
+now.
+
+Baseline stays `BR-V1.21-2026-09-05`; this section is part of that bump.
+
+## 42. Decided — navigation is gated by capability, because one equality operator hid four features (2026-09-06)
+
+The owner reported, over the course of an afternoon, that the registrations page was not in the
+menu, that they could not see who was registered for an event, that unconfirmed registrations
+were not listed, and that the legal documents were not visible — and concluded, reasonably, that
+"a lot of features are half-baked".
+
+**All four were one bug, and none of the four features was missing.** `admin/layout.tsx` decided
+which tabs to render with `staffUser.role === "ADMIN"`, a raw equality test against a hierarchy of
+five nesting roles (§38). `"SUPERADMIN" !== "ADMIN"`, so **a Superadministrator was shown only the
+Events tab** — and migration `0016` had turned every existing ADMIN into a SUPERADMIN precisely so
+that nobody lost access. The people most likely to be running the club were the only ones who
+could not navigate to the registrations, the legal documents, the staff screen or `/devs`.
+
+It was wrong in the other direction too, quietly: a DEV was offered no `/devs` link although that
+screen exists for exactly that role, and an ADMIN was offered a Staff tab that 404s on arrival.
+
+### What this was not
+
+**Not a security defect, and worth being precise about that.** Every one of those pages asserts
+its own capability on the server and answers 404 to a typed URL — `canManageRegistrations`,
+`requireStaffRole("ADMIN")`, `canManageStaff`, `canSeeDiagnostics`. BR-REQ-060-01 held throughout;
+nothing was reachable that should not have been. What failed is the other half of a backoffice:
+navigation is how a person learns what the system can do, and a section nobody can see is a
+feature nobody knows exists.
+
+**Not a missing filter, either.** The registrations list has always taken an `eventId` query
+parameter and has never filtered by status by default, so "per event" and "including unconfirmed"
+both already worked — the screen was simply unreachable. The one real gap was direction: the only
+way to ask "who entered this race" was to open the list and pick from a dropdown, so the event
+row now links to its own registrations. That link is gated on `canManageRegistrations` and only
+appears for an event that takes entries.
+
+### The decision
+
+Which sections a role may see is a **rule**, so it is a pure function — `visibleAdminSections` in
+`domain/roles.ts`, beside the capabilities it composes — rather than a conditional inside a React
+component. §1.5 already required that of every rule that can be one; this is what it costs to
+skip it. Each entry names the capability the page behind it asserts, so the two cannot drift.
+
+The test that matters is not the per-role list but the property: **a higher role is offered every
+section a lower one is**, asserted across every pair in the hierarchy. An equality test against a
+role name fails that immediately, which is why it is written as a property and not as four
+expectations. Any future role added to the middle of the hierarchy is checked by it for free.
+
+### Also
+
+The backoffice header now shows the signed-in **address** as well as the display name. A display
+name does not distinguish a personal Zitadel account from a club one, and the address is what the
+`staff_users` allowlist actually matches on. It is the reader's own address shown to themselves —
+§10.3's protections concern participants, and a member of staff seeing their own sign-in is not
+that.
+
+Baseline stays `BR-V1.21-2026-09-05`; this section is part of that bump.

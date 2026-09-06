@@ -383,24 +383,17 @@ export const eventTranslations = pgTable(
     excerpt: text("excerpt"),
     bodyJson: jsonb("body_json"),
 
-    /**
-     * DEPRECATED, and dropped in the release after this one.
+    /*
+     * `location_name`, `location_address`, `difficulty_label` and `cost_text` were here and are
+     * gone (migration `0017`, `DECISIONS.md` §36). They are the same fact in both languages
+     * rather than a translation of one, so they live on `events`. The columns survived one
+     * release after the code stopped reading them, which is what AGENTS.md §7.6 requires: a
+     * rollback has to find a schema the previous code can still run against.
      *
-     * These four moved to `events` (`DECISIONS.md` §36) because they are the same fact in both
-     * languages, not a translation of it. Nothing reads them any more: every query takes them
-     * from the event row.
-     *
-     * They are still *written* — `createEvent` and `duplicateEvent` copy the event-row value
-     * into every translation — for one reason only, and it disappears with the columns: this
-     * table's `NOT NULL` and its `event_translations_required_fields_present` CHECK still name
-     * `location_name`, and AGENTS.md §7.6 ships a drop in the release after the code that stops
-     * needing it, so that a rollback finds a schema its code can still run against.
+     * `cover_alt_text` stays. It is genuinely per language — alt text is prose a translator
+     * writes, not a fact about the event.
      */
-    locationName: text("location_name").notNull(),
-    locationAddress: text("location_address"),
-    difficultyLabel: text("difficulty_label"),
     coverAltText: text("cover_alt_text"),
-    costText: text("cost_text"),
 
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
@@ -433,18 +426,20 @@ export const eventTranslations = pgTable(
     check("event_translations_version_positive", sql`${t.version} >= 1`),
 
     /**
-     * The three fields every public page renders, present rather than blank.
+     * The two fields every public page renders, present rather than blank.
      *
      * `NOT NULL` alone permits `''`, and a translation whose title is an empty string is what a
      * half-filled second locale looks like. Publication requires a complete translation in every
      * locale (`content/events/service.ts#transitionEvent`); this is the part of "complete" a
      * CHECK can state honestly from inside one row.
+     *
+     * It was three until migration `0017`. The third named `location_name`, which is no longer
+     * on this table — the meeting point is one value for the whole event and is checked there.
      */
     check(
       "event_translations_required_fields_present",
       sql`length(btrim(${t.title})) > 0
-          AND length(btrim(${t.slug})) > 0
-          AND length(btrim(${t.locationName})) > 0`,
+          AND length(btrim(${t.slug})) > 0`,
     ),
   ],
 );

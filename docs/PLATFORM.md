@@ -211,6 +211,49 @@ as a slow first page. Storage and compute allowances on the free plan are **not 
 because they have not been checked** — confirm them before production rather than discovering
 them on a race morning.
 
+The cold start is also the reason the pool sets no connection timeout: see the next section.
+
+### Connections are not the ceiling, and a long query is — checked 2026-09-05
+
+`db/client.ts` opens the pool with `max: 10`. The question that has to be answered before a
+registration window opens is whether that number can exhaust the database under load, and the
+answer is no — but not for the reason it looks like.
+
+**`max: 10` is per warm function instance, not per deployment.** Vercel's own guidance is
+explicit: "Define your pool globally, so multiple requests within the same instance can reuse
+it", and the concurrency limit is per instance — under load Vercel adds instances, each with
+its own pool. So the deployment's total is `10 × warm instances`, a number nobody sets.
+
+**What sits on the other end.** `DATABASE_URL` points at Neon's *pooled* host (the one
+containing `-pooler`), so every one of those connections lands on PgBouncer, not on PostgreSQL.
+
+| Layer | Limit at Neon Free (0.25–2 CU autoscale) |
+| --- | --- |
+| PgBouncer client connections | **10,000** |
+| Concurrent server transactions (`default_pool_size`, 90% of `max_connections`) | **93** at 0.25 CU |
+| Direct connections, if the non-pooled host were ever used | 104 at 0.25 CU (97 usable), 839 at 2 CU |
+
+**The arithmetic.** Saturating PgBouncer's client side needs 1,000 simultaneously warm
+instances. Saturating the 93 concurrent transactions behind it needs 93 requests *executing a
+statement at the same instant* — not 93 visitors, because a request that is rendering, waiting
+on the network or idle between statements holds a client slot and no server slot. A club race
+opening entries to a few hundred people over an hour does not approach either. **`max: 10`
+stays.** Vercel names `max: 1` as the wrong correction: it does not lower the total and removes
+concurrency inside the instance.
+
+**So the risk is duration, not count** — one statement holding one connection. A Vercel function
+may run 300 seconds, and one unbounded query would occupy a connection, and the invocation
+budget, for all of it while everything behind it queues. `db/client.ts` now sets
+`statement_timeout` to **10 seconds** and `idle_in_transaction_session_timeout` to **30**. The
+first is enforced by PostgreSQL, so it holds even when the Node process is frozen or the request
+was abandoned; the second covers what the first cannot see — a serverless instance killed
+between two statements of an open transaction, leaving a capacity lock (§10.6) held by nobody.
+
+**No connection timeout, deliberately.** Neon Free scales to zero and the first request after an
+idle period waits for the compute to wake. That wait is connection time, not statement time, so
+`statement_timeout` does not touch it — and bounding it would make the guard itself the outage,
+failing a visitor's first page load to enforce a deadline.
+
 ### 6. The repository is owned by a person, not the club
 
 BR-BUS-101 requires the club to own the domain, hosting, repository, database, staff
@@ -237,14 +280,62 @@ absorb load that a limit should have refused is paying for abuse.
 ### Before a registration window opens
 
 - [ ] Read `/devs`. Everything blocked or limited there will be worse under load, not better.
+- [ ] **Read the email-volume figure on `/devs`** and compare it with the number of people you
+      expect. It does the arithmetic below for you — registrations today × 3 against the daily
+      allowance, with what is left of today — so this check is now a glance rather than a
+      dashboard visit. It turns red when the allowance is spent and amber when the projection
+      exceeds what is left.
 - [ ] Confirm the scheduled jobs actually ran in the last ten minutes. Under a spike the outbox
       is what delivers confirmations, and it runs about every two hours here (limit 4) — that is
       the single worst thing about a busy registration day, and it is not fixed by any upgrade in
       this table.
-- [ ] Check Mailgun's remaining monthly allowance against the number of people you expect. Each
-      registration sends at least two messages: verify, then confirm.
 - [ ] Decide the capacity **before** opening, not during. A capacity raised mid-window reallocates
       the waiting list, which is correct and surprising.
+
+### When the daily allowance runs out — decided, and it is not a bounce
+
+This will happen: three messages per completed registration against 100 a day is roughly 33
+registrations, and a race opening entries to a hundred people crosses it before lunch (limit 1).
+What happens then is now a decision rather than an accident.
+
+**The messages wait, and go out when the allowance resets.** Mailgun refuses a send whose
+allowance is spent, the adapter classifies that refusal as `throttled`, and the outbox leaves the
+row `PENDING` and schedules the next attempt for **just after the next UTC midnight** rather than
+applying its ordinary backoff. Nobody loses a confirmation; some people get theirs the next
+morning.
+
+**The defect this replaced is worth knowing, because the same shape will recur with the next
+provider.** Mailgun refuses a spent allowance with the *same HTTP 400* it uses for a malformed
+message — `Domain <domain> is not allowed to send: recipient limit exceeded` — and the adapter
+mapped every 400 to a permanent failure. Permanent means `BOUNCED`, and `BOUNCED` is terminal:
+the outbox never retries out of it. So on the club's busiest day, every message queued after the
+cap would have been **discarded**, not delayed. Mapping alone was not enough either: the retry
+schedule spends all six attempts in about an hour, so even a transient classification would have
+marked a good message `FAILED` around ninety minutes later. It needed a third outcome with a
+day-scale reset, which is what `throttled` is.
+
+The statuses now, checked against Mailgun's own documentation on 2026-09-05 — whose table lists
+only 400, 401, 403, 404, 429 and 500, so anything else here is observed rather than inferred:
+
+| Status | Treated as | Why |
+| --- | --- | --- |
+| 401, 403 | permanent | Bad credentials, or a sending domain that is not verified. Every retry fails identically |
+| 400 with limit wording | **throttled** | The allowance, not the message. Retry after the reset |
+| 400 otherwise | permanent | A malformed message, or a sandbox recipient who is not authorized. Waiting authorizes nobody |
+| 402, 420 | **throttled** | Undocumented by Mailgun. 420 is its own code for "not allowed to send: … limit exceeded"; 402 is a plan or payment refusal |
+| 429 | transient | The *hourly* rate limit (300/hour on free), which clears within the hour. Ordinary backoff, deliberately not a day |
+| 404, 5xx, network | transient | Not clearly the caller's fault |
+
+The pattern that moves a 400 out of permanent is **narrow on purpose** and must stay narrow:
+widening it to "not allowed to send" would sweep in a disabled domain and an unauthorized sandbox
+recipient, and retrying those once a day forever is exactly how a sending domain's reputation is
+spent. `tests/unit/notifications/mailgun-classification.test.ts` asserts both directions.
+
+**The upgrade this makes an informed choice rather than a panic.** One month of Mailgun Basic
+($15) removes the daily limit entirely. Deferral means the club can decide that at leisure the
+next morning instead of during the window — but a race whose confirmations arrive a day late is
+still a bad race, so if `/devs` shows the projection above the remaining allowance, upgrade
+**before** opening.
 
 ### What to bump, and in what order
 
@@ -269,7 +360,6 @@ Things already decided and owed, so they are not rediscovered.
 
 | Owed | Why | Where it is recorded |
 | --- | --- | --- |
-| Migration `0015`: drop `location_name`, `location_address`, `difficulty_label`, `cost_text` from `event_translations`, and the third clause of `event_translations_required_fields_present` | The four moved to `events`; a drop ships in the release after the code that stopped needing it (`AGENTS.md` §7.6) | `DECISIONS.md` §36 |
 | A decision on whether the backoffice stays bilingual or becomes Romanian-only | The owner raised it; the enum labels were the smaller half and are done | `DECISIONS.md` §35 |
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |

@@ -167,7 +167,6 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
         locale: "ro",
         slug: "crosul-aniversar",
         title: "Crosul aniversar",
-        locationName: "Parcul Tractorul",
         authorStaffUserId: author.id,
       });
 
