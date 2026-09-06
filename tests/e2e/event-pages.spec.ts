@@ -98,13 +98,18 @@ test.describe("BR-REQ-040-02 no cross-locale fallback", () => {
     expect(body).not.toContain("Urcare pe Tâmpa");
 
     /*
-      The meeting point, the difficulty and the cost are deliberately NOT translated: they are
-      one value for the whole event (`DECISIONS.md` §36), so the English page shows the club's
-      own words. That is the accepted trade for not entering every event's place twice, and it
-      is asserted here so nobody "fixes" it back into two columns by accident.
+      The meeting point is deliberately NOT translated: it is one value for the whole event
+      (`DECISIONS.md` §36), so the English page shows the club's own words for its own places.
+      That is the accepted trade for not entering every event's place twice, and it is asserted
+      here so nobody "fixes" it back into two columns by accident.
+
+      The cost and the difficulty used to be asserted the same way and no longer are: §43
+      narrowed §36 by making them closed sets, so they render in the reader's own language. A
+      place name cannot be translated; "Gratuit" always could be.
     */
     expect(body).toContain("Stația de telecabină Tâmpa");
-    expect(body).toContain("Gratuit");
+    expect(body).toContain("Free");
+    expect(body).not.toContain("Gratuit");
   });
 
   test("does not show the Romanian event in the English listing", async ({ page }) => {
