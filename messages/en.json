@@ -399,7 +399,9 @@
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
       "privacyAcknowledged": "Privacy notice"
-    }
+    },
+    "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
+    "optionalSuffix": "optional"
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

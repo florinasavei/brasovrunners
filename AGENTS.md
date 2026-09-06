@@ -2549,7 +2549,8 @@ an IP or a device. One key per surface, and each names what is actually being de
 | Registration submission | the canonical email identity (§10.4) | one person flooding one mailbox; `+tag` variants are one allowance |
 | Admin resend | the registration id | two organizers, or one loop, filling a participant's inbox |
 | Token validation | the presented token's **hash**, never the secret | one email link hammered in a retry loop. Not enumeration: a 32-byte secret is not guessed |
-| Job endpoints | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
+| Management/profile link request | the canonical email identity (§10.4) | **not built — no route asks for one yet.** The day a participant can request their own link back, it is a mailbox flood aimed at somebody else's address and it MUST answer generically, like §15.1, so it cannot be used to discover who is registered |
+| Job endpoints (auth-adjacent) | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
 | Uploads | not built; media storage is deferred (§17) | — |
 
 A refusal MUST NOT tell the caller which defence it tripped where the surface already answers

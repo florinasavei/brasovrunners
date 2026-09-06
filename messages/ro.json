@@ -399,7 +399,9 @@
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
       "privacyAcknowledged": "Nota de confidențialitate"
-    }
+    },
+    "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
+    "optionalSuffix": "opțional"
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

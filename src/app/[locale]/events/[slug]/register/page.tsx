@@ -93,6 +93,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       {submitted ? (
         <Alert severity="success">{t("submitted")}</Alert>
       ) : (
+        <>
+        {/*
+          What the asterisk means, said once, before the first field that uses one.
+
+          Every required input already carries `required`, so the browser refuses the
+          submission and moves focus to the first field that is not filled — that is native
+          validation and it needs no JavaScript. What was missing is the *legend*: MUI marks a
+          required `TextField` with an asterisk and nothing on the page said what an asterisk
+          meant, so "which of these must I fill in" had no answer until you pressed the button.
+        */}
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("requiredLegend")}
+        </Typography>
         <form action={submitRegistrationAction}>
         <Stack spacing={2}>
           <input type="hidden" name="locale" value={locale} />
@@ -299,24 +312,35 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           />
           <FormControlLabel
             control={<Checkbox name="healthConsent" />}
-            label={t("healthConsent")}
+            label={`${t("healthConsent")} — ${t("optionalSuffix")}`}
           />
 
           <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
             {t("sections.consents")}
           </Typography>
 
+          {/*
+            The one consent that is required, and the only one — BR-REQ-031-02.
+
+            `required` on a `Checkbox` reaches the input and never the label, so this sat among
+            three genuinely optional consents looking exactly like them. The asterisk is added
+            by hand for that reason, matching what MUI puts on a required `TextField`, and the
+            three below say "optional" so the difference is legible without pressing anything.
+          */}
           <FormControlLabel
             control={<Checkbox name="privacyAcknowledged" required />}
             label={
               <>
                 {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
+                <Box component="span" aria-hidden="true" sx={{ color: "error.main" }}>
+                  {" *"}
+                </Box>
               </>
             }
           />
           <FormControlLabel
             control={<Checkbox name="resultsNameConsent" />}
-            label={t("resultsNameConsent")}
+            label={`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
           />
           {/*
             BR-REQ-039-01. Asked on every form, including for an event that publishes no start
@@ -326,14 +350,27 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           */}
           <FormControlLabel
             control={<Checkbox name="listOptOut" />}
-            label={t("listOptOut")}
+            label={`${t("listOptOut")} — ${t("optionalSuffix")}`}
           />
 
+          {/*
+            Enabled, always, and deliberately.
+
+            A submit button disabled until a form validates cannot say *why* it is disabled:
+            somebody using a screen reader meets a control that does nothing and is told
+            nothing, and somebody using a mouse is left hunting for the field they missed.
+            Pressing it is what produces the answer — the browser refuses, focuses the first
+            unfilled field and says what it wants, in the reader's own language, with no
+            JavaScript at all. Disabling it would also need a client island, which the standing
+            rule keeps to the few that earn it (§1.5). The marking above is the fix; the
+            button is not.
+          */}
           <Button type="submit" variant="contained">
             {t("submit")}
           </Button>
         </Stack>
         </form>
+        </>
       )}
     </Container>
   );

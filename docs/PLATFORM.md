@@ -364,7 +364,7 @@ Things already decided and owed, so they are not rediscovered.
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |
 | An alert on `/api/health` going `degraded` | The health check is the detection; nothing watches it | this page, limit 4 |
-| Rate limiting on uploads | §19.4 names five surfaces. Four are built — submission, admin resend, token validation and the job endpoints. Uploads are the fifth and there is nothing to guard yet: media storage is deferred (`AGENTS.md` §17) | `AGENTS.md` §19.4 |
+| Rate limiting on the two surfaces with no route yet | §19.4 names five. Built: submission, admin resend, token validation, and the job endpoints as the auth-adjacent one. The remaining two have nothing to guard — media storage is deferred (`AGENTS.md` §17), and no route lets a participant request their own link back. Both need their scope the day the route lands | `AGENTS.md` §19.4 |
 
 ---
 
