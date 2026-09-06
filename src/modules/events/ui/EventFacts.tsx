@@ -1,8 +1,9 @@
+import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { env } from "@/shared/config/env";
 import { distanceInKm } from "../domain/event-kind";
 import { mapLinkFor } from "../domain/map-link";
@@ -125,23 +126,52 @@ export default async function EventFacts({
 
   facts.push({ label: t("registration"), value: t(`registrationState.${state}`) });
 
+  /**
+   * A two-column grid rather than a stack of rows, and tighter in the card than on the page.
+   *
+   * Every fact stays present as text, which is what BR-REQ-070-03 criterion 2 requires and what
+   * the end-to-end suite asserts — this changes how much room they take, not what is said. A
+   * listing of four events was 2,750px tall on a 390px screen, and a runner deciding which
+   * Sunday to turn up for was scrolling past six repeated labels per card to find the date.
+   *
+   * The grid also fixes the alignment: as separate rows, each value started wherever its own
+   * label ended on a narrow screen, so nothing lined up.
+   */
+  const compact = variant === "compact";
+
   return (
-    <Stack component="dl" spacing={1} sx={{ my: 0 }}>
+    <Box
+      component="dl"
+      sx={{
+        my: 0,
+        display: "grid",
+        // The label column sizes to the longest label and stops there; on a phone the pair
+        // still shares one line, which is what saves the height.
+        gridTemplateColumns: "auto 1fr",
+        columnGap: compact ? 1.5 : 2,
+        rowGap: compact ? 0.5 : 1,
+        alignItems: "baseline",
+      }}
+    >
       {facts.map((fact) => (
-        <Stack
-          key={fact.label}
-          direction={{ xs: "column", sm: "row" }}
-          spacing={{ xs: 0, sm: 1 }}
-          component="div"
-        >
-          <Typography component="dt" variant="body2" color="text.secondary" sx={{ minWidth: 140 }}>
+        <Fragment key={fact.label}>
+          <Typography
+            component="dt"
+            variant={compact ? "caption" : "body2"}
+            color="text.secondary"
+            sx={{ whiteSpace: "nowrap" }}
+          >
             {fact.label}
           </Typography>
-          <Typography component="dd" variant="body1" sx={{ m: 0, fontWeight: 500 }}>
+          <Typography
+            component="dd"
+            variant={compact ? "body2" : "body1"}
+            sx={{ m: 0, fontWeight: 500 }}
+          >
             {fact.value}
           </Typography>
-        </Stack>
+        </Fragment>
       ))}
-    </Stack>
+    </Box>
   );
 }

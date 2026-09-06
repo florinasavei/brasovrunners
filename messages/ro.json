@@ -97,7 +97,8 @@
     "costValues": {
       "FREE": "Gratuit",
       "PAID": "Cu taxă"
-    }
+    },
+    "seeDetails": "Vezi detaliile"
   },
   "Admin": {
     "title": "Administrare",
@@ -160,10 +161,12 @@
       "auditTrail": "Ce a făcut echipa",
       "auditActorRemoved": "cont șters",
       "audit": {
-        "registration.created_by_staff": "Înscriere adăugată de echipă",
-        "registration.name_corrected": "Nume corectat",
-        "registration.cancelled_by_staff": "Anulată de echipă",
-        "registration.resend_rate_limited": "Retrimitere limitată"
+        "registration": {
+          "created_by_staff": "Înscriere adăugată de echipă",
+          "name_corrected": "Nume corectat",
+          "cancelled_by_staff": "Anulată de echipă",
+          "resend_rate_limited": "Retrimitere limitată"
+        }
       },
       "locale": {
         "ro": "Română",

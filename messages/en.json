@@ -97,7 +97,8 @@
     "costValues": {
       "FREE": "Free",
       "PAID": "Paid"
-    }
+    },
+    "seeDetails": "See details"
   },
   "Admin": {
     "title": "Backoffice",
@@ -160,10 +161,12 @@
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
       "audit": {
-        "registration.created_by_staff": "Registration entered by staff",
-        "registration.name_corrected": "Name corrected",
-        "registration.cancelled_by_staff": "Cancelled by staff",
-        "registration.resend_rate_limited": "Resend rate-limited"
+        "registration": {
+          "created_by_staff": "Registration entered by staff",
+          "name_corrected": "Name corrected",
+          "cancelled_by_staff": "Cancelled by staff",
+          "resend_rate_limited": "Resend rate-limited"
+        }
       },
       "locale": {
         "ro": "Română",
