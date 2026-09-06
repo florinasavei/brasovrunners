@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer

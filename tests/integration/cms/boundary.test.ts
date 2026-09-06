@@ -159,6 +159,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/events/new",
       "/admin/legal",
       "/admin/legal/[id]",
+      "/admin/legal/new",
       "/admin/registrations",
       "/admin/registrations/[id]",
       "/admin/registrations/new",
@@ -189,27 +190,46 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     }
 
     /**
-     * This used to assert that no route was called `/admin/legal` at all, which is a weaker
-     * statement than the rule it stands for: a name is not a capability, and a blocklist of
-     * folder names is dodged by renaming a folder. Reading a legal document in the backoffice
-     * breaks nothing — the club has to be able to see what its participants are signing.
+     * This assertion has been narrowed twice, and each time for the same reason: it kept
+     * standing for something broader than the rule underneath it.
      *
-     * What must stay impossible is *writing* one from a request. So the assertion is now
-     * about the two things that would make it possible, and both are checked directly:
-     * no route that edits, and no write function reachable from one.
+     * First it asserted no route was called `/admin/legal` at all — but a name is not a
+     * capability, and reading a legal document in the backoffice breaks nothing.
+     *
+     * Then it asserted no route ending `/new`, which `DECISIONS.md` §46 showed was also too
+     * broad: writing a *new version* is how legal text has always changed, and requiring a
+     * developer and a migration to do it put a developer on the critical path of a decision
+     * that is entirely the club's. What must stay impossible is narrower and sharper —
+     * **changing the words of a version somebody has accepted**, because their signature
+     * points at those words.
+     *
+     * So: no route may edit or delete, creating is allowed, and the service is where the
+     * conflict is raised for an approved or referenced version (`legal/editor.test.ts` proves
+     * that half).
      */
     const legalRoutes = Object.keys(routing.pathnames).filter((route) => route.startsWith("/admin/legal"));
     for (const route of legalRoutes) {
-      expect(route, `${route} must not be an editing route`).not.toMatch(/\/(new|edit|delete)$/);
+      expect(route, `${route} must not be an editing route`).not.toMatch(/\/(edit|delete)$/);
     }
 
+    /**
+     * The repository stays read-and-insert only. Every write that can change an existing row
+     * lives in `service.ts`, behind `assertStillADraft` — so there is exactly one place that
+     * decides whether a version may be touched, and no way to reach a bare UPDATE without
+     * passing it.
+     */
     const repository = await import("@/modules/legal-documents/repository");
     const writers = Object.keys(repository).filter((name) => /^(update|delete|approve|edit)/.test(name));
     expect(writers, "the legal-documents repository must export no way to change a version").toEqual([]);
 
-    // `insertLegalDocumentVersion` is the single exception, and it is deliberate: a *new*
-    // version is how legal text changes (`docs/RUNBOOKS.md` § Legal document version).
-    // Inserting never mutates what somebody already signed.
     expect(Object.keys(repository)).toContain("insertLegalDocumentVersion");
+
+    // And the guarded writes are all in the service, none of them reachable another way.
+    const service = await import("@/modules/legal-documents/service");
+    expect(Object.keys(service).sort()).toEqual([
+      "approveVersion",
+      "createDraftVersion",
+      "updateDraftVersion",
+    ]);
   });
 });

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.23-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.23-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2395,3 +2395,101 @@ Erasing is Administrator-only, asks for a reason, and says plainly that it canno
 it is meant to be the heavier of the two, because it is.
 
 Baseline bumped to `BR-V1.23-2026-09-06`.
+
+---
+
+## 45. Decided — a retention sweep deletes what is spent, and never what belongs to a person (2026-09-06)
+
+**Status:** Decided.
+
+The owner asked for hard deletes "to keep the DB light". Two answers, because the request
+contains two different things.
+
+**Deletes here were already hard.** Erasing a registration (§44) is `DELETE`, and cancelling is
+a status rather than a hidden row: nothing in this schema is soft-deleted, so there was no
+tombstone to sweep up.
+
+**What actually grows is mechanism, not data.** Measured against the QA database, the whole
+thing is under a megabyte and `job_runs` holds 67 rows — but it gains one every five minutes
+whether or not anybody registers. That is 288 a day and roughly 105,000 a year, to answer a
+question that only ever reads the newest row. Three other tables grow with traffic and then
+never shrink: throttle buckets whose window has passed, action tokens that are spent, and
+messages sent months ago.
+
+So the sweep takes four tables and no others:
+
+| Table | Window | Why that window |
+| --- | --- | --- |
+| `job_runs` | 30 days | `/api/health` and `/devs` read the newest run only |
+| `rate_limit_buckets` | 1 day | a bucket outside its window can never be read again |
+| `email_action_tokens` | 30 days, spent or long expired | the row holds a hash and a link, and cannot be accepted again |
+| `email_outbox` | 90 days, `SENT` only | a delivered row keeps the recipient's address; a bounced one is evidence |
+
+Two of those are privacy improvements rather than housekeeping. A sent message keeps a
+participant's address and a token keeps the link between a participant and a registration;
+holding either for years because nothing deleted them was not a decision anybody made.
+
+### What it must never touch, and why that is not squeamishness
+
+`registrations`, `participants`, `declaration_acceptances`, `audit_logs` and `events` are
+untouched, and a test asserts it ten years past every window. **How long the club keeps a
+runner's entry after a race is a policy question with legal weight**, and it belongs to the club
+(`BUSINESS.md` §9) rather than to a sweep that runs every five minutes and would answer it by
+accident. Erasing one person is §44: deliberate, per-row, audited, and asked for.
+
+### Where it runs
+
+Inside the registration-maintenance job, last, in its own `try`/`catch`. Last because expiring a
+hold is that job's actual duty and deleting month-old rows must never delay it; caught
+separately because a failure here is untidiness that no participant would notice, and marking
+the whole run failed for it would make `/api/health` cry wolf.
+
+Baseline bumped to `BR-V1.24-2026-09-06`.
+
+---
+
+## 46. Decided — the club writes its own legal text; immutability is about acceptance, not authorship (2026-09-06)
+
+**Status:** Decided. Narrows §6.7 and `AGENTS.md` §12.5; BR-REQ-053-01 criterion 4 is rewritten
+rather than removed.
+
+The rule said V1 has no editor screen for legal documents, and the reasoning behind it was
+sound: a participant signed version 3, `declaration_acceptances` records that they signed
+version 3, and rewriting its words afterwards would leave every one of those signatures
+pointing at text nobody ever agreed to.
+
+But the rule was broader than its reason. It also prevented *creating* a version, which put a
+developer and a migration on the critical path of a decision that is entirely the club's — and
+the club's approved wording was, at the time this was written, the single item still blocking a
+real registration on a deployed and otherwise working system. Nothing about immutability
+requires that a lawyer's paragraph reach the database through a pull request.
+
+### The line, stated once
+
+A version is a **draft** until approved. A draft may be rewritten freely. The moment it is
+approved — or accepted by a participant, or pointed at by an event — it is frozen, and a
+correction is the next version. Approval is one-way: un-approving would mean somebody could
+accept a version on Monday that the club treats as never in force by Wednesday, while their
+acceptance row still says they signed it.
+
+That is asserted in exactly one function, `service.ts#assertStillADraft`, and the repository
+deliberately exports no update, delete or approve at all — so there is no path to a bare UPDATE
+that skips the check. `tests/integration/cms/boundary.test.ts` asserts that shape as a property
+rather than trusting it.
+
+### The editor is a textarea, and that is a decision
+
+The body is structured JSON, and the Tiptap contract that will eventually own it is M5. Pulling
+that dependency forward to type a privacy notice would decide the body schema for the wrong
+reason. So the format is the one everybody already writes in: a blank line between paragraphs,
+`## ` for a heading, converted by `domain/body-text.ts`, which round-trips — nothing an
+organizer typed is reshaped behind their back.
+
+### What did not change
+
+Inventing legal wording is still forbidden (§1.2), and the editor says so above the fields every
+time it is opened. Sample text still refuses to seed in production (§29). Both languages are
+still required before a version can exist at all, because BR-REQ-040-02 forbids falling back to
+the other and the alternative to both is a public page that cannot render.
+
+Baseline bumped to `BR-V1.25-2026-09-06`.
