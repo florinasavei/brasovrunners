@@ -11,11 +11,16 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
-import { findOrCreateParticipant, markEmailVerified } from "@/modules/participants/repository";
+import {
+  findOrCreateParticipant,
+  findParticipantByCanonicalEmail,
+  markEmailVerified,
+} from "@/modules/participants/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
+import { deriveAllowedResendMessageType } from "./domain/resend";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import {
   declarationSigningSchema,
@@ -275,6 +280,76 @@ async function enqueueVerificationEmail<T extends Record<string, unknown>>(
     payload: {},
     idempotencyKey: `registration:${registration.id}:verify-requested:${now.toISOString()}`,
     now,
+  });
+}
+
+/**
+ * "Send me that link again" — §19.4's second surface, the one its table listed as specified
+ * and not built.
+ *
+ * The participant has an address and a problem: nothing arrived, or it arrived and was
+ * deleted. Until now the only way back was to fill the whole registration form again, which
+ * `submitRegistration` quietly treats as a resend for one status — and which is unreachable
+ * once the registration window closes, even though a declaration hold outlives it.
+ *
+ * Three properties this function must keep, in order of how badly each fails:
+ *
+ * 1. **It answers identically whatever it finds.** A form that accepts an address nobody has
+ *    proven they own is a membership oracle if it ever says "no such registration". So it
+ *    returns nothing at all: not found, not active, nothing to resend, throttled — one answer,
+ *    the same one, matching §15.1's generic response and §13.2's single invalid-or-expired.
+ * 2. **It sends only what the current status allows**, via the same
+ *    `deriveAllowedResendMessageType` the Administrator resend uses (§15.8). A participant
+ *    cannot conjure a declaration link for a registration that is merely waitlisted, because
+ *    nothing is waiting on them.
+ * 3. **It never changes state.** No transition, no hold extension, no new token here — the
+ *    token is minted by the renderer at send time, as it is for every other message (§14.5).
+ */
+export async function requestRegistrationLink<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { email: string; eventId?: string },
+  now: Date,
+): Promise<void> {
+  let identity;
+  try {
+    identity = canonicalizeEmail(input.email);
+  } catch {
+    // A malformed address is not a registration either, and saying so differently would be a
+    // second answer. The form's own `type="email"` catches the honest typo before this.
+    return;
+  }
+
+  // Counted before anything is looked up, so a script cannot use the lookup itself as the
+  // signal, and counted even when refused (`consumeRateLimit`).
+  const verdict = await consumeRateLimit(db, "link-request", identity.canonicalEmail, now);
+  if (!verdict.allowed) return;
+
+  const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
+  if (!participant) return;
+
+  const registration = input.eventId
+    ? await repo.findRegistrationByEventAndParticipant(db, input.eventId, participant.id)
+    : await repo.findLatestActiveRegistrationForParticipant(db, participant.id);
+  if (!registration || !isActiveStatus(registration.status)) return;
+
+  const messageType = deriveAllowedResendMessageType(registration.status);
+  if (!messageType) return;
+
+  await db.transaction(async (tx) => {
+    await enqueueEmail(tx, {
+      participantId: participant.id,
+      registrationId: registration.id,
+      messageType,
+      // The registration's language, not the language of the page they asked from: the row
+      // records what they chose when they registered, and that is the one they read.
+      locale: registration.locale,
+      recipientEmail: participant.deliveryEmail,
+      payload: {},
+      // Per request, so two genuine asks an hour apart are two messages — the throttle above
+      // is what bounds them, not a key collision that would silently swallow the second.
+      idempotencyKey: `registration:${registration.id}:link-requested:${now.toISOString()}`,
+      now,
+    });
   });
 }
 

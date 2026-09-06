@@ -91,7 +91,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       </Typography>
 
       {submitted ? (
-        <Alert severity="success">{t("submitted")}</Alert>
+        <Stack spacing={2}>
+          <Alert severity="success">{t("submitted")}</Alert>
+          {/*
+            The one thing a person needs when the message does not arrive, offered at the
+            moment they would first notice — carrying the event so the resend knows which
+            registration is meant without asking a second question.
+          */}
+          <Typography variant="body2" color="text.secondary">
+            {t("resend.prompt")}{" "}
+            <Link href={{ pathname: "/registrations/resend", query: { event: slug } }}>
+              {t("resend.linkLabel")}
+            </Link>
+          </Typography>
+        </Stack>
       ) : (
         <>
         {/*

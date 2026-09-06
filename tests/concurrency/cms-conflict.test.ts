@@ -62,8 +62,8 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
     // One value for the whole event now (`DECISIONS.md` §36).
     locationName: "Parcul Tractorul",
     locationAddress: "",
-    difficultyLabel: "",
-    costText: "",
+    difficulty: null,
+    costType: null,
     mapUrl: "",
     distanceMeters: "",
     elevationGainMeters: "",

@@ -88,6 +88,15 @@
       "OPEN": "Registration is open",
       "CLOSED": "Registration has closed",
       "EVENT_CANCELLED": "The event has been cancelled"
+    },
+    "difficultyValues": {
+      "EASY": "Easy",
+      "MODERATE": "Moderate",
+      "HARD": "Hard"
+    },
+    "costValues": {
+      "FREE": "Free",
+      "PAID": "Paid"
     }
   },
   "Admin": {
@@ -217,10 +226,10 @@
         "excerpt": "Short description",
         "locationName": "Meeting point",
         "locationAddress": "Address",
-        "difficultyLabel": "Difficulty",
-        "costText": "Cost",
         "seoTitle": "Search engine title",
-        "seoDescription": "Search engine description"
+        "seoDescription": "Search engine description",
+        "difficulty": "Difficulty",
+        "costType": "Cost"
       },
       "latitude": "Latitude",
       "longitude": "Longitude",
@@ -267,7 +276,17 @@
       "copySection": "Copy and removal",
       "duplicate": "Duplicate",
       "delete": "Delete",
-      "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened."
+      "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
+      "difficultyValues": {
+        "EASY": "Easy",
+        "MODERATE": "Moderate",
+        "HARD": "Hard"
+      },
+      "costValues": {
+        "FREE": "Free",
+        "PAID": "Paid"
+      },
+      "notStated": "Not stated"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -401,7 +420,16 @@
       "privacyAcknowledged": "Privacy notice"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
-    "optionalSuffix": "optional"
+    "optionalSuffix": "optional",
+    "resend": {
+      "title": "Send the registration link again",
+      "intro": "If our message did not arrive, enter the address you registered with and we will send the link again. Check your spam folder too.",
+      "emailHelp": "The address you used when registering.",
+      "submit": "Send the link",
+      "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
+      "prompt": "Did the message not arrive?",
+      "linkLabel": "Send it again"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

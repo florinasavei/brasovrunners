@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.21-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.21-2026-09-05`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.22-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -200,7 +200,11 @@ rather than breaking the site.
 **The guards are finished, and the pool is bounded in time.** §19.4 named five surfaces and
 guarded two; token validation is now keyed on the presented token's *hash* — the threat is one
 link hammered, not enumeration — and the job endpoints are throttled per job name, counted only
-after `JOB_SECRET` verifies. Uploads are the fifth and have nothing behind them yet. The database
+after `JOB_SECRET` verifies. The second surface has a route now: `/registrations/resend` lets a
+participant ask for their own link back when nothing arrived, sending only what the current
+status allows and answering identically whatever it finds, because a form anybody can type any
+address into is a membership oracle the moment it says "no such registration". Uploads are the
+fifth and have nothing behind them yet. The database
 pool sets `statement_timeout` and `idle_in_transaction_session_timeout`: its size was never the
 risk (`docs/PLATFORM.md` § "Connections are not the ceiling" does the arithmetic), one unbounded
 query holding a serverless function for 300 seconds was. And a **spent Mailgun allowance now

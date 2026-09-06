@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.21-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.21-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1374,12 +1374,20 @@ An event has two kinds of field, and the split is "would a translator change thi
 - **Per language** (`event_translations`): title, slug, excerpt, `seo_title`, `seo_description`,
   and the M5 body. These are writing, and a translator changes every one of them.
 - **One value for the whole event** (`events`): everything factual, including
-  `location_name`, `location_address`, `difficulty_label` and `cost_text`. A street address is
+  `location_name`, `location_address`, `difficulty` and `cost_type`. A street address is
   identical word for word in both languages, and the meeting point, the difficulty and the cost
   are one decision the club made once. Asking for them twice was asking the same question twice.
 
-The accepted consequence, and it is a real one: those four render on the English page in the
-club's own words, so `/en/events/...` shows "Parcul Tractorul" and "Gratuit". That is **not** a
+Two of those four are closed sets rather than typed words, since migration `0018`:
+`difficulty` is `EASY|MODERATE|HARD` and `cost_type` is `FREE|PAID`. For a fact with three
+possible answers, free text bought nothing and cost the reader their own language — so these two
+render translated, and the consequence below applies only to the meeting point and the street
+address, which are names and cannot be anything but the club's own words. `cost_type` states
+**whether** an event charges and deliberately not how much: an amount is a number, a currency and
+usually a deadline, and it becomes its own column the day the club runs an event that needs one.
+
+The accepted consequence, and it is a real one: the two name fields render on the English page in
+the club's own words, so `/en/events/...` shows "Parcul Tractorul". That is **not** a
 cross-locale fallback — nothing is borrowing the other language's row — and BR-REQ-040-02 is
 unchanged: a locale with no translation is still a 404 and still never shows the other language's
 *text*. It is a single value the club wrote once, and `tests/e2e/event-pages.spec.ts` asserts it
@@ -1495,8 +1503,8 @@ events
 - elevation_gain_meters integer null
 - location_name text null       -- §11.7; one value for both languages, required before publishing
 - location_address text null    -- §11.7
-- difficulty_label text null    -- §11.7
-- cost_text text null           -- §11.7; "Gratuit", "50 lei"
+- difficulty EASY|MODERATE|HARD null   -- §11.7; null means the club has not said
+- cost_type FREE|PAID null            -- §11.7; whether it charges, never how much
 - capacity integer null
 - registration_mode
 - registration_opens_at timestamptz null
@@ -1573,7 +1581,8 @@ CHECK title and slug are non-blank, not merely NOT NULL
 
 `editorial_status` and `published_at` are deliberately absent: publication moved to `events`
 (`DECISIONS.md` §28). `location_name`, `location_address`, `difficulty_label` and `cost_text` were
-here and are gone (migration `0017`, §11.7, `DECISIONS.md` §36): they were the same fact entered
+here and are gone (migration `0017`, §11.7, `DECISIONS.md` §36) — the last two have since become
+the `difficulty` and `cost_type` enums on `events` (migration `0018`): they were the same fact entered
 twice rather than a translation of it, so they live on `events`, and `location_name` was the
 CHECK's third clause. The columns outlived the code that read them by one release, which is what
 §7.6 requires — for that release a rollback had to find a schema the previous code could still run
@@ -2549,7 +2558,7 @@ an IP or a device. One key per surface, and each names what is actually being de
 | Registration submission | the canonical email identity (§10.4) | one person flooding one mailbox; `+tag` variants are one allowance |
 | Admin resend | the registration id | two organizers, or one loop, filling a participant's inbox |
 | Token validation | the presented token's **hash**, never the secret | one email link hammered in a retry loop. Not enumeration: a 32-byte secret is not guessed |
-| Management/profile link request | the canonical email identity (§10.4) | **not built — no route asks for one yet.** The day a participant can request their own link back, it is a mailbox flood aimed at somebody else's address and it MUST answer generically, like §15.1, so it cannot be used to discover who is registered |
+| Management/profile link request | the canonical email identity (§10.4) | one address typed repeatedly into a form nobody has to prove they own — a mailbox flood aimed at **somebody else's** inbox. Built: `/registrations/resend` takes an address and answers identically whatever it finds, generically as §15.1 requires, so it cannot be used to discover who is registered. The profile half is still unbuilt (M4) |
 | Job endpoints (auth-adjacent) | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
 | Uploads | not built; media storage is deferred (§17) | — |
 

@@ -101,8 +101,10 @@ function eventFieldsFrom(form: FormData) {
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     locationAddress: value("locationAddress"),
-    difficultyLabel: value("difficultyLabel"),
-    costText: value("costText"),
+    // Closed sets since migration `0018`. An unselected dropdown posts "", which `fields.ts`
+    // reads as "the club has not said" rather than as an invalid value.
+    difficulty: value("difficulty") || null,
+    costType: value("costType") || null,
     mapUrl: value("mapUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),

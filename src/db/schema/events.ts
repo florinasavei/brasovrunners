@@ -42,6 +42,30 @@ export const editorialStatus = pgEnum("editorial_status", [
 export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL", "EXTERNAL"]);
 
 /**
+ * How hard the event is, as a closed set rather than a typed word.
+ *
+ * It was `difficulty_label`, free text, and `DECISIONS.md` §36 accepted the consequence that an
+ * English page would show whatever Romanian the club typed. For a fact with three possible
+ * answers that trade buys nothing: an enum is the same single decision by the club, rendered in
+ * the reader's own language, and it also stops "Mediu", "mediu" and "Medium" being three
+ * difficulties in a filter that does not exist yet but will.
+ *
+ * Three values, because three is what the club uses. A fourth is a migration, not a free-text
+ * escape hatch — the point of the closed set is that adding to it is a decision.
+ */
+export const eventDifficulty = pgEnum("event_difficulty", ["EASY", "MODERATE", "HARD"]);
+
+/**
+ * Whether the event costs money — and deliberately not how much.
+ *
+ * A price is not an enum: it is an amount, a currency, and usually a deadline. This column
+ * answers the only question every event page must answer today, which is whether a runner
+ * needs their wallet. The amount becomes its own nullable column the day the club runs an
+ * event that charges, and `PAID` is what will point at it.
+ */
+export const eventCostType = pgEnum("event_cost_type", ["FREE", "PAID"]);
+
+/**
  * Whether the event page publishes who is coming (BR-REQ-039-01, AGENTS.md §12.3).
  *
  * `HIDDEN` is the default and the only value any existing row has, because publishing the names
@@ -179,12 +203,16 @@ export const events = pgTable(
      */
     locationName: text("location_name"),
     locationAddress: text("location_address"),
-    difficultyLabel: text("difficulty_label"),
+
     /**
-     * Free text: "Gratuit", "50 lei". Null means the club has not stated a cost, and the page
-     * then says nothing about it rather than guessing that the event is free.
+     * The two facts that stopped being free text in migration `0018`.
+     *
+     * Null means the club has not said, and the page then omits the row rather than guessing —
+     * an event with no stated cost is not thereby free, and one with no stated difficulty is
+     * not thereby easy. That is why neither column has a default.
      */
-    costText: text("cost_text"),
+    difficulty: eventDifficulty("difficulty"),
+    costType: eventCostType("cost_type"),
 
     /**
      * The one event the landing page leads with, or none.

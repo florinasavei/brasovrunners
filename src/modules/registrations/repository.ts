@@ -1,7 +1,8 @@
-import { and, asc, eq, inArray, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lte, or, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import {
+  ACTIVE_REGISTRATION_STATUSES,
   type Registration,
   type RegistrationKind,
   type RegistrationSource,
@@ -69,6 +70,31 @@ export async function findRegistrationByEventAndParticipant<T extends Record<str
     .select()
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), eq(registrations.participantId, participantId)))
+    .limit(1);
+  return row;
+}
+
+/**
+ * This participant's most recent registration that is still live, across every event.
+ *
+ * For the participant-facing link request (§19.4), where the person has an address and a
+ * problem — "nothing arrived" — and not necessarily the event in hand. Ordered by creation
+ * rather than by event date so that the answer is the thing they most recently did, which is
+ * what somebody asking for a link again is almost always asking about.
+ */
+export async function findLatestActiveRegistrationForParticipant<
+  T extends Record<string, unknown>,
+>(db: Database<T>, participantId: string): Promise<Registration | undefined> {
+  const [row] = await db
+    .select()
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.participantId, participantId),
+        inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
+      ),
+    )
+    .orderBy(desc(registrations.createdAt))
     .limit(1);
   return row;
 }

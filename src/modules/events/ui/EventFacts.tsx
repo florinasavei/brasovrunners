@@ -114,12 +114,14 @@ export default async function EventFacts({
       value: t("elevationM", { m: format.number(event.elevationGainMeters) }),
     });
   }
-  if (variant === "full" && event.difficultyLabel) {
-    facts.push({ label: t("difficulty"), value: event.difficultyLabel });
+  // Both are enums now (migration `0018`), so both render in the reader's own language
+  // rather than in whichever one the organizer was typing in.
+  if (variant === "full" && event.difficulty) {
+    facts.push({ label: t("difficulty"), value: t(`difficultyValues.${event.difficulty}`) });
   }
   // Only when the club has stated one. Null means unstated, not free — guessing "free" on the
   // club's behalf is exactly the kind of invention AGENTS.md §1.2 forbids.
-  if (event.costText) facts.push({ label: t("cost"), value: event.costText });
+  if (event.costType) facts.push({ label: t("cost"), value: t(`costValues.${event.costType}`) });
 
   facts.push({ label: t("registration"), value: t(`registrationState.${state}`) });
 

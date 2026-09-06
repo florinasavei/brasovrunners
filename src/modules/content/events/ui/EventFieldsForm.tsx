@@ -135,20 +135,44 @@ export default async function EventFieldsForm({
         label={t("editor.fields.locationAddress")}
         defaultValue={event?.locationAddress ?? ""}
       />
+      {/*
+        Closed sets since migration `0018`, so the organizer picks rather than types — which is
+        what lets the public page render each in the reader's own language instead of in the
+        words whoever filled the form was thinking in.
+
+        The empty option is deliberate and first: "not stated" is a real answer, and the page
+        omits the row entirely rather than guessing that an event with no stated cost is free.
+      */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
-          name="event.difficultyLabel"
-          label={t("editor.fields.difficultyLabel")}
-          defaultValue={event?.difficultyLabel ?? ""}
+          name="event.difficulty"
+          label={t("editor.fields.difficulty")}
+          select
+          defaultValue={event?.difficulty ?? ""}
           sx={{ flex: 1 }}
-        />
+        >
+          <MenuItem value="">{t("editor.notStated")}</MenuItem>
+          {(["EASY", "MODERATE", "HARD"] as const).map((value) => (
+            <MenuItem key={value} value={value}>
+              {t(`editor.difficultyValues.${value}`)}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField
-          name="event.costText"
-          label={t("editor.fields.costText")}
+          name="event.costType"
+          label={t("editor.fields.costType")}
+          select
           helperText={t("editor.costHelp")}
-          defaultValue={event?.costText ?? ""}
+          defaultValue={event?.costType ?? ""}
           sx={{ flex: 1 }}
-        />
+        >
+          <MenuItem value="">{t("editor.notStated")}</MenuItem>
+          {(["FREE", "PAID"] as const).map((value) => (
+            <MenuItem key={value} value={value}>
+              {t(`editor.costValues.${value}`)}
+            </MenuItem>
+          ))}
+        </TextField>
       </Stack>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

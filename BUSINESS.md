@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.21-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.21-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -455,6 +455,7 @@ Romanian and English are supported from V1.
 - Navigation, forms, validation messages, action pages, emails, declarations, and editorial content are localized. This is about the **public site** and the email participants receive.
 - The backoffice is the club's own tool, used by a handful of people who all speak Romanian, and its labels for the club's own vocabulary — a publication state, a staff role, a registration state — are written once, in Romanian. Two copies of the same seven words made the screen harder to work on rather than easier.
 - **What is written twice is only what a translator would change**: the title, the page address, the short description and the two search-engine fields. The time, the type, the capacity, the meeting point, the street address, the difficulty and the cost are one answer for the whole event, given once. Those last four used to be asked per language, and the second answer was not a translation — it was the same fact again. The trade the club accepted: the English page shows those four in the club's own words.
+- **The difficulty and the cost are now chosen from a list, not typed.** Difficulty is easy, moderate or hard; cost is free or paid. An organizer picks one answer for the event and the English page says it in English, which the typed version could not do. Both may be left unanswered, and then the page says nothing about them — an event with no stated cost is not thereby free. Cost says only *whether* the event charges; if the club ever runs one that does, the amount is a separate question nobody has had to answer yet.
 - Content may exist in Romanian before an English translation is ready.
 - Public URLs identify the language.
 - Dates and numbers are formatted for the selected language.

@@ -88,6 +88,15 @@
       "OPEN": "Înscrierile sunt deschise",
       "CLOSED": "Înscrierile s-au închis",
       "EVENT_CANCELLED": "Evenimentul a fost anulat"
+    },
+    "difficultyValues": {
+      "EASY": "Ușor",
+      "MODERATE": "Mediu",
+      "HARD": "Avansat"
+    },
+    "costValues": {
+      "FREE": "Gratuit",
+      "PAID": "Cu taxă"
     }
   },
   "Admin": {
@@ -217,10 +226,10 @@
         "excerpt": "Descriere scurtă",
         "locationName": "Punct de întâlnire",
         "locationAddress": "Adresă",
-        "difficultyLabel": "Dificultate",
-        "costText": "Cost",
         "seoTitle": "Titlu pentru motoarele de căutare",
-        "seoDescription": "Descriere pentru motoarele de căutare"
+        "seoDescription": "Descriere pentru motoarele de căutare",
+        "difficulty": "Dificultate",
+        "costType": "Cost"
       },
       "latitude": "Latitudine",
       "longitude": "Longitudine",
@@ -267,7 +276,17 @@
       "copySection": "Copiere și ștergere",
       "duplicate": "Duplică",
       "delete": "Șterge",
-      "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le."
+      "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
+      "difficultyValues": {
+        "EASY": "Ușor",
+        "MODERATE": "Mediu",
+        "HARD": "Avansat"
+      },
+      "costValues": {
+        "FREE": "Gratuit",
+        "PAID": "Cu taxă"
+      },
+      "notStated": "Nespecificat"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -401,7 +420,16 @@
       "privacyAcknowledged": "Nota de confidențialitate"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
-    "optionalSuffix": "opțional"
+    "optionalSuffix": "opțional",
+    "resend": {
+      "title": "Retrimite linkul de înregistrare",
+      "intro": "Dacă nu ai primit mesajul nostru, scrie adresa cu care te-ai înscris și îți trimitem linkul din nou. Verifică și folderul de spam.",
+      "emailHelp": "Adresa folosită la înscriere.",
+      "submit": "Trimite linkul",
+      "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "prompt": "Nu a ajuns mesajul?",
+      "linkLabel": "Trimite-l din nou"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

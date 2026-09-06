@@ -93,8 +93,8 @@ async function seed() {
        */
       locationName: "Parcul Tractorul, zona de start",
       locationAddress: "Strada Nicolae Labiș, Brașov",
-      difficultyLabel: "Mediu",
-      costText: "Gratuit",
+      difficulty: "MODERATE" as const,
+      costType: "FREE" as const,
       ro: {
         slug: "crosul-aniversar-brasov-runners",
         title: "Crosul aniversar Brașov Runners",
@@ -113,8 +113,8 @@ async function seed() {
       startsAt: new Date("2026-09-13T07:00:00+03:00"),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
-      difficultyLabel: "Ușor",
-      costText: "Gratuit",
+      difficulty: "EASY" as const,
+      costType: "FREE" as const,
       ro: {
         slug: "alergare-de-duminica-parcul-tractorul",
         title: "Alergare de duminică",
@@ -132,8 +132,8 @@ async function seed() {
       distanceMeters: 14000,
       elevationGainMeters: 600,
       locationName: "Stația de telecabină Tâmpa",
-      difficultyLabel: "Mediu",
-      costText: "Gratuit",
+      difficulty: "MODERATE" as const,
+      costType: "FREE" as const,
       ro: {
         slug: "tura-pe-tampa",
         title: "Tură pe Tâmpa",
@@ -149,8 +149,8 @@ async function seed() {
       kind: "INTERVAL_SESSION" as const,
       startsAt: new Date("2026-09-24T18:30:00+03:00"),
       locationName: "Stadionul Olimpia",
-      difficultyLabel: "Avansat",
-      costText: "Gratuit",
+      difficulty: "HARD" as const,
+      costType: "FREE" as const,
       ro: {
         slug: "antrenament-de-intervale-olimpia",
         title: "Antrenament de intervale",
@@ -184,8 +184,8 @@ async function seed() {
         // The same event in either language (`DECISIONS.md` §36).
         locationName: row.locationName,
         locationAddress: "locationAddress" in row ? row.locationAddress : undefined,
-        difficultyLabel: row.difficultyLabel,
-        costText: row.costText,
+        difficulty: row.difficulty,
+        costType: row.costType,
         /**
          * NONE, deliberately, for every seeded event.
          *

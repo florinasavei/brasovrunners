@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.21-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.21-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2294,3 +2294,47 @@ name does not distinguish a personal Zitadel account from a club one, and the ad
 that.
 
 Baseline stays `BR-V1.21-2026-09-05`; this section is part of that bump.
+
+---
+
+## 43. Decided — the difficulty and the cost are closed sets; the price is not one of them (2026-09-06)
+
+**Status:** Decided. Narrows §36, which is otherwise unchanged.
+
+Two of the four fields §36 moved onto the event row were free text: `difficulty_label` and
+`cost_text`. §36 accepted a consequence for all four — that the English page would show
+whatever Romanian the club typed — because a street address and the name of a park genuinely
+are the club's own words, and retyping them per language was asking the same question twice.
+
+For the other two that reasoning does not hold. "Mediu" is not a name; it is one of three
+answers to a question with three answers, and the only reason an English reader saw it in
+Romanian was that the column happened to be `text`. Migration `0018` makes them
+`event_difficulty` (`EASY|MODERATE|HARD`) and `event_cost_type` (`FREE|PAID`), backfilled from
+the words already stored, and `0019` drops the text columns behind them. The organizer still
+answers once; the page now says it in the reader's language. §36's trade stands for
+`location_name` and `location_address`, which is where it always belonged.
+
+### Why the cost enum says whether and not how much
+
+The owner asked for "cost as an enum". A price is not an enum — it is an amount, a currency,
+and usually a deadline, and inventing a shape for money nobody charges yet would be exactly the
+speculative structure §1.3 warns against. `cost_type` answers the question every event page has
+to answer today: does a runner need their wallet. The day the club runs an event that charges,
+`PAID` is what the amount column hangs off, and adding it is a migration against three rows.
+
+The migration keeps the fact and loses the figure: "50 lei" becomes `PAID`, and the number is
+gone. Nothing in either database charges money — every row read "Gratuit" — so this discards no
+figure anyone has published, and the alternative was inventing the amount column now to avoid a
+loss that does not exist.
+
+### Null is a third answer, and it is not the safe default of the other two
+
+Neither column has a default. An event with no stated cost is **not** free, and one with no
+stated difficulty is **not** easy — the page omits the row entirely rather than answering on the
+club's behalf, which is §1.2 applied to a dropdown. `optionalEnum` in
+`content/events/fields.ts` reads `""` and null as "not stated" and **refuses** anything else,
+rather than `.catch(null)`: a value outside the set cannot have come from the dropdown that
+posts the field, and silently calling it "not stated" would hide a stale or tampered form
+instead of refusing it.
+
+Baseline bumped to `BR-V1.22-2026-09-06`.

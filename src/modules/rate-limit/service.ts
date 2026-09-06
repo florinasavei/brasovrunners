@@ -19,6 +19,7 @@ import { retryAfterSeconds, windowStart } from "./domain/window";
 
 export type RateLimitScope =
   | "registration-submit"
+  | "link-request"
   | "admin-resend"
   | "token-validate"
   | "job-invoke";
@@ -37,6 +38,20 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
   // Five submissions per hour for one email identity. A participant registering, mistyping and
   // retrying uses two or three; a script filling a mailbox uses hundreds.
   "registration-submit": { limit: 5, windowMs: 60 * 60_000 },
+  /**
+   * §19.4's second surface, keyed on the canonical email identity as that table requires.
+   *
+   * The threat is not somebody spamming themselves: it is a stranger typing *your* address
+   * into this form repeatedly, because the whole point of the surface is that it accepts an
+   * address nobody has proven they own. So the bucket belongs to the mailbox being written
+   * to, and `+tag` variants of one Gmail inbox share it — which is exactly what the canonical
+   * identity already means (§10.4).
+   *
+   * Three an hour rather than five: a participant who did not receive the first mail asks
+   * once, maybe twice while checking a spam folder. Five is the allowance for a form somebody
+   * can genuinely mistype their way through; this form has one field.
+   */
+  "link-request": { limit: 3, windowMs: 60 * 60_000 },
   // BR-REQ-037-02 criterion 5. Per registration, not per administrator: the thing being
   // protected is one participant's inbox, and two organizers clicking resend at the same
   // moment is the case that should be caught.
