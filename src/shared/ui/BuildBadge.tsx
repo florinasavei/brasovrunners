@@ -49,11 +49,24 @@ export default async function BuildBadge() {
   ];
   const text = parts.join(" · ");
 
+  /**
+   * Floating on a large screen, part of the page on a phone.
+   *
+   * Fixed, it is a permanent 250px label over the bottom-right of a 390px screen — on the
+   * event page it covered the difficulty row outright, and covering a fact to announce a build
+   * number is the wrong trade on the viewport the whole site is designed for first
+   * (BR-REQ-041-01). From `sm` up there is room to spare and the corner is empty, so it floats
+   * there as before.
+   *
+   * Below the footer rather than above it when static: it is the least important thing on the
+   * page, and this is the one place where saying so costs nothing.
+   */
   const sx = {
-    position: "fixed",
+    position: { xs: "static", sm: "fixed" },
+    alignSelf: "flex-end",
     right: 8,
     bottom: 8,
-    m: 0,
+    m: { xs: 1, sm: 0 },
     px: 0.75,
     py: 0.25,
     borderRadius: 1,

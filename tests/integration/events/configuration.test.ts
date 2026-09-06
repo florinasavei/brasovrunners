@@ -46,7 +46,6 @@ describe("BR-REQ-011-01 event configuration", () => {
       locale: "ro",
       slug,
       title: "Titlu",
-      locationName: "Centru",
     });
   }
 

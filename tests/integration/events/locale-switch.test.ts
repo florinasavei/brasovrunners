@@ -42,7 +42,6 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
         locale: "ro" as const,
         slug: "tura-pe-tampa",
         title: "Tură pe Tâmpa",
-        locationName: "Stația de telecabină",
       },
       ...(options.withEnglish
         ? [
@@ -51,7 +50,6 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
               locale: "en" as const,
               slug: "tampa-trail",
               title: "Tâmpa trail run",
-              locationName: "Cable car station",
             },
           ]
         : []),

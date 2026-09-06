@@ -1,5 +1,7 @@
 import { getDb } from "@/db/client";
+import { TOKEN_NOT_FOUND } from "@/modules/action-tokens/domain/token-state";
 import { consumeActionToken, readActionTokenContext } from "@/modules/action-tokens/repository";
+import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { DomainError } from "@/shared/errors/domain-error";
 import { confirmEmail, type EventForRegistration, signDeclaration, unregister } from "./service";
@@ -13,6 +15,13 @@ import { findRegistrationById } from "./repository";
  * `confirmEmail`/`signDeclaration`/`unregister`'s own `db.transaction()` nest as a savepoint,
  * so a token is never burned without its effect landing, and never left live if the effect
  * fails. The three routes under `app/[locale]/registrations/*` are thin wrappers over these.
+ *
+ * This is also the one place a presented token is throttled (§19.4, `action-tokens/throttle.ts`).
+ * It goes here rather than in the repository because this is the boundary where one request is
+ * one attempt: `consumeAndSignDeclaration` below tries two purposes for a single click, and a
+ * throttle any deeper would charge that participant twice. A refusal returns `TOKEN_NOT_FOUND`,
+ * which is what §13.2 requires anyway — one generic invalid-or-expired answer, never a hint
+ * about which defence was tripped.
  */
 
 async function loadEventForRegistration(
@@ -39,11 +48,19 @@ export async function readRegistrationTokenContext(
   secret: string,
   purpose: "VERIFY_REGISTRATION_EMAIL" | "COMPLETE_DECLARATION" | "MANAGE_REGISTRATION" | "WAITLIST_OFFER",
 ) {
-  return readActionTokenContext(getDb(), { secret, purpose, now: new Date() });
+  const db = getDb();
+  const now = new Date();
+
+  if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
+
+  return readActionTokenContext(db, { secret, purpose, now });
 }
 
 export async function consumeAndConfirmEmail(secret: string, now: Date) {
   const db = getDb();
+
+  if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
+
   return db.transaction(async (tx) => {
     const consumed = await consumeActionToken(tx, { secret, purpose: "VERIFY_REGISTRATION_EMAIL", now });
     if (!consumed.ok) return consumed;
@@ -63,6 +80,9 @@ export async function consumeAndSignDeclaration(
   now: Date,
 ) {
   const db = getDb();
+
+  if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
+
   return db.transaction(async (tx) => {
     // Accepting a waiting-list offer is signing the declaration (§15.7): the same token
     // purpose is checked for either, in the order a live offer is more likely.
@@ -83,6 +103,9 @@ export async function consumeAndSignDeclaration(
 
 export async function consumeAndCancel(secret: string, now: Date) {
   const db = getDb();
+
+  if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
+
   return db.transaction(async (tx) => {
     const consumed = await consumeActionToken(tx, { secret, purpose: "MANAGE_REGISTRATION", now });
     if (!consumed.ok) return consumed;

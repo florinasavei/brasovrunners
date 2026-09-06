@@ -22,9 +22,34 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  *   webhook is matched against.
  * - **401, 403** — permanent. Bad credentials or an unverified sending domain: every retry
  *   fails identically, and the deployment needs a person, not another attempt.
- * - **400** — permanent. A malformed message, an unauthorized sandbox recipient, an address
- *   Mailgun refuses. Retrying an unchanged message that was already refused is pointless.
- * - **429, 5xx, and any network error** — transient. Rate limits and outages pass.
+ * - **400** — permanent, *unless the body says the allowance is spent*. See below; this is the
+ *   one that was wrong. Otherwise a malformed message, an unauthorized sandbox recipient, an
+ *   address Mailgun refuses — retrying an unchanged message already refused is pointless.
+ * - **402, 420** — throttled. Mailgun's own non-standard code for "Domain … is not allowed to
+ *   send: recipient limit exceeded" is **420**, and a plan or payment refusal surfaces as 402.
+ *   Neither is documented in Mailgun's status-code table, which lists only 400, 401, 403, 404,
+ *   429 and 500 — so neither may be inferred from the documentation, and both are handled
+ *   because they are observed.
+ * - **429** — transient, deliberately *not* throttled. This is Mailgun's per-hour rate limit
+ *   (300/hour on a free account), which clears within the hour, so the ordinary one-, two-,
+ *   four-minute backoff is the right response and a full-day deferral would be an own goal.
+ * - **5xx and any network error** — transient. Outages pass.
+ *
+ * ## The 400 that is not the caller's fault, and why it mattered
+ *
+ * Mailgun refuses a send whose account allowance is spent with the *same* 400 it uses for a
+ * malformed message: `Domain <domain> is not allowed to send: recipient limit exceeded`. Mapped
+ * as a flat permanent failure, that marked every message queued after the cap BOUNCED —
+ * terminal, never retried — on the one day of the year the club most needs them: a race opening
+ * entries sends three messages per completed registration against a 100/day allowance, so it
+ * crosses the cap before lunch (`docs/PLATFORM.md`, limit 1). The messages that would have gone
+ * out at midnight were being thrown away instead.
+ *
+ * So a 400 is checked against `ALLOWANCE_SPENT` before it is called permanent. The pattern is
+ * kept **narrow on purpose**: the sandbox's own refusals — "is not among the authorized
+ * recipients", "Sandbox subdomains are for test purposes only" — must stay permanent, because
+ * no amount of waiting authorizes a recipient, and retrying those daily forever is the
+ * reputation cost this file exists to avoid. Limit language only.
  *
  * ## Every hostname here is configuration, never a literal
  *
@@ -62,6 +87,46 @@ export type MailgunConfig = {
 
 /** Longer than this and the message is stuck behind a provider that is not answering. */
 const REQUEST_TIMEOUT_MS = 15_000;
+
+/**
+ * The account's own allowance, refused — not the message.
+ *
+ * Matched against the provider's body, and only ever to move a refusal from permanent to
+ * throttled, so a false negative costs nothing new and a false positive is what has to be
+ * avoided: it would retry a genuinely bad message once a day forever. Hence limit language and
+ * nothing else. "not allowed to send" alone is not enough — Mailgun uses it for a disabled
+ * domain too, which waiting does not fix.
+ */
+const ALLOWANCE_SPENT = /limit exceeded|exceeded your|sending limit|daily limit|quota/i;
+
+/**
+ * Which refusals are final, which are the allowance, and which are worth another minute.
+ *
+ * Split out of `send` so the mapping can be read as a table and asserted directly — it is the
+ * part of this adapter with real consequences, and it was wrong once.
+ */
+export function classifyMailgunFailure(
+  status: number,
+  body: string,
+): "permanent_failure" | "throttled" | "transient_failure" {
+  // Credentials, or a sending domain that is not verified. Every retry fails identically.
+  if (status === 401 || status === 403) return "permanent_failure";
+
+  // Mailgun's own code for a refused send against a spent allowance, and the payment/plan
+  // refusal. Neither appears in the documented status table; both are observed.
+  if (status === 402 || status === 420) return "throttled";
+
+  // The hourly rate limit. Clears within the hour, so ordinary backoff, not a daily deferral.
+  if (status === 429) return "transient_failure";
+
+  if (status === 400) {
+    return ALLOWANCE_SPENT.test(body) ? "throttled" : "permanent_failure";
+  }
+
+  // 404, 5xx, anything unrecognised. Conservative in the safe direction, which is the
+  // principle this whole mapping follows: what is not clearly the caller's fault is retried.
+  return "transient_failure";
+}
 
 type MailgunAccepted = { id?: string; message?: string };
 
@@ -164,11 +229,9 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       }
 
       const body = await response.text().catch(() => "");
-      const permanent =
-        response.status === 400 || response.status === 401 || response.status === 403;
 
       return {
-        outcome: permanent ? "permanent_failure" : "transient_failure",
+        outcome: classifyMailgunFailure(response.status, body),
         error: sanitizeError(response.status, body, config.apiKey),
       };
     },

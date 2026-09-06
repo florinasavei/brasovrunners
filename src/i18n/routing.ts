@@ -40,6 +40,15 @@ export const routing = defineRouting({
       ro: "/inregistrari/gestionare/[token]",
       en: "/registrations/manage/[token]",
     },
+    /**
+     * "Send me that link again" (§19.4's second surface). No token in the path — this is the
+     * route somebody reaches precisely because they have no token, so it takes an address and
+     * answers the same way whatever that address turns out to mean.
+     */
+    "/registrations/resend": {
+      ro: "/inregistrari/retrimite",
+      en: "/registrations/resend",
+    },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },

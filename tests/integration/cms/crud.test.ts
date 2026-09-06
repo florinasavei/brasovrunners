@@ -61,8 +61,8 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
     // One value for the whole event now (`DECISIONS.md` §36).
     locationName: "Parcul Tractorul",
     locationAddress: "",
-    difficultyLabel: "",
-    costText: "",
+    difficulty: null,
+    costType: null,
     mapUrl: "",
     distanceMeters: "",
     elevationGainMeters: "",

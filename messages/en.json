@@ -88,7 +88,17 @@
       "OPEN": "Registration is open",
       "CLOSED": "Registration has closed",
       "EVENT_CANCELLED": "The event has been cancelled"
-    }
+    },
+    "difficultyValues": {
+      "EASY": "Easy",
+      "MODERATE": "Moderate",
+      "HARD": "Hard"
+    },
+    "costValues": {
+      "FREE": "Free",
+      "PAID": "Paid"
+    },
+    "seeDetails": "See details"
   },
   "Admin": {
     "title": "Backoffice",
@@ -151,10 +161,12 @@
       "auditTrail": "What staff did",
       "auditActorRemoved": "account removed",
       "audit": {
-        "registration.created_by_staff": "Registration entered by staff",
-        "registration.name_corrected": "Name corrected",
-        "registration.cancelled_by_staff": "Cancelled by staff",
-        "registration.resend_rate_limited": "Resend rate-limited"
+        "registration": {
+          "created_by_staff": "Registration entered by staff",
+          "name_corrected": "Name corrected",
+          "cancelled_by_staff": "Cancelled by staff",
+          "resend_rate_limited": "Resend rate-limited"
+        }
       },
       "locale": {
         "ro": "Română",
@@ -167,7 +179,8 @@
       "preview": "Preview",
       "edit": "Edit",
       "moreActions": "More actions",
-      "new": "New event"
+      "new": "New event",
+      "registrations": "Registrations"
     },
     "confirm": {
       "cancel": "Never mind",
@@ -216,10 +229,10 @@
         "excerpt": "Short description",
         "locationName": "Meeting point",
         "locationAddress": "Address",
-        "difficultyLabel": "Difficulty",
-        "costText": "Cost",
         "seoTitle": "Search engine title",
-        "seoDescription": "Search engine description"
+        "seoDescription": "Search engine description",
+        "difficulty": "Difficulty",
+        "costType": "Cost"
       },
       "latitude": "Latitude",
       "longitude": "Longitude",
@@ -266,7 +279,17 @@
       "copySection": "Copy and removal",
       "duplicate": "Duplicate",
       "delete": "Delete",
-      "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened."
+      "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
+      "difficultyValues": {
+        "EASY": "Easy",
+        "MODERATE": "Moderate",
+        "HARD": "Hard"
+      },
+      "costValues": {
+        "FREE": "Free",
+        "PAID": "Paid"
+      },
+      "notStated": "Not stated"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -398,6 +421,17 @@
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
       "privacyAcknowledged": "Privacy notice"
+    },
+    "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
+    "optionalSuffix": "optional",
+    "resend": {
+      "title": "Send the registration link again",
+      "intro": "If our message did not arrive, enter the address you registered with and we will send the link again. Check your spam folder too.",
+      "emailHelp": "The address you used when registering.",
+      "submit": "Send the link",
+      "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
+      "prompt": "Did the message not arrive?",
+      "linkLabel": "Send it again"
     }
   },
   "Registrations": {
@@ -492,7 +526,7 @@
       }
     },
     "rateLimits": "Rate limits",
-    "rateLimitsIntro": "How many attempts each action accepts, per identity, in a fixed window. A limit somebody is hitting looks like \"the site is broken\" without anything being broken.",
+    "rateLimitsIntro": "How many attempts each guarded action accepts in a fixed window, per key — an email identity, a registration, one email link, or one job. A limit somebody is hitting looks like \"the site is broken\" without anything being broken.",
     "roles": "Roles",
     "rolesIntro": "Each role can do everything the one below it can, plus one thing more. The line that matters is between Technical and Admin: from there up, participant data is visible.",
     "youAre": "your role",
@@ -502,6 +536,44 @@
       "DEV": "plus the configuration page. No participant data",
       "ADMIN": "plus registrations, participants, exports, deleting an event",
       "SUPERADMIN": "plus staff administration: who has access and what they may do"
+    },
+    "settings": "Settings",
+    "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",
+    "emailVolume": "Email volume today",
+    "emailVolumeIntro": "Three messages per completed registration, against the provider's daily allowance. Check this before opening a registration window, not after. Counted from midnight UTC.",
+    "emailVolumeHeadroom": "{remaining} of {allowance} messages left today.",
+    "registrationsToday": "Registrations today",
+    "testRegistrations": "test",
+    "projectedMessages": "Projected messages",
+    "queuedMessages": "Queued today",
+    "sentMessages": "Sent today",
+    "inUse": "in use",
+    "setting": {
+      "APP_ENV": {
+        "what": "Which deployment this is. It — not NODE_ENV — decides every environment-dependent rule: whether live email may be sent, whether the development sign-in switcher is permitted, and whether sample legal text and test registrations may exist at all.",
+        "values": {
+          "local": "A developer's own machine. Email is captured and never transmitted; the sign-in switcher is available; sample legal text is seeded.",
+          "test": "The automated suites. Same guarantees as local, and nothing here ever reaches a person.",
+          "qa": "The shared deployment colleagues try things on. Real database, real sign-in, and email either captured or restricted to an allowlist — never open delivery.",
+          "production": "The club's real site. The only environment permitted to send live email, and the only one that refuses sample legal text and test registrations outright."
+        }
+      },
+      "EMAIL_DELIVERY_MODE": {
+        "what": "How far a message actually goes once the outbox renders it. This is the guard between a test system and a stranger's inbox, and startup refuses any combination that would cross it.",
+        "values": {
+          "capture": "Nothing is transmitted. Messages are held in memory — which on a deployed serverless host means they reach nobody at all, so registration looks broken to anyone but a developer.",
+          "allowlist": "Real delivery, but only to the addresses in EMAIL_ALLOWLIST; everything else is captured. This is what a Mailgun sandbox domain is, and it is how a small closed group tests the whole journey safely.",
+          "live": "Real delivery to whoever registered. Permitted only when APP_ENV is production; stating it anywhere else fails at startup."
+        }
+      },
+      "STAFF_AUTH_MODE": {
+        "what": "How a member of staff proves who they are. Participants never sign in at all — this is the backoffice door only, and the staff_users table decides who may come through it regardless of which mode is set.",
+        "values": {
+          "dev-switcher": "A local shortcut that lets a developer become any role without an identity provider. Permitted only when APP_ENV is local or test; stating it elsewhere fails at startup.",
+          "provider": "The real thing: Auth.js with Zitadel. The provider proves the address, and the staff_users allowlist decides whether that address may in.",
+          "disabled": "There is no way in. Every staff route answers 404 rather than a refusal, so the backoffice is unreachable rather than merely hidden. This is the correct setting for any environment with no identity provider configured."
+        }
+      }
     }
   }
 }

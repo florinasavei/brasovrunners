@@ -35,6 +35,20 @@ const optionalText = (max: number) =>
     .transform((value) => (value === "" ? null : value))
     .nullable();
 
+/**
+ * A closed set the club may also decline to answer.
+ *
+ * Same shape as `optionalText`: an empty string and null both mean "not stated", and anything
+ * else must be one of the listed values. Deliberately not `.catch(null)` — a value outside the
+ * set did not come from the dropdown that posts this field, and turning it silently into "not
+ * stated" would hide that rather than refuse it.
+ */
+const optionalEnum = <const T extends readonly [string, ...string[]]>(values: T) =>
+  z
+    .union([z.enum(values), z.literal("")])
+    .nullable()
+    .transform((value) => (value === "" ? null : value));
+
 export const translationFieldsSchema = z
   .object({
     slug: z.string().trim().min(1).max(120).regex(SLUG, {
@@ -168,8 +182,12 @@ export const eventFieldsSchema = z
      */
     locationName: z.string().trim().min(1).max(200),
     locationAddress: optionalText(300),
-    difficultyLabel: optionalText(80),
-    costText: optionalText(120),
+    /**
+     * Closed sets since migration `0018`, and optional because "the club has not said" is a
+     * real answer — `""` from an unselected dropdown means exactly that, not a validation error.
+     */
+    difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
+    costType: optionalEnum(["FREE", "PAID"]),
     mapUrl: httpsUrl("a map link must start with https://"),
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),

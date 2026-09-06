@@ -100,8 +100,8 @@ export default async function PreviewEventPage({ params }: Props) {
     // event row exactly as the public page does.
     locationName: event.locationName,
     locationAddress: event.locationAddress,
-    difficultyLabel: event.difficultyLabel,
-    costText: event.costText,
+    difficulty: event.difficulty,
+    costType: event.costType,
     slug: translation.slug,
     title: translation.title,
     excerpt: translation.excerpt,

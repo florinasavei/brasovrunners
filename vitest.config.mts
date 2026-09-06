@@ -16,6 +16,17 @@ export default defineConfig({
     // peak memory sane and makes failures easier to read.
     fileParallelism: false,
     testTimeout: 30_000,
+    /**
+     * The same budget for a hook as for a test, because `beforeAll` here does strictly more
+     * work than most tests do: `createTestDatabase()` starts a PostgreSQL compiled to
+     * WebAssembly and applies every migration to it.
+     *
+     * Vitest's default is 10s, and it silently applied only to hooks — a file with three
+     * `describe` blocks builds three of these instances, and on a machine with anything else
+     * running the second and third exceeded it. The failure then reads as "Hook timed out",
+     * which looks like a broken test and is really a budget set for a cheaper kind of work.
+     */
+    hookTimeout: 30_000,
     server: {
       deps: {
         // next-intl's navigation helpers import `next/navigation`, which Node cannot resolve

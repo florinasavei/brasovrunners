@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -97,6 +97,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
   §36 draws the line explicitly: the meeting point, the street address, the difficulty and the
   cost are one value for the whole event, not a translation, so the English page showing the
   club's own words for them is a single stored value rather than a fallback to another row.
+  Since migration `0018` the difficulty and the cost are closed sets — `EASY|MODERATE|HARD` and
+  `FREE|PAID` — so they are one stored value *and* render in the reader's own language; the two
+  name fields remain the club's own words, because a place name is not translated.
 
 **Acceptance criteria**
 
@@ -105,7 +108,8 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given the same event, when that language's listing is requested, then the event is absent from it, and the sitemap contains only the language it has a translation for.
 4. Given a published event with a translation in both languages, when it is unpublished, then both languages stop being reachable in the same moment.
 5. Given the language switcher on a page whose event has no translation in the target language, when it is used, then it lands on that language's event listing rather than on a 404.
-6. Given an event's meeting point, street address, difficulty or cost, when either language's page renders, then it shows the one value stored on the event — this is a shared field, not a translation, and not a fallback (AGENTS.md §11.7).
+6. Given an event's meeting point or street address, when either language's page renders, then it shows the one value stored on the event — this is a shared field, not a translation, and not a fallback (AGENTS.md §11.7).
+7. Given an event's difficulty or cost, when either language's page renders, then it shows that language's word for the stored enum value, and when the value is null the page omits the row entirely rather than stating a difficulty or a cost the club never gave.
 
 **Verification:** integration `events/publication.test.ts`, `events/locale-switch.test.ts`; e2e `cms-publish.spec.ts`, `event-pages.spec.ts`
 
@@ -726,8 +730,9 @@ other participant link uses — never by a password.
 3. Given a token, when it is past its expiry, used, or invalidated, then it is rejected.
 4. Given any GET request carrying a token, when it is handled, then no state is mutated.
 5. Given a new token for the same purpose and registration, when it is issued, then previous active tokens for that purpose are invalidated.
+6. Given repeated validation attempts presenting the same token, when they exceed the limit for the window, then further attempts are refused with the same generic response an unknown token receives, and the limit is keyed on the token's hash rather than on the caller.
 
-**Verification:** integration `tokens/action-tokens.test.ts`
+**Verification:** integration `tokens/action-tokens.test.ts`, `tokens/token-throttle.test.ts`
 
 ### 4.7 Backoffice
 
@@ -1010,7 +1015,7 @@ other participant link uses — never by a password.
 **Acceptance criteria**
 
 1. Given any public page, when its server HTML response is fetched without executing JavaScript, then the page's substantive content is present in that response.
-2. Given an event page, when its text is extracted, then the date, start time, meeting point, cost, and registration requirement are present as text rather than only as component styling or an image. Cost is `event_translations.cost_text`, localized free text; when it is absent the page states nothing about cost rather than assuming the event is free.
+2. Given an event page, when its text is extracted, then the date, start time, meeting point, cost, and registration requirement are present as text rather than only as component styling or an image. Cost is `events.cost_type`, `FREE|PAID`, rendered in the reader's language; when it is null the page states nothing about cost rather than assuming the event is free.
 3. Given a cancelled or full event, when its text is extracted, then that status is stated in words.
 4. Given production `robots.txt`, when it is fetched, then admin, API, participant action and manage paths, declaration pages, preview, and runner profiles are disallowed for every user agent.
 5. Given production `robots.txt`, when it is inspected, then the training-crawler policy recorded in `DECISIONS.md` is reflected, with the verification date of the user-agent names recorded.
@@ -1274,8 +1279,9 @@ other participant link uses — never by a password.
 3. Given a job invocation, when it completes, then a `job_runs` row records the outcome.
 4. Given a job that has not succeeded within its agreed threshold, when the health endpoint is read, then it reports degraded.
 5. Given a job endpoint, when it is called without a valid `JOB_SECRET` or scheduler identity, then it is refused.
+6. Given a job endpoint called with a valid secret more often than the limit for the window, then further calls are refused with `429` and a `Retry-After`; and given calls refused at criterion 5, then they are not counted against that limit.
 
-**Verification:** integration `jobs/maintenance.test.ts`
+**Verification:** integration `jobs/maintenance.test.ts`, `jobs/job-throttle.test.ts`
 
 ---
 

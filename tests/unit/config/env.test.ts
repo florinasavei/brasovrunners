@@ -16,7 +16,8 @@ describe("BR-REQ-101-02 environment validation", () => {
   it("defaults to the local environment and a localhost base URL", () => {
     const env = envSchema.parse({});
     expect(env.APP_ENV).toBe("local");
-    expect(env.APP_BASE_URL).toBe("http://localhost:3000");
+    // The port `yarn dev` actually starts on (`scripts/dev.mjs`), not 3000.
+    expect(env.APP_BASE_URL).toBe("http://localhost:47821");
   });
 
   it("rejects an APP_ENV outside the four named environments", () => {

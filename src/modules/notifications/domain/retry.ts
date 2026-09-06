@@ -41,6 +41,38 @@ export function nextAttemptAt(now: Date, attemptCount: number): Date {
 }
 
 /**
+ * A few minutes past midnight, so the retry lands after the reset rather than on it.
+ *
+ * Racing a provider's own clock by a second is a wasted attempt and another day's wait.
+ */
+const ALLOWANCE_RESET_MARGIN_MS = 5 * 60_000;
+
+/**
+ * When a provider that refused for lack of allowance is expected to accept again.
+ *
+ * **UTC midnight**, plus a small margin. Mailgun publishes a daily send limit on its free plan
+ * (100/day — `docs/PLATFORM.md`, limit 1) and does not publish the instant it resets; UTC
+ * midnight is the assumption, stated here rather than buried, and the cost of it being wrong
+ * is one wasted attempt out of six, not a lost message. An adapter that *does* know says so
+ * with `SendResult.retryAfter` and this is not consulted.
+ *
+ * Why a day and not the ordinary backoff: the backoff schedule spends all six attempts in
+ * about an hour, so a message queued when a *daily* cap was reached would be marked FAILED
+ * around ninety minutes later and never sent — on registration day, when the queue behind the
+ * cap is every confirmation the club owes. Six attempts a day apart outlast any daily cap and
+ * stay bounded: a message nobody has delivered in six days needs a person, which is the same
+ * reasoning `MAX_SEND_ATTEMPTS` already makes on its own scale.
+ */
+export function nextAllowanceResetAt(now: Date): Date {
+  const nextMidnight = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+  );
+  return new Date(nextMidnight + ALLOWANCE_RESET_MARGIN_MS);
+}
+
+/**
  * How long a claimed row may stay PROCESSING before another worker may take it back.
  *
  * A worker that is killed between claiming a row and recording the outcome — a deploy, an

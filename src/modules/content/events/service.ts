@@ -280,8 +280,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     mapUrl: fields.mapUrl,
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
-    difficultyLabel: fields.difficultyLabel,
-    costText: fields.costText,
+    difficulty: fields.difficulty,
+    costType: fields.costType,
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     featured: fields.featured,
@@ -745,15 +745,6 @@ export async function createEvent<T extends Record<string, unknown>>(
         eventId: event.id,
         locale,
         ...parsed.translations[locale],
-        /**
-         * A copy, not a translation, and it goes away with the column.
-         *
-         * `event_translations.location_name` is still NOT NULL and still named by
-         * `event_translations_required_fields_present`; the drop ships in the release after this
-         * one (AGENTS.md §7.6). Nothing reads it — every query takes the meeting point from the
-         * event row — so this exists only to keep the insert legal until then.
-         */
-        locationName: parsed.locationName,
         authorStaffUserId: input.actor.id,
         createdAt: now,
         updatedAt: now,
@@ -815,8 +806,8 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         mapUrl: source.mapUrl,
         locationName: source.locationName,
         locationAddress: source.locationAddress,
-        difficultyLabel: source.difficultyLabel,
-        costText: source.costText,
+        difficulty: source.difficulty,
+        costType: source.costType,
         distanceMeters: source.distanceMeters,
         elevationGainMeters: source.elevationGainMeters,
         featured: false,
@@ -847,9 +838,6 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         title: translation.title,
         excerpt: translation.excerpt,
         bodyJson: translation.bodyJson,
-        // The deprecated copy again, from the source event row rather than from the source
-        // translation, so a duplicate never carries a value the original no longer has.
-        locationName: source.locationName ?? translation.locationName,
         coverAltText: translation.coverAltText,
         seoTitle: translation.seoTitle,
         seoDescription: translation.seoDescription,

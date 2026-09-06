@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.19-2026-09-05`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.22-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -135,7 +135,7 @@ and writes none of it. Only what a translator would change is entered per langua
 page address, the short description and the two SEO fields. The meeting point, the street address,
 the difficulty and the cost are one value for the whole event (`AGENTS.md` §11.7, `DECISIONS.md`
 §36), which means the English page shows them in the club's own words — the accepted trade, and
-the next baseline owes migration `0015` to drop the columns they left behind. Built ahead of its milestone on purpose: `DECISIONS.md` §25, §28. Staff sign-in is Auth.js with the Zitadel OAuth provider
+migration `0017` has since dropped the columns they left behind. Built ahead of its milestone on purpose: `DECISIONS.md` §25, §28. Staff sign-in is Auth.js with the Zitadel OAuth provider
 (`DECISIONS.md` §26, reversing §24, which was never shipped to anyone). `STAFF_AUTH_MODE=provider`
 is the real thing; local and test still use the development switcher of `AGENTS.md` §13.1, and any
 environment without a Zitadel tenant runs `STAFF_AUTH_MODE=disabled`, answering 404 to every staff
@@ -197,7 +197,24 @@ labelled everywhere it is listed, and cannot exist when `APP_ENV=production`, re
 down, when a job is stale or has never run, because a stalled scheduler delays a notification
 rather than breaking the site.
 
-**668 unit and integration tests, 86 end-to-end runs (43 per viewport project), and five
+**The guards are finished, and the pool is bounded in time.** §19.4 named five surfaces and
+guarded two; token validation is now keyed on the presented token's *hash* — the threat is one
+link hammered, not enumeration — and the job endpoints are throttled per job name, counted only
+after `JOB_SECRET` verifies. The second surface has a route now: `/registrations/resend` lets a
+participant ask for their own link back when nothing arrived, sending only what the current
+status allows and answering identically whatever it finds, because a form anybody can type any
+address into is a membership oracle the moment it says "no such registration". Uploads are the
+fifth and have nothing behind them yet. The database
+pool sets `statement_timeout` and `idle_in_transaction_session_timeout`: its size was never the
+risk (`docs/PLATFORM.md` § "Connections are not the ceiling" does the arithmetic), one unbounded
+query holding a serverless function for 300 seconds was. And a **spent Mailgun allowance now
+defers a message instead of discarding it** — the provider refuses a spent daily cap with the
+same 400 it uses for a malformed message, which the adapter called permanent, so on the club's
+busiest day every message queued after the cap was thrown away (`DECISIONS.md` §40). `/devs`
+shows the volume against the allowance before a window opens, and explains every configuration
+enum rather than only reporting its value (§41).
+
+**737 unit and integration tests, 90 end-to-end runs (45 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
@@ -237,7 +254,7 @@ database or secrets. `SETUP.md` §26 and `docs/RUNBOOKS.md` are the procedures.
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | QA project live, migrated and seeded; production project not created |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | QA deployed on its provider hostname, tracking `qa`; production project not created |
-| Jobs | No in-process interval — serverless has no process for one. `.github/workflows/scheduled-jobs.yml` calls both endpoints every five minutes with each environment's `JOB_SECRET` | live in QA since `BR-V1.18`. It had never run before that: `QA_APP_BASE_URL` and `QA_JOB_SECRET` did not exist, so every run logged "qa is not configured; skipping" and exited green |
+| Jobs | No in-process interval — serverless has no process for one. An external HTTP pinger POSTs both endpoints every five minutes with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | live in QA since `BR-V1.18`. It had never run before that: `QA_APP_BASE_URL` and `QA_JOB_SECRET` did not exist, so every run logged "qa is not configured; skipping" and exited green. Actions alone measured ~2-hour gaps, not five minutes — `SETUP.md` §26 has the numbers and the pinger setup |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
 | Storage | Documented: R2 behind the four-method adapter in `AGENTS.md` §17. Direction: `public/` until a non-developer uploads | deferred |

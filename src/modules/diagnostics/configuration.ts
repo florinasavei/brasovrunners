@@ -21,9 +21,18 @@
  * about configuration, and rules are tested without a browser or a deployment.
  */
 
-export type AppEnvironment = "local" | "test" | "qa" | "production";
-export type EmailDeliveryMode = "capture" | "allowlist" | "live";
-export type StaffAuthMode = "dev-switcher" | "provider" | "disabled";
+// Re-exported from the one definition (`shared/config/env-enums.ts`) rather than restated,
+// so a new mode cannot exist in the validator and be missing from the report.
+export type {
+  AppEnvironment,
+  EmailDeliveryMode,
+  StaffAuthMode,
+} from "@/shared/config/env-enums";
+import type {
+  AppEnvironment,
+  EmailDeliveryMode,
+  StaffAuthMode,
+} from "@/shared/config/env-enums";
 
 /** Every variable this report can speak about. Names only — never a value. */
 export type ConfigurableVariable =

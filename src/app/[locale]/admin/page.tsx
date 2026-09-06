@@ -13,7 +13,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listEventsForBackoffice } from "@/modules/content/events/repository";
-import { canCreateEvent, canDeleteEvent } from "@/modules/staff-identity/domain/roles";
+import { canCreateEvent, canDeleteEvent, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
   REGISTRATION_MODE_LABEL,
@@ -163,6 +163,29 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   >
                     {t("events.edit")}
                   </Button>
+
+                  {/*
+                    Who entered *this* race. The registrations list has always been able to
+                    answer it — the event filter is a query parameter — but the only way to ask
+                    was to open the list and pick from a dropdown, which is the wrong direction:
+                    an organizer looking at a race wants its entrants, not a list of everybody's.
+
+                    Only for an event that takes entries at all, and only for a role that may
+                    read them (§10.2's personal-data boundary). `registrations/page.tsx` asserts
+                    the same thing again on arrival.
+                  */}
+                  {event.registrationMode !== "NONE" &&
+                    canManageRegistrations(staffUser.role) && (
+                      <Button
+                        component="a"
+                        href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`}
+                        variant="outlined"
+                        size="small"
+                        sx={{ minHeight: 44 }}
+                      >
+                        {t("events.registrations")}
+                      </Button>
+                    )}
 
                   {/*
                     Duplicate and Delete live behind a disclosure rather than sitting in the row.

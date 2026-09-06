@@ -209,7 +209,6 @@ describe("BR-REQ-070-01 the public event query", () => {
       locale: "ro",
       slug: "alergare",
       title: "Alergare",
-      locationName: "Parc",
     });
     await createRegistration(event.id, { name: "Ana Popescu", email: "ana@example.org" });
 

@@ -29,12 +29,23 @@ export type OutgoingEmail = {
 };
 
 /**
- * The three outcomes the outbox knows how to act on.
+ * The four outcomes the outbox knows how to act on.
  *
  * The distinction between transient and permanent is the whole reason this is a union rather
  * than a boolean: a transient failure is retried with backoff, and a permanent one must not
  * be, because retrying a hard bounce for six attempts is how a sending domain's reputation is
  * destroyed (§16.1, §16.5).
+ *
+ * `throttled` is the third case, and it is not a shade of transient. A transient failure is
+ * the provider being unable to take the message *now* and probably able in a minute, so the
+ * outbox retries in one, two, four minutes and gives up after six attempts — about an hour.
+ * A throttled failure is the provider refusing because **this account's own allowance is
+ * spent**, which on Mailgun Free is a *daily* limit of 100 messages (`docs/PLATFORM.md`,
+ * limit 1). Retrying that on a minute scale burns all six attempts inside the hour and marks
+ * a confirmation FAILED that would have sent perfectly well the next morning — which is the
+ * registration-day failure this distinction exists to prevent. Nothing was transmitted, so no
+ * reputation was spent and there is nothing to back off *from*; what there is, is a reset to
+ * wait for. `retryAfter` says when.
  *
  * `error` is a short provider reason for `email_outbox.last_error`. It is sanitized before it
  * is stored — never a body, an address, or an action token (§14.5).
@@ -42,6 +53,16 @@ export type OutgoingEmail = {
 export type SendResult =
   | { outcome: "sent"; providerMessageId: string }
   | { outcome: "transient_failure"; error: string }
+  | {
+      outcome: "throttled";
+      error: string;
+      /**
+       * When the provider's allowance is expected back. The outbox schedules the next attempt
+       * for then rather than applying its own backoff. Absent means "the adapter does not
+       * know", and the outbox falls back to the next daily reset.
+       */
+      retryAfter?: Date;
+    }
   | { outcome: "permanent_failure"; error: string };
 
 export interface EmailAdapter {

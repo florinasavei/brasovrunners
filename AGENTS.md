@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.19-2026-09-05 -->
+<!-- PROJECT_BASELINE: BR-V1.22-2026-09-06 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.19-2026-09-05`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.22-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1374,12 +1374,20 @@ An event has two kinds of field, and the split is "would a translator change thi
 - **Per language** (`event_translations`): title, slug, excerpt, `seo_title`, `seo_description`,
   and the M5 body. These are writing, and a translator changes every one of them.
 - **One value for the whole event** (`events`): everything factual, including
-  `location_name`, `location_address`, `difficulty_label` and `cost_text`. A street address is
+  `location_name`, `location_address`, `difficulty` and `cost_type`. A street address is
   identical word for word in both languages, and the meeting point, the difficulty and the cost
   are one decision the club made once. Asking for them twice was asking the same question twice.
 
-The accepted consequence, and it is a real one: those four render on the English page in the
-club's own words, so `/en/events/...` shows "Parcul Tractorul" and "Gratuit". That is **not** a
+Two of those four are closed sets rather than typed words, since migration `0018`:
+`difficulty` is `EASY|MODERATE|HARD` and `cost_type` is `FREE|PAID`. For a fact with three
+possible answers, free text bought nothing and cost the reader their own language — so these two
+render translated, and the consequence below applies only to the meeting point and the street
+address, which are names and cannot be anything but the club's own words. `cost_type` states
+**whether** an event charges and deliberately not how much: an amount is a number, a currency and
+usually a deadline, and it becomes its own column the day the club runs an event that needs one.
+
+The accepted consequence, and it is a real one: the two name fields render on the English page in
+the club's own words, so `/en/events/...` shows "Parcul Tractorul". That is **not** a
 cross-locale fallback — nothing is borrowing the other language's row — and BR-REQ-040-02 is
 unchanged: a locale with no translation is still a 404 and still never shows the other language's
 *text*. It is a single value the club wrote once, and `tests/e2e/event-pages.spec.ts` asserts it
@@ -1495,8 +1503,8 @@ events
 - elevation_gain_meters integer null
 - location_name text null       -- §11.7; one value for both languages, required before publishing
 - location_address text null    -- §11.7
-- difficulty_label text null    -- §11.7
-- cost_text text null           -- §11.7; "Gratuit", "50 lei"
+- difficulty EASY|MODERATE|HARD null   -- §11.7; null means the club has not said
+- cost_type FREE|PAID null            -- §11.7; whether it charges, never how much
 - capacity integer null
 - registration_mode
 - registration_opens_at timestamptz null
@@ -1557,10 +1565,6 @@ event_translations
 - title
 - excerpt
 - body_json jsonb
-- location_name                 -- DEPRECATED, dropped in the release after BR-V1.19; see §11.7
-- location_address null         -- DEPRECATED
-- difficulty_label null         -- DEPRECATED
-- cost_text null                -- DEPRECATED
 - cover_alt_text null
 - seo_title null
 - seo_description null
@@ -1572,14 +1576,17 @@ event_translations
 
 UNIQUE(event_id, locale)
 UNIQUE(locale, slug)
-CHECK title, slug and location_name are non-blank, not merely NOT NULL
+CHECK title and slug are non-blank, not merely NOT NULL
 ```
 
 `editorial_status` and `published_at` are deliberately absent: publication moved to `events`
-(`DECISIONS.md` §28). The four deprecated columns above moved to `events` for a different reason
-(§11.7, `DECISIONS.md` §36): they were the same fact entered twice rather than a translation of
-it. They are still written — a copy of the event-row value — and still named by the CHECK, because
-a drop ships in the release after the code that stopped needing it (§7.6). Nothing reads them.
+(`DECISIONS.md` §28). `location_name`, `location_address`, `difficulty_label` and `cost_text` were
+here and are gone (migration `0017`, §11.7, `DECISIONS.md` §36) — the last two have since become
+the `difficulty` and `cost_type` enums on `events` (migration `0018`): they were the same fact entered
+twice rather than a translation of it, so they live on `events`, and `location_name` was the
+CHECK's third clause. The columns outlived the code that read them by one release, which is what
+§7.6 requires — for that release a rollback had to find a schema the previous code could still run
+against.
 
 What stays here is the language's own text — title, slug, excerpt, the two SEO fields and the M5
 body — its author, and its own `version` for the save guard.
@@ -2299,14 +2306,26 @@ Capacity and queue correctness come from transaction-time expiry evaluation (§1
 job exists to send expiry messages, promote the queue on an otherwise idle event, and
 retry the outbox.
 
-Invocation has two layers:
+Invocation has two layers, and on a serverless host the first of them does not exist:
 
-- primary: an in-process interval inside the persistent application calling the same
-  internal handler, permitted because correctness does not depend on it;
-- watchdog: an external scheduler posting to the job endpoints with `JOB_SECRET`, at
-  roughly five minutes for maintenance and one to five minutes for the outbox.
+- primary: an external scheduler posting to the job endpoints with `JOB_SECRET`, at roughly
+  five minutes for maintenance and one to five minutes for the outbox. This deploys to
+  serverless functions (§7), which have no persistent process for an in-process interval to
+  live in, so the external caller is the only mechanism rather than a watchdog over one;
+- backstop: a second, independent caller on the same endpoints, because the jobs are
+  idempotent and two callers cost one wasted query while one caller that stops costs a
+  participant their place in the queue.
 
-The scheduler is named in `SETUP.md` §26. Changing it must not change business logic.
+**A scheduler that fires late is a promptness failure, never a correctness one**, and the
+distinction decides how much to spend on it. Expiry is evaluated against `now` on every read
+(§10.6), so a two-hour gap releases a place two hours late — it does not release it to the
+wrong person. What a late run delays is the *message*: the offer email the next runner is
+already entitled to. Choose the primary caller on that basis, and measure it with
+`/api/health` rather than with the scheduler's own dashboard: `stale` there is the only report
+that reflects what the application actually saw.
+
+The scheduler is named in `SETUP.md` §26, which also records what GitHub Actions' `schedule`
+trigger measured on this repository. Changing it must not change business logic.
 
 ### 16.3 Message types
 
@@ -2542,6 +2561,22 @@ Protect:
 - uploads/auth-adjacent routes.
 
 Use platform-native or small database-backed throttle. Do not add Redis solely for V1. Avoid persisting raw IP longer than necessary; never use IP/device as participant identity.
+
+The key is stored, so it MUST be something the application already holds about the action, never
+an IP or a device. One key per surface, and each names what is actually being defended:
+
+| Surface | Key | What it stops |
+| --- | --- | --- |
+| Registration submission | the canonical email identity (§10.4) | one person flooding one mailbox; `+tag` variants are one allowance |
+| Admin resend | the registration id | two organizers, or one loop, filling a participant's inbox |
+| Token validation | the presented token's **hash**, never the secret | one email link hammered in a retry loop. Not enumeration: a 32-byte secret is not guessed |
+| Management/profile link request | the canonical email identity (§10.4) | one address typed repeatedly into a form nobody has to prove they own — a mailbox flood aimed at **somebody else's** inbox. Built: `/registrations/resend` takes an address and answers identically whatever it finds, generically as §15.1 requires, so it cannot be used to discover who is registered. The profile half is still unbuilt (M4) |
+| Job endpoints (auth-adjacent) | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
+| Uploads | not built; media storage is deferred (§17) | — |
+
+A refusal MUST NOT tell the caller which defence it tripped where the surface already answers
+generically: registration submission returns its usual generic response (§15.1) and token
+validation returns the one invalid-or-expired answer of §13.2.
 
 ### 19.5 Public profile safety
 

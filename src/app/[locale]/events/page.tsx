@@ -118,6 +118,24 @@ export default async function EventsPage({ params }: Props) {
                   )}
 
                   <EventFacts event={event} now={now} variant="compact" />
+
+                  {/*
+                    The card has always been one big link (`CardLink`), and nothing said so.
+                    On a listing where only the featured event carried buttons, the other three
+                    read as inert panels — the affordance was a hover colour, which a phone does
+                    not have and a glance does not find.
+
+                    Text plus an arrow rather than a second button: the whole card is already
+                    the tap target (BR-REQ-041-01 criterion 6), and a real button inside a link
+                    would be a control inside a control.
+                  */}
+                  <Typography
+                    aria-hidden="true"
+                    variant="body2"
+                    sx={{ mt: 2, color: "primary.main", fontWeight: 500 }}
+                  >
+                    {tEvent("seeDetails")} →
+                  </Typography>
                 </CardContent>
               </CardLink>
             </Card>

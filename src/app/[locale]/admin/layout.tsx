@@ -12,6 +12,10 @@ import type { ReactNode } from "react";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import {
+  type AdminSection,
+  visibleAdminSections,
+} from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import AdminTabs, { type AdminTab } from "@/modules/staff-identity/ui/AdminTabs";
 import { env } from "@/shared/config/env";
@@ -55,22 +59,31 @@ export default async function AdminLayout({ children, params }: Props) {
 
   const t = await getTranslations("Admin");
 
-  const tabs: AdminTab[] = [
-    { href: getPathname({ locale, href: "/admin" }), label: t("nav.events") },
-    ...(staffUser.role === "ADMIN"
-      ? [
-          {
-            href: getPathname({ locale, href: "/admin/registrations" }),
-            label: t("nav.registrations"),
-          },
-          { href: getPathname({ locale, href: "/admin/legal" }), label: t("nav.legal") },
-          { href: getPathname({ locale, href: "/admin/staff" }), label: t("nav.staff") },
-          // What this deployment is configured to do (BR-REQ-090-04). Its own route rather
-          // than a backoffice page: it is read by whoever is holding the hosting dashboard.
-          { href: getPathname({ locale, href: "/devs" }), label: t("nav.devs") },
-        ]
-      : []),
-  ];
+  /**
+   * One tab per section this role may open, in a fixed order.
+   *
+   * Which sections those are is a rule and lives with the other role rules
+   * (`visibleAdminSections`), not here — it read `staffUser.role === "ADMIN"` for the whole
+   * group, a raw equality test against a hierarchy of five nesting roles, and the effect was
+   * that a **SUPERADMIN saw only the Events tab**. That module's comment has the full account.
+   *
+   * All this does is turn a section into a link: `getPathname` is a server function, so the
+   * hrefs are resolved here and the client island only decides which one is current.
+   */
+  const SECTION_HREF: Record<AdminSection, string> = {
+    events: getPathname({ locale, href: "/admin" }),
+    registrations: getPathname({ locale, href: "/admin/registrations" }),
+    legal: getPathname({ locale, href: "/admin/legal" }),
+    staff: getPathname({ locale, href: "/admin/staff" }),
+    // Its own route rather than a backoffice page: it is read by whoever is holding the
+    // hosting dashboard (BR-REQ-090-04).
+    devs: getPathname({ locale, href: "/devs" }),
+  };
+
+  const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
+    href: SECTION_HREF[section],
+    label: t(`nav.${section}`),
+  }));
 
   return (
     /*
@@ -88,11 +101,26 @@ export default async function AdminLayout({ children, params }: Props) {
           <Typography variant="h1" sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }}>
             {t("title")}
           </Typography>
+          {/*
+            Who you are, and *which account* you are — the address, not only the display name.
+            A club with two Zitadel accounts on one machine, or one person with a personal and a
+            club address, cannot tell them apart from a display name, and the address is the
+            identity the `staff_users` allowlist actually matches on. It is the reader's own
+            address shown to themselves, so there is no disclosure here: §10.3's protections are
+            about participants, and a member of staff seeing their own sign-in is not that.
+          */}
           <Typography variant="body2" color="text.secondary">
             {t("signedInAs", {
               name: staffUser.displayName,
               role: STAFF_ROLE_LABEL[staffUser.role],
             })}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontFamily: "monospace", fontSize: "0.8125rem", wordBreak: "break-all" }}
+          >
+            {staffUser.email}
           </Typography>
         </Box>
 

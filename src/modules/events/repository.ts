@@ -48,8 +48,8 @@ const PUBLIC_COLUMNS = {
   // The same event in either language (`DECISIONS.md` §36): one value, on the event row.
   locationName: events.locationName,
   locationAddress: events.locationAddress,
-  difficultyLabel: events.difficultyLabel,
-  costText: events.costText,
+  difficulty: events.difficulty,
+  costType: events.costType,
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,

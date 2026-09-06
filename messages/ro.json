@@ -88,7 +88,17 @@
       "OPEN": "Înscrierile sunt deschise",
       "CLOSED": "Înscrierile s-au închis",
       "EVENT_CANCELLED": "Evenimentul a fost anulat"
-    }
+    },
+    "difficultyValues": {
+      "EASY": "Ușor",
+      "MODERATE": "Mediu",
+      "HARD": "Avansat"
+    },
+    "costValues": {
+      "FREE": "Gratuit",
+      "PAID": "Cu taxă"
+    },
+    "seeDetails": "Vezi detaliile"
   },
   "Admin": {
     "title": "Administrare",
@@ -151,10 +161,12 @@
       "auditTrail": "Ce a făcut echipa",
       "auditActorRemoved": "cont șters",
       "audit": {
-        "registration.created_by_staff": "Înscriere adăugată de echipă",
-        "registration.name_corrected": "Nume corectat",
-        "registration.cancelled_by_staff": "Anulată de echipă",
-        "registration.resend_rate_limited": "Retrimitere limitată"
+        "registration": {
+          "created_by_staff": "Înscriere adăugată de echipă",
+          "name_corrected": "Nume corectat",
+          "cancelled_by_staff": "Anulată de echipă",
+          "resend_rate_limited": "Retrimitere limitată"
+        }
       },
       "locale": {
         "ro": "Română",
@@ -167,7 +179,8 @@
       "preview": "Previzualizare",
       "edit": "Editează",
       "moreActions": "Alte acțiuni",
-      "new": "Eveniment nou"
+      "new": "Eveniment nou",
+      "registrations": "Înscrieri"
     },
     "confirm": {
       "cancel": "Renunță",
@@ -216,10 +229,10 @@
         "excerpt": "Descriere scurtă",
         "locationName": "Punct de întâlnire",
         "locationAddress": "Adresă",
-        "difficultyLabel": "Dificultate",
-        "costText": "Cost",
         "seoTitle": "Titlu pentru motoarele de căutare",
-        "seoDescription": "Descriere pentru motoarele de căutare"
+        "seoDescription": "Descriere pentru motoarele de căutare",
+        "difficulty": "Dificultate",
+        "costType": "Cost"
       },
       "latitude": "Latitudine",
       "longitude": "Longitudine",
@@ -266,7 +279,17 @@
       "copySection": "Copiere și ștergere",
       "duplicate": "Duplică",
       "delete": "Șterge",
-      "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le."
+      "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
+      "difficultyValues": {
+        "EASY": "Ușor",
+        "MODERATE": "Mediu",
+        "HARD": "Avansat"
+      },
+      "costValues": {
+        "FREE": "Gratuit",
+        "PAID": "Cu taxă"
+      },
+      "notStated": "Nespecificat"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -398,6 +421,17 @@
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
       "privacyAcknowledged": "Nota de confidențialitate"
+    },
+    "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
+    "optionalSuffix": "opțional",
+    "resend": {
+      "title": "Retrimite linkul de înregistrare",
+      "intro": "Dacă nu ai primit mesajul nostru, scrie adresa cu care te-ai înscris și îți trimitem linkul din nou. Verifică și folderul de spam.",
+      "emailHelp": "Adresa folosită la înscriere.",
+      "submit": "Trimite linkul",
+      "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "prompt": "Nu a ajuns mesajul?",
+      "linkLabel": "Trimite-l din nou"
     }
   },
   "Registrations": {
@@ -492,7 +526,7 @@
       }
     },
     "rateLimits": "Limite de frecvență",
-    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune, per identitate, într-o fereastră fixă. O limită atinsă arată ca „site-ul nu merge” fără să fie nimic stricat.",
+    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune protejată într-o fereastră fixă, per cheie — o identitate de e-mail, o înscriere, un link din e-mail sau o sarcină programată. O limită atinsă arată ca „site-ul nu merge” fără să fie nimic stricat.",
     "roles": "Roluri",
     "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
     "youAre": "rolul tău",
@@ -502,6 +536,44 @@
       "DEV": "plus pagina de configurare. Fără date despre participanți",
       "ADMIN": "plus înscrieri, participanți, export, ștergerea unui eveniment",
       "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
+    },
+    "settings": "Setări",
+    "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
+    "emailVolume": "Volum de e-mail astăzi",
+    "emailVolumeIntro": "Trei mesaje pentru fiecare înscriere finalizată, raportat la alocația zilnică a furnizorului. Verifică asta înainte de a deschide înscrierile, nu după. Numărat de la miezul nopții UTC.",
+    "emailVolumeHeadroom": "Au mai rămas {remaining} din {allowance} mesaje astăzi.",
+    "registrationsToday": "Înscrieri astăzi",
+    "testRegistrations": "de test",
+    "projectedMessages": "Mesaje estimate",
+    "queuedMessages": "În coadă astăzi",
+    "sentMessages": "Trimise astăzi",
+    "inUse": "activ",
+    "setting": {
+      "APP_ENV": {
+        "what": "Ce mediu este acesta. El — nu NODE_ENV — decide fiecare regulă care depinde de mediu: dacă se pot trimite e-mailuri reale, dacă este permis comutatorul de autentificare pentru dezvoltare și dacă pot exista textul juridic de probă și înscrierile de test.",
+        "values": {
+          "local": "Mașina unui dezvoltator. E-mailul este reținut și niciodată transmis; comutatorul de autentificare este disponibil; textul juridic de probă este încărcat.",
+          "test": "Suitele automate. Aceleași garanții ca local, și nimic de aici nu ajunge vreodată la o persoană.",
+          "qa": "Mediul comun pe care colegii încearcă lucruri. Bază de date reală, autentificare reală, iar e-mailul fie reținut, fie limitat la o listă de adrese — niciodată livrare deschisă.",
+          "production": "Site-ul real al clubului. Singurul mediu care poate trimite e-mail real și singurul care refuză categoric textul juridic de probă și înscrierile de test."
+        }
+      },
+      "EMAIL_DELIVERY_MODE": {
+        "what": "Cât de departe ajunge efectiv un mesaj după ce este compus. Aceasta este bariera dintre un sistem de test și căsuța poștală a unui necunoscut, iar pornirea refuză orice combinație care ar trece-o.",
+        "values": {
+          "capture": "Nu se transmite nimic. Mesajele sunt păstrate în memorie — ceea ce pe o găzduire serverless înseamnă că nu ajung la nimeni, deci înscrierea pare stricată pentru oricine altcineva decât un dezvoltator.",
+          "allowlist": "Livrare reală, dar numai către adresele din EMAIL_ALLOWLIST; restul sunt reținute. Asta este un domeniu sandbox Mailgun și așa testează un grup restrâns tot parcursul, în siguranță.",
+          "live": "Livrare reală către cine s-a înscris. Permisă doar când APP_ENV este production; declarată altundeva, pornirea eșuează."
+        }
+      },
+      "STAFF_AUTH_MODE": {
+        "what": "Cum dovedește un membru al personalului cine este. Participanții nu se autentifică niciodată — aceasta este doar ușa backoffice-ului, iar tabelul staff_users decide cine poate intra, indiferent de modul setat.",
+        "values": {
+          "dev-switcher": "O scurtătură locală prin care un dezvoltator devine orice rol fără furnizor de identitate. Permisă doar când APP_ENV este local sau test; declarată altundeva, pornirea eșuează.",
+          "provider": "Varianta reală: Auth.js cu Zitadel. Furnizorul dovedește adresa, iar lista staff_users decide dacă acea adresă poate intra.",
+          "disabled": "Nu există nicio cale de intrare. Fiecare rută de personal răspunde 404 în loc de un refuz, deci backoffice-ul este inaccesibil, nu doar ascuns. Aceasta este setarea corectă pentru orice mediu fără furnizor de identitate configurat."
+        }
+      }
     }
   }
 }

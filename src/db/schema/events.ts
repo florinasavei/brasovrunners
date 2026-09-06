@@ -42,6 +42,30 @@ export const editorialStatus = pgEnum("editorial_status", [
 export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL", "EXTERNAL"]);
 
 /**
+ * How hard the event is, as a closed set rather than a typed word.
+ *
+ * It was `difficulty_label`, free text, and `DECISIONS.md` §36 accepted the consequence that an
+ * English page would show whatever Romanian the club typed. For a fact with three possible
+ * answers that trade buys nothing: an enum is the same single decision by the club, rendered in
+ * the reader's own language, and it also stops "Mediu", "mediu" and "Medium" being three
+ * difficulties in a filter that does not exist yet but will.
+ *
+ * Three values, because three is what the club uses. A fourth is a migration, not a free-text
+ * escape hatch — the point of the closed set is that adding to it is a decision.
+ */
+export const eventDifficulty = pgEnum("event_difficulty", ["EASY", "MODERATE", "HARD"]);
+
+/**
+ * Whether the event costs money — and deliberately not how much.
+ *
+ * A price is not an enum: it is an amount, a currency, and usually a deadline. This column
+ * answers the only question every event page must answer today, which is whether a runner
+ * needs their wallet. The amount becomes its own nullable column the day the club runs an
+ * event that charges, and `PAID` is what will point at it.
+ */
+export const eventCostType = pgEnum("event_cost_type", ["FREE", "PAID"]);
+
+/**
  * Whether the event page publishes who is coming (BR-REQ-039-01, AGENTS.md §12.3).
  *
  * `HIDDEN` is the default and the only value any existing row has, because publishing the names
@@ -179,12 +203,16 @@ export const events = pgTable(
      */
     locationName: text("location_name"),
     locationAddress: text("location_address"),
-    difficultyLabel: text("difficulty_label"),
+
     /**
-     * Free text: "Gratuit", "50 lei". Null means the club has not stated a cost, and the page
-     * then says nothing about it rather than guessing that the event is free.
+     * The two facts that stopped being free text in migration `0018`.
+     *
+     * Null means the club has not said, and the page then omits the row rather than guessing —
+     * an event with no stated cost is not thereby free, and one with no stated difficulty is
+     * not thereby easy. That is why neither column has a default.
      */
-    costText: text("cost_text"),
+    difficulty: eventDifficulty("difficulty"),
+    costType: eventCostType("cost_type"),
 
     /**
      * The one event the landing page leads with, or none.
@@ -383,24 +411,17 @@ export const eventTranslations = pgTable(
     excerpt: text("excerpt"),
     bodyJson: jsonb("body_json"),
 
-    /**
-     * DEPRECATED, and dropped in the release after this one.
+    /*
+     * `location_name`, `location_address`, `difficulty_label` and `cost_text` were here and are
+     * gone (migration `0017`, `DECISIONS.md` §36). They are the same fact in both languages
+     * rather than a translation of one, so they live on `events`. The columns survived one
+     * release after the code stopped reading them, which is what AGENTS.md §7.6 requires: a
+     * rollback has to find a schema the previous code can still run against.
      *
-     * These four moved to `events` (`DECISIONS.md` §36) because they are the same fact in both
-     * languages, not a translation of it. Nothing reads them any more: every query takes them
-     * from the event row.
-     *
-     * They are still *written* — `createEvent` and `duplicateEvent` copy the event-row value
-     * into every translation — for one reason only, and it disappears with the columns: this
-     * table's `NOT NULL` and its `event_translations_required_fields_present` CHECK still name
-     * `location_name`, and AGENTS.md §7.6 ships a drop in the release after the code that stops
-     * needing it, so that a rollback finds a schema its code can still run against.
+     * `cover_alt_text` stays. It is genuinely per language — alt text is prose a translator
+     * writes, not a fact about the event.
      */
-    locationName: text("location_name").notNull(),
-    locationAddress: text("location_address"),
-    difficultyLabel: text("difficulty_label"),
     coverAltText: text("cover_alt_text"),
-    costText: text("cost_text"),
 
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
@@ -433,18 +454,20 @@ export const eventTranslations = pgTable(
     check("event_translations_version_positive", sql`${t.version} >= 1`),
 
     /**
-     * The three fields every public page renders, present rather than blank.
+     * The two fields every public page renders, present rather than blank.
      *
      * `NOT NULL` alone permits `''`, and a translation whose title is an empty string is what a
      * half-filled second locale looks like. Publication requires a complete translation in every
      * locale (`content/events/service.ts#transitionEvent`); this is the part of "complete" a
      * CHECK can state honestly from inside one row.
+     *
+     * It was three until migration `0017`. The third named `location_name`, which is no longer
+     * on this table — the meeting point is one value for the whole event and is checked there.
      */
     check(
       "event_translations_required_fields_present",
       sql`length(btrim(${t.title})) > 0
-          AND length(btrim(${t.slug})) > 0
-          AND length(btrim(${t.locationName})) > 0`,
+          AND length(btrim(${t.slug})) > 0`,
     ),
   ],
 );

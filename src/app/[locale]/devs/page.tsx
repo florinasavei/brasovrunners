@@ -17,11 +17,13 @@ import {
   worstStatus,
 } from "@/modules/diagnostics/configuration";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { buildInfo, formatLastUpdated, formatVersion } from "@/shared/config/build-info";
+import { CONFIGURATION_ENUMS } from "@/shared/config/env-enums";
 import { env } from "@/shared/config/env";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -105,6 +107,14 @@ export default async function DevsPage({ params }: Props) {
       checkJobHealth(db, jobName, now),
     ),
   );
+  const volume = await readEmailVolumeToday(db, now);
+
+  /** The value each configuration enum currently holds, for marking it in the list below. */
+  const currentSetting: Record<string, string> = {
+    APP_ENV: env.APP_ENV,
+    EMAIL_DELIVERY_MODE: env.EMAIL_DELIVERY_MODE,
+    STAFF_AUTH_MODE: env.STAFF_AUTH_MODE ?? "disabled",
+  };
 
   const severity = (status: string) =>
     status === "blocked" ? "error" : status === "limited" ? "warning" : "success";
@@ -197,6 +207,122 @@ export default async function DevsPage({ params }: Props) {
               {scope}: {policy.limit} / {Math.round(policy.windowMs / 60_000)} min
             </Typography>
           ))}
+        </Stack>
+      </Box>
+
+      <Divider />
+
+      {/*
+        Every value each configuration enum accepts, with the one in force marked. The page
+        could always say which mode this deployment was in and never what the alternatives
+        were, so "what else could this be set to?" meant opening the source. The list comes
+        from `shared/config/env-enums.ts`, which is also what `env.ts` validates against, so
+        it cannot drift from what the process would actually accept.
+      */}
+      <Box component="section">
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+          {t("settings")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("settingsIntro")}
+        </Typography>
+        <Stack spacing={3}>
+          {CONFIGURATION_ENUMS.map(({ variable, values }) => (
+            <Box key={variable} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontFamily: "monospace", fontSize: "0.8125rem" }}
+              >
+                {variable}
+              </Typography>
+              {/* What the setting is for, before what its values are. */}
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                {t(`setting.${variable}.what`)}
+              </Typography>
+
+              {/* One row per value: the token, whether it is the one in force, and what it
+                  does. A list of bare tokens says what this could be set to and not what
+                  setting it would mean, which is the question somebody actually has. */}
+              <Stack component="ul" spacing={1} sx={{ listStyle: "none", p: 0, m: 0 }}>
+                {values.map((value) => {
+                  const active = currentSetting[variable] === value;
+                  return (
+                    <Stack
+                      component="li"
+                      key={value}
+                      direction={{ xs: "column", sm: "row" }}
+                      spacing={{ xs: 0.5, sm: 1.5 }}
+                      sx={{ alignItems: { sm: "baseline" } }}
+                    >
+                      <Chip
+                        size="small"
+                        label={active ? `${value} · ${t("inUse")}` : value}
+                        color={active ? "primary" : "default"}
+                        variant={active ? "filled" : "outlined"}
+                        sx={{ flexShrink: 0 }}
+                      />
+                      <Typography
+                        variant="body2"
+                        color={active ? "text.primary" : "text.secondary"}
+                      >
+                        {t(`setting.${variable}.values.${value}`)}
+                      </Typography>
+                    </Stack>
+                  );
+                })}
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
+      </Box>
+
+      <Divider />
+
+      {/*
+        The arithmetic of `docs/PLATFORM.md` limit 1, done here so nobody has to do it by hand
+        on the morning it matters: three messages per completed registration against a daily
+        allowance of a hundred. Test registrations are counted, and counted separately — §12.6
+        keeps them out of every count the *club* is given, and this is an operator's forecast
+        of what will reach the provider, which a synthetic participant consumes just the same.
+      */}
+      <Box component="section">
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+          {t("emailVolume")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("emailVolumeIntro")}
+        </Typography>
+        <Alert
+          severity={
+            volume.remaining === 0
+              ? "error"
+              : volume.projectedMessages > volume.remaining
+                ? "warning"
+                : "success"
+          }
+          sx={{ mb: 2 }}
+        >
+          {t("emailVolumeHeadroom", {
+            remaining: volume.remaining,
+            allowance: volume.allowance,
+          })}
+        </Alert>
+        <Stack spacing={0.5}>
+          <Typography variant="body2">
+            {t("registrationsToday")}: <strong>{volume.realRegistrations}</strong>
+            {volume.testRegistrations > 0
+              ? ` (+${volume.testRegistrations} ${t("testRegistrations")})`
+              : ""}
+          </Typography>
+          <Typography variant="body2">
+            {t("projectedMessages")}: <strong>{volume.projectedMessages}</strong>
+          </Typography>
+          <Typography variant="body2">
+            {t("queuedMessages")}: <strong>{volume.queuedMessages}</strong>
+          </Typography>
+          <Typography variant="body2">
+            {t("sentMessages")}: <strong>{volume.sentMessages}</strong> / {volume.allowance}
+          </Typography>
         </Stack>
       </Box>
 

@@ -213,3 +213,45 @@ export function canSeeDiagnostics(role: StaffRole): boolean {
 export function canManageStaff(role: StaffRole): boolean {
   return atLeast(role, "SUPERADMIN");
 }
+
+/**
+ * The backoffice's sections, and which of them a role is offered.
+ *
+ * A pure function because "which sections may this role see" is a rule, and §1.5 requires a
+ * rule that can be a pure function to be one. It was not one, and the cost was concrete: the
+ * layout tested `role === "ADMIN"` for the whole group, which is a raw equality check against a
+ * hierarchy of five nesting roles (`DECISIONS.md` §38). **A SUPERADMIN was therefore shown only
+ * the Events tab** — and migration `0016` made every existing ADMIN a SUPERADMIN, so the people
+ * actually running the club were the ones who could not see the registrations, the legal
+ * documents, the staff screen or `/devs`. A DEV was offered no `/devs`; an ADMIN was offered a
+ * Staff tab that 404s on arrival.
+ *
+ * Nothing was exposed by any of that. Every page below asserts its own capability on the server
+ * and answers 404 to a typed URL (BR-REQ-060-01) — the navigation was lying about what the
+ * reader may do, not letting them do more. But a section a person cannot see is a feature they
+ * conclude does not exist, which is exactly what happened.
+ *
+ * Each entry names the capability the page behind it actually asserts, so the two cannot drift:
+ *
+ *     events         everyone with a staff session — the backoffice's front door
+ *     registrations  canManageRegistrations   `admin/registrations/page.tsx`
+ *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
+ *     staff          canManageStaff           `admin/staff/page.tsx`
+ *     devs           canSeeDiagnostics        `devs/page.tsx`
+ *
+ * The hierarchy makes one property testable and worth stating: a higher role is offered every
+ * section a lower one is. `tests/unit/staff/roles.test.ts` asserts it across every pair, which
+ * is the assertion that would have caught the original defect.
+ */
+export const ADMIN_SECTIONS = ["events", "registrations", "legal", "staff", "devs"] as const;
+export type AdminSection = (typeof ADMIN_SECTIONS)[number];
+
+export function visibleAdminSections(role: StaffRole): AdminSection[] {
+  return [
+    "events" as const,
+    ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
+    ...(atLeast(role, "ADMIN") ? (["legal"] as const) : []),
+    ...(canManageStaff(role) ? (["staff"] as const) : []),
+    ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
+  ];
+}

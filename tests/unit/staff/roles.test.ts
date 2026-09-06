@@ -9,6 +9,7 @@ import {
   isLiveContent,
   STAFF_ROLES,
   TRANSITIONS,
+  visibleAdminSections,
 } from "@/modules/staff-identity/domain/roles";
 
 /**
@@ -144,5 +145,71 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canEditEventFields("ADMIN")).toBe(true);
     expect(canEditEventFields("MODERATOR")).toBe(true);
     expect(canEditEventFields("CONTRIBUTOR")).toBe(false);
+  });
+});
+
+/**
+ * BR-REQ-060-01 — the backoffice offers a role exactly the sections it may open.
+ *
+ * These exist because the layout did not consult any of the capabilities above. It tested
+ * `role === "ADMIN"` for the whole group, and against five nesting roles that meant a
+ * **SUPERADMIN was shown only the Events tab** — while migration `0016` had just turned every
+ * existing ADMIN into a SUPERADMIN. Nothing was exposed; every page still refused on the
+ * server. What broke was the reader's picture of the system, which is how four separate
+ * "this feature is missing" reports came from one equality operator.
+ *
+ * The monotonicity test below is the one that would have caught it, and it is the reason this
+ * is a pure function rather than a conditional inside a React component.
+ */
+describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
+  it("gives every signed-in role the events section and nothing it may not open", () => {
+    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["events"]);
+    expect(visibleAdminSections("MODERATOR")).toEqual(["events"]);
+  });
+
+  it("gives DEV the configuration report and no participant data", () => {
+    const sections = visibleAdminSections("DEV");
+
+    expect(sections).toContain("devs");
+    // The line that carries the weight (§38): DEV helps with the platform and never sees the
+    // people who registered.
+    expect(sections).not.toContain("registrations");
+    expect(sections).not.toContain("staff");
+  });
+
+  it("gives ADMIN the registrations and the legal documents, but not staff administration", () => {
+    const sections = visibleAdminSections("ADMIN");
+
+    expect(sections).toEqual(["events", "registrations", "legal", "devs"]);
+    // An Administrator reads every registration and still cannot promote themselves.
+    expect(sections).not.toContain("staff");
+  });
+
+  it("gives SUPERADMIN every section — the case that was broken", () => {
+    expect(visibleAdminSections("SUPERADMIN")).toEqual([
+      "events",
+      "registrations",
+      "legal",
+      "staff",
+      "devs",
+    ]);
+  });
+
+  it("never offers a higher role less than a lower one", () => {
+    // The property, across every pair in the hierarchy. An equality test against a role name
+    // fails this immediately, which is the whole point of asserting it rather than the lists.
+    for (let lower = 0; lower < STAFF_ROLES.length; lower += 1) {
+      for (let higher = lower; higher < STAFF_ROLES.length; higher += 1) {
+        const lowerSections = visibleAdminSections(STAFF_ROLES[lower]);
+        const higherSections = visibleAdminSections(STAFF_ROLES[higher]);
+
+        for (const section of lowerSections) {
+          expect(
+            higherSections,
+            `${STAFF_ROLES[higher]} must be offered everything ${STAFF_ROLES[lower]} is`,
+          ).toContain(section);
+        }
+      }
+    }
   });
 });
