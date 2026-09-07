@@ -199,6 +199,9 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       emergencyContactName: input.details?.emergencyContactName ?? null,
       emergencyContactPhone: input.details?.emergencyContactPhone ?? null,
       clubName: input.details?.clubName ?? null,
+      // NOT NULL with a default of false: "did not say" and "said no" are the same answer to
+      // a question that grants nothing, unlike the two consents above it, where they are not.
+      clubMemberDeclared: input.details?.clubMemberDeclared ?? false,
       tshirtSize: input.details?.tshirtSize ?? null,
       healthNotes: input.details?.healthNotes ?? null,
       healthConsentVersion: input.details?.healthConsentVersion ?? null,

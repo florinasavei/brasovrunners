@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.25-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.26-2026-09-06`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -110,6 +110,28 @@ when it is full, and a sentence — opening date, closed, cancelled — where th
 offer. The count is the allocator's own formula (`readPublicAvailability`), never a second one.
 Until `BR-V1.19` the whole lifecycle was built, tested and unreachable: the route existed and no
 file under `src/` linked to it.
+
+**The form a stranger fills in is one page, and what loads is the required half.** Fifteen
+questions were asked on one screen — 2,697 pixels at 390 wide, now 2,117; a multi-step form was considered and refused in all three shapes it
+could take, because each keeps partial answers somewhere that costs more than the scrolling it
+saves — hidden fields would put health text in the markup of every later step, a partial row
+would need a condition inside the allocator, and a client wizard would have to reimplement the
+browser's own validation in two languages. What loads now is what a submission is refused
+without, plus the consents; the t-shirt, the club, the display name and the health note sit
+behind native `<details>`. A consent is never collapsed — a question behind a summary nobody
+opens has not been put to them. A rejection the browser could not catch returns to a focusable
+error summary by URL fragment, with each field named as a link to that field. The declaration
+page names the event and the instant the hold expires, above the text rather than after it
+(`DECISIONS.md` §47).
+
+**The club can see which entries are its own.** An optional "I am a Brașov Runners team member"
+tick, on the public form and the staff-entered one, inside the optional disclosure whose summary
+names the club. Staff were never blocked from registering — `participants` and `staff_users`
+share no constraint and the public form reads no session — so what this adds is visibility, not
+access. It is a **claim**: matching against `staff_users` would answer "no" for most members,
+who have no backoffice account. It grants nothing and appears in no condition in the allocator
+or the capacity formula, which a test enforces; the export prints "Yes" or an empty cell and
+never "No" (`DECISIONS.md` §48).
 
 **A public participant list, built and switched off.** `events.participant_list_visibility` is
 `HIDDEN` for every event and `NAMES` publishes the registered names of confirmed, real, not

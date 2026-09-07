@@ -7,6 +7,7 @@ import { getDb } from "@/db/client";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { readPublicAvailability } from "@/modules/registrations/service";
 import ButtonLink from "@/shared/ui/ButtonLink";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { registrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
@@ -46,10 +47,6 @@ export default async function RegistrationCta({ event, now }: { event: PublicEve
   const cta = registrationCta({ ...event, availablePlaces }, now);
   if (cta.kind === "NONE") return null;
 
-  // 44px is the minimum tap target BR-REQ-041-01 criterion 6 names; MUI's medium button is
-  // 36.5px, which passes on a mouse and fails on a thumb.
-  const tapTarget = { minHeight: 44 };
-
   if (cta.kind === "EXTERNAL") {
     return (
       <Box sx={{ mt: 3 }}>
@@ -62,7 +59,7 @@ export default async function RegistrationCta({ event, now }: { event: PublicEve
           target="_blank"
           rel="noopener noreferrer nofollow"
           variant="contained"
-          sx={tapTarget}
+          sx={TAP_TARGET}
         >
           {cta.provider
             ? t("cta.externalWithProvider", { provider: cta.provider })
@@ -77,7 +74,7 @@ export default async function RegistrationCta({ event, now }: { event: PublicEve
       <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
         <ButtonLink
           variant="contained"
-          sx={tapTarget}
+          sx={TAP_TARGET}
           href={{ pathname: "/events/[slug]/register", params: { slug: event.slug } }}
         >
           {cta.kind === "FULL" ? t("cta.joinWaitingList") : t("cta.register")}

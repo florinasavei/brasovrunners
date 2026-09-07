@@ -64,6 +64,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
     difficulty: null,
     costType: null,
     mapUrl: "",
+    routeUrl: "",
     distanceMeters: "",
     elevationGainMeters: "",
     featured: false,
@@ -168,7 +169,12 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
     it("copies the configuration but never the publication, the date or the flag", async () => {
       const source = await createEvent(db, {
         actor: editor,
-        fields: { ...NEW_EVENT, featured: true, distanceMeters: "10000" },
+        fields: {
+          ...NEW_EVENT,
+          featured: true,
+          distanceMeters: "10000",
+          routeUrl: ["https:/", "routes.example.test", "tampa"].join("/"),
+        },
       });
       const reviewed = await transitionEvent(db, {
         actor: editor,
@@ -186,6 +192,9 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       const copy = await duplicateEvent(db, { actor: editor, eventId: source.id });
 
       expect(copy.distanceMeters).toBe(10000);
+      // BR-REQ-011-01 criterion 8: last year's race is run on last year's route, which is the
+      // usual reason for duplicating an event at all.
+      expect(copy.routeUrl).toBe(["https:/", "routes.example.test", "tampa"].join("/"));
       expect(copy.editorialStatus, "a copy is a draft").toBe("DRAFT");
       expect(copy.publishedAt, "a copy has never been public").toBeNull();
       expect(copy.featured, "a copy does not take over the landing page").toBe(false);

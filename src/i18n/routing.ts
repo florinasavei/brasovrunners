@@ -50,6 +50,13 @@ export const routing = defineRouting({
       en: "/registrations/resend",
     },
 
+    /**
+     * Standing pages the club writes for itself — "About Brașov Runners", "Contact"
+     * (BR-REQ-050-03). Under their own prefix rather than at the site root: a page slug and an
+     * event slug are then two different URLs, so `contact` may be both without either winning.
+     */
+    "/pages/[slug]": { ro: "/pagini/[slug]", en: "/pages/[slug]" },
+
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
     "/legal/terms": { ro: "/termeni", en: "/terms" },
@@ -78,6 +85,9 @@ export const routing = defineRouting({
     "/admin/legal": "/admin/legal",
     "/admin/legal/new": "/admin/legal/new",
     "/admin/legal/[id]": "/admin/legal/[id]",
+    "/admin/pages": "/admin/pages",
+    "/admin/pages/new": "/admin/pages/new",
+    "/admin/pages/[id]": "/admin/pages/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },
   },

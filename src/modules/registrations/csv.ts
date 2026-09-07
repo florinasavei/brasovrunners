@@ -26,17 +26,45 @@ export type RegistrationCsvRow = {
   registeredName: string;
   email: string;
   status: string;
+  /**
+   * BR-REQ-031-06. "Yes" or empty, never "No".
+   *
+   * The column is a claim somebody made about themselves, and an empty cell says so: a person
+   * who never opened the optional section and a person who is not in the club produce the same
+   * `false`, and printing "No" against both would turn a missing answer into a stated one. The
+   * volunteer sorting this at a start line reads a column of "Yes" and blanks, which is what
+   * the data actually is.
+   */
+  clubMemberDeclared: boolean;
   submittedAt: string;
   confirmedAt: string;
 };
 
-const HEADER = ["Event", "Name", "Email", "Status", "Submitted", "Confirmed"];
+const HEADER = [
+  "Event",
+  "Name",
+  "Email",
+  "Status",
+  "Club member (declared)",
+  "Submitted",
+  "Confirmed",
+];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
   const lines = [
-    HEADER.join(","),
+    // Through the same cell function as the data. No header needs quoting today; one added
+    // later with a comma in it would silently split every row into an extra column.
+    HEADER.map(csvCell).join(","),
     ...rows.map((row) =>
-      [row.eventTitle, row.registeredName, row.email, row.status, row.submittedAt, row.confirmedAt]
+      [
+        row.eventTitle,
+        row.registeredName,
+        row.email,
+        row.status,
+        row.clubMemberDeclared ? "Yes" : "",
+        row.submittedAt,
+        row.confirmedAt,
+      ]
         .map(csvCell)
         .join(","),
     ),

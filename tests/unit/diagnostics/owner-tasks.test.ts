@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  COST_LINES,
   ownerTasks,
   sortTasks,
   type OwnerTaskInputs,
@@ -17,7 +16,7 @@ import {
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   legalTextIsSample: false,
-  onProviderHostname: false,
+  clubDomainBound: true,
   emailDeliveryMode: "live",
   jobsHealthy: true,
   publishedEventCount: 4,
@@ -52,7 +51,7 @@ describe("owner tasks", () => {
 
   it("treats the provider hostname as work to do, not as a blocker", () => {
     // The site genuinely works on it, which is the difference between this and the two above.
-    expect(stateOf({ ...LAUNCHED, onProviderHostname: true }, "registerDomain")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, clubDomainBound: false }, "registerDomain")).toBe("open");
   });
 
   it("blocks on a stopped scheduler, and says it belongs to the developer", () => {
@@ -77,7 +76,7 @@ describe("owner tasks", () => {
       ownerTasks({
         ...LAUNCHED,
         legalTextIsSample: true,
-        onProviderHostname: true,
+        clubDomainBound: false,
       }),
     );
     expect(sorted.map((task) => task.state)).toEqual(
@@ -87,20 +86,5 @@ describe("owner tasks", () => {
       }),
     );
     expect(sorted[0].state).toBe("blocking");
-  });
-});
-
-describe("cost lines", () => {
-  it("quotes an amount for every provider, or says plainly that it is undecided", () => {
-    // AGENTS.md §1.2 forbids inventing vendor pricing. A line the club must fill in reads "?"
-    // and renders as "to be decided" — never as a plausible number nobody checked.
-    for (const line of COST_LINES) {
-      expect(line.amount).toMatch(/^(\$\d+|\?)$/);
-    }
-  });
-
-  it("names the domain as the one undecided cost", () => {
-    const undecided = COST_LINES.filter((line) => line.amount === "?").map((line) => line.id);
-    expect(undecided).toEqual(["domain"]);
   });
 });

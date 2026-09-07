@@ -1,0 +1,2 @@
+ALTER TABLE "events" ADD COLUMN "route_url" text;--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_route_url_is_https" CHECK ("events"."route_url" IS NULL OR "events"."route_url" LIKE 'https://%');

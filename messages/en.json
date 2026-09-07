@@ -98,7 +98,9 @@
       "FREE": "Free",
       "PAID": "Paid"
     },
-    "seeDetails": "See details"
+    "seeDetails": "See details",
+    "route": "Route",
+    "openRoute": "View the route"
   },
   "Admin": {
     "title": "Backoffice",
@@ -113,7 +115,8 @@
       "staff": "Staff",
       "legal": "Legal documents",
       "devs": "Configuration",
-      "tasks": "To do"
+      "tasks": "To do",
+      "pages": "Pages"
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -179,7 +182,10 @@
       "deleteAction": "Delete permanently",
       "deleteConfirm": "I confirm this deletion is permanent",
       "registrationDeleted": "The registration was permanently deleted.",
-      "rowActions": "Actions"
+      "rowActions": "Actions",
+      "clubMemberLabel": "Brașov Runners members",
+      "clubMemberOnly": "Only those who declared membership",
+      "clubMemberChip": "Member (declared)"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -297,7 +303,9 @@
         "FREE": "Free",
         "PAID": "Paid"
       },
-      "notStated": "Not stated"
+      "notStated": "Not stated",
+      "routeUrl": "Route link",
+      "routeUrlHelp": "Where the route can be seen — Strava, Komoot, or the map you drew it on. Must start with https://. Leave empty if there is not one."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -384,8 +392,6 @@
         "club": "The club",
         "developer": "The developer"
       },
-      "costsTitle": "Costs",
-      "costsIntro": "These figures come from docs/PLATFORM.md, checked against the providers. They are not estimates.",
       "costUnknown": "to be decided",
       "items": {
         "approveLegalText": {
@@ -414,27 +420,125 @@
           "done": "The jobs are running on time."
         }
       },
-      "costs": {
-        "vercel": {
-          "name": "Hosting (Vercel)",
-          "note": "the Hobby plan, free. Moving to Pro costs $20/month per person who deploys."
+      "freeTitle": "Can the site run for free?",
+      "freeVerdict": {
+        "freeExceptDomain": "Yes, apart from the domain. Every service is on a free plan today and nothing costs anything monthly. The .ro domain is paid yearly and is the one certain expense.",
+        "freeButAtALimit": "Yes, but today's email allowance is spent. Nothing is lost — the messages go out after midnight UTC. If you open registration now, the confirmations arrive tomorrow morning.",
+        "notFree": "Caution, though not necessarily a breach. A published event is marked as charging a fee. Vercel's Hobby terms do not look at legal form — being an NGO is not an exemption, and the word “non-profit” does not appear in them at all. Two things do matter: “Asking for Donations does not fall under commercial usage” (their own explicit note), but “advertising the sale of a product or service” does. So a contribution presented as a donation is fine; a mandatory entry fee is not, even when it only covers costs. This site takes no money and has no payment integration — that helps, but it is not the only test."
+      },
+      "registrationsLeftToday": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
+      "limitsTitle": "The limits that matter",
+      "limitsIntro": "Not every documented limit — the four this club will actually meet, plus the rule about money. “Applies” means you are under it; “reached” means it is biting today.",
+      "limitApplies": "applies",
+      "limitReached": "reached",
+      "limits": {
+        "mailgunDaily": {
+          "title": "100 messages a day, which is about 33 registrations",
+          "body": "Mailgun's free plan sends 100 messages a day, and one completed registration costs three: confirm your address, sign the declaration, registration confirmed. A race opening entries to a hundred people crosses it before lunch. Messages past the cap are not lost — they wait until after midnight UTC."
         },
-        "neon": {
-          "name": "Database (Neon)",
-          "note": "the free plan."
+        "schedulerFloor": {
+          "title": "The scheduler fires about every two hours, not every five minutes",
+          "body": "Vercel Hobby allows one scheduled run a day and refuses a finer expression at deploy time, so the scheduler is a GitHub Actions workflow plus an external pinger. Measured on this repository, Actions alone fires roughly every two hours. That delays a message rather than losing it — but a confirmation arriving two hours late, on registration day, is experienced as a broken site."
         },
-        "mailgun": {
-          "name": "Email (Mailgun)",
-          "note": "the free sandbox, capped at 5 recipients. A paid plan becomes necessary for real volume."
+        "commercialUse": {
+          "title": "Vercel Hobby requires non-commercial use — the club sells nothing",
+          "body": "Brașov Runners sells nothing and takes no money, and this site has no payment integration at all. Of Vercel's five examples of commercial usage, four do not touch us: we request no payments, advertise the sale of nothing, carry no affiliate links and run no advertisements. One remains and it does not depend on what the club does: “receiving payment to create, update, or host the site”. If anyone is ever paid to work on this site, that alone is commercial usage — it is the single thing worth watching here. For anything resembling an entry contribution: Vercel states explicitly that “Asking for Donations does not fall under commercial usage”, so a donation is fine, while a mandatory fee would fall under “advertising the sale of a service”."
         },
+        "identityDomain": {
+          "title": "Staff sign-in on the club's own domain needs a paid plan",
+          "body": "Zitadel Free includes zero custom domains and one identity administrator. While staff sign in on the provider's hostname, neither matters. From the day the club's domain is bound, both do."
+        },
+        "orgRepository": {
+          "title": "A club-owned repository forces a paid Vercel plan",
+          "body": "Vercel Hobby cannot connect to a Git organization's repository, only to a personal one. The club wants the repository in its own name — which forces paid Vercel or a move to the fallback host. Two things the club wants that block each other."
+        }
+      },
+      "plansTitle": "What we are on, and what the next step up costs",
+      "plansIntro": "Prices are quoted from the project's own documentation, checked on {checked}. Vendors change them without notice — re-check before spending anything.",
+      "planNone": "no provider chosen",
+      "firstPaid": "First paid plan: {plan}, {cost}.",
+      "plans": {
         "domain": {
           "name": ".ro domain",
-          "note": "the yearly cost depends on the registrar; paid once a year."
+          "freeGives": "The one certain expense and the only line with no free option. Paid yearly, at the registrar's price."
+        },
+        "mailgun": {
+          "name": "Mailgun (email)",
+          "freeGives": "Free: 100 messages a day, 5 authorized sandbox recipients, one day of log retention."
+        },
+        "vercel": {
+          "name": "Vercel (hosting)",
+          "freeGives": "Hobby: 100 GB bandwidth, 1M invocations, one scheduled run a day, non-commercial only."
+        },
+        "neon": {
+          "name": "Neon (database)",
+          "freeGives": "Free: 0.5 GB storage, 100 CU-hours a month, 5 GB egress."
         },
         "zitadel": {
-          "name": "Sign-in (Zitadel)",
-          "note": "the free plan."
+          "name": "Zitadel (staff sign-in)",
+          "freeGives": "Free: 100 daily active users, one administrator, no custom domain."
+        },
+        "githubActions": {
+          "name": "GitHub Actions (scheduler)",
+          "freeGives": "Free and unlimited on a public repository. On a private one, 2,000 minutes a month."
         }
+      },
+      "bumpTitle": "What to bump temporarily, and when to drop it again",
+      "bumpIntro": "A plan nobody drops again is the expensive failure here, and no dashboard will remind you. Write the downgrade date wherever you wrote the upgrade date. Bump one thing, watch, then the next — two at once means never learning which one was binding.",
+      "bumpTemporary": "temporary",
+      "bumpPermanent": "permanent",
+      "bumps": {
+        "mailgun": {
+          "when": "You expect more registrations than the daily allowance covers",
+          "what": "Mailgun Basic, $15/month, removes the daily limit entirely and includes 10,000 messages a month.",
+          "back": "Drop it the month after: one month per race, not a standing subscription."
+        },
+        "neon": {
+          "when": "Pages are slow, or the database returns connection errors",
+          "what": "Neon Launch, usage-based, no monthly minimum.",
+          "back": "Drop it once the registration window closes."
+        },
+        "vercelLoad": {
+          "when": "Vercel throttles the site under traffic",
+          "what": "Vercel Pro, $20/month for each person who deploys. Viewer seats are free.",
+          "back": "Drop it only if it was taken purely for load. Note: exceeding a Hobby cap pauses the feature for 30 days and you cannot buy your way out — upgrade before the window, never during it."
+        },
+        "vercelCommercial": {
+          "when": "The club starts charging entry, or the repository moves to a club organization",
+          "what": "Vercel Pro, or the move to the fallback host already decided.",
+          "back": "Not dropped. This is not a traffic spike, it is a change in what the site is."
+        }
+      }
+    },
+    "pages": {
+      "title": "Pages",
+      "create": "New page",
+      "intro": "The club’s standing pages — “About Brașov Runners”, “Contact”. They publish in both languages together, like events.",
+      "empty": "There are no pages yet.",
+      "untitled": "Untitled",
+      "order": "order {order}",
+      "backToList": "← All pages",
+      "incomplete": "Both languages must be complete before publishing. Missing: {detail}.",
+      "readOnly": "Your role can read pages but not change them.",
+      "delete": "Delete page",
+      "deleteTitle": "Delete this page?",
+      "deleteBody": "The page and both translations go permanently. If it was published and you only want it off the site, use “Archive”.",
+      "viewPublic": "View the public page →",
+      "navOrder": "Order in the menu",
+      "navOrderHelp": "A lower number comes first. Leave 0 if it does not matter.",
+      "slugHelp": "The page address: lowercase letters, digits and hyphens.",
+      "slugLocked": "The address is fixed once published — links already sent have to keep working.",
+      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading.",
+      "language": {
+        "ro": "Romanian",
+        "en": "English"
+      },
+      "fields": {
+        "title": "Title",
+        "slug": "Page address",
+        "body": "Text",
+        "seoTitle": "SEO title",
+        "seoDescription": "SEO description"
       }
     }
   },
@@ -457,14 +561,14 @@
     "submit": "Submit registration",
     "submitted": "Check your email to confirm your registration.",
     "errors": {
-      "generic": "The registration could not be submitted. Check what you entered and try again.",
-      "fields": "Please check these fields: {fields}."
+      "title": "The registration could not be submitted",
+      "fieldsIntro": "Check these fields:",
+      "field": "Please complete this field correctly.",
+      "generic": "The registration could not be submitted. Check what you entered and try again."
     },
     "sections": {
       "about": "About you",
       "contact": "Contact",
-      "race": "The race",
-      "health": "Health information (optional)",
       "consents": "Consents"
     },
     "firstName": "First name",
@@ -536,7 +640,12 @@
         "declare": "One step left: read and sign the declaration. Your place is held for 30 minutes.",
         "done": "Your registration is confirmed. See you at the start!"
       }
-    }
+    },
+    "disclosure": {
+      "race": "Brașov Runners member, club and t-shirt — optional",
+      "health": "Health information — optional"
+    },
+    "clubMemberDeclared": "I am a Brașov Runners team member"
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",
@@ -544,7 +653,8 @@
       "title": "Confirm your email address",
       "prompt": "Press the button below to confirm your email address and continue your registration.",
       "action": "Confirm",
-      "done": "Your email address has been confirmed."
+      "done": "Your email address has been confirmed.",
+      "doneTitle": "Your email address is confirmed"
     },
     "declare": {
       "title": "Event declaration",
@@ -552,14 +662,19 @@
       "typedName": "Type your full name as a signature",
       "action": "Sign and confirm",
       "doneConfirmed": "Your registration is confirmed.",
-      "doneWaitlisted": "The place was no longer available; you have been added to the waiting list."
+      "doneWaitlisted": "The place was no longer available; you have been added to the waiting list.",
+      "doneTitle": "Your declaration is signed",
+      "event": "For the event: {event}",
+      "deadline": "Your place is held until {deadline}.",
+      "typedNameHelp": "Type the full name you registered with."
     },
     "manage": {
       "title": "Manage your registration",
       "prompt": "You can cancel this registration. The place will be released immediately.",
       "action": "Cancel registration",
       "done": "Your registration has been cancelled.",
-      "eventStarted": "This event has already started; the registration can no longer be cancelled."
+      "eventStarted": "This event has already started; the registration can no longer be cancelled.",
+      "doneTitle": "Registration cancelled"
     }
   },
   "Devs": {

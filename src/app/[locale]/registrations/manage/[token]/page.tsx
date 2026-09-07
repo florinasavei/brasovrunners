@@ -8,6 +8,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { cancelRegistrationAction } from "./actions";
 
 type Props = {
@@ -34,6 +35,11 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (done) {
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+        {/* An outcome page still opens with a heading: a document whose only content is an
+            alert gives a screen reader nothing to navigate to. */}
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("manage.doneTitle")}
+        </Typography>
         <Alert severity="success">{t("manage.done")}</Alert>
       </Container>
     );
@@ -57,7 +63,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="token" value={token} />
           <Typography sx={{ mb: 2 }}>{t("manage.prompt")}</Typography>
-          <Button type="submit" variant="outlined" color="error">
+          <Button type="submit" variant="outlined" color="error" sx={TAP_TARGET}>
             {t("manage.action")}
           </Button>
         </form>

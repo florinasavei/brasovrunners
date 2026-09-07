@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+// One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
+// one of them needed a longer wait than the other.
+import { signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -33,12 +36,6 @@ const EVENT_BY_PROJECT: Record<string, { title: string; slug: string; englishSlu
     englishSlug: "interval-session-olimpia",
   },
 };
-
-async function signIn(page: import("@playwright/test").Page, identity: string) {
-  await page.goto("/ro/autentificare");
-  await page.getByRole("button", { name: new RegExp(identity) }).click();
-  await expect(page).toHaveURL(/\/ro\/admin$/);
-}
 
 test.describe("BR-REQ-060-01 the backoffice refuses an anonymous request", () => {
   test("sends a signed-out visitor to sign in rather than showing the backoffice", async ({

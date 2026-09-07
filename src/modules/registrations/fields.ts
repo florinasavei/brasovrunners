@@ -57,6 +57,21 @@ const submissionFields = z.object({
   emergencyContactPhone: z.string().trim().min(3).max(40),
 
   clubName: z.string().trim().max(200).optional(),
+
+  /**
+   * "I am a Brașov Runners team member" (BR-REQ-031-06).
+   *
+   * A claim, not a fact, and deliberately not validated against anything: most members of this
+   * club have no backoffice account, so checking `staff_users` would answer "no" for exactly
+   * the people the question is asked to find (`DECISIONS.md` §48). It is informational — it
+   * may not decide a price, a place or a queue position, and nothing downstream reads it except
+   * the backoffice list, the filter and the export.
+   *
+   * `.default(false)` rather than `.optional()`: an unticked box is absent from `FormData`, and
+   * the column is NOT NULL because "did not say" and "no" are the same answer here.
+   */
+  clubMemberDeclared: z.boolean().default(false),
+
   tshirtSize: z.enum(["NONE", "XS", "S", "M", "L", "XL", "XXL"]).default("NONE"),
 
   /**

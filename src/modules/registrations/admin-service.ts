@@ -170,6 +170,8 @@ export type CreateRegistrationByStaffInput = {
     emergencyContactName?: string;
     emergencyContactPhone?: string;
     clubName?: string;
+    /** BR-REQ-031-06. What the person told the organizer; a claim like every other one. */
+    clubMemberDeclared?: boolean;
     tshirtSize?: "NONE" | "XS" | "S" | "M" | "L" | "XL" | "XXL";
   };
   email: string;

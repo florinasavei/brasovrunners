@@ -121,6 +121,36 @@ export default async function EventFacts({
       value: t("elevationM", { m: format.number(event.elevationGainMeters) }),
     });
   }
+
+  /**
+   * The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
+   *
+   * Beside the distance and the climb rather than beside the meeting point, because it answers
+   * "where does it go" and those two answer "how far" — the meeting point answers a different
+   * question and stays above them, where BR-REQ-041-01 criterion 2 wants it.
+   *
+   * Full variant only, for the same reason the map link is: the listing card is itself one
+   * link, and an anchor inside an anchor is invalid HTML that the browser silently splits.
+   */
+  if (variant === "full" && event.routeUrl) {
+    facts.push({
+      label: t("route"),
+      value: (
+        <Link
+          href={event.routeUrl}
+          target="_blank"
+          // Whatever service the club drew the route on. `noopener` stops the opened page
+          // reaching back through `window.opener`, `noreferrer` stops it learning where the
+          // visitor came from.
+          rel="noopener noreferrer"
+          // 44px, like every other link a thumb has to find (BR-REQ-041-01 criterion 6).
+          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+        >
+          {t("openRoute")}
+        </Link>
+      ),
+    });
+  }
   // Both are enums now (migration `0018`), so both render in the reader's own language
   // rather than in whichever one the organizer was typing in.
   if (variant === "full" && event.difficulty) {

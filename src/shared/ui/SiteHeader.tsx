@@ -1,7 +1,10 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { getDb } from "@/db/client";
+import type { Locale } from "@/i18n/routing";
+import { listPublishedPages } from "@/modules/content/pages/repository";
 import {
   FONT,
   HEADER_MARK_HEIGHT,
@@ -13,6 +16,40 @@ import {
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
+
+/**
+ * The club's standing pages, for the navigation — or nothing at all, whatever goes wrong.
+ *
+ * ## Why a try/catch and not `.catch()`
+ *
+ * This was written as `listPublishedPages(getDb(), locale).catch(() => [])`, which reads as
+ * guarded and is not: `getDb()` runs **synchronously**, as an argument, and throws before there
+ * is any promise for `.catch` to attach to. The rejection handler was chained to a promise that
+ * never existed. A `try` covers the call and the await together, which is the only shape that
+ * covers both failures.
+ *
+ * ## Why it must survive having no database at all
+ *
+ * `db/client.ts` documents the rule this broke: importing it must stay free, because Next
+ * evaluates page modules while collecting build data, and a build must work on a machine with
+ * no database — CI has none. `/[locale]` is a pure redirect with no `force-dynamic`, so Next
+ * prerenders it at build time and renders this layout to do it. Unguarded, that failed the
+ * whole build with "DATABASE_URL is not set", on a page that renders nothing.
+ *
+ * Returning `[]` costs a navigation entry on the two routes that are statically prerendered —
+ * a redirect and a catch-all 404, neither of which shows a menu anybody reads. Every page where
+ * the navigation matters declares `force-dynamic` and queries for real, on every request.
+ *
+ * And a header that throws is a site with no way out of any page, which is worse than a site
+ * with a shorter menu.
+ */
+async function navigationPages(locale: Locale) {
+  try {
+    return await listPublishedPages(getDb(), locale);
+  } catch {
+    return [];
+  }
+}
 
 /**
  * The site header: the mark, the club's name, and a way back to the first page.
@@ -42,6 +79,13 @@ import SiteNav from "./SiteNav";
  */
 export default async function SiteHeader() {
   const t = await getTranslations("Site");
+  /**
+   * One indexed query on every public page, which is a cost worth naming: the header is what
+   * every visitor pays for (`AGENTS.md` §1.5). It buys a navigation an organizer can change
+   * without a developer, which is the whole point of the page type (BR-REQ-050-03).
+   */
+  const locale = await getLocale();
+  const pages = await navigationPages(locale as Locale);
 
   return (
     <Box
@@ -131,7 +175,7 @@ export default async function SiteHeader() {
           (BR-REQ-041-01 criterion 1), a wrap costs one row of height.
         */}
         <Box sx={{ order: { xs: 3, sm: 2 }, flexBasis: { xs: "100%", sm: "auto" }, ml: { sm: 2 } }}>
-          <SiteNav />
+          <SiteNav pages={pages.map((page) => ({ slug: page.slug, title: page.title }))} />
         </Box>
 
         <Box sx={{ order: { xs: 2, sm: 3 }, ml: "auto" }}>

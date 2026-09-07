@@ -204,6 +204,20 @@ export default async function EventFieldsForm({
         inputMode="url"
       />
 
+      {/*
+        The course, and a separate question from the one above: where a runner turns up and
+        where they then run are two different pages on two different services more often than
+        they are one (`DECISIONS.md` §49).
+      */}
+      <TextField
+        name="event.routeUrl"
+        type="url"
+        label={t("editor.routeUrl")}
+        helperText={t("editor.routeUrlHelp")}
+        defaultValue={event?.routeUrl ?? ""}
+        inputMode="url"
+      />
+
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
           name="event.distanceMeters"

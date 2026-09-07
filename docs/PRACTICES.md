@@ -2,7 +2,7 @@
 
 # Practice guides
 
-**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 ## About these guides
@@ -471,7 +471,11 @@ In order of how often they happen:
 
 1. **Read an event and decide.** Date, time, meeting point, distance, cost, places left: all
    visible without scrolling on a small phone, as text, in the first screen.
-2. **Register.** Two fields, two choices, one button. Under a minute on a phone with one hand.
+2. **Register.** One page, never a wizard (`DECISIONS.md` §47). What loads is the fields a
+   submission is refused without, the consents, and the button; the t-shirt, the club, the
+   display name and the health note are collapsed behind native `<details>` that name
+   themselves. Under a minute on a phone with one hand for somebody who answers only what
+   they must.
 3. **Confirm from email.** The link opens in the phone's browser, the page fits, the action is
    one tap, and the participant is not asked to log in to anything.
 4. **Sign the declaration under a deadline.** Readable text, a checkbox, a name field, a
@@ -512,7 +516,9 @@ phone-tolerable. Those seven cannot.
   for names. This is the difference between the right keyboard and a fight with autocorrect.
 - `autocomplete` attributes so the phone offers the person's own name and email.
 - Labels above fields, not beside them; placeholders are not labels.
-- Errors appear next to the field and the page scrolls to the first one.
+- Errors appear next to the field, and a server-side rejection is entered at a focusable
+  summary through a URL fragment, each field named there linking to its own anchor. No
+  JavaScript: `#id` plus `tabindex="-1"` is the whole mechanism.
 - No CAPTCHA (see [Accessibility](#accessibility) §3).
 - The privacy acknowledgment and results choice are real checkboxes with large tap areas, and
   the privacy link opens without discarding the form.

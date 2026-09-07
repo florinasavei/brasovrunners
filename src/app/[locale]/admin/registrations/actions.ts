@@ -91,6 +91,7 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
           emergencyContactName: optional(form, "emergencyContactName"),
           emergencyContactPhone: optional(form, "emergencyContactPhone"),
           clubName: optional(form, "clubName"),
+          clubMemberDeclared: form.get("clubMemberDeclared") === "on",
           tshirtSize: optional(form, "tshirtSize") as
             | "NONE"
             | "XS"

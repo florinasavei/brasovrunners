@@ -19,6 +19,7 @@ const BASE = {
   locationName: "Parcul Tractorul",
   locationAddress: "",
   mapUrl: "",
+  routeUrl: "",
   distanceMeters: "",
   elevationGainMeters: "",
   featured: false,

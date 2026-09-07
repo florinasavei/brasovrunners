@@ -175,10 +175,28 @@ export const events = pgTable(
      * provider, so a maps URL can be *configured* but never written into the code.
      *
      * This column wins when it is set, for the case coordinates cannot express: a named venue
-     * page, a route the club has already drawn, a shared list. The database requires https, so
+     * page, a shared list, a pin the club has already dropped. The database requires https, so
      * `javascript:` and `data:` cannot be stored even by a seed or a hand-written `UPDATE`.
+     *
+     * It is **where to meet**, and nothing else. The route is `route_url` below — the two were
+     * one column until somebody needed both on the same event (`DECISIONS.md` §49).
      */
     mapUrl: text("map_url"),
+
+    /**
+     * The course: where the run actually goes (BR-REQ-011-01 criterion 8).
+     *
+     * A link and never a file, because media storage is deferred (`AGENTS.md` §17) and there is
+     * nowhere to put a GPX yet. The club already draws its routes somewhere — Strava, Komoot,
+     * a map service — and the link to that is worth more than a copy that goes stale.
+     *
+     * Separate from `map_url` because a runner asks two different questions: "where do I turn
+     * up" and "where does it go", and an event usually answers them with two different pages.
+     * https at the database for the same reason `map_url` is: this URL is pasted by an
+     * organizer and clicked by a visitor, and the constraint is what holds when the value
+     * arrives from a seed or a hand-written `UPDATE` rather than from the form.
+     */
+    routeUrl: text("route_url"),
 
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
@@ -303,6 +321,10 @@ export const events = pgTable(
      * runs when a visitor clicks the club's own map link.
      */
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+    check(
+      "events_route_url_is_https",
+      sql`${t.routeUrl} IS NULL OR ${t.routeUrl} LIKE 'https://%'`,
+    ),
 
     /**
      * A coordinate is a pair, and each half has a range.

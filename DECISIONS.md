@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2493,3 +2493,381 @@ still required before a version can exist at all, because BR-REQ-040-02 forbids 
 the other and the alternative to both is a public page that cannot render.
 
 Baseline bumped to `BR-V1.25-2026-09-06`.
+
+## 47. Decided — the registration form stays one page; what was cut is the half nobody has to answer (2026-09-06)
+
+**Status:** Decided. Adds a rule to `AGENTS.md` §15.1 and §18.5, and a criterion to
+BR-REQ-041-01. Nothing in §10.5, §12.6 or the allocator changes, which is most of the point.
+
+The public registration form asked fifteen things on one screen. On a 390-pixel phone that is a
+very long page, and it is the only page in this product a stranger is asked to complete. The
+question put was whether to make it a multi-step form.
+
+### Why not a wizard, in the three shapes a wizard could take
+
+An anonymous visitor has no account and no session, so any form split across steps has to keep
+partial answers somewhere. There were three candidate somewheres and each costs more than the
+scrolling it saves.
+
+**Hidden fields carried forward through server round-trips.** No JavaScript, no storage — and
+it puts `healthNotes` into a hidden input on the rendered HTML of every step after the one that
+asked for it. That is special-category data under GDPR Article 9, and BR-REQ-031-05 criterion 5
+says plainly that no public page renders health text in its markup under any condition. The
+design is refused by a rule that already exists, before anyone weighs the ergonomics.
+
+**A partial registration row, completed as they go.** Durable and resumable, and wrong in three
+places at once. `registrations` has a `UNIQUE(event_id, participant_id)` and a status enum with
+no draft in it (§10.5), so a half-finished entry either invents an eighth status or consumes
+the uniqueness of a real one. BR-REQ-031-02 criterion 1 refuses a submission with no privacy
+acknowledgment and says no registration row is created — a row written at step one is created
+before that acknowledgment exists. And the row would then have to be invisible to the
+allocator, the capacity formula and the export, which is exactly the sort of condition
+`AGENTS.md` §12.6 keeps out of the allocator: the rule there is that `kind` appears in no
+condition inside it, and a `status = DRAFT` check would be the same mistake with a different
+column.
+
+**A client-side stepper.** One island, sections shown and hidden, everything posted together.
+It works, and the cost is not the kilobytes. Native `required` on a field inside a hidden step
+stops the submission with no visible message — the browser refuses to focus what it cannot show
+— so a wizard has to reimplement validation in JavaScript, which means reimplementing the
+browser's own messages, in Romanian and English, with the focus management and the screen-reader
+announcements that come free today. That is a large amount of new code, on the one page that
+must work everywhere, to replace something that already works. `AGENTS.md` §1.5 makes that
+trade a bad one before the accessibility argument is even reached.
+
+### What the page's length actually was
+
+Fifteen questions, of which four are optional data (`displayName`, `tshirtSize`, `clubName`,
+`healthNotes` with its consent) and two are optional consents. Measured at 390 pixels wide, the
+page was 2,697 pixels tall — more than three phone screens — and a fifth of that was things
+nobody has to answer to be registered.
+
+So the optional data is behind native `<details>`, closed, each summary naming what is inside —
+the pattern already used for the display name and for the destructive actions on the
+registrations list. It needs no JavaScript, no island and no new component. What loads is the
+required set, the consents and the button: 2,117 pixels rather than 2,697. That is not what a
+wizard would have saved, and it was bought without any of what a wizard would have cost.
+
+The optional *consents* stay open, and that asymmetry is deliberate: BR-REQ-072-01 criterion 1
+and BR-REQ-039-01 require the choice to be **presented**, and a question behind a summary
+somebody never opens has not been put to them. Collapsing a t-shirt size loses nothing;
+collapsing a consent quietly turns "asked and declined" into "never asked".
+
+### The round trip, which was the real accessibility failure
+
+Native validation catches almost everything before a request is made. What it cannot catch —
+and what somebody without JavaScript always meets — was answered by a redirect that put a
+person back at the top of a long form with a red box listing field names as plain text.
+
+The redirect now carries `#registration-errors`, the summary at that anchor is focusable, and
+each field it names is a link to that field's own anchor. Following one moves focus to the
+input. No JavaScript is involved in any of it; a fragment and `tabindex="-1"` are the whole
+mechanism. The field is also marked at the field, with a message under it that MUI wires to
+`aria-describedby`, because a summary at the top is a route and not a replacement for saying
+what is wrong where it is wrong.
+
+The `fields` parameter is matched against a known list (`modules/registrations/form-errors.ts`)
+rather than trusted. It is a query string anybody can type, and it was reaching
+`t("fieldNames.<x>")` directly.
+
+### The rest of the journey
+
+The declaration page did not show its deadline. §18.5 has required one in the first screen
+since the rule was written, and BR-REQ-041-01 criterion 3 says so too; the page showed the
+declaration and a button and nothing about the thirty minutes running underneath. It now names
+the event and the instant the hold expires, in the event's own timezone, above the declaration
+body — read from the registration row and not from the token that opened the page, because a
+message rendered by a late outbox batch gives its token a fourteen-day default rather than the
+hold's expiry, and printing that would be a wrong deadline on the one page whose subject is a
+deadline. Absolute time and no countdown: a countdown alone is unusable for somebody who
+stepped away, and a server-rendered "29 minutes left" is stale before it is read.
+
+Touch targets are the other thing that had quietly drifted. MUI's medium button is about 37
+pixels tall and its checkbox is 42 by 42, both under the 44 that BR-REQ-041-01 criterion 6 makes
+a hard rule; `RegistrationCta` had already noticed and fixed it locally. That local constant is
+now `shared/ui/tap-target.ts` and every control in the four participant pages carries it. A
+theme-level `MuiButton` default was considered and rejected: it would enlarge the backoffice
+too, where density is worth more than reach, and would put the rule in a file nobody opens while
+looking at the registration form.
+
+### What this costs
+
+The optional questions are one tap further away than they were. Somebody who wants a t-shirt
+has to open a summary that says "T-shirt and club". That is the trade, and it is accepted
+because the required path is what a stranger walks and the optional path is what a returning
+club member goes looking for.
+
+Baseline bumped to `BR-V1.26-2026-09-06`.
+
+## 48. Decided — the club's own people declare themselves, and the declaration grants nothing (2026-09-06)
+
+**Status:** Decided. Adds `registrations.club_member_declared` and BR-REQ-031-06; adds a rule to
+`AGENTS.md` §12.6 and to `BUSINESS.md` BR-BUS-031. The allocator and the capacity formula are
+untouched, deliberately.
+
+The request was for a tick on the registration form — "I am a Brașov Runners team member" — so
+that the club's own administrators and moderators could sign up for races.
+
+### The premise was wrong, and the want underneath it was not
+
+Nothing has ever stopped a staff member registering. `participants` and `staff_users` are
+separate tables with no shared constraint and no foreign key between them, and the public
+registration form reads no session at all: an organizer opens it, enters their own address,
+confirms their own email and signs their own declaration, exactly like a stranger. There was
+nothing to unblock.
+
+What the club actually lacked was a way to **tell its own people apart from strangers in a list
+of entries**. The only existing signal was the free-text `club_name`, which depends on somebody
+choosing to type "Brașov Runners" and spelling it the same way twice.
+
+### Why it is a claim and not a lookup
+
+The obvious implementation is to match the registration's canonical email against `staff_users`
+and store a fact rather than a claim. It was rejected, because **app staff and club members are
+not the same population and the smaller one is the wrong one**. `staff_users` holds the handful
+of people with backoffice access. A member who pays dues, wears the vest and runs every event
+has no row there and never will — so a verified flag would answer "no" for most of the people
+the question exists to find, and it would answer it confidently.
+
+A second reason: a staff member signs in with whatever address the club's identity provider
+knows, and races with whatever address they actually read. Matching the two is a guess.
+
+So the value is what the person said about themselves, stored as given. The column is named
+`club_member_declared` rather than `club_member` for that reason, and every screen that shows it
+says "declared". A future reader who takes it for a verified fact will hand a member's benefit
+to whoever ticked a box, and the name is the cheapest defence against that.
+
+### It grants nothing, and that is the load-bearing part
+
+A self-ticked box that decided a price, a reserved place or a position in the queue would decide
+it for anybody at all. The rule is therefore the same one `kind` already carries: **it appears
+in no condition in the allocator or the capacity formula** (§12.6, §10.6). One of the tests in
+`club-member.test.ts` exists purely to fail if that changes — a declared member and a stranger
+reaching a full event both land on the waiting list.
+
+If the club ever does want a member price or a members' allocation, the thing it needs first is
+a real roster and a decision recorded here, not this column.
+
+### "False" is not "no"
+
+Somebody who never opened the optional section and somebody who is not in the club produce the
+same stored `false`. Two surfaces are shaped around that:
+
+- **the export prints "Yes" or an empty cell, never "No"** — a volunteer sorting the file at a
+  start line cannot tell a missing answer from a negative one, and printing "No" against both
+  turns a question nobody answered into an answer;
+- **the backoffice filter only ever narrows to the people who declared it.** There is no
+  "show me the non-members" option, because that list would be "everybody who did not tick a
+  box" presented as something else.
+
+### Where it sits on the form
+
+Inside the optional disclosure with `club_name` and the t-shirt size, whose summary now reads
+"Brașov Runners member, club and t-shirt". That keeps §47's rule intact — optional data is
+collapsed, consents are not — and it puts the club's name in the summary, so a member scanning
+the page finds it without opening anything. It sits beside `club_name` because they are the same
+question asked twice: somebody who ticks this is in the club whose name they would have typed.
+
+Asked on the staff-entered form too. An organizer taking a registration over the telephone is
+usually taking it from somebody in the club.
+
+Baseline `BR-V1.26-2026-09-06`, alongside §47.
+
+## 49. Decided — the route is its own link, not an overloaded map link (2026-09-07)
+
+**Status:** Decided. Adds `events.route_url` and BR-REQ-011-01 criterion 8; narrows what
+`map_url` is for. No decision here is reversed — `map_url`'s docstring simply claimed a job it
+should not have had.
+
+The club wanted a link to the track for each race. There was already a column that could hold
+one: `map_url`, whose own comment listed "a route the club has already drawn" among the things
+it exists for.
+
+### Why that column could not be the answer
+
+Because a runner asks two questions and they have two answers. *Where do I turn up* is a pin on
+a corner of a park. *Where does it go* is a drawn line on Strava, Komoot, or whatever the club
+mapped it with. An event that has both — which is every race the club puts on — could store only
+one of them, and whichever the organizer pasted, the label on the page was "meeting point".
+
+`map_url` is now documented as the meeting-point override and nothing else, and `route_url` is
+the course. Two columns, two questions, two labels.
+
+### A link and not a file
+
+Media storage is deferred (`AGENTS.md` §17): there is no adapter, no bucket, and no upload
+surface, so a GPX has nowhere to go. That is the reason today. The reason it would still be a
+link afterwards is that the route already lives on the service the club drew it on, where it can
+be re-drawn, followed on a watch, and looked at on a phone by somebody standing at the start —
+and a GPX copied into this application is a second copy that goes stale the first time the
+course changes.
+
+If the club later wants the file as well, that is an upload feature with its own decision, and
+this column is not in its way.
+
+### https, twice
+
+Same as `map_url`: `httpsUrl` in the form schema so an organizer gets a message naming the
+field, and `events_route_url_is_https` at the database so a seed, a migration or a hand-written
+`UPDATE` cannot store `javascript:` behind a link a visitor is invited to click. Neither check
+is redundant; they defend different doors.
+
+### Where it renders, and where it does not
+
+Beside the distance and the climb on the event page, because it belongs with "how far" rather
+than with "where do I meet" — and the meeting point stays above them, where BR-REQ-041-01
+criterion 2 wants the first-screen facts.
+
+Not on a listing card. The card is already one link (`CardLink`, for the 44-pixel tap target)
+and an anchor inside an anchor is invalid HTML that the browser silently splits — the same
+reason the map link waits for the detail page.
+
+No `SportsEvent` property carries it. schema.org has `hasMap` for a place and nothing for a
+course, and inventing a property that no consumer reads would be worse than omitting one.
+
+### Carried on a duplicate
+
+Duplicating last year's event is how the club creates this year's, and last year's race is run
+on last year's route. It copies, like the distance and the climb, and unlike the publication
+state, the date and the featured flag.
+
+Baseline `BR-V1.26-2026-09-06`.
+
+## 50. Decided — being a non-profit is not the carve-out; how the money is framed is (2026-09-07)
+
+**Status:** Decided. Narrows the commercial-usage reasoning in `docs/PLATFORM.md`, and records a
+product consequence that is **not built**: `events.cost_type` cannot express the distinction the
+rule turns on.
+
+The club is a Romanian **ONG**, and the owner's reasonable position was that a race contribution
+is a donation or cost recovery rather than profit, so Vercel's non-commercial Hobby plan still
+applies. Re-reading the guidelines against that claim changed what the platform page says.
+
+### What the terms actually test
+
+Verified against Vercel's fair-use guidelines on 2026-09-07. Commercial usage is any deployment
+"used for the purpose of financial gain of **anyone** involved in **any part of the production**
+of the project, including a paid employee or consultant writing the code", with five listed
+examples: requesting or processing payment from visitors; advertising the sale of a product or
+service; receiving payment to create, update or host the site; affiliate linking as the primary
+purpose; and advertisements.
+
+**"Non-profit" does not appear in the document.** Legal form is not a test, and an ONG that
+advertises a priced service is in the same position as a company that does.
+
+What *is* explicit is the opposite of what was assumed: **"Asking for Donations does not fall
+under commercial usage."** The carve-out the club needs exists, and it is about framing rather
+than about the club.
+
+### Three consequences, in the order they will bite
+
+1. **A contribution presented as a donation is allowed.** This is the club's actual intent and
+   the terms accommodate it directly.
+2. **A mandatory entry fee is not**, and the reason is wider than payment processing — this site
+   has no payment integration and never touches money. "Advertising the sale of a service" is on
+   the list, and an event page stating a required fee does that whoever collects it and however.
+3. **Paying anybody to build or host this site is commercial usage on its own.** The clause names
+   a paid consultant writing the code. For a club whose platform is built by a professional
+   developer this is the likelier trigger, and it is unaffected by anything the club charges.
+
+### What this changed in the software
+
+The `/admin/tasks` verdict previously flipped to a flat "not free" on any `PAID` event, which
+overstated a rule the club can satisfy by wording. It is now a **caution** that states the
+donation carve-out, the advertising clause and the paid-developer trigger, so an organizer reads
+what to do rather than only that something is wrong.
+
+### What is owed, and deliberately not built here
+
+`events.cost_type` is `FREE|PAID` (`DECISIONS.md` §43). A donation and a price are the same value
+in that enum, and they are on opposite sides of the rule above — so the platform cannot currently
+tell an organizer whether their own event is inside the carve-out, and the caution has to hedge.
+
+The fix is a third value, and it is a business decision rather than a schema one: what the club
+intends to ask for, in the club's own words, before a column is named after it. Not built, not
+guessed. Until then the caution says "check how this is worded", which is honest about what the
+data supports.
+
+Baseline `BR-V1.26-2026-09-06`.
+
+### Settled by the owner, 2026-09-07
+
+**Brașov Runners sells nothing and takes no money.** The owner confirmed it after the analysis
+above, and that is the fact this record ends on: four of Vercel's five examples of commercial
+usage cannot apply to a club that requests no payment, advertises the sale of nothing, carries no
+affiliate links and runs no advertisements. The deployment is inside the Hobby plan, and
+`/admin/tasks` reports it that way rather than hedging.
+
+The reasoning is kept for two reasons rather than deleted. The first is the one trigger that is
+**independent of anything the club sells** — payment to create, update or host the site — which
+stays worth knowing for a platform built by a professional developer. The second is that "should
+we ask for a contribution towards costs" is a question a volunteer committee will raise again, and
+when it does, the answer should be read rather than re-derived: a donation is explicitly carved
+out, a mandatory fee is not, and the difference is wording rather than intent.
+
+## 51. Decided — standing pages are a small content type, not the start of the M5 CMS (2026-09-07)
+
+**Status:** Decided. Adds `pages`/`page_translations`, BR-REQ-050-03 and `AGENTS.md` §12.9.
+Narrows nothing; M5 keeps articles, galleries, the media library and the Tiptap body contract.
+
+The club needs to say things that are not events and are not legal wording: "About Brașov
+Runners" first, "Contact" soon after. `CLAUDE.md` scoped all non-event content to M5, which
+would have meant no About page until a content system existed.
+
+### The thing that made this small
+
+`DECISIONS.md` §46 already faced the same fork for legal documents and chose a textarea over
+Tiptap, on the grounds that pulling the M5 body contract forward to type a privacy notice would
+decide that schema for the wrong reason. That reasoning transfers exactly, and so does the
+implementation: `domain/body-text.ts` converts a blank-line/`## ` document to the stored section
+shape and back, round-trips, and is already the format the club writes in.
+
+So a page is a title, an address, a body and two SEO fields, per language. That is the whole
+type. There is no cover image, no gallery, no layout choice and no block editor, and adding any
+of them is M5's job rather than this one's.
+
+### What was reused, and the one thing that reuse costs
+
+The editorial status enum is `events`', not a second one with the same four values. So are
+`allowedTransitions`, `canTransition` and the role predicates. "May this person publish" has one
+answer in this product, and a second copy of it is a second place for it to go wrong — which is
+the failure `AGENTS.md` §1.5 rule 3 exists to prevent.
+
+The cost is a naming smell: `canEditEventFields` and `canCreateEvent` now gate pages too, and
+read oddly at those call sites. Renaming them touches the event editor, which is about to run a
+real registration window, so it is written down here and deliberately not done today.
+
+The body converter and its renderer are **imported** from `legal-documents` rather than moved to
+a shared module. §1.5 rule 6 abstracts on the third occurrence, not the second; the third is when
+that move becomes right.
+
+### What it inherits rather than reinvents
+
+Publication is one state for the whole page and requires every locale complete, because a page
+that renders in Romanian and 404s in English is exactly BR-REQ-040-02's failure. A slug is fixed
+once published (§11.5): links already shared have to keep working. A save carries the version it
+was loaded with, so two organizers produce a CONFLICT rather than one silently losing the English
+half — and the page row and both translations are one transaction, so a stale version anywhere
+writes none of it.
+
+### Two differences from an event, both deliberate
+
+**A page may be deleted.** An event with a registration against it is refused because somebody's
+entry hangs off it (§15.11). Nothing hangs off a page, so deleting one made by mistake loses only
+what its author typed. Archiving remains the answer for a page that was real and is now over.
+
+**Both languages are on one screen**, where the event editor uses a tab each. An event carries
+thirty fields and two panels of thirty do not fit; a page carries four. Seeing both at once is
+what makes "the English one is empty" obvious before somebody presses publish and is told so by
+a validation error.
+
+### The navigation stopped being a constant
+
+`SiteNav` held a literal list with a comment saying the club's own pages were M5. They are not
+any more, and they are created by an organizer rather than a developer, so the header reads them.
+That is one indexed query on every public page — a cost worth naming, since the header is what
+every visitor pays for (§1.5) — and it buys a menu the club can change without a deployment. It
+fails soft: a page that cannot be loaded costs a navigation entry, never the header itself,
+because a site whose header throws has no way out of any page at all.
+
+Baseline `BR-V1.26-2026-09-06`.

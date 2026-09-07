@@ -22,6 +22,7 @@ describe("CSV formula neutralization", () => {
         registeredName: 'Ana "Speedy" Pop',
         email: "ana@example.ro",
         status: "CONFIRMED",
+        clubMemberDeclared: false,
         submittedAt: "2026-09-04T10:00:00.000Z",
         confirmedAt: "",
       },
@@ -38,6 +39,7 @@ describe("CSV formula neutralization", () => {
         registeredName: "=cmd|'/c calc'!A1",
         email: "ana@example.ro",
         status: "CONFIRMED",
+        clubMemberDeclared: false,
         submittedAt: "2026-09-04T10:00:00.000Z",
         confirmedAt: "",
       },
@@ -49,7 +51,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,Email,Status,Submitted,Confirmed");
+    expect(csv).toBe("Event,Name,Email,Status,Club member (declared),Submitted,Confirmed");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -57,10 +59,41 @@ describe("CSV formula neutralization", () => {
         registeredName: "Ana",
         email: "ana@example.ro",
         status: "CONFIRMED",
+        clubMemberDeclared: false,
         submittedAt: "2026-09-04T10:00:00.000Z",
         confirmedAt: "",
       },
     ]);
     expect(withRow.split("\r\n")).toHaveLength(2);
+  });
+
+  /**
+   * BR-REQ-031-06. The column is a claim, so it prints "Yes" or nothing at all.
+   *
+   * Printing "No" would turn "never opened the optional section" into "said they are not a
+   * member" — the same stored `false`, two different meanings, and the volunteer reading this
+   * file at a start line cannot tell them apart. A blank cell is the honest rendering of both.
+   */
+  it("prints a declared membership as Yes and everything else as an empty cell", () => {
+    const row = {
+      eventTitle: "Test",
+      registeredName: "Ana",
+      email: "ana@example.ro",
+      status: "CONFIRMED",
+      clubMemberDeclared: false,
+      submittedAt: "2026-09-04T10:00:00.000Z",
+      confirmedAt: "",
+    };
+
+    const member = buildRegistrationsCsv([{ ...row, clubMemberDeclared: true }]);
+    expect(member.split("\r\n")[1]).toBe(
+      "Test,Ana,ana@example.ro,CONFIRMED,Yes,2026-09-04T10:00:00.000Z,",
+    );
+
+    const other = buildRegistrationsCsv([row]);
+    expect(other.split("\r\n")[1]).toBe(
+      "Test,Ana,ana@example.ro,CONFIRMED,,2026-09-04T10:00:00.000Z,",
+    );
+    expect(other).not.toContain("No");
   });
 });

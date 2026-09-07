@@ -31,7 +31,7 @@ import { resendRegistrationEmailAction } from "./[id]/actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ eventId?: string; status?: string }>;
+  searchParams: Promise<{ eventId?: string; status?: string; clubMember?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -67,13 +67,16 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const actor = await requireStaff();
   if (!canManageRegistrations(actor.role)) notFound();
 
-  const { eventId, status } = await searchParams;
+  const { eventId, status, clubMember } = await searchParams;
   const db = getDb();
 
   const [registrations, events] = await Promise.all([
     listRegistrationsForAdmin(db, {
       eventId: eventId || undefined,
       status: isRegistrationStatus(status) ? status : undefined,
+      // One-way: it narrows to the people who ticked the box and never to the ones who did not
+      // (`admin-repository.ts` says why).
+      clubMemberDeclared: clubMember === "1" || undefined,
     }),
     listEventsWithRegistrations(db),
   ]);
@@ -121,6 +124,16 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </MenuItem>
           ))}
         </TextField>
+        <TextField
+          select
+          name="clubMember"
+          label={t("registrations.clubMemberLabel")}
+          defaultValue={clubMember === "1" ? "1" : ""}
+          sx={{ minWidth: 220 }}
+        >
+          <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
+          <MenuItem value="1">{t("registrations.clubMemberOnly")}</MenuItem>
+        </TextField>
         <TextField select name="status" label={t("registrations.statusLabel")} defaultValue={status ?? ""} sx={{ minWidth: 220 }}>
           <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
           {registrationStatus.enumValues.map((value) => (
@@ -148,6 +161,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       route and omits these rows entirely. */}
                   {row.kind === "TEST" && (
                     <Chip size="small" color="warning" label={t("registrations.testKind")} />
+                  )}
+                  {/* BR-REQ-031-06. The label says "declared" in both languages, because this
+                      is what the person wrote about themselves and not something the club
+                      checked — an organizer who reads it as verified will hand out a member
+                      price to whoever ticked a box. */}
+                  {row.clubMemberDeclared && (
+                    <Chip
+                      size="small"
+                      color="info"
+                      variant="outlined"
+                      label={t("registrations.clubMemberChip")}
+                    />
                   )}
                   <Chip
                     size="small"

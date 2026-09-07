@@ -2,7 +2,7 @@
 
 import Box from "@mui/material/Box";
 import { useTranslations } from "next-intl";
-import { useSelectedLayoutSegment } from "next/navigation";
+import { useSelectedLayoutSegments } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 
 /**
@@ -26,16 +26,27 @@ import { Link } from "@/i18n/navigation";
  *
  * ## Why the list is so short
  *
- * Because it is honest. Events is the only public section that exists; the legal pages live in
- * the footer, where legal links belong. Articles, galleries and the club's own pages are M5,
- * and a nav item pointing at a route that 404s is worse than one that is missing. Adding a
- * section later is one entry below.
+ * Because it is honest. Events is the section this site is built around; the legal pages live in
+ * the footer, where legal links belong. Articles and galleries are still M5, and a nav item
+ * pointing at a route that 404s is worse than one that is missing.
+ *
+ * The club's own standing pages are no longer among the missing (BR-REQ-050-03): they are
+ * created by an organizer rather than by a developer, so they arrive as a prop from
+ * `SiteHeader` — which is a Server Component and can read them — rather than as a constant
+ * somebody has to remember to edit.
  */
 const SECTIONS = [{ segment: "events", href: "/events" }] as const;
 
-export default function SiteNav() {
+export type NavPage = { slug: string; title: string };
+
+export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) {
   const t = useTranslations("Site.nav");
-  const selected = useSelectedLayoutSegment();
+  /*
+    Segments rather than one segment: a standing page is two deep (`pages` then its slug), and
+    comparing only the first would mark every page as the current one.
+  */
+  const segments = useSelectedLayoutSegments();
+  const selected = segments[0];
 
   return (
     <Box
@@ -68,6 +79,37 @@ export default function SiteNav() {
               }}
             >
               {t(section.segment)}
+            </Box>
+          </Link>
+        );
+      })}
+
+      {/* One entry per published page, in the order the club put them in. */}
+      {pages.map((page) => {
+        const current = selected === "pages" && segments[1] === page.slug;
+
+        return (
+          <Link
+            key={page.slug}
+            href={{ pathname: "/pages/[slug]", params: { slug: page.slug } }}
+            style={{ textDecoration: "none" }}
+          >
+            <Box
+              component="span"
+              aria-current={current ? "page" : undefined}
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: 44,
+                px: 0.5,
+                color: current ? "text.primary" : "text.secondary",
+                fontWeight: current ? 700 : 500,
+                borderBottom: 2,
+                borderColor: current ? "primary.main" : "transparent",
+                "&:hover": { color: "text.primary" },
+              }}
+            >
+              {page.title}
             </Box>
           </Link>
         );
