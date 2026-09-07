@@ -233,11 +233,26 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
 
     expect(Object.keys(repository)).toContain("insertLegalDocumentVersion");
 
-    // And the guarded writes are all in the service, none of them reachable another way.
+    /*
+      And the guarded writes are all in the service, none of them reachable another way.
+
+      The list is exhaustive on purpose: it is what catches a fifth writer being added to the
+      club's legal text without anybody arguing for it. `deleteDraftVersion` joined it under
+      `DECISIONS.md` §53 and is guarded the same way as the rest — it refuses an approved
+      version outright, and refuses a draft anything references. `isReliedOn` is a pure
+      predicate over three counts and writes nothing; it is exported so the backoffice list and
+      the service cannot disagree about what "referenced" means.
+
+      There is deliberately no `withdrawApproval` here. §53 has the reasoning: a declaration is
+      bound to the participant when the form is posted rather than when it is read, so changing
+      which version is current would let somebody sign text they never saw.
+    */
     const service = await import("@/modules/legal-documents/service");
     expect(Object.keys(service).sort()).toEqual([
       "approveVersion",
       "createDraftVersion",
+      "deleteDraftVersion",
+      "isReliedOn",
       "updateDraftVersion",
     ]);
   });

@@ -144,7 +144,11 @@ export default async function AdminLayout({ children, params }: Props) {
       */}
       <AdminTabs items={tabs} />
 
-      {/* AGENTS.md §11.1: legal documents are not CMS content and have no editor screen. */}
+      {/*
+        The club writes its own legal text now (`DECISIONS.md` §46), so this no longer says it
+        cannot. What it says instead is the rule that is still true and still easy to trip over:
+        an approved version is never rewritten.
+      */}
       <Alert severity="info" sx={{ mb: 3 }}>
         {t("legalNotice")}
       </Alert>

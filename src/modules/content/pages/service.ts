@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { pages, pageTranslations, type Page } from "@/db/schema/pages";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
@@ -294,6 +294,59 @@ export async function deletePage<T extends Record<string, unknown>>(
 
   const [deleted] = await db.delete(pages).where(eq(pages.id, input.pageId)).returning();
   if (!deleted) throw new DomainError("NOT_FOUND", "no such page");
+}
+
+/**
+ * Move one page up or down the site navigation (BR-REQ-050-03).
+ *
+ * The order was a number field on the editor, which is the wrong shape for the question. Nobody
+ * wants page four to have `nav_order = 40`; they want it above page three, and answering that
+ * through a number means opening two pages, reading both numbers, inventing a third, and hoping
+ * nothing else shares it — `nav_order` is not unique and every page starts at the same `0`.
+ *
+ * So a move **renumbers the whole list** rather than swapping two rows. Swapping is the obvious
+ * implementation and it is wrong here: with the default `0` on every page, two rows can share a
+ * number, and swapping equal numbers changes nothing while appearing to work. Rewriting the
+ * sequence from the order the club is actually looking at is idempotent, repairs duplicates and
+ * gaps as a side effect, and cannot leave the list in a state a later move reads differently.
+ *
+ * It is one transaction because a half-renumbered navigation is a navigation with two page
+ * threes in it.
+ */
+export async function movePageInNav<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; pageId: string; direction: "up" | "down" },
+): Promise<void> {
+  if (!canEditEventFields(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not reorder the navigation`);
+  }
+
+  await db.transaction(async (tx) => {
+    // The same order the navigation and the list screen use, so "up" means what it looked like.
+    const ordered = await tx
+      .select({ id: pages.id })
+      .from(pages)
+      .orderBy(asc(pages.navOrder), asc(pages.createdAt));
+
+    const index = ordered.findIndex((row) => row.id === input.pageId);
+    if (index === -1) throw new DomainError("NOT_FOUND", "no such page");
+
+    const target = input.direction === "up" ? index - 1 : index + 1;
+    // Already at the end it is being moved towards. Not an error: the button is simply not
+    // offered there, and a replayed POST should do nothing rather than fail.
+    if (target < 0 || target >= ordered.length) return;
+
+    const moved = [...ordered];
+    [moved[index], moved[target]] = [moved[target], moved[index]];
+
+    for (const [position, row] of moved.entries()) {
+      await tx
+        .update(pages)
+        // One-based, so the numbers read the way the list does.
+        .set({ navOrder: position + 1 })
+        .where(eq(pages.id, row.id));
+    }
+  });
 }
 
 export { allowedTransitions };

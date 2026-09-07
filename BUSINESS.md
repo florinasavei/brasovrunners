@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -590,6 +590,15 @@ Privacy, terms, and declaration wording require human approval. AI must not inve
 Each legal or declaration document has a version and effective date. A registration stores the exact declaration version and content hash accepted by the participant.
 
 Changing a declaration creates a new version. It does not rewrite the historical record of people who accepted an earlier version.
+
+The club writes this wording itself, in the backoffice, and what it may take back is deliberately
+narrow. A version that has been **approved** is never edited, never deleted, and its approval is
+never withdrawn — once the club has published words as its own, the record of what it published
+stands whether or not anybody happened to sign against it. What may be removed is a **draft
+nobody has ever seen**: an unapproved version is not on the public site and nobody can have
+agreed to it, so a paragraph somebody started and thought better of does not have to stay in the
+club's document list for ever. A correction to approved wording is the next version, which is
+what versioning is for.
 
 Until the club approves its own wording, every environment except production carries a clearly
 marked **sample** privacy notice, terms and declaration: complete in structure so the club or its

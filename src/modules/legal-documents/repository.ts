@@ -6,6 +6,7 @@ import {
   legalDocuments,
   type LegalDocumentKey,
 } from "@/db/schema/legal-documents";
+import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
@@ -172,6 +173,19 @@ export type LegalDocumentVersionRow = {
   locales: string[];
   acceptanceCount: number;
   eventCount: number;
+  /**
+   * Registrations that recorded this version's *number* as the privacy notice they
+   * acknowledged — the reliance the database cannot see.
+   *
+   * `registrations.privacy_notice_version` is a plain `integer` with no foreign key, as are
+   * `results_consent_version` and `health_consent_version`. So a privacy notice hundreds of
+   * people acknowledged looks, to `acceptanceCount` and `eventCount`, exactly like one nobody
+   * has ever touched — and PostgreSQL would raise nothing at all if it were deleted. Only
+   * `EVENT_DECLARATION` versions get a `declaration_acceptances` row; this is the equivalent
+   * count for the other key, and it is the reason withdrawing a notice people registered under
+   * is refused.
+   */
+  privacyAcknowledgementCount: number;
 };
 
 export async function listVersionsForBackoffice<T extends Record<string, unknown>>(
@@ -188,6 +202,17 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
       acceptanceCount: sql<number>`(select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
+      // Matched on the version *number*, and only for the notice key, because that is the only
+      // shape this reference has: there is no id to join on.
+      privacyAcknowledgementCount: sql<number>`(
+        select count(*)::int from ${registrations}
+        where ${legalDocuments.key} = 'PRIVACY_NOTICE'
+          and (
+            ${registrations.privacyNoticeVersion} = ${legalDocuments.version}
+            or ${registrations.resultsConsentVersion} = ${legalDocuments.version}
+            or ${registrations.healthConsentVersion} = ${legalDocuments.version}
+          )
+      )`,
     })
     .from(legalDocuments)
     .leftJoin(

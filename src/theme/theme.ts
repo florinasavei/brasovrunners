@@ -38,4 +38,31 @@ export const theme = createTheme({
     h2: { fontFamily: `${FONT.display}, ${FONT.fallback}`, fontSize: "1.5rem", fontWeight: 500 },
   },
   shape: { borderRadius: 10 },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        /**
+         * Room for the sticky header above anything the browser scrolls to.
+         *
+         * The header is `position: sticky` on every page, so an anchor jump — `#admin-alert`
+         * after a backoffice action, a skip link, an error summary's link to the field it
+         * names — lands the target at the very top of the viewport, underneath it. The
+         * backoffice was the visible case: every Server Action redirects to `#admin-alert`
+         * precisely so the outcome is not missed at the top of a long list, and after a long
+         * list the alert arrived hidden behind the header. The elements set
+         * `scrollMarginTop: 16`, which was written for a page with no sticky header and
+         * clears nothing.
+         *
+         * `scroll-padding-top` on the scroll container fixes every anchor on the site at once,
+         * rather than each element remembering the header's height. The two values are the
+         * header's own two shapes: at `xs` the navigation takes a second row, above `sm` it
+         * sits beside the lockup on one.
+         */
+        html: {
+          scrollPaddingTop: 120,
+          "@media (min-width:600px)": { scrollPaddingTop: 76 },
+        },
+      },
+    },
+  },
 });

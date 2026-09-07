@@ -9,6 +9,7 @@ import { textToBody } from "@/modules/legal-documents/domain/body-text";
 import {
   approveVersion,
   createDraftVersion,
+  deleteDraftVersion,
   updateDraftVersion,
 } from "@/modules/legal-documents/service";
 import { requireStaffRole } from "@/modules/staff-identity/session";
@@ -111,4 +112,25 @@ export async function approveLegalVersionAction(form: FormData): Promise<void> {
     getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: versionId } } }),
     outcome,
   );
+}
+
+/**
+ * Delete a version that was never approved (BR-REQ-053-02, `DECISIONS.md` §53).
+ *
+ * Always back to the list, never to the version's own page: on success that page describes a
+ * row that no longer exists, and a 404 is a poor way to learn a deletion worked. The same
+ * reasoning `registrations/actions.ts` gives for erasing a registration.
+ */
+export async function deleteLegalVersionAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin/legal" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await deleteDraftVersion(getDb(), actor, text(form, "versionId"));
+  } catch (error) {
+    backTo(listPath, outcomeOf(error));
+  }
+
+  backTo(listPath, { saved: "legalVersionDeleted" });
 }
