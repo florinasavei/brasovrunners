@@ -172,6 +172,61 @@ export async function transitionEventAction(form: FormData): Promise<void> {
 }
 
 /**
+ * Archive several events at once, from the list (BR-REQ-051-01).
+ *
+ * The one bulk verb events get. A season ends with a handful of races that are over and should
+ * come off the site, and archiving them one at a time is one editor round-trip each. Publishing
+ * in bulk is deliberately not offered: PUBLISHED is refused while either language is incomplete,
+ * so a bulk publish would be a button whose usual outcome is a list of failures. Deleting in
+ * bulk is not offered either — it is Administrator-only, it is refused for any event with a
+ * registration, and it is not a thing to do to several rows on one tick.
+ *
+ * ## Why the checkbox carries the version
+ *
+ * Each row's value is `id:version`, so every archive still passes the version it was loaded with
+ * and a colleague's concurrent edit still produces a CONFLICT for that row (§11.5). Reading the
+ * current version here instead would have been simpler and would have quietly turned a bulk
+ * archive into the one write in the backoffice that overwrites whatever it finds.
+ */
+export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin" });
+
+  const selected = form
+    .getAll("eventRef")
+    .filter((value): value is string => typeof value === "string" && value.includes(":"));
+
+  if (selected.length === 0) {
+    backTo(listPath, { error: "NOTHING_SELECTED" });
+  }
+
+  let archived = 0;
+  let failed = 0;
+  try {
+    const actor = await requireStaff();
+    const db = getDb();
+
+    for (const reference of selected) {
+      const separator = reference.lastIndexOf(":");
+      const eventId = reference.slice(0, separator);
+      const expectedVersion = Number(reference.slice(separator + 1));
+
+      try {
+        await transitionEvent(db, { actor, eventId, expectedVersion, to: "ARCHIVED" });
+        archived += 1;
+      } catch (error) {
+        if (!isDomainError(error)) throw error;
+        failed += 1;
+      }
+    }
+  } catch (error) {
+    backTo(listPath, outcomeOf(error));
+  }
+
+  redirect(`${listPath}?saved=eventsArchived&archived=${archived}&failed=${failed}#admin-alert`);
+}
+
+/**
  * The editor's one save (BR-REQ-051-01).
  *
  * One form, one button, one transaction: the event row and every language the actor may edit,

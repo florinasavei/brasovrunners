@@ -5,7 +5,13 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import type { EditorialStatus } from "@/modules/staff-identity/domain/roles";
-import { createPage, deletePage, savePage, transitionPage } from "@/modules/content/pages/service";
+import {
+  createPage,
+  deletePage,
+  movePageInNav,
+  savePage,
+  transitionPage,
+} from "@/modules/content/pages/service";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -117,6 +123,31 @@ export async function transitionPageAction(form: FormData): Promise<void> {
   }
 
   backTo(path, outcome);
+}
+
+/**
+ * Move a page one place up or down the site navigation, from the list (BR-REQ-050-03).
+ *
+ * It lands back on the list rather than on the page it moved, because the thing being changed
+ * is the order — which is only visible as a list — and the organizer is almost never moving one
+ * page once.
+ */
+export async function movePageAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin/pages" });
+
+  try {
+    const actor = await requireStaff();
+    await movePageInNav(getDb(), {
+      actor,
+      pageId: text(form, "pageId"),
+      direction: text(form, "direction") === "up" ? "up" : "down",
+    });
+  } catch (error) {
+    backTo(listPath, outcomeOf(error));
+  }
+
+  backTo(listPath, { saved: "moved" });
 }
 
 export async function deletePageAction(form: FormData): Promise<void> {

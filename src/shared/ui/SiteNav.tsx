@@ -52,7 +52,41 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
     <Box
       component="nav"
       aria-label={t("label")}
-      sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: { xs: 1, sm: 2 } }}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: { xs: 1, sm: 2 },
+        /**
+         * One row, always, however many pages the club publishes.
+         *
+         * This wrapped, and the header it sits in is `position: sticky`. Every published
+         * standing page adds an entry (BR-REQ-050-03), so at 320px a club with a dozen of them
+         * pushed the navigation onto row after row and the sticky header grew until it covered
+         * the page beneath it. That is not hypothetical: it broke an end-to-end test by
+         * intercepting a click on the button underneath, which reads as a flaky test and is
+         * really the header eating the page.
+         *
+         * Wrapping is what made the height unbounded, so the height is bounded here instead.
+         * The overflow scrolls sideways — the pattern every mobile tab bar already uses, and
+         * one the browser implements natively: no client island, no JavaScript, and it holds
+         * for three pages or thirty. The alternative, an overflow menu, needs state, a popup
+         * and a client boundary to hide links that fit fine on a laptop.
+         *
+         * `minWidth: 0` because this is a flex child, and a flex child refuses to shrink below
+         * its content without it — the scroll would never engage and the row would overflow the
+         * page sideways instead, which is the defect this replaces (BR-REQ-041-01 criterion 1).
+         */
+        flexWrap: "nowrap",
+        minWidth: 0,
+        overflowX: "auto",
+        // The current section is marked with a 2px underline; without room for it the scroll
+        // container clips it away exactly on the entry it is meant to identify.
+        pb: "2px",
+        scrollbarWidth: "thin",
+        // A scrollable row of links is still a row of links to a keyboard: nothing here is
+        // reachable only by dragging.
+        "& > *": { flexShrink: 0 },
+      }}
     >
       {SECTIONS.map((section) => {
         const current = selected === section.segment;

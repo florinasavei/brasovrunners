@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1641,6 +1641,26 @@ UNIQUE(legal_document_id, locale)
 A version referenced by an acceptance is immutable. Exactly one approved version per key
 is current at a given time, resolved by `effective_at`. The public legal routes render
 the current approved version for the requested locale.
+
+Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
+
+- a version is a **draft** until approved, and only a draft may be rewritten;
+- a draft that was **never approved** and that nothing references may be **deleted**, taking its
+  translations with it (`ON DELETE cascade`). Nothing can have relied on it: no public page
+  renders an unapproved version, and both a registration and an acceptance record whichever
+  version was current;
+- an **approved version is never edited and never deleted**, whatever its reference counts say.
+  Approval is the club publishing words as its own, and the record of what it published outlives
+  whether anybody acted on it;
+- **approval is not withdrawn.** A declaration is bound to the participant at submission rather
+  than at render — `registrations/service.ts` re-resolves the current version when the form is
+  posted, and the form carries no version — so changing which version is current would let
+  somebody sign text they never read. §53 has the sequence and the fix that would be required
+  first;
+- **reliance is wider than the two foreign keys.** `registrations.privacy_notice_version`,
+  `results_consent_version` and `health_consent_version` are plain integers naming a
+  `PRIVACY_NOTICE` version, with nothing for PostgreSQL to enforce. Any check that asks "does
+  anything depend on this version" counts those too.
 
 ### 12.9 Standing pages
 

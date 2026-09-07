@@ -174,7 +174,17 @@ export default async function SiteHeader() {
           Wrapping rather than shrinking: an overflow costs the page a sideways scrollbar
           (BR-REQ-041-01 criterion 1), a wrap costs one row of height.
         */}
-        <Box sx={{ order: { xs: 3, sm: 2 }, flexBasis: { xs: "100%", sm: "auto" }, ml: { sm: 2 } }}>
+        <Box
+          sx={{
+            order: { xs: 3, sm: 2 },
+            flexBasis: { xs: "100%", sm: "auto" },
+            // The nav below scrolls sideways rather than wrapping, and a flex child will not
+            // shrink below its content unless both it and the scroller say so.
+            minWidth: 0,
+            flexShrink: 1,
+            ml: { sm: 2 },
+          }}
+        >
           <SiteNav pages={pages.map((page) => ({ slug: page.slug, title: page.title }))} />
         </Box>
 

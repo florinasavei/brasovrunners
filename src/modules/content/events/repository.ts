@@ -1,5 +1,6 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
+import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 
 /**
@@ -34,6 +35,32 @@ export async function listEventsForBackoffice<T extends Record<string, unknown>>
     byEvent.set(row.event.id, entry);
   }
   return [...byEvent.values()];
+}
+
+/**
+ * How many registrations each event carries, for the list screen.
+ *
+ * `deleteEvent` refuses an event that has any, and the list had no way to say so: the button was
+ * simply offered and the refusal arrived afterwards as an error code. A count turns that into a
+ * sentence an organizer accepts before pressing anything — "eleven people have registered" is a
+ * reason; a button that fails is not (BR-REQ-060-01: the guard is still on the server either
+ * way, and this only changes what the screen is able to explain).
+ *
+ * `TEST` rows are counted too, deliberately. They block a delete exactly as real ones do, because
+ * the foreign key does not care what kind they are, so a count that omitted them would explain
+ * the refusal with a number that disagreed with it.
+ *
+ * One grouped query for the whole list rather than one per row.
+ */
+export async function countRegistrationsByEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+): Promise<Map<string, number>> {
+  const rows = await db
+    .select({ eventId: registrations.eventId, total: count() })
+    .from(registrations)
+    .groupBy(registrations.eventId);
+
+  return new Map(rows.map((row) => [row.eventId, row.total]));
 }
 
 export async function findEventForEditing<T extends Record<string, unknown>>(

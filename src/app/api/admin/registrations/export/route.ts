@@ -32,16 +32,26 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const eventId = url.searchParams.get("eventId");
   const status = url.searchParams.get("status");
+  const clubMember = url.searchParams.get("clubMember");
+  const search = url.searchParams.get("q");
 
   /**
    * `TEST` rows are omitted, not labelled (`DECISIONS.md` §30). The export is the club's own
    * count of who is coming: it leaves this application, is sorted and filtered in a spreadsheet,
    * and is read at a start line by somebody who never saw the backoffice. A column that says
    * "test" is one filter away from being gone; a row that is not there cannot be miscounted.
+   *
+   * Every filter the list screen applies is applied here too, and paging deliberately is not.
+   * The button that reaches this route sits above a filtered list, so a file that ignored the
+   * search box would silently disagree with the rows the organizer was looking at when they
+   * pressed it — and one that honoured the page would export whichever 25 rows were on screen.
+   * Filters narrow what the file is *about*; a page is only how much of it fits.
    */
   const rows = await listRegistrationsForAdmin(getDb(), {
     eventId: eventId || undefined,
     status: isRegistrationStatus(status) ? status : undefined,
+    clubMemberDeclared: clubMember === "1" || undefined,
+    search: search || undefined,
     excludeTest: true,
   });
 

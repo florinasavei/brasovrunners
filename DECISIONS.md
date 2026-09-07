@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -2922,3 +2922,131 @@ now does for the standing pages. Doing that route by route is the next piece of 
 boundary is what stops the default page appearing in the meantime.
 
 Baseline `BR-V1.26-2026-09-06`.
+
+## 53. Decided — reliance freezes a legal version, and an unapproved draft may be deleted (2026-09-07)
+
+**Status:** Decided. Adds `deleteDraftVersion` to `modules/legal-documents/service.ts`, a third
+reliance count to `listVersionsForBackoffice`, and a row-count check to `approveVersion`.
+Narrows §46 rather than reversing it. `AGENTS.md` §12.5, BR-REQ-053-02.
+
+§46 froze an approved legal version, and gave one reason: a participant signed version 3, and
+rewriting version 3 leaves their signature describing text nobody agreed to. That reason is
+about **reliance**, not about approval — so the obvious next move was to let the club edit,
+un-approve and delete any approved version nothing had relied on. Three of those four verbs are
+not being built, and the reasons are worth recording, because each one looks safe until the
+codebase is read.
+
+### What is built: delete, for a version that was never approved
+
+A draft has never been in force. `findCurrentApprovedDocument` filters on `is_approved`, so no
+public page has rendered it; a registration records whichever version was current, so none can
+name it; and an acceptance is written only against what was current, so none can point at it.
+Nothing can have relied on it, and without this the club's document list grew by a row every
+time somebody started typing and thought better of it, with no way back.
+
+An approved version is still never deleted, whatever its counts say — and that is a *different*
+rule from "nothing relies on it". Approval is the club publishing words as its own; the record
+of what it published, and when, outlives whether anybody happened to act on it.
+
+### The reliance nobody could see
+
+`listVersionsForBackoffice` showed two counts, one per foreign key: acceptances and events.
+Both are real, and together they were wrong about the most relied-upon document the club has.
+
+A privacy notice is referenced from `registrations` by **version number** —
+`privacy_notice_version`, `results_consent_version` and `health_consent_version` are all plain
+`integer` columns with no foreign key at all. Only `EVENT_DECLARATION` versions ever get a
+`declaration_acceptances` row, so a privacy notice that four hundred people had acknowledged
+appeared on the backoffice screen as "not used yet", and PostgreSQL would have raised nothing
+whatsoever if it were deleted. The third count exists so the screen stops saying something
+false, and it is checked before any deletion.
+
+### Why un-approve is not built, which is the substantive finding
+
+Withdrawing an approval is the verb the club would actually want, and it cannot be made safe
+here without changing the registration lifecycle.
+
+**A declaration is bound to the participant at POST, not at render.**
+`registrations/declare/[token]/page.tsx` resolves the text with
+`findCurrentApprovedDocument(...)` and renders it. The form posts four fields — `locale`,
+`token`, `accepted`, `typedName` — and no version, no document id and no hash. Then
+`registrations/service.ts` calls `findCurrentApprovedDocument` **again**, independently, and
+writes the acceptance from whatever *that* returned. So the row records the version that was
+current when the button was pressed, not the version the person read.
+
+Un-approving exists precisely to change which version is current, on the next request, with no
+deploy. It would therefore let somebody read version 3 and have version 2 recorded as the text
+they signed — the exact failure §46 exists to prevent, arrived at from the other direction. The
+same split applies to the privacy notice at submission, and there the fallback is worse: every
+environment but production seeds a **sample** notice whose own first heading reads "SAMPLE TEXT
+— NOT APPROVED", so withdrawing a real version can silently promote that back into force and
+stamp real consent records against it.
+
+The fix is to bind the signature where it is read: carry the resolved document id and
+`content_sha256` as hidden fields and refuse a signature against anything else. That is a change
+to the registration lifecycle, it needs its own requirement and its own tests, and it must land
+before un-approve is worth revisiting. **This is a pre-existing defect** — approving a *new*
+version between a participant's GET and POST already triggers it today — and it is recorded here
+rather than fixed here because the console work was scoped to exclude the lifecycle.
+
+Editing an approved-but-unreferenced version is refused for a smaller reason: `content_sha256`
+is published under a version number and `docs/RUNBOOKS.md` verifies against it, so text that
+changes under a fixed number makes that check meaningless.
+
+### One thing the new verb broke, and the guard for it
+
+Until a `legal_documents` row could be deleted, `approveVersion`'s `UPDATE ... WHERE id = $1`
+could never match zero rows, so it ignored the count. It now asserts one row and refuses
+otherwise: a draft deleted in another tab would have left the update matching nothing and the
+screen reporting that the club's legal text was in force when no such row existed.
+
+Baseline `BR-V1.27-2026-09-07`.
+
+## 54. Decided — a loading boundary may not sit above a `notFound()` (2026-09-07)
+
+**Status:** Decided, after the end-to-end suite caught it. Shapes where `loading.tsx` files live
+under `src/app/[locale]/admin`, and adds a `layout.tsx` per gated section. BR-REQ-060-01.
+
+The application had no `loading.tsx` anywhere, so every backoffice click left the old page on
+screen — unchanged and unmarked — until the server answered. Adding one per route is the
+obvious fix and it quietly broke authorization.
+
+### What happened
+
+`loading.tsx` wraps what is below it in Suspense, and Next flushes the shell as soon as it has
+one. The status line goes out with that flush. Every `/admin` page authorizes by calling
+`notFound()` — deliberately, because §10.2 refuses to confirm that a screen an Author may not
+open exists at all — and a `notFound()` raised *after* the flush cannot change a status that has
+already been sent.
+
+So an Author requesting `/admin/staff` got **200, with the not-found page in the body**. It looks
+identical in a browser and is not the same thing at all: a 200 is not a refusal to a crawler, a
+monitor, an uptime check or a script. Two end-to-end tests assert `404` on exactly those two
+routes, which is how this was caught rather than shipped.
+
+### Two rules, and the route groups that follow from them
+
+**A `loading.tsx` must not sit above a `notFound()`.** It applies to its own segment *and every
+descendant*, so:
+
+- the root `admin/loading.tsx` is gone. It covered all six sections, and defeated every gate
+  beneath it — including gates written into section layouts specifically to outrank it;
+- a section's role gate moved into a `layout.tsx` beside its boundary, which renders **before**
+  there is anything to flush. The page still asserts the same rule, because a page is a request
+  of its own and a guard that depends on a parent is one that disappears the first time the page
+  is rendered from somewhere else. The layout is there for the status code alone;
+- the lists that have `[id]` and `new` siblings — registrations, pages, legal, and the events
+  overview — moved into a `(list)` route group, so their boundary covers the list and nothing
+  else. A route group changes no URL, which is why `routing.pathnames` is untouched and the
+  architecture test that pins it still passes;
+- the editor and detail routes get **no** boundary at all. Their `notFound()` is a missing row —
+  a deleted event's URL — and that has to stay a 404. They are also the routes where a stale
+  page on screen is least confusing, because the organizer arrived by clicking a specific row.
+
+The trade is explicit: the longest waits in the backoffice are the editors, and they are the
+routes that keep no loading state. Fixing that means moving the row lookup into a layout and
+querying twice, which buys a skeleton with a duplicated query on the slowest page. Not worth it
+today, and written down so the next person does not rediscover the constraint by breaking a
+status code.
+
+Baseline `BR-V1.27-2026-09-07`.

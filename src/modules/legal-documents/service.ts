@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { legalDocuments, legalDocumentTranslations } from "@/db/schema/legal-documents";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -82,7 +82,7 @@ async function assertStillADraft<T extends Record<string, unknown>>(
       "an approved version cannot be edited; publish a correction as a new version",
     );
   }
-  if (row.acceptanceCount > 0 || row.eventCount > 0) {
+  if (row.acceptanceCount > 0 || row.eventCount > 0 || row.privacyAcknowledgementCount > 0) {
     throw new DomainError(
       "CONFLICT",
       "this version is already referenced and cannot be edited; create a new version instead",
@@ -206,7 +206,18 @@ export async function approveVersion<T extends Record<string, unknown>>(
   assertMayEdit(actor);
   await assertStillADraft(db, versionId);
 
-  await db
+  /*
+    The result is checked, and that is new.
+
+    This was `UPDATE ... WHERE id = $1` with nothing read back. Until drafts could be deleted a
+    `legal_documents` row could not stop existing, so a zero-row update was impossible and
+    ignoring the count cost nothing. `deleteDraftVersion` changes that: a draft removed between
+    the check above and this statement leaves the update matching nothing, and the action would
+    have redirected with "version approved" — telling an Administrator the club's legal text was
+    in force when no such row exists. A write on a trust-carrying path reports what it did
+    (§1.5).
+  */
+  const [approved] = await db
     .update(legalDocuments)
     .set({
       isApproved: true,
@@ -215,5 +226,93 @@ export async function approveVersion<T extends Record<string, unknown>>(
       // draft happened to be typed.
       effectiveAt: now,
     })
-    .where(eq(legalDocuments.id, versionId));
+    .where(and(eq(legalDocuments.id, versionId), eq(legalDocuments.isApproved, false)))
+    .returning({ id: legalDocuments.id });
+
+  if (!approved) {
+    throw new DomainError("CONFLICT", "this version changed while it was being approved");
+  }
+}
+
+/**
+ * Everything in the database that depends on this version's words (`DECISIONS.md` §53).
+ *
+ * Deliberately wider than the two foreign keys. A privacy notice is referenced by *number* from
+ * `registrations` — `privacy_notice_version`, `results_consent_version` and
+ * `health_consent_version` are all plain integers with no key for PostgreSQL to enforce — so a
+ * notice hundreds of people acknowledged is invisible to `acceptanceCount` and `eventCount`
+ * alike, and the database would raise nothing at all if it were removed. Only
+ * `EVENT_DECLARATION` versions ever get a `declaration_acceptances` row; this is what stands in
+ * for it on the other key.
+ */
+export type VersionReliance = {
+  acceptances: number;
+  events: number;
+  privacyAcknowledgements: number;
+};
+
+export function isReliedOn(reliance: VersionReliance): boolean {
+  return reliance.acceptances > 0 || reliance.events > 0 || reliance.privacyAcknowledgements > 0;
+}
+
+/**
+ * Delete a version that was never approved (BR-REQ-053-02, `DECISIONS.md` §53).
+ *
+ * The whole of the new freedom, and narrow on purpose. A draft has never been in force: no
+ * public page has rendered it, because `findCurrentApprovedDocument` filters on `is_approved`;
+ * no registration can have recorded its number, because a registration records whatever was
+ * current; and no acceptance can name it, for the same reason. Nothing can have relied on it,
+ * so nothing is lost by removing it — and without this the club's list of legal documents grew
+ * by a row every time somebody started typing and thought better of it, with no way back.
+ *
+ * **An approved version is never deleted**, whatever its counts say, and that is not the same
+ * rule as "nothing relies on it". Approval is the club publishing words as its own; the record
+ * of what it published, and when, outlives whether anybody happened to act on it. §46's freeze
+ * stands untouched for every version that was ever in force.
+ *
+ * The two translations go with it (`ON DELETE cascade`), which is right: a body belongs to its
+ * version and means nothing apart from it.
+ */
+export async function deleteDraftVersion<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  versionId: string,
+): Promise<void> {
+  assertMayEdit(actor);
+
+  const rows = await listVersionsForBackoffice(db);
+  const row = rows.find((candidate) => candidate.id === versionId);
+  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+
+  if (row.isApproved) {
+    throw new DomainError(
+      "CONFLICT",
+      "an approved version cannot be deleted; its words are part of what the club has published",
+    );
+  }
+  if (
+    isReliedOn({
+      acceptances: row.acceptanceCount,
+      events: row.eventCount,
+      privacyAcknowledgements: row.privacyAcknowledgementCount,
+    })
+  ) {
+    throw new DomainError("CONFLICT", "this version is referenced and cannot be deleted");
+  }
+
+  /*
+    `is_approved = false` again in the `WHERE`, because the read above is not in this
+    statement's transaction and an approval can land between the two. Without it the delete
+    would race an approval and win; with it the delete simply matches nothing and says so.
+    That is also what keeps a raw foreign-key violation from reaching an organizer, which
+    §14.3 forbids.
+  */
+  const [deleted] = await db
+    .delete(legalDocuments)
+    .where(and(eq(legalDocuments.id, versionId), eq(legalDocuments.isApproved, false)))
+    .returning({ id: legalDocuments.id });
+
+  if (!deleted) {
+    throw new DomainError("CONFLICT", "this version was approved while it was being deleted");
+  }
 }

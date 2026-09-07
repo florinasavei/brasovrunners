@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1112,7 +1112,7 @@ pulling it forward to write an About page would decide that schema for the wrong
 1. Given a legal document key, when a version is approved, then it carries a version number, an effective date, an approval record, a content hash, and Romanian and English bodies.
 2. Given a version that a participant has accepted, when any edit is attempted, then it is rejected.
 3. Given a new version, when it becomes effective, then earlier acceptances continue to reference the version that was accepted.
-4. Given a version that is approved or referenced, when any interface attempts to change its text, then it is refused — editing is confined to unapproved, unreferenced drafts (BR-REQ-053-02).
+4. Given a version that is approved or referenced, when any interface attempts to change its text, then it is refused — editing is confined to unapproved, unreferenced drafts (BR-REQ-053-02). An approved version is also never deleted and its approval is never withdrawn (`DECISIONS.md` §53).
 5. Given the public site, when any page renders, then the privacy notice and terms are reachable in the current locale.
 6. Given any environment other than production, when it is seeded, then a clearly marked sample version of each key exists, whose own rendered body opens — in both languages — with a banner saying that it is sample text, is not approved by the club, is not legal advice, and must be replaced before a real participant registers.
 7. Given `APP_ENV=production`, when the sample text is seeded, then it is refused outright rather than skipped quietly; the club's approved wording is written in the backoffice (BR-REQ-053-02) or, where a migration is preferred, per `docs/RUNBOOKS.md` § Legal document version.
@@ -1126,10 +1126,11 @@ pulling it forward to write an About page would decide that schema for the wrong
 - **Implements:** AGENTS.md §12.5, §11.1, §10.2
 - **Priority:** MUST
 - **Release:** M1
-- **Status:** built, and recorded in `DECISIONS.md` §46. It narrows BR-REQ-053-01 criterion 4
-  rather than reversing it: what may never be edited is a version somebody has accepted, and
-  requiring a developer and a migration to *create* one was an accident of that rule rather than
-  a consequence of it.
+- **Status:** built, and recorded in `DECISIONS.md` §46 and §53. It narrows BR-REQ-053-01
+  criterion 4 rather than reversing it: what may never be edited is a version somebody has
+  accepted, and requiring a developer and a migration to *create* one was an accident of that
+  rule rather than a consequence of it. §53 adds deletion for a version that was never approved,
+  and records why un-approving an approved one is not offered.
 
 **Acceptance criteria**
 
@@ -1141,8 +1142,14 @@ pulling it forward to write an About page would decide that schema for the wrong
 6. Given an approved version, when approval is attempted again, then it is refused.
 7. Given a document written in only one language, or with an empty body in either, when it is saved, then it is refused — a public page cannot fall back to the other language (BR-REQ-040-02).
 8. Given any role below the one that administers staff, when any of this is attempted, then it is refused.
+9. Given a version that was never approved and that nothing references, when it is deleted, then the version and its text in every language are removed together, and the version number becomes available again.
+10. Given a version that is approved, when deletion is attempted, then it is refused with a conflict whether or not anything references it — the record of what the club published outlives whether anybody acted on it.
+11. Given a version that an acceptance names, an event points at, or a registration recorded the number of as the privacy notice it acknowledged, when deletion is attempted, then it is refused with a conflict.
+12. Given the backoffice list of versions, when it renders, then each row states how many acceptances, events and registrations depend on that version, and a version that cannot be deleted states which of those reasons applies rather than omitting the control.
+13. Given a version deleted between the moment approval was checked and the moment it was written, when approval completes, then it is refused rather than reporting success.
+14. Given an approved version, when withdrawing its approval is attempted, then there is no such operation: `DECISIONS.md` §53 records that a declaration is bound to the participant at submission rather than at render, so changing which version is current would let somebody sign text they never read.
 
-**Verification:** integration `legal/editor.test.ts`
+**Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`
 
 ### 4.10 Transactional email
 

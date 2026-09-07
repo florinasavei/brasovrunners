@@ -154,6 +154,69 @@ export async function cancelRegistrationAction(form: FormData): Promise<void> {
   backTo(detailPath(locale, registrationId), outcome);
 }
 
+/**
+ * Cancel several registrations at once, with one reason (BR-REQ-037-03, §15.11).
+ *
+ * The one bulk verb that earns its place. Race morning produces a handful of people who told an
+ * organizer they are not running, and cancelling them one at a time is five round-trips through
+ * a list that re-sorts underneath you. Nothing about the operation is new: each row goes through
+ * `cancelRegistrationByStaff` exactly as it does singly, so each releases its place through the
+ * allocator and each writes its own `audit_logs` row. Only the typing is shared.
+ *
+ * Cancel and nothing else. Erasing is not offered in bulk on purpose — it is the one action that
+ * takes the declaration with it, and a mis-ticked checkbox should not be able to do that to
+ * twenty people at once.
+ *
+ * One failure does not abandon the rest: a row somebody else already cancelled would otherwise
+ * silently strand the remaining ones, so each is attempted and the outcome is counted.
+ */
+export async function bulkCancelRegistrationsAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const ids = form
+    .getAll("registrationId")
+    .filter((value): value is string => typeof value === "string" && value !== "");
+  const reason = text(form, "reason");
+
+  const listPath = getPathname({ locale, href: "/admin/registrations" });
+  /*
+    The list's own query string comes back as a field so the organizer returns to the filtered,
+    sorted page they acted from. Only the query is carried, never a path: a redirect target
+    taken from a form is an open redirect, and rebuilding the path here from `getPathname`
+    means the field can only ever choose which rows are shown.
+  */
+  const listQuery = text(form, "listQuery");
+  const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
+
+  if (ids.length === 0) {
+    backTo(returnTo, { error: "NOTHING_SELECTED" });
+  }
+
+  let cancelled = 0;
+  let failed = 0;
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    const db = getDb();
+    const now = new Date();
+
+    for (const registrationId of ids) {
+      try {
+        await cancelRegistrationByStaff(db, actor, registrationId, reason, now);
+        cancelled += 1;
+      } catch (error) {
+        if (!isDomainError(error)) throw error;
+        failed += 1;
+      }
+    }
+  } catch (error) {
+    backTo(returnTo, outcomeOf(error));
+  }
+
+  const separator = returnTo.includes("?") ? "&" : "?";
+  redirect(
+    `${returnTo}${separator}saved=registrationsCancelled&cancelled=${cancelled}&failed=${failed}#admin-alert`,
+  );
+}
+
 export async function deleteRegistrationAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = text(form, "registrationId");
