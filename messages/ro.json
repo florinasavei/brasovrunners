@@ -794,5 +794,12 @@
         }
       }
     }
+  },
+  "Error": {
+    "title": "Ceva nu a funcționat",
+    "body": "Pagina nu a putut fi afișată. De cele mai multe ori este ceva trecător — încearcă din nou peste câteva momente.",
+    "retry": "Încearcă din nou",
+    "home": "Înapoi la prima pagină",
+    "reference": "Dacă se repetă, spune-ne acest cod:"
   }
 }

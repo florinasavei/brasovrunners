@@ -103,6 +103,9 @@ export default async function AdminTasksPage({ params }: Props) {
   const clubDomainBound =
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
   const jobsHealthy = jobs.every((job) => job.status === "ok");
+  // Which ones, not how many: a single missing monitor and a stopped scheduler are the same
+  // count and different problems.
+  const staleJobNames = jobs.filter((job) => job.status !== "ok").map((job) => job.jobName);
 
   const tasks = sortTasks(
     ownerTasks({
@@ -113,7 +116,7 @@ export default async function AdminTasksPage({ params }: Props) {
       legalTextIsSample: /EXEMPLU|SAMPLE/i.test(privacyNotice?.title ?? ""),
       clubDomainBound,
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
-      jobsHealthy,
+      staleJobNames,
       publishedEventCount,
     }),
   );
@@ -166,6 +169,7 @@ export default async function AdminTasksPage({ params }: Props) {
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {t(`items.${task.id}.${task.state === "done" ? "done" : "todo"}`)}
+              {task.detail && ` — ${task.detail}`}
             </Typography>
           </Box>
         ))}

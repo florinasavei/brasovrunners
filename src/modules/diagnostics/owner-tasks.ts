@@ -25,6 +25,8 @@ export type OwnerTask = {
   id: string;
   owner: TaskOwner;
   state: TaskState;
+  /** What the page appends to the sentence, when there is something specific to say. */
+  detail?: string;
 };
 
 export type OwnerTaskInputs = {
@@ -41,8 +43,19 @@ export type OwnerTaskInputs = {
    */
   clubDomainBound: boolean;
   emailDeliveryMode: "capture" | "allowlist" | "live";
-  /** A scheduler that has stopped means nothing is sent and no hold ever expires. */
-  jobsHealthy: boolean;
+  /**
+   * Each scheduled job's own liveness, not one boolean for all of them.
+   *
+   * It *was* one boolean, and that hid the defect it existed to catch. `SETUP.md` §26 asks for
+   * **two** monitors per environment — one per job endpoint — and QA had only ever had one:
+   * `email-outbox` ran every five minutes, `registration-maintenance` every two hours, on the
+   * GitHub Actions backstop alone. Rolled into "are the jobs healthy", that read as a single
+   * amber light somebody could explain away. Named, it says which monitor is missing.
+   *
+   * The two failures are not the same either. A late outbox delays a message; late maintenance
+   * means a lapsed hold keeps occupying a place and the next runner is never offered it.
+   */
+  staleJobNames: readonly string[];
   /** Events the club has published, so an empty site reads as work rather than as success. */
   publishedEventCount: number;
 };
@@ -89,12 +102,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.publishedEventCount > 0 ? "done" : "open",
   });
 
-  // The one developer-owned entry, and it earns its place: when the scheduler stops, no message
-  // is sent and no hold expires, and neither failure announces itself on the public site.
+  // The one developer-owned entry, and it earns its place: when a job stops, no message is sent
+  // or no hold expires, and neither failure announces itself on the public site.
   tasks.push({
     id: "scheduler",
     owner: "developer",
-    state: input.jobsHealthy ? "done" : "blocking",
+    state: input.staleJobNames.length === 0 ? "done" : "blocking",
+    // Carried so the page can name the job rather than say "something is late". A missing
+    // monitor and a broken one look identical from here; the job name is what tells them apart.
+    detail: input.staleJobNames.join(", ") || undefined,
   });
 
   return tasks;

@@ -2871,3 +2871,54 @@ fails soft: a page that cannot be loaded costs a navigation entry, never the hea
 because a site whose header throws has no way out of any page at all.
 
 Baseline `BR-V1.26-2026-09-06`.
+
+## 52. Decided — two error boundaries, Next's own digest, and one gap named rather than hidden (2026-09-07)
+
+**Status:** Decided. Adds `src/app/[locale]/error.tsx` and `src/app/global-error.tsx`, and a rule
+to `AGENTS.md` §14.3, which covered domain error codes and said nothing about boundaries.
+
+There was no error boundary anywhere in this application. Any unhandled throw — a database blip,
+a Neon instance waking from scale-to-zero, the pool's `statement_timeout` — gave a stranger
+Next's default production page: "Application error: a server-side exception has occurred",
+unstyled, in English, with no way back and no hint whether to try again.
+
+### Two boundaries, because they do different jobs
+
+`[locale]/error.tsx` catches everything below the layout, which is almost every failure. It has
+the locale, the theme and the catalogue, so it apologises in the reader's own language.
+
+`global-error.tsx` catches the failures *above* it — a broken locale resolution, a provider that
+threw, a layout that never rendered — and it replaces the whole document. There is no translator
+at that point, because replacing the root layout replaces `NextIntlClientProvider` with it, so
+it says everything twice: Romanian first, English under it. That is the documented exception to
+§11.3 rather than an oversight, and the styles are inline for the same reason the strings are
+hard-coded — the theme is gone too.
+
+### The correlation id already existed
+
+The question was whether to show one, and the answer is that Next already generates it. Every
+server error is hashed into `digest`, logged beside the stack, and handed to the boundary — so a
+runner can say "it said 2060393594" and the owner can find that line. No id generator, no new
+logging decision, and no temptation to write a participant's address into a log to make it
+findable (§14.5). The message and the stack are never shown: they carry SQL, provider text and
+sometimes an address (§14.3).
+
+A retry is offered because `reset()` is free and the failures this application will actually meet
+— a cold start, a dropped connection — are the kind a second attempt fixes.
+
+### The gap, measured rather than assumed
+
+**A visitor with JavaScript disabled sees a blank page, not the error page.** Verified against a
+production build pointed at a dead database, in a real browser: with JavaScript the club's page
+renders in full; without it the body is empty. `error.tsx` is a Client Component by Next's design
+and cannot render on the server, so a server-side throw streams a shell and the boundary only
+appears on hydration.
+
+That is worth stating plainly because this site is built to work without JavaScript, and it means
+the boundary is a safety net for the common case rather than a guarantee. **The only thing that
+produces server-rendered HTML on a failure is catching the failure where it happens** — guarding
+the data read on the route and rendering a degraded page, the way `SiteHeader#navigationPages`
+now does for the standing pages. Doing that route by route is the next piece of work; the
+boundary is what stops the default page appearing in the meantime.
+
+Baseline `BR-V1.26-2026-09-06`.

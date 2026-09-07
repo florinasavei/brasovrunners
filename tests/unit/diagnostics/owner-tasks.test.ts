@@ -18,7 +18,7 @@ const LAUNCHED: OwnerTaskInputs = {
   legalTextIsSample: false,
   clubDomainBound: true,
   emailDeliveryMode: "live",
-  jobsHealthy: true,
+  staleJobNames: [],
   publishedEventCount: 4,
 };
 
@@ -54,9 +54,14 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, clubDomainBound: false }, "registerDomain")).toBe("open");
   });
 
-  it("blocks on a stopped scheduler, and says it belongs to the developer", () => {
-    const tasks = ownerTasks({ ...LAUNCHED, jobsHealthy: false });
+  it("blocks on a stopped scheduler, names the job, and says it belongs to the developer", () => {
+    // One boolean for "are the jobs healthy" hid the defect this exists to catch: QA ran
+    // `email-outbox` every five minutes and `registration-maintenance` every two hours, because
+    // only one of the two monitors `SETUP.md` §26 asks for was ever created. Rolled together,
+    // that reads as a single amber light. Named, it says which monitor is missing.
+    const tasks = ownerTasks({ ...LAUNCHED, staleJobNames: ["registration-maintenance"] });
     const scheduler = tasks.find((task) => task.id === "scheduler");
+    expect(scheduler?.detail).toBe("registration-maintenance");
     expect(scheduler?.state).toBe("blocking");
     expect(scheduler?.owner).toBe("developer");
   });
