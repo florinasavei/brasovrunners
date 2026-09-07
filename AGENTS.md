@@ -2111,6 +2111,25 @@ INTERNAL_ERROR
 
 Never expose SQL/stack/provider secret/token.
 
+**Error boundaries** (`DECISIONS.md` §52). Two, and they are not interchangeable:
+
+- `app/[locale]/error.tsx` has the locale, the theme and the catalogue, and handles everything
+  below the layout. It shows Next's own `error.digest` — already logged beside the stack, so a
+  report can name it — and never the message or the stack, which carry SQL and sometimes an
+  address (§14.5). It offers `reset()`, because a cold start is the failure a retry fixes.
+- `app/global-error.tsx` replaces the whole document for a failure in the root layout itself. It
+  has no translator and no theme — replacing the layout replaces the provider — so its strings
+  are hard-coded in both languages and its styles are inline. That is the one permitted exception
+  to §11.3.
+
+Neither boundary may read a database, fetch, or import anything that can throw. An error page
+that throws is the one failure with no recovery left.
+
+**A boundary is a net, not a guarantee.** `error.tsx` is a Client Component by Next's design, so
+a server-side throw renders nothing until hydration and a visitor with JavaScript disabled sees a
+blank page — measured, not assumed. Where a route must degrade rather than disappear, catch the
+failure at the data read and render a reduced page, as `SiteHeader#navigationPages` does.
+
 ### 14.4 Naming and imports
 
 - database `snake_case`;

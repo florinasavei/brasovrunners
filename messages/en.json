@@ -794,5 +794,12 @@
         }
       }
     }
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "body": "This page could not be displayed. It is usually temporary — try again in a moment.",
+    "retry": "Try again",
+    "home": "Back to the first page",
+    "reference": "If it keeps happening, tell us this code:"
   }
 }
