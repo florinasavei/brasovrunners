@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1508,6 +1508,7 @@ events
 - latitude numeric null
 - longitude numeric null
 - map_url text null              -- the organizer's own map link, stored not assembled
+- route_url text null            -- BR-REQ-011-01 criterion 8; where the run goes, not where it starts
 - featured boolean NOT NULL DEFAULT false
 - distance_meters integer null
 - elevation_gain_meters integer null
@@ -1539,9 +1540,15 @@ Checks:
   the meeting point itself: the map link and the `geo` of the `SportsEvent` block are both built
   from them, because a place name is not a start line;
 - `map_url` is https or null. It is the override for what coordinates cannot express — a venue
-  page, a drawn route — and it is stored rather than built, because §8 forbids a hostname
+  page, a shared list — and it is stored rather than built, because §8 forbids a hostname
   literal under `src/` and exempts no provider. The ordinary link comes from the coordinates
   plus `MAP_LINK_BASE_URL`, which is configuration;
+- `route_url` is https or null, and is **not** `map_url`. Where to turn up and where the run
+  goes are two questions an event usually answers with two pages, so they are two columns
+  (`DECISIONS.md` §49). It is a link and never an uploaded file while media storage is deferred
+  (§17), it renders as its own labelled fact on the event page and on no listing card — the
+  card is already one link and an anchor inside an anchor is invalid HTML — and duplicating an
+  event carries it, because last year's race is run on last year's route;
 - at most one event carries `featured`, enforced by a partial unique index rather than by
   application code — two featured events would leave the landing page choosing one arbitrarily;
 - a PUBLISHED event has a `published_at`. The rest of "publishable" — a complete translation in
@@ -1635,6 +1642,50 @@ A version referenced by an acceptance is immutable. Exactly one approved version
 is current at a given time, resolved by `effective_at`. The public legal routes render
 the current approved version for the requested locale.
 
+### 12.9 Standing pages
+
+```text
+pages
+- id
+- editorial_status DRAFT|IN_REVIEW|PUBLISHED|ARCHIVED   -- the *same* enum as events, not a copy
+- published_at null            -- stamped once, on first publication; slug stability dates from it
+- nav_order integer NOT NULL DEFAULT 0
+- created_by_staff_user_id / updated_by_staff_user_id   -- ON DELETE SET NULL
+- version integer NOT NULL DEFAULT 1                    -- optimistic concurrency, §11.5
+- created_at / updated_at
+
+page_translations
+- id
+- page_id uuid NOT NULL REFERENCES pages ON DELETE CASCADE
+- locale
+- slug / title                 -- both non-empty, by CHECK
+- body_json jsonb null         -- the `legal_documents.body_json` shape: sections, headings, paragraphs
+- seo_title / seo_description null
+- author_staff_user_id null
+- version integer NOT NULL DEFAULT 1
+
+UNIQUE(page_id, locale)
+UNIQUE(locale, slug)
+```
+
+Rules (BR-REQ-050-03, `DECISIONS.md` §51):
+
+- **It is not the M5 content system.** No gallery, no media library, no cover image, and the
+  body is the plain-text format `modules/legal-documents/domain/body-text.ts` converts — a blank
+  line between paragraphs, `## ` for a heading. Tiptap stays M5; writing an About page must not
+  decide that schema (§46 refused the same shortcut for a privacy notice).
+- **The editorial enum, the transitions and the role predicates are `events`', reused.** "May
+  this person publish" has one answer in this product, and a second copy of it is a second place
+  for it to be wrong.
+- **Publication is one state for the whole page**, and PUBLISHED is refused while any locale is
+  incomplete — a page that renders in Romanian and 404s in English is what BR-REQ-040-02 exists
+  to prevent (§11.2).
+- **A slug is fixed once published** (§11.5), scoped per locale, and never scoped against
+  `event_translations`: the two live under different path prefixes, so "contact" as both is two
+  URLs rather than a collision.
+- **A page may be deleted outright**, unlike an event, because nothing a participant owns hangs
+  off one. Archiving remains the answer for a page that was real and is now over.
+
 ### 12.6 Registrations
 
 ```text
@@ -1654,6 +1705,7 @@ registrations
 - results_name_consent boolean NOT NULL
 - results_consent_version integer NOT NULL
 - list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
+- club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
 - bib_number integer null              -- M1 footprint; assigned in M2, unique per race, enforced in the assignment transaction
 - submitted_at
 - email_confirmed_at null
@@ -1690,6 +1742,21 @@ three rules (`DECISIONS.md` §30):
   the insert. The synthetic participant's address is in `test.invalid` (RFC 2606), which can never
   receive mail: `kind` carries the meaning, and the domain is what makes a bug in email-mode
   selection harmless.
+
+`club_member_declared` carries one rule of its own (BR-REQ-031-06, `DECISIONS.md` §48):
+
+- **It is a claim and is never verified.** Nothing matches it against `staff_users` or any
+  roster, because most members of this club have no backoffice account and a verified flag would
+  answer "no" for exactly the people the question is asked to find. Every surface that shows it
+  says "declared".
+- **It grants nothing, so it MUST NOT appear in any condition in the allocator or the capacity
+  formula of §10.6** — the same rule `kind` carries, for a different reason: a self-ticked box
+  that decided a price, a place or a queue position would decide it for anybody who ticked it.
+  A member price, if the club ever wants one, needs a membership list and a decision recorded
+  before it needs this column.
+- **`false` means "did not say" as often as it means "no",** so it is reported as a presence and
+  never as a negative: the export prints "Yes" or an empty cell, and the backoffice filter
+  narrows to the people who declared it and offers no way to select the rest.
 
 ### 12.7 Declaration acceptances
 
@@ -2106,6 +2173,13 @@ Free-place display may use short request-time data with deliberate invalidation,
 
 No place consumed.
 
+A rejection at step 3 carries **field names and never field values** back to the form, because
+the answer travels in a URL that every proxy in between logs (§14.5). The names are matched
+against the form's own list on the way back in — the parameter is a string anybody can type —
+and the page is entered at the error summary rather than at the top (§18.2). Nothing past step
+3 is ever reported that way: from canonicalization onward the response is the generic one
+whatever the address turns out to mean, honeypot, timing check and throttle included.
+
 ### 15.2 Email confirmation
 
 On explicit POST with valid token/action session:
@@ -2491,8 +2565,17 @@ The phone is the design target; larger layouts derive from it (`BUSINESS.md` BR-
 - No hover-only affordance. Anything shown on hover is reachable by tap or present in the page.
 - Touch targets in participant journeys are at least 44 by 44 CSS pixels; never below 24.
 - Registration, declaration, and offer pages keep the primary action reachable without
-  scrolling back, and show any deadline in the first screen.
+  scrolling back, and show any deadline in the first screen. A deadline is an absolute local
+  time in the event's timezone, never a countdown alone, and it is read from the registration
+  row rather than from the token that opened the page.
+- The public registration form is **one page, not a wizard** (`DECISIONS.md` §47). A field a
+  submission is refused without is present as the page loads; optional *data* is collapsed
+  behind a native `<details>` whose summary names what is inside; a **consent is never
+  collapsed**, because BR-REQ-072-01 and BR-REQ-039-01 require the choice to be presented and a
+  question behind a summary nobody opens has not been put to them.
 - Form fields carry correct `type`, `inputmode`, `autocomplete`, and `autocapitalize`.
+  `autocomplete` is `off` where the answer is deliberately not the person filling the form in:
+  an emergency contact, and the typed name that signs a declaration.
 - Dialogs scroll internally and preserve entered data across rotation; prefer a page.
 - Email templates are single column with one primary button and its URL printed below it.
 - The backoffice registration list and detail work on a phone; the rest of the backoffice
@@ -2515,7 +2598,14 @@ Target WCAG 2.2 AA:
 - adequate tap targets;
 - test MUI dialogs/menus/forms/Tiptap;
 - declaration/offer deadline readable mobile;
-- translated labels do not clip.
+- translated labels do not clip;
+- **a server-side rejection is entered at the error, not at the top of the page.** The redirect
+  carries a URL fragment naming a focusable summary, the summary links each rejected field to
+  that field's own anchor, and the field carries its own message through `aria-describedby`.
+  A fragment and `tabindex="-1"` are the whole mechanism, so it works with JavaScript off;
+- **every page in a participant journey opens with an `h1`,** including the one that only
+  reports an outcome. A document whose sole content is an alert gives a screen reader nothing
+  to navigate to and leaves "what happened" out of the outline.
 
 ### 18.3 Performance
 

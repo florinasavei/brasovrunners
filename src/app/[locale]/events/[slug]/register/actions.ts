@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { findEventForRegistrationById, findPublishedEventBySlug } from "@/modules/events/repository";
+import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { submitRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -61,7 +62,11 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
       // Field names, never values: nothing a participant typed goes into a URL, which is
       // logged by every proxy between here and them (§14.5).
       const fields = error.fields.length > 0 ? `&fields=${error.fields.join(",")}` : "";
-      redirect(`${path}?error=${error.code}${fields}`);
+      // The fragment is what stops a rejection landing somebody at the top of a long form with
+      // nothing said: the browser scrolls to the summary and, because it is focusable, focuses
+      // it. No JavaScript is involved, which is the point — this path exists for the submission
+      // the browser's own validation could not catch.
+      redirect(`${path}?error=${error.code}${fields}#${ERROR_SUMMARY_ID}`);
     }
     throw error;
   }

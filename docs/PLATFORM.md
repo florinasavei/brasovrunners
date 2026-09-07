@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -65,6 +65,12 @@ notice — **re-check before spending, and update the date in this heading when 
 Running cost today: **€0 plus the domain**, because nothing has been upgraded. The table below is
 what changes that.
 
+**This table, the limits below it and the bump order now render on `/admin/tasks`** for an
+Administrator, with the check date beside them and the email headroom computed from what this
+deployment has actually sent today (BR-REQ-090-05). This document stays the source: a figure
+changes here first, and `modules/diagnostics/platform-plans.ts` quotes it. A club treasurer
+should never have to open a repository to find out what the club may spend.
+
 ### The four that will actually bite this club
 
 **1. Mailgun's 100 emails/day is the binding constraint on registration day.** This application
@@ -95,17 +101,41 @@ three to five staff the DAU cap (100) is irrelevant; these two are not.
 - **Vercel Pro is per seat.** Three organizers who deploy is $60/month. Viewer seats are free and
   can see dashboards and deployments, so only people who actually deploy need a paid seat.
 
-### The commercial clause, precisely
+### The commercial clause, precisely — re-verified 2026-09-07
 
-Vercel's fair-use guidelines define commercial usage as any deployment "used for the purpose of
-financial gain of **anyone** involved in **any part of the production** of the project" — which
-catches a paid developer, not only a paying visitor. The first listed example is "any method of
-requesting or processing payment from visitors of the site".
+Read against the page itself rather than paraphrased, because the club is a **non-profit (ONG)**
+and the obvious assumption — that this exempts it — is wrong.
 
-**A donate button alone sits inside a donations carve-out. A race entry fee does not.** The day
-the club charges for entry, Hobby stops being defensible, and the choice is Pro or the fallback
-already recorded in `DECISIONS.md` — Render Free in Frankfurt, which runs the literal `yarn start`
-contract and needs no code change.
+Commercial usage is any deployment "used for the purpose of financial gain of **anyone** involved
+in **any part of the production** of the project, including a paid employee or consultant writing
+the code". The listed examples are: requesting or processing payment from visitors; **advertising
+the sale of a product or service**; receiving payment to create, update or host the site;
+affiliate linking as the site's primary purpose; and advertisements.
+
+**The word "non-profit" does not appear anywhere in the guidelines.** Legal form is not the test.
+Two things are:
+
+- **Donations are explicitly carved out.** The page carries the note, verbatim: "Asking for
+  Donations **does not** fall under commercial usage." A contribution the club presents as a
+  donation is therefore fine on Hobby.
+- **"Advertising the sale of a service" is not.** This is the sharp edge, and it is wider than
+  "does the site take money" — which this one never does, having no payment integration at all.
+  An event page stating a **mandatory entry fee** announces the sale of a service, whoever
+  collects the money and by whatever means. A suggested donation does not.
+
+A third trigger is independent of both and easy to overlook: **the day anybody is paid to build,
+update or host this site, that alone is commercial usage** — the clause names a paid consultant
+writing the code. For a club whose site is built by a professional developer, this is the more
+likely trigger of the two.
+
+Where a specific case is unclear, the guidelines ask you to contact Vercel support rather than
+guess. If Hobby does stop applying, the choice is Pro or the fallback already recorded in
+`DECISIONS.md` — Render Free in Frankfurt, which runs the literal `yarn start` contract and needs
+no code change.
+
+**Product consequence, not yet built:** `events.cost_type` is `FREE|PAID`, which cannot express
+the distinction the clause turns on. If the club intends to ask for contributions and stay on
+Hobby, the enum needs a third value — a donation is not a price. Recorded in `DECISIONS.md` §50.
 
 ## Limits that constrain the club, worst first
 
@@ -364,7 +394,7 @@ Things already decided and owed, so they are not rediscovered.
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |
 | An alert on `/api/health` going `degraded` | The health check is the detection; nothing watches it | this page, limit 4 |
-| Rate limiting on the two surfaces with no route yet | §19.4 names five. Built: submission, admin resend, token validation, and the job endpoints as the auth-adjacent one. The remaining two have nothing to guard — media storage is deferred (`AGENTS.md` §17), and no route lets a participant request their own link back. Both need their scope the day the route lands | `AGENTS.md` §19.4 |
+| Rate limiting on the one surface with no route yet | §19.4 names five. Built: submission, admin resend, token validation, the job endpoints as the auth-adjacent one, and the participant's own link request — `/registrations/resend` landed in `BR-V1.22`, throttled on the canonical email identity. Only uploads remain, and media storage is deferred (`AGENTS.md` §17), so there is nothing yet to guard | `AGENTS.md` §19.4 |
 
 ---
 

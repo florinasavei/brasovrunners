@@ -8,6 +8,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { jobRuns } from "@/db/schema/job-runs";
 import { legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-documents";
+import { pages, pageTranslations } from "@/db/schema/pages";
 import { participants } from "@/db/schema/participants";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrations } from "@/db/schema/registrations";
@@ -80,6 +81,10 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(events);
   await db.delete(legalDocumentTranslations);
   await db.delete(legalDocuments);
+  // Standing pages (BR-REQ-050-03). Translations cascade from their page, but deleting them
+  // first keeps this list saying what owns what, like the events pair above.
+  await db.delete(pageTranslations);
+  await db.delete(pages);
   await db.delete(participants);
   await db.delete(jobRuns);
   await db.delete(rateLimitBuckets);

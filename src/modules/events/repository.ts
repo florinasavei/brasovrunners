@@ -34,6 +34,8 @@ const PUBLIC_COLUMNS = {
   latitude: events.latitude,
   longitude: events.longitude,
   mapUrl: events.mapUrl,
+  // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
+  routeUrl: events.routeUrl,
   featured: events.featured,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,

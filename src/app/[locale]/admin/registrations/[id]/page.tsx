@@ -91,6 +91,10 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.source === "STAFF" && (
           <Chip size="small" variant="outlined" label={tr("registrations.enteredByStaff")} />
         )}
+        {/* BR-REQ-031-06. A claim, worded as one wherever it is shown. */}
+        {registration.clubMemberDeclared && (
+          <Chip size="small" color="info" variant="outlined" label={tr("registrations.clubMemberChip")} />
+        )}
       </Stack>
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}

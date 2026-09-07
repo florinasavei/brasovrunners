@@ -106,6 +106,7 @@ function eventFieldsFrom(form: FormData) {
     difficulty: value("difficulty") || null,
     costType: value("costType") || null,
     mapUrl: value("mapUrl"),
+    routeUrl: value("routeUrl"),
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
     featured: form.get("event.featured") === "on",

@@ -72,6 +72,7 @@ export default async function AdminLayout({ children, params }: Props) {
    */
   const SECTION_HREF: Record<AdminSection, string> = {
     events: getPathname({ locale, href: "/admin" }),
+    pages: getPathname({ locale, href: "/admin/pages" }),
     registrations: getPathname({ locale, href: "/admin/registrations" }),
     tasks: getPathname({ locale, href: "/admin/tasks" }),
     legal: getPathname({ locale, href: "/admin/legal" }),

@@ -109,6 +109,12 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           <TextField name="emergencyContactName" label={rt("emergencyContactName")} />
           <TextField name="emergencyContactPhone" type="tel" label={rt("emergencyContactPhone")} />
           <TextField name="clubName" label={rt("clubName")} />
+          {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
+              telephone is usually taking it from somebody in the club. */}
+          <FormControlLabel
+            control={<Checkbox name="clubMemberDeclared" />}
+            label={rt("clubMemberDeclared")}
+          />
             <TextField
               name="email"
               type="email"

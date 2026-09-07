@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -141,6 +141,10 @@ A small meetup may need only:
 - date and time;
 - meeting point, and a link to it on a map;
 - approximate distance or difficulty;
+- a link to the route, where the club has drawn one. This is a **different link from the map**:
+  where to turn up and where the run goes are two questions, and the club answers them with two
+  different pages more often than with one. It is a link and never an uploaded file, because the
+  route already lives on the service the club drew it on and a copy would go stale;
 - short description;
 - no registration or simple internal registration.
 
@@ -235,7 +239,15 @@ What is asked, and why each one is there:
 - **nationality** and **city** — results and the club's own record of who it reaches;
 - **telephone**, and an **emergency contact** name and number — the organizer needs to reach
   somebody on the day. Required for that reason;
-- **t-shirt size** and **club or team** — optional, and only useful when there is a shirt.
+- **t-shirt size** and **club or team** — optional, and only useful when there is a shirt;
+- **“I am a Brașov Runners team member”** — optional, and a **claim rather than a fact**. The
+  club has members who run its races and organizers who run them too, and until now the only way
+  to tell them from a stranger was whether somebody happened to type the club's name into a free
+  text box. Nobody's answer is checked against anything: most members of this club have no
+  backoffice account, so a verified flag would say "no" for exactly the people the question is
+  asked to find. It is therefore for the club's own information only — it changes no price, no
+  place, and no position in a queue — and every screen that shows it says "declared". An
+  organizer corrects one that is wrong.
 
 An organizer entering a registration for somebody who telephoned may leave unknown details
 blank. Refusing the row would lose the registration; an incomplete one can be completed later.
@@ -484,7 +496,13 @@ Rules:
 - every participant journey can be completed on a phone with one hand, without horizontal
   scrolling, in either language;
 - the essential facts of an event are visible on the first screen of a phone;
-- deadlines on the declaration and offer pages are visible without searching;
+- deadlines on the declaration and offer pages are visible without searching, and stated as a
+  time of day rather than only as "thirty minutes";
+- registration is one page, not a sequence of steps. Questions nobody has to answer are folded
+  away behind a heading that says what they are; every consent is asked in the open, because a
+  choice somebody never saw is not a choice they declined;
+- when a form is refused, the page says which answers to fix and takes the person to the first
+  of them, rather than returning them to the top;
 - nothing important is available only by hovering with a mouse;
 - emails are designed to be read on a phone;
 - the organizer surfaces needed on race morning, finding a participant and seeing their
@@ -497,6 +515,11 @@ The mini CMS exists so approved club members can maintain content without code c
 
 It supports only:
 
+- **standing pages the club writes about itself** — "About Brașov Runners", "Contact" and their
+  like. They appear in the site menu in the order the club chooses, go live in both languages
+  together like an event, and their address stops changing once published, so a link already
+  shared keeps working. Deliberately plain: a title and text, no photo galleries and no layout
+  choices, because the club needs to say things rather than design them;
 - articles and announcements;
 - event titles, descriptions, locations, images, and SEO text;
 - selected static content such as About and homepage introduction;

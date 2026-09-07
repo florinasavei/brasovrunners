@@ -1,6 +1,10 @@
 import { parseLocalizedPath } from "@/i18n/alternate-path";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import {
+  findPublishedPageBySlug,
+  findPublishedPageSiblingSlug,
+} from "@/modules/content/pages/repository";
 import { type Database, findPublishedEventBySlug, findPublishedTranslations } from "./repository";
 
 /**
@@ -45,12 +49,35 @@ export async function resolveLocaleSwitch(
     });
   }
 
+  /**
+   * A standing page's address differs per language too, so switching resolves the sibling row
+   * rather than reusing this locale's slug (BR-REQ-040-01, BR-REQ-050-03). Falls back to the
+   * listing when the other language has no published translation — which publication forbids,
+   * but a switcher must not 404 on a rule it does not enforce.
+   */
+  if (parsed.route === "/pages/[slug]") {
+    const slug = parsed.params.slug;
+    if (!slug) return listing;
+
+    const page = await findPublishedPageBySlug(db, parsed.locale, slug);
+    if (!page) return listing;
+
+    const sibling = await findPublishedPageSiblingSlug(db, page.id, target);
+    if (!sibling) return listing;
+
+    return getPathname({
+      locale: target,
+      href: { pathname: parsed.route, params: { slug: sibling } },
+    });
+  }
+
   // The staff routes carry an id rather than a slug, and an id is the same in both languages.
   if (
     parsed.route === "/admin/events/[id]" ||
     parsed.route === "/preview/events/[id]" ||
     parsed.route === "/admin/registrations/[id]" ||
-    parsed.route === "/admin/legal/[id]"
+    parsed.route === "/admin/legal/[id]" ||
+    parsed.route === "/admin/pages/[id]"
   ) {
     const id = parsed.params.id;
     if (!id) return listing;

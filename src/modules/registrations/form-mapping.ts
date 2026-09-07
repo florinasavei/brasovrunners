@@ -59,6 +59,8 @@ export function readRegistrationForm(form: FormData, locale: Locale) {
     emergencyContactPhone: text(form, "emergencyContactPhone"),
 
     clubName: optional(form, "clubName"),
+    // BR-REQ-031-06 — a claim the club can see and correct, and that grants nothing.
+    clubMemberDeclared: checked(form, "clubMemberDeclared"),
     tshirtSize: optional(form, "tshirtSize"),
 
     // BR-REQ-031-05 — the text is refused without its own consent, in the schema.

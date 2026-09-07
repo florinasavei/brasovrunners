@@ -29,6 +29,8 @@ export type RegistrationListRow = {
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
+  /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
+  clubMemberDeclared: boolean;
   submittedAt: Date;
   confirmedAt: Date | null;
 };
@@ -46,12 +48,21 @@ export type RegistrationListRow = {
  */
 export async function listRegistrationsForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
-  filters: { eventId?: string; status?: RegistrationStatus; excludeTest?: boolean } = {},
+  filters: {
+    eventId?: string;
+    status?: RegistrationStatus;
+    excludeTest?: boolean;
+    clubMemberDeclared?: boolean;
+  } = {},
 ): Promise<RegistrationListRow[]> {
   const conditions = [
     filters.eventId ? eq(registrations.eventId, filters.eventId) : undefined,
     filters.status ? eq(registrations.status, filters.status) : undefined,
     filters.excludeTest ? eq(registrations.kind, "REAL") : undefined,
+    // Only ever narrows to the people who said yes. There is no "show me the non-members"
+    // filter, because `false` here means "did not tick a box" as often as it means "not a
+    // member", and a screen that presented it as the second would be inventing an answer.
+    filters.clubMemberDeclared ? eq(registrations.clubMemberDeclared, true) : undefined,
   ].filter((condition) => condition !== undefined);
 
   return db
@@ -64,6 +75,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
+      clubMemberDeclared: registrations.clubMemberDeclared,
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
     })
@@ -90,6 +102,7 @@ export type RegistrationDetail = {
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
+  clubMemberDeclared: boolean;
   submittedAt: Date;
   emailConfirmedAt: Date | null;
   waitlistedAt: Date | null;
@@ -116,6 +129,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
+      clubMemberDeclared: registrations.clubMemberDeclared,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
       waitlistedAt: registrations.waitlistedAt,

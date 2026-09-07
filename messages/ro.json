@@ -98,7 +98,9 @@
       "FREE": "Gratuit",
       "PAID": "Cu taxă"
     },
-    "seeDetails": "Vezi detaliile"
+    "seeDetails": "Vezi detaliile",
+    "route": "Traseu",
+    "openRoute": "Vezi traseul"
   },
   "Admin": {
     "title": "Administrare",
@@ -113,7 +115,8 @@
       "staff": "Echipa",
       "legal": "Documente legale",
       "devs": "Configurație",
-      "tasks": "De făcut"
+      "tasks": "De făcut",
+      "pages": "Pagini"
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -179,7 +182,10 @@
       "deleteAction": "Șterge definitiv",
       "deleteConfirm": "Confirm că această ștergere este definitivă",
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
-      "rowActions": "Acțiuni"
+      "rowActions": "Acțiuni",
+      "clubMemberLabel": "Membri Brașov Runners",
+      "clubMemberOnly": "Doar cei care s-au declarat membri",
+      "clubMemberChip": "Membru (declarat)"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -297,7 +303,9 @@
         "FREE": "Gratuit",
         "PAID": "Cu taxă"
       },
-      "notStated": "Nespecificat"
+      "notStated": "Nespecificat",
+      "routeUrl": "Link către traseu",
+      "routeUrlHelp": "Unde poate fi văzut traseul — Strava, Komoot sau harta pe care ai desenat-o. Trebuie să înceapă cu https://. Lasă gol dacă nu există unul."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -384,8 +392,6 @@
         "club": "Clubul",
         "developer": "Dezvoltatorul"
       },
-      "costsTitle": "Costuri",
-      "costsIntro": "Cifrele sunt cele din docs/PLATFORM.md, verificate la furnizori. Nu sunt estimări.",
       "costUnknown": "de stabilit",
       "items": {
         "approveLegalText": {
@@ -414,27 +420,125 @@
           "done": "Sarcinile rulează la timp."
         }
       },
-      "costs": {
-        "vercel": {
-          "name": "Găzduire (Vercel)",
-          "note": "planul Hobby, gratuit. Trecerea la Pro costă 20 $/lună de persoană care publică."
+      "freeTitle": "Poate site-ul să funcționeze gratuit?",
+      "freeVerdict": {
+        "freeExceptDomain": "Da, în afară de domeniu. Toate serviciile sunt pe planuri gratuite acum și nimic nu costă lunar. Domeniul .ro se plătește anual și este singura cheltuială sigură.",
+        "freeButAtALimit": "Da, dar alocația de e-mail de azi este consumată. Mesajele nu se pierd — pleacă după miezul nopții UTC. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
+        "notFree": "Atenție, dar nu neapărat. Ai un eveniment publicat marcat cu taxă. Termenii Vercel Hobby nu se uită la forma juridică — faptul că suntem ONG nu este o scutire, cuvântul „non-profit” nu apare deloc în ei. Ce contează sunt două lucruri: „solicitarea de donații NU intră la folosire comercială” (scris explicit de ei), dar „promovarea vânzării unui produs sau serviciu” intră. Deci o contribuție prezentată ca donație este în regulă; o taxă obligatorie de participare, chiar dacă acoperă strict costurile, nu este. Site-ul nu încasează bani și nu are integrare de plată — asta ajută, dar nu este singurul criteriu."
+      },
+      "registrationsLeftToday": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
+      "limitsTitle": "Limitele care contează",
+      "limitsIntro": "Nu toate limitele documentate, ci cele patru pe care clubul chiar le va atinge, plus regula despre bani. „Se aplică” înseamnă că ești sub ea acum; „atinsă” înseamnă că te lovește azi.",
+      "limitApplies": "se aplică",
+      "limitReached": "atinsă",
+      "limits": {
+        "mailgunDaily": {
+          "title": "100 de mesaje pe zi, adică aproximativ 33 de înscrieri",
+          "body": "Planul gratuit Mailgun trimite 100 de mesaje pe zi, iar o înscriere completă costă trei: confirmă adresa, semnează declarația, înscriere confirmată. O cursă deschisă pentru o sută de oameni depășește limita înainte de prânz. Mesajele peste limită nu se pierd — așteaptă până după miezul nopții UTC."
         },
-        "neon": {
-          "name": "Baza de date (Neon)",
-          "note": "planul gratuit."
+        "schedulerFloor": {
+          "title": "Programatorul pornește cam din două în două ore, nu din cinci în cinci minute",
+          "body": "Vercel Hobby permite o singură rulare programată pe zi și refuză o expresie mai deasă chiar la publicare, așa că programatorul este un workflow GitHub Actions plus un serviciu extern de ping. Măsurat pe acest repository, Actions singur pornește cam la două ore. Asta întârzie mesajul, nu îl pierde — dar o confirmare care ajunge peste două ore, în ziua înscrierilor, este resimțită ca un site stricat."
         },
-        "mailgun": {
-          "name": "Email (Mailgun)",
-          "note": "sandbox gratuit, limitat la 5 destinatari. Planul plătit devine necesar pentru volume reale."
+        "commercialUse": {
+          "title": "Vercel Hobby cere folosire necomercială — clubul nu vinde nimic",
+          "body": "Brașov Runners nu vinde nimic și nu încasează bani, iar site-ul nu are nicio integrare de plată. Din cele cinci exemple de folosire comercială date de Vercel, patru nu ne privesc deloc: nu cerem plăți, nu promovăm vânzarea a nimic, nu avem linkuri de afiliere și nu avem reclame. Rămâne unul care nu depinde de ce face clubul: „primirea de bani pentru a crea, actualiza sau găzdui site-ul”. Dacă cineva este vreodată plătit să lucreze la acest site, asta singură înseamnă folosire comercială — este singurul lucru de urmărit aici. Pentru orice ar semăna cu o contribuție de participare: Vercel scrie explicit că „solicitarea de donații NU intră la folosire comercială”, deci o donație este în regulă, în timp ce o taxă obligatorie ar intra la „promovarea vânzării unui serviciu”."
         },
+        "identityDomain": {
+          "title": "Autentificarea echipei pe domeniul clubului cere plan plătit",
+          "body": "Zitadel Free include zero domenii proprii și un singur administrator de identitate. Cât timp echipa se autentifică pe adresa furnizorului, niciuna nu contează. Din ziua în care domeniul clubului este legat, ambele contează."
+        },
+        "orgRepository": {
+          "title": "Un repository al clubului forțează un plan Vercel plătit",
+          "body": "Vercel Hobby nu se poate conecta la repository-ul unei organizații Git, doar la unul personal. Clubul își dorește repository-ul pe numele lui — asta înseamnă automat Vercel plătit sau mutarea pe găzduirea de rezervă. Sunt două lucruri dorite care se blochează reciproc."
+        }
+      },
+      "plansTitle": "Pe ce planuri suntem și cât costă următorul pas",
+      "plansIntro": "Prețurile sunt citate din documentația proiectului, verificate la {checked}. Furnizorii le schimbă fără anunț — verifică din nou înainte să plătești ceva.",
+      "planNone": "niciun furnizor ales",
+      "firstPaid": "Primul plan plătit: {plan}, {cost}.",
+      "plans": {
         "domain": {
           "name": "Domeniu .ro",
-          "note": "costul anual depinde de registrar; se plătește o dată pe an."
+          "freeGives": "Singura cheltuială sigură și singura care nu are variantă gratuită. Se plătește anual, la prețul registrarului."
+        },
+        "mailgun": {
+          "name": "Mailgun (e-mail)",
+          "freeGives": "Gratuit: 100 de mesaje pe zi, 5 destinatari autorizați în sandbox, log păstrat o zi."
+        },
+        "vercel": {
+          "name": "Vercel (găzduire)",
+          "freeGives": "Hobby: 100 GB trafic, 1 milion de invocări, o rulare programată pe zi, doar necomercial."
+        },
+        "neon": {
+          "name": "Neon (baza de date)",
+          "freeGives": "Gratuit: 0,5 GB spațiu, 100 CU-ore pe lună, 5 GB trafic de ieșire."
         },
         "zitadel": {
-          "name": "Autentificare (Zitadel)",
-          "note": "planul gratuit."
+          "name": "Zitadel (autentificarea echipei)",
+          "freeGives": "Gratuit: 100 de utilizatori activi zilnic, un singur administrator, niciun domeniu propriu."
+        },
+        "githubActions": {
+          "name": "GitHub Actions (programator)",
+          "freeGives": "Gratuit și nelimitat pe repository public. Pe unul privat, 2.000 de minute pe lună."
         }
+      },
+      "bumpTitle": "Ce se mărește temporar, și când se dă înapoi",
+      "bumpIntro": "Un plan mărit pe care nimeni nu îl scade la loc este greșeala scumpă aici, și niciun panou de control nu o să îți amintească. Scrie data coborârii în același loc în care ai scris-o pe cea a urcării. Mărește un singur lucru, uită-te ce se întâmplă, apoi pe următorul — două deodată înseamnă că nu afli niciodată care era de vină.",
+      "bumpTemporary": "temporar",
+      "bumpPermanent": "permanent",
+      "bumps": {
+        "mailgun": {
+          "when": "Aștepți mai multe înscrieri decât permite alocația zilnică",
+          "what": "Mailgun Basic, $15 pe lună, scoate complet limita zilnică și include 10.000 de mesaje pe lună.",
+          "back": "Se dă înapoi luna următoare: o lună per cursă, nu un abonament permanent."
+        },
+        "neon": {
+          "when": "Paginile se încarcă greu sau apar erori de conexiune la baza de date",
+          "what": "Neon Launch, plată la consum, fără minim lunar.",
+          "back": "Se dă înapoi după ce se închide fereastra de înscrieri."
+        },
+        "vercelLoad": {
+          "when": "Vercel limitează site-ul din cauza traficului",
+          "what": "Vercel Pro, $20 pe lună de fiecare persoană care publică. Locurile de vizualizare sunt gratuite.",
+          "back": "Se dă înapoi doar dacă a fost luat strict pentru trafic. Atenție: depășirea unei limite pe Hobby oprește funcția 30 de zile și nu se poate cumpăra ieșirea din ea — urcă înainte de fereastră, niciodată în timpul ei."
+        },
+        "vercelCommercial": {
+          "when": "Clubul începe să perceapă taxă de participare, sau repository-ul trece pe organizația clubului",
+          "what": "Vercel Pro, sau mutarea pe găzduirea de rezervă deja decisă.",
+          "back": "Nu se dă înapoi. Nu este un vârf de trafic, este o schimbare a ceea ce este site-ul."
+        }
+      }
+    },
+    "pages": {
+      "title": "Pagini",
+      "create": "Pagină nouă",
+      "intro": "Paginile fixe ale clubului — „Despre Brașov Runners”, „Contact”. Se publică în ambele limbi deodată, ca evenimentele.",
+      "empty": "Nu există nicio pagină încă.",
+      "untitled": "Fără titlu",
+      "order": "ordinea {order}",
+      "backToList": "← Toate paginile",
+      "incomplete": "Ambele limbi trebuie completate înainte de publicare. Lipsesc: {detail}.",
+      "readOnly": "Rolul tău poate citi paginile, dar nu le poate modifica.",
+      "delete": "Șterge pagina",
+      "deleteTitle": "Ștergi pagina?",
+      "deleteBody": "Pagina și ambele traduceri dispar definitiv. Dacă pagina a fost publicată și vrei doar să o scoți de pe site, folosește „Arhivează”.",
+      "viewPublic": "Vezi pagina publică →",
+      "navOrder": "Ordinea în meniu",
+      "navOrderHelp": "Numărul mai mic apare primul. Lasă 0 dacă nu contează.",
+      "slugHelp": "Adresa paginii: litere mici, cifre și cratime.",
+      "slugLocked": "Adresa nu se mai schimbă după publicare — linkurile deja trimise trebuie să funcționeze.",
+      "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
+      "language": {
+        "ro": "Română",
+        "en": "Engleză"
+      },
+      "fields": {
+        "title": "Titlu",
+        "slug": "Adresa paginii",
+        "body": "Text",
+        "seoTitle": "Titlu SEO",
+        "seoDescription": "Descriere SEO"
       }
     }
   },
@@ -457,14 +561,14 @@
     "submit": "Trimite înscrierea",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "errors": {
-      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
-      "fields": "Verifică aceste câmpuri: {fields}."
+      "title": "Înscrierea nu a putut fi trimisă",
+      "fieldsIntro": "Verifică aceste câmpuri:",
+      "field": "Completează acest câmp corect.",
+      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
     },
     "sections": {
       "about": "Despre tine",
       "contact": "Contact",
-      "race": "Cursa",
-      "health": "Informații medicale (opțional)",
       "consents": "Acorduri"
     },
     "firstName": "Prenume",
@@ -536,7 +640,12 @@
         "declare": "Mai rămâne un pas: citește și semnează declarația. Locul tău este rezervat 30 de minute.",
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
-    }
+    },
+    "disclosure": {
+      "race": "Membru Brașov Runners, club și tricou — opțional",
+      "health": "Informații medicale — opțional"
+    },
+    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners"
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",
@@ -544,7 +653,8 @@
       "title": "Confirmă adresa de email",
       "prompt": "Apasă butonul de mai jos pentru a confirma adresa de email și a continua înscrierea.",
       "action": "Confirmă",
-      "done": "Adresa de email a fost confirmată."
+      "done": "Adresa de email a fost confirmată.",
+      "doneTitle": "Adresa a fost confirmată"
     },
     "declare": {
       "title": "Declarație pe proprie răspundere",
@@ -552,14 +662,19 @@
       "typedName": "Scrie numele complet ca semnătură",
       "action": "Semnează și confirmă",
       "doneConfirmed": "Înscrierea a fost confirmată.",
-      "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare."
+      "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
+      "doneTitle": "Declarația a fost semnată",
+      "event": "Pentru evenimentul: {event}",
+      "deadline": "Locul tău este rezervat până la {deadline}.",
+      "typedNameHelp": "Scrie numele complet cu care te-ai înscris."
     },
     "manage": {
       "title": "Gestionează înscrierea",
       "prompt": "Poți anula această înscriere. Locul va fi eliberat imediat.",
       "action": "Anulează înscrierea",
       "done": "Înscrierea a fost anulată.",
-      "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată."
+      "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată.",
+      "doneTitle": "Înscriere anulată"
     }
   },
   "Devs": {

@@ -26,6 +26,13 @@ export type RegistrationEntryDetails = {
   emergencyContactName?: string | null;
   emergencyContactPhone?: string | null;
   clubName?: string | null;
+  /**
+   * "I am a Brașov Runners team member", as claimed. Never verified — see the schema.
+   *
+   * `boolean | undefined` and not `| null` like its neighbours: the column is NOT NULL with a
+   * default of false, so "not supplied" means "leave it alone" rather than "clear it".
+   */
+  clubMemberDeclared?: boolean;
   tshirtSize?: RegistrationTshirtSize | null;
   healthNotes?: string | null;
   healthConsentVersion?: number | null;

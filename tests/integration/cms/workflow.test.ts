@@ -83,6 +83,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     difficulty: null,
     costType: null,
     mapUrl: "",
+    routeUrl: "",
     distanceMeters: "",
     elevationGainMeters: "",
     featured: false,
@@ -776,6 +777,68 @@ describe("BR-REQ-051-01 editorial workflow", () => {
               eventId: event.id,
               expectedVersion: event.version,
               fields: { ...EVENT_FIELDS, mapUrl: value },
+            }),
+          ),
+        ).toBe("VALIDATION_ERROR");
+      },
+    );
+
+    /**
+     * BR-REQ-011-01 criterion 8 — the course, saved, cleared and refused like the map link.
+     *
+     * The last of the three is the one that matters: an organizer gets a message naming the
+     * field, rather than a constraint violation from the database, which is the whole reason
+     * `fields.ts` validates a rule the column also enforces.
+     */
+    it("saves the route link, and clears it when the field comes back empty", async () => {
+      const { event } = await seedEvent();
+      const route = ["https:/", "routes.example.test", "tampa"].join("/");
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, routeUrl: route },
+      });
+      expect(saved.routeUrl).toBe(route);
+
+      const cleared = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: saved.version,
+        fields: EVENT_FIELDS,
+      });
+      expect(cleared.routeUrl).toBeNull();
+    });
+
+    it("keeps the meeting point and the course apart on one event", async () => {
+      const { event } = await seedEvent();
+      const map = ["https:/", "maps.example.test", "brasov"].join("/");
+      const route = ["https:/", "routes.example.test", "tampa"].join("/");
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, mapUrl: map, routeUrl: route },
+      });
+
+      expect(saved.mapUrl).toBe(map);
+      expect(saved.routeUrl).toBe(route);
+    });
+
+    it.each(["javascript:alert(1)", "http://routes.example.test/tampa", "routes.example.test"])(
+      "refuses %s as a route link",
+      async (value) => {
+        const { event } = await seedEvent();
+
+        expect(
+          await codeOf(
+            saveEventFields(db, {
+              actor: editor,
+              eventId: event.id,
+              expectedVersion: event.version,
+              fields: { ...EVENT_FIELDS, routeUrl: value },
             }),
           ),
         ).toBe("VALIDATION_ERROR");

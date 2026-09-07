@@ -189,6 +189,9 @@ export const eventFieldsSchema = z
     difficulty: optionalEnum(["EASY", "MODERATE", "HARD"]),
     costType: optionalEnum(["FREE", "PAID"]),
     mapUrl: httpsUrl("a map link must start with https://"),
+    // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link
+    // and never a file: media storage is deferred (`AGENTS.md` §17).
+    routeUrl: httpsUrl("a route link must start with https://"),
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),

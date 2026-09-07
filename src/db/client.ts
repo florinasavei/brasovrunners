@@ -8,6 +8,7 @@ import * as emailOutboxSchema from "./schema/email-outbox";
 import * as eventsSchema from "./schema/events";
 import * as jobRunsSchema from "./schema/job-runs";
 import * as legalDocumentsSchema from "./schema/legal-documents";
+import * as pagesSchema from "./schema/pages";
 import * as participantsSchema from "./schema/participants";
 import * as rateLimitSchema from "./schema/rate-limit";
 import * as registrationsSchema from "./schema/registrations";
@@ -20,6 +21,7 @@ export const schema = {
   ...emailOutboxSchema,
   ...staffUsersSchema,
   ...legalDocumentsSchema,
+  ...pagesSchema,
   ...registrationsSchema,
   ...declarationAcceptancesSchema,
   ...jobRunsSchema,

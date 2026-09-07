@@ -75,7 +75,9 @@ const privacyNoticeRo: LegalDocumentBody = {
     {
       heading: "2. Ce date colectăm și de ce",
       paragraphs: [
-        "Când te înscrii la un eveniment, platforma păstrează numele pe care îl scrii, adresa de e-mail și limba în care ai completat formularul. Nu există parolă și nu se creează niciun cont: adresa de e-mail este singura identitate.",
+        "Când te înscrii la un eveniment, platforma păstrează: numele tău legal (prenume și nume), numele sub care alegi să apari public, data nașterii, sexul, naționalitatea, orașul, adresa de e-mail, telefonul, numele și telefonul persoanei de contact în caz de urgență și limba în care ai completat formularul. Nu există parolă și nu se creează niciun cont: adresa de e-mail este singura identitate.",
+        "Opțional, mai poți adăuga mărimea de tricou, clubul sau echipa din care faci parte și faptul că ești membru al echipei Brașov Runners. Acestea nu sunt verificate și nu schimbă nimic la înscrierea ta: nici prețul, nici locul, nici poziția pe lista de așteptare. Sunt păstrate pentru organizarea internă a clubului.",
+        "Informațiile medicale sunt tratate separat și au propriul lor consimțământ — vezi secțiunea despre ele mai jos.",
         "Scopul este organizarea evenimentului: să știm cine participă, să îți trimitem confirmarea și să gestionăm locurile și lista de așteptare.",
         "Temeiul legal pentru acest scop: <TEMEI LEGAL — de exemplu executarea unui contract sau interesul legitim; a se completa de club>.",
       ],
@@ -201,7 +203,9 @@ const privacyNoticeEn: LegalDocumentBody = {
     {
       heading: "2. What we collect, and why",
       paragraphs: [
-        "When you register for an event, the platform keeps the name you type, your email address, and the language you filled the form in. There is no password and no account is created: your email address is the only identity.",
+        "When you register for an event, the platform keeps: your legal name (first and last), the name you choose to appear under publicly, your date of birth, sex, nationality, city, email address, telephone number, the name and telephone number of an emergency contact, and the language you filled the form in. There is no password and no account is created: your email address is the only identity.",
+        "You may also add, optionally, a t-shirt size, the club or team you run with, and whether you are a Brașov Runners team member. None of these is verified and none of them changes anything about your registration: not the price, not your place, not your position on the waiting list. They are kept for the club's own organisation.",
+        "Health information is handled separately and has its own consent — see the section about it below.",
         "The purpose is running the event: knowing who is taking part, sending you your confirmation, and managing places and the waiting list.",
         "Lawful basis for this purpose: <LAWFUL BASIS — for example performance of a contract, or legitimate interests; to be completed by the club>.",
       ],

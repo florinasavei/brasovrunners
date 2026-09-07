@@ -210,6 +210,23 @@ export const registrations = pgTable(
     emergencyContactPhone: text("emergency_contact_phone"),
 
     clubName: text("club_name"),
+
+    /**
+     * "I am a Brașov Runners team member", as the person filling the form said it
+     * (BR-REQ-031-06, `DECISIONS.md` §48).
+     *
+     * `_declared` is in the name because the value is a **claim and never a fact**. Nothing
+     * checks it against `staff_users` and nothing checks it against a roster, because most
+     * members of this club have no backoffice account and never will — so a verified flag
+     * would be wrong for exactly the people it is meant to find.
+     *
+     * It is therefore informational only. It MUST NOT decide a price, a place, or a position
+     * in the queue: `AGENTS.md` §12.6 keeps conditions like this one out of the allocator and
+     * the capacity formula, and a self-ticked box that granted anything would be granted to
+     * anybody who ticked it. An organizer corrects a wrong one in the backoffice.
+     */
+    clubMemberDeclared: boolean("club_member_declared").notNull().default(false),
+
     tshirtSize: registrationTshirtSize("tshirt_size"),
 
     /**

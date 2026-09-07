@@ -124,6 +124,46 @@ describe("BR-REQ-011-01 event configuration", () => {
     });
   });
 
+  /**
+   * BR-REQ-011-01 criterion 8. The same guard as the map link, and for the same reason: this
+   * URL is pasted by an organizer and clicked by a visitor, and the form is not the last line
+   * of defence — a seed, a migration or a hand-written UPDATE all reach the column.
+   */
+  describe("the route link is stored, and only ever https", () => {
+    it("accepts an https link", async () => {
+      const link = ["https:/", "routes.example.test", "tampa"].join("/");
+      const event = await insertEvent({ routeUrl: link });
+      expect(event.routeUrl).toBe(link);
+    });
+
+    it("is null when the club has not drawn one", async () => {
+      expect((await insertEvent({})).routeUrl).toBeNull();
+    });
+
+    it("is a different column from the map link, so an event can carry both", async () => {
+      const map = ["https:/", "maps.example.test", "brasov"].join("/");
+      const route = ["https:/", "routes.example.test", "tampa"].join("/");
+      const event = await insertEvent({ mapUrl: map, routeUrl: route });
+
+      // Where to meet and where it goes are two questions (`DECISIONS.md` §49); before this
+      // column they shared one field and answering both meant choosing which to lose.
+      expect(event.mapUrl).toBe(map);
+      expect(event.routeUrl).toBe(route);
+    });
+
+    it.each([
+      ["javascript", "javascript:alert(1)"],
+      ["data", "data:text/html,<script>alert(1)</script>"],
+      ["plain http", "http://routes.example.test/tampa"],
+      ["a bare word", "routes.example.test"],
+    ])("refuses %s", async (_name, value) => {
+      await expectViolation(insertEvent({ routeUrl: value }), {
+        code: SQLSTATE.CHECK_VIOLATION,
+        constraint: "events_route_url_is_https",
+      });
+    });
+  });
+
   describe("coordinates are a pair, and each half has a range", () => {
     it("stores a pair", async () => {
       const event = await insertEvent({ latitude: "45.6427", longitude: "25.5887" });

@@ -51,6 +51,7 @@ export async function GET(request: Request): Promise<Response> {
       registeredName: row.registeredName,
       email: row.participantEmail,
       status: row.status,
+      clubMemberDeclared: row.clubMemberDeclared,
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
     })),

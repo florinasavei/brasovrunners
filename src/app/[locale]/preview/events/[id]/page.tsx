@@ -87,6 +87,7 @@ export default async function PreviewEventPage({ params }: Props) {
     latitude: event.latitude,
     longitude: event.longitude,
     mapUrl: event.mapUrl,
+    routeUrl: event.routeUrl,
     featured: event.featured,
     distanceMeters: event.distanceMeters,
     elevationGainMeters: event.elevationGainMeters,

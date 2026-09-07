@@ -32,8 +32,14 @@ export type OwnerTaskInputs = {
   legalTextIsSample: boolean;
   /** Does an approved privacy notice exist at all? Without one, registration refuses everyone. */
   hasApprovedPrivacyNotice: boolean;
-  /** True while the site answers on a provider hostname rather than the club's own domain. */
-  onProviderHostname: boolean;
+  /**
+   * Is the club's own domain bound and serving this deployment?
+   *
+   * False on a provider hostname *and* on a developer's machine. "Not a provider hostname" was
+   * the old test and it read `localhost` as a bound domain, which marked the domain task done
+   * on every developer's laptop.
+   */
+  clubDomainBound: boolean;
   emailDeliveryMode: "capture" | "allowlist" | "live";
   /** A scheduler that has stopped means nothing is sent and no hold ever expires. */
   jobsHealthy: boolean;
@@ -74,7 +80,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   tasks.push({
     id: "registerDomain",
     owner: "club",
-    state: input.onProviderHostname ? "open" : "done",
+    state: input.clubDomainBound ? "done" : "open",
   });
 
   tasks.push({
@@ -99,25 +105,3 @@ export function sortTasks(tasks: OwnerTask[]): OwnerTask[] {
   const rank: Record<TaskState, number> = { blocking: 0, open: 1, done: 2 };
   return [...tasks].sort((a, b) => rank[a.state] - rank[b.state]);
 }
-
-/**
- * What each provider costs, quoted from `docs/PLATFORM.md` rather than from memory.
- *
- * AGENTS.md §1.2 forbids inventing vendor pricing, and a page a non-technical person reads to
- * decide what to pay for is the worst possible place to guess. Every figure here is one already
- * researched and recorded in that document; the day one changes, it changes there first and this
- * follows. `amount` is deliberately a string: these are quotes, not arithmetic.
- */
-export type CostLine = {
-  id: string;
-  amount: string;
-  paidBy: TaskOwner;
-};
-
-export const COST_LINES: readonly CostLine[] = [
-  { id: "vercel", amount: "$0", paidBy: "club" },
-  { id: "neon", amount: "$0", paidBy: "club" },
-  { id: "mailgun", amount: "$0", paidBy: "club" },
-  { id: "domain", amount: "?", paidBy: "club" },
-  { id: "zitadel", amount: "$0", paidBy: "club" },
-];

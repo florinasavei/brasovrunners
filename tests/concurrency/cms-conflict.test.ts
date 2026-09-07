@@ -65,6 +65,7 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
     difficulty: null,
     costType: null,
     mapUrl: "",
+    routeUrl: "",
     distanceMeters: "",
     elevationGainMeters: "",
     featured: false,

@@ -9,6 +9,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { confirmEmailAction } from "./actions";
 
 type Props = {
@@ -37,6 +38,13 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   if (done) {
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+        {/* Every page in this journey opens with an h1, this one included. A page whose only
+            content is an alert leaves a screen-reader heading list with a gap where the
+            outcome should be, and "what happened" is the one thing somebody arriving here
+            wants. */}
+        <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
+          {t("confirm.doneTitle")}
+        </Typography>
         {/* Confirmed is not finished: the declaration is still to sign, and the hold that
             protects their place is running. Saying "done" alone loses people here. */}
         <RegistrationJourney current="declare" />
@@ -62,7 +70,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="token" value={token} />
           <Typography sx={{ mb: 2 }}>{t("confirm.prompt")}</Typography>
-          <Button type="submit" variant="contained">
+          <Button type="submit" variant="contained" sx={TAP_TARGET}>
             {t("confirm.action")}
           </Button>
         </form>

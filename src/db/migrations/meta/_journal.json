@@ -141,6 +141,27 @@
       "when": 1788665717713,
       "tag": "0019_drop_event_free_text_difficulty_and_cost",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1788723641988,
+      "tag": "0020_registration_club_member_declared",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788749880400,
+      "tag": "0021_event_route_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1788754816383,
+      "tag": "0022_pages",
+      "breakpoints": true
     }
   ]
 }

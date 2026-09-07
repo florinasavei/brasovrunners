@@ -1,7 +1,10 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { getDb } from "@/db/client";
+import type { Locale } from "@/i18n/routing";
+import { listPublishedPages } from "@/modules/content/pages/repository";
 import {
   FONT,
   HEADER_MARK_HEIGHT,
@@ -42,6 +45,20 @@ import SiteNav from "./SiteNav";
  */
 export default async function SiteHeader() {
   const t = await getTranslations("Site");
+  /**
+   * The club's standing pages, for the navigation (BR-REQ-050-03).
+   *
+   * One indexed query on every public page, which is a cost worth naming: the header is what
+   * every visitor pays for (`AGENTS.md` §1.5). It buys a navigation an organizer can change
+   * without a developer, which is the whole point of the page type — and it is one query
+   * returning a handful of rows, against a listing that already makes several.
+   *
+   * A failure here must not take the header down with it. There is no navigation entry for a
+   * page nobody could load, and a site whose header throws is a site with no way out of any
+   * page at all.
+   */
+  const locale = await getLocale();
+  const pages = await listPublishedPages(getDb(), locale as Locale).catch(() => []);
 
   return (
     <Box
@@ -131,7 +148,7 @@ export default async function SiteHeader() {
           (BR-REQ-041-01 criterion 1), a wrap costs one row of height.
         */}
         <Box sx={{ order: { xs: 3, sm: 2 }, flexBasis: { xs: "100%", sm: "auto" }, ml: { sm: 2 } }}>
-          <SiteNav />
+          <SiteNav pages={pages.map((page) => ({ slug: page.slug, title: page.title }))} />
         </Box>
 
         <Box sx={{ order: { xs: 2, sm: 3 }, ml: "auto" }}>

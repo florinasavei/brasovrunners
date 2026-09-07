@@ -152,6 +152,11 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
   it("offers no route the CMS could have created", () => {
     // Criterion 2: no interface creates a route or a layout. The route table is a literal in
     // the source, so the whole set is knowable, and this test fails the day one is generated.
+    //
+    // `/pages/[slug]` does not weaken that and is worth saying why: an organizer creating an
+    // "About" page writes a content row that an existing parameterised route reads, exactly as
+    // creating an event does for `/events/[slug]`. No route, layout or file is produced, and
+    // this list still has to be edited by a person for a new one to exist.
     expect(Object.keys(routing.pathnames).sort()).toEqual([
       "/",
       "/admin",
@@ -160,6 +165,9 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/legal",
       "/admin/legal/[id]",
       "/admin/legal/new",
+      "/admin/pages",
+      "/admin/pages/[id]",
+      "/admin/pages/new",
       "/admin/registrations",
       "/admin/registrations/[id]",
       "/admin/registrations/new",
@@ -171,6 +179,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/events/[slug]/register",
       "/legal/privacy",
       "/legal/terms",
+      "/pages/[slug]",
       "/preview/events/[id]",
       "/registrations/confirm/[token]",
       "/registrations/declare/[token]",

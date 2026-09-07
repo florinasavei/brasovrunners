@@ -33,6 +33,7 @@ const EVENT_FIELDS = {
   difficulty: null,
   costType: null,
   mapUrl: "",
+  routeUrl: "",
   distanceMeters: "",
   elevationGainMeters: "",
   featured: false,

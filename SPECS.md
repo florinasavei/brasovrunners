@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.25-2026-09-06 -->
+<!-- PROJECT_BASELINE: BR-V1.26-2026-09-06 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.25-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.26-2026-09-06`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -166,8 +166,10 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 6. Given any interactive element in a participant journey, when its rendered size is measured, then it is at least 44 by 44 CSS pixels.
 7. Given the registration list and registration detail in the backoffice on a phone viewport, when they render, then a participant can be found by name and their status read without horizontal scrolling.
 8. Given the test suite, when it runs, then every registration journey runs under a mobile viewport project as well as desktop.
+9. Given the public registration form, when it renders, then every field a submission is refused without is present without opening anything, every optional data field is collapsed behind a native disclosure whose summary names what is inside, and every consent is presented uncollapsed. It is one page; a multi-step form is refused (`DECISIONS.md` §47).
+10. Given a submission the server rejects, when the response renders, then the page is entered at a focusable summary naming each rejected field as a link to that field, and each rejected field carries its own message next to it.
 
-**Verification:** e2e `mobile/*.spec.ts` with a mobile Playwright project; release check on a real device
+**Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects; unit `registrations/form-errors.test.ts`; release check on a real device
 
 #### BR-REQ-001-01 — One platform boundary
 
@@ -217,6 +219,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 6. Given a race start earlier than the event start, or later than the event end where one exists, when it is submitted, then the database refuses it.
 7. Given an event with coordinates, when its page renders, then the meeting point and the address link to that exact point, and the `SportsEvent` block carries `geo` and `hasMap`. The link is built from `MAP_LINK_BASE_URL`, which is configuration: `AGENTS.md` §8 forbids a map hostname under `src/` and exempts no provider, so a club with no map service configured sees the meeting point as text rather than a guessed link.
 7a. Given coordinates, when they are saved, then latitude and longitude are present together and within ±90 and ±180; the database refuses half a pair, a value out of range, and a transposed pair. A stored `map_url` overrides the built link, must be https at the form and at the database, and renders with `rel="noopener noreferrer"`.
+8. Given an event with a route link, when its page renders, then the route is offered as its own labelled fact, separate from the meeting point and its map link, opening in a new tab with `rel="noopener noreferrer"` and a tap target of at least 44 pixels. `events.route_url` must be https at the form and again at the database; it is a link and never an uploaded file, since media storage is deferred (`AGENTS.md` §17). It is absent from the listing card, where the whole card is already one link. An event with no route link says nothing about a route, and duplicating an event carries it (`DECISIONS.md` §49).
 8. Given two events, when both are marked as the featured event, then the database refuses the second; and when one is featured, the landing page leads with it, above the ordinary listing, ordered featured → race → soonest.
 
 **Verification:** integration `events/configuration.test.ts`; unit `events/zoned-time.test.ts`; e2e `event-pages.spec.ts`
@@ -445,6 +448,29 @@ its own absence from the export, and no public surface at all.
 6. Given a participant who withdraws the consent, when the registration is inspected afterwards, then the health text is cleared rather than merely flagged.
 
 **Verification:** integration `registrations/health-consent.test.ts`; privacy `public-surface.test.ts`
+
+#### BR-REQ-031-06 — The club's own people can say so, and it grants them nothing
+
+- **Source:** BR-BUS-031
+- **Implements:** AGENTS.md §12.6, §15.1, §15.10
+- **Priority:** SHOULD
+- **Release:** M1
+
+The club's members and its organizers enter its races like anybody else, and the club wants to
+know which entries are theirs. The answer is a self-declaration, not a lookup: `staff_users`
+holds only the handful of people with backoffice access, so matching against it would answer
+"no" for most of the members the question exists to find (`DECISIONS.md` §48).
+
+**Acceptance criteria**
+
+1. Given the public registration form, when it renders, then it offers an optional "I am a Brașov Runners team member" choice, and the disclosure it sits in names the club in its summary.
+2. Given a submission that does not answer it, when the row is inspected, then the stored value is `false` and never null, and the submission is accepted.
+3. Given the value, when any capacity, hold, waiting-list or queue-ordering path is inspected, then it appears in no condition in any of them — a declared member and a stranger reaching a full event get the same answer.
+4. Given any backoffice screen that shows the value, when it renders, then it is worded as a declaration and never as a verified fact, and the registrations list can be narrowed to the people who declared it.
+5. Given the CSV export, when it is produced, then the column reads "Yes" for a declared member and is empty for everybody else, never "No" — an unanswered question and a negative answer are the same stored value and must not be printed as the same statement.
+6. Given a registration an organizer enters for somebody who telephoned, when the form renders, then the same choice is offered.
+
+**Verification:** integration `registrations/club-member.test.ts`; unit `registrations/csv.test.ts`; e2e `registration-form.spec.ts`
 
 #### BR-REQ-036-03 — A participant can see where they are
 
@@ -956,6 +982,34 @@ other participant link uses — never by a password.
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`; e2e `cms-publish.spec.ts`
 
+#### BR-REQ-050-03 — The club writes its own standing pages
+
+- **Source:** BR-BUS-050
+- **Implements:** AGENTS.md §9.2, §11.2, §11.5, §12.9
+- **Priority:** SHOULD
+- **Release:** M1
+
+"About Brașov Runners" and its like: text that is not an event and not legal wording. A
+deliberately small content type — no galleries, no media library, no cover image, and the body
+is the plain-text format the legal editor already uses, because the Tiptap contract is M5 and
+pulling it forward to write an About page would decide that schema for the wrong reason
+(`DECISIONS.md` §51, following §46).
+
+**Acceptance criteria**
+
+1. Given an Editor, when they create a page, then it is a draft with a translation in every locale, reachable from no public URL until published.
+2. Given a page, when it is published, then every locale is complete or the transition is refused, naming the language and what it is missing — the same rule an event follows (AGENTS.md §11.2).
+3. Given a published page, when it is requested at its own locale's address, then it renders; and when it is requested at another locale's address, then it is a 404 rather than the other language's text (BR-REQ-040-02).
+4. Given a published page, when the language switcher is used, then it lands on the same page's address in the other language.
+5. Given a page saved with a version somebody else already superseded, when it is submitted, then it is a CONFLICT and neither the page row nor either translation is written (AGENTS.md §11.5).
+6. Given a published page, when its address is edited, then it is refused: links already shared have to keep working.
+7. Given a page address, when it is submitted, then it is lowercase letters, digits and hyphens, is not a reserved word, and is not already in use in that locale.
+8. Given published pages, when the public header renders, then each appears as a navigation entry in the order the club set, and when the sitemap is produced, then each published locale's address is listed.
+9. Given a Contributor, when they attempt to create or edit a page, then it is refused; given an Editor, then it is allowed.
+10. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
+
+**Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; e2e `pages.spec.ts`
+
 #### BR-REQ-051-01 — Editorial workflow and permissions
 
 - **Source:** BR-BUS-051, BR-BUS-060
@@ -1226,6 +1280,31 @@ other participant link uses — never by a password.
 6. Given the route, when a crawler requests it, then it is disallowed in `robots.txt`, carries `noindex`, and is served with a private, no-store cache policy.
 
 **Verification:** unit `diagnostics/configuration.test.ts`; unit `seo/private-paths.test.ts`
+
+#### BR-REQ-090-05 — The club can see what it may spend, and what the free plans refuse
+
+- **Source:** BR-BUS-090, BR-BUS-101
+- **Implements:** AGENTS.md §1.2, §9.2
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built. `/admin/tasks`, Administrator only.
+
+`/devs` reports configuration to somebody who reads a status enum, and the task list says what is
+owed. Neither answers the question a volunteer treasurer asks before a race: **can we keep
+running this for nothing, and what do we buy on the day we cannot?** That answer existed only in
+`docs/PLATFORM.md`, which no organizer will open.
+
+**Acceptance criteria**
+
+1. Given an Administrator, when `/admin/tasks` is requested, then it states whether the platform can run for free, naming the domain as the one certain cost, and the verdict is derived from this deployment rather than asserted.
+2. Given a published event whose `cost_type` is `PAID`, when the page renders, then it reports that the free hosting plan no longer applies, because taking an entry fee is outside the provider's non-commercial terms.
+3. Given the page, when it renders, then it states how many further registrations today's remaining email allowance covers, computed from the allowance, what has been sent today, and the messages one completed registration costs — and that figure is a floor, never a ceiling.
+4. Given each limit the club can actually meet, when the page renders, then it says whether the limit applies to this deployment and whether it has been reached today.
+5. Given every price on the page, when it renders, then it is a figure recorded in `docs/PLATFORM.md`, shown with the date those figures were last verified against the vendors, and a cost the club has not decided renders as "to be decided" rather than as a plausible number (`AGENTS.md` §1.2).
+6. Given each upgrade the page recommends, when it renders, then it names what triggers it, what it costs, and whether it is meant to be reversed — and at least one is marked as not reversible.
+7. Given an Author or an Editor, when `/admin/tasks` is requested, then the response is 404.
+
+**Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`
 
 #### BR-REQ-100-01 — AI reviewer permission boundary
 

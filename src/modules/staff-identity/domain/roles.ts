@@ -235,6 +235,7 @@ export function canManageStaff(role: StaffRole): boolean {
  *
  *     events         everyone with a staff session — the backoffice's front door
  *     registrations  canManageRegistrations   `admin/registrations/page.tsx`
+ *     pages          isEditorial              `admin/pages/page.tsx`
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     staff          canManageStaff           `admin/staff/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
@@ -243,12 +244,23 @@ export function canManageStaff(role: StaffRole): boolean {
  * section a lower one is. `tests/unit/staff/roles.test.ts` asserts it across every pair, which
  * is the assertion that would have caught the original defect.
  */
-export const ADMIN_SECTIONS = ["events", "registrations", "tasks", "legal", "staff", "devs"] as const;
+export const ADMIN_SECTIONS = [
+  "events",
+  "pages",
+  "registrations",
+  "tasks",
+  "legal",
+  "staff",
+  "devs",
+] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
   return [
     "events" as const,
+    // Standing pages are editorial control of what the club says about itself, so the same
+    // roles that configure an event write them (BR-REQ-050-03).
+    ...(isEditorial(role) ? (["pages"] as const) : []),
     ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
     // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
     ...(canManageRegistrations(role) ? (["tasks"] as const) : []),
