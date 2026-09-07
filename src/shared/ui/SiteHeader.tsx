@@ -18,6 +18,40 @@ import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
 
 /**
+ * The club's standing pages, for the navigation — or nothing at all, whatever goes wrong.
+ *
+ * ## Why a try/catch and not `.catch()`
+ *
+ * This was written as `listPublishedPages(getDb(), locale).catch(() => [])`, which reads as
+ * guarded and is not: `getDb()` runs **synchronously**, as an argument, and throws before there
+ * is any promise for `.catch` to attach to. The rejection handler was chained to a promise that
+ * never existed. A `try` covers the call and the await together, which is the only shape that
+ * covers both failures.
+ *
+ * ## Why it must survive having no database at all
+ *
+ * `db/client.ts` documents the rule this broke: importing it must stay free, because Next
+ * evaluates page modules while collecting build data, and a build must work on a machine with
+ * no database — CI has none. `/[locale]` is a pure redirect with no `force-dynamic`, so Next
+ * prerenders it at build time and renders this layout to do it. Unguarded, that failed the
+ * whole build with "DATABASE_URL is not set", on a page that renders nothing.
+ *
+ * Returning `[]` costs a navigation entry on the two routes that are statically prerendered —
+ * a redirect and a catch-all 404, neither of which shows a menu anybody reads. Every page where
+ * the navigation matters declares `force-dynamic` and queries for real, on every request.
+ *
+ * And a header that throws is a site with no way out of any page, which is worse than a site
+ * with a shorter menu.
+ */
+async function navigationPages(locale: Locale) {
+  try {
+    return await listPublishedPages(getDb(), locale);
+  } catch {
+    return [];
+  }
+}
+
+/**
  * The site header: the mark, the club's name, and a way back to the first page.
  *
  * A Server Component — nothing here is interactive except the link, and that lives in
@@ -46,19 +80,12 @@ import SiteNav from "./SiteNav";
 export default async function SiteHeader() {
   const t = await getTranslations("Site");
   /**
-   * The club's standing pages, for the navigation (BR-REQ-050-03).
-   *
    * One indexed query on every public page, which is a cost worth naming: the header is what
    * every visitor pays for (`AGENTS.md` §1.5). It buys a navigation an organizer can change
-   * without a developer, which is the whole point of the page type — and it is one query
-   * returning a handful of rows, against a listing that already makes several.
-   *
-   * A failure here must not take the header down with it. There is no navigation entry for a
-   * page nobody could load, and a site whose header throws is a site with no way out of any
-   * page at all.
+   * without a developer, which is the whole point of the page type (BR-REQ-050-03).
    */
   const locale = await getLocale();
-  const pages = await listPublishedPages(getDb(), locale as Locale).catch(() => []);
+  const pages = await navigationPages(locale as Locale);
 
   return (
     <Box
