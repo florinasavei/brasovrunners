@@ -18,6 +18,7 @@ import {
 } from "@/modules/diagnostics/configuration";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -323,6 +324,53 @@ export default async function DevsPage({ params }: Props) {
           <Typography variant="body2">
             {t("sentMessages")}: <strong>{volume.sentMessages}</strong> / {volume.allowance}
           </Typography>
+        </Stack>
+      </Box>
+
+      <Divider />
+
+      {/*
+        What each plan limit does when it is met, and who enforces it — the operational half of
+        the platform inventory. The money half (what a plan costs, what the next one costs, what
+        the club has not decided) lives on `/admin/tasks`, for the people who pay for it, and is
+        deliberately absent here: one figure rendered in two places is one figure that will
+        disagree with itself.
+      */}
+      <Box component="section">
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+          {t("operationalTitle")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("operationalIntro")}
+        </Typography>
+        <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {OPERATIONAL_LIMITS.map((limit) => (
+            <Box
+              component="li"
+              key={limit.id}
+              sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
+            >
+              <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
+                {/* Who stops you decides what you can do about it: a provider limit is bought
+                    or waited out, an application limit is a line of code with an owner. */}
+                <Chip size="small" variant="outlined" label={t(`enforcedBy.${limit.enforcedBy}`)} />
+                {limit.variable && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={limit.variable}
+                    sx={{ fontFamily: "monospace" }}
+                  />
+                )}
+              </Stack>
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                {t(`operational.${limit.id}.title`)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t(`operational.${limit.id}.body`)}
+              </Typography>
+            </Box>
+          ))}
         </Stack>
       </Box>
 

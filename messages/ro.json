@@ -452,7 +452,6 @@
         "club": "Clubul",
         "developer": "Dezvoltatorul"
       },
-      "costUnknown": "de stabilit",
       "items": {
         "approveLegalText": {
           "title": "Aprobă textele legale",
@@ -480,94 +479,159 @@
           "done": "Sarcinile rulează la timp."
         }
       },
-      "freeTitle": "Poate site-ul să funcționeze gratuit?",
       "freeVerdict": {
-        "freeExceptDomain": "Da, în afară de domeniu. Toate serviciile sunt pe planuri gratuite acum și nimic nu costă lunar. Domeniul .ro se plătește anual și este singura cheltuială sigură.",
-        "freeButAtALimit": "Da, dar alocația de e-mail de azi este consumată. Mesajele nu se pierd — pleacă după miezul nopții UTC. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
-        "notFree": "Atenție, dar nu neapărat. Ai un eveniment publicat marcat cu taxă. Termenii Vercel Hobby nu se uită la forma juridică — faptul că suntem ONG nu este o scutire, cuvântul „non-profit” nu apare deloc în ei. Ce contează sunt două lucruri: „solicitarea de donații NU intră la folosire comercială” (scris explicit de ei), dar „promovarea vânzării unui produs sau serviciu” intră. Deci o contribuție prezentată ca donație este în regulă; o taxă obligatorie de participare, chiar dacă acoperă strict costurile, nu este. Site-ul nu încasează bani și nu are integrare de plată — asta ajută, dar nu este singurul criteriu."
+        "freeExceptDomain": "Da, în afară de domeniu: toate serviciile sunt pe planuri gratuite și nu se plătește nimic lunar.",
+        "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat. Nu se pierde nimic — pleacă după miezul nopții. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
+        "notFree": "Atenție, dar nu neapărat o problemă. Este publicat un eveniment cu taxă. Planul gratuit al furnizorului nu se uită la faptul că suntem ONG — asta nu este o scutire. Ce contează este cum sunt cerute banii: o donație este permisă explicit, o taxă obligatorie nu, chiar dacă acoperă strict costurile. Site-ul nu încasează bani și nu are cum să o facă — asta ajută, dar nu decide singură."
       },
       "registrationsLeftToday": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
-      "limitsTitle": "Limitele care contează",
-      "limitsIntro": "Nu toate limitele documentate, ci cele patru pe care clubul chiar le va atinge, plus regula despre bani. „Se aplică” înseamnă că ești sub ea acum; „atinsă” înseamnă că te lovește azi.",
-      "limitApplies": "se aplică",
-      "limitReached": "atinsă",
-      "limits": {
-        "mailgunDaily": {
-          "title": "100 de mesaje pe zi, adică aproximativ 33 de înscrieri",
-          "body": "Planul gratuit Mailgun trimite 100 de mesaje pe zi, iar o înscriere completă costă trei: confirmă adresa, semnează declarația, înscriere confirmată. O cursă deschisă pentru o sută de oameni depășește limita înainte de prânz. Mesajele peste limită nu se pierd — așteaptă până după miezul nopții UTC."
-        },
-        "schedulerFloor": {
-          "title": "Programatorul pornește cam din două în două ore, nu din cinci în cinci minute",
-          "body": "Vercel Hobby permite o singură rulare programată pe zi și refuză o expresie mai deasă chiar la publicare, așa că programatorul este un workflow GitHub Actions plus un serviciu extern de ping. Măsurat pe acest repository, Actions singur pornește cam la două ore. Asta întârzie mesajul, nu îl pierde — dar o confirmare care ajunge peste două ore, în ziua înscrierilor, este resimțită ca un site stricat."
-        },
-        "commercialUse": {
-          "title": "Vercel Hobby cere folosire necomercială — clubul nu vinde nimic",
-          "body": "Brașov Runners nu vinde nimic și nu încasează bani, iar site-ul nu are nicio integrare de plată. Din cele cinci exemple de folosire comercială date de Vercel, patru nu ne privesc deloc: nu cerem plăți, nu promovăm vânzarea a nimic, nu avem linkuri de afiliere și nu avem reclame. Rămâne unul care nu depinde de ce face clubul: „primirea de bani pentru a crea, actualiza sau găzdui site-ul”. Dacă cineva este vreodată plătit să lucreze la acest site, asta singură înseamnă folosire comercială — este singurul lucru de urmărit aici. Pentru orice ar semăna cu o contribuție de participare: Vercel scrie explicit că „solicitarea de donații NU intră la folosire comercială”, deci o donație este în regulă, în timp ce o taxă obligatorie ar intra la „promovarea vânzării unui serviciu”."
-        },
-        "identityDomain": {
-          "title": "Autentificarea echipei pe domeniul clubului cere plan plătit",
-          "body": "Zitadel Free include zero domenii proprii și un singur administrator de identitate. Cât timp echipa se autentifică pe adresa furnizorului, niciuna nu contează. Din ziua în care domeniul clubului este legat, ambele contează."
-        },
-        "orgRepository": {
-          "title": "Un repository al clubului forțează un plan Vercel plătit",
-          "body": "Vercel Hobby nu se poate conecta la repository-ul unei organizații Git, doar la unul personal. Clubul își dorește repository-ul pe numele lui — asta înseamnă automat Vercel plătit sau mutarea pe găzduirea de rezervă. Sunt două lucruri dorite care se blochează reciproc."
-        }
+      "costTitle": "Cât costă",
+      "costToday": {
+        "nothing": "Astăzi clubul nu plătește nimic. Toate serviciile sunt pe planuri gratuite, iar domeniul încă nu este cumpărat.",
+        "total": "Astăzi clubul plătește {total} pe an.",
+        "amount": "{amount} {currency}",
+        "amountPlusVat": "{amount} {currency} + TVA",
+        "free": "gratuit",
+        "notTaken": "nimic încă"
       },
-      "plansTitle": "Pe ce planuri suntem și cât costă următorul pas",
-      "plansIntro": "Prețurile sunt citate din documentația proiectului, verificate la {checked}. Furnizorii le schimbă fără anunț — verifică din nou înainte să plătești ceva.",
-      "planNone": "niciun furnizor ales",
-      "firstPaid": "Primul plan plătit: {plan}, {cost}.",
-      "plans": {
+      "nextSpend": {
+        "domain": "Prima cheltuială care urmează: domeniul .ro, {cost} + TVA pe an. Acesta este prețul oficial; o firmă de la care îl cumperi poate cere mai mult. Se plătește în lei, o dată pe an. Apare în ziua în care clubul îl cumpără; până atunci site-ul stă pe adresa gratuită a furnizorului.",
+        "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}. Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
+        "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}. Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
+      },
+      "currencyNote": "Sumele sunt scrise în moneda în care cere fiecare firmă, fără să le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine. Excepția este domeniul, unde plata se face chiar în lei, la cursul zilei. TVA în România este {vat}%.",
+      "freshness": {
+        "fresh": "Prețurile au fost verificate pe {checked}, acum {days} zile. Sunt destul de recente ca să te bazezi pe ele.",
+        "ageing": "Prețurile au fost verificate pe {checked}, acum {days} zile. Încep să fie vechi — întreabă din nou înainte să plătești ceva.",
+        "stale": "Prețurile au fost verificate pe {checked}, acum {days} zile. Sunt prea vechi ca să le mai crezi: cere-i dezvoltatorului să le verifice înainte de orice decizie."
+      },
+      "servicesTitle": "Serviciile, pe rând",
+      "servicesIntro": "Câte un rând pentru fiecare serviciu de care depinde site-ul: pe ce plan suntem, cât costă azi, ce primim gratuit, care este limita pe care o vom atinge prima, cât de aproape suntem chiar acum, ce se întâmplă când o depășim și cât costă pasul următor.",
+      "severity": {
+        "ok": "în regulă",
+        "unknown": "nu știm",
+        "watch": "de urmărit",
+        "act": "de rezolvat"
+      },
+      "field": {
+        "planToday": "Plan azi",
+        "costToday": "Cost azi",
+        "howClose": "Cât de aproape",
+        "nextPlan": "Pasul următor"
+      },
+      "planNone": "încă nu am ales de unde",
+      "nextPlanNone": "nu are pas următor",
+      "checkedOn": "Sume verificate pe {checked}.",
+      "bump": {
+        "temporary": "se ia temporar",
+        "permanent": "rămâne pentru totdeauna"
+      },
+      "services": {
         "domain": {
-          "name": "Domeniu .ro",
-          "freeGives": "Singura cheltuială sigură și singura care nu are variantă gratuită. Se plătește anual, la prețul registrarului."
+          "name": "Adresa site-ului (domeniul .ro)",
+          "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește oricum. Prețul oficial este 12 EUR + TVA pe an, iar firma de la care îl cumperi poate cere mai mult.",
+          "ceiling": "Prima limită: fără adresa proprie a clubului, e-mailurile nu pot pleca spre participanți.",
+          "whenCrossed": "Adică pot fi trimise doar către cinci adrese de test. Din ziua în care domeniul este cumpărat, apare o factură pe an, plătită în lei.",
+          "closeYes": "Cumpărat, iar site-ul răspunde pe el.",
+          "closeNo": "Necumpărat. Site-ul răspunde pe adresa gratuită a furnizorului."
         },
         "mailgun": {
-          "name": "Mailgun (e-mail)",
-          "freeGives": "Gratuit: 100 de mesaje pe zi, 5 destinatari autorizați în sandbox, log păstrat o zi."
+          "name": "Mailgun (trimiterea e-mailurilor)",
+          "freeGives": "Gratuit: 100 de e-mailuri pe zi. Până când clubul are domeniul lui, e-mailurile pot pleca doar către cinci adrese de test.",
+          "ceiling": "Prima limită: 100 de e-mailuri pe zi, adică vreo 33 de înscrieri, pentru că o înscriere completă cere trei e-mailuri.",
+          "whenCrossed": "E-mailurile de peste limită nu se pierd: rămân la coadă și pleacă după miezul nopții. Dar o cursă la care confirmările ajung abia a doua zi dimineață este o cursă proastă, așa că planul plătit se ia înainte de deschiderea înscrierilor, nu în timpul lor.",
+          "closeMeasured": "Azi au plecat {used} din {of} e-mailuri — mai ajung pentru vreo {left} înscrieri.",
+          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung."
         },
         "vercel": {
-          "name": "Vercel (găzduire)",
-          "freeGives": "Hobby: 100 GB trafic, 1 milion de invocări, o rulare programată pe zi, doar necomercial."
+          "name": "Vercel (locul unde stă site-ul)",
+          "freeGives": "Gratuit: destul trafic și destulă putere pentru un site de club, dar numai pentru folosire necomercială.",
+          "ceiling": "Prima limită: planul gratuit cere ca site-ul să nu fie folosit comercial. Clubul nu vinde nimic și nu încasează bani, deci suntem în regulă.",
+          "whenCrossed": "Un eveniment care cere o taxă obligatorie ar fi socotit comercial; o donație, nu — asta scrie chiar la ei. Mai este ceva ce nu ține de club: dacă cineva este plătit vreodată să lucreze la acest site, tot comercial se cheamă. Și încă un lucru de știut: dacă se depășește o limită a planului gratuit, funcția se oprește 30 de zile și nu poți plăti ca să o repornești — de aceea se urcă planul înainte de o cursă, nu în timpul ei.",
+          "closeYes": "Este publicat un eveniment cu taxă — verifică cum este formulat.",
+          "closeNo": "Niciun eveniment publicat nu cere bani.",
+          "bumpBack": "Nu se dă înapoi: nu este un vârf de trafic, este o schimbare a felului în care este folosit site-ul. Excepție: dacă a fost luat strict pentru trafic."
         },
         "neon": {
           "name": "Neon (baza de date)",
-          "freeGives": "Gratuit: 0,5 GB spațiu, 100 CU-ore pe lună, 5 GB trafic de ieșire."
+          "freeGives": "Gratuit: o bază de date mică (0,5 GB) și o cantitate de lucru inclusă în fiecare lună.",
+          "ceiling": "Prima limită: spațiul și cantitatea de lucru incluse lunar.",
+          "whenCrossed": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Peste limită, site-ul devine lent și pot apărea erori. Pasul următor se plătește la consum, nu ca abonament fix.",
+          "closeUnknown": "Nemăsurat: site-ul nu știe cât s-a consumat. Se vede în contul Neon și merită privit înainte de o cursă.",
+          "bumpBack": "Se ia pentru zilele înscrierilor și se coboară după ce acestea se închid."
         },
         "zitadel": {
-          "name": "Zitadel (autentificarea echipei)",
-          "freeGives": "Gratuit: 100 de utilizatori activi zilnic, un singur administrator, niciun domeniu propriu."
+          "name": "Zitadel (contul cu care intră echipa)",
+          "freeGives": "Gratuit: până la 100 de oameni pe zi și un singur administrator. Autentificarea se face pe adresa furnizorului, nu pe a clubului.",
+          "ceiling": "Prima limită: pe gratuit, echipa nu se poate autentifica pe adresa clubului și nu poate exista un al doilea administrator.",
+          "whenCrossed": "Cât timp echipa intră pe adresa furnizorului, nu contează. Din ziua în care clubul își cumpără domeniul, dacă vrei autentificare pe el sau un al doilea administrator, trebuie plătit.",
+          "closeYes": "Domeniul clubului este pus — de acum contează amândouă.",
+          "closeNo": "Echipa intră pe adresa furnizorului."
         },
         "githubActions": {
-          "name": "GitHub Actions (programator)",
-          "freeGives": "Gratuit și nelimitat pe repository public. Pe unul privat, 2.000 de minute pe lună."
+          "name": "GitHub (sarcinile automate)",
+          "freeGives": "Gratuit și fără limită, cât timp programul site-ului este public.",
+          "ceiling": "Aici limita nu sunt banii, ci ritmul: sarcinile automate ar trebui să pornească din cinci în cinci minute, dar în realitate pornesc cam din două în două ore.",
+          "whenCrossed": "E-mailurile stau la coadă, iar locurile ținute pentru cineva se eliberează mai târziu decât ar trebui. Nu se strică nimic și nimeni nu pierde locul — dar confirmarea ajunge cu întârziere, iar în ziua înscrierilor asta se simte ca un site stricat.",
+          "closeYes": "O sarcină automată nu a mai rulat de prea mult timp.",
+          "closeNo": "Sarcinile automate au rulat la timp."
         }
       },
-      "bumpTitle": "Ce se mărește temporar, și când se dă înapoi",
-      "bumpIntro": "Un plan mărit pe care nimeni nu îl scade la loc este greșeala scumpă aici, și niciun panou de control nu o să îți amintească. Scrie data coborârii în același loc în care ai scris-o pe cea a urcării. Mărește un singur lucru, uită-te ce se întâmplă, apoi pe următorul — două deodată înseamnă că nu afli niciodată care era de vină.",
-      "bumpTemporary": "temporar",
-      "bumpPermanent": "permanent",
-      "bumps": {
-        "mailgun": {
-          "when": "Aștepți mai multe înscrieri decât permite alocația zilnică",
-          "what": "Mailgun Basic, $15 pe lună, scoate complet limita zilnică și include 10.000 de mesaje pe lună.",
-          "back": "Se dă înapoi luna următoare: o lună per cursă, nu un abonament permanent."
+      "decisionsTitle": "Ce așteaptă o hotărâre",
+      "decisionsIntro": "Restul paginii sunt lucruri de citit. Aici sunt întrebări la care trebuie să răspundă cineva anume, până la un moment anume.",
+      "decisionState": {
+        "open": "de răspuns",
+        "answered": "răspuns"
+      },
+      "decisions": {
+        "domainRegistrar": {
+          "question": "De unde cumpărăm domeniul și cât plătim de fapt?",
+          "open": "Prețul oficial este 12 EUR + TVA pe an, dar firmele de la care se cumpără cer sume diferite. Cine îl cumpără spune suma plătită, ca să apară aici. Până când: înainte de prima cursă cu înscrieri, pentru că e-mailurile către participanți depind de domeniu.",
+          "answered": "Domeniul este cumpărat și site-ul răspunde pe el. Dacă suma plătită nu a fost încă spusă nimănui, acum este momentul."
         },
-        "neon": {
-          "when": "Paginile se încarcă greu sau apar erori de conexiune la baza de date",
-          "what": "Neon Launch, plată la consum, fără minim lunar.",
-          "back": "Se dă înapoi după ce se închide fereastra de înscrieri."
+        "entryContribution": {
+          "question": "Va cere clubul vreodată bani pentru participare?",
+          "open": "Este publicat un eveniment cu taxă, iar asta contrazice ce s-a hotărât pe 7 septembrie 2026. Cineva trebuie să spună dacă este o donație sau o taxă obligatorie: diferența stă în felul în care este scris, nu în intenție, iar de ea depinde dacă găzduirea gratuită se mai aplică. Până când: înainte ca evenimentul să primească înscrieri.",
+          "answered": "Nu. Proprietarul a confirmat pe 7 septembrie 2026 că Brașov Runners nu vinde nimic și nu încasează bani. Dacă răspunsul se schimbă vreodată: o donație este permisă explicit pe planul gratuit, o taxă obligatorie nu."
         },
-        "vercelLoad": {
-          "when": "Vercel limitează site-ul din cauza traficului",
-          "what": "Vercel Pro, $20 pe lună de fiecare persoană care publică. Locurile de vizualizare sunt gratuite.",
-          "back": "Se dă înapoi doar dacă a fost luat strict pentru trafic. Atenție: depășirea unei limite pe Hobby oprește funcția 30 de zile și nu se poate cumpăra ieșirea din ea — urcă înainte de fereastră, niciodată în timpul ei."
+        "currency": {
+          "question": "În ce monedă arătăm sumele?",
+          "open": "Nehotărât: pagina ar amesteca monede fără să spună de ce.",
+          "answered": "În moneda în care cere fiecare firmă, fără să o transformăm în lei. Un curs scris pe pagină ar fi o cifră pe care nicio factură nu o confirmă, iar la domeniu plata se face oricum în lei, la cursul zilei. Hotărât de dezvoltator, iar motivul este scris lângă cifre, în programul site-ului."
         },
-        "vercelCommercial": {
-          "when": "Clubul începe să perceapă taxă de participare, sau repository-ul trece pe organizația clubului",
-          "what": "Vercel Pro, sau mutarea pe găzduirea de rezervă deja decisă.",
-          "back": "Nu se dă înapoi. Nu este un vârf de trafic, este o schimbare a ceea ce este site-ul."
+        "mailgunBeforeRace": {
+          "question": "Luăm o lună de Mailgun plătit înainte de prima cursă adevărată?",
+          "open": "Gratuit ajung vreo 33 de înscrieri pe zi. Dacă la o cursă sunt așteptați mai mulți, cei 15 dolari pe o lună se plătesc înainte de deschiderea înscrierilor, nu în timpul lor — altfel confirmările ajung a doua zi dimineață. Până când: cu o zi înainte să se deschidă înscrierile.",
+          "answered": "Clubul nu mai depinde de limita zilnică gratuită."
         }
+      },
+      "optionsTitle": "Ce alternative avem",
+      "optionsIntro": "Pentru fiecare serviciu de mai sus a existat și altă variantă, cercetată și nealeasă. Scrise una lângă alta, se vede că nu suntem legați de nimeni: am ales, și fiecare alegere are o ieșire. Nimic de aici nu se schimbă acum; la final este scris unde stă hotărârea, pentru dezvoltator.",
+      "options": {
+        "vercel": {
+          "title": "Locul unde stă site-ul",
+          "why": "Render, tot gratuit și tot în Europa, poate ține acest site fără nicio modificare. Nu a fost ales pentru că varianta de acum este gratuită și funcționează; rămâne soluția de rezervă în ziua în care planul gratuit de acum nu ne mai este permis. Scris în:"
+        },
+        "mailgun": {
+          "title": "Trimiterea e-mailurilor",
+          "why": "Resend, cu serverele în Irlanda, ar fi gratuit la câte e-mailuri trimite clubul. Mailgun a fost ales pentru că firma este în Uniunea Europeană, iar mutarea de la unul la altul ar fi o schimbare mică. Scris în:"
+        },
+        "zitadel": {
+          "title": "Contul cu care intră echipa",
+          "why": "S-ar putea și fără firmă separată, doar cu lista de oameni din site, pentru trei-cinci organizatori care oricum nu își fac singuri cont. Varianta de acum este deja construită și funcționează; cealaltă contează în ziua în care autentificarea pe domeniul clubului ar cere plată. Scris în:"
+        },
+        "storage": {
+          "title": "Poze și fișiere",
+          "why": "Pozele stau chiar în site, fără serviciu separat, până când cineva care nu este dezvoltator va avea nevoie să încarce singur ceva. Abia atunci merită un cont nou și o factură în plus. Scris în:"
+        }
+      },
+      "cloudflare": {
+        "title": "Cloudflare, o singură dată — pentru că întrebarea revine",
+        "proxy": "Nu punem Cloudflare în fața site-ului. Ar fi două servicii care fac același lucru, iar orice problemă ar deveni de două ori mai greu de găsit.",
+        "dns": "Nu trebuie să mutăm la ei adresa site-ului. Domeniul rămâne la firma de la care este cumpărat.",
+        "workers": "Serviciul lor de rulat programe nu poate ține acest site: este construit altfel și nu i-ar ajunge nici puterea inclusă gratuit.",
+        "r2": "Pentru poze și fișiere, Cloudflare este chiar o variantă bună și ieftină. Contează abia când cineva care nu este dezvoltator va încărca singur poze.",
+        "turnstile": "Împotriva spamului, Cloudflare are un instrument bun, dacă protecția de acum nu mai ajunge. Dar este o firmă care ar vedea datele vizitatorilor, așa că nota de confidențialitate aprobată trebuie să o numească întâi."
       }
     },
     "pages": {
@@ -862,6 +926,38 @@
           "provider": "Varianta reală: Auth.js cu Zitadel. Furnizorul dovedește adresa, iar lista staff_users decide dacă acea adresă poate intra.",
           "disabled": "Nu există nicio cale de intrare. Fiecare rută de personal răspunde 404 în loc de un refuz, deci backoffice-ul este inaccesibil, nu doar ascuns. Aceasta este setarea corectă pentru orice mediu fără furnizor de identitate configurat."
         }
+      }
+    },
+    "operationalTitle": "Ce face fiecare limită când este atinsă",
+    "operationalIntro": "Cine oprește: furnizorul, prin API-ul lui, sau chiar codul acestei aplicații. Ce face aplicația în acel moment, și ce variabilă sau monitorizare este implicată. Costurile și planurile nu sunt aici: stau pe /admin/tasks, pentru cine plătește factura.",
+    "enforcedBy": {
+      "provider": "impusă de furnizor",
+      "application": "impusă de aplicație"
+    },
+    "operational": {
+      "mailgunDaily": {
+        "title": "Alocația zilnică Mailgun (100 de mesaje pe planul gratuit)",
+        "body": "Mailgun refuză trimiterea cu același HTTP 400 pe care îl folosește pentru un mesaj invalid. Adaptorul recunoaște formularea despre limită, clasifică refuzul ca „throttled”, iar rândul din outbox rămâne PENDING cu următoarea încercare programată imediat după miezul nopții UTC — nu backoff-ul obișnuit, care ar consuma toate cele șase încercări într-o oră și ar marca mesajul FAILED. Semnalul este cifra de volum e-mail de mai sus; nu există variabilă de configurare pentru limită."
+      },
+      "captureOnServerless": {
+        "title": "Modul „capture” nu livrează nimic pe un mediu publicat",
+        "body": "Adaptorul de capture ține mesajele în memoria procesului, iar pe hosting serverless procesul dispare înainte ca cineva să citească linkul. Un coleg neinclus în allowlist se înscrie și pur și simplu nu aude nimic. Singurul mod în care cineva din afara codului duce o înscriere până la capăt este allowlist cu un furnizor real."
+      },
+      "schedulerFloor": {
+        "title": "Cadența sarcinilor programate",
+        "body": "Vercel Hobby permite o rulare pe zi și refuză o expresie mai deasă chiar la publicare, deci programatorul este workflow-ul GitHub Actions plus un pinger extern; minimul GitHub este de cinci minute, iar măsurat aici cadența reală este de aproximativ două ore. Aplicația nu se strică între rulări: expirarea rezervării este evaluată în fiecare tranzacție de capacitate (§10.6), deci o rulare târzie întârzie un mesaj, nu suprarezervă un eveniment. Ambele endpoint-uri sunt protejate cu JOB_SECRET, iar liveness-ul fiecărei sarcini apare mai jos și în /api/health."
+      },
+      "hobbyCapPause": {
+        "title": "Depășirea unei limite Hobby oprește funcția 30 de zile",
+        "body": "Nu este o factură, este o pauză cu termen fix, și nu se poate cumpăra ieșirea din ea în timpul ferestrei. Aplicația nu are ce să facă atunci; singura reacție este să urci planul înainte de fereastră. Se vede doar în panoul Vercel — nu există nimic aici care să o raporteze."
+      },
+      "identityDomain": {
+        "title": "Zitadel Free: zero domenii proprii, un singur administrator",
+        "body": "Nu are efect asupra codului, dar decide ce host apare la autentificare. Cât timp STAFF_AUTH_MODE=provider merge pe hostname-ul furnizorului, limita nu se simte; pe domeniul clubului cere plan plătit. STAFF_AUTH_MODE=disabled răspunde 404 la orice rută de staff, ceea ce este exact ce trebuie într-un mediu fără tenant."
+      },
+      "statementTimeout": {
+        "title": "statement_timeout 10s și idle_in_transaction_session_timeout 30s",
+        "body": "Impuse de această aplicație, nu de Neon: db/client.ts le setează pe pool. Riscul nu a fost niciodată numărul de conexiuni (max: 10 este per instanță caldă, iar PgBouncer acceptă mult mai multe), ci o interogare nemărginită care ține o funcție Vercel 300 de secunde. Primul timeout este impus de PostgreSQL, deci ține și când procesul Node este blocat; al doilea acoperă o instanță ucisă între două instrucțiuni ale unei tranzacții deschise. Conexiunea nu are timeout, deliberat: pe Neon Free prima cerere după inactivitate așteaptă pornirea bazei."
       }
     }
   },

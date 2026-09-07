@@ -452,7 +452,6 @@
         "club": "The club",
         "developer": "The developer"
       },
-      "costUnknown": "to be decided",
       "items": {
         "approveLegalText": {
           "title": "Approve the legal text",
@@ -480,94 +479,159 @@
           "done": "The jobs are running on time."
         }
       },
-      "freeTitle": "Can the site run for free?",
       "freeVerdict": {
-        "freeExceptDomain": "Yes, apart from the domain. Every service is on a free plan today and nothing costs anything monthly. The .ro domain is paid yearly and is the one certain expense.",
-        "freeButAtALimit": "Yes, but today's email allowance is spent. Nothing is lost — the messages go out after midnight UTC. If you open registration now, the confirmations arrive tomorrow morning.",
-        "notFree": "Caution, though not necessarily a breach. A published event is marked as charging a fee. Vercel's Hobby terms do not look at legal form — being an NGO is not an exemption, and the word “non-profit” does not appear in them at all. Two things do matter: “Asking for Donations does not fall under commercial usage” (their own explicit note), but “advertising the sale of a product or service” does. So a contribution presented as a donation is fine; a mandatory entry fee is not, even when it only covers costs. This site takes no money and has no payment integration — that helps, but it is not the only test."
+        "freeExceptDomain": "Yes, apart from the domain: every service is on a free plan and nothing is paid monthly.",
+        "freeButAtALimit": "Yes, but today's free emails are used up. Nothing is lost — they go out after midnight. If you open entries now, the confirmations arrive tomorrow morning.",
+        "notFree": "Careful, though not necessarily a problem. A published event is marked as charging a fee. The provider's free plan does not care that we are a non-profit — that is not an exemption. What matters is how the money is asked for: a donation is explicitly allowed, a compulsory fee is not, even if it only covers costs. The site takes no money and has no way to — that helps, but it does not settle it on its own."
       },
       "registrationsLeftToday": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
-      "limitsTitle": "The limits that matter",
-      "limitsIntro": "Not every documented limit — the four this club will actually meet, plus the rule about money. “Applies” means you are under it; “reached” means it is biting today.",
-      "limitApplies": "applies",
-      "limitReached": "reached",
-      "limits": {
-        "mailgunDaily": {
-          "title": "100 messages a day, which is about 33 registrations",
-          "body": "Mailgun's free plan sends 100 messages a day, and one completed registration costs three: confirm your address, sign the declaration, registration confirmed. A race opening entries to a hundred people crosses it before lunch. Messages past the cap are not lost — they wait until after midnight UTC."
-        },
-        "schedulerFloor": {
-          "title": "The scheduler fires about every two hours, not every five minutes",
-          "body": "Vercel Hobby allows one scheduled run a day and refuses a finer expression at deploy time, so the scheduler is a GitHub Actions workflow plus an external pinger. Measured on this repository, Actions alone fires roughly every two hours. That delays a message rather than losing it — but a confirmation arriving two hours late, on registration day, is experienced as a broken site."
-        },
-        "commercialUse": {
-          "title": "Vercel Hobby requires non-commercial use — the club sells nothing",
-          "body": "Brașov Runners sells nothing and takes no money, and this site has no payment integration at all. Of Vercel's five examples of commercial usage, four do not touch us: we request no payments, advertise the sale of nothing, carry no affiliate links and run no advertisements. One remains and it does not depend on what the club does: “receiving payment to create, update, or host the site”. If anyone is ever paid to work on this site, that alone is commercial usage — it is the single thing worth watching here. For anything resembling an entry contribution: Vercel states explicitly that “Asking for Donations does not fall under commercial usage”, so a donation is fine, while a mandatory fee would fall under “advertising the sale of a service”."
-        },
-        "identityDomain": {
-          "title": "Staff sign-in on the club's own domain needs a paid plan",
-          "body": "Zitadel Free includes zero custom domains and one identity administrator. While staff sign in on the provider's hostname, neither matters. From the day the club's domain is bound, both do."
-        },
-        "orgRepository": {
-          "title": "A club-owned repository forces a paid Vercel plan",
-          "body": "Vercel Hobby cannot connect to a Git organization's repository, only to a personal one. The club wants the repository in its own name — which forces paid Vercel or a move to the fallback host. Two things the club wants that block each other."
-        }
+      "costTitle": "What it costs",
+      "costToday": {
+        "nothing": "Today the club pays nothing at all. Every service is on a free plan, and the domain has not been bought yet.",
+        "total": "Today the club pays {total} a year.",
+        "amount": "{amount} {currency}",
+        "amountPlusVat": "{amount} {currency} + VAT",
+        "free": "free",
+        "notTaken": "nothing yet"
       },
-      "plansTitle": "What we are on, and what the next step up costs",
-      "plansIntro": "Prices are quoted from the project's own documentation, checked on {checked}. Vendors change them without notice — re-check before spending anything.",
-      "planNone": "no provider chosen",
-      "firstPaid": "First paid plan: {plan}, {cost}.",
-      "plans": {
+      "nextSpend": {
+        "domain": "The next thing to cost money: the .ro domain, {cost} + VAT a year. That is the official price; the company you buy it from may charge more. It is paid in lei, once a year. It arrives the day the club buys it; until then the site sits on the provider's free address.",
+        "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}. Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
+        "vercel": "The next thing to cost money: Vercel Pro, {cost}. It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
+      },
+      "currencyNote": "Amounts are written in the currency each company charges in, not converted into lei: none of them invoices in lei, and an exchange rate written today would be wrong tomorrow. The exception is the domain, which is paid in lei at the day's rate. VAT in Romania is {vat}%.",
+      "freshness": {
+        "fresh": "Prices were checked on {checked}, {days} days ago. Recent enough to rely on.",
+        "ageing": "Prices were checked on {checked}, {days} days ago. They are getting old — ask again before spending anything.",
+        "stale": "Prices were checked on {checked}, {days} days ago. Too old to trust: ask the developer to check them before any decision."
+      },
+      "servicesTitle": "The services, one at a time",
+      "servicesIntro": "One row for each service the site depends on: the plan we are on, what it costs today, what we get for free, the limit we will meet first, how close we are right now, what happens when we cross it, and what the next step up costs.",
+      "severity": {
+        "ok": "fine",
+        "unknown": "we don't know",
+        "watch": "watch",
+        "act": "act"
+      },
+      "field": {
+        "planToday": "Plan today",
+        "costToday": "Cost today",
+        "howClose": "How close",
+        "nextPlan": "Next step up"
+      },
+      "planNone": "not chosen yet",
+      "nextPlanNone": "no next step",
+      "checkedOn": "Amounts checked on {checked}.",
+      "bump": {
+        "temporary": "taken temporarily",
+        "permanent": "stays for good"
+      },
+      "services": {
         "domain": {
-          "name": ".ro domain",
-          "freeGives": "The one certain expense and the only line with no free option. Paid yearly, at the registrar's price."
+          "name": "The site's address (.ro domain)",
+          "freeGives": "There is no free version — this is the one thing on the page that is paid for either way. The official price is 12 EUR + VAT a year, and the company you buy it from may charge more.",
+          "ceiling": "The first limit: without the club's own address, email cannot go out to participants.",
+          "whenCrossed": "It can only go to five test addresses. From the day the domain is bought there is one invoice a year, paid in lei.",
+          "closeYes": "Bought, and the site answers on it.",
+          "closeNo": "Not bought. The site answers on the provider's free address."
         },
         "mailgun": {
-          "name": "Mailgun (email)",
-          "freeGives": "Free: 100 messages a day, 5 authorized sandbox recipients, one day of log retention."
+          "name": "Mailgun (sending email)",
+          "freeGives": "Free: 100 emails a day. Until the club has its own address, email can only go to five test addresses.",
+          "ceiling": "The first limit: 100 emails a day, which is about 33 entries, because one complete entry takes three emails.",
+          "whenCrossed": "Emails over the limit are not lost: they wait in the queue and go out after midnight. But a race whose confirmations only arrive the next morning is a bad race, so the paid plan is bought before entries open, not during them.",
+          "closeMeasured": "{used} of {of} emails have gone out today — enough left for about {left} entries.",
+          "bumpBack": "Taken for the month of the race and stopped the month after. One month per race, not a long-term subscription."
         },
         "vercel": {
-          "name": "Vercel (hosting)",
-          "freeGives": "Hobby: 100 GB bandwidth, 1M invocations, one scheduled run a day, non-commercial only."
+          "name": "Vercel (where the site lives)",
+          "freeGives": "Free: enough traffic and power for a club site, but only for non-commercial use.",
+          "ceiling": "The first limit: the free plan requires that the site is not used commercially. The club sells nothing and takes no money, so we are fine.",
+          "whenCrossed": "An event asking for a compulsory fee would count as commercial; a donation would not — they say so themselves. There is one more thing, and it has nothing to do with the club: if anybody is ever paid to work on this site, that counts as commercial too. And one more to know: if a limit on the free plan is exceeded, the feature stops for 30 days and you cannot pay to restart it — which is why you move up before a race, not during one.",
+          "closeYes": "A published event is marked as charging a fee — check how it is worded.",
+          "closeNo": "No published event asks for money.",
+          "bumpBack": "This one does not come back down: it is not a busy weekend, it is a change in how the site is used. Unless it was taken purely for traffic."
         },
         "neon": {
-          "name": "Neon (database)",
-          "freeGives": "Free: 0.5 GB storage, 100 CU-hours a month, 5 GB egress."
+          "name": "Neon (the database)",
+          "freeGives": "Free: a small database (0.5 GB) and an amount of work included every month.",
+          "ceiling": "The first limit: the space and the monthly amount of work included.",
+          "whenCrossed": "On the free plan the database goes to sleep when nobody is using it, so the first page after a quiet spell is slow to load. Past the limit the site gets slow and errors can appear. The next step up is paid by usage, not as a fixed subscription.",
+          "closeUnknown": "Not measured: the site does not know how much has been used. It is visible in the Neon account and worth a look before a race.",
+          "bumpBack": "Taken for the days entries are open and dropped once they close."
         },
         "zitadel": {
-          "name": "Zitadel (staff sign-in)",
-          "freeGives": "Free: 100 daily active users, one administrator, no custom domain."
+          "name": "Zitadel (how the team signs in)",
+          "freeGives": "Free: up to 100 people a day and a single administrator. Signing in happens on the provider's address, not the club's.",
+          "ceiling": "The first limit: on the free plan the team cannot sign in on the club's own address, and there can be only one administrator.",
+          "whenCrossed": "While the team signs in on the provider's address, none of this matters. From the day the club buys its domain, signing in on it or having a second administrator has to be paid for.",
+          "closeYes": "The club's domain is in place — both of these matter now.",
+          "closeNo": "The team signs in on the provider's address."
         },
         "githubActions": {
-          "name": "GitHub Actions (scheduler)",
-          "freeGives": "Free and unlimited on a public repository. On a private one, 2,000 minutes a month."
+          "name": "GitHub (the automatic jobs)",
+          "freeGives": "Free and unlimited, as long as the site's code stays public.",
+          "ceiling": "Here the limit is not money but rhythm: the automatic jobs should run every five minutes, and in practice they run roughly every two hours.",
+          "whenCrossed": "Email waits in the queue, and places held for somebody are released later than they should be. Nothing breaks and nobody loses their place — but the confirmation arrives late, and on registration day that feels like a broken site.",
+          "closeYes": "An automatic job has not run for too long.",
+          "closeNo": "The automatic jobs ran on time."
         }
       },
-      "bumpTitle": "What to bump temporarily, and when to drop it again",
-      "bumpIntro": "A plan nobody drops again is the expensive failure here, and no dashboard will remind you. Write the downgrade date wherever you wrote the upgrade date. Bump one thing, watch, then the next — two at once means never learning which one was binding.",
-      "bumpTemporary": "temporary",
-      "bumpPermanent": "permanent",
-      "bumps": {
-        "mailgun": {
-          "when": "You expect more registrations than the daily allowance covers",
-          "what": "Mailgun Basic, $15/month, removes the daily limit entirely and includes 10,000 messages a month.",
-          "back": "Drop it the month after: one month per race, not a standing subscription."
+      "decisionsTitle": "What is waiting on a decision",
+      "decisionsIntro": "The rest of this page is things to read. These are questions somebody in particular has to answer, by a particular time.",
+      "decisionState": {
+        "open": "needs an answer",
+        "answered": "answered"
+      },
+      "decisions": {
+        "domainRegistrar": {
+          "question": "Where do we buy the domain, and what do we actually pay?",
+          "open": "The official price is 12 EUR + VAT a year, but the companies you buy from charge different amounts. Whoever buys it says what was paid, so it can appear here. By when: before the first race with entries, because email to participants depends on the domain.",
+          "answered": "The domain is bought and the site answers on it. If nobody has been told what it cost, now is the moment."
         },
-        "neon": {
-          "when": "Pages are slow, or the database returns connection errors",
-          "what": "Neon Launch, usage-based, no monthly minimum.",
-          "back": "Drop it once the registration window closes."
+        "entryContribution": {
+          "question": "Will the club ever ask for money to take part?",
+          "open": "A published event is marked as charging a fee, which contradicts what was decided on 7 September 2026. Somebody has to say whether it is a donation or a compulsory fee: the difference is in how it is written rather than in the intention, and free hosting depends on it. By when: before that event takes entries.",
+          "answered": "No. The owner confirmed on 7 September 2026 that Brașov Runners sells nothing and takes no money. If that ever changes: a donation is explicitly allowed on the free plan, a compulsory fee is not."
         },
-        "vercelLoad": {
-          "when": "Vercel throttles the site under traffic",
-          "what": "Vercel Pro, $20/month for each person who deploys. Viewer seats are free.",
-          "back": "Drop it only if it was taken purely for load. Note: exceeding a Hobby cap pauses the feature for 30 days and you cannot buy your way out — upgrade before the window, never during it."
+        "currency": {
+          "question": "Which currency do we show amounts in?",
+          "open": "Undecided: the page would mix currencies without saying why.",
+          "answered": "In the currency each company charges in, without converting to lei. An exchange rate on the page would be a figure no invoice ever confirms, and the domain is paid in lei anyway, at the day's rate. Decided by the developer, with the reason written next to the figures in the site's code."
         },
-        "vercelCommercial": {
-          "when": "The club starts charging entry, or the repository moves to a club organization",
-          "what": "Vercel Pro, or the move to the fallback host already decided.",
-          "back": "Not dropped. This is not a traffic spike, it is a change in what the site is."
+        "mailgunBeforeRace": {
+          "question": "Do we take a paid month of Mailgun before the first real race?",
+          "open": "The free allowance covers about 33 entries a day. If a race expects more, the $15 for one month is paid before entries open rather than during them — otherwise confirmations arrive the next morning. By when: the day before entries open.",
+          "answered": "The club no longer depends on the free daily limit."
         }
+      },
+      "optionsTitle": "What our options are",
+      "optionsIntro": "For each service above there was another option, researched and not taken. Side by side, it is clear we are not tied to anybody: we chose, and every choice has a way out. Nothing here changes now; the note at the end says where the decision is written down, for the developer.",
+      "options": {
+        "vercel": {
+          "title": "Where the site lives",
+          "why": "Render, also free and also in Europe, could host this site with no changes at all. Not taken because what we use now is free and works; it stays the fallback for the day the current free plan is no longer allowed for us. Written in:"
+        },
+        "mailgun": {
+          "title": "Sending email",
+          "why": "Resend, with its servers in Ireland, would be free at the volume the club sends. Mailgun was chosen because the company is in the European Union, and moving from one to the other would be a small change. Written in:"
+        },
+        "zitadel": {
+          "title": "How the team signs in",
+          "why": "It could be done without a separate company, using only the list of people in the site, for three to five organizers who never sign themselves up anyway. What we have is already built and works; the other option matters the day signing in on the club's own address would have to be paid for. Written in:"
+        },
+        "storage": {
+          "title": "Photos and files",
+          "why": "Photos live in the site itself, with no separate service, until somebody who is not a developer needs to upload one. Only then is it worth a new account and another invoice. Written in:"
+        }
+      },
+      "cloudflare": {
+        "title": "Cloudflare, once — because the question keeps coming back",
+        "proxy": "We do not put Cloudflare in front of the site. That would be two services doing the same job, and any problem would be twice as hard to find.",
+        "dns": "We do not have to move the site's address to them. The domain stays with the company it is bought from.",
+        "workers": "Their service for running programs cannot host this site: it is built differently, and the power included for free would not be enough.",
+        "r2": "For photos and files, Cloudflare is genuinely a good, cheap option. It only matters once somebody who is not a developer starts uploading photos.",
+        "turnstile": "Against spam, Cloudflare has a good tool, if the protection we have now stops being enough. But it is a company that would see visitors' data, so the approved privacy notice has to name it first."
       }
     },
     "pages": {
@@ -862,6 +926,38 @@
           "provider": "The real thing: Auth.js with Zitadel. The provider proves the address, and the staff_users allowlist decides whether that address may in.",
           "disabled": "There is no way in. Every staff route answers 404 rather than a refusal, so the backoffice is unreachable rather than merely hidden. This is the correct setting for any environment with no identity provider configured."
         }
+      }
+    },
+    "operationalTitle": "What each limit does when it is met",
+    "operationalIntro": "Who stops you — the provider's own API, or this application's code — what the application does at that moment, and which variable or monitor is involved. Costs and plans are not here: they live on /admin/tasks, for the people who pay the invoice.",
+    "enforcedBy": {
+      "provider": "enforced by the provider",
+      "application": "enforced by the application"
+    },
+    "operational": {
+      "mailgunDaily": {
+        "title": "Mailgun's daily allowance (100 messages on the free plan)",
+        "body": "Mailgun refuses the send with the same HTTP 400 it uses for a malformed message. The adapter recognises the limit wording, classifies the refusal as throttled, and the outbox row stays PENDING with its next attempt scheduled just after midnight UTC — not the ordinary backoff, which would spend all six attempts within an hour and mark a good message FAILED. The signal is the email-volume figure above; there is no configuration variable for the cap."
+      },
+      "captureOnServerless": {
+        "title": "Capture mode delivers nothing on a deployed environment",
+        "body": "The capture adapter holds messages in the process's memory, and on serverless hosting the process is gone before anybody could read the link. A colleague who is not on the allowlist registers and then simply never hears anything. Allowlist mode with a real provider is the only way somebody outside the code completes a registration."
+      },
+      "schedulerFloor": {
+        "title": "The cadence of the scheduled jobs",
+        "body": "Vercel Hobby allows one run a day and refuses a finer expression at deploy time, so the scheduler is the GitHub Actions workflow plus an external pinger; GitHub's own minimum is five minutes, and measured here the real cadence is roughly two hours. The application does not break in between: hold expiry is evaluated inside every capacity transaction (§10.6), so a late run delays a message rather than overbooking an event. Both endpoints are guarded by JOB_SECRET, and each job's liveness is reported below and in /api/health."
+      },
+      "hobbyCapPause": {
+        "title": "Exceeding a Hobby cap pauses the feature for 30 days",
+        "body": "Not a bill — an outage with a fixed sentence, and you cannot buy your way out of it during the window. There is nothing the application can do at that point; the only response is to upgrade before the window. It is visible only in the Vercel dashboard — nothing here reports it."
+      },
+      "identityDomain": {
+        "title": "Zitadel Free: zero custom domains, one administrator",
+        "body": "No effect on the code, but it decides which host staff sign in on. While STAFF_AUTH_MODE=provider runs on the provider's hostname the limit is not felt; on the club's own domain it needs a paid tier. STAFF_AUTH_MODE=disabled answers 404 to every staff route, which is what an environment with no tenant should do."
+      },
+      "statementTimeout": {
+        "title": "statement_timeout 10s and idle_in_transaction_session_timeout 30s",
+        "body": "Enforced by this application rather than by Neon: db/client.ts sets both on the pool. The risk was never the connection count (max: 10 is per warm instance, and PgBouncer accepts far more) but one unbounded query holding a Vercel function for 300 seconds. The first timeout is enforced by PostgreSQL, so it holds even when the Node process is frozen; the second covers an instance killed between two statements of an open transaction. There is no connection timeout, deliberately: on Neon Free the first request after an idle period waits for the database to wake."
       }
     }
   },
