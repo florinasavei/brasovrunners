@@ -33,7 +33,7 @@ waiting on.
 | **Zitadel** | *to record* | Staff identity. `staff_users` is the allowlist; Zitadel never decides who may in | `brasov-runners-8iqx8c.eu1.zitadel.cloud/ui/console` | QA tenant live, `STAFF_AUTH_MODE=provider`; own mail through Mailgun SMTP (`smtp.mailgun.org:587`, US sandbox, working 2026-09-05) |
 | **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
-| **Domain registrar** | *not chosen* | `<domain>` and its DNS | — | **Not registered** |
+| **Domain registrar** | *not chosen* | `<domain>` and its DNS | — | **Not registered.** Registry price 12 EUR + VAT/year (ROTLD, checked 2026-09-07); an accredited registrar may charge more |
 | **Cloudflare R2** | *no account* | Media, when a non-developer needs to upload | — | **Not signed up.** Deferred (`AGENTS.md` §17); its figures below are reference for the day it is needed |
 
 Hostnames: `SETUP.md` §26, which is the only file allowed to name one.
@@ -60,16 +60,32 @@ notice — **re-check before spending, and update the date in this heading when 
 | **Neon** | Free, $0 | 0.5 GB storage/project, **100 CU-hours/month**, 5 GB egress, 10 branches, autoscale 0.25–2 CU | **Launch** — usage-based, no monthly minimum: $0.106/CU-hour, $0.35/GB-month. Instant restore billed separately at $0.20/GB-month |
 | **Zitadel** | Free, $0 | **100 daily active users**, 5,000 management API requests, 1 instance, **1 administrator**, **0 custom domains**, 1 day audit trail | Paid tier — required for a custom domain and for more than one administrator |
 | **GitHub Actions** | Free | **Unlimited on public repositories** — standard runners consume no minutes. Private: 2,000 min/month | Metered only for private repos or larger runners. Team $4/user/month |
+| **`.ro` domain** *(not registered)* | **none — this is the one line with no free plan** | — | **12 EUR + VAT per year**, the ROTLD registry price, checked 2026-09-07 on rotld.ro/prices. Romanian individuals and legal entities are invoiced in lei at the National Bank's rate on the invoice date; Romania's standard VAT has been 21% since 2025-08-01. An accredited registrar may charge more than the registry does |
 | **Cloudflare R2** *(no account yet)* | Included allowance | 10 GB-month storage, 1M Class A ops, 10M Class B ops, **egress always $0** | Usage-based: $0.015/GB-month storage, $4.50/M Class A, $0.36/M Class B |
 
-Running cost today: **€0 plus the domain**, because nothing has been upgraded. The table below is
-what changes that.
+Running cost today: **€0**, because nothing has been upgraded *and the domain has not been
+bought yet*. The first cost to arrive is the domain at 12 EUR + VAT a year. The table below is
+what changes the rest.
 
 **This table, the limits below it and the bump order now render on `/admin/tasks`** for an
-Administrator, with the check date beside them and the email headroom computed from what this
-deployment has actually sent today (BR-REQ-090-05). This document stays the source: a figure
-changes here first, and `modules/diagnostics/platform-plans.ts` quotes it. A club treasurer
-should never have to open a repository to find out what the club may spend.
+Administrator, as **one row per service** rather than three overlapping lists, with the email
+headroom computed from what this deployment has actually sent today (BR-REQ-090-05). This
+document stays the source: a figure changes here first, and
+`modules/diagnostics/platform-plans.ts` quotes it. A club treasurer should never have to open a
+repository to find out what the club may spend.
+
+Three things about how that page treats these figures, decided in that file and recorded here so
+they are not re-argued. Each row carries **its own** check date, because the domain price was
+established two days after the rest and one shared date would have claimed a re-check that never
+happened. The page **ages** the oldest of those dates rather than only printing it — fresh under
+90 days, ageing to 270, too old to quote after that — so a year-old quotation stops being
+asserted at full confidence. And amounts stay in **each vendor's own currency**, with no exchange
+rate: none of them invoices in lei except the domain registry, which converts at the National
+Bank's rate on the invoice date, so a leu figure printed here would be arithmetic no invoice ever
+confirms. The page also separates a **fact** from a **question somebody owes an answer to** —
+which registrar and what it actually cost, whether an event will ever charge, whether to buy a
+month of Mailgun before a race — and lists, per service, the alternative that was researched and
+not taken, so the club can see it is not locked in.
 
 ### The four that will actually bite this club
 
@@ -408,6 +424,7 @@ the expensive failure here.
 | --- | --- | --- | --- | --- |
 | *none yet* | | | | |
 
-Expected first spend, in the order it will arrive: the domain (annual, registrar's price), then
-one month of Mailgun Basic ($15) around the first real race, then a Vercel paid plan if and only
-if the repository moves to a club organization or the club starts charging entry.
+Expected first spend, in the order it will arrive: the domain (12 EUR + VAT a year at the
+registry price; record what the registrar actually charged in the row above), then one month of
+Mailgun Basic ($15) around the first real race, then a Vercel paid plan if and only if the
+repository moves to a club organization or the club starts charging entry.
