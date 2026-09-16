@@ -5,12 +5,17 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
+import Box from "@mui/material/Box";
 import { env } from "@/shared/config/env";
 import { routing } from "@/i18n/routing";
+import BuildBadge from "@/shared/ui/BuildBadge";
+import EnvironmentNotice from "@/shared/ui/EnvironmentNotice";
+import SiteFooter from "@/shared/ui/SiteFooter";
+import SiteHeader from "@/shared/ui/SiteHeader";
 import AppTheme from "@/theme/AppTheme";
 
 const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
+  weight: ["300", "400", "500", "700", "900"],
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-roboto",
@@ -43,13 +48,62 @@ export default async function LocaleLayout({ children, params }: Props) {
   }
   setRequestLocale(locale);
 
+  const site = await getTranslations({ locale, namespace: "Site" });
+
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
     <html lang={locale} suppressHydrationWarning>
       <body className={roboto.variable}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
-            <NextIntlClientProvider>{children}</NextIntlClientProvider>
+            <NextIntlClientProvider>
+              {/* Not a <main>: every page already renders its own via `id="main" component="main"` on
+                  its root Container, and a document may have only one. */}
+              <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+                {/* Above the header, because it has to be read before anything below it is
+                    mistaken for the club's real website. */}
+                <EnvironmentNotice />
+                {/*
+                  Skip to the content. Every page renders its own `id="main" component="main"`,
+                  so `#main` is a stable target, and a keyboard reader no longer has to
+                  tab through the lockup, the sections and the language switcher on
+                  every single page before reaching what they came for.
+
+                  Visually hidden until focused: the standard pattern, and it must not
+                  be `display: none`, which would take it out of the tab order and
+                  defeat the whole point.
+                */}
+                <Box
+                  component="a"
+                  href="#main"
+                  sx={{
+                    position: "absolute",
+                    left: -10000,
+                    top: 0,
+                    // A literal, not a theme callback: this is a Server Component, and a
+                    // function in `sx` cannot cross into a Client Component. Above MUI's
+                    // tooltip layer (1500), which is the highest thing this site renders.
+                    zIndex: 1600,
+                    "&:focus": {
+                      left: 8,
+                      top: 8,
+                      px: 2,
+                      py: 1,
+                      bgcolor: "background.paper",
+                      border: 1,
+                      borderColor: "divider",
+                      borderRadius: 1,
+                    },
+                  }}
+                >
+                  {site("skipToContent")}
+                </Box>
+                <SiteHeader />
+                <Box sx={{ flex: 1 }}>{children}</Box>
+                <SiteFooter />
+                <BuildBadge />
+              </Box>
+            </NextIntlClientProvider>
           </AppTheme>
         </AppRouterCacheProvider>
       </body>

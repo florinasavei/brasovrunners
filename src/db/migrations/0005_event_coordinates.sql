@@ -1,0 +1,3 @@
+ALTER TABLE "events" ADD CONSTRAINT "events_coordinates_are_a_pair" CHECK (("events"."latitude" IS NULL) = ("events"."longitude" IS NULL));--> statement-breakpoint
+ALTER TABLE "events" ADD CONSTRAINT "events_coordinates_in_range" CHECK (("events"."latitude" IS NULL OR ("events"."latitude" >= -90 AND "events"."latitude" <= 90))
+          AND ("events"."longitude" IS NULL OR ("events"."longitude" >= -180 AND "events"."longitude" <= 180)));

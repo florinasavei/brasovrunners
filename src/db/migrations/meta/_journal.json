@@ -22,6 +22,146 @@
       "when": 1788422885783,
       "tag": "0002_participants",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788443295242,
+      "tag": "0003_email_action_tokens_and_outbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788497132077,
+      "tag": "0004_staff_users_and_event_editing",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788503102222,
+      "tag": "0005_event_coordinates",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788510450984,
+      "tag": "0006_registrations_legal_docs_and_job_infra",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788510478599,
+      "tag": "0007_drop_staff_auth_subject",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788510491571,
+      "tag": "0008_add_staff_zitadel_subject",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788513680649,
+      "tag": "0009_drop_pilot_capacity_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788514995323,
+      "tag": "0010_email_outbox_sent_at_allows_post_send_bounce",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788547201806,
+      "tag": "0011_event_publication_and_test_registrations",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788589635582,
+      "tag": "0012_participant_start_list",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788591218330,
+      "tag": "0013_audit_log_and_staff_registrations",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788596674436,
+      "tag": "0014_shared_event_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1788603561329,
+      "tag": "0015_race_entry_details",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788629885550,
+      "tag": "0016_staff_role_hierarchy",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788635033724,
+      "tag": "0017_drop_deprecated_event_translation_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788665684427,
+      "tag": "0018_event_difficulty_and_cost_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1788665717713,
+      "tag": "0019_drop_event_free_text_difficulty_and_cost",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1788723641988,
+      "tag": "0020_registration_club_member_declared",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788749880400,
+      "tag": "0021_event_route_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1788754816383,
+      "tag": "0022_pages",
+      "breakpoints": true
     }
   ]
 }

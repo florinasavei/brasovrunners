@@ -2,7 +2,7 @@
 
 # Practice guides
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 ## About these guides
@@ -197,10 +197,11 @@ That comment stops a future agent from "fixing" a rule it thinks is a bug.
 
 Priority 1 is not delegable. Read every line of:
 
-- the capacity transaction and the queue allocator;
+- the capacity transaction and the queue allocator — including anything that touches
+  `registrations.kind`, whose whole point is that it changes nothing there;
 - email canonicalization;
 - action tokens, sessions, and role checks;
-- migrations;
+- migrations, and a migration that carries data from one column to another most of all;
 - anything producing or rendering legal text.
 
 Everything else gets normal review.
@@ -423,7 +424,7 @@ The project does not end at the release; it changes shape.
 - [ ] Legal text request sent to the club with the full list from `BUSINESS.md` §9.
 - [ ] Three real events and two real articles collected for building against.
 - [ ] Walking-skeleton amendment accepted or declined, and documented either way.
-- [ ] Provider verification done: Vercel Node version and cron limits, Neon, Zitadel, Mailgun, R2 tiers.
+- [ ] Provider verification done: Vercel Node version and cron limits, Neon, Mailgun, R2 tiers.
 - [ ] Second person identified for provider recovery access.
 
 **During the build**
@@ -470,7 +471,11 @@ In order of how often they happen:
 
 1. **Read an event and decide.** Date, time, meeting point, distance, cost, places left: all
    visible without scrolling on a small phone, as text, in the first screen.
-2. **Register.** Two fields, two choices, one button. Under a minute on a phone with one hand.
+2. **Register.** One page, never a wizard (`DECISIONS.md` §47). What loads is the fields a
+   submission is refused without, the consents, and the button; the t-shirt, the club, the
+   display name and the health note are collapsed behind native `<details>` that name
+   themselves. Under a minute on a phone with one hand for somebody who answers only what
+   they must.
 3. **Confirm from email.** The link opens in the phone's browser, the page fits, the action is
    one tap, and the participant is not asked to log in to anything.
 4. **Sign the declaration under a deadline.** Readable text, a checkbox, a name field, a
@@ -511,7 +516,9 @@ phone-tolerable. Those seven cannot.
   for names. This is the difference between the right keyboard and a fight with autocorrect.
 - `autocomplete` attributes so the phone offers the person's own name and email.
 - Labels above fields, not beside them; placeholders are not labels.
-- Errors appear next to the field and the page scrolls to the first one.
+- Errors appear next to the field, and a server-side rejection is entered at a focusable
+  summary through a URL fragment, each field named there linking to its own anchor. No
+  JavaScript: `#id` plus `tabindex="-1"` is the whole mechanism.
 - No CAPTCHA (see [Accessibility](#accessibility) §3).
 - The privacy acknowledgment and results choice are real checkboxes with large tap areas, and
   the privacy link opens without discarding the form.

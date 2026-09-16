@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -15,9 +15,9 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | --- | --- |
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
-| Code | Public event pages running: Next.js App Router, Material UI, `next-intl` `ro`/`en`, PostgreSQL via Drizzle, structured data, sitemap. No registration, email, or login yet. |
-| Priority | M1: event pages and registration, defined in [`DECISIONS.md`](./DECISIONS.md) §12 |
-| Now | **Weekend pilot:** Romanian event pages on Vercel from Neon, no registration — [`WEEKEND.md`](./WEEKEND.md). `SETUP.md` §29 remains the M1 plan |
+| Code | M1 complete in code. Public event pages; a backoffice where an organizer creates, duplicates, configures, previews, publishes, archives and deletes a race, with every column an organizer owns and both languages going live together; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents, with clearly marked sample text everywhere but production and no invented text there at all; ten transactional message types through the outbox; a registrations backoffice that can enter, rename and cancel a registration — and nothing else — each with an audit row, and a CSV export and labelled test registrations for exercising the queue. Registration is reachable from the public pages, and a public participant list exists and is switched off everywhere until the club's approved privacy notice describes it. See [`DECISIONS.md`](./DECISIONS.md) §26–§34. |
+| Priority | Account creation and DevOps, not application code: DNS for the club's `.com` domain (bought 2026-09-16; a `.ro` follows in a year — [`DECISIONS.md`](./DECISIONS.md) §55), a Mailgun sending domain verified on it, a production Zitadel application, the first release PR, and the club's approved privacy notice and declaration text. The production Vercel and Neon projects exist and track `main` |
+| Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in works there through Zitadel, gated by the `staff_users` allowlist; email is still `capture`, so nothing transmits until a sending domain exists. The production Vercel and Neon projects exist, configured and never deployed — `main` is behind `qa`, and the first production deployment is the release PR ([`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) § The first production deployment). `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -81,27 +81,37 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`LICENSE`](./LICENSE) | MIT, copyright Brașov Runners; the club owns the platform per BR-BUS-101 |
 | [`MANIFEST.txt`](./MANIFEST.txt) | One-page handoff summary of the baseline and the headline decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
+| [`scripts/db-migrate.mjs`](./scripts/db-migrate.mjs) | `yarn db:migrate:env <local\|qa\|production>` — the only supported way to migrate a deployed database. Prints the target and the pending migrations before applying; production needs `--yes` (`AGENTS.md` §7.6) |
+| [`scripts/email-probe.ts`](./scripts/email-probe.ts) | `yarn email:probe [--fail] <address>` — sends one message through the real Mailgun adapter, to an address typed on the command line. Exercises the provider half of `AGENTS.md` §16 (key, region, sending domain, and the transient/permanent mapping) without going near the outbox |
+| [`scripts/bind-domain.mjs`](./scripts/bind-domain.mjs) | `yarn domain:bind <qa\|production> <domain> [--alias-of <canonical>] [--apply]` — the scriptable half of `docs/RUNBOOKS.md` § Domain binding, through `vercel api`: adds the hostnames to that environment's own Vercel project, redirects `www` to the apex, sets `APP_BASE_URL` for a canonical domain or a permanent redirect for a second one, prints the DNS records to create and the consoles a machine must not touch. Dry run unless `--apply` |
+| [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
 | [`scripts/db-reset-local.mjs`](./scripts/db-reset-local.mjs) | `yarn db:reset:local`: drops both schemas, migrates and seeds; refuses any non-local database |
 | [`scripts/dev.mjs`](./scripts/dev.mjs) | `yarn dev`: starts on port 47821, or the next free one, and keeps `APP_BASE_URL` matching |
+| [`scripts/sync-flags.mjs`](./scripts/sync-flags.mjs) | `yarn flags:sync`: copies the country flags from `flag-icons` into `public/flags/`. Runs on install and as the first half of `yarn build`; the output is generated and git-ignored |
 | [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit, and adds the `git gone` alias |
 | [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
+| [`docs/brand/README.md`](./docs/brand/README.md) | The club's logo, kit photograph and display typeface: what each file is, which of the two blues is authoritative, and why the kit font cannot set a Romanian word |
+| [`docs/PLATFORM.md`](./docs/PLATFORM.md) | Every account the platform runs on: plan, what it holds, who can recover it, and **what its limits stop the club from doing**. Operational fact, not authority; no secret and no hostname |
 | [`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) | Three runbooks: [repository bootstrap](./docs/RUNBOOKS.md#repository-bootstrap) for the first push, [domain binding](./docs/RUNBOOKS.md#domain-binding) at the end of M1, [legal document version](./docs/RUNBOOKS.md#legal-document-version) whenever approved wording changes |
 | [`docs/history/ORIGINAL_PLAN_2026-08.md`](./docs/history/ORIGINAL_PLAN_2026-08.md) | Original planning input, retained for traceability. **Not authoritative.** It predates Material UI, staff-only auth, passwordless participants, waiting lists, the `qa`/`main` flow, and every hosting decision since. |
 | [`.github/workflows/docs-check.yml`](./.github/workflows/docs-check.yml) | Runs `docs:check` on every pull request and on `qa`/`main`; read-only permissions |
+| [`.github/workflows/migrate.yml`](./.github/workflows/migrate.yml) | Applies committed migrations to a deployed database: automatically to QA when one lands on `qa`, and to production only as a reviewed manual run. GitHub Environments hold the per-environment `DATABASE_URL` |
+| [`.github/workflows/scheduled-jobs.yml`](./.github/workflows/scheduled-jobs.yml) | Every five minutes, calls each environment's email-outbox and registration-maintenance endpoints with that environment's `JOB_SECRET`. The only thing that runs them: serverless functions have no persistent process for an interval (`AGENTS.md` §16.2) |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review ownership of the root documents |
 | [`.github/pull_request_template.md`](./.github/pull_request_template.md) | Per-pull-request checks, including the documentation sync checklist |
 | [`package.json`](./package.json) | Scripts and exact-pinned dependencies; `yarn check` is the aggregate gate |
 | [`drizzle.config.ts`](./drizzle.config.ts) | Drizzle Kit config: schema path, migration output, `DATABASE_URL` |
 | [`playwright.config.ts`](./playwright.config.ts) | Playwright config: mobile (320px) and desktop projects; `yarn test:e2e` |
-| [`vitest.config.mts`](./vitest.config.mts) | Vitest config; `.mts` because Vite loads a `.ts` config as CommonJS |
+| [`vitest.config.mts`](./vitest.config.mts) | Vitest config; `.mts` because Vite loads a `.ts` config as CommonJS. Excludes the concurrency suite, so `yarn test` needs no database |
+| [`vitest.concurrency.config.mts`](./vitest.concurrency.config.mts) | The suite that needs two real PostgreSQL connections; `yarn test:concurrency` |
 | [`next.config.ts`](./next.config.ts) | Next.js configuration, wrapped by the next-intl plugin; nothing host-specific |
 | [`tsconfig.json`](./tsconfig.json) | TypeScript, strict, as generated by create-next-app |
 | [`eslint.config.mjs`](./eslint.config.mjs) | ESLint flat config from `eslint-config-next`; `yarn lint` |
-| [`.nvmrc`](./.nvmrc) | Node version, `22.14.0`, matching `engines.node`; CI reads it via `node-version-file` |
+| [`.nvmrc`](./.nvmrc) | Node version, `22.14.0` exactly; CI reads it via `node-version-file`. `engines.node` states the supported major, `22.x` |
 | [`.yarnrc.yml`](./.yarnrc.yml) | Yarn 4 settings: node-modules linker, exact version pins, supply-chain gates |
 | [`docker-compose.yml`](./docker-compose.yml) | Local PostgreSQL for development (`SETUP.md` §9); tests do not use it |
 | [`.env.example`](./.env.example) | Environment variable names and safe local examples, never real values (`AGENTS.md` §8) |
@@ -197,7 +207,8 @@ The platform lets people:
 
 - discover Brașov Runners meetups, community runs, events, and races;
 - read useful event information in Romanian or English;
-- see the exact number of currently available places for capped events;
+- see the exact number of currently available places for capped events, and enter from the event page or the featured event on the landing page;
+- ask to be left off the public participant list, on any event, whether or not that event publishes one;
 - register without creating an account or password;
 - confirm control of their email address;
 - sign the approved event declaration before becoming confirmed;
@@ -209,7 +220,9 @@ The platform lets people:
 
 The club can:
 
-- manage events, capacity, registrations, waiting lists, declarations, and transactional email from one backoffice;
+- manage events, capacity, registrations, waiting lists, declarations, and transactional email from one backoffice, saving an event's settings and both languages together in one save;
+- enter a registration for somebody who asks in person, on the phone, or after a run — it takes its place in the same queue as one made online, and the participant still confirms and signs for themselves;
+- publish the names of the people coming to a particular event, once the approved privacy notice says so, with any participant able to keep their own name off it;
 - resend the email appropriate to a participant's current registration state;
 - cancel, safely restart, waitlist, or promote registrations with an audit trail; a restart re-enters the flow at the correct step for the participant's verification state and never lands directly on Confirmed;
 - let approved contributors write and publish content through a small built-in CMS;
@@ -219,7 +232,8 @@ The club can:
 
 Authentication is deliberately limited to staff:
 
-- `AUTHOR`, `EDITOR`, and `ADMIN` users sign in to the CMS/backoffice through Zitadel;
+- `AUTHOR`, `EDITOR`, and `ADMIN` users sign in to the CMS/backoffice through Auth.js and the Zitadel OAuth provider, against the `staff_users` allowlist — an unknown Zitadel account is refused before a session issues ([`DECISIONS.md`](./DECISIONS.md) §26). Local and test use the development switcher instead; qa and production refuse every staff request until an operator turns `STAFF_AUTH_MODE=provider` on for that environment, which needs a Zitadel tenant to exist first;
+- an administrator maintains that list: add a colleague by email and role, change a role, revoke access. Nobody outside it can sign in;
 - ordinary participants do **not** create an application account;
 - participant identity is based on a verified email address;
 - participant actions use short-lived, purpose-limited email links;
@@ -365,14 +379,15 @@ real PostgreSQL compiled to WebAssembly, in-process — so the whole suite runs 
 no Docker and no setup. Journeys run in a real browser through **Playwright**, at a 320-pixel
 phone viewport as well as a desktop one, because the phone is the design target.
 
-**Still to come**, each documented and deliberately not built yet: staff login (Auth.js),
-transactional email, a small Tiptap-based CMS for organizers, and image storage.
+**Still to come**, each documented and deliberately not built yet: a small Tiptap-based CMS for
+organizers (articles, static pages, galleries) and image storage. Staff login and transactional
+email now exist — see [`DECISIONS.md`](./DECISIONS.md) §26 and the current-status table above.
 
 ### The table
 
 | Area | Choice | Notes |
 | --- | --- | --- |
-| Runtime | Node.js 22.14.0 | Pinned in `.nvmrc` and `engines`; CI reads the same file |
+| Runtime | Node.js 22.14.0 | Pinned exactly in `.nvmrc`, which CI reads; `engines.node` states the major, `22.x` |
 | Package manager | Yarn 4 via Corepack | Exact version pins by default, no floating ranges |
 | Application | Next.js 16 App Router | One modular monolith; Server Components by default |
 | Language | TypeScript 5.9, strict | |
@@ -382,8 +397,8 @@ transactional email, a small Tiptap-based CMS for organizers, and image storage.
 | Database | PostgreSQL + Drizzle ORM | Neon in QA and production, Docker locally |
 | Validation | Zod | At every boundary, including environment variables |
 | Hosting | Vercel, region `fra1` | One project per environment; portable by rule |
-| Domain / DNS | ROTLD-accredited registrar | Bound at the end of M1; see [`SETUP.md`](./SETUP.md) §26 |
-| Staff authentication | Auth.js | Documented with Zitadel; direction is Auth.js alone — deferred |
+| Domain / DNS | The club's registrar; a `.com` first, a `.ro` added later | Exactly one canonical host, every other domain redirects to it, switched by `yarn domain:bind`; see [`SETUP.md`](./SETUP.md) §26 |
+| Staff authentication | Auth.js with the Zitadel OAuth provider, `staff_users` as the allowlist | Live in QA; production needs its own Zitadel application ([`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) § Staff sign-in) |
 | Participant access | Verified email action links | No participant account or password, ever |
 | Email | Transactional outbox behind an adapter | Documented as Mailgun; needs the domain first — deferred |
 | Storage | Object storage behind an adapter | Documented as Cloudflare R2 — deferred |
@@ -444,7 +459,7 @@ email action links, canonical tags, `hreflang` alternates, `sitemap.xml`, `robot
 Open Graph URLs, authentication callbacks, and the Mailgun webhook URL. No hostname
 literal may appear in `src/`.
 
-The domain and normal DNS stay with whichever registrar holds the `.ro`; that may change over time and the application does not care. Cloudflare remains the documented object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
+The domain and normal DNS stay with whichever registrar holds the club's domains. The club may hold more than one; exactly one is canonical at a time, the others redirect to it, and the application does not care which ([`DECISIONS.md`](./DECISIONS.md) §55). Cloudflare remains the documented object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
 
 Time-driven work such as email-outbox retries and waitlist/hold expiry must be idempotent and restart-safe. No capacity or queue decision may depend on the maintenance job having run: every read and every capacity-changing transaction evaluates hold expiry against the current time. The scheduler is a delivery and liveness mechanism only, it invokes protected internal job endpoints, and it is infrastructure rather than domain logic.
 
@@ -452,9 +467,9 @@ Time-driven work such as email-outbox retries and waitlist/hold expiry must be i
 
 | Environment | Purpose | Data and providers |
 | --- | --- | --- |
-| Local | Daily development | Local PostgreSQL, mock staff auth, captured email, local/fake storage |
+| Local | Daily development | Local PostgreSQL, the development staff switcher, captured email, local/fake storage |
 | Test | CI and automated integration tests | Disposable PostgreSQL and fake/capture adapters |
-| QA | Integrated testing and club acceptance | Dedicated Neon, Zitadel, R2, and allowlisted/captured email; synthetic data only |
+| QA | Integrated testing and club acceptance | Dedicated Neon and R2, allowlisted or captured email, staff sign-in through its own Zitadel application; synthetic data only |
 | Production | Live website | Dedicated production resources and authorized real data |
 
 `APP_ENV` distinguishes these environments. `NODE_ENV` is not used as the environment identity.
@@ -475,9 +490,28 @@ The CMS is part of the same application and supports only real club needs:
 - a small media library;
 - optimistic concurrency so one editor cannot silently overwrite another.
 
+**What is built today** is the whole of an event: create it, duplicate last year's, set every
+column it carries — kind, event status, both times, the end time and the time zone, the
+coordinates, the map link, distance, climb, the featured flag, and the whole registration block
+including the capacity, the window and the approved declaration a participant signs — write both
+languages, preview it, publish it, archive it when it is over, delete one made by mistake. Draft →
+In review → Published → Archived belongs to the *event*: both languages go live together, and
+publishing is refused while either is incomplete ([`DECISIONS.md`](./DECISIONS.md) §28). Deleting
+is the Administrator's alone and is refused for an event anybody has registered for. Every save
+carries the version it was loaded with. It was built during M1 rather than M5, deliberately and on
+the record (§25, §28); the requirements keep their M5 release field and carry a status line.
+Articles, static pages, galleries and the media library are not built.
+
 Tiptap JSON is stored as the canonical editable body. Public rendering uses an allowlisted Tiptap schema; arbitrary HTML, scripts, remote embeds, collaboration cloud, comments, and paid editor extensions are excluded from V1.
 
-Legal documents (privacy notice, terms, and the event declaration) are versioned, Admin-controlled content stored outside the ordinary Author/Editor workflow. Their wording requires human approval. AI must not invent them. V1 has no editor screen for them; new versions arrive through [the legal document runbook](./docs/RUNBOOKS.md#legal-document-version).
+Legal documents (privacy notice, terms, and the event declaration) are versioned, Admin-controlled content stored outside the ordinary Author/Editor workflow. Their wording requires human approval. AI must not invent them. V1 has no editor screen for them; new versions arrive through [the legal document runbook](./docs/RUNBOOKS.md#legal-document-version). An event *points at* an approved declaration version from the editor, which is a selection and never an edit.
+
+Until the club approves its own wording, every environment except production carries a clearly
+marked **sample** set: complete in structure so the club or its lawyer edits a concrete draft
+rather than facing a blank page, every club-specific fact a visible `<PLACEHOLDER>`, and a
+not-approved banner as the first thing on each rendered page. Production is refused outright
+([`DECISIONS.md`](./DECISIONS.md) §29), and registration there correctly refuses everyone until
+the approved text is loaded.
 
 ## Read-only AI review
 
@@ -548,6 +582,7 @@ yarn typecheck
 yarn test
 yarn test:unit
 yarn test:integration
+yarn test:concurrency
 yarn test:e2e
 yarn check
 yarn docs:check
@@ -555,6 +590,7 @@ yarn db:generate
 yarn db:migrate
 yarn db:seed
 yarn db:reset:local
+yarn flags:sync
 yarn deploy:build
 ```
 
@@ -608,6 +644,7 @@ content/
 .github/
   workflows/
     docs-check.yml
+    scheduled-jobs.yml
   CODEOWNERS
   pull_request_template.md
 

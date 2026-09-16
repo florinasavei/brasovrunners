@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   index,
   integer,
@@ -10,8 +11,12 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { legalDocuments } from "./legal-documents";
+import { locale } from "./locale";
+import { staffUsers } from "./staff-users";
 
 // AGENTS.md §10.1 defines these sets. They are database enums so an unsupported value is
 // rejected by the database, not only by application validation (BR-REQ-010-01 criterion 3).
@@ -36,7 +41,46 @@ export const editorialStatus = pgEnum("editorial_status", [
 
 export const registrationMode = pgEnum("registration_mode", ["NONE", "INTERNAL", "EXTERNAL"]);
 
-export const locale = pgEnum("locale", ["ro", "en"]);
+/**
+ * How hard the event is, as a closed set rather than a typed word.
+ *
+ * It was `difficulty_label`, free text, and `DECISIONS.md` §36 accepted the consequence that an
+ * English page would show whatever Romanian the club typed. For a fact with three possible
+ * answers that trade buys nothing: an enum is the same single decision by the club, rendered in
+ * the reader's own language, and it also stops "Mediu", "mediu" and "Medium" being three
+ * difficulties in a filter that does not exist yet but will.
+ *
+ * Three values, because three is what the club uses. A fourth is a migration, not a free-text
+ * escape hatch — the point of the closed set is that adding to it is a decision.
+ */
+export const eventDifficulty = pgEnum("event_difficulty", ["EASY", "MODERATE", "HARD"]);
+
+/**
+ * Whether the event costs money — and deliberately not how much.
+ *
+ * A price is not an enum: it is an amount, a currency, and usually a deadline. This column
+ * answers the only question every event page must answer today, which is whether a runner
+ * needs their wallet. The amount becomes its own nullable column the day the club runs an
+ * event that charges, and `PAID` is what will point at it.
+ */
+export const eventCostType = pgEnum("event_cost_type", ["FREE", "PAID"]);
+
+/**
+ * Whether the event page publishes who is coming (BR-REQ-039-01, AGENTS.md §12.3).
+ *
+ * `HIDDEN` is the default and the only value any existing row has, because publishing the names
+ * of the people who entered a race is a disclosure of their personal data — not a display
+ * option. The club turns it on per event, knowing what it is turning on, and the approved
+ * privacy notice has to say that it happens before it may be turned on at all.
+ *
+ * `NAMES` is the whole of the other setting: the registered name, and nothing else. There is no
+ * value here that publishes an email, a status, a bib or a count of who has not confirmed —
+ * those would each be a different disclosure, and adding one is a change to this enum with a
+ * decision behind it rather than a flag somebody sets.
+ */
+export const participantListVisibility = pgEnum("participant_list_visibility", ["HIDDEN", "NAMES"]);
+
+export type ParticipantListVisibility = (typeof participantListVisibility.enumValues)[number];
 
 /**
  * Events.
@@ -44,9 +88,6 @@ export const locale = pgEnum("locale", ["ro", "en"]);
  * The full M1 column set from AGENTS.md §12.3 is present even though the pilot reads only a
  * few of them. Columns are free to add now and a migration later, and the M2 footprints
  * (`race_id`) are required to be here from the start.
- *
- * Staff attribution columns are deliberately absent until `staff_users` exists; adding them
- * before the table they reference would mean a fake foreign key or none at all.
  */
 export const events = pgTable(
   "events",
@@ -59,42 +100,190 @@ export const events = pgTable(
     kind: eventKind("kind").notNull(),
     eventStatus: eventStatus("event_status").notNull().default("SCHEDULED"),
 
+    /**
+     * Publication, for the whole event rather than per language.
+     *
+     * This column used to live on `event_translations`, so Romanian could be PUBLISHED while
+     * English was still a draft. It no longer can: an event is published or it is not, and both
+     * languages go live together (`DECISIONS.md` §28, superseding the per-locale wording of
+     * AGENTS.md §11.2). BR-REQ-040-02 still forbids a cross-locale fallback — a locale with no
+     * translation row is a 404, and so is an event that is not PUBLISHED — but the half-published
+     * state that rule used to have to describe cannot occur any more.
+     *
+     * The rule that makes it safe is enforced in `content/events/service.ts#transitionEvent`:
+     * PUBLISHED requires a complete translation in every locale. A CHECK cannot say that
+     * honestly — it would have to read `event_translations` — so the only thing asserted here is
+     * what a CHECK *can* see: a published event carries the date it was first published.
+     */
+    editorialStatus: editorialStatus("editorial_status").notNull().default("DRAFT"),
+
+    /**
+     * When the event was first published — and it is never cleared.
+     *
+     * Unpublishing moves `editorial_status` back to DRAFT, which is what every public query
+     * reads, but the timestamp stays. It is the record of "this has been public at least once",
+     * which is what AGENTS.md §11.5 keys slug stability on: a slug is editable before first
+     * publication and stable afterwards, and clearing this on unpublish would hand back an
+     * editable slug for a URL people have already followed and search engines have indexed.
+     */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+
+    /**
+     * Optimistic concurrency for the event row (AGENTS.md §11.5, BR-REQ-051-01 criterion 5).
+     *
+     * The same guard `event_translations.version` gives a translation save, now that the event
+     * row carries publication and the whole registration block: two organizers configuring one
+     * race on a Sunday morning is the ordinary case, and last-write-wins would silently discard
+     * one of them. Incremented by every save and every transition.
+     */
+    version: integer("version").notNull().default(1),
+
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
+
+    /**
+     * The gun time, when the race's own start differs from when the event begins.
+     *
+     * `starts_at` keeps its meaning exactly: when the event begins — the gathering — and it is
+     * what the ordering, the upcoming/past cut-off, the sitemap and the listing all read. A
+     * runner needs both times, and they are not the same fact: gather at 09:00, start at
+     * 10:00. Null when the club has stated only one time; the page then shows only that one
+     * rather than inventing a gathering an hour before.
+     */
+    raceStartsAt: timestamp("race_starts_at", { withTimezone: true }),
+
     timezone: text("timezone").notNull().default("Europe/Bucharest"),
 
+    /**
+     * The exact spot, in decimal degrees.
+     *
+     * A name is not a location: "Parcul Tractorul" puts a runner somewhere in a park, and the
+     * start is one corner of it. These are what the map link is built from, and what the
+     * `SportsEvent` block publishes as `geo` so a search result can show the right pin.
+     *
+     * Both or neither — half a coordinate is a point in the Atlantic.
+     */
     latitude: numeric("latitude"),
     longitude: numeric("longitude"),
+
+    /**
+     * An override for the map link, when the club wants one specific page.
+     *
+     * The ordinary way to get a map link is the coordinates above: the application builds one
+     * from them and `MAP_LINK_BASE_URL`, which is configuration. That indirection is not
+     * decoration — AGENTS.md §8 forbids a hostname literal anywhere under `src/` and exempts no
+     * provider, so a maps URL can be *configured* but never written into the code.
+     *
+     * This column wins when it is set, for the case coordinates cannot express: a named venue
+     * page, a shared list, a pin the club has already dropped. The database requires https, so
+     * `javascript:` and `data:` cannot be stored even by a seed or a hand-written `UPDATE`.
+     *
+     * It is **where to meet**, and nothing else. The route is `route_url` below — the two were
+     * one column until somebody needed both on the same event (`DECISIONS.md` §49).
+     */
+    mapUrl: text("map_url"),
+
+    /**
+     * The course: where the run actually goes (BR-REQ-011-01 criterion 8).
+     *
+     * A link and never a file, because media storage is deferred (`AGENTS.md` §17) and there is
+     * nowhere to put a GPX yet. The club already draws its routes somewhere — Strava, Komoot,
+     * a map service — and the link to that is worth more than a copy that goes stale.
+     *
+     * Separate from `map_url` because a runner asks two different questions: "where do I turn
+     * up" and "where does it go", and an event usually answers them with two different pages.
+     * https at the database for the same reason `map_url` is: this URL is pasted by an
+     * organizer and clicked by a visitor, and the constraint is what holds when the value
+     * arrives from a seed or a hand-written `UPDATE` rather than from the form.
+     */
+    routeUrl: text("route_url"),
+
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
 
-    // Must stay NULL for the whole pilot. See the check constraint below.
+    /**
+     * The four facts that are the same event in either language (`DECISIONS.md` §36).
+     *
+     * They lived on `event_translations` and were typed twice — and the second copy was not a
+     * translation, it was the same fact again: the street address is identical word for word,
+     * and the meeting point, the difficulty and the cost are one thing the club decided once.
+     * An organizer filling an event in was answering the same question in two panels.
+     *
+     * The accepted consequence, recorded rather than discovered later: these render on the
+     * English page in whatever words the club typed, so `/en/events/...` shows "Parcul
+     * Tractorul" and "Gratuit". That is the club's own vocabulary for its own places, and the
+     * owner chose it over retyping. The title, the page address, the short description and the
+     * two SEO fields stay per language, because those genuinely are translations.
+     *
+     * Nullable at the database, required by `content/events/fields.ts` on every save: the column
+     * has to accept the rows that existed before the migration that added it, and
+     * `transitionEvent` refuses to publish an event whose meeting point is still blank.
+     */
+    locationName: text("location_name"),
+    locationAddress: text("location_address"),
+
+    /**
+     * The two facts that stopped being free text in migration `0018`.
+     *
+     * Null means the club has not said, and the page then omits the row rather than guessing —
+     * an event with no stated cost is not thereby free, and one with no stated difficulty is
+     * not thereby easy. That is why neither column has a default.
+     */
+    difficulty: eventDifficulty("difficulty"),
+    costType: eventCostType("cost_type"),
+
+    /**
+     * The one event the landing page leads with, or none.
+     *
+     * At most one row may carry it, and that is enforced by the partial unique index below
+     * rather than by application code — the same reasoning as the capacity guard. Two featured
+     * events is not a cosmetic bug: the hero would render one of them arbitrarily, and the
+     * club would have no way to tell which without reading the database.
+     */
+    featured: boolean("featured").notNull().default(false),
+
     capacity: integer("capacity"),
 
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),
     registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
 
-    // References legal_documents once that table exists; unconstrained until then.
-    declarationDocumentId: uuid("declaration_document_id"),
+    // The EVENT_DECLARATION document version an internal registration must accept.
+    declarationDocumentId: uuid("declaration_document_id").references(() => legalDocuments.id),
 
     externalProvider: text("external_provider"),
     externalRegistrationUrl: text("external_registration_url"),
+
+    /**
+     * Off, until the club decides otherwise for one specific event (BR-REQ-039-01).
+     *
+     * The default is the rule, not a convenience: every event that exists today, and every event
+     * created after this column, publishes nobody. Switching it on is a deliberate act in the
+     * backoffice, and a participant can still keep their own name off the page
+     * (`registrations.list_opt_out`).
+     */
+    participantListVisibility: participantListVisibility("participant_list_visibility")
+      .notNull()
+      .default("HIDDEN"),
+
+    // AGENTS.md §12.3. Nullable because every row that exists today was written by a seed
+    // rather than by a person, and inventing an author for it would be a lie in the trail.
+    createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
+    updatedByStaffUserId: uuid("updated_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    /**
-     * The pilot guard rail. BR-REQ-034-02 requires that a capped event never overbooks, and
-     * that guarantee comes from a locked capacity transaction with a concurrency test, which
-     * does not exist yet. Deferring the capacity engine is only safe if the system is
-     * physically incapable of storing a capacity, so the database refuses one.
-     *
-     * Removing this constraint is the last step of building the capacity transaction, never
-     * the first. WEEKEND.md records the reasoning.
-     */
-    check("events_capacity_must_be_null_during_pilot", sql`${t.capacity} IS NULL`),
+    // The pilot guard rail that blocked any capacity value — `events_capacity_must_be_null_
+    // during_pilot` — is removed here, and only here: BR-REQ-034-02's locked capacity
+    // transaction (`modules/registrations/service.ts`) and its concurrency suite
+    // (`tests/concurrency/capacity.test.ts`) exist and pass first. WEEKEND.md and
+    // DECISIONS.md record why the guard existed and when removing it became safe.
 
     // AGENTS.md §12.3: capacity and a declaration are internal-registration concepts only.
     check(
@@ -110,6 +299,50 @@ export const events = pgTable(
     ),
 
     check("events_end_after_start", sql`${t.endsAt} IS NULL OR ${t.endsAt} > ${t.startsAt}`),
+
+    /**
+     * The race cannot start before the event begins, nor after it ends.
+     *
+     * A gun time before the gathering is a typo every time, and it would render as a page
+     * telling runners to arrive an hour after the race started.
+     */
+    check(
+      "events_race_start_within_event",
+      sql`${t.raceStartsAt} IS NULL
+          OR (${t.raceStartsAt} >= ${t.startsAt}
+              AND (${t.endsAt} IS NULL OR ${t.raceStartsAt} <= ${t.endsAt}))`,
+    ),
+
+    /**
+     * https only, at the database.
+     *
+     * The form validates too, but the form is not the last line: a seed, a migration or a
+     * direct `UPDATE` all reach this column, and a stored `javascript:` URL is a script that
+     * runs when a visitor clicks the club's own map link.
+     */
+    check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
+    check(
+      "events_route_url_is_https",
+      sql`${t.routeUrl} IS NULL OR ${t.routeUrl} LIKE 'https://%'`,
+    ),
+
+    /**
+     * A coordinate is a pair, and each half has a range.
+     *
+     * Latitude beyond ±90 does not exist, and longitude beyond ±180 wraps — both are what a
+     * transposed pair looks like, which is the mistake this catches: Brașov is 45.65, 25.60,
+     * and typed the other way round it is a field in Somalia.
+     */
+    check(
+      "events_coordinates_are_a_pair",
+      sql`(${t.latitude} IS NULL) = (${t.longitude} IS NULL)`,
+    ),
+    check(
+      "events_coordinates_in_range",
+      sql`(${t.latitude} IS NULL OR (${t.latitude} >= -90 AND ${t.latitude} <= 90))
+          AND (${t.longitude} IS NULL OR (${t.longitude} >= -180 AND ${t.longitude} <= 180))`,
+    ),
+
     check(
       "events_non_negative_measurements",
       sql`(${t.distanceMeters} IS NULL OR ${t.distanceMeters} >= 0)
@@ -120,18 +353,71 @@ export const events = pgTable(
       sql`${t.registrationOpensAt} IS NULL OR ${t.registrationClosesAt} IS NULL
           OR ${t.registrationClosesAt} >= ${t.registrationOpensAt}`,
     ),
+
+    /**
+     * A capacity is a number of places, so zero is not one.
+     *
+     * AGENTS.md §12.3 lists "positive capacity" among the checks; it could not be written while
+     * the pilot guard forced the column to stay NULL, and it matters now that an organizer types
+     * the number into a form. Capacity 0 would read as "unlimited is off, and nobody may enter",
+     * which is what `registration_mode = NONE` already says honestly.
+     */
+    check("events_capacity_positive", sql`${t.capacity} IS NULL OR ${t.capacity} > 0`),
+
+    /**
+     * A start list can only be published for an event this platform actually registers.
+     *
+     * For `NONE` there are no participants to list, and for `EXTERNAL` the people who entered
+     * are the other organizer's — the club holds no registrations for them and must not appear
+     * to publish any. Set here as well as in the service for the reason every other check on
+     * this table is: a seed or a hand-written `UPDATE` reaches this column too.
+     */
+    check(
+      "events_participant_list_internal_only",
+      sql`${t.participantListVisibility} = 'HIDDEN' OR ${t.registrationMode} = 'INTERNAL'`,
+    ),
+
+    check("events_version_positive", sql`${t.version} >= 1`),
+
+    /**
+     * A published event has a first-publication date.
+     *
+     * The whole of "PUBLISHED requires both locales complete" cannot be a CHECK — the rows it
+     * would have to read are in another table — so this asserts the half that is honestly
+     * visible from here, and `content/events/service.ts` asserts the rest.
+     */
+    check(
+      "events_published_has_a_publication_date",
+      sql`${t.editorialStatus} <> 'PUBLISHED' OR ${t.publishedAt} IS NOT NULL`,
+    ),
     check("events_race_id_implies_race_kind", sql`${t.raceId} IS NULL OR ${t.kind} = 'RACE'`),
 
+    /**
+     * At most one featured event, enforced by the database.
+     *
+     * A partial unique index over the flag: every row with `featured = true` collides with
+     * every other, and rows with `false` are not in the index at all, so the ordinary case
+     * has no contention. Application code that "remembers" to clear the previous flag is a
+     * race between two organizers, not a rule.
+     */
+    uniqueIndex("events_only_one_featured").on(t.featured).where(sql`${t.featured}`),
+
     index("events_status_starts_at_idx").on(t.eventStatus, t.startsAt),
+    // Every public query filters on publication and orders by the start, now that publication
+    // is a column here rather than on the translation the query joins.
+    index("events_editorial_status_starts_at_idx").on(t.editorialStatus, t.startsAt),
     index("events_kind_starts_at_idx").on(t.kind, t.startsAt),
     index("events_registration_mode_starts_at_idx").on(t.registrationMode, t.startsAt),
   ],
 );
 
 /**
- * Event translations. One row per event per locale, each with its own editorial status so
- * Romanian can be published while English is still a draft (BR-REQ-040-02: no cross-locale
- * fallback — an unpublished locale is a 404, not the other language).
+ * Event translations. One row per event per locale.
+ *
+ * No editorial status here: publication is one state for the whole event (`events`
+ * `editorial_status`, `DECISIONS.md` §28), so both languages go live together and a
+ * half-published event cannot exist. BR-REQ-040-02 still holds — a locale with no translation
+ * row is a 404 in that locale and never a fallback to the other language.
  */
 export const eventTranslations = pgTable(
   "event_translations",
@@ -147,23 +433,37 @@ export const eventTranslations = pgTable(
     excerpt: text("excerpt"),
     bodyJson: jsonb("body_json"),
 
-    locationName: text("location_name").notNull(),
-    locationAddress: text("location_address"),
-    difficultyLabel: text("difficulty_label"),
+    /*
+     * `location_name`, `location_address`, `difficulty_label` and `cost_text` were here and are
+     * gone (migration `0017`, `DECISIONS.md` §36). They are the same fact in both languages
+     * rather than a translation of one, so they live on `events`. The columns survived one
+     * release after the code stopped reading them, which is what AGENTS.md §7.6 requires: a
+     * rollback has to find a schema the previous code can still run against.
+     *
+     * `cover_alt_text` stays. It is genuinely per language — alt text is prose a translator
+     * writes, not a fact about the event.
+     */
     coverAltText: text("cover_alt_text"),
-
-    // Free text, per locale: "Gratuit" / "Free", or "50 lei". BR-REQ-041-01 criterion 2 and
-    // BR-REQ-070-03 criterion 2 both require cost to be readable as text on the event page,
-    // and it is localized wording rather than a number, so it belongs on the translation.
-    // Null means the club has not stated a cost; the page then says nothing about it rather
-    // than guessing that the event is free.
-    costText: text("cost_text"),
 
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
 
-    editorialStatus: editorialStatus("editorial_status").notNull().default("DRAFT"),
-    publishedAt: timestamp("published_at", { withTimezone: true }),
+    // AGENTS.md §12.4. The author is what turns "an Author edits their own drafts"
+    // (BR-REQ-051-01 criterion 1) into a rule the server can check rather than a description.
+    authorStaffUserId: uuid("author_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
+    reviewedByStaffUserId: uuid("reviewed_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
+
+    /**
+     * Optimistic concurrency (AGENTS.md §11.5, BR-REQ-051-01 criterion 5).
+     *
+     * Incremented by every save. A save carrying a stale number is a conflict, never a
+     * last-write-wins overwrite — see `saveEventTranslation` in
+     * `src/modules/content/events/service.ts`.
+     */
     version: integer("version").notNull().default(1),
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -173,6 +473,23 @@ export const eventTranslations = pgTable(
     unique("event_translations_event_locale_unique").on(t.eventId, t.locale),
     // Slugs are scoped per locale, so `ro` and `en` may each use "crosul-brasovului".
     unique("event_translations_locale_slug_unique").on(t.locale, t.slug),
-    index("event_translations_status_idx").on(t.locale, t.editorialStatus),
+    check("event_translations_version_positive", sql`${t.version} >= 1`),
+
+    /**
+     * The two fields every public page renders, present rather than blank.
+     *
+     * `NOT NULL` alone permits `''`, and a translation whose title is an empty string is what a
+     * half-filled second locale looks like. Publication requires a complete translation in every
+     * locale (`content/events/service.ts#transitionEvent`); this is the part of "complete" a
+     * CHECK can state honestly from inside one row.
+     *
+     * It was three until migration `0017`. The third named `location_name`, which is no longer
+     * on this table — the meeting point is one value for the whole event and is checked there.
+     */
+    check(
+      "event_translations_required_fields_present",
+      sql`length(btrim(${t.title})) > 0
+          AND length(btrim(${t.slug})) > 0`,
+    ),
   ],
 );

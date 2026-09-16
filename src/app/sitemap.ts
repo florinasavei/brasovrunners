@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { listPublishedPages } from "@/modules/content/pages/repository";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { env } from "@/shared/config/env";
 
@@ -21,20 +22,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of routing.locales) {
-    entries.push({
-      url: `${env.APP_BASE_URL}${getPathname({ locale, href: "/" })}`,
-      changeFrequency: "weekly",
-      priority: 1,
-    });
-
     const events = await listPublishedEvents(getDb(), locale);
 
-    // The events index is only worth listing where there is something on it.
+    /**
+     * The site root is deliberately absent: it redirects to the events listing, and listing a
+     * URL that answers 308 asks a crawler to discover the same page twice. The listing is the
+     * landing page, so it carries priority 1.
+     *
+     * It is only worth listing where there is something on it.
+     */
     if (events.length > 0) {
       entries.push({
         url: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
         changeFrequency: "weekly",
-        priority: 0.8,
+        priority: 1,
       });
     }
 
@@ -47,6 +48,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: event.publishedAt ?? undefined,
         changeFrequency: "weekly",
         priority: 0.7,
+      });
+    }
+  }
+
+  /**
+   * Standing pages (BR-REQ-050-03), in a second pass so they sit together in the file rather
+   * than interleaved with events.
+   *
+   * `changeFrequency` is yearly and the priority is below an event's: an About page is what a
+   * visitor reads once, and an event is what they come back for. Only published rows are
+   * returned, and only in a locale that has one — the same rule as everything above.
+   */
+  for (const locale of routing.locales) {
+    for (const page of await listPublishedPages(getDb(), locale)) {
+      entries.push({
+        url: `${env.APP_BASE_URL}${getPathname({
+          locale,
+          href: { pathname: "/pages/[slug]", params: { slug: page.slug } },
+        })}`,
+        lastModified: page.updatedAt,
+        changeFrequency: "yearly",
+        priority: 0.4,
       });
     }
   }

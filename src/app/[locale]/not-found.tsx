@@ -7,7 +7,7 @@ export default async function NotFound() {
   const t = await getTranslations("NotFound");
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 4, sm: 8 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title")}
       </Typography>

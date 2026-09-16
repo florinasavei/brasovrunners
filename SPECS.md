@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -46,6 +46,12 @@ are built strictly in that order (`DECISIONS.md` §12 and §13; `BUSINESS.md` §
 
 Each requirement's **Release** field names its milestone.
 
+**One slice moved earlier, and the requirements were not relabelled.** Event editing, the
+editorial workflow, the protected preview and the three staff roles were built during M1
+rather than M5, because until they existed only a developer could change a race. The affected
+requirements — BR-REQ-050-01, BR-REQ-051-01, BR-REQ-051-02 — keep `Release: M5` and carry a
+**Status** line saying which part is built. `DECISIONS.md` §25 records the reordering.
+
 **Release gate for M1.** Every M1 MUST requirement passes, the owner decisions in
 `BUSINESS.md` §9 are answered, the approved legal documents are loaded, the domain-binding
 runbook is complete, and one real registration has completed on production.
@@ -73,23 +79,39 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a request to `/`, when a valid saved locale exists, then the response redirects to that locale.
 4. Given a URL with an explicit locale prefix, when a different locale is saved, then the URL wins.
 5. Given any localized page, when it renders, then the alternate-locale link points at the corresponding localized slug and not at a concatenated URL.
+6. Given the language switcher in the site header, when it is used on any page, then the visitor lands on the same page in the other language — resolved on the server, because the two locales of an event have different slugs and only the database holds the pair. When that page has no published translation in the target language, the switcher lands on that language's event listing rather than on a 404.
+7. Given the switcher, when it renders, then the current language is marked rather than offered as a link, and the visible label is the language code with the flag as decoration beside it — a flag is a country, not a language.
 
-**Verification:** e2e `locale-routing.spec.ts`
+**Verification:** unit `i18n/alternate-path.test.ts`; integration `events/locale-switch.test.ts`; e2e `event-pages.spec.ts`
 
 #### BR-REQ-040-02 — No cross-locale content fallback
 
 - **Source:** BR-BUS-040, BR-BUS-020
-- **Implements:** AGENTS.md §9.3
+- **Implements:** AGENTS.md §9.3, §11.2
 - **Priority:** MUST
 - **Release:** M1
+- **Status:** restated by `DECISIONS.md` §28, and bounded by §36. Publication is one state for
+  the whole event, so the half-published event the earlier wording described — Romanian live
+  while English is a draft — can no longer occur. The rule itself is unchanged and stronger:
+  what a locale must never do is serve the other language's *text*.
+  §36 draws the line explicitly: the meeting point, the street address, the difficulty and the
+  cost are one value for the whole event, not a translation, so the English page showing the
+  club's own words for them is a single stored value rather than a fallback to another row.
+  Since migration `0018` the difficulty and the cost are closed sets — `EASY|MODERATE|HARD` and
+  `FREE|PAID` — so they are one stored value *and* render in the reader's own language; the two
+  name fields remain the club's own words, because a place name is not translated.
 
 **Acceptance criteria**
 
-1. Given an event published in Romanian only, when `/en/events/<slug>` is requested, then the page does not display the Romanian body.
-2. Given the same event, when the English listing is requested, then the event is absent from it.
-3. Given the same event, when the sitemap is generated, then only the Romanian URL appears.
+1. Given an event that is not published, when either language's URL is requested, then both 404, and the event is absent from both listings and from the sitemap.
+2. Given a published event that has no translation in one language, when that language's URL for it is requested, then the page 404s and does not display the other language's body.
+3. Given the same event, when that language's listing is requested, then the event is absent from it, and the sitemap contains only the language it has a translation for.
+4. Given a published event with a translation in both languages, when it is unpublished, then both languages stop being reachable in the same moment.
+5. Given the language switcher on a page whose event has no translation in the target language, when it is used, then it lands on that language's event listing rather than on a 404.
+6. Given an event's meeting point or street address, when either language's page renders, then it shows the one value stored on the event — this is a shared field, not a translation, and not a fallback (AGENTS.md §11.7).
+7. Given an event's difficulty or cost, when either language's page renders, then it shows that language's word for the stored enum value, and when the value is null the page omits the row entirely rather than stating a difficulty or a cost the club never gave.
 
-**Verification:** integration `content/locale-publication.test.ts`; e2e `event-page.spec.ts`
+**Verification:** integration `events/publication.test.ts`, `events/locale-switch.test.ts`; e2e `cms-publish.spec.ts`, `event-pages.spec.ts`
 
 #### BR-REQ-040-03 — Localized formatting and registration locale
 
@@ -112,12 +134,18 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §9.3
 - **Priority:** MUST
 - **Release:** M1
+- **Status:** amended, and recorded in `DECISIONS.md` §35. The rule is about the **public site**,
+  which is fully bilingual and stays so. The backoffice's enum labels — editorial status,
+  transitions, staff roles, event status, registration mode, registration status — are Romanian
+  only and live in `modules/staff-identity/domain/staff-labels.ts` rather than in either
+  catalogue.
 
 **Acceptance criteria**
 
 1. Given the message catalogs, when CI runs, then `ro.json` and `en.json` have identical key sets and identical interpolation placeholders.
 2. Given a missing key in production, when a page renders, then the failure is logged without participant data and the page still renders.
-3. Given the source tree, when CI runs, then no user-facing string literal exists outside the message catalogs.
+3. Given the source tree, when CI runs, then no user-facing string literal exists outside the message catalogs — except the backoffice enum labels named in the status above, which are Romanian constants typed `Record<Enum, string>`, so a new enum value is a compile error rather than a raw token on a screen.
+4. Given either catalogue, when CI runs, then it carries none of those enum labels: one copy of the club's own vocabulary, not two kept in step by a test.
 
 **Verification:** CI check `i18n-parity`; unit `i18n/messages.test.ts`
 
@@ -138,8 +166,10 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 6. Given any interactive element in a participant journey, when its rendered size is measured, then it is at least 44 by 44 CSS pixels.
 7. Given the registration list and registration detail in the backoffice on a phone viewport, when they render, then a participant can be found by name and their status read without horizontal scrolling.
 8. Given the test suite, when it runs, then every registration journey runs under a mobile viewport project as well as desktop.
+9. Given the public registration form, when it renders, then every field a submission is refused without is present without opening anything, every optional data field is collapsed behind a native disclosure whose summary names what is inside, and every consent is presented uncollapsed. It is one page; a multi-step form is refused (`DECISIONS.md` §47).
+10. Given a submission the server rejects, when the response renders, then the page is entered at a focusable summary naming each rejected field as a link to that field, and each rejected field carries its own message next to it.
 
-**Verification:** e2e `mobile/*.spec.ts` with a mobile Playwright project; release check on a real device
+**Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects; unit `registrations/form-errors.test.ts`; release check on a real device
 
 #### BR-REQ-001-01 — One platform boundary
 
@@ -185,8 +215,14 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given an internal event, when capacity is absent, then registration is open without any numeric place count.
 3. Given an internal event, when `registration_closes_at` is absent, then registration closes at event start.
 4. Given an internal event, when `registration_opens_at` is absent, then registration opens when the event is published in that locale.
+5. Given a race with a gathering time and a gun time, when its page renders, then both are shown, each labelled, in the event's timezone; and when only one time is stated, only that one is shown. `starts_at` remains when the event begins and continues to drive ordering, the upcoming/past cut-off, the sitemap and the listing.
+6. Given a race start earlier than the event start, or later than the event end where one exists, when it is submitted, then the database refuses it.
+7. Given an event with coordinates, when its page renders, then the meeting point and the address link to that exact point, and the `SportsEvent` block carries `geo` and `hasMap`. The link is built from `MAP_LINK_BASE_URL`, which is configuration: `AGENTS.md` §8 forbids a map hostname under `src/` and exempts no provider, so a club with no map service configured sees the meeting point as text rather than a guessed link.
+7a. Given coordinates, when they are saved, then latitude and longitude are present together and within ±90 and ±180; the database refuses half a pair, a value out of range, and a transposed pair. A stored `map_url` overrides the built link, must be https at the form and at the database, and renders with `rel="noopener noreferrer"`.
+8. Given an event with a route link, when its page renders, then the route is offered as its own labelled fact, separate from the meeting point and its map link, opening in a new tab with `rel="noopener noreferrer"` and a tap target of at least 44 pixels. `events.route_url` must be https at the form and again at the database; it is a link and never an uploaded file, since media storage is deferred (`AGENTS.md` §17). It is absent from the listing card, where the whole card is already one link. An event with no route link says nothing about a route, and duplicating an event carries it (`DECISIONS.md` §49).
+8. Given two events, when both are marked as the featured event, then the database refuses the second; and when one is featured, the landing page leads with it, above the ordinary listing, ordered featured → race → soonest.
 
-**Verification:** integration `events/configuration.test.ts`
+**Verification:** integration `events/configuration.test.ts`; unit `events/zoned-time.test.ts`; e2e `event-pages.spec.ts`
 
 #### BR-REQ-020-01 — Publication and cancellation visibility
 
@@ -285,6 +321,28 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 
 **Verification:** integration `capacity/queue-priority.test.ts`
 
+#### BR-REQ-039-01 — The public participant list is opt-out, off by default, and names only
+
+- **Source:** BR-BUS-039, BR-BUS-070
+- **Implements:** AGENTS.md §10.10, §12.3, §12.6
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §32; switched off in every
+  environment. The wording of the approved privacy notice that would allow the club to switch it
+  on is still the club's to write, and until it exists the setting stays HIDDEN everywhere.
+
+**Acceptance criteria**
+
+1. Given a newly created or newly duplicated event, when its participant-list setting is read, then it is `HIDDEN`.
+2. Given an event whose setting is `HIDDEN`, when its public page renders, then nothing about who is registered appears — no list, no heading and no count.
+3. Given an event whose setting is `NAMES`, when its public page renders, then it lists the registered name of every `CONFIRMED`, `REAL` registration that has not opted out, ordered by confirmation time, and nothing else about any of them.
+4. Given a registration that is not `CONFIRMED`, of kind `TEST`, or opted out, when the list renders, then that person does not appear and no count reveals them.
+5. Given the registration form, when it renders, then it offers a plainly worded opt-out, on every event, whatever that event's current setting is.
+6. Given an event whose registration mode is not `INTERNAL`, when `NAMES` is saved, then it is refused by the service and again by a database constraint.
+7. Given the public queries, when they are read, then no participant email address can be returned by any of them.
+
+**Verification:** integration `privacy/public-surface.test.ts`
+
 ### 4.3 Participant identity
 
 #### BR-REQ-031-01 — Registration without an account
@@ -350,6 +408,107 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 4. Given a registration close time earlier than the 48-hour window, when the link is created, then its expiry is capped at registration close.
 
 **Verification:** integration `registrations/confirmation-ttl.test.ts`
+
+#### BR-REQ-031-04 — Race entry details
+
+- **Source:** BR-BUS-031
+- **Implements:** AGENTS.md §12.6, §15.1
+- **Priority:** MUST
+- **Release:** M1
+
+**Acceptance criteria**
+
+1. Given the public registration form, when it renders, then it asks for first name, last name, public display name, date of birth, sex, nationality, city, phone, emergency contact name, emergency contact phone, t-shirt size and club, and still offers no password field and no login link.
+2. Given a public submission missing any of first name, last name, date of birth, sex, nationality, city, phone, emergency contact name or emergency contact phone, when it is posted, then it is rejected and no registration row is created.
+3. Given an accepted public submission whose display name is blank, when the row is inspected, then the display name equals the legal name, and is never empty. Shortening it is the participant's own choice, offered in a collapsed section of the form and never applied for them.
+4. Given a date of birth in the future, or earlier than 120 years before the event, when it is posted, then it is rejected.
+5. Given a registration an organizer enters for somebody who asked in person (BR-REQ-037-05), when a detail is unknown, then it may be left blank and the registration is still accepted — an organizer records what the person said on the telephone, and refusing the row would lose the registration entirely.
+6. Given any stored registration, when the legal name is read, then it is the pair of name fields, and the declaration is signed against that name and not against the display name.
+
+**Verification:** integration `registrations/entry-details.test.ts`; e2e `registration-submit.spec.ts`
+
+#### BR-REQ-031-05 — Health information is consented separately and never published
+
+- **Source:** BR-BUS-031, BR-BUS-053
+- **Implements:** AGENTS.md §12.6, §14.5, §15.10
+- **Priority:** MUST
+- **Release:** M1
+
+Health data is a special category under GDPR Article 9. It is collected because a race organizer
+may need it on the day, and it is therefore kept apart from every other field: its own consent,
+its own absence from the export, and no public surface at all.
+
+**Acceptance criteria**
+
+1. Given the registration form, when it renders, then the health field is optional and carries its own explicit consent checkbox, worded separately from the privacy-notice acknowledgment.
+2. Given a submission carrying health text without that consent ticked, when it is posted, then it is rejected and no registration row is created.
+3. Given an accepted submission with health text, when the row is inspected, then it stores the consent version and a server timestamp alongside the text.
+4. Given the registrations CSV export, when it is produced, then the health column is absent.
+5. Given any public page, including the participant list and any event page, when it renders, then no health text appears in the markup under any condition.
+6. Given a participant who withdraws the consent, when the registration is inspected afterwards, then the health text is cleared rather than merely flagged.
+
+**Verification:** integration `registrations/health-consent.test.ts`; privacy `public-surface.test.ts`
+
+#### BR-REQ-031-06 — The club's own people can say so, and it grants them nothing
+
+- **Source:** BR-BUS-031
+- **Implements:** AGENTS.md §12.6, §15.1, §15.10
+- **Priority:** SHOULD
+- **Release:** M1
+
+The club's members and its organizers enter its races like anybody else, and the club wants to
+know which entries are theirs. The answer is a self-declaration, not a lookup: `staff_users`
+holds only the handful of people with backoffice access, so matching against it would answer
+"no" for most of the members the question exists to find (`DECISIONS.md` §48).
+
+**Acceptance criteria**
+
+1. Given the public registration form, when it renders, then it offers an optional "I am a Brașov Runners team member" choice, and the disclosure it sits in names the club in its summary.
+2. Given a submission that does not answer it, when the row is inspected, then the stored value is `false` and never null, and the submission is accepted.
+3. Given the value, when any capacity, hold, waiting-list or queue-ordering path is inspected, then it appears in no condition in any of them — a declared member and a stranger reaching a full event get the same answer.
+4. Given any backoffice screen that shows the value, when it renders, then it is worded as a declaration and never as a verified fact, and the registrations list can be narrowed to the people who declared it.
+5. Given the CSV export, when it is produced, then the column reads "Yes" for a declared member and is empty for everybody else, never "No" — an unanswered question and a negative answer are the same stored value and must not be printed as the same statement.
+6. Given a registration an organizer enters for somebody who telephoned, when the form renders, then the same choice is offered.
+
+**Verification:** integration `registrations/club-member.test.ts`; unit `registrations/csv.test.ts`; e2e `registration-form.spec.ts`
+
+#### BR-REQ-036-03 — A participant can see where they are
+
+- **Source:** BR-BUS-031, BR-BUS-035, BR-BUS-036
+- **Implements:** AGENTS.md §10.5, §12.8, §16.3
+- **Priority:** MUST
+- **Release:** M1
+
+A registration moves through six states and, until this exists, the only evidence a participant
+has of any of them is whichever email happened to arrive. Participants have no accounts
+(BR-BUS-031), so the page is reached by the same single-use-minted, hashed action token every
+other participant link uses — never by a password.
+
+**Acceptance criteria**
+
+1. Given any registration email, when it renders, then it carries a link to that registration's status page.
+2. Given a valid status link, when it is opened, then the page names the event, the current state in the participant's own locale, and the one action that is theirs to take next — or states plainly that there is nothing to do.
+3. Given a waitlisted registration, when the status page renders, then it states the position in the queue.
+4. Given a status page, when it renders, then it shows no other participant's name, address, position or count.
+5. Given an invalid, expired or already-used token, when the page is opened, then it renders the same generic message as every other participant token surface, revealing nothing about whether the registration exists.
+6. Given the status page, when it is requested by any method, then it mutates nothing (AGENTS.md §12.8).
+
+**Verification:** integration `registrations/status-page.test.ts`; e2e `registration-status.spec.ts`
+
+#### BR-REQ-039-02 — The public list publishes the display name
+
+- **Source:** BR-BUS-039
+- **Implements:** AGENTS.md §10.10, §12.6
+- **Priority:** MUST
+- **Release:** M1
+
+**Acceptance criteria**
+
+1. Given an event whose participant list is `NAMES`, when the list renders, then each row is the registration's display name and nothing else.
+2. Given a registration whose display name differs from its legal name, when the list renders, then the legal name appears nowhere in the markup.
+3. Given the rules of BR-REQ-039-01, when the list renders, then they are unchanged: confirmed and real registrations only, opt-outs excluded, ordered by confirmation.
+
+**Verification:** privacy `public-surface.test.ts`
 
 #### BR-REQ-032-01 — Whitespace and case are ignored
 
@@ -597,8 +756,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a token, when it is past its expiry, used, or invalidated, then it is rejected.
 4. Given any GET request carrying a token, when it is handled, then no state is mutated.
 5. Given a new token for the same purpose and registration, when it is issued, then previous active tokens for that purpose are invalidated.
+6. Given repeated validation attempts presenting the same token, when they exceed the limit for the window, then further attempts are refused with the same generic response an unknown token receives, and the limit is keyed on the token's hash rather than on the caller.
 
-**Verification:** integration `tokens/action-tokens.test.ts`
+**Verification:** integration `tokens/action-tokens.test.ts`, `tokens/token-throttle.test.ts`
 
 ### 4.7 Backoffice
 
@@ -636,17 +796,85 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 #### BR-REQ-037-03 — Administrative corrections are bounded
 
 - **Source:** BR-BUS-037
-- **Implements:** AGENTS.md §14, §10.3
+- **Implements:** AGENTS.md §14, §10.3, §15.11
 - **Priority:** MUST
 - **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §33. The administrative changes to a
+  registration are entering one, correcting its name, cancelling it, and — since `DECISIONS.md`
+  §44 — erasing it (BR-REQ-037-06). There is deliberately no fifth: no verified-email edit and
+  no participant merge.
 
 **Acceptance criteria**
 
 1. Given a registration, when an administrator corrects the participant name, then the change is audited.
 2. Given the backoffice, when it renders, then it offers no verified-email edit and no participant merge.
 3. Given any administrative state change, when it completes, then an audit row records actor, action, entity, and time.
+4. Given a cancellation by an administrator, when it commits, then the released place is offered to the front of the waiting list, exactly as a participant's own cancellation is.
 
-**Verification:** integration `backoffice/corrections.test.ts`
+**Verification:** integration `registrations/staff-crud.test.ts`
+
+#### BR-REQ-037-04 — The queue can be exercised without reaching anyone
+
+- **Source:** BR-BUS-037, BR-BUS-060
+- **Implements:** AGENTS.md §12.6, §10.6, §15.10
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §30. No participant account type
+  is added and the staff role enum stays at three: this is a property of the registration.
+
+**Acceptance criteria**
+
+1. Given a registration of kind `TEST`, when it moves through the lifecycle, then it occupies a place, expires on the same hold deadlines, and is promoted from the waiting list by the same allocator as a `REAL` one; running the same scenario as each kind produces identical transitions.
+2. Given the capacity formula and the queue allocator, when they are read, then neither contains any condition on the kind.
+3. Given the CSV export, when it is produced, then `TEST` rows are absent from it.
+4. Given any screen that lists a registration, when a `TEST` row is shown, then it is labelled unmistakably.
+5. Given an Administrator in an environment other than production, when they add N test registrations to an event, then N synthetic participants go through the ordinary submission and confirmation path, each on a distinct address in a reserved domain that can never receive mail.
+6. Given the same Administrator, when they remove the test registrations for that event, then those rows and the synthetic participants behind them are deleted and every real registration is left standing.
+7. Given `APP_ENV=production`, when a test registration is attempted, then it is refused in two independent places.
+
+**Verification:** integration `registrations/test-kind.test.ts`
+
+#### BR-REQ-037-05 — An Administrator registers somebody who asked in person
+
+- **Source:** BR-BUS-037, BR-BUS-060
+- **Implements:** AGENTS.md §15.11, §12.6, §12.12
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §33.
+
+**Acceptance criteria**
+
+1. Given an Administrator and an event whose registration mode is `INTERNAL`, when they enter a name and an email, then a registration is created in `PENDING_EMAIL_CONFIRMATION`, of kind `REAL` and source `STAFF`, carrying the staff user who entered it.
+2. Given that registration, when it is created, then the participant receives the ordinary verification email and nothing about it is confirmed by staff.
+3. Given a full event with a waiting list, when an Administrator enters a registration and its address is confirmed, then it joins the back of that waiting list and no existing entry loses its position.
+4. Given the form, when the relay confirmation is not ticked, then the registration is refused and nothing is written.
+5. Given an address that already holds an active registration for that event, when an Administrator enters it, then they are told so plainly rather than receiving the public form's generic answer.
+6. Given an Author or an Editor, when any of this is attempted, then it is refused.
+7. Given any of these changes, when it completes, then an `audit_logs` row records the actor, the action, the entity and the time.
+
+**Verification:** integration `registrations/staff-crud.test.ts`
+
+#### BR-REQ-037-06 — An Administrator erases a registration
+
+- **Source:** BR-BUS-037, BR-BUS-070
+- **Implements:** AGENTS.md §15.11, §12.12, §10.3
+- **Priority:** MUST
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §44, which supersedes the "there is no
+  delete" of §33. Cancelling keeps the row, which is right for a withdrawal and wrong for an
+  erasure request; this is the second case.
+
+**Acceptance criteria**
+
+1. Given a registration that holds a place, when an Administrator erases it, then the place is released through the ordinary allocator and offered to the front of the waiting list before the row is removed.
+2. Given a registration with a signed declaration, when it is erased, then the declaration acceptance is deleted with it, and so are its action tokens and queued messages.
+3. Given any erasure, when it completes, then an `audit_logs` row records the actor, the reason, the status it was in and the time — and contains neither the participant's name nor their address.
+4. Given that audit row, when the registration no longer exists, then the row is still readable: it carries no foreign key to the thing it describes.
+5. Given an erasure, when it completes, then no message is sent to the participant.
+6. Given any role below Administrator, when an erasure is attempted, then it is refused and nothing is removed.
+7. Given an unknown registration, when an erasure is attempted, then it is refused rather than reported as a silent success.
+
+**Verification:** integration `registrations/staff-crud.test.ts`
 
 #### BR-REQ-071-01 — Participant export
 
@@ -720,6 +948,11 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §11.1, §11.4
 - **Priority:** MUST
 - **Release:** M5
+- **Status:** the event slice is built and in use — including creating, duplicating, archiving
+  and deleting an event, and every column an organizer owns (`BR-REQ-050-02`). Articles, static
+  pages, galleries and the Tiptap body contract of criterion 3 are not. Built during M1 by a
+  recorded reordering of the plan (`DECISIONS.md` §25, §28), which is why the release field
+  still reads M5.
 
 **Acceptance criteria**
 
@@ -729,22 +962,74 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 
 **Verification:** integration `cms/boundary.test.ts`
 
+#### BR-REQ-050-02 — An organizer owns the whole event, without a developer
+
+- **Source:** BR-BUS-050
+- **Implements:** AGENTS.md §11.1, §12.3
+- **Priority:** MUST
+- **Release:** M5
+- **Status:** built during M1 (`DECISIONS.md` §28). Until it existed, configuring an event meant
+  editing `src/db/seeds/pilot.ts` and re-running a seed.
+
+**Acceptance criteria**
+
+1. Given an Editor or an Administrator, when they create an event, then they supply its kind, its status, its times and time zone, its coordinates, its distance and climb, the featured flag and the whole registration block, plus a title, address and description in every language, and the event is created as a draft.
+2. Given an existing event, when it is edited, then every one of those fields is editable through the interface, and no field of `events` requires a developer.
+3. Given an event, when it is duplicated, then the copy is a draft, is not featured, has never been published, and carries its own page address in each language.
+4. Given an Administrator, when they delete an event that has no registration against it, then it and its translations are removed.
+5. Given an event that has any registration against it, when deletion is attempted, then it is refused with a reason and nothing is removed; archiving is the supported answer.
+6. Given an Author, when they attempt to create, duplicate or delete an event, then it is refused at the server.
+
+**Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`; e2e `cms-publish.spec.ts`
+
+#### BR-REQ-050-03 — The club writes its own standing pages
+
+- **Source:** BR-BUS-050
+- **Implements:** AGENTS.md §9.2, §11.2, §11.5, §12.9
+- **Priority:** SHOULD
+- **Release:** M1
+
+"About Brașov Runners" and its like: text that is not an event and not legal wording. A
+deliberately small content type — no galleries, no media library, no cover image, and the body
+is the plain-text format the legal editor already uses, because the Tiptap contract is M5 and
+pulling it forward to write an About page would decide that schema for the wrong reason
+(`DECISIONS.md` §51, following §46).
+
+**Acceptance criteria**
+
+1. Given an Editor, when they create a page, then it is a draft with a translation in every locale, reachable from no public URL until published.
+2. Given a page, when it is published, then every locale is complete or the transition is refused, naming the language and what it is missing — the same rule an event follows (AGENTS.md §11.2).
+3. Given a published page, when it is requested at its own locale's address, then it renders; and when it is requested at another locale's address, then it is a 404 rather than the other language's text (BR-REQ-040-02).
+4. Given a published page, when the language switcher is used, then it lands on the same page's address in the other language.
+5. Given a page saved with a version somebody else already superseded, when it is submitted, then it is a CONFLICT and neither the page row nor either translation is written (AGENTS.md §11.5).
+6. Given a published page, when its address is edited, then it is refused: links already shared have to keep working.
+7. Given a page address, when it is submitted, then it is lowercase letters, digits and hyphens, is not a reserved word, and is not already in use in that locale.
+8. Given published pages, when the public header renders, then each appears as a navigation entry in the order the club set, and when the sitemap is produced, then each published locale's address is listed.
+9. Given a Contributor, when they attempt to create or edit a page, then it is refused; given an Editor, then it is allowed.
+10. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
+
+**Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; e2e `pages.spec.ts`
+
 #### BR-REQ-051-01 — Editorial workflow and permissions
 
 - **Source:** BR-BUS-051, BR-BUS-060
 - **Implements:** AGENTS.md §11.2, §13.1
 - **Priority:** MUST
 - **Release:** M5
+- **Status:** built for events during M1 (`DECISIONS.md` §25); it applies to articles and pages
+  when those exist. Criterion 2 changed with `DECISIONS.md` §28: publication is one state for
+  the whole event rather than one per language (`DECISIONS.md` §28).
 
 **Acceptance criteria**
 
 1. Given an Author, when they work in the CMS, then they can create and edit their own drafts and submit for review, and cannot publish.
-2. Given an Editor or Administrator, when they review a submission, then they can publish, unpublish, and archive per locale.
+2. Given an Editor or Administrator, when they review a submission, then they can publish, unpublish, and archive the event, and both languages go live or come down together.
 3. Given published content, when an Author attempts to edit it, then it is refused.
 4. Given a save that affects live content, when it is submitted, then the interface warns before it takes effect.
-5. Given two editors saving the same record, when the second save carries a stale version, then it is rejected as a conflict.
+5. Given two editors saving the same record, when the second save carries a stale version, then it is rejected as a conflict, and the first editor's save survives intact. This is verified with two real database connections, not the in-process test database, which is single-connection and cannot express the race. The event row carries a version of its own, so a publish that races a change to the event is a conflict too.
+6. Given an event where any language is missing a field the public page renders, or has no translation at all, when publication is attempted, then it is refused with the language and the missing fields named, and nothing goes public.
 
-**Verification:** integration `cms/workflow.test.ts`; e2e `cms-publish.spec.ts`
+**Verification:** integration `cms/workflow.test.ts`; concurrency `cms-conflict.test.ts` (`yarn test:concurrency`); e2e `cms-publish.spec.ts`
 
 #### BR-REQ-051-02 — Protected preview
 
@@ -752,13 +1037,15 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Implements:** AGENTS.md §11.5
 - **Priority:** MUST
 - **Release:** M5
+- **Status:** built for event translations during M1 (`DECISIONS.md` §25).
 
 **Acceptance criteria**
 
-1. Given a preview URL, when it is opened without staff authorization, then access is refused.
+1. Given a preview URL, when it is opened without staff authorization, then access is refused before any row is read, so the response does not reveal whether the draft exists.
 2. Given a preview page, when it renders, then it carries `noindex`, is absent from the sitemap, and is not publicly cached.
+3. Given a preview URL, when it is opened by staff, then it renders the translation of the locale in that URL, whatever its editorial status.
 
-**Verification:** integration `cms/preview.test.ts`
+**Verification:** integration `cms/preview.test.ts`; unit `seo/private-paths.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-052-01 — Publication quality gates
 
@@ -788,6 +1075,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given a published event page, when it renders, then it contains a `SportsEvent` block whose start and end times carry the event timezone offset, whose `organizer` references the club `@id`, and whose `location` includes a postal address.
 3. Given a capped event, when the block renders, then `remainingAttendeeCapacity` equals the free-place count displayed on the same page.
 4. Given a cancelled event, when the page renders, then the block is still present with `eventStatus` set to cancelled.
+4a. Given a race with a gun time distinct from the event start, when the block renders, then `startDate` is the race start and `doorTime` is the event start; with no distinct gun time, `startDate` falls back to the event start.
 5. Given a published article (M5), when it renders, then it contains an `Article` block with `datePublished` and `dateModified`.
 6. Given any structured data block on any page, when it is inspected, then it contains no participant name, email, registration list, or declaration content.
 7. Given the test suite, when it runs, then it parses the emitted JSON-LD and asserts the required properties are present.
@@ -804,7 +1092,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 **Acceptance criteria**
 
 1. Given any public page, when its server HTML response is fetched without executing JavaScript, then the page's substantive content is present in that response.
-2. Given an event page, when its text is extracted, then the date, start time, meeting point, cost, and registration requirement are present as text rather than only as component styling or an image. Cost is `event_translations.cost_text`, localized free text; when it is absent the page states nothing about cost rather than assuming the event is free.
+2. Given an event page, when its text is extracted, then the date, start time, meeting point, cost, and registration requirement are present as text rather than only as component styling or an image. Cost is `events.cost_type`, `FREE|PAID`, rendered in the reader's language; when it is null the page states nothing about cost rather than assuming the event is free.
 3. Given a cancelled or full event, when its text is extracted, then that status is stated in words.
 4. Given production `robots.txt`, when it is fetched, then admin, API, participant action and manage paths, declaration pages, preview, and runner profiles are disallowed for every user agent.
 5. Given production `robots.txt`, when it is inspected, then the training-crawler policy recorded in `DECISIONS.md` is reflected, with the verification date of the user-agent names recorded.
@@ -824,10 +1112,44 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 1. Given a legal document key, when a version is approved, then it carries a version number, an effective date, an approval record, a content hash, and Romanian and English bodies.
 2. Given a version that a participant has accepted, when any edit is attempted, then it is rejected.
 3. Given a new version, when it becomes effective, then earlier acceptances continue to reference the version that was accepted.
-4. Given any staff role, when the CMS is used, then no interface edits legal document text.
+4. Given a version that is approved or referenced, when any interface attempts to change its text, then it is refused — editing is confined to unapproved, unreferenced drafts (BR-REQ-053-02). An approved version is also never deleted and its approval is never withdrawn (`DECISIONS.md` §53).
 5. Given the public site, when any page renders, then the privacy notice and terms are reachable in the current locale.
+6. Given any environment other than production, when it is seeded, then a clearly marked sample version of each key exists, whose own rendered body opens — in both languages — with a banner saying that it is sample text, is not approved by the club, is not legal advice, and must be replaced before a real participant registers.
+7. Given `APP_ENV=production`, when the sample text is seeded, then it is refused outright rather than skipped quietly; the club's approved wording is written in the backoffice (BR-REQ-053-02) or, where a migration is preferred, per `docs/RUNBOOKS.md` § Legal document version.
+8. Given a sample document, when it is read, then every club-specific fact — the controller's legal name, address and contact, any representative, retention periods, and the lawful basis for each purpose — is an obvious placeholder rather than an invented value.
 
 **Verification:** integration `legal/versions.test.ts`; e2e `legal-pages.spec.ts`
+
+#### BR-REQ-053-02 — The club writes its own legal text
+
+- **Source:** BR-BUS-053
+- **Implements:** AGENTS.md §12.5, §11.1, §10.2
+- **Priority:** MUST
+- **Release:** M1
+- **Status:** built, and recorded in `DECISIONS.md` §46 and §53. It narrows BR-REQ-053-01
+  criterion 4 rather than reversing it: what may never be edited is a version somebody has
+  accepted, and requiring a developer and a migration to *create* one was an accident of that
+  rule rather than a consequence of it. §53 adds deletion for a version that was never approved,
+  and records why un-approving an approved one is not offered.
+
+**Acceptance criteria**
+
+1. Given an Administrator, when they write a new version of a legal document, then it is created as the next version number for that key, unapproved, with its content hash computed from the text saved.
+2. Given a draft that is unapproved and unreferenced, when it is rewritten, then the text and the content hash are replaced together, and neither can describe the other's contents.
+3. Given a version that is approved, when an edit is attempted, then it is refused with a conflict and the words are unchanged.
+4. Given a version that a participant has accepted or an event points at, when an edit is attempted, then it is refused with a conflict.
+5. Given a draft, when it is approved, then it becomes public from the moment of approval, records who approved it, and can no longer be edited.
+6. Given an approved version, when approval is attempted again, then it is refused.
+7. Given a document written in only one language, or with an empty body in either, when it is saved, then it is refused — a public page cannot fall back to the other language (BR-REQ-040-02).
+8. Given any role below the one that administers staff, when any of this is attempted, then it is refused.
+9. Given a version that was never approved and that nothing references, when it is deleted, then the version and its text in every language are removed together, and the version number becomes available again.
+10. Given a version that is approved, when deletion is attempted, then it is refused with a conflict whether or not anything references it — the record of what the club published outlives whether anybody acted on it.
+11. Given a version that an acceptance names, an event points at, or a registration recorded the number of as the privacy notice it acknowledged, when deletion is attempted, then it is refused with a conflict.
+12. Given the backoffice list of versions, when it renders, then each row states how many acceptances, events and registrations depend on that version, and a version that cannot be deleted states which of those reasons applies rather than omitting the control.
+13. Given a version deleted between the moment approval was checked and the moment it was written, when approval completes, then it is refused rather than reporting success.
+14. Given an approved version, when withdrawing its approval is attempted, then there is no such operation: `DECISIONS.md` §53 records that a declaration is bound to the participant at submission rather than at render, so changing which version is current would let somebody sign text they never read.
+
+**Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`
 
 ### 4.10 Transactional email
 
@@ -907,8 +1229,13 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given an Editor, when they request participant or export endpoints, then it is refused.
 3. Given an unauthenticated request to any `/admin` route, when it is made, then it is refused.
 4. Given each guarded endpoint, when tests run, then authorization is asserted at the server, not only in the UI.
+5. Given an Administrator, when they administer staff, then they may add a colleague by email address and role, change a colleague's role, and revoke access; an Author or an Editor is refused every one of those operations.
+6. Given an Administrator, when they attempt to change their own role, remove their own access, or leave the club with no Administrator at all, then it is refused.
+7. Given the development staff switcher, when `APP_ENV` is qa or production, then it is unavailable, and a process configured to use it there does not start.
+8. Given an Author or an Editor, when they attempt to delete an event or to add or remove test registrations, then it is refused at the server; both are the Administrator's alone.
+9. Given `APP_ENV=production`, when a test registration is created by any path, then it is refused — at the feature's entrance and again at the statement that would write the row.
 
-**Verification:** integration `auth/role-boundaries.test.ts`
+**Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-070-01 — Participant data is never public
 
@@ -941,6 +1268,50 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 4. Given a page, when it is audited, then colour contrast, form labels, and error announcements meet the agreed accessibility baseline.
 
 **Verification:** e2e `seo.spec.ts`; accessibility audit in CI
+
+#### BR-REQ-090-04 — A deployment can say what it is configured to do
+
+- **Source:** BR-BUS-090, BR-BUS-101
+- **Implements:** AGENTS.md §9.2, §8, §14.5
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built. `/devs`, Administrator only.
+
+**Acceptance criteria**
+
+1. Given an Administrator, when `/devs` is requested, then it names the environment, the build, the mode of each configured subsystem, and for each mode the variables that mode requires with whether each is set.
+2. Given any variable, when the page renders, then its **name** appears and its **value never does** — no key, no connection string, no secret, in the markup or in the page's data.
+3. Given a subsystem missing something its own mode requires, when the page renders, then it is marked as blocked and the missing variables are named.
+4. Given `EMAIL_DELIVERY_MODE=capture` on a deployed environment, when the page renders, then it is reported as limited rather than correct, because captured messages on a serverless host reach nobody.
+5. Given an Author or an Editor, when `/devs` is requested, then the response is 404, the same answer a route that does not exist gives.
+6. Given the route, when a crawler requests it, then it is disallowed in `robots.txt`, carries `noindex`, and is served with a private, no-store cache policy.
+
+**Verification:** unit `diagnostics/configuration.test.ts`; unit `seo/private-paths.test.ts`
+
+#### BR-REQ-090-05 — The club can see what it may spend, and what the free plans refuse
+
+- **Source:** BR-BUS-090, BR-BUS-101
+- **Implements:** AGENTS.md §1.2, §9.2
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built. `/admin/tasks`, Administrator only.
+
+`/devs` reports configuration to somebody who reads a status enum, and the task list says what is
+owed. Neither answers the question a volunteer treasurer asks before a race: **can we keep
+running this for nothing, and what do we buy on the day we cannot?** That answer existed only in
+`docs/PLATFORM.md`, which no organizer will open.
+
+**Acceptance criteria**
+
+1. Given an Administrator, when `/admin/tasks` is requested, then it states whether the platform can run for free, naming the domain as the one certain cost, and the verdict is derived from this deployment rather than asserted.
+2. Given a published event whose `cost_type` is `PAID`, when the page renders, then it reports that the free hosting plan no longer applies, because taking an entry fee is outside the provider's non-commercial terms.
+3. Given the page, when it renders, then it states how many further registrations today's remaining email allowance covers, computed from the allowance, what has been sent today, and the messages one completed registration costs — and that figure is a floor, never a ceiling.
+4. Given each limit the club can actually meet, when the page renders, then it says whether the limit applies to this deployment and whether it has been reached today.
+5. Given every price on the page, when it renders, then it is a figure recorded in `docs/PLATFORM.md`, shown with the date those figures were last verified against the vendors, and a cost the club has not decided renders as "to be decided" rather than as a plausible number (`AGENTS.md` §1.2).
+6. Given each upgrade the page recommends, when it renders, then it names what triggers it, what it costs, and whether it is meant to be reversed — and at least one is marked as not reversible.
+7. Given an Author or an Editor, when `/admin/tasks` is requested, then the response is 404.
+
+**Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`
 
 #### BR-REQ-100-01 — AI reviewer permission boundary
 
@@ -1024,8 +1395,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 2. Given a change of `APP_BASE_URL`, when the application restarts, then email links, canonical tags, `hreflang` alternates, sitemap entries, Open Graph URLs, authentication callbacks, and the webhook URL all reflect the new host with no code change.
 3. Given cookies, when they are set, then no `domain` attribute is used.
 4. Given the binding runbook, when it is completed, then exactly one canonical production host serves the site and the other redirects to it.
+5. Given a second domain the club holds, when it is bound as an alias, then it and its `www` redirect permanently to the canonical host; and making it the canonical host instead is the same configuration change in reverse — `APP_BASE_URL` and the host-level redirects — with no code change.
 
-**Verification:** integration `hosting/base-url.test.ts`; `docs/RUNBOOKS.md` § Domain binding
+**Verification:** integration `hosting/base-url.test.ts`; `docs/RUNBOOKS.md` § Domain binding; `scripts/bind-domain.mjs`
 
 #### BR-REQ-090-03 — Scheduled work is a liveness concern only
 
@@ -1041,8 +1413,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 3. Given a job invocation, when it completes, then a `job_runs` row records the outcome.
 4. Given a job that has not succeeded within its agreed threshold, when the health endpoint is read, then it reports degraded.
 5. Given a job endpoint, when it is called without a valid `JOB_SECRET` or scheduler identity, then it is refused.
+6. Given a job endpoint called with a valid secret more often than the limit for the window, then further calls are refused with `429` and a `Retry-After`; and given calls refused at criterion 5, then they are not counted against that limit.
 
-**Verification:** integration `jobs/maintenance.test.ts`
+**Verification:** integration `jobs/maintenance.test.ts`, `jobs/job-throttle.test.ts`
 
 ---
 
@@ -1062,20 +1435,21 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 | BR-BUS-034 | BR-REQ-034-01, BR-REQ-034-02, BR-REQ-034-03, BR-REQ-052-02, BR-REQ-090-03 |
 | BR-BUS-035 | BR-REQ-035-01, BR-REQ-035-02, BR-REQ-035-03, BR-REQ-035-04, BR-REQ-035-05, BR-REQ-034-03, BR-REQ-090-03 |
 | BR-BUS-036 | BR-REQ-036-01, BR-REQ-036-02 |
-| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
+| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
 | BR-BUS-038 | BR-REQ-038-01, BR-REQ-038-02, BR-REQ-038-03 |
+| BR-BUS-039 | BR-REQ-039-01 |
 | BR-BUS-040 | BR-REQ-040-01, BR-REQ-040-02, BR-REQ-040-03, BR-REQ-040-04 |
 | BR-BUS-041 | BR-REQ-041-01 |
 | BR-BUS-050 | BR-REQ-050-01 |
 | BR-BUS-051 | BR-REQ-051-01, BR-REQ-051-02 |
 | BR-BUS-052 | BR-REQ-052-01, BR-REQ-052-02, BR-REQ-070-03, BR-REQ-070-02 |
-| BR-BUS-053 | BR-REQ-053-01, BR-REQ-033-02, BR-REQ-031-02 |
+| BR-BUS-053 | BR-REQ-053-01, BR-REQ-053-02, BR-REQ-033-02, BR-REQ-031-02 |
 | BR-BUS-060 | BR-REQ-060-01, BR-REQ-051-01 |
-| BR-BUS-070 | BR-REQ-070-01, BR-REQ-070-02, BR-REQ-070-03, BR-REQ-036-02, BR-REQ-038-01, BR-REQ-041-01, BR-REQ-071-01, BR-REQ-072-01 |
+| BR-BUS-070 | BR-REQ-070-01, BR-REQ-070-02, BR-REQ-070-03, BR-REQ-036-02, BR-REQ-038-01, BR-REQ-039-01, BR-REQ-041-01, BR-REQ-071-01, BR-REQ-072-01 |
 | BR-BUS-071 | BR-REQ-071-01 |
 | BR-BUS-072 | BR-REQ-072-01 |
 | BR-BUS-080 | BR-REQ-080-01, BR-REQ-080-02, BR-REQ-080-03, BR-REQ-080-04, BR-REQ-037-02 |
-| BR-BUS-090 | BR-REQ-090-01, BR-REQ-090-02, BR-REQ-090-03, BR-REQ-080-03 |
+| BR-BUS-090 | BR-REQ-090-01, BR-REQ-090-02, BR-REQ-090-03, BR-REQ-090-04, BR-REQ-080-03 |
 | BR-BUS-100 | BR-REQ-100-01 |
 | BR-BUS-101 | BR-REQ-101-01, BR-REQ-101-02 |
 

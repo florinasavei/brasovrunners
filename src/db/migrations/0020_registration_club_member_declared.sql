@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "club_member_declared" boolean DEFAULT false NOT NULL;

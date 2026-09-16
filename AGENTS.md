@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -51,7 +51,7 @@ There is no `develop` branch.
 
 The frontend uses **Material UI**, not Tailwind or shadcn, so conventions remain close to Flyward while the visual identity remains specific to Brașov Runners.
 
-Zitadel authentication is for staff only. Participants do not receive application accounts or passwords.
+Staff authentication is for staff only. Participants do not receive application accounts or passwords.
 
 AI reviewers may read and comment, but reviewer-only integrations must not push code, modify workflows, merge, deploy, or read secrets.
 
@@ -125,6 +125,20 @@ When two goals conflict, the higher one wins:
 6. less code over less duplication; abstract on the third occurrence, not the second;
 7. measured performance on paths that matter;
 8. elegance.
+
+**The owner's standing instruction, and it outranks everything below correctness: this site
+stays fast, small and easy for the next person to work on.** Read it as a constraint on what
+may be added, not as a note to optimize later. Concretely, and enforceable in review:
+
+- a dependency is a cost. Prefer nothing, then the platform, then what is already installed. A
+  library added for one screen must be argued for in the pull request;
+- Server Components by default and client islands kept to what genuinely needs interactivity.
+  A page that works with JavaScript disabled is the target, not the exception;
+- no build-time cleverness, no code generation, no abstraction whose payoff is a future feature.
+  The reader is an agent with no context and twenty minutes;
+- assets are inspected before they are committed: a font, an image or an icon set that is larger
+  than the page it decorates is rejected;
+- speed is a property of the served page, so it is judged on a phone at 320px, not on a laptop.
 
 Binding consequences:
 
@@ -232,6 +246,13 @@ The launchable product is **M1**. Later milestones are scheduled in the owner's 
 Requirements for a milestone are written in `SPECS.md` when that milestone starts. Do not
 implement a later milestone's behavior early.
 
+**One deliberate exception, recorded rather than relabelled.** The event-editing slice of M5 —
+BR-REQ-050-01, BR-REQ-051-01 and BR-REQ-051-02 as they apply to `event_translations`, plus the
+roles of BR-REQ-060-01 — was built during M1, because the alternative was a developer editing
+a seed file and re-running it every time the club changed a race. Articles, static pages,
+galleries, the media library and the Tiptap body contract remain M5, and those requirements
+keep their `Release: M5` field: the plan moved, the requirement did not (`DECISIONS.md` §25).
+
 **The one permitted exception to "nothing for later".** M1 includes three structural
 footprints for M2 because they are trivial now and painful on race week: the `races` table
 and `events.race_id`, results consent fields on registrations, and a nullable
@@ -292,7 +313,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 | Validation | Zod at application boundaries |
 | ORM | Drizzle ORM |
 | Database | PostgreSQL; Neon for QA/production |
-| Staff authentication | Auth.js with Zitadel provider |
+| Staff authentication | Auth.js with the Zitadel OAuth provider; `staff_users` is the server-side allowlist — an unknown Zitadel account is refused (§13.1, `DECISIONS.md` §26) |
 | Participant access | Hashed, expiring, purpose-scoped email action tokens |
 | Email | Mailgun behind adapter and PostgreSQL outbox |
 | Storage | Cloudflare R2 behind adapter |
@@ -346,13 +367,13 @@ Public pages must look like a local running community, not a default MUI dashboa
        +----------+----------+       +----------+----------+
        |          |          |       |          |          |
        v          v          v       v          v          v
-    Zitadel     Neon       R2      Zitadel     Neon       R2
-      QA         QA        QA        PROD       PROD      PROD
+     Neon        R2                Neon        R2
+      QA          QA                PROD        PROD
                   |                             |
               Mailgun QA                  Mailgun PROD
 ```
 
-Zitadel is used only by staff. Public participant actions are handled by this application's email-token boundary.
+Staff authentication runs through Auth.js and the Zitadel OAuth provider and is used only by staff; `staff_users` remains the server-side allowlist. Public participant actions are handled by this application's email-token boundary.
 
 Local and test use local/disposable infrastructure and fake/capture adapters.
 
@@ -598,15 +619,15 @@ type AppEnvironment = "local" | "test" | "qa" | "production";
 
 | Environment | Database | Staff auth | Email | Storage | Data |
 | --- | --- | --- | --- | --- | --- |
-| local | Local PostgreSQL | Mock | Capture | Local/fake | Synthetic |
-| test | Disposable PostgreSQL | Mock | Capture | Fake | Disposable |
-| qa | Dedicated Neon | Dedicated Zitadel QA | Capture/allowlist | Dedicated R2 | Persistent synthetic |
-| production | Dedicated Neon | Dedicated Zitadel production | Live | Dedicated R2 | Authorized real |
+| local | Local PostgreSQL | Development switcher | Capture | Local/fake | Synthetic |
+| test | Disposable PostgreSQL | Development switcher | Capture | Fake | Disposable |
+| qa | Dedicated Neon | Auth.js + Zitadel, live | Capture/allowlist | Dedicated R2 | Persistent synthetic |
+| production | Dedicated Neon | Auth.js + Zitadel through its own Zitadel application; `disabled` until it exists | Live once a sending domain is verified; capture until then | Dedicated R2 | Authorized real |
 
 ### 7.2 Provider modes
 
 ```ts
-type StaffAuthMode = "mock" | "zitadel";
+type StaffAuthMode = "dev-switcher" | "provider" | "disabled";
 type EmailDeliveryMode = "capture" | "allowlist" | "live";
 type StorageMode = "local" | "fake" | "r2";
 ```
@@ -615,10 +636,10 @@ Required combinations:
 
 | APP_ENV | Auth | Email | Storage |
 | --- | --- | --- | --- |
-| local | mock | capture | local |
-| test | mock | capture | fake |
-| qa | zitadel | capture or allowlist | r2 |
-| production | zitadel | live | r2 |
+| local | dev-switcher | capture | local |
+| test | dev-switcher | capture | fake |
+| qa | provider (Zitadel) | capture or allowlist | r2 |
+| production | provider (Zitadel), through its own application; disabled until it exists | live once a sending domain is verified; capture until then, which `/devs` reports as limited (BR-REQ-090-04) | r2 |
 
 Startup rejects unsafe combinations.
 
@@ -639,6 +660,13 @@ brasov-runners-production
 The custom domain is bound at the end of M1. `SETUP.md` §26 holds the only hostname
 table in the repository, and `docs/RUNBOOKS.md` § Domain binding is the binding procedure.
 Binding must be a configuration and DNS change only.
+
+The club may hold several domains over time (`DECISIONS.md` §55). Exactly one is canonical — it
+is what `APP_BASE_URL` names — and every other hostname on the project, `www` included, is a
+permanent redirect to it, set on the host and never in application code. `scripts/bind-domain.mjs`
+does both halves, and switching which domain is canonical is that script run twice and a redeploy.
+The function region is a project setting, not a repository one, and it drifted once — `iad1` while
+every document said `fra1` — so `SETUP.md` §26 records how to read it back and how to set it.
 
 Separate projects prevent environment-variable/deployment mixing. The host is an adapter, not part of the business/domain architecture. Vercel builds the app into serverless functions and never runs `yarn start`, so the portability contract below is verified in CI, not by the host.
 
@@ -670,6 +698,9 @@ app_environment_metadata(environment, provisioned_at)
 
 Startup/migrate/seed/reset verifies marker against `APP_ENV` and aborts on mismatch.
 
+**Not yet implemented.** Nothing under `src/db` creates or reads this table (found 2026-09-16,
+`DECISIONS.md` §55). The rule stands; the gap is named in `SETUP.md` §25 rather than ticked.
+
 ### 7.5 QA safeguards
 
 QA:
@@ -678,6 +709,11 @@ QA:
 - `X-Robots-Tag: noindex, nofollow` and restrictive robots;
 - no production canonical/sitemap URLs;
 - visible QA badge in Admin;
+- **a notice on every public page saying this is not the club's real site**, stated as "not
+  production" rather than "qa" so a fifth environment gets it by default rather than being
+  silently mistaken for the real thing. QA runs the same code, the same design and the same
+  seeded events on a hostname nobody recognises: a visitor sent a link has no way to tell, and
+  will register for a race on a system whose data the next seed deletes;
 - captured/allowlisted email only;
 - separate webhook/job secrets;
 - no production storage/auth/database access;
@@ -693,6 +729,41 @@ QA:
 - use expand/contract when app/schema overlap is possible;
 - failed migration blocks deployment;
 - rollback considers schema/data compatibility.
+
+**The mechanism** (`DECISIONS.md` §31). None of the above says who runs a migration against a
+deployed database, and for a while nothing did — a release went out carrying code whose migration
+had not been applied, and every public page returned 500 while the health check reported the
+database fine.
+
+- `yarn db:migrate:env <local|qa|production>` (`scripts/db-migrate.mjs`) is the only supported
+  way. It takes the environment as an argument rather than the connection string from the
+  ambient shell, prints the target host with credentials masked and the exact pending
+  migrations before applying anything, refuses production without `--yes`, and exits non-zero
+  on failure.
+- `.github/workflows/migrate.yml` runs it. QA applies automatically when a migration lands on
+  `qa`; production is a reviewed `workflow_dispatch`. It uses GitHub Environments rather than
+  repository secrets specifically because a required reviewer is the "gated" half of this
+  section and a repository secret cannot provide one. GitHub environment names are
+  case-insensitive: the workflow's `production` is the `Production` environment Vercel's GitHub
+  app created, and since 2026-09-16 it carries the required reviewer and a `main`-only deployment
+  branch policy — a production migration can only be dispatched from `main`.
+- `yarn smoke <base-url>` (`scripts/smoke.mjs`) turns `/api/health` into an exit code, and every
+  deployment ends with it. "The build went green" and "the site works" are different statements.
+
+**Ordering, and why expand/contract is not optional here.** A push to `qa` starts the Vercel
+build and the migration at the same moment, so for a few seconds the deployed code and the
+schema disagree. That window is harmless for an additive migration and guaranteed breakage for a
+destructive one, which is what "use expand/contract when app/schema overlap is possible" means in
+practice:
+
+- a migration that only **adds** may ship in the same release as the code that uses it;
+- a migration that **drops or renames** ships in the release *after* the code that stopped
+  using the old shape. The drop is its own migration, in its own pull request.
+
+**Drift is detected, not assumed.** `next.config.ts` inlines the journal's head into the build,
+and `/api/health` compares it with what the database records as applied: `behind` is reported as
+`down` with a 503, because in that state the site is already failing. `select 1` succeeds against
+a stale schema, which is why the database check alone was not enough.
 
 ### 7.7 Reset and seed
 
@@ -714,7 +785,8 @@ APP_ENV
 APP_BASE_URL
 DATABASE_URL
 STAFF_AUTH_MODE
-Auth.js/Zitadel values required by installed provider
+MAP_LINK_BASE_URL
+Auth.js values required by the installed provider
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
 MAILGUN_API_KEY
@@ -749,7 +821,17 @@ Rules:
 - `R2_PUBLIC_BASE_URL` is configuration; start on the R2 development subdomain;
 - production rejects localhost/non-production identifiers;
 - QA rejects known production identifiers/live email;
-- do not invent Auth.js provider variable names; use installed official contract.
+- do not invent Auth.js provider variable names; use installed official contract;
+- `MAP_LINK_BASE_URL` is the map service a coordinate becomes a link to. The application
+  appends `?q=<latitude>,<longitude>`, which Google Maps and OpenStreetMap both understand, so
+  the provider is a deployment decision rather than a code one — which is what keeps the
+  hostname out of `src/`. Unset, the meeting point renders as text with no link: a missing map
+  is a missing convenience, and a guessed one sends runners somewhere else;
+- `STAFF_AUTH_MODE` is `dev-switcher`, `provider`, or `disabled`. Unset, it derives: the
+  switcher in local and test, `disabled` everywhere else. Stating `dev-switcher` outside local
+  or test fails at startup, for the same reason live email does — a permissive deployment is
+  noticed after someone has used it, and a process that will not boot is noticed in seconds.
+  `provider` requires `AUTH_SECRET` and the Zitadel variables (§13.1, `DECISIONS.md` §26).
 
 Business timing defaults belong in typed config/constants with tests:
 
@@ -811,7 +893,27 @@ Logical/public route mapping includes:
 /legal/privacy                  /ro/confidentialitate        /en/privacy
 /legal/terms                    /ro/termeni                  /en/terms
 /admin/...                      /ro/admin/...                /en/admin/...
+/sign-in                        /ro/autentificare            /en/sign-in
+/preview/events/[id]            /ro/previzualizare/evenimente/[id]
+                                /en/preview/events/[id]
 ```
+
+Staff routes are localized like everything else but never appear in public navigation or the
+sitemap, are disallowed in `robots.txt`, and are served with `X-Robots-Tag: noindex` and a
+private, no-store cache policy.
+
+`/devs` is one of them (BR-REQ-090-04): the same spelling in both locales, Administrator only,
+and it reports what this deployment is *configured* to do — the mode of each subsystem, and for
+each mode the variables it requires with whether each is set. It MUST NOT render a value. The
+page maps `env` to booleans before anything else runs and `modules/diagnostics/configuration.ts`
+receives only those, so there is no path from a secret to the markup rather than a convention
+against printing one (§8, §14.5). `/api/health` stays the machine-readable answer about a
+process that is already running; this is the answer about the configuration it started from. The site footer carried a "Staff" link until
+`DECISIONS.md` §34; the way in is the build badge now — a double-click, or `Enter` when it has
+focus, and inert where `STAFF_AUTH_MODE=disabled`. No user-visible string names the identity
+provider: `signIn("zitadel", …)` is code, and the button says what it does. The preview renders the translation of the locale in its own
+URL: previewing one language through another language's chrome shows the organizer a page that
+does not exist.
 
 The two legal routes render the current approved version of the corresponding legal
 document and are linked from the footer in both locales.
@@ -821,6 +923,10 @@ Participant action/manage pages are localized but excluded from public navigatio
 Non-human routes are unprefixed:
 
 ```text
+/api/locale                      the language switcher: resolves the current page into the
+                                 other locale and redirects. Server-side because the two
+                                 locales of an event have different slugs and only the
+                                 database knows the pair (BR-REQ-040-01 criterion 5)
 /api/auth/...
 /api/webhooks/mailgun
 /api/internal/jobs/email-outbox
@@ -828,10 +934,26 @@ Non-human routes are unprefixed:
 /api/health
 ```
 
+`/login` is an alias, not a route: the proxy redirects it to the sign-in path — unprefixed, so
+next-intl negotiates the language exactly as it does for an unprefixed `/admin`
+(`src/i18n/aliases.ts`). An alias never gets a page of its own, because two URLs rendering one
+page is the duplicate-content problem canonical tags exist to solve.
+
+The staff routes are `/sign-in`, `/admin`, `/admin/events/new`, `/admin/events/[id]`,
+`/admin/staff`, `/admin/registrations`, `/admin/registrations/[id]` and `/preview/events/[id]`.
+Every one is locale-prefixed, none is in public navigation or the sitemap, and all are disallowed
+in `robots.txt`. A signed-out request to one is sent to sign-in where a sign-in exists and
+answered 404 where `STAFF_AUTH_MODE=disabled`; signing in lands back in the backoffice.
+
 ### 9.3 Messages and content
 
 - semantic keys, not English sentence keys;
-- no hard-coded user-facing strings;
+- no hard-coded user-facing strings, with one bounded exception: the backoffice's enum labels
+  (editorial status, transitions, staff roles, event status, registration mode, registration
+  status) are Romanian constants in `modules/staff-identity/domain/staff-labels.ts`, typed
+  `Record<Enum, string>` so a new enum value is a compile error. `DECISIONS.md` §35. Everything a
+  visitor or a participant reads — including `Event.kind.*`, which both the public pages and the
+  backoffice use — stays in both catalogues;
 - CI checks key/interpolation parity;
 - enum/error codes stay language-neutral;
 - production missing-key fallback logs without PII;
@@ -888,15 +1010,35 @@ Rules:
 
 ### 10.2 Staff roles
 
-```ts
-type StaffRole = "AUTHOR" | "EDITOR" | "ADMIN";
+Five roles, ordered, each a superset of the one before it:
+
+```text
+CONTRIBUTOR  own drafts; submit them for approval
+MODERATOR    edit any event; approve, publish, unpublish, archive
+DEV          + the configuration report (/devs). No participant data
+ADMIN        + registrations, participants, exports, test registrations, delete an event
+SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
 
-- Author: own/assigned drafts; submit review.
-- Editor: all editorial content; publish/unpublish/archive; event content/galleries.
-- Admin: registrations, participants, waitlist, declarations, profiles, exports, roles, operations.
+`modules/staff-identity/domain/roles.ts` is the single place this order is written. Every
+capability is `atLeast(role, MINIMUM)` rather than a list of roles, which is what makes the
+hierarchy a property rather than a convention: a role added later inherits correctly, and no
+grant can be forgotten. `session.ts` imports that rank rather than keeping its own — it used to
+keep a second copy, which is one rule in two places.
 
-Participant is not a staff role.
+The boundary that carries the most weight is **DEV | ADMIN, and it is personal data**. Below it
+is the club's own content and its own configuration; at and above it are the people who
+registered. `/devs` therefore sits at DEV: it reports which variables are set and never a value,
+so it can be given to somebody helping with the platform without also handing over the
+participant list.
+
+`canManageStaff` is SUPERADMIN and nothing else, and it defines the top: a role that could grant
+itself a higher one makes every rule below it decorative. The lockout guards key on that same
+role — the last SUPERADMIN can be neither demoted nor removed, by themselves or by anybody else.
+
+MUST NOT: a capability written as a list of roles; a second copy of the rank; a screen that
+gates on `canManageStaff` when what it actually needs is `canManageRegistrations` — the two were
+one function until `BR-V1.19` and the registrations screens were reading the wrong one.
 
 ### 10.3 Participant identity
 
@@ -1117,6 +1259,28 @@ type SocialProvider =
 
 Validate HTTPS and provider host allowlist. Render safe external links with `rel="noopener noreferrer nofollow"`.
 
+### 10.10 Public participant list
+
+The event page MAY publish who is coming. It is a disclosure of personal data, and every rule
+below exists because of that (BR-BUS-039, BR-REQ-039-01).
+
+- `events.participant_list_visibility` is `HIDDEN` by default and MUST stay the default for
+  every new and every duplicated event. A copy never inherits it: the decision was made about
+  the people who entered the original;
+- `NAMES` is refused unless `registration_mode = INTERNAL`, in the service and again as a CHECK.
+  For `NONE` there is nobody to list; for `EXTERNAL` the entrants are another organizer's;
+- the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
+  ordered by `confirmed_at` then `id`. The select list is the registered name and nothing else —
+  no address, no status, no identifier, and no count of anything unconfirmed;
+- `registrations.list_opt_out` is the participant's own refusal, asked on every registration
+  form whatever the event's current setting is: a list can be switched on months later, and a
+  question nobody put to that person cannot be answered on their behalf;
+- it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
+  sample notice carries the paragraph with the club's facts as placeholders (§29,
+  `DECISIONS.md` §29);
+- `tests/privacy/public-surface.test.ts` is where these are asserted. That file may be extended
+  and MUST NOT be weakened.
+
 ---
 
 ## 11. Mini CMS
@@ -1124,6 +1288,11 @@ Validate HTTPS and provider host allowlist. Render safe external links with `rel
 ### 11.1 Boundary
 
 Custom CMS inside application. No arbitrary route/layout/content-type creation.
+
+It does create, duplicate and remove *events*, which is the one content type that exists: every
+column of `events` an organizer owns is editable through it, so `src/db/seeds/pilot.ts` is no
+longer how an event is configured. The legal-document selection an internal event carries is a
+choice among approved versions and never an edit of one.
 
 Supported:
 
@@ -1134,10 +1303,20 @@ Supported:
 - media selection/upload.
 
 Legal documents (privacy notice, terms, event declaration) are Admin-controlled
-versioned content, not ordinary Author content. V1 has no editor screen for them: new
-versions arrive through a migration or seed following
-`docs/RUNBOOKS.md` § Legal document version. The backoffice shows them read-only. No staff
-role may edit a version that a participant has already accepted.
+versioned content, not ordinary Author content. The backoffice **writes** them and never
+**rewrites** them (`DECISIONS.md` §46, BR-REQ-053-02): an Administrator drafts a version, reads
+it, approves it, and from that moment its words are fixed. A correction is the next version.
+
+What must never happen is an edit to a version a participant has accepted — their acceptance
+row points at those words, and changing them would leave every signature describing text nobody
+agreed to. That is asserted in one place, `legal-documents/service.ts#assertStillADraft`, which
+refuses an approved version, one with an acceptance, and one an event points at. The repository
+exports no update, delete or approve function at all, so there is no way to a bare UPDATE that
+skips it.
+
+The seed and the migration path both still exist for the cases that want them — sample text
+outside production (`DECISIONS.md` §29) and a migration where one is preferred
+(`docs/RUNBOOKS.md` § Legal document version).
 
 ### 11.2 Editorial workflow
 
@@ -1149,7 +1328,13 @@ DRAFT -> IN_REVIEW -> PUBLISHED -> ARCHIVED
 - Editor/Admin: edit all, return to draft, publish, unpublish, archive.
 - Author cannot publish/edit Published.
 - Editor/Admin may edit live content after explicit warning.
-- publishing per locale.
+- **publishing is per event, not per locale** (`DECISIONS.md` §28, superseding the per-locale
+  rule this line used to state). `editorial_status` lives on `events`; both languages go live
+  together and come down together.
+- PUBLISHED requires a complete translation in every locale the site serves — every field a
+  public page renders, present in each. The transition refuses otherwise and names the language
+  and the fields; a CHECK asserts only what one row can see honestly, because the rule reads a
+  set of rows.
 - no scheduled publication/comments/full history/live collaboration.
 
 ### 11.3 Tiptap contract
@@ -1204,6 +1389,36 @@ CMS cannot create routes. Privacy, terms, and declarations are legal documents u
 
 AI output stays Draft and human reviewed. Never invent results, quotes, sponsors, safety instructions, or legal text. No automatic publication.
 
+### 11.7 What is per language, and what is not
+
+An event has two kinds of field, and the split is "would a translator change this?" rather than
+"which screen shows it" (`DECISIONS.md` §36):
+
+- **Per language** (`event_translations`): title, slug, excerpt, `seo_title`, `seo_description`,
+  and the M5 body. These are writing, and a translator changes every one of them.
+- **One value for the whole event** (`events`): everything factual, including
+  `location_name`, `location_address`, `difficulty` and `cost_type`. A street address is
+  identical word for word in both languages, and the meeting point, the difficulty and the cost
+  are one decision the club made once. Asking for them twice was asking the same question twice.
+
+Two of those four are closed sets rather than typed words, since migration `0018`:
+`difficulty` is `EASY|MODERATE|HARD` and `cost_type` is `FREE|PAID`. For a fact with three
+possible answers, free text bought nothing and cost the reader their own language — so these two
+render translated, and the consequence below applies only to the meeting point and the street
+address, which are names and cannot be anything but the club's own words. `cost_type` states
+**whether** an event charges and deliberately not how much: an amount is a number, a currency and
+usually a deadline, and it becomes its own column the day the club runs an event that needs one.
+
+The accepted consequence, and it is a real one: the two name fields render on the English page in
+the club's own words, so `/en/events/...` shows "Parcul Tractorul". That is **not** a
+cross-locale fallback — nothing is borrowing the other language's row — and BR-REQ-040-02 is
+unchanged: a locale with no translation is still a 404 and still never shows the other language's
+*text*. It is a single value the club wrote once, and `tests/e2e/event-pages.spec.ts` asserts it
+stays that way so nobody splits the columns back apart by accident.
+
+`location_name` is required by `content/events/fields.ts` on every save and by `transitionEvent`
+before publication. The column is nullable only so it could be added to rows that predate it.
+
 ---
 
 ## 12. Minimum data model (M1, including the M2 footprints)
@@ -1215,16 +1430,33 @@ Use PostgreSQL UUID primary keys unless accepted repository convention differs. 
 ```text
 staff_users
 - id uuid PK
-- zitadel_subject text UNIQUE NOT NULL
-- email text NOT NULL
+- zitadel_subject text UNIQUE null   -- Zitadel's immutable subject claim; null until first sign-in
+- email text UNIQUE NOT NULL         -- lowercased; the allowlist key
 - display_name text NOT NULL
 - preferred_locale ro|en NOT NULL DEFAULT ro
 - role AUTHOR|EDITOR|ADMIN NOT NULL
+- invited_at timestamptz NOT NULL
+- first_signed_in_at timestamptz null
 - created_at timestamptz
 - updated_at timestamptz
 ```
 
-No passwords/provider tokens.
+Checks:
+
+- `email = lower(email)`;
+- a subject and a first sign-in are present together or not at all.
+
+No passwords/provider tokens — Zitadel holds credentials, this table holds only the subject
+claim it issues once someone signs in.
+
+The column is `zitadel_subject`: staff authentication is Auth.js with the Zitadel OAuth
+provider, and this table is the server-side allowlist regardless of what Zitadel asserts
+(§13.1, `DECISIONS.md` §26).
+
+The row is the invitation. An Administrator adds a colleague by email and role before that
+person has ever signed in; the first sign-in binds the provider's subject to the waiting row.
+No row, no access, whatever a provider asserts. There is no invitation email until the club's
+sending domain exists — inventing one is forbidden by §1.2.
 
 ### 12.2 Participants
 
@@ -1279,13 +1511,24 @@ events
 - race_id uuid null            -- M1 footprint for M2; null for events with no siblings
 - kind
 - event_status
-- starts_at timestamptz
+- editorial_status             -- publication, for the whole event: both locales go live together
+- published_at timestamptz null -- first publication; never cleared, so slugs stay stable
+- version integer              -- optimistic concurrency for the event row
+- starts_at timestamptz          -- when the event begins; for a race, the gathering
+- race_starts_at timestamptz null -- the gun time, when it differs from the event start
 - ends_at timestamptz null
 - timezone text NOT NULL DEFAULT Europe/Bucharest
 - latitude numeric null
 - longitude numeric null
+- map_url text null              -- the organizer's own map link, stored not assembled
+- route_url text null            -- BR-REQ-011-01 criterion 8; where the run goes, not where it starts
+- featured boolean NOT NULL DEFAULT false
 - distance_meters integer null
 - elevation_gain_meters integer null
+- location_name text null       -- §11.7; one value for both languages, required before publishing
+- location_address text null    -- §11.7
+- difficulty EASY|MODERATE|HARD null   -- §11.7; null means the club has not said
+- cost_type FREE|PAID null            -- §11.7; whether it charges, never how much
 - capacity integer null
 - registration_mode
 - registration_opens_at timestamptz null
@@ -1293,6 +1536,7 @@ events
 - declaration_document_id uuid null   -- references a legal_documents row with key EVENT_DECLARATION
 - external_provider text null
 - external_registration_url text null
+- participant_list_visibility HIDDEN|NAMES NOT NULL DEFAULT HIDDEN  -- §10.10; a disclosure, off by default
 - cover_media_asset_id uuid null
 - created_by_staff_user_id uuid
 - updated_by_staff_user_id uuid
@@ -1304,17 +1548,38 @@ Checks:
 
 - when `race_id` is set, the event's kind is `RACE`;
 - end after start;
+- the race start is not before `starts_at` and not after `ends_at` where one exists;
+- `latitude` and `longitude` are present together or not at all, within ±90 and ±180. They are
+  the meeting point itself: the map link and the `geo` of the `SportsEvent` block are both built
+  from them, because a place name is not a start line;
+- `map_url` is https or null. It is the override for what coordinates cannot express — a venue
+  page, a shared list — and it is stored rather than built, because §8 forbids a hostname
+  literal under `src/` and exempts no provider. The ordinary link comes from the coordinates
+  plus `MAP_LINK_BASE_URL`, which is configuration;
+- `route_url` is https or null, and is **not** `map_url`. Where to turn up and where the run
+  goes are two questions an event usually answers with two pages, so they are two columns
+  (`DECISIONS.md` §49). It is a link and never an uploaded file while media storage is deferred
+  (§17), it renders as its own labelled fact on the event page and on no listing card — the
+  card is already one link and an anchor inside an anchor is invalid HTML — and duplicating an
+  event carries it, because last year's race is run on last year's route;
+- at most one event carries `featured`, enforced by a partial unique index rather than by
+  application code — two featured events would leave the landing page choosing one arbitrarily;
+- a PUBLISHED event has a `published_at`. The rest of "publishable" — a complete translation in
+  every locale — cannot be a CHECK, because it reads rows in another table, and is asserted in
+  `modules/content/events/service.ts#transitionEvent`;
 - non-negative distance/elevation;
 - positive capacity;
 - close not before open/not after start for internal;
 - capacity/declaration internal only;
 - approved declaration required internal;
-- external HTTPS/provider fields external only.
+- external HTTPS/provider fields external only;
+- `participant_list_visibility = NAMES` only on an INTERNAL event.
 
 Indexes:
 
 ```text
 (event_status, starts_at)
+(editorial_status, starts_at)
 (kind, starts_at)
 (registration_mode, starts_at)
 ```
@@ -1330,24 +1595,31 @@ event_translations
 - title
 - excerpt
 - body_json jsonb
-- location_name
-- location_address null
-- difficulty_label null
-- cost_text null                -- localized wording: "Gratuit", "Free", "50 lei"
 - cover_alt_text null
 - seo_title null
 - seo_description null
-- editorial_status
 - author_staff_user_id null
 - reviewed_by_staff_user_id null
-- published_at null
 - version integer
 - created_at
 - updated_at
 
 UNIQUE(event_id, locale)
 UNIQUE(locale, slug)
+CHECK title and slug are non-blank, not merely NOT NULL
 ```
+
+`editorial_status` and `published_at` are deliberately absent: publication moved to `events`
+(`DECISIONS.md` §28). `location_name`, `location_address`, `difficulty_label` and `cost_text` were
+here and are gone (migration `0017`, §11.7, `DECISIONS.md` §36) — the last two have since become
+the `difficulty` and `cost_type` enums on `events` (migration `0018`): they were the same fact entered
+twice rather than a translation of it, so they live on `events`, and `location_name` was the
+CHECK's third clause. The columns outlived the code that read them by one release, which is what
+§7.6 requires — for that release a rollback had to find a schema the previous code could still run
+against.
+
+What stays here is the language's own text — title, slug, excerpt, the two SEO fields and the M5
+body — its author, and its own `version` for the save guard.
 
 ### 12.5 Legal documents
 
@@ -1383,6 +1655,70 @@ A version referenced by an acceptance is immutable. Exactly one approved version
 is current at a given time, resolved by `effective_at`. The public legal routes render
 the current approved version for the requested locale.
 
+Writing, and what may be undone (`DECISIONS.md` §46 and §53, BR-REQ-053-02):
+
+- a version is a **draft** until approved, and only a draft may be rewritten;
+- a draft that was **never approved** and that nothing references may be **deleted**, taking its
+  translations with it (`ON DELETE cascade`). Nothing can have relied on it: no public page
+  renders an unapproved version, and both a registration and an acceptance record whichever
+  version was current;
+- an **approved version is never edited and never deleted**, whatever its reference counts say.
+  Approval is the club publishing words as its own, and the record of what it published outlives
+  whether anybody acted on it;
+- **approval is not withdrawn.** A declaration is bound to the participant at submission rather
+  than at render — `registrations/service.ts` re-resolves the current version when the form is
+  posted, and the form carries no version — so changing which version is current would let
+  somebody sign text they never read. §53 has the sequence and the fix that would be required
+  first;
+- **reliance is wider than the two foreign keys.** `registrations.privacy_notice_version`,
+  `results_consent_version` and `health_consent_version` are plain integers naming a
+  `PRIVACY_NOTICE` version, with nothing for PostgreSQL to enforce. Any check that asks "does
+  anything depend on this version" counts those too.
+
+### 12.9 Standing pages
+
+```text
+pages
+- id
+- editorial_status DRAFT|IN_REVIEW|PUBLISHED|ARCHIVED   -- the *same* enum as events, not a copy
+- published_at null            -- stamped once, on first publication; slug stability dates from it
+- nav_order integer NOT NULL DEFAULT 0
+- created_by_staff_user_id / updated_by_staff_user_id   -- ON DELETE SET NULL
+- version integer NOT NULL DEFAULT 1                    -- optimistic concurrency, §11.5
+- created_at / updated_at
+
+page_translations
+- id
+- page_id uuid NOT NULL REFERENCES pages ON DELETE CASCADE
+- locale
+- slug / title                 -- both non-empty, by CHECK
+- body_json jsonb null         -- the `legal_documents.body_json` shape: sections, headings, paragraphs
+- seo_title / seo_description null
+- author_staff_user_id null
+- version integer NOT NULL DEFAULT 1
+
+UNIQUE(page_id, locale)
+UNIQUE(locale, slug)
+```
+
+Rules (BR-REQ-050-03, `DECISIONS.md` §51):
+
+- **It is not the M5 content system.** No gallery, no media library, no cover image, and the
+  body is the plain-text format `modules/legal-documents/domain/body-text.ts` converts — a blank
+  line between paragraphs, `## ` for a heading. Tiptap stays M5; writing an About page must not
+  decide that schema (§46 refused the same shortcut for a privacy notice).
+- **The editorial enum, the transitions and the role predicates are `events`', reused.** "May
+  this person publish" has one answer in this product, and a second copy of it is a second place
+  for it to be wrong.
+- **Publication is one state for the whole page**, and PUBLISHED is refused while any locale is
+  incomplete — a page that renders in Romanian and 404s in English is what BR-REQ-040-02 exists
+  to prevent (§11.2).
+- **A slug is fixed once published** (§11.5), scoped per locale, and never scoped against
+  `event_translations`: the two live under different path prefixes, so "contact" as both is two
+  URLs rather than a collision.
+- **A page may be deleted outright**, unlike an event, because nothing a participant owns hangs
+  off one. Archiving remains the answer for a page that was real and is now over.
+
 ### 12.6 Registrations
 
 ```text
@@ -1391,13 +1727,18 @@ registrations
 - event_id
 - participant_id
 - status
+- kind REAL|TEST NOT NULL DEFAULT REAL   -- a demonstration of the queue, never a person
 - locale
 - registered_name
 - privacy_notice_version integer NOT NULL
 - privacy_acknowledged_at timestamptz NOT NULL
 - race_id uuid null                    -- denormalized from the event for the race-level uniqueness index
+- source PUBLIC|STAFF NOT NULL DEFAULT PUBLIC   -- who put the row here (BR-REQ-037-05)
+- created_by_staff_user_id uuid null           -- the organizer who entered it, ON DELETE SET NULL
 - results_name_consent boolean NOT NULL
 - results_consent_version integer NOT NULL
+- list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
+- club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
 - bib_number integer null              -- M1 footprint; assigned in M2, unique per race, enforced in the assignment transaction
 - submitted_at
 - email_confirmed_at null
@@ -1415,10 +1756,40 @@ registrations
 UNIQUE(event_id, participant_id)
 UNIQUE(race_id, participant_id) WHERE race_id IS NOT NULL AND status IN (active statuses)   -- one distance per race
 INDEX(event_id, status)
+INDEX(event_id, kind)
 INDEX(participant_id, status)
 INDEX(event_id, waitlisted_at, id)
 INDEX(event_id, hold_expires_at)
 ```
+
+`kind` exists so the waiting list can be exercised without ten real mailboxes, and it carries
+three rules (`DECISIONS.md` §30):
+
+- **A `TEST` registration is a real registration to the queue.** It goes through
+  `modules/registrations/service.ts` like any other, occupies a place, expires on the same hold
+  deadlines and is promoted by the same allocator. `kind` MUST NOT appear in any condition inside
+  the allocator or the capacity formula of §10.6.
+- **It is excluded from what the club counts and labelled where it is listed.** The CSV export
+  omits `TEST` rows; every backoffice screen that lists a registration marks them.
+- **It cannot exist when `APP_ENV=production`**, refused in the feature's own module and again at
+  the insert. The synthetic participant's address is in `test.invalid` (RFC 2606), which can never
+  receive mail: `kind` carries the meaning, and the domain is what makes a bug in email-mode
+  selection harmless.
+
+`club_member_declared` carries one rule of its own (BR-REQ-031-06, `DECISIONS.md` §48):
+
+- **It is a claim and is never verified.** Nothing matches it against `staff_users` or any
+  roster, because most members of this club have no backoffice account and a verified flag would
+  answer "no" for exactly the people the question is asked to find. Every surface that shows it
+  says "declared".
+- **It grants nothing, so it MUST NOT appear in any condition in the allocator or the capacity
+  formula of §10.6** — the same rule `kind` carries, for a different reason: a self-ticked box
+  that decided a price, a place or a queue position would decide it for anybody who ticked it.
+  A member price, if the club ever wants one, needs a membership list and a decision recorded
+  before it needs this column.
+- **`false` means "did not say" as often as it means "no",** so it is reported as a presence and
+  never as a negative: the export prints "Yes" or an empty cell, and the backoffice filter
+  narrows to the people who declared it and offers no way to select the rest.
 
 ### 12.7 Declaration acceptances
 
@@ -1605,6 +1976,16 @@ when the last successful run of a job is older than its agreed threshold.
 
 Do not put email body, raw token, declaration body, or full participant export in audit metadata.
 
+`audit_logs` is written by exactly one module — `modules/audit/repository.ts`, called from
+`modules/registrations/admin-service.ts` — and is insert-only: nothing updates or deletes a row.
+Three actions exist: `registration.created_by_staff`, `registration.name_corrected` and
+`registration.cancelled_by_staff`. The action is a closed union in code rather than free text, so
+a typo cannot produce a row nothing will ever find. The row is written immediately after the
+change rather than inside its transaction, because each change runs through the registration
+allocator, which owns the transaction around the event-row lock (§10.6); reaching into it would
+mean a second write path into `registrations`, which §15 exists to prevent. The bounded
+consequence: a crash between the two loses an audit row, and never invents one.
+
 ### 12.13 Deferred tables
 
 Do not add participant auth/password/account-provider tables, questions, medical/emergency/minor data, teams, bibs, check-ins, results, leaderboards, points, badges, GPX, Strava tokens/activities, content comments, collaboration sessions.
@@ -1615,26 +1996,39 @@ Do not add participant auth/password/account-provider tables, questions, medical
 
 ### 13.1 Staff authentication
 
-Use Auth.js Zitadel provider. Do not hand-roll OIDC/token exchange/session/logout.
+Use Auth.js, with the Zitadel OAuth provider and `staff_users` as the server-side allowlist
+(`DECISIONS.md` §26 — this reverses §24, which was never shipped to anyone). An unknown
+Zitadel account is refused before a session is ever issued, whatever token it presents: the
+allowlist is asserted in the `signIn` callback, not merely in what the interface renders. Do
+not hand-roll OIDC, token exchange, session or logout — Auth.js does all three.
 
-Verify installed/current official docs for callback, env names, issuer, logout, redirects, claims.
+Verify the installed and current official documentation for callback paths, environment
+variable names, session strategy, logout and claims before writing any of it. Both sign-in
+methods a volunteer might use (password, passwordless) are configured in Zitadel's own login
+policy, never in this application.
 
-Local/test may provide development-only seeded staff switcher:
+`STAFF_AUTH_MODE=provider` is the real thing; `disabled` is the safe default for an environment
+nobody has turned it on for yet — every guarded call asks who is signing the request and gets
+nobody, so the backoffice answers 404 rather than being hidden. Standing up the Zitadel tenant
+itself is an account-creation task (`SETUP.md`), not application code.
 
-- unavailable QA/production;
+Local/test may provide a development-only seeded staff switcher:
+
+- unavailable in QA/production, refused at startup by `STAFF_AUTH_MODE` (§8);
 - server guarded;
-- synthetic identities;
-- same authorization helpers.
+- synthetic identities, marked as such in the data;
+- same authorization helpers as the real thing.
 
-After provider login:
+After Zitadel sign-in:
 
-1. read immutable `sub`;
-2. require verified email when supplied;
-3. find/create `staff_users` by subject;
+1. read the immutable subject claim (`account.providerAccountId`);
+2. require a verified email (`profile.email_verified`);
+3. find the `staff_users` row by subject, or by the invited email address on a first sign-in,
+   and bind the subject to it. Never create a row for an address nobody invited;
 4. update safe email/display name;
 5. preserve local role/preference.
 
-Never provision public participants through Zitadel.
+Never provision public participants through staff authentication.
 
 Server helpers:
 
@@ -1750,6 +2144,25 @@ INTERNAL_ERROR
 
 Never expose SQL/stack/provider secret/token.
 
+**Error boundaries** (`DECISIONS.md` §52). Two, and they are not interchangeable:
+
+- `app/[locale]/error.tsx` has the locale, the theme and the catalogue, and handles everything
+  below the layout. It shows Next's own `error.digest` — already logged beside the stack, so a
+  report can name it — and never the message or the stack, which carry SQL and sometimes an
+  address (§14.5). It offers `reset()`, because a cold start is the failure a retry fixes.
+- `app/global-error.tsx` replaces the whole document for a failure in the root layout itself. It
+  has no translator and no theme — replacing the layout replaces the provider — so its strings
+  are hard-coded in both languages and its styles are inline. That is the one permitted exception
+  to §11.3.
+
+Neither boundary may read a database, fetch, or import anything that can throw. An error page
+that throws is the one failure with no recovery left.
+
+**A boundary is a net, not a guarantee.** `error.tsx` is a Client Component by Next's design, so
+a server-side throw renders nothing until hydration and a visitor with JavaScript disabled sees a
+blank page — measured, not assumed. Where a route must degrade rather than disappear, catch the
+failure at the data read and render a reduced page, as `SiteHeader#navigationPages` does.
+
 ### 14.4 Naming and imports
 
 - database `snake_case`;
@@ -1811,6 +2224,13 @@ Free-place display may use short request-time data with deliberate invalidation,
 14. return generic “check your email” response.
 
 No place consumed.
+
+A rejection at step 3 carries **field names and never field values** back to the form, because
+the answer travels in a URL that every proxy in between logs (§14.5). The names are matched
+against the form's own list on the way back in — the parameter is a string anybody can type —
+and the page is entered at the error summary rather than at the top (§18.2). Nothing past step
+3 is ever reported that way: from canonicalization onward the response is the generic one
+whatever the address turns out to mean, honeypot, timing check and throttle included.
 
 ### 15.2 Email confirmation
 
@@ -1948,6 +2368,50 @@ Resend never changes state or marks declaration accepted.
 - audit;
 - no public storage/log body.
 
+### 15.11 Staff-entered registration and administrative corrections
+
+The three administrative changes to a registration, and there is no fourth (BR-REQ-037-03,
+BR-REQ-037-05):
+
+1. **Entering one.** `createRegistrationByStaff` calls the same `submitRegistration` the public
+   form calls, with `source = STAFF` and the organizer's id. Identical allocator, identical
+   event-row lock, identical position in the queue, identical `PENDING_EMAIL_CONFIRMATION`
+   start. The participant receives the ordinary verification email and signs the declaration
+   from their own link: nothing here can reach CONFIRMED, because §10.8 says nobody signs a
+   declaration for somebody else. The organizer must confirm on the form that they are relaying
+   a request; the service refuses the whole registration without it.
+2. **Correcting the registered name.** One text column, audited with its previous value. There
+   is no verified-email edit and no participant merge (§10.3, BR-REQ-037-03 criterion 2): the
+   verified address is the identity, and a typo is fixed by cancelling and registering again.
+3. **Cancelling.** The same `unregister` a participant's own link uses, with
+   `cancellation_source = ADMIN`, so the place is released inside the locked transaction and
+   offered to the front of the waiting list (§15.5, §15.6). A status §10.5 gives no edge to
+   CANCELLED from — `PENDING_EMAIL_CONFIRMATION` — is refused with a sentence rather than a bare
+   conflict; such a row holds no place and lapses after 48 hours on its own.
+
+4. **Erasing.** Administrator only, and not the same thing as cancelling. Cancelling keeps the
+   row — the name, the address, the signed declaration — which is right for a runner who
+   withdraws and is exactly wrong for one who asks to be removed. This rule previously said
+   "there is no delete", and that made "we cannot delete you" the club's only possible answer
+   to an erasure request, which is not an answer it may give (`DECISIONS.md` §44).
+
+   The order is fixed and each step is load-bearing: release the place through the ordinary
+   allocator first, so the queue behaves as it does for any withdrawal; write the `audit_logs`
+   row second, while the registration still exists to be described; delete the declaration
+   acceptance and the registration last, in one transaction. Tokens and outbox rows cascade at
+   the database. No message is sent — a deletion is not a notification, and the person who
+   asked for it does not want one.
+
+   The audit row records who, when, why, and the status it was in, and **never the name or the
+   address**: those are what the deletion exists to remove. It survives because
+   `audit_logs.entity_id` carries no foreign key (§12.12), which is the whole reason it does
+   not.
+
+Every one of the four writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+`registrations`, a staff-signed declaration, a staff-confirmed registration, a staff-entered
+row that is allocated ahead of anybody already waiting, or a delete that skips the allocator and
+strands the place it held.
+
 ---
 
 ## 16. Email
@@ -1988,21 +2452,40 @@ Registration maintenance:
   `expiry_reason = EVENT_STARTED`;
 - call fill available spots;
 - bounded/idempotent/observable;
-- record a `job_runs` row for every invocation.
+- record a `job_runs` row for every invocation;
+- prune the rows whose purpose is spent (`DECISIONS.md` §45): `job_runs` past 30 days,
+  `rate_limit_buckets` past 1 day, spent or long-expired `email_action_tokens` past 30 days, and
+  `SENT` `email_outbox` rows past 90 days. Last in the run and in its own `try`/`catch`, because
+  expiring a hold is the duty and tidying is not, and a failed sweep MUST NOT fail the run.
+  `registrations`, `participants`, `declaration_acceptances`, `audit_logs` and `events` are
+  never swept: how long the club keeps a runner's entry is a policy question for the club, and
+  erasing one person is §15.11's own action.
 
 The maintenance job is a delivery and liveness mechanism, not a correctness mechanism.
 Capacity and queue correctness come from transaction-time expiry evaluation (§10.6). The
 job exists to send expiry messages, promote the queue on an otherwise idle event, and
 retry the outbox.
 
-Invocation has two layers:
+Invocation has two layers, and on a serverless host the first of them does not exist:
 
-- primary: an in-process interval inside the persistent application calling the same
-  internal handler, permitted because correctness does not depend on it;
-- watchdog: an external scheduler posting to the job endpoints with `JOB_SECRET`, at
-  roughly five minutes for maintenance and one to five minutes for the outbox.
+- primary: an external scheduler posting to the job endpoints with `JOB_SECRET`, at roughly
+  five minutes for maintenance and one to five minutes for the outbox. This deploys to
+  serverless functions (§7), which have no persistent process for an in-process interval to
+  live in, so the external caller is the only mechanism rather than a watchdog over one;
+- backstop: a second, independent caller on the same endpoints, because the jobs are
+  idempotent and two callers cost one wasted query while one caller that stops costs a
+  participant their place in the queue.
 
-The scheduler is named in `SETUP.md` §26. Changing it must not change business logic.
+**A scheduler that fires late is a promptness failure, never a correctness one**, and the
+distinction decides how much to spend on it. Expiry is evaluated against `now` on every read
+(§10.6), so a two-hour gap releases a place two hours late — it does not release it to the
+wrong person. What a late run delays is the *message*: the offer email the next runner is
+already entitled to. Choose the primary caller on that basis, and measure it with
+`/api/health` rather than with the scheduler's own dashboard: `stale` there is the only report
+that reflects what the application actually saw.
+
+The scheduler is named in `SETUP.md` §26, which also records what GitHub Actions' `schedule`
+trigger measured on this repository. Changing it must not change business logic.
 
 ### 16.3 Message types
 
@@ -2134,8 +2617,17 @@ The phone is the design target; larger layouts derive from it (`BUSINESS.md` BR-
 - No hover-only affordance. Anything shown on hover is reachable by tap or present in the page.
 - Touch targets in participant journeys are at least 44 by 44 CSS pixels; never below 24.
 - Registration, declaration, and offer pages keep the primary action reachable without
-  scrolling back, and show any deadline in the first screen.
+  scrolling back, and show any deadline in the first screen. A deadline is an absolute local
+  time in the event's timezone, never a countdown alone, and it is read from the registration
+  row rather than from the token that opened the page.
+- The public registration form is **one page, not a wizard** (`DECISIONS.md` §47). A field a
+  submission is refused without is present as the page loads; optional *data* is collapsed
+  behind a native `<details>` whose summary names what is inside; a **consent is never
+  collapsed**, because BR-REQ-072-01 and BR-REQ-039-01 require the choice to be presented and a
+  question behind a summary nobody opens has not been put to them.
 - Form fields carry correct `type`, `inputmode`, `autocomplete`, and `autocapitalize`.
+  `autocomplete` is `off` where the answer is deliberately not the person filling the form in:
+  an emergency contact, and the typed name that signs a declaration.
 - Dialogs scroll internally and preserve entered data across rotation; prefer a page.
 - Email templates are single column with one primary button and its URL printed below it.
 - The backoffice registration list and detail work on a phone; the rest of the backoffice
@@ -2158,12 +2650,21 @@ Target WCAG 2.2 AA:
 - adequate tap targets;
 - test MUI dialogs/menus/forms/Tiptap;
 - declaration/offer deadline readable mobile;
-- translated labels do not clip.
+- translated labels do not clip;
+- **a server-side rejection is entered at the error, not at the top of the page.** The redirect
+  carries a URL fragment naming a focusable summary, the summary links each rejected field to
+  that field's own anchor, and the field carries its own message through `aria-describedby`.
+  A fragment and `tabindex="-1"` are the whole mechanism, so it works with JavaScript off;
+- **every page in a participant journey opens with an `h1`,** including the one that only
+  reports an outcome. A document whose sole content is an alert gives a screen reader nothing
+  to navigate to and leaves "what happened" out of the outline.
 
 ### 18.3 Performance
 
 - Server Components;
 - narrow client islands;
+- every kilobyte on the critical path is argued for; the header and the landing page are the
+  two surfaces every visitor pays for (§1.5, the owner's standing instruction);
 - responsive images;
 - limited third-party scripts;
 - indexed queries/server pagination;
@@ -2237,6 +2738,22 @@ Protect:
 
 Use platform-native or small database-backed throttle. Do not add Redis solely for V1. Avoid persisting raw IP longer than necessary; never use IP/device as participant identity.
 
+The key is stored, so it MUST be something the application already holds about the action, never
+an IP or a device. One key per surface, and each names what is actually being defended:
+
+| Surface | Key | What it stops |
+| --- | --- | --- |
+| Registration submission | the canonical email identity (§10.4) | one person flooding one mailbox; `+tag` variants are one allowance |
+| Admin resend | the registration id | two organizers, or one loop, filling a participant's inbox |
+| Token validation | the presented token's **hash**, never the secret | one email link hammered in a retry loop. Not enumeration: a 32-byte secret is not guessed |
+| Management/profile link request | the canonical email identity (§10.4) | one address typed repeatedly into a form nobody has to prove they own — a mailbox flood aimed at **somebody else's** inbox. Built: `/registrations/resend` takes an address and answers identically whatever it finds, generically as §15.1 requires, so it cannot be used to discover who is registered. The profile half is still unbuilt (M4) |
+| Job endpoints (auth-adjacent) | the job name | a leaked `JOB_SECRET` draining the outbox without limit. Counted only *after* the secret verifies, so an anonymous flood cannot lock the scheduler out |
+| Uploads | not built; media storage is deferred (§17) | — |
+
+A refusal MUST NOT tell the caller which defence it tripped where the surface already answers
+generically: registration submission returns its usual generic response (§15.1) and token
+validation returns the one invalid-or-expired answer of §13.2.
+
 ### 19.5 Public profile safety
 
 - plain-text bio or tightly controlled schema;
@@ -2299,7 +2816,8 @@ Real disposable PostgreSQL/migrations:
 - action token hash/single-use/invalidation;
 - profile public query excludes private fields;
 - locale publication/slug uniqueness;
-- CMS stale-version rejection;
+- CMS stale-version rejection. This one needs two real connections: PGlite is single-connection,
+  so a green test there proves only that the SQL parses. `yarn test:concurrency`;
 - environment marker/seeds/audit.
 
 ### 20.4 E2E
@@ -2332,7 +2850,7 @@ Core journeys:
 
 ### 20.5 QA provider checks
 
-- real staff Zitadel login/logout;
+- real staff login/logout, once the sign-in method exists (§13.1);
 - Mailgun allowlisted delivery/webhook;
 - R2 upload/read/delete;
 - outbox scheduler/retry;
@@ -2551,7 +3069,7 @@ GET /api/health
 
 No secrets/schema/PII.
 
-Brașov Runners owns the domain/DNS, Vercel, GitHub, Neon, Zitadel, Mailgun, Cloudflare R2, password manager, billing/recovery. Freelancer least privilege, not sole recovery owner.
+Brașov Runners owns the domain/DNS, Vercel, GitHub, Neon, Mailgun, Cloudflare R2, password manager, billing/recovery. Freelancer least privilege, not sole recovery owner.
 
 ---
 
@@ -2593,7 +3111,7 @@ pull-request breakdown. Each milestone ends with its own slice of the launch che
 
 - Phase 1.0 Foundation: repository, `qa`/`main` protection, CI, `docs:check`, Next.js, MUI, theme, i18n shell, PostgreSQL, Drizzle, migrations, environment validation, seeds.
 - Phase 1.1 Walking skeleton (`DECISIONS.md` §7): one seeded event, registration form, capture-mode email, placeholder declaration, `CONFIRMED` reached, deployed to QA, clicked through by a person.
-- Phase 1.2 Staff auth and minimal backoffice: Zitadel/Auth.js, roles, create/edit/publish an event, list registrations, one registration's timeline.
+- Phase 1.2 Staff auth and minimal backoffice: Auth.js with the `staff_users` allowlist, roles, staff administration, create/edit/publish an event, list registrations, one registration's timeline. Event editing, roles and the workflow shipped early (`DECISIONS.md` §25); the sign-in method itself waits on the sending domain.
 - Phase 1.3 Event pages: localized public list and detail, exact free-place count, structured data, sitemap, robots, canonical/hreflang. Race grouping in the schema and a grouped page when `race_id` is present; no multi-distance registration UI yet.
 - Phase 1.4 Registration lifecycle: identity and tokens, privacy acknowledgment, results consent capture, legal documents via runbook, confirmation, holds, declaration acceptance, confirmed, unregistration, concurrency tests.
 - Phase 1.5 Waiting list: FIFO, offers, expiry, restart, queue closure at event start, maintenance job, `job_runs`, scheduler.
@@ -2687,7 +3205,7 @@ A new maintainer receives:
 - QA credentials through password manager;
 - architecture/data model/decision records;
 - migration/backup/restore runbooks;
-- registrar/Vercel/Mailgun/R2/Zitadel/Neon ownership map;
+- registrar/Vercel/Mailgun/R2/Neon ownership map;
 - registration/waitlist/declaration/email support runbook;
 - known limitations/deferred scope;
 - current incident contacts.

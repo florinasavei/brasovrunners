@@ -1,6 +1,28 @@
 {
   "Site": {
-    "name": "Brașov Runners"
+    "name": "Brașov Runners",
+    "language": "Language",
+    "languageCode": {
+      "ro": "RO",
+      "en": "EN"
+    },
+    "languageName": {
+      "ro": "Română",
+      "en": "English"
+    },
+    "buildBadgeLabel": "Website version and when it was last updated",
+    "buildBadgeSignIn": "Double-click, or press Enter, to sign in as staff.",
+    "lastBuild": "last build",
+    "environmentNotice": {
+      "label": "Notice about this version of the site",
+      "title": "Test site ({environment}) — this is not the club's real website.",
+      "body": "Everything here is sample data for trying the site out, and it may be deleted at any time. Please do not use it to register for a real event. The club's official website is coming soon, at its own address."
+    },
+    "skipToContent": "Skip to content",
+    "nav": {
+      "label": "Main navigation",
+      "events": "Events"
+    }
   },
   "Home": {
     "title": "Brașov Runners",
@@ -10,13 +32,20 @@
   "Events": {
     "title": "Events",
     "intro": "Runs, trail outings and training sessions organised by the club.",
-    "empty": "No events are published right now. Check back soon."
+    "empty": "No events are published right now. Check back soon.",
+    "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
+    "pastNotice": "This event has already taken place.",
+    "featured": "Featured event",
+    "featuredCallToAction": "See the race details"
   },
   "Event": {
     "backToEvents": "Back to events",
     "date": "Date",
     "startTime": "Start time",
+    "gatheringTime": "Gathering time",
+    "raceStartTime": "Race start",
     "meetingPoint": "Meeting point",
+    "openMap": "Open the map",
     "address": "Address",
     "distance": "Distance",
     "distanceKm": "{km} km",
@@ -36,6 +65,22 @@
       "RACE": "Race",
       "OTHER": "Other"
     },
+    "startList": {
+      "title": "Who's coming",
+      "empty": "Nobody has confirmed a place yet.",
+      "note": "Only people who confirmed their registration and did not ask to be left out are listed here."
+    },
+    "cta": {
+      "register": "Register for this event",
+      "joinWaitingList": "Join the waiting list",
+      "external": "Register on the organiser's site",
+      "externalWithProvider": "Register on {provider}",
+      "placesRemaining": "{count, plural, one {# place left} other {# places left}}",
+      "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
+      "opensOn": "Registration opens on {date}.",
+      "closed": "Registration has closed for this event.",
+      "cancelled": "The event has been cancelled, so registration has stopped."
+    },
     "registrationState": {
       "NOT_APPLICABLE": "No registration needed",
       "EXTERNAL": "Register on the organiser's site",
@@ -43,10 +88,884 @@
       "OPEN": "Registration is open",
       "CLOSED": "Registration has closed",
       "EVENT_CANCELLED": "The event has been cancelled"
+    },
+    "difficultyValues": {
+      "EASY": "Easy",
+      "MODERATE": "Moderate",
+      "HARD": "Hard"
+    },
+    "costValues": {
+      "FREE": "Free",
+      "PAID": "Paid"
+    },
+    "seeDetails": "See details",
+    "route": "Route",
+    "openRoute": "View the route"
+  },
+  "Admin": {
+    "title": "Backoffice",
+    "signedInAs": "Signed in as {name} — {role}",
+    "signOut": "Sign out",
+    "saved": "Your changes have been saved.",
+    "loading": "Loading…",
+    "list": {
+      "results": "{count} results",
+      "page": "Page {page} of {pages}",
+      "previous": "Previous page",
+      "next": "Next page",
+      "perPage": "Rows per page",
+      "sortBy": "Sort by {column}",
+      "search": "Search",
+      "searchByName": "Search by name",
+      "clear": "Clear filters",
+      "actions": "Actions"
+    },
+    "backToEvents": "Back to the event list",
+    "legalNotice": "Legal text — the privacy notice, the terms and the declaration — is written here, but never rewritten: an approved version stays as it is, and a correction means a new version.",
+    "nav": {
+      "events": "Events",
+      "registrations": "Registrations",
+      "staff": "Staff",
+      "legal": "Legal documents",
+      "devs": "Configuration",
+      "tasks": "To do",
+      "pages": "Pages"
+    },
+    "registrations": {
+      "empty": "There are no registrations.",
+      "filterAll": "All events",
+      "filter": "Filter",
+      "statusLabel": "Status",
+      "export": "Export CSV",
+      "backToList": "Back to registrations",
+      "resend": "Resend email",
+      "resendSent": "The email has been queued again.",
+      "resendNothingToSend": "There is nothing to resend for this status.",
+      "timeline": "Timeline",
+      "submitted": "Submitted",
+      "emailConfirmed": "Email confirmed",
+      "waitlisted": "Waitlisted",
+      "offerCreated": "Offer created",
+      "holdExpires": "Hold expires",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "declaration": "Declaration signed",
+      "outboxHistory": "Email history",
+      "testKind": "Test",
+      "enteredByStaff": "Entered by staff",
+      "new": "Add a registration",
+      "newTitle": "Add a registration",
+      "newExplanation": "For somebody who asked in person, on the phone, or after a run. It enters exactly like a registration the participant made themselves: the same order for places, the same waiting list, the same starting state. They receive the ordinary confirmation email and sign the declaration themselves — nobody can sign one for somebody else.",
+      "noEventsAcceptingRegistrations": "No event takes registrations through the platform. Set the registration mode to \"Register here\" on the event page.",
+      "event": "Event",
+      "participantName": "Participant name",
+      "participantEmail": "Participant email address",
+      "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
+      "participantLocale": "Language we write to them in",
+      "participantLocaleHelp": "The language of every email about this registration.",
+      "listOptOut": "They do not want to appear on the public participant list",
+      "relayConfirmation": "I confirm this person asked me to register them.",
+      "create": "Add the registration",
+      "viewForEvent": "See this event's registrations",
+      "correctName": "Correct the name",
+      "correctNameHelp": "Only the name can be corrected. The email address is the participant's identity and is never changed here: for a wrong address, cancel the registration and add it again with the right one.",
+      "saveName": "Save the name",
+      "cancelTitle": "Cancel the registration",
+      "cancelReason": "Reason",
+      "cancelAction": "Cancel the registration",
+      "cancelHelp": "A registration is never deleted — it records what somebody agreed to and when. Cancelling releases the place, and it goes to the first person on the waiting list.",
+      "auditTrail": "What staff did",
+      "auditActorRemoved": "account removed",
+      "audit": {
+        "registration": {
+          "created_by_staff": "Registration entered by staff",
+          "name_corrected": "Name corrected",
+          "cancelled_by_staff": "Cancelled by staff",
+          "resend_rate_limited": "Resend rate-limited"
+        }
+      },
+      "locale": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "deleteTitle": "Delete permanently",
+      "deleteHelp": "Deletes the registration and the signed declaration, permanently. The place is released to the waiting list, and the log keeps who deleted it and why — not the person’s data. Use it for an erasure request; for an ordinary withdrawal, cancel instead.",
+      "deleteReason": "Reason for deletion",
+      "deleteAction": "Delete permanently",
+      "deleteConfirm": "I confirm this deletion is permanent",
+      "registrationDeleted": "The registration was permanently deleted.",
+      "rowActions": "Actions",
+      "clubMemberLabel": "Brașov Runners members",
+      "clubMemberOnly": "Only those who declared membership",
+      "clubMemberChip": "Member (declared)",
+      "columnName": "Name",
+      "columnStatus": "Status",
+      "columnEvent": "Event",
+      "columnEmail": "Email",
+      "columnSubmitted": "Submitted",
+      "openNamed": "Open the registration for {name}",
+      "tableCaption": "Registrations, with status, event and date submitted",
+      "emptyFiltered": "No registration matches these filters. Clear them to see all of them.",
+      "selectRow": "Select the registration for {name}",
+      "bulkCancelTitle": "Cancel the ticked registrations",
+      "bulkCancelHelp": "Each ticked registration is cancelled separately, with the same reason, and each place goes to the first person on the waiting list. Permanent erasure is never done in bulk.",
+      "bulkCancelAction": "Cancel the ticked ones",
+      "bulkCancelPending": "Cancelling…",
+      "registrationsCancelled": "{cancelled} registrations cancelled. {failed} could not be cancelled.",
+      "searchHelp": "Search by name, with or without Romanian diacritics.",
+      "resendShort": "Resend"
+    },
+    "events": {
+      "empty": "There is no event in the database.",
+      "featured": "Featured",
+      "preview": "Preview",
+      "edit": "Edit",
+      "moreActions": "More actions",
+      "new": "New event",
+      "registrations": "Registrations",
+      "columnTitle": "Event",
+      "columnStatus": "Status",
+      "columnDate": "Date",
+      "columnEntries": "Registrations",
+      "tableCaption": "The club's events, with their status, date and number of registrations",
+      "selectEvent": "Select \"{title}\"",
+      "bulkArchiveTitle": "Archive the ticked events",
+      "bulkArchiveHelp": "Archiving takes an event off the site without deleting anything. An event somebody else has edited in the meantime is not archived, so their change is not lost.",
+      "bulkArchiveAction": "Archive the ticked ones",
+      "bulkArchivePending": "Archiving…",
+      "eventsArchived": "{archived} events archived. {failed} could not be archived.",
+      "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event instead.",
+      "deleteBlockedShort": "{count} registrations"
+    },
+    "confirm": {
+      "cancel": "Never mind",
+      "duplicateTitle": "Duplicate this event?",
+      "duplicateBody": "A copy is created as a draft, with its own page addresses. It is not featured and it is not published.",
+      "deleteTitle": "Delete this event?",
+      "deleteBody": "Deleting is permanent. Only an event nobody has registered for can be deleted; for one that has happened, archive it instead.",
+      "archiveTitle": "Archive this event?",
+      "archiveBody": "The event comes off the site, in both languages. You can bring it back later by sending it through review and publishing it again.",
+      "removeTestTitle": "Remove the test registrations?",
+      "removeTestBody": "Every test registration for this event is deleted, along with the synthetic participants behind them. Real registrations are left untouched.",
+      "cancelRegistrationTitle": "Cancel this registration?",
+      "cancelRegistrationBody": "The place is released immediately and offered to the first person on the waiting list. The registration itself is kept, marked cancelled."
+    },
+    "errors": {
+      "NOTHING_SELECTED": "You did not tick any registration.",
+      "UNAUTHENTICATED": "Your session has ended. Sign in again.",
+      "FORBIDDEN": "Your role does not allow this.",
+      "NOT_FOUND": "That record no longer exists.",
+      "VALIDATION_ERROR": "Check what you entered; something is not valid.",
+      "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten."
+    },
+    "editor": {
+      "eventSection": "Event details",
+      "startsAt": "Event start",
+      "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
+      "raceStartsAt": "Race start",
+      "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
+      "mapUrl": "Map link",
+      "mapUrlHelp": "Optional. The link is built from the coordinates; fill this in only to point at a specific page. It must start with https://.",
+      "featured": "Lead the site with this event",
+      "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
+      "saveEvent": "Save the event details",
+      "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
+      "translationSection": "Content ({locale})",
+      "translationReadOnly": "You cannot edit this text: the event is published, or the text was written by another author.",
+      "version": "version {version}",
+      "liveWarning": "This event is published. Your changes become public the moment you save.",
+      "acknowledgeLive": "I understand that I am editing published content.",
+      "saveTranslation": "Save the text",
+      "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
+      "slugLocked": "The page has been published, so its address stays as it is.",
+      "costHelp": "Free text: \"Free\", \"50 lei\". Leave empty when no cost has been stated.",
+      "fields": {
+        "title": "Title",
+        "slug": "Page address",
+        "excerpt": "Short description",
+        "locationName": "Meeting point",
+        "locationAddress": "Address",
+        "seoTitle": "Search engine title",
+        "seoDescription": "Search engine description",
+        "difficulty": "Difficulty",
+        "costType": "Cost"
+      },
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "coordinatesHelp": "The exact start point, in decimal degrees — for example 45.6427 and 25.5887. Right-click the spot on a map to copy them. A park name is not a start line.",
+      "sharedFieldHelp": "The same in both languages. Filled in once.",
+      "contentHelp": "The same event, in two languages. Only the words change here; the time, the place, the difficulty and the cost are in Settings above and are shared by both.",
+      "tabIncomplete": "incomplete",
+      "settingsSection": "Settings",
+      "contentSection": "Content",
+      "save": "Save",
+      "publicationSection": "Publication",
+      "noTransitions": "Your role cannot move this event from its current state.",
+      "incompleteForPublication": "Both languages must be complete before this event can be published. Missing: {detail}.",
+      "newTitle": "New event",
+      "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
+      "create": "Create the event",
+      "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
+      "kind": "Kind",
+      "eventStatus": "Event status",
+      "timezone": "Time zone",
+      "timezoneHelp": "The zone the times below are typed in, e.g. Europe/Bucharest.",
+      "endsAt": "Event end",
+      "endsAtHelp": "Optional. Leave empty when the club has stated only a start.",
+      "distanceMeters": "Distance",
+      "distanceMetersHelp": "In metres. 10000 shows as 10 km.",
+      "elevationGainMeters": "Elevation gain (m)",
+      "registrationSection": "Registration",
+      "registrationMode": "Registration mode",
+      "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
+      "capacity": "Capacity",
+      "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
+      "registrationOpensAt": "Registration opens",
+      "registrationClosesAt": "Registration closes",
+      "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
+      "declarationDocument": "Declaration a participant signs",
+      "declarationDocumentHelp": "Chosen from the approved versions. This text is never edited here — a new version arrives through a migration.",
+      "declarationNone": "No approved declaration exists in this environment, so no event can take registrations here yet.",
+      "declarationUnset": "None",
+      "participantList": "Publish the participant list on the event page",
+      "participantListHelp": "Publishes the names of the people who confirmed their registration and did not ask to be left out. No email addresses, and nothing about unconfirmed registrations. This is a disclosure of personal data: the approved privacy notice must describe it before this is switched on.",
+      "externalProvider": "External organiser",
+      "externalRegistrationUrl": "External registration link",
+      "externalHelp": "Both only for an event registered elsewhere. The link must start with https://.",
+      "copySection": "Copy and removal",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "deleteHelp": "A duplicate is created as a draft, is never featured, and gets its own page addresses. Deleting is for an event nobody has registered for; archive the ones that happened.",
+      "difficultyValues": {
+        "EASY": "Easy",
+        "MODERATE": "Moderate",
+        "HARD": "Hard"
+      },
+      "costValues": {
+        "FREE": "Free",
+        "PAID": "Paid"
+      },
+      "notStated": "Not stated",
+      "routeUrl": "Route link",
+      "routeUrlHelp": "Where the route can be seen — Strava, Komoot, or the map you drew it on. Must start with https://. Leave empty if there is not one."
+    },
+    "preview": {
+      "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
+      "backToEditor": "Back to editing"
+    },
+    "signIn": {
+      "title": "Staff sign-in",
+      "unavailable": "Staff sign-in is not available in this environment yet.",
+      "developmentOnly": "Development identities, on a local machine and in tests only. These are not real people.",
+      "action": "Sign in"
+    },
+    "staff": {
+      "title": "Staff",
+      "inviteTitle": "Add someone",
+      "email": "Email address",
+      "name": "Name",
+      "role": "Role",
+      "preferredLocale": "Preferred language",
+      "invite": "Add",
+      "inviteHelp": "No email is sent: the platform has no sending domain yet. Access begins at their first sign-in with this address.",
+      "pending": "Has not signed in yet",
+      "you": "You",
+      "changeRole": "Change role",
+      "revoke": "Revoke access",
+      "columnName": "Name",
+      "columnEmail": "Email",
+      "columnRole": "Role",
+      "columnStatus": "Status",
+      "tableCaption": "The accounts that may sign in to the backoffice, with each one's role",
+      "empty": "There is no staff account yet.",
+      "changeRolePending": "Saving…",
+      "revokePending": "Removing…"
+    },
+    "testRegistrations": {
+      "title": "Test registrations",
+      "explanation": "Synthetic participants on reserved @test.invalid addresses, which can never receive mail. They go through the ordinary submission and confirmation path, so they occupy places and fill the waiting list exactly as real people do — and they are left out of the CSV export and labelled everywhere they are listed. Not available in production.",
+      "count": "How many",
+      "add": "Add test registrations",
+      "remove": "Remove all test registrations"
+    },
+    "legal": {
+      "title": "Legal documents",
+      "intro": "The privacy notice, the terms, and the declaration participants sign. Readable here; not editable.",
+      "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
+      "document": "Document",
+      "version": "Version",
+      "state": "State",
+      "languages": "Languages",
+      "usage": "In use",
+      "effectiveAt": "Effective from",
+      "approved": "Approved",
+      "draft": "Draft",
+      "keys": {
+        "PRIVACY_NOTICE": "Privacy notice",
+        "TERMS": "Terms and conditions",
+        "EVENT_DECLARATION": "Participant declaration"
+      },
+      "referenced": "{signatures} signatures · {events} events",
+      "unreferenced": "Not yet used",
+      "immutabilityNotice": "An approved version is never edited and never deleted: participants signed exactly that text, and what the club published stays on the record. A correction is a new version. An unapproved draft can be deleted, because nobody has seen it.",
+      "readOnlyNotice": "This page is read-only. Legal text is not edited from the backoffice.",
+      "backToList": "Back to legal documents",
+      "noTranslations": "This version has no text yet.",
+      "newTitle": "New version",
+      "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
+      "newVersion": "New version",
+      "saveDraft": "Save draft",
+      "titleField": "Title",
+      "bodyField": "Text",
+      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading.",
+      "keyLocked": "The document cannot change after creation.",
+      "editorWarning": "This is the club’s legal text. Write or paste only wording the club has approved — never invent legal content.",
+      "approveTitle": "Approve this version",
+      "approveHelp": "Once approved the text is public and can no longer be edited. A later correction means a new version.",
+      "approveConfirm": "I confirm the club has approved this text and it may become public",
+      "approveAction": "Approve and publish",
+      "legalDraftCreated": "The draft was created.",
+      "legalDraftSaved": "The draft was saved.",
+      "legalVersionApproved": "The version is approved and now public.",
+      "referencedFull": "{signatures} signatures · {events} events · {acknowledgements} registrations",
+      "tableCaption": "Legal document versions, with their state and what depends on each",
+      "delete": "Delete the draft",
+      "deletePending": "Deleting…",
+      "deleteTitle": "Delete the draft?",
+      "deleteBody": "The draft and its text in both languages go permanently. Nobody has seen it: a draft is never public and nobody has signed it.",
+      "deleteBlockedApproved": "Approved — cannot be deleted. What the club published stays on the record.",
+      "deleteBlockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
+      "legalVersionDeleted": "The draft has been deleted."
+    },
+    "tasks": {
+      "title": "What is still to do",
+      "intro": "What is missing before the platform can take real entries. Every line is read from the system, not ticked by hand.",
+      "blockingSummary": "Blocking real registrations: {count}.",
+      "nothingBlocking": "Nothing is blocking registrations. The rest are improvements.",
+      "state": {
+        "blocking": "Blocking",
+        "open": "To do",
+        "done": "Done"
+      },
+      "owner": {
+        "club": "The club",
+        "developer": "The developer"
+      },
+      "items": {
+        "approveLegalText": {
+          "title": "Approve the legal text",
+          "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone. The procedure is docs/RUNBOOKS.md § Legal document version.",
+          "done": "The club’s approved wording is published."
+        },
+        "liveEmail": {
+          "title": "Email to real participants",
+          "todo": "Messages are either captured or reach at most 5 authorised addresses in the Mailgun sandbox. Reaching every participant needs the club’s domain, verified in Mailgun.",
+          "done": "Email reaches participants."
+        },
+        "registerDomain": {
+          "title": "Register the club's domain",
+          "todo": "The site works, but on the provider’s address. The club’s own domain is also what unlocks email to anyone.  does the technical half.",
+          "done": "The site answers on the club’s domain."
+        },
+        "publishEvents": {
+          "title": "Publish events",
+          "todo": "No event is published, so visitors see an empty list.",
+          "done": "Events are published."
+        },
+        "scheduler": {
+          "title": "The scheduled jobs",
+          "todo": "The scheduled jobs have not run recently: email does not go out and held places do not expire. This one is technical.",
+          "done": "The jobs are running on time."
+        }
+      },
+      "freeVerdict": {
+        "freeExceptDomain": "Yes, apart from the domain: every service is on a free plan and nothing is paid monthly.",
+        "freeButAtALimit": "Yes, but today's free emails are used up. Nothing is lost — they go out after midnight. If you open entries now, the confirmations arrive tomorrow morning.",
+        "notFree": "Careful, though not necessarily a problem. A published event is marked as charging a fee. The provider's free plan does not care that we are a non-profit — that is not an exemption. What matters is how the money is asked for: a donation is explicitly allowed, a compulsory fee is not, even if it only covers costs. The site takes no money and has no way to — that helps, but it does not settle it on its own."
+      },
+      "registrationsLeftToday": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
+      "costTitle": "What it costs",
+      "costToday": {
+        "nothing": "Today the club pays nothing at all. Every service is on a free plan, and the domain has not been bought yet.",
+        "total": "Today the club pays {total} a year.",
+        "amount": "{amount} {currency}",
+        "amountPlusVat": "{amount} {currency} + VAT",
+        "free": "free",
+        "notTaken": "nothing yet"
+      },
+      "nextSpend": {
+        "domain": "The next thing to cost money: the club's domain, {cost} a year at the registry (the .com price from 1 November 2026). The company you buy it from charges a little more and adds VAT, in its own currency, once a year. It arrives the day the club buys it; until then the site sits on the provider's free address.",
+        "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}. Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
+        "vercel": "The next thing to cost money: Vercel Pro, {cost}. It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
+      },
+      "currencyNote": "Amounts are written in the currency each company charges in, not converted into lei: none of them invoices in lei, and an exchange rate written today would be wrong tomorrow. The domain is invoiced by the company it is bought from, in that company's currency. VAT in Romania is {vat}%.",
+      "freshness": {
+        "fresh": "Prices were checked on {checked}, {days} days ago. Recent enough to rely on.",
+        "ageing": "Prices were checked on {checked}, {days} days ago. They are getting old — ask again before spending anything.",
+        "stale": "Prices were checked on {checked}, {days} days ago. Too old to trust: ask the developer to check them before any decision."
+      },
+      "servicesTitle": "The services, one at a time",
+      "servicesIntro": "One row for each service the site depends on: the plan we are on, what it costs today, what we get for free, the limit we will meet first, how close we are right now, what happens when we cross it, and what the next step up costs.",
+      "severity": {
+        "ok": "fine",
+        "unknown": "we don't know",
+        "watch": "watch",
+        "act": "act"
+      },
+      "field": {
+        "planToday": "Plan today",
+        "costToday": "Cost today",
+        "howClose": "How close",
+        "nextPlan": "Next step up"
+      },
+      "planNone": "not chosen yet",
+      "nextPlanNone": "no next step",
+      "checkedOn": "Amounts checked on {checked}.",
+      "bump": {
+        "temporary": "taken temporarily",
+        "permanent": "stays for good"
+      },
+      "services": {
+        "domain": {
+          "name": "The site's address (the .com domain)",
+          "freeGives": "There is no free version — this is the one thing on the page that is paid for either way. The registry price for a .com is 10.97 USD a year from 1 November 2026 (10.26 USD until then); the company you buy it from charges more and adds VAT.",
+          "ceiling": "The first limit: without the club's own address, email cannot go out to participants.",
+          "whenCrossed": "It can only go to five test addresses. From the day the domain is bought there is one invoice a year, paid in lei.",
+          "closeYes": "Bought, and the site answers on it.",
+          "closeNo": "Not bought. The site answers on the provider's free address."
+        },
+        "mailgun": {
+          "name": "Mailgun (sending email)",
+          "freeGives": "Free: 100 emails a day. Until the club has its own address, email can only go to five test addresses.",
+          "ceiling": "The first limit: 100 emails a day, which is about 33 entries, because one complete entry takes three emails.",
+          "whenCrossed": "Emails over the limit are not lost: they wait in the queue and go out after midnight. But a race whose confirmations only arrive the next morning is a bad race, so the paid plan is bought before entries open, not during them.",
+          "closeMeasured": "{used} of {of} emails have gone out today — enough left for about {left} entries.",
+          "bumpBack": "Taken for the month of the race and stopped the month after. One month per race, not a long-term subscription."
+        },
+        "vercel": {
+          "name": "Vercel (where the site lives)",
+          "freeGives": "Free: enough traffic and power for a club site, but only for non-commercial use.",
+          "ceiling": "The first limit: the free plan requires that the site is not used commercially. The club sells nothing and takes no money, so we are fine.",
+          "whenCrossed": "An event asking for a compulsory fee would count as commercial; a donation would not — they say so themselves. There is one more thing, and it has nothing to do with the club: if anybody is ever paid to work on this site, that counts as commercial too. And one more to know: if a limit on the free plan is exceeded, the feature stops for 30 days and you cannot pay to restart it — which is why you move up before a race, not during one.",
+          "closeYes": "A published event is marked as charging a fee — check how it is worded.",
+          "closeNo": "No published event asks for money.",
+          "bumpBack": "This one does not come back down: it is not a busy weekend, it is a change in how the site is used. Unless it was taken purely for traffic."
+        },
+        "neon": {
+          "name": "Neon (the database)",
+          "freeGives": "Free: a small database (0.5 GB) and an amount of work included every month.",
+          "ceiling": "The first limit: the space and the monthly amount of work included.",
+          "whenCrossed": "On the free plan the database goes to sleep when nobody is using it, so the first page after a quiet spell is slow to load. Past the limit the site gets slow and errors can appear. The next step up is paid by usage, not as a fixed subscription.",
+          "closeUnknown": "Not measured: the site does not know how much has been used. It is visible in the Neon account and worth a look before a race.",
+          "bumpBack": "Taken for the days entries are open and dropped once they close."
+        },
+        "zitadel": {
+          "name": "Zitadel (how the team signs in)",
+          "freeGives": "Free: up to 100 people a day and a single administrator. Signing in happens on the provider's address, not the club's.",
+          "ceiling": "The first limit: on the free plan the team cannot sign in on the club's own address, and there can be only one administrator.",
+          "whenCrossed": "While the team signs in on the provider's address, none of this matters. From the day the club buys its domain, signing in on it or having a second administrator has to be paid for.",
+          "closeYes": "The club's domain is in place — both of these matter now.",
+          "closeNo": "The team signs in on the provider's address."
+        },
+        "githubActions": {
+          "name": "GitHub (the automatic jobs)",
+          "freeGives": "Free and unlimited, as long as the site's code stays public.",
+          "ceiling": "Here the limit is not money but rhythm: the automatic jobs should run every five minutes, and in practice they run roughly every two hours.",
+          "whenCrossed": "Email waits in the queue, and places held for somebody are released later than they should be. Nothing breaks and nobody loses their place — but the confirmation arrives late, and on registration day that feels like a broken site.",
+          "closeYes": "An automatic job has not run for too long.",
+          "closeNo": "The automatic jobs ran on time."
+        }
+      },
+      "decisionsTitle": "What is waiting on a decision",
+      "decisionsIntro": "The rest of this page is things to read. These are questions somebody in particular has to answer, by a particular time.",
+      "decisionState": {
+        "open": "needs an answer",
+        "answered": "answered"
+      },
+      "decisions": {
+        "domainRegistrar": {
+          "question": "Where do we buy the domain, and what do we actually pay?",
+          "open": "The registry price for a .com is 10.97 USD a year, but the companies you buy from charge different amounts and add VAT. Whoever buys it says what was paid, so it can appear here. By when: before the first race with entries, because email to participants depends on the domain.",
+          "answered": "The domain is bought and the site answers on it. If nobody has been told what it cost, now is the moment."
+        },
+        "entryContribution": {
+          "question": "Will the club ever ask for money to take part?",
+          "open": "A published event is marked as charging a fee, which contradicts what was decided on 7 September 2026. Somebody has to say whether it is a donation or a compulsory fee: the difference is in how it is written rather than in the intention, and free hosting depends on it. By when: before that event takes entries.",
+          "answered": "No. The owner confirmed on 7 September 2026 that Brașov Runners sells nothing and takes no money. If that ever changes: a donation is explicitly allowed on the free plan, a compulsory fee is not."
+        },
+        "currency": {
+          "question": "Which currency do we show amounts in?",
+          "open": "Undecided: the page would mix currencies without saying why.",
+          "answered": "In the currency each company charges in, without converting to lei. An exchange rate on the page would be a figure no invoice ever confirms, and the domain is paid in lei anyway, at the day's rate. Decided by the developer, with the reason written next to the figures in the site's code."
+        },
+        "mailgunBeforeRace": {
+          "question": "Do we take a paid month of Mailgun before the first real race?",
+          "open": "The free allowance covers about 33 entries a day. If a race expects more, the $15 for one month is paid before entries open rather than during them — otherwise confirmations arrive the next morning. By when: the day before entries open.",
+          "answered": "The club no longer depends on the free daily limit."
+        }
+      },
+      "optionsTitle": "What our options are",
+      "optionsIntro": "For each service above there was another option, researched and not taken. Side by side, it is clear we are not tied to anybody: we chose, and every choice has a way out. Nothing here changes now; the note at the end says where the decision is written down, for the developer.",
+      "options": {
+        "vercel": {
+          "title": "Where the site lives",
+          "why": "Render, also free and also in Europe, could host this site with no changes at all. Not taken because what we use now is free and works; it stays the fallback for the day the current free plan is no longer allowed for us. Written in:"
+        },
+        "mailgun": {
+          "title": "Sending email",
+          "why": "Resend, with its servers in Ireland, would be free at the volume the club sends. Mailgun was chosen because the company is in the European Union, and moving from one to the other would be a small change. Written in:"
+        },
+        "zitadel": {
+          "title": "How the team signs in",
+          "why": "It could be done without a separate company, using only the list of people in the site, for three to five organizers who never sign themselves up anyway. What we have is already built and works; the other option matters the day signing in on the club's own address would have to be paid for. Written in:"
+        },
+        "storage": {
+          "title": "Photos and files",
+          "why": "Photos live in the site itself, with no separate service, until somebody who is not a developer needs to upload one. Only then is it worth a new account and another invoice. Written in:"
+        }
+      },
+      "cloudflare": {
+        "title": "Cloudflare, once — because the question keeps coming back",
+        "proxy": "We do not put Cloudflare in front of the site. That would be two services doing the same job, and any problem would be twice as hard to find.",
+        "dns": "We do not have to move the site's address to them. The domain stays with the company it is bought from.",
+        "workers": "Their service for running programs cannot host this site: it is built differently, and the power included for free would not be enough.",
+        "r2": "For photos and files, Cloudflare is genuinely a good, cheap option. It only matters once somebody who is not a developer starts uploading photos.",
+        "turnstile": "Against spam, Cloudflare has a good tool, if the protection we have now stops being enough. But it is a company that would see visitors' data, so the approved privacy notice has to name it first."
+      }
+    },
+    "pages": {
+      "title": "Pages",
+      "create": "New page",
+      "intro": "The club’s standing pages — “About Brașov Runners”, “Contact”. They publish in both languages together, like events.",
+      "empty": "There are no pages yet.",
+      "untitled": "Untitled",
+      "order": "order {order}",
+      "backToList": "← All pages",
+      "incomplete": "Both languages must be complete before publishing. Missing: {detail}.",
+      "readOnly": "Your role can read pages but not change them.",
+      "delete": "Delete page",
+      "deleteTitle": "Delete this page?",
+      "deleteBody": "The page and both translations go permanently. If it was published and you only want it off the site, use “Archive”.",
+      "viewPublic": "View the public page →",
+      "columnTitle": "Title",
+      "columnStatus": "Status",
+      "columnAddress": "Address",
+      "columnOrder": "Order",
+      "tableCaption": "The club's pages, with their status and their order in the menu",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "moveUpNamed": "Move \"{title}\" up the menu",
+      "moveDownNamed": "Move \"{title}\" down the menu",
+      "moveHelp": "The order here is the order in the site menu.",
+      "navOrder": "Order in the menu",
+      "navOrderHelp": "A lower number comes first. Leave 0 if it does not matter.",
+      "slugHelp": "The page address: lowercase letters, digits and hyphens.",
+      "slugLocked": "The address is fixed once published — links already sent have to keep working.",
+      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading.",
+      "language": {
+        "ro": "Romanian",
+        "en": "English"
+      },
+      "fields": {
+        "title": "Title",
+        "slug": "Page address",
+        "body": "Text",
+        "seoTitle": "SEO title",
+        "seoDescription": "SEO description"
+      }
     }
   },
   "NotFound": {
     "title": "This page does not exist",
     "back": "Back to the home page"
+  },
+  "Legal": {
+    "unavailable": "This document has not been published for this environment yet.",
+    "privacyLinkLabel": "Privacy",
+    "termsLinkLabel": "Terms and conditions"
+  },
+  "Registration": {
+    "title": "Register: {event}",
+    "email": "Email address",
+    "privacyPrefix": "I have read and agree to the",
+    "privacyLinkLabel": "privacy notice",
+    "resultsNameConsent": "I agree to my name appearing in public results",
+    "listOptOut": "Keep my name off the public participant list, if the club publishes one for this event",
+    "submit": "Submit registration",
+    "submitted": "Check your email to confirm your registration.",
+    "errors": {
+      "title": "The registration could not be submitted",
+      "fieldsIntro": "Check these fields:",
+      "field": "Please complete this field correctly.",
+      "generic": "The registration could not be submitted. Check what you entered and try again."
+    },
+    "sections": {
+      "about": "About you",
+      "contact": "Contact",
+      "consents": "Consents"
+    },
+    "firstName": "First name",
+    "lastName": "Last name",
+    "displayName": "Public display name",
+    "displayNameHelp": "By default the participant list and the results show your full name. If you would rather they showed something else — “Ana P.”, for instance — write it here. To stay off the list entirely, use the option below.",
+    "birthDate": "Date of birth",
+    "birthDateHelp": "Age categories are worked out against the day of the race.",
+    "sex": "Sex",
+    "sexOptions": {
+      "FEMALE": "Female",
+      "MALE": "Male",
+      "UNSPECIFIED": "Prefer not to say"
+    },
+    "nationality": "Nationality",
+    "city": "City",
+    "phone": "Phone",
+    "emergencyContactName": "Emergency contact",
+    "emergencyContactPhone": "Emergency contact phone",
+    "tshirtSize": "T-shirt size",
+    "tshirtSizes": {
+      "NONE": "No t-shirt"
+    },
+    "clubName": "Club or team",
+    "optional": "Optional",
+    "healthNotes": "Conditions, allergies or medication",
+    "healthNotesHelp": "Only what an organizer would need to know if you needed help on race day. You may leave this empty.",
+    "healthConsent": "I agree that this health information may be kept and used only for my safety on race day",
+    "displayNameToggle": "Want to appear publicly under a different name?",
+    "displayNamePlaceholder": "Ana P.",
+    "fieldNames": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "displayName": "Public display name",
+      "email": "Email address",
+      "birthDate": "Date of birth",
+      "sex": "Sex",
+      "nationality": "Nationality",
+      "city": "City",
+      "phone": "Phone",
+      "emergencyContactName": "Emergency contact",
+      "emergencyContactPhone": "Emergency contact phone",
+      "tshirtSize": "T-shirt size",
+      "clubName": "Club or team",
+      "healthNotes": "Health information",
+      "healthConsent": "Health information consent",
+      "privacyAcknowledged": "Privacy notice"
+    },
+    "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
+    "optionalSuffix": "optional",
+    "resend": {
+      "title": "Send the registration link again",
+      "intro": "If our message did not arrive, enter the address you registered with and we will send the link again. Check your spam folder too.",
+      "emailHelp": "The address you used when registering.",
+      "submit": "Send the link",
+      "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
+      "prompt": "Did the message not arrive?",
+      "linkLabel": "Send it again"
+    },
+    "journey": {
+      "steps": {
+        "details": "Your details",
+        "confirm": "Confirm your email",
+        "declare": "Sign the declaration"
+      },
+      "now": {
+        "details": "Fill in the form. We will then email you to confirm your address.",
+        "confirm": "We have sent you a confirmation link. It can take up to 5 minutes to arrive — check your spam folder before registering again.",
+        "declare": "One step left: read and sign the declaration. Your place is held for 30 minutes.",
+        "done": "Your registration is confirmed. See you at the start!"
+      }
+    },
+    "disclosure": {
+      "race": "Brașov Runners member, club and t-shirt — optional",
+      "health": "Health information — optional"
+    },
+    "clubMemberDeclared": "I am a Brașov Runners team member"
+  },
+  "Registrations": {
+    "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",
+    "confirm": {
+      "title": "Confirm your email address",
+      "prompt": "Press the button below to confirm your email address and continue your registration.",
+      "action": "Confirm",
+      "done": "Your email address has been confirmed.",
+      "doneTitle": "Your email address is confirmed"
+    },
+    "declare": {
+      "title": "Event declaration",
+      "accept": "I have read and accept the declaration above",
+      "typedName": "Type your full name as a signature",
+      "action": "Sign and confirm",
+      "doneConfirmed": "Your registration is confirmed.",
+      "doneWaitlisted": "The place was no longer available; you have been added to the waiting list.",
+      "doneTitle": "Your declaration is signed",
+      "event": "For the event: {event}",
+      "deadline": "Your place is held until {deadline}.",
+      "typedNameHelp": "Type the full name you registered with."
+    },
+    "manage": {
+      "title": "Manage your registration",
+      "prompt": "You can cancel this registration. The place will be released immediately.",
+      "action": "Cancel registration",
+      "done": "Your registration has been cancelled.",
+      "eventStarted": "This event has already started; the registration can no longer be cancelled.",
+      "doneTitle": "Registration cancelled"
+    }
+  },
+  "Devs": {
+    "title": "This deployment's configuration",
+    "intro": "What is configured here and what is missing. Variable names and whether they have a value — never the value.",
+    "environment": "Environment",
+    "buildUnknown": "build date unknown",
+    "configuration": "Configuration",
+    "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",
+    "runtime": "State right now",
+    "runtimeIntro": "What the database and the scheduled jobs report at this moment. The same values as /api/health.",
+    "schema": "Database schema",
+    "overall": {
+      "ok": "Everything is coherently configured.",
+      "limited": "Working, but doing less than you probably expect. See the marked items below.",
+      "blocked": "Something this deployment needs in order to start, or to work, is missing. See the red items below."
+    },
+    "status": {
+      "ok": "OK",
+      "limited": "Limited",
+      "blocked": "Blocked"
+    },
+    "jobStatus": {
+      "ok": "running",
+      "stale": "stale",
+      "never_run": "never run"
+    },
+    "checks": {
+      "emailCaptureLocal": {
+        "title": "Email",
+        "body": "Messages are kept in memory and go nowhere. The only mode local and test accept."
+      },
+      "emailCaptureDeployed": {
+        "title": "Email",
+        "body": "Messages are kept in memory and go nowhere — and on a hosted environment nobody can read them, because the process is gone. Anyone registering here never receives the confirmation. For real delivery: EMAIL_DELIVERY_MODE=allowlist, together with EMAIL_ALLOWLIST and the three Mailgun variables."
+      },
+      "emailAllowlist": {
+        "title": "Email",
+        "body": "Transmits only to the addresses in EMAIL_ALLOWLIST; everything else is captured. Each address must also be an authorized recipient in Mailgun, spelled exactly the same."
+      },
+      "emailLive": {
+        "title": "Email",
+        "body": "Transmits to anybody. Permitted in production only."
+      },
+      "staffProvider": {
+        "title": "Staff sign-in",
+        "body": "Through the identity provider. Who may in is still decided by the staff_users table, not by the provider."
+      },
+      "staffDevSwitcher": {
+        "title": "Staff sign-in",
+        "body": "Development identities, local and test only. Not real people."
+      },
+      "staffDisabled": {
+        "title": "Staff sign-in",
+        "body": "There is no way in at all: every staff route answers 404. Correct for an environment with no provider configured."
+      },
+      "jobs": {
+        "title": "Scheduled jobs",
+        "body": "The only thing that drains the email queue and expires holds. Without JOB_SECRET the endpoints refuse every caller, and the symptom is not an error — it is email that never arrives."
+      },
+      "webhook": {
+        "title": "Mailgun webhook",
+        "body": "How a bounce reaches the registration it belongs to. Without the signing key, requests are refused and delivery state stays unknown."
+      },
+      "mapLink": {
+        "title": "Map link",
+        "body": "Optional. Without it the meeting point stays plain text with no link — documented behaviour, not a fault."
+      }
+    },
+    "rateLimits": "Rate limits",
+    "rateLimitsIntro": "How many attempts each guarded action accepts in a fixed window, per key — an email identity, a registration, one email link, or one job. A limit somebody is hitting looks like \"the site is broken\" without anything being broken.",
+    "roles": "Roles",
+    "rolesIntro": "Each role can do everything the one below it can, plus one thing more. The line that matters is between Technical and Admin: from there up, participant data is visible.",
+    "youAre": "your role",
+    "roleSummary": {
+      "CONTRIBUTOR": "proposes text and submits it for approval",
+      "MODERATOR": "edits any event and approves",
+      "DEV": "plus the configuration page. No participant data",
+      "ADMIN": "plus registrations, participants, exports, deleting an event",
+      "SUPERADMIN": "plus staff administration: who has access and what they may do"
+    },
+    "settings": "Settings",
+    "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",
+    "emailVolume": "Email volume today",
+    "emailVolumeIntro": "Three messages per completed registration, against the provider's daily allowance. Check this before opening a registration window, not after. Counted from midnight UTC.",
+    "emailVolumeHeadroom": "{remaining} of {allowance} messages left today.",
+    "registrationsToday": "Registrations today",
+    "testRegistrations": "test",
+    "projectedMessages": "Projected messages",
+    "queuedMessages": "Queued today",
+    "sentMessages": "Sent today",
+    "inUse": "in use",
+    "setting": {
+      "APP_ENV": {
+        "what": "Which deployment this is. It — not NODE_ENV — decides every environment-dependent rule: whether live email may be sent, whether the development sign-in switcher is permitted, and whether sample legal text and test registrations may exist at all.",
+        "values": {
+          "local": "A developer's own machine. Email is captured and never transmitted; the sign-in switcher is available; sample legal text is seeded.",
+          "test": "The automated suites. Same guarantees as local, and nothing here ever reaches a person.",
+          "qa": "The shared deployment colleagues try things on. Real database, real sign-in, and email either captured or restricted to an allowlist — never open delivery.",
+          "production": "The club's real site. The only environment permitted to send live email, and the only one that refuses sample legal text and test registrations outright."
+        }
+      },
+      "EMAIL_DELIVERY_MODE": {
+        "what": "How far a message actually goes once the outbox renders it. This is the guard between a test system and a stranger's inbox, and startup refuses any combination that would cross it.",
+        "values": {
+          "capture": "Nothing is transmitted. Messages are held in memory — which on a deployed serverless host means they reach nobody at all, so registration looks broken to anyone but a developer.",
+          "allowlist": "Real delivery, but only to the addresses in EMAIL_ALLOWLIST; everything else is captured. This is what a Mailgun sandbox domain is, and it is how a small closed group tests the whole journey safely.",
+          "live": "Real delivery to whoever registered. Permitted only when APP_ENV is production; stating it anywhere else fails at startup."
+        }
+      },
+      "STAFF_AUTH_MODE": {
+        "what": "How a member of staff proves who they are. Participants never sign in at all — this is the backoffice door only, and the staff_users table decides who may come through it regardless of which mode is set.",
+        "values": {
+          "dev-switcher": "A local shortcut that lets a developer become any role without an identity provider. Permitted only when APP_ENV is local or test; stating it elsewhere fails at startup.",
+          "provider": "The real thing: Auth.js with Zitadel. The provider proves the address, and the staff_users allowlist decides whether that address may in.",
+          "disabled": "There is no way in. Every staff route answers 404 rather than a refusal, so the backoffice is unreachable rather than merely hidden. This is the correct setting for any environment with no identity provider configured."
+        }
+      }
+    },
+    "operationalTitle": "What each limit does when it is met",
+    "operationalIntro": "Who stops you — the provider's own API, or this application's code — what the application does at that moment, and which variable or monitor is involved. Costs and plans are not here: they live on /admin/tasks, for the people who pay the invoice.",
+    "enforcedBy": {
+      "provider": "enforced by the provider",
+      "application": "enforced by the application"
+    },
+    "operational": {
+      "mailgunDaily": {
+        "title": "Mailgun's daily allowance (100 messages on the free plan)",
+        "body": "Mailgun refuses the send with the same HTTP 400 it uses for a malformed message. The adapter recognises the limit wording, classifies the refusal as throttled, and the outbox row stays PENDING with its next attempt scheduled just after midnight UTC — not the ordinary backoff, which would spend all six attempts within an hour and mark a good message FAILED. The signal is the email-volume figure above; there is no configuration variable for the cap."
+      },
+      "captureOnServerless": {
+        "title": "Capture mode delivers nothing on a deployed environment",
+        "body": "The capture adapter holds messages in the process's memory, and on serverless hosting the process is gone before anybody could read the link. A colleague who is not on the allowlist registers and then simply never hears anything. Allowlist mode with a real provider is the only way somebody outside the code completes a registration."
+      },
+      "schedulerFloor": {
+        "title": "The cadence of the scheduled jobs",
+        "body": "Vercel Hobby allows one run a day and refuses a finer expression at deploy time, so the scheduler is the GitHub Actions workflow plus an external pinger; GitHub's own minimum is five minutes, and measured here the real cadence is roughly two hours. The application does not break in between: hold expiry is evaluated inside every capacity transaction (§10.6), so a late run delays a message rather than overbooking an event. Both endpoints are guarded by JOB_SECRET, and each job's liveness is reported below and in /api/health."
+      },
+      "hobbyCapPause": {
+        "title": "Exceeding a Hobby cap pauses the feature for 30 days",
+        "body": "Not a bill — an outage with a fixed sentence, and you cannot buy your way out of it during the window. There is nothing the application can do at that point; the only response is to upgrade before the window. It is visible only in the Vercel dashboard — nothing here reports it."
+      },
+      "identityDomain": {
+        "title": "Zitadel Free: zero custom domains, one administrator",
+        "body": "No effect on the code, but it decides which host staff sign in on. While STAFF_AUTH_MODE=provider runs on the provider's hostname the limit is not felt; on the club's own domain it needs a paid tier. STAFF_AUTH_MODE=disabled answers 404 to every staff route, which is what an environment with no tenant should do."
+      },
+      "statementTimeout": {
+        "title": "statement_timeout 10s and idle_in_transaction_session_timeout 30s",
+        "body": "Enforced by this application rather than by Neon: db/client.ts sets both on the pool. The risk was never the connection count (max: 10 is per warm instance, and PgBouncer accepts far more) but one unbounded query holding a Vercel function for 300 seconds. The first timeout is enforced by PostgreSQL, so it holds even when the Node process is frozen; the second covers an instance killed between two statements of an open transaction. There is no connection timeout, deliberately: on Neon Free the first request after an idle period waits for the database to wake."
+      }
+    }
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "body": "This page could not be displayed. It is usually temporary — try again in a moment.",
+    "retry": "Try again",
+    "home": "Back to the first page",
+    "reference": "If it keeps happening, tell us this code:"
   }
 }

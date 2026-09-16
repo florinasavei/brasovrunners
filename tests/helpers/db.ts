@@ -1,10 +1,34 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { emailActionTokens } from "@/db/schema/email-action-tokens";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
+import { jobRuns } from "@/db/schema/job-runs";
+import { legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-documents";
+import { pages, pageTranslations } from "@/db/schema/pages";
 import { participants } from "@/db/schema/participants";
+import { rateLimitBuckets } from "@/db/schema/rate-limit";
+import { registrations } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
 
-const schema = { events, eventTranslations, participants };
+const schema = {
+  auditLogs,
+  events,
+  eventTranslations,
+  participants,
+  emailActionTokens,
+  emailOutbox,
+  staffUsers,
+  legalDocuments,
+  legalDocumentTranslations,
+  registrations,
+  declarationAcceptances,
+  jobRuns,
+  rateLimitBuckets,
+};
 export type TestDatabase = PgliteDatabase<typeof schema>;
 
 /**
@@ -43,9 +67,29 @@ export async function createTestDatabase(): Promise<{
   };
 }
 
-/** Truncate every table so one test cannot see another's rows. */
+/** Truncate every table so one test cannot see another's rows. Children before parents. */
 export async function resetTables(db: TestDatabase): Promise<void> {
+  await db.delete(auditLogs);
+  await db.delete(declarationAcceptances);
+  await db.delete(emailActionTokens);
+  await db.delete(emailOutbox);
   await db.delete(eventTranslations);
+  // `registrations` references `events`, and `events.declaration_document_id` references
+  // `legal_documents`, so registrations must go before events, and events before legal
+  // documents — the reverse of the order either child appears in the schema files.
+  await db.delete(registrations);
   await db.delete(events);
+  await db.delete(legalDocumentTranslations);
+  await db.delete(legalDocuments);
+  // Standing pages (BR-REQ-050-03). Translations cascade from their page, but deleting them
+  // first keeps this list saying what owns what, like the events pair above.
+  await db.delete(pageTranslations);
+  await db.delete(pages);
   await db.delete(participants);
+  await db.delete(jobRuns);
+  await db.delete(rateLimitBuckets);
+  // Last: events, translations and legal documents reference staff users, and although the
+  // foreign keys are ON DELETE SET NULL, deleting the parents first keeps the order honest
+  // about what owns what.
+  await db.delete(staffUsers);
 }

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # WEEKEND.md — the pilot scope
 
-**Baseline `BR-V1.14-2026-09-03`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
+**Baseline `BR-V1.28-2026-09-16`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
 
 One weekend of AI-assisted building. This file says exactly what that weekend produces, in
 what order, and what it deliberately does not. When it conflicts with `SETUP.md` §29, this file
@@ -13,8 +13,9 @@ wins for the pilot; §29 remains the plan for M1.
 **Romanian event pages, live on Vercel, read from Neon.** A list at `/ro/evenimente` and a
 detail page at `/ro/evenimente/<slug>` showing kind, date and time in Europe/Bucharest, meeting
 point, distance, and cost — as text, mobile-first. Two or three real upcoming events, seeded
-from a file. `/en/…` returns 404 because the English translation is Draft, which is exactly
-what BR-REQ-040-02 prescribes rather than a compromise.
+from a file. Both locales are published: the owner decided the site ships bilingual, so every
+event carries a complete English translation as well as a Romanian one. BR-REQ-040-02 is
+unchanged and still enforced — an unpublished locale is a 404, never a fallback.
 
 That replaces the Facebook post as the canonical event record. It is the half of M1 with zero
 legal risk, and it is useful to the club on Monday.
@@ -111,7 +112,7 @@ lane in `CLAUDE.md`.
 
 - The QA project's default `vercel.app` URL lists the seeded events at `/ro/evenimente` on a phone.
 - The production project does the same from `main`.
-- `/en/evenimente` is a 404, not a fallback.
+- `/en/events` serves English words, never Romanian ones under an English URL.
 - `yarn check` is green on the branch; CI is green on `qa`.
 - The six tests pass.
 - A club organizer has opened it on their own phone and not asked "where is the date".
@@ -120,13 +121,11 @@ lane in `CLAUDE.md`.
 
 | Deferred | Why it is safe to wait | Unblocked by |
 | --- | --- | --- |
-| Registration, confirmation, declaration, manage/cancel | Needs email and approved legal text; neither exists | domain + two approved Romanian texts |
-| Email delivery to real people | Needs a verified sending domain; a sandbox reaches only five authorized addresses | the domain |
-| The outbox, adapters and tokens | Nothing — buildable and testable against a sandbox today | already unblocked |
-| Staff login and the backoffice | Nothing to administer; events are seeded. Direction when built: Auth.js alone with a server-side allowlist, no external IdP | first registration |
-| Privacy notice and terms pages | No personal data is collected by the event pages. Needed the day registration opens | club approval |
-| Capacity and the waiting list | The pilot is uncapped and the DB enforces it. Half-built capacity overbooks in public | the locked transaction and its concurrency test |
-| English | Draft, so `/en` 404s. Never ship English chrome with Romanian body text | translated content |
+| Registration, confirmation, declaration, manage/cancel; **the code now exists** | Built after the pilot, against real PostgreSQL under concurrent load — see `CHANGELOG.md` BR-V1.16. What remains is not code: no event is `INTERNAL` mode with a real capacity yet, no legal text is approved outside a developer's machine, and live email needs the domain | two approved Romanian texts + the domain |
+| Email delivery to real people; **the pipeline now exists** | Ten message templates, the outbox jobs and the Mailgun webhook are built and tested in capture mode. Live delivery needs a verified sending domain; a sandbox reaches only five authorized addresses | the domain |
+| Staff **login**; the backoffice itself is now built | The backoffice, the three roles and the editorial workflow shipped after the pilot (`DECISIONS.md` §25), because a developer editing a seed file is not a way for a club to run a race. Staff sign-in now exists too, through Auth.js and Zitadel (`DECISIONS.md` §26) — it does not need the sending domain the way an emailed link would have, only a Zitadel tenant. Local and test use the development switcher; qa and production run `STAFF_AUTH_MODE=disabled` until a tenant exists for them | a Zitadel tenant |
+| Privacy notice and terms pages; **the versioning and the routes now exist** | A `PLACEHOLDER` version is seeded in local and test only (`DECISIONS.md` §27) and registration itself refuses when nothing is approved. The routes 404 nowhere they shouldn't — they simply have nothing real to show yet | club approval of real Romanian and English text |
+| Capacity and the waiting list; **no longer deferred** | The locked capacity transaction exists and its concurrency suite (`tests/concurrency/capacity.test.ts`) passed before the pilot's `CHECK (capacity IS NULL)` guard was removed. An event may carry a real capacity now | — |
 | CMS, media, profiles, races, bibs, results | M2–M5 | — |
 
 ## The email progression, corrected
@@ -140,8 +139,9 @@ controls the `vercel.app` zone. There are two steps, not three.
 | **Mailgun sandbox**, free, today | The whole pipeline built and tested against your own inbox | Reaches at most five authorized addresses. No club member can register |
 | **`<domain>`**, once registered | Real participants, real verification email | Needs DNS records and days for sender reputation to settle |
 
-So the sandbox is a development tool, not a launch step. Build the outbox, the adapter, the
-token layer and the three message types against it now; launch still waits on the domain.
+So the sandbox is a development tool, not a launch step. The outbox, the adapter and the token
+layer are built and tested without it; the three message types can be written against it.
+Launch still waits on the domain.
 
 ## Spam protection on the registration form
 
@@ -173,12 +173,26 @@ rejects an alias rather than trusting application code to notice. Built now beca
 the canonical email immutable with no merge path: get it wrong and the organizer's list shows
 one runner twice, permanently.
 
-## Next weekend
+**Email action tokens and the transactional outbox** (BR-REQ-036-02, BR-REQ-080-02,
+BR-REQ-080-03) — the half of the registration slice that needs neither the domain nor a
+provider account. `email_action_tokens` stores only a SHA-256 hash, scoped to one purpose and
+one registration, expiring, single use, and previous active tokens die when a new one is
+issued. `email_outbox` commits with the change that caused it, and the provider is called
+afterwards, from a separate transaction. The adapter has two implementations: capture, which is
+the mailbox in local and test, and a Mailgun stub with no network call in it. Built now because
+none of it was blocked on anything, and because the two rules it carries — a mail scanner's GET
+must not confirm a registration, and a rolled-back registration must not send email — are
+cheaper to build into the schema than to retrofit onto a working flow.
 
-Buildable against a Mailgun sandbox today, no domain needed: the outbox and its adapter, the
-three Romanian message types, and hashed single-use tokens with GET-never-mutates.
+## Next weekend, done
 
-Blocked until the domain and the club's approved texts exist: the registration form with privacy
-acknowledgment and results consent, confirmation → declaration → confirmed → manage/cancel, one
-server-authorized admin page listing who is coming, and a retention rule with a named erasure
-contact. The scope review estimated ~20 hours for that slice against an *uncapped* event.
+Everything this section once described as blocked has since been built: the registration form
+with privacy acknowledgment and results consent, confirmation → declaration → confirmed →
+manage/cancel, capacity and the waiting list with a real concurrency suite, ten message
+templates in both languages, and a server-authorized backoffice page listing who is coming,
+with a state-aware resend and CSV export. `CHANGELOG.md` BR-V1.16 and `DECISIONS.md` §26–§27
+are the record.
+
+What genuinely still blocks a real participant from using any of it: the club's approved
+Romanian and English privacy notice and declaration text, a Zitadel tenant for staff sign-in,
+and the sending domain for live email. None of those are code.

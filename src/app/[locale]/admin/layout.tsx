@@ -1,0 +1,159 @@
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import type { Metadata } from "next";
+import { hasLocale } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound, redirect } from "next/navigation";
+import type { ReactNode } from "react";
+import { getPathname } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
+import { getCurrentStaffUser } from "@/modules/staff-identity/session";
+import {
+  type AdminSection,
+  visibleAdminSections,
+} from "@/modules/staff-identity/domain/roles";
+import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import AdminTabs, { type AdminTab } from "@/modules/staff-identity/ui/AdminTabs";
+import { env } from "@/shared/config/env";
+import { signOutAction } from "./actions";
+
+type Props = { children: ReactNode; params: Promise<{ locale: string }> };
+
+/** Reads the session cookie, so it can never be prerendered or cached (AGENTS.md §14.5). */
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  // The backoffice is not public content. The proxy sets the same thing as a response header,
+  // which is what covers the responses that never render metadata at all.
+  robots: { index: false, follow: false },
+};
+
+/**
+ * The backoffice shell, and the gate in front of it.
+ *
+ * BR-REQ-060-01 criterion 3: an unauthenticated request to any `/admin` route is refused. It
+ * is refused here for the pages, and again inside every Server Action, because a page guard
+ * says nothing about a POST that arrives without ever rendering one.
+ *
+ * Signed out, the answer depends on whether there is any way to sign in at all. Where there is
+ * one — the development switcher locally, Zitadel in qa and production — the visitor is sent to
+ * it, and signing in lands them back in the backoffice rather than on whatever page the provider
+ * felt like. Where `STAFF_AUTH_MODE=disabled` there is no lock on the door at all, and the
+ * answer is 404: announcing "sign in" on a site with no sign-in would be an invitation to look
+ * for one.
+ */
+export default async function AdminLayout({ children, params }: Props) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  setRequestLocale(locale);
+
+  const staffUser = await getCurrentStaffUser();
+  if (!staffUser) {
+    if (env.STAFF_AUTH_MODE === "disabled") notFound();
+    redirect(getPathname({ locale, href: "/sign-in" }));
+  }
+
+  const t = await getTranslations("Admin");
+
+  /**
+   * One tab per section this role may open, in a fixed order.
+   *
+   * Which sections those are is a rule and lives with the other role rules
+   * (`visibleAdminSections`), not here — it read `staffUser.role === "ADMIN"` for the whole
+   * group, a raw equality test against a hierarchy of five nesting roles, and the effect was
+   * that a **SUPERADMIN saw only the Events tab**. That module's comment has the full account.
+   *
+   * All this does is turn a section into a link: `getPathname` is a server function, so the
+   * hrefs are resolved here and the client island only decides which one is current.
+   */
+  const SECTION_HREF: Record<AdminSection, string> = {
+    events: getPathname({ locale, href: "/admin" }),
+    pages: getPathname({ locale, href: "/admin/pages" }),
+    registrations: getPathname({ locale, href: "/admin/registrations" }),
+    tasks: getPathname({ locale, href: "/admin/tasks" }),
+    legal: getPathname({ locale, href: "/admin/legal" }),
+    staff: getPathname({ locale, href: "/admin/staff" }),
+    // Its own route rather than a backoffice page: it is read by whoever is holding the
+    // hosting dashboard (BR-REQ-090-04).
+    devs: getPathname({ locale, href: "/devs" }),
+  };
+
+  const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
+    href: SECTION_HREF[section],
+    label: t(`nav.${section}`),
+  }));
+
+  return (
+    /*
+      Wider than the public site, and only here. `md` is right for an event page a person reads
+      and wrong for a list of registrations with a status, a date, an address and an event title
+      on every row — at `md` those wrap into four lines each and the list stops being scannable.
+    */
+    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ mb: 3, alignItems: { sm: "center" }, justifyContent: "space-between" }}
+      >
+        <Box>
+          <Typography variant="h1" sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }}>
+            {t("title")}
+          </Typography>
+          {/*
+            Who you are, and *which account* you are — the address, not only the display name.
+            A club with two Zitadel accounts on one machine, or one person with a personal and a
+            club address, cannot tell them apart from a display name, and the address is the
+            identity the `staff_users` allowlist actually matches on. It is the reader's own
+            address shown to themselves, so there is no disclosure here: §10.3's protections are
+            about participants, and a member of staff seeing their own sign-in is not that.
+          */}
+          <Typography variant="body2" color="text.secondary">
+            {t("signedInAs", {
+              name: staffUser.displayName,
+              role: STAFF_ROLE_LABEL[staffUser.role],
+            })}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontFamily: "monospace", fontSize: "0.8125rem", wordBreak: "break-all" }}
+          >
+            {staffUser.email}
+          </Typography>
+        </Box>
+
+        <form action={signOutAction}>
+          <input type="hidden" name="uiLocale" value={locale} />
+          <Button type="submit" size="small" variant="outlined">
+            {t("signOut")}
+          </Button>
+        </form>
+      </Stack>
+
+      {/*
+        The same role gating as the three bare links this replaces: a section an Administrator
+        alone may open is not offered to anybody else, and the page behind it answers 404 to a
+        typed URL regardless (BR-REQ-060-01).
+
+        The hrefs are resolved here, on the server, because `getPathname` is a server function —
+        the island only decides which of them is the current one.
+      */}
+      <AdminTabs items={tabs} />
+
+      {/*
+        The club writes its own legal text now (`DECISIONS.md` §46), so this no longer says it
+        cannot. What it says instead is the rule that is still true and still easy to trip over:
+        an approved version is never rewritten.
+      */}
+      <Alert severity="info" sx={{ mb: 3 }}>
+        {t("legalNotice")}
+      </Alert>
+
+      {children}
+    </Container>
+  );
+}

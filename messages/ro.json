@@ -1,6 +1,28 @@
 {
   "Site": {
-    "name": "Brașov Runners"
+    "name": "Brașov Runners",
+    "language": "Limbă",
+    "languageCode": {
+      "ro": "RO",
+      "en": "EN"
+    },
+    "languageName": {
+      "ro": "Română",
+      "en": "English"
+    },
+    "buildBadgeLabel": "Versiunea site-ului și data ultimei actualizări",
+    "buildBadgeSignIn": "Dublu clic, sau Enter, pentru autentificarea echipei.",
+    "lastBuild": "ultima actualizare",
+    "environmentNotice": {
+      "label": "Anunț despre această versiune a site-ului",
+      "title": "Site de test ({environment}) — acesta nu este site-ul real al clubului.",
+      "body": "Tot ce vezi aici sunt date de probă, pentru încercarea site-ului, și pot fi șterse oricând. Te rugăm să nu îl folosești pentru a te înscrie la un eveniment real. Site-ul oficial al clubului urmează, la adresa lui proprie."
+    },
+    "skipToContent": "Sari la conținut",
+    "nav": {
+      "label": "Navigare principală",
+      "events": "Evenimente"
+    }
   },
   "Home": {
     "title": "Brașov Runners",
@@ -10,13 +32,20 @@
   "Events": {
     "title": "Evenimente",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club.",
-    "empty": "Nu sunt evenimente publicate momentan. Revino în curând."
+    "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
+    "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
+    "pastNotice": "Acest eveniment a avut deja loc.",
+    "featured": "Evenimentul principal",
+    "featuredCallToAction": "Vezi detaliile cursei"
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
     "date": "Data",
     "startTime": "Ora de start",
+    "gatheringTime": "Ora de întâlnire",
+    "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
+    "openMap": "Vezi pe hartă",
     "address": "Adresă",
     "distance": "Distanță",
     "distanceKm": "{km} km",
@@ -36,6 +65,22 @@
       "RACE": "Cursă",
       "OTHER": "Alt tip"
     },
+    "startList": {
+      "title": "Cine vine",
+      "empty": "Încă nu și-a confirmat nimeni participarea.",
+      "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei."
+    },
+    "cta": {
+      "register": "Înscrie-te la eveniment",
+      "joinWaitingList": "Intră pe lista de așteptare",
+      "external": "Înscrie-te pe site-ul organizatorului",
+      "externalWithProvider": "Înscrie-te pe {provider}",
+      "placesRemaining": "{count, plural, one {# loc liber} few {# locuri libere} other {# de locuri libere}}",
+      "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
+      "opensOn": "Înscrierile se deschid pe {date}.",
+      "closed": "Înscrierile s-au închis pentru acest eveniment.",
+      "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit."
+    },
     "registrationState": {
       "NOT_APPLICABLE": "Nu este necesară înscrierea",
       "EXTERNAL": "Înscriere pe site-ul organizatorului",
@@ -43,10 +88,884 @@
       "OPEN": "Înscrierile sunt deschise",
       "CLOSED": "Înscrierile s-au închis",
       "EVENT_CANCELLED": "Evenimentul a fost anulat"
+    },
+    "difficultyValues": {
+      "EASY": "Ușor",
+      "MODERATE": "Mediu",
+      "HARD": "Avansat"
+    },
+    "costValues": {
+      "FREE": "Gratuit",
+      "PAID": "Cu taxă"
+    },
+    "seeDetails": "Vezi detaliile",
+    "route": "Traseu",
+    "openRoute": "Vezi traseul"
+  },
+  "Admin": {
+    "title": "Administrare",
+    "signedInAs": "Autentificat ca {name} — {role}",
+    "signOut": "Ieși din cont",
+    "saved": "Modificările au fost salvate.",
+    "loading": "Se încarcă…",
+    "list": {
+      "results": "{count} rezultate",
+      "page": "Pagina {page} din {pages}",
+      "previous": "Pagina anterioară",
+      "next": "Pagina următoare",
+      "perPage": "Rânduri pe pagină",
+      "sortBy": "Sortează după {column}",
+      "search": "Caută",
+      "searchByName": "Caută după nume",
+      "clear": "Șterge filtrele",
+      "actions": "Acțiuni"
+    },
+    "backToEvents": "Înapoi la lista de evenimente",
+    "legalNotice": "Textul legal — nota de confidențialitate, termenii și declarația — se scrie aici, dar nu se rescrie: o versiune aprobată rămâne neschimbată, iar o corectură înseamnă o versiune nouă.",
+    "nav": {
+      "events": "Evenimente",
+      "registrations": "Înscrieri",
+      "staff": "Echipa",
+      "legal": "Documente legale",
+      "devs": "Configurație",
+      "tasks": "De făcut",
+      "pages": "Pagini"
+    },
+    "registrations": {
+      "empty": "Nu există nicio înscriere.",
+      "filterAll": "Toate evenimentele",
+      "filter": "Filtrează",
+      "statusLabel": "Stare",
+      "export": "Exportă CSV",
+      "backToList": "Înapoi la înscrieri",
+      "resend": "Retrimite emailul",
+      "resendSent": "Emailul a fost pus în coadă din nou.",
+      "resendNothingToSend": "Nu există niciun email de retrimis pentru această stare.",
+      "timeline": "Cronologie",
+      "submitted": "Trimisă",
+      "emailConfirmed": "Email confirmat",
+      "waitlisted": "Pe lista de așteptare",
+      "offerCreated": "Ofertă creată",
+      "holdExpires": "Rezervarea expiră",
+      "confirmed": "Confirmată",
+      "cancelled": "Anulată",
+      "expired": "Expirată",
+      "declaration": "Declarație semnată",
+      "outboxHistory": "Istoric email",
+      "testKind": "Test",
+      "enteredByStaff": "Adăugată de echipă",
+      "new": "Adaugă o înscriere",
+      "newTitle": "Adaugă o înscriere",
+      "newExplanation": "Pentru cineva care a cerut personal, la telefon sau după o alergare. Înscrierea intră exact ca una făcută de participant: aceeași ordine la locuri, aceeași listă de așteptare și aceeași stare de început. Persoana primește e-mailul obișnuit de confirmare și semnează singură declarația — nimeni nu poate semna în locul altcuiva.",
+      "noEventsAcceptingRegistrations": "Niciun eveniment nu primește înscrieri prin platformă. Setează modul de înscriere pe „Înscriere aici” în pagina evenimentului.",
+      "event": "Evenimentul",
+      "participantName": "Numele participantului",
+      "participantEmail": "Adresa de e-mail a participantului",
+      "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
+      "participantLocale": "Limba în care îi scriem",
+      "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
+      "listOptOut": "Persoana nu vrea să apară pe lista publică de participanți",
+      "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu.",
+      "create": "Adaugă înscrierea",
+      "viewForEvent": "Vezi înscrierile acestui eveniment",
+      "correctName": "Corectează numele",
+      "correctNameHelp": "Se poate corecta doar numele. Adresa de e-mail este identitatea participantului și nu se schimbă de aici: pentru o adresă greșită, anulează înscrierea și adaug-o din nou cu adresa corectă.",
+      "saveName": "Salvează numele",
+      "cancelTitle": "Anulează înscrierea",
+      "cancelReason": "Motivul",
+      "cancelAction": "Anulează înscrierea",
+      "cancelHelp": "Înscrierea nu se șterge niciodată — rămâne ca dovadă a ce a acceptat persoana și când. Anularea eliberează locul, iar acesta merge la primul de pe lista de așteptare.",
+      "auditTrail": "Ce a făcut echipa",
+      "auditActorRemoved": "cont șters",
+      "audit": {
+        "registration": {
+          "created_by_staff": "Înscriere adăugată de echipă",
+          "name_corrected": "Nume corectat",
+          "cancelled_by_staff": "Anulată de echipă",
+          "resend_rate_limited": "Retrimitere limitată"
+        }
+      },
+      "locale": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "deleteTitle": "Șterge definitiv",
+      "deleteHelp": "Șterge înscrierea și declarația semnată, definitiv. Locul este eliberat către lista de așteptare, iar în jurnal rămâne cine a șters și de ce — nu și datele persoanei. Folosește-o pentru o cerere de ștergere a datelor; pentru o retragere obișnuită, anulează.",
+      "deleteReason": "Motivul ștergerii",
+      "deleteAction": "Șterge definitiv",
+      "deleteConfirm": "Confirm că această ștergere este definitivă",
+      "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
+      "rowActions": "Acțiuni",
+      "clubMemberLabel": "Membri Brașov Runners",
+      "clubMemberOnly": "Doar cei care s-au declarat membri",
+      "clubMemberChip": "Membru (declarat)",
+      "columnName": "Nume",
+      "columnStatus": "Stare",
+      "columnEvent": "Eveniment",
+      "columnEmail": "E-mail",
+      "columnSubmitted": "Trimisă",
+      "openNamed": "Deschide înscrierea lui {name}",
+      "tableCaption": "Înscrieri, cu stare, eveniment și data trimiterii",
+      "emptyFiltered": "Nicio înscriere nu corespunde filtrelor. Șterge filtrele ca să le vezi pe toate.",
+      "selectRow": "Selectează înscrierea lui {name}",
+      "bulkCancelTitle": "Anulează înscrierile bifate",
+      "bulkCancelHelp": "Fiecare înscriere bifată este anulată separat, cu același motiv, iar locul fiecăreia merge la primul de pe lista de așteptare. Ștergerea definitivă nu se face în grup.",
+      "bulkCancelAction": "Anulează cele bifate",
+      "bulkCancelPending": "Se anulează…",
+      "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
+      "searchHelp": "Caută după nume, cu sau fără diacritice.",
+      "resendShort": "Retrimite"
+    },
+    "events": {
+      "empty": "Nu există niciun eveniment în baza de date.",
+      "featured": "Principal",
+      "preview": "Previzualizare",
+      "edit": "Editează",
+      "moreActions": "Alte acțiuni",
+      "new": "Eveniment nou",
+      "registrations": "Înscrieri",
+      "columnTitle": "Evenimentul",
+      "columnStatus": "Stare",
+      "columnDate": "Data",
+      "columnEntries": "Înscrieri",
+      "tableCaption": "Evenimentele clubului, cu starea, data și numărul de înscrieri",
+      "selectEvent": "Selectează „{title}”",
+      "bulkArchiveTitle": "Arhivează evenimentele bifate",
+      "bulkArchiveHelp": "Arhivarea scoate evenimentul de pe site fără să șteargă nimic. Un eveniment modificat între timp de altcineva nu se arhivează, ca să nu se piardă modificarea lui.",
+      "bulkArchiveAction": "Arhivează cele bifate",
+      "bulkArchivePending": "Se arhivează…",
+      "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
+      "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul în locul ștergerii.",
+      "deleteBlockedShort": "{count} înscrieri"
+    },
+    "confirm": {
+      "cancel": "Renunță",
+      "duplicateTitle": "Duplici evenimentul?",
+      "duplicateBody": "Se creează o copie, ca ciornă, cu adrese proprii. Nu devine evenimentul principal și nu este publicată.",
+      "deleteTitle": "Ștergi evenimentul?",
+      "deleteBody": "Ștergerea este definitivă. Se poate șterge doar un eveniment la care nu s-a înscris nimeni; pentru unul care a avut loc, arhivează-l.",
+      "archiveTitle": "Arhivezi evenimentul?",
+      "archiveBody": "Evenimentul dispare de pe site, în ambele limbi. Îl poți readuce mai târziu, trecându-l din nou prin verificare și publicare.",
+      "removeTestTitle": "Ștergi înscrierile de test?",
+      "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
+      "cancelRegistrationTitle": "Anulezi înscrierea?",
+      "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”."
+    },
+    "errors": {
+      "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
+      "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
+      "FORBIDDEN": "Rolul tău nu permite această acțiune.",
+      "NOT_FOUND": "Înregistrarea nu mai există.",
+      "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
+      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris."
+    },
+    "editor": {
+      "eventSection": "Detaliile evenimentului",
+      "startsAt": "Începutul evenimentului",
+      "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
+      "raceStartsAt": "Startul cursei",
+      "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
+      "mapUrl": "Link către hartă",
+      "mapUrlHelp": "Opțional. Linkul se construiește din coordonate; completează aici doar dacă vrei o pagină anume. Trebuie să înceapă cu https://.",
+      "featured": "Evenimentul principal al site-ului",
+      "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
+      "saveEvent": "Salvează detaliile evenimentului",
+      "eventFieldsReadOnly": "Doar un editor sau un administrator poate modifica orele, harta și evenimentul principal.",
+      "translationSection": "Conținut ({locale})",
+      "translationReadOnly": "Nu poți edita acest text: evenimentul este publicat sau textul a fost scris de alt autor.",
+      "version": "versiunea {version}",
+      "liveWarning": "Evenimentul este publicat. Modificările devin publice în momentul salvării.",
+      "acknowledgeLive": "Am înțeles că modific conținut publicat.",
+      "saveTranslation": "Salvează textul",
+      "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
+      "slugLocked": "Pagina a fost publicată, așa că adresa rămâne neschimbată.",
+      "costHelp": "Text liber: „Gratuit”, „50 lei”. Lasă gol dacă nu s-a stabilit un cost.",
+      "fields": {
+        "title": "Titlu",
+        "slug": "Adresa paginii",
+        "excerpt": "Descriere scurtă",
+        "locationName": "Punct de întâlnire",
+        "locationAddress": "Adresă",
+        "seoTitle": "Titlu pentru motoarele de căutare",
+        "seoDescription": "Descriere pentru motoarele de căutare",
+        "difficulty": "Dificultate",
+        "costType": "Cost"
+      },
+      "latitude": "Latitudine",
+      "longitude": "Longitudine",
+      "coordinatesHelp": "Punctul exact de start, în grade zecimale — de exemplu 45.6427 și 25.5887. Copiază-le din hartă cu clic dreapta pe locul exact. Un nume de parc nu este un punct de start.",
+      "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
+      "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
+      "tabIncomplete": "incomplet",
+      "settingsSection": "Setări",
+      "contentSection": "Conținut",
+      "save": "Salvează",
+      "publicationSection": "Publicare",
+      "noTransitions": "Rolul tău nu poate muta acest eveniment din starea în care se află.",
+      "incompleteForPublication": "Ambele limbi trebuie completate înainte ca evenimentul să poată fi publicat. Lipsesc: {detail}.",
+      "newTitle": "Eveniment nou",
+      "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
+      "create": "Creează evenimentul",
+      "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
+      "kind": "Tip",
+      "eventStatus": "Starea evenimentului",
+      "timezone": "Fus orar",
+      "timezoneHelp": "Fusul în care sunt scrise orele de mai jos, de exemplu Europe/Bucharest.",
+      "endsAt": "Sfârșitul evenimentului",
+      "endsAtHelp": "Opțional. Lasă gol dacă s-a anunțat doar ora de start.",
+      "distanceMeters": "Distanță",
+      "distanceMetersHelp": "În metri. 10000 se afișează ca 10 km.",
+      "elevationGainMeters": "Diferență de nivel (m)",
+      "registrationSection": "Înscriere",
+      "registrationMode": "Modul de înscriere",
+      "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
+      "capacity": "Număr de locuri",
+      "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
+      "registrationOpensAt": "Înscrierile se deschid",
+      "registrationClosesAt": "Înscrierile se închid",
+      "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
+      "declarationDocument": "Declarația pe care o semnează participantul",
+      "declarationDocumentHelp": "Se alege dintre versiunile aprobate. Textul nu se editează niciodată aici — o versiune nouă vine printr-o migrare.",
+      "declarationNone": "Nu există nicio declarație aprobată în acest mediu, deci niciun eveniment nu poate primi înscrieri încă.",
+      "declarationUnset": "Niciuna",
+      "participantList": "Publică lista participanților pe pagina evenimentului",
+      "participantListHelp": "Publică numele persoanelor care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei. Nu se publică adrese de e-mail și nimic despre înscrierile neconfirmate. Este o divulgare de date cu caracter personal: nota de confidențialitate aprobată trebuie să o menționeze înainte ca opțiunea să fie bifată.",
+      "externalProvider": "Organizator extern",
+      "externalRegistrationUrl": "Link de înscriere extern",
+      "externalHelp": "Amândouă doar pentru un eveniment cu înscriere în altă parte. Linkul trebuie să înceapă cu https://.",
+      "copySection": "Copiere și ștergere",
+      "duplicate": "Duplică",
+      "delete": "Șterge",
+      "deleteHelp": "Duplicatul se creează ca ciornă, nu este niciodată evenimentul principal și primește adrese proprii. Ștergerea este pentru un eveniment la care nu s-a înscris nimeni; pe cele care au avut loc arhivează-le.",
+      "difficultyValues": {
+        "EASY": "Ușor",
+        "MODERATE": "Mediu",
+        "HARD": "Avansat"
+      },
+      "costValues": {
+        "FREE": "Gratuit",
+        "PAID": "Cu taxă"
+      },
+      "notStated": "Nespecificat",
+      "routeUrl": "Link către traseu",
+      "routeUrlHelp": "Unde poate fi văzut traseul — Strava, Komoot sau harta pe care ai desenat-o. Trebuie să înceapă cu https://. Lasă gol dacă nu există unul."
+    },
+    "preview": {
+      "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
+      "backToEditor": "Înapoi la editare"
+    },
+    "signIn": {
+      "title": "Autentificare echipă",
+      "unavailable": "Autentificarea pentru echipă nu este încă disponibilă în acest mediu.",
+      "developmentOnly": "Identități de dezvoltare, doar pe calculatorul local și în teste. Nu sunt persoane reale.",
+      "action": "Autentificare"
+    },
+    "staff": {
+      "title": "Echipa",
+      "inviteTitle": "Adaugă o persoană",
+      "email": "Adresă de email",
+      "name": "Nume",
+      "role": "Rol",
+      "preferredLocale": "Limbă preferată",
+      "invite": "Adaugă",
+      "inviteHelp": "Nu se trimite niciun email: platforma nu are încă domeniul de expediere. Persoana capătă acces la prima autentificare cu această adresă.",
+      "pending": "Nu s-a autentificat încă",
+      "you": "Tu",
+      "changeRole": "Schimbă rolul",
+      "revoke": "Retrage accesul",
+      "columnName": "Nume",
+      "columnEmail": "E-mail",
+      "columnRole": "Rol",
+      "columnStatus": "Stare",
+      "tableCaption": "Conturile care pot intra în administrare, cu rolul fiecăruia",
+      "empty": "Nu există niciun cont în echipă.",
+      "changeRolePending": "Se salvează…",
+      "revokePending": "Se retrage…"
+    },
+    "testRegistrations": {
+      "title": "Înscrieri de test",
+      "explanation": "Participanți sintetici, pe adrese rezervate @test.invalid, care nu pot primi niciodată e-mail. Trec prin același flux de trimitere și confirmare ca oricine, deci ocupă locuri și umplu lista de așteptare exact ca oamenii reali — și sunt excluse din exportul CSV și marcate peste tot unde apar. Indisponibile în producție.",
+      "count": "Câte",
+      "add": "Adaugă înscrieri de test",
+      "remove": "Șterge toate înscrierile de test"
+    },
+    "legal": {
+      "title": "Documente legale",
+      "intro": "Nota de confidențialitate, termenii și declarația pe care o semnează participanții. Se pot citi aici; nu se pot modifica.",
+      "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
+      "document": "Document",
+      "version": "Versiune",
+      "state": "Stare",
+      "languages": "Limbi",
+      "usage": "Folosit",
+      "effectiveAt": "În vigoare de la",
+      "approved": "Aprobat",
+      "draft": "Ciornă",
+      "keys": {
+        "PRIVACY_NOTICE": "Nota de confidențialitate",
+        "TERMS": "Termeni și condiții",
+        "EVENT_DECLARATION": "Declarația participantului"
+      },
+      "referenced": "{signatures} semnături · {events} evenimente",
+      "unreferenced": "Nefolosit încă",
+      "immutabilityNotice": "O versiune aprobată nu se mai modifică și nu se mai șterge: participanții au semnat exact acel text, iar ce a publicat clubul rămâne în evidență. O corectură înseamnă o versiune nouă. O ciornă neaprobată se poate șterge, pentru că nimeni nu a văzut-o.",
+      "readOnlyNotice": "Această pagină este doar pentru citire. Textul legal nu se editează din backoffice.",
+      "backToList": "Înapoi la documentele legale",
+      "noTranslations": "Această versiune nu are încă niciun text.",
+      "newTitle": "Versiune nouă",
+      "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
+      "newVersion": "Versiune nouă",
+      "saveDraft": "Salvează ciorna",
+      "titleField": "Titlu",
+      "bodyField": "Text",
+      "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
+      "keyLocked": "Documentul nu se schimbă după creare.",
+      "editorWarning": "Acesta este textul juridic al clubului. Scrie sau lipește doar formulări aprobate de club — nu inventa conținut juridic.",
+      "approveTitle": "Aprobă versiunea",
+      "approveHelp": "După aprobare textul devine public și nu mai poate fi modificat. O corectură ulterioară înseamnă o versiune nouă.",
+      "approveConfirm": "Confirm că textul este aprobat de club și poate deveni public",
+      "approveAction": "Aprobă și publică",
+      "legalDraftCreated": "Ciorna a fost creată.",
+      "legalDraftSaved": "Ciorna a fost salvată.",
+      "legalVersionApproved": "Versiunea a fost aprobată și este acum publică.",
+      "referencedFull": "{signatures} semnături · {events} evenimente · {acknowledgements} înscrieri",
+      "tableCaption": "Versiunile documentelor legale, cu starea și ce depinde de fiecare",
+      "delete": "Șterge ciorna",
+      "deletePending": "Se șterge…",
+      "deleteTitle": "Ștergi ciorna?",
+      "deleteBody": "Ciorna și textul ei în ambele limbi dispar definitiv. Nimeni nu a văzut-o: o ciornă nu apare public și nimeni nu a semnat-o.",
+      "deleteBlockedApproved": "Aprobată — nu se poate șterge. Ce a publicat clubul rămâne în evidență.",
+      "deleteBlockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "legalVersionDeleted": "Ciorna a fost ștearsă."
+    },
+    "tasks": {
+      "title": "Ce mai este de făcut",
+      "intro": "Ce lipsește ca platforma să poată primi înscrieri reale. Fiecare linie este citită din sistem, nu bifată de mână.",
+      "blockingSummary": "Blochează înscrierile reale: {count}.",
+      "nothingBlocking": "Nimic nu blochează înscrierile. Restul sunt îmbunătățiri.",
+      "state": {
+        "blocking": "Blochează",
+        "open": "De făcut",
+        "done": "Gata"
+      },
+      "owner": {
+        "club": "Clubul",
+        "developer": "Dezvoltatorul"
+      },
+      "items": {
+        "approveLegalText": {
+          "title": "Aprobă textele legale",
+          "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierile sunt refuzate. Procedura: docs/RUNBOOKS.md § Legal document version.",
+          "done": "Textele aprobate de club sunt publicate."
+        },
+        "liveEmail": {
+          "title": "Email către participanți reali",
+          "todo": "Acum mesajele fie sunt reținute, fie ajung doar la maximum 5 adrese autorizate în sandbox-ul Mailgun. Pentru toți participanții este nevoie de domeniul clubului, verificat în Mailgun.",
+          "done": "Emailurile ajung la participanți."
+        },
+        "registerDomain": {
+          "title": "Înregistrează domeniul clubului",
+          "todo": "Site-ul funcționează, dar pe adresa furnizorului. Domeniul propriu este și condiția pentru emailuri către oricine. Comanda  face partea tehnică.",
+          "done": "Site-ul răspunde pe domeniul clubului."
+        },
+        "publishEvents": {
+          "title": "Publică evenimente",
+          "todo": "Nu este publicat niciun eveniment, deci vizitatorii văd o listă goală.",
+          "done": "Există evenimente publicate."
+        },
+        "scheduler": {
+          "title": "Programatorul de sarcini",
+          "todo": "Sarcinile programate nu au rulat recent: emailurile nu pleacă și locurile rezervate nu expiră. Aceasta este o problemă tehnică.",
+          "done": "Sarcinile rulează la timp."
+        }
+      },
+      "freeVerdict": {
+        "freeExceptDomain": "Da, în afară de domeniu: toate serviciile sunt pe planuri gratuite și nu se plătește nimic lunar.",
+        "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat. Nu se pierde nimic — pleacă după miezul nopții. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
+        "notFree": "Atenție, dar nu neapărat o problemă. Este publicat un eveniment cu taxă. Planul gratuit al furnizorului nu se uită la faptul că suntem ONG — asta nu este o scutire. Ce contează este cum sunt cerute banii: o donație este permisă explicit, o taxă obligatorie nu, chiar dacă acoperă strict costurile. Site-ul nu încasează bani și nu are cum să o facă — asta ajută, dar nu decide singură."
+      },
+      "registrationsLeftToday": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
+      "costTitle": "Cât costă",
+      "costToday": {
+        "nothing": "Astăzi clubul nu plătește nimic. Toate serviciile sunt pe planuri gratuite, iar domeniul încă nu este cumpărat.",
+        "total": "Astăzi clubul plătește {total} pe an.",
+        "amount": "{amount} {currency}",
+        "amountPlusVat": "{amount} {currency} + TVA",
+        "free": "gratuit",
+        "notTaken": "nimic încă"
+      },
+      "nextSpend": {
+        "domain": "Prima cheltuială care urmează: domeniul clubului, {cost} pe an la registru (prețul pentru .com de la 1 noiembrie 2026). Firma de la care îl cumperi cere puțin mai mult și adaugă TVA, în moneda ei, o dată pe an. Apare în ziua în care clubul îl cumpără; până atunci site-ul stă pe adresa gratuită a furnizorului.",
+        "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}. Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
+        "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}. Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
+      },
+      "currencyNote": "Sumele sunt scrise în moneda în care cere fiecare firmă, fără să le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine. Domeniul este facturat de firma de la care se cumpără, în moneda ei. TVA în România este {vat}%.",
+      "freshness": {
+        "fresh": "Prețurile au fost verificate pe {checked}, acum {days} zile. Sunt destul de recente ca să te bazezi pe ele.",
+        "ageing": "Prețurile au fost verificate pe {checked}, acum {days} zile. Încep să fie vechi — întreabă din nou înainte să plătești ceva.",
+        "stale": "Prețurile au fost verificate pe {checked}, acum {days} zile. Sunt prea vechi ca să le mai crezi: cere-i dezvoltatorului să le verifice înainte de orice decizie."
+      },
+      "servicesTitle": "Serviciile, pe rând",
+      "servicesIntro": "Câte un rând pentru fiecare serviciu de care depinde site-ul: pe ce plan suntem, cât costă azi, ce primim gratuit, care este limita pe care o vom atinge prima, cât de aproape suntem chiar acum, ce se întâmplă când o depășim și cât costă pasul următor.",
+      "severity": {
+        "ok": "în regulă",
+        "unknown": "nu știm",
+        "watch": "de urmărit",
+        "act": "de rezolvat"
+      },
+      "field": {
+        "planToday": "Plan azi",
+        "costToday": "Cost azi",
+        "howClose": "Cât de aproape",
+        "nextPlan": "Pasul următor"
+      },
+      "planNone": "încă nu am ales de unde",
+      "nextPlanNone": "nu are pas următor",
+      "checkedOn": "Sume verificate pe {checked}.",
+      "bump": {
+        "temporary": "se ia temporar",
+        "permanent": "rămâne pentru totdeauna"
+      },
+      "services": {
+        "domain": {
+          "name": "Adresa site-ului (domeniul .com)",
+          "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește oricum. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026 (10,26 USD până atunci); firma de la care îl cumperi cere mai mult și adaugă TVA.",
+          "ceiling": "Prima limită: fără adresa proprie a clubului, e-mailurile nu pot pleca spre participanți.",
+          "whenCrossed": "Adică pot fi trimise doar către cinci adrese de test. Din ziua în care domeniul este cumpărat, apare o factură pe an, plătită în lei.",
+          "closeYes": "Cumpărat, iar site-ul răspunde pe el.",
+          "closeNo": "Necumpărat. Site-ul răspunde pe adresa gratuită a furnizorului."
+        },
+        "mailgun": {
+          "name": "Mailgun (trimiterea e-mailurilor)",
+          "freeGives": "Gratuit: 100 de e-mailuri pe zi. Până când clubul are domeniul lui, e-mailurile pot pleca doar către cinci adrese de test.",
+          "ceiling": "Prima limită: 100 de e-mailuri pe zi, adică vreo 33 de înscrieri, pentru că o înscriere completă cere trei e-mailuri.",
+          "whenCrossed": "E-mailurile de peste limită nu se pierd: rămân la coadă și pleacă după miezul nopții. Dar o cursă la care confirmările ajung abia a doua zi dimineață este o cursă proastă, așa că planul plătit se ia înainte de deschiderea înscrierilor, nu în timpul lor.",
+          "closeMeasured": "Azi au plecat {used} din {of} e-mailuri — mai ajung pentru vreo {left} înscrieri.",
+          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung."
+        },
+        "vercel": {
+          "name": "Vercel (locul unde stă site-ul)",
+          "freeGives": "Gratuit: destul trafic și destulă putere pentru un site de club, dar numai pentru folosire necomercială.",
+          "ceiling": "Prima limită: planul gratuit cere ca site-ul să nu fie folosit comercial. Clubul nu vinde nimic și nu încasează bani, deci suntem în regulă.",
+          "whenCrossed": "Un eveniment care cere o taxă obligatorie ar fi socotit comercial; o donație, nu — asta scrie chiar la ei. Mai este ceva ce nu ține de club: dacă cineva este plătit vreodată să lucreze la acest site, tot comercial se cheamă. Și încă un lucru de știut: dacă se depășește o limită a planului gratuit, funcția se oprește 30 de zile și nu poți plăti ca să o repornești — de aceea se urcă planul înainte de o cursă, nu în timpul ei.",
+          "closeYes": "Este publicat un eveniment cu taxă — verifică cum este formulat.",
+          "closeNo": "Niciun eveniment publicat nu cere bani.",
+          "bumpBack": "Nu se dă înapoi: nu este un vârf de trafic, este o schimbare a felului în care este folosit site-ul. Excepție: dacă a fost luat strict pentru trafic."
+        },
+        "neon": {
+          "name": "Neon (baza de date)",
+          "freeGives": "Gratuit: o bază de date mică (0,5 GB) și o cantitate de lucru inclusă în fiecare lună.",
+          "ceiling": "Prima limită: spațiul și cantitatea de lucru incluse lunar.",
+          "whenCrossed": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Peste limită, site-ul devine lent și pot apărea erori. Pasul următor se plătește la consum, nu ca abonament fix.",
+          "closeUnknown": "Nemăsurat: site-ul nu știe cât s-a consumat. Se vede în contul Neon și merită privit înainte de o cursă.",
+          "bumpBack": "Se ia pentru zilele înscrierilor și se coboară după ce acestea se închid."
+        },
+        "zitadel": {
+          "name": "Zitadel (contul cu care intră echipa)",
+          "freeGives": "Gratuit: până la 100 de oameni pe zi și un singur administrator. Autentificarea se face pe adresa furnizorului, nu pe a clubului.",
+          "ceiling": "Prima limită: pe gratuit, echipa nu se poate autentifica pe adresa clubului și nu poate exista un al doilea administrator.",
+          "whenCrossed": "Cât timp echipa intră pe adresa furnizorului, nu contează. Din ziua în care clubul își cumpără domeniul, dacă vrei autentificare pe el sau un al doilea administrator, trebuie plătit.",
+          "closeYes": "Domeniul clubului este pus — de acum contează amândouă.",
+          "closeNo": "Echipa intră pe adresa furnizorului."
+        },
+        "githubActions": {
+          "name": "GitHub (sarcinile automate)",
+          "freeGives": "Gratuit și fără limită, cât timp programul site-ului este public.",
+          "ceiling": "Aici limita nu sunt banii, ci ritmul: sarcinile automate ar trebui să pornească din cinci în cinci minute, dar în realitate pornesc cam din două în două ore.",
+          "whenCrossed": "E-mailurile stau la coadă, iar locurile ținute pentru cineva se eliberează mai târziu decât ar trebui. Nu se strică nimic și nimeni nu pierde locul — dar confirmarea ajunge cu întârziere, iar în ziua înscrierilor asta se simte ca un site stricat.",
+          "closeYes": "O sarcină automată nu a mai rulat de prea mult timp.",
+          "closeNo": "Sarcinile automate au rulat la timp."
+        }
+      },
+      "decisionsTitle": "Ce așteaptă o hotărâre",
+      "decisionsIntro": "Restul paginii sunt lucruri de citit. Aici sunt întrebări la care trebuie să răspundă cineva anume, până la un moment anume.",
+      "decisionState": {
+        "open": "de răspuns",
+        "answered": "răspuns"
+      },
+      "decisions": {
+        "domainRegistrar": {
+          "question": "De unde cumpărăm domeniul și cât plătim de fapt?",
+          "open": "Prețul de registru pentru un .com este 10,97 USD pe an, dar firmele de la care se cumpără cer sume diferite și adaugă TVA. Cine îl cumpără spune suma plătită, ca să apară aici. Până când: înainte de prima cursă cu înscrieri, pentru că e-mailurile către participanți depind de domeniu.",
+          "answered": "Domeniul este cumpărat și site-ul răspunde pe el. Dacă suma plătită nu a fost încă spusă nimănui, acum este momentul."
+        },
+        "entryContribution": {
+          "question": "Va cere clubul vreodată bani pentru participare?",
+          "open": "Este publicat un eveniment cu taxă, iar asta contrazice ce s-a hotărât pe 7 septembrie 2026. Cineva trebuie să spună dacă este o donație sau o taxă obligatorie: diferența stă în felul în care este scris, nu în intenție, iar de ea depinde dacă găzduirea gratuită se mai aplică. Până când: înainte ca evenimentul să primească înscrieri.",
+          "answered": "Nu. Proprietarul a confirmat pe 7 septembrie 2026 că Brașov Runners nu vinde nimic și nu încasează bani. Dacă răspunsul se schimbă vreodată: o donație este permisă explicit pe planul gratuit, o taxă obligatorie nu."
+        },
+        "currency": {
+          "question": "În ce monedă arătăm sumele?",
+          "open": "Nehotărât: pagina ar amesteca monede fără să spună de ce.",
+          "answered": "În moneda în care cere fiecare firmă, fără să o transformăm în lei. Un curs scris pe pagină ar fi o cifră pe care nicio factură nu o confirmă, iar la domeniu plata se face oricum în lei, la cursul zilei. Hotărât de dezvoltator, iar motivul este scris lângă cifre, în programul site-ului."
+        },
+        "mailgunBeforeRace": {
+          "question": "Luăm o lună de Mailgun plătit înainte de prima cursă adevărată?",
+          "open": "Gratuit ajung vreo 33 de înscrieri pe zi. Dacă la o cursă sunt așteptați mai mulți, cei 15 dolari pe o lună se plătesc înainte de deschiderea înscrierilor, nu în timpul lor — altfel confirmările ajung a doua zi dimineață. Până când: cu o zi înainte să se deschidă înscrierile.",
+          "answered": "Clubul nu mai depinde de limita zilnică gratuită."
+        }
+      },
+      "optionsTitle": "Ce alternative avem",
+      "optionsIntro": "Pentru fiecare serviciu de mai sus a existat și altă variantă, cercetată și nealeasă. Scrise una lângă alta, se vede că nu suntem legați de nimeni: am ales, și fiecare alegere are o ieșire. Nimic de aici nu se schimbă acum; la final este scris unde stă hotărârea, pentru dezvoltator.",
+      "options": {
+        "vercel": {
+          "title": "Locul unde stă site-ul",
+          "why": "Render, tot gratuit și tot în Europa, poate ține acest site fără nicio modificare. Nu a fost ales pentru că varianta de acum este gratuită și funcționează; rămâne soluția de rezervă în ziua în care planul gratuit de acum nu ne mai este permis. Scris în:"
+        },
+        "mailgun": {
+          "title": "Trimiterea e-mailurilor",
+          "why": "Resend, cu serverele în Irlanda, ar fi gratuit la câte e-mailuri trimite clubul. Mailgun a fost ales pentru că firma este în Uniunea Europeană, iar mutarea de la unul la altul ar fi o schimbare mică. Scris în:"
+        },
+        "zitadel": {
+          "title": "Contul cu care intră echipa",
+          "why": "S-ar putea și fără firmă separată, doar cu lista de oameni din site, pentru trei-cinci organizatori care oricum nu își fac singuri cont. Varianta de acum este deja construită și funcționează; cealaltă contează în ziua în care autentificarea pe domeniul clubului ar cere plată. Scris în:"
+        },
+        "storage": {
+          "title": "Poze și fișiere",
+          "why": "Pozele stau chiar în site, fără serviciu separat, până când cineva care nu este dezvoltator va avea nevoie să încarce singur ceva. Abia atunci merită un cont nou și o factură în plus. Scris în:"
+        }
+      },
+      "cloudflare": {
+        "title": "Cloudflare, o singură dată — pentru că întrebarea revine",
+        "proxy": "Nu punem Cloudflare în fața site-ului. Ar fi două servicii care fac același lucru, iar orice problemă ar deveni de două ori mai greu de găsit.",
+        "dns": "Nu trebuie să mutăm la ei adresa site-ului. Domeniul rămâne la firma de la care este cumpărat.",
+        "workers": "Serviciul lor de rulat programe nu poate ține acest site: este construit altfel și nu i-ar ajunge nici puterea inclusă gratuit.",
+        "r2": "Pentru poze și fișiere, Cloudflare este chiar o variantă bună și ieftină. Contează abia când cineva care nu este dezvoltator va încărca singur poze.",
+        "turnstile": "Împotriva spamului, Cloudflare are un instrument bun, dacă protecția de acum nu mai ajunge. Dar este o firmă care ar vedea datele vizitatorilor, așa că nota de confidențialitate aprobată trebuie să o numească întâi."
+      }
+    },
+    "pages": {
+      "title": "Pagini",
+      "create": "Pagină nouă",
+      "intro": "Paginile fixe ale clubului — „Despre Brașov Runners”, „Contact”. Se publică în ambele limbi deodată, ca evenimentele.",
+      "empty": "Nu există nicio pagină încă.",
+      "untitled": "Fără titlu",
+      "order": "ordinea {order}",
+      "backToList": "← Toate paginile",
+      "incomplete": "Ambele limbi trebuie completate înainte de publicare. Lipsesc: {detail}.",
+      "readOnly": "Rolul tău poate citi paginile, dar nu le poate modifica.",
+      "delete": "Șterge pagina",
+      "deleteTitle": "Ștergi pagina?",
+      "deleteBody": "Pagina și ambele traduceri dispar definitiv. Dacă pagina a fost publicată și vrei doar să o scoți de pe site, folosește „Arhivează”.",
+      "viewPublic": "Vezi pagina publică →",
+      "columnTitle": "Titlu",
+      "columnStatus": "Stare",
+      "columnAddress": "Adresa",
+      "columnOrder": "Ordinea",
+      "tableCaption": "Paginile clubului, cu starea și ordinea în meniu",
+      "moveUp": "Mută mai sus",
+      "moveDown": "Mută mai jos",
+      "moveUpNamed": "Mută „{title}” mai sus în meniu",
+      "moveDownNamed": "Mută „{title}” mai jos în meniu",
+      "moveHelp": "Ordinea de aici este ordinea din meniul site-ului.",
+      "navOrder": "Ordinea în meniu",
+      "navOrderHelp": "Numărul mai mic apare primul. Lasă 0 dacă nu contează.",
+      "slugHelp": "Adresa paginii: litere mici, cifre și cratime.",
+      "slugLocked": "Adresa nu se mai schimbă după publicare — linkurile deja trimise trebuie să funcționeze.",
+      "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
+      "language": {
+        "ro": "Română",
+        "en": "Engleză"
+      },
+      "fields": {
+        "title": "Titlu",
+        "slug": "Adresa paginii",
+        "body": "Text",
+        "seoTitle": "Titlu SEO",
+        "seoDescription": "Descriere SEO"
+      }
     }
   },
   "NotFound": {
     "title": "Pagina nu există",
     "back": "Înapoi la prima pagină"
+  },
+  "Legal": {
+    "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
+    "privacyLinkLabel": "Confidențialitate",
+    "termsLinkLabel": "Termeni și condiții"
+  },
+  "Registration": {
+    "title": "Înscriere: {event}",
+    "email": "Adresă de email",
+    "privacyPrefix": "Am citit și sunt de acord cu",
+    "privacyLinkLabel": "nota de confidențialitate",
+    "resultsNameConsent": "Sunt de acord ca numele meu să apară în rezultatele publice",
+    "listOptOut": "Nu vreau ca numele meu să apară pe lista publică de participanți, dacă clubul publică una pentru acest eveniment",
+    "submit": "Trimite înscrierea",
+    "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
+    "errors": {
+      "title": "Înscrierea nu a putut fi trimisă",
+      "fieldsIntro": "Verifică aceste câmpuri:",
+      "field": "Completează acest câmp corect.",
+      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
+    },
+    "sections": {
+      "about": "Despre tine",
+      "contact": "Contact",
+      "consents": "Acorduri"
+    },
+    "firstName": "Prenume",
+    "lastName": "Nume de familie",
+    "displayName": "Nume afișat public",
+    "displayNameHelp": "Implicit, pe lista de participanți și în rezultate apare numele tău complet. Dacă preferi altceva — de exemplu „Ana P.” — scrie-l aici. Dacă nu vrei să apari deloc pe listă, bifează opțiunea de mai jos.",
+    "birthDate": "Data nașterii",
+    "birthDateHelp": "Categoriile de vârstă se calculează la data cursei.",
+    "sex": "Sex",
+    "sexOptions": {
+      "FEMALE": "Feminin",
+      "MALE": "Masculin",
+      "UNSPECIFIED": "Prefer să nu spun"
+    },
+    "nationality": "Naționalitate",
+    "city": "Oraș",
+    "phone": "Telefon",
+    "emergencyContactName": "Persoană de contact în caz de urgență",
+    "emergencyContactPhone": "Telefonul persoanei de contact",
+    "tshirtSize": "Mărime tricou",
+    "tshirtSizes": {
+      "NONE": "Fără tricou"
+    },
+    "clubName": "Club sau echipă",
+    "optional": "Opțional",
+    "healthNotes": "Afecțiuni, alergii sau medicație",
+    "healthNotesHelp": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor în ziua cursei. Poți lăsa gol.",
+    "healthConsent": "Sunt de acord ca aceste informații medicale să fie păstrate și folosite doar pentru siguranța mea în ziua cursei",
+    "displayNameToggle": "Vrei să apari public sub alt nume?",
+    "displayNamePlaceholder": "Ana P.",
+    "fieldNames": {
+      "firstName": "Prenume",
+      "lastName": "Nume de familie",
+      "displayName": "Nume afișat public",
+      "email": "Adresă de email",
+      "birthDate": "Data nașterii",
+      "sex": "Sex",
+      "nationality": "Naționalitate",
+      "city": "Oraș",
+      "phone": "Telefon",
+      "emergencyContactName": "Persoană de contact în caz de urgență",
+      "emergencyContactPhone": "Telefonul persoanei de contact",
+      "tshirtSize": "Mărime tricou",
+      "clubName": "Club sau echipă",
+      "healthNotes": "Informații medicale",
+      "healthConsent": "Acordul pentru informațiile medicale",
+      "privacyAcknowledged": "Nota de confidențialitate"
+    },
+    "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
+    "optionalSuffix": "opțional",
+    "resend": {
+      "title": "Retrimite linkul de înregistrare",
+      "intro": "Dacă nu ai primit mesajul nostru, scrie adresa cu care te-ai înscris și îți trimitem linkul din nou. Verifică și folderul de spam.",
+      "emailHelp": "Adresa folosită la înscriere.",
+      "submit": "Trimite linkul",
+      "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "prompt": "Nu a ajuns mesajul?",
+      "linkLabel": "Trimite-l din nou"
+    },
+    "journey": {
+      "steps": {
+        "details": "Datele tale",
+        "confirm": "Confirmă emailul",
+        "declare": "Semnează declarația"
+      },
+      "now": {
+        "details": "Completează formularul. După trimitere îți scriem pe email ca să confirmi adresa.",
+        "confirm": "Ți-am trimis un email cu un link de confirmare. Poate dura până la 5 minute să ajungă — verifică și folderul de spam înainte să te înscrii din nou.",
+        "declare": "Mai rămâne un pas: citește și semnează declarația. Locul tău este rezervat 30 de minute.",
+        "done": "Înscrierea ta este confirmată. Ne vedem la start!"
+      }
+    },
+    "disclosure": {
+      "race": "Membru Brașov Runners, club și tricou — opțional",
+      "health": "Informații medicale — opțional"
+    },
+    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners"
+  },
+  "Registrations": {
+    "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",
+    "confirm": {
+      "title": "Confirmă adresa de email",
+      "prompt": "Apasă butonul de mai jos pentru a confirma adresa de email și a continua înscrierea.",
+      "action": "Confirmă",
+      "done": "Adresa de email a fost confirmată.",
+      "doneTitle": "Adresa a fost confirmată"
+    },
+    "declare": {
+      "title": "Declarație pe proprie răspundere",
+      "accept": "Am citit și accept declarația de mai sus",
+      "typedName": "Scrie numele complet ca semnătură",
+      "action": "Semnează și confirmă",
+      "doneConfirmed": "Înscrierea a fost confirmată.",
+      "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
+      "doneTitle": "Declarația a fost semnată",
+      "event": "Pentru evenimentul: {event}",
+      "deadline": "Locul tău este rezervat până la {deadline}.",
+      "typedNameHelp": "Scrie numele complet cu care te-ai înscris."
+    },
+    "manage": {
+      "title": "Gestionează înscrierea",
+      "prompt": "Poți anula această înscriere. Locul va fi eliberat imediat.",
+      "action": "Anulează înscrierea",
+      "done": "Înscrierea a fost anulată.",
+      "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată.",
+      "doneTitle": "Înscriere anulată"
+    }
+  },
+  "Devs": {
+    "title": "Configurația acestui mediu",
+    "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",
+    "environment": "Mediu",
+    "buildUnknown": "versiune necunoscută",
+    "configuration": "Configurație",
+    "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
+    "runtime": "Starea în acest moment",
+    "runtimeIntro": "Ce raportează baza de date și joburile programate acum. Aceleași valori ca /api/health.",
+    "schema": "Schema bazei de date",
+    "overall": {
+      "ok": "Totul este configurat coerent.",
+      "limited": "Funcționează, dar face mai puțin decât probabil te aștepți. Vezi punctele marcate mai jos.",
+      "blocked": "Ceva îi lipsește acestui mediu ca să pornească sau ca să funcționeze. Vezi punctele roșii de mai jos."
+    },
+    "status": {
+      "ok": "În regulă",
+      "limited": "Limitat",
+      "blocked": "Blocat"
+    },
+    "jobStatus": {
+      "ok": "rulează",
+      "stale": "întârziat",
+      "never_run": "nu a rulat niciodată"
+    },
+    "checks": {
+      "emailCaptureLocal": {
+        "title": "E-mail",
+        "body": "Mesajele sunt păstrate în memorie și nu pleacă nicăieri. Este singurul mod permis local și în teste."
+      },
+      "emailCaptureDeployed": {
+        "title": "E-mail",
+        "body": "Mesajele sunt păstrate în memorie și nu pleacă nicăieri — iar pe un mediu găzduit nimeni nu le poate citi, pentru că procesul dispare. Cine se înscrie aici nu primește niciodată e-mailul de confirmare. Pentru livrare reală: EMAIL_DELIVERY_MODE=allowlist, împreună cu EMAIL_ALLOWLIST și cele trei variabile Mailgun."
+      },
+      "emailAllowlist": {
+        "title": "E-mail",
+        "body": "Se transmite doar către adresele din EMAIL_ALLOWLIST; restul sunt capturate. Fiecare adresă trebuie să fie și „authorized recipient” în Mailgun, scrisă exact la fel."
+      },
+      "emailLive": {
+        "title": "E-mail",
+        "body": "Se transmite către oricine. Permis doar în producție."
+      },
+      "staffProvider": {
+        "title": "Autentificarea echipei",
+        "body": "Prin furnizorul de identitate. Accesul rămâne decis de tabela staff_users, nu de furnizor."
+      },
+      "staffDevSwitcher": {
+        "title": "Autentificarea echipei",
+        "body": "Identități de dezvoltare, doar local și în teste. Nu sunt persoane reale."
+      },
+      "staffDisabled": {
+        "title": "Autentificarea echipei",
+        "body": "Nu există nicio cale de intrare: orice rută de administrare răspunde 404. Corect pentru un mediu fără furnizor configurat."
+      },
+      "jobs": {
+        "title": "Joburi programate",
+        "body": "Singurul lucru care golește coada de e-mail și expiră rezervările. Fără JOB_SECRET endpointurile refuză orice apel, iar simptomul nu este o eroare — este e-mail care nu ajunge niciodată."
+      },
+      "webhook": {
+        "title": "Webhook Mailgun",
+        "body": "Cum ajunge un bounce înapoi la înscriere. Fără cheia de semnătură, cererile sunt refuzate și starea livrării rămâne necunoscută."
+      },
+      "mapLink": {
+        "title": "Link către hartă",
+        "body": "Opțional. Fără el, punctul de întâlnire rămâne text simplu, fără link — comportament documentat, nu defect."
+      }
+    },
+    "rateLimits": "Limite de frecvență",
+    "rateLimitsIntro": "Câte încercări acceptă fiecare acțiune protejată într-o fereastră fixă, per cheie — o identitate de e-mail, o înscriere, un link din e-mail sau o sarcină programată. O limită atinsă arată ca „site-ul nu merge” fără să fie nimic stricat.",
+    "roles": "Roluri",
+    "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
+    "youAre": "rolul tău",
+    "roleSummary": {
+      "CONTRIBUTOR": "propune texte și le trimite spre aprobare",
+      "MODERATOR": "editează orice eveniment și aprobă",
+      "DEV": "plus pagina de configurare. Fără date despre participanți",
+      "ADMIN": "plus înscrieri, participanți, export, ștergerea unui eveniment",
+      "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
+    },
+    "settings": "Setări",
+    "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
+    "emailVolume": "Volum de e-mail astăzi",
+    "emailVolumeIntro": "Trei mesaje pentru fiecare înscriere finalizată, raportat la alocația zilnică a furnizorului. Verifică asta înainte de a deschide înscrierile, nu după. Numărat de la miezul nopții UTC.",
+    "emailVolumeHeadroom": "Au mai rămas {remaining} din {allowance} mesaje astăzi.",
+    "registrationsToday": "Înscrieri astăzi",
+    "testRegistrations": "de test",
+    "projectedMessages": "Mesaje estimate",
+    "queuedMessages": "În coadă astăzi",
+    "sentMessages": "Trimise astăzi",
+    "inUse": "activ",
+    "setting": {
+      "APP_ENV": {
+        "what": "Ce mediu este acesta. El — nu NODE_ENV — decide fiecare regulă care depinde de mediu: dacă se pot trimite e-mailuri reale, dacă este permis comutatorul de autentificare pentru dezvoltare și dacă pot exista textul juridic de probă și înscrierile de test.",
+        "values": {
+          "local": "Mașina unui dezvoltator. E-mailul este reținut și niciodată transmis; comutatorul de autentificare este disponibil; textul juridic de probă este încărcat.",
+          "test": "Suitele automate. Aceleași garanții ca local, și nimic de aici nu ajunge vreodată la o persoană.",
+          "qa": "Mediul comun pe care colegii încearcă lucruri. Bază de date reală, autentificare reală, iar e-mailul fie reținut, fie limitat la o listă de adrese — niciodată livrare deschisă.",
+          "production": "Site-ul real al clubului. Singurul mediu care poate trimite e-mail real și singurul care refuză categoric textul juridic de probă și înscrierile de test."
+        }
+      },
+      "EMAIL_DELIVERY_MODE": {
+        "what": "Cât de departe ajunge efectiv un mesaj după ce este compus. Aceasta este bariera dintre un sistem de test și căsuța poștală a unui necunoscut, iar pornirea refuză orice combinație care ar trece-o.",
+        "values": {
+          "capture": "Nu se transmite nimic. Mesajele sunt păstrate în memorie — ceea ce pe o găzduire serverless înseamnă că nu ajung la nimeni, deci înscrierea pare stricată pentru oricine altcineva decât un dezvoltator.",
+          "allowlist": "Livrare reală, dar numai către adresele din EMAIL_ALLOWLIST; restul sunt reținute. Asta este un domeniu sandbox Mailgun și așa testează un grup restrâns tot parcursul, în siguranță.",
+          "live": "Livrare reală către cine s-a înscris. Permisă doar când APP_ENV este production; declarată altundeva, pornirea eșuează."
+        }
+      },
+      "STAFF_AUTH_MODE": {
+        "what": "Cum dovedește un membru al personalului cine este. Participanții nu se autentifică niciodată — aceasta este doar ușa backoffice-ului, iar tabelul staff_users decide cine poate intra, indiferent de modul setat.",
+        "values": {
+          "dev-switcher": "O scurtătură locală prin care un dezvoltator devine orice rol fără furnizor de identitate. Permisă doar când APP_ENV este local sau test; declarată altundeva, pornirea eșuează.",
+          "provider": "Varianta reală: Auth.js cu Zitadel. Furnizorul dovedește adresa, iar lista staff_users decide dacă acea adresă poate intra.",
+          "disabled": "Nu există nicio cale de intrare. Fiecare rută de personal răspunde 404 în loc de un refuz, deci backoffice-ul este inaccesibil, nu doar ascuns. Aceasta este setarea corectă pentru orice mediu fără furnizor de identitate configurat."
+        }
+      }
+    },
+    "operationalTitle": "Ce face fiecare limită când este atinsă",
+    "operationalIntro": "Cine oprește: furnizorul, prin API-ul lui, sau chiar codul acestei aplicații. Ce face aplicația în acel moment, și ce variabilă sau monitorizare este implicată. Costurile și planurile nu sunt aici: stau pe /admin/tasks, pentru cine plătește factura.",
+    "enforcedBy": {
+      "provider": "impusă de furnizor",
+      "application": "impusă de aplicație"
+    },
+    "operational": {
+      "mailgunDaily": {
+        "title": "Alocația zilnică Mailgun (100 de mesaje pe planul gratuit)",
+        "body": "Mailgun refuză trimiterea cu același HTTP 400 pe care îl folosește pentru un mesaj invalid. Adaptorul recunoaște formularea despre limită, clasifică refuzul ca „throttled”, iar rândul din outbox rămâne PENDING cu următoarea încercare programată imediat după miezul nopții UTC — nu backoff-ul obișnuit, care ar consuma toate cele șase încercări într-o oră și ar marca mesajul FAILED. Semnalul este cifra de volum e-mail de mai sus; nu există variabilă de configurare pentru limită."
+      },
+      "captureOnServerless": {
+        "title": "Modul „capture” nu livrează nimic pe un mediu publicat",
+        "body": "Adaptorul de capture ține mesajele în memoria procesului, iar pe hosting serverless procesul dispare înainte ca cineva să citească linkul. Un coleg neinclus în allowlist se înscrie și pur și simplu nu aude nimic. Singurul mod în care cineva din afara codului duce o înscriere până la capăt este allowlist cu un furnizor real."
+      },
+      "schedulerFloor": {
+        "title": "Cadența sarcinilor programate",
+        "body": "Vercel Hobby permite o rulare pe zi și refuză o expresie mai deasă chiar la publicare, deci programatorul este workflow-ul GitHub Actions plus un pinger extern; minimul GitHub este de cinci minute, iar măsurat aici cadența reală este de aproximativ două ore. Aplicația nu se strică între rulări: expirarea rezervării este evaluată în fiecare tranzacție de capacitate (§10.6), deci o rulare târzie întârzie un mesaj, nu suprarezervă un eveniment. Ambele endpoint-uri sunt protejate cu JOB_SECRET, iar liveness-ul fiecărei sarcini apare mai jos și în /api/health."
+      },
+      "hobbyCapPause": {
+        "title": "Depășirea unei limite Hobby oprește funcția 30 de zile",
+        "body": "Nu este o factură, este o pauză cu termen fix, și nu se poate cumpăra ieșirea din ea în timpul ferestrei. Aplicația nu are ce să facă atunci; singura reacție este să urci planul înainte de fereastră. Se vede doar în panoul Vercel — nu există nimic aici care să o raporteze."
+      },
+      "identityDomain": {
+        "title": "Zitadel Free: zero domenii proprii, un singur administrator",
+        "body": "Nu are efect asupra codului, dar decide ce host apare la autentificare. Cât timp STAFF_AUTH_MODE=provider merge pe hostname-ul furnizorului, limita nu se simte; pe domeniul clubului cere plan plătit. STAFF_AUTH_MODE=disabled răspunde 404 la orice rută de staff, ceea ce este exact ce trebuie într-un mediu fără tenant."
+      },
+      "statementTimeout": {
+        "title": "statement_timeout 10s și idle_in_transaction_session_timeout 30s",
+        "body": "Impuse de această aplicație, nu de Neon: db/client.ts le setează pe pool. Riscul nu a fost niciodată numărul de conexiuni (max: 10 este per instanță caldă, iar PgBouncer acceptă mult mai multe), ci o interogare nemărginită care ține o funcție Vercel 300 de secunde. Primul timeout este impus de PostgreSQL, deci ține și când procesul Node este blocat; al doilea acoperă o instanță ucisă între două instrucțiuni ale unei tranzacții deschise. Conexiunea nu are timeout, deliberat: pe Neon Free prima cerere după inactivitate așteaptă pornirea bazei."
+      }
+    }
+  },
+  "Error": {
+    "title": "Ceva nu a funcționat",
+    "body": "Pagina nu a putut fi afișată. De cele mai multe ori este ceva trecător — încearcă din nou peste câteva momente.",
+    "retry": "Încearcă din nou",
+    "home": "Înapoi la prima pagină",
+    "reference": "Dacă se repetă, spune-ne acest cod:"
   }
 }

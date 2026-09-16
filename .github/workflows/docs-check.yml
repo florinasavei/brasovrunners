@@ -83,6 +83,11 @@ jobs:
       - run: yarn playwright install --with-deps chromium
 
       - run: yarn db:migrate
+
+      # The one suite that cannot run in the `docs-check` job: it needs two real connections,
+      # and PGlite has one (BR-REQ-051-01 criterion 5).
+      - run: yarn test:concurrency
+
       - run: yarn db:seed
       - run: yarn test:e2e
 

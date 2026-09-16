@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -139,13 +139,19 @@ A race is an event type, not a separate registration system.
 A small meetup may need only:
 
 - date and time;
-- meeting point;
+- meeting point, and a link to it on a map;
 - approximate distance or difficulty;
+- a link to the route, where the club has drawn one. This is a **different link from the map**:
+  where to turn up and where the run goes are two questions, and the club answers them with two
+  different pages more often than with one. It is a link and never an uploaded file, because the
+  route already lives on the service the club drew it on and a copy would go stale;
 - short description;
 - no registration or simple internal registration.
 
 A larger event or race may additionally need:
 
+- two times rather than one: when to be there, and when the race starts. Runners need both, and
+  the difference is often an hour;
 - longer description;
 - capacity;
 - registration opening and closing dates;
@@ -153,6 +159,13 @@ A larger event or race may additionally need:
 - an external registration link;
 - participant export;
 - stronger operational checks.
+
+One event at a time may be the club's **featured** event. The website leads with that one, in
+full, above the ordinary list — the anniversary cross rather than the fourth card down. Marking
+a second event as featured is refused: two lead events is no lead event.
+
+The map link is the one the organizer already uses and shares. The platform stores it rather
+than building it, so the club is never tied to one map provider.
 
 The same event model supports both without forcing race-only complexity onto weekly meetups.
 
@@ -177,11 +190,20 @@ race only groups.
 
 ### BR-BUS-020 — Event publication
 
-An event is public only when its content for that language is published.
+An event is published or it is not, and both languages go live together. Publishing is a decision
+about the event, not about a language: the club advertises a race, not a Romanian race and an
+English one.
 
-Romanian and English may be published independently. An unavailable English translation must not display Romanian text as if it were English.
+Publishing is refused while either language is incomplete, and the interface says which language
+and which fields. That is the same rule the club would apply by hand — a page that reads as
+half-translated in one language is worse than a page that is not there yet.
 
-Cancelled events remain visible with a clear cancelled status when that information is still useful to visitors.
+An event that has no translation in a language simply does not exist in that language: the page
+is not found, the listing does not carry it, and the sitemap does not list it. It must never
+display the other language's text as if it were a translation.
+
+Cancelled events remain visible with a clear cancelled status when that information is still
+useful to visitors.
 
 ### BR-BUS-030 — Registration modes
 
@@ -195,13 +217,49 @@ An external event does not create a local participant registration unless a late
 
 ### BR-BUS-031 — No participant account required
 
-Internal registration does not require a participant login, password, or Zitadel account.
+Internal registration does not require a participant login, password, or account of any kind.
 
-The participant supplies a full name and email address, and acknowledges the current approved privacy notice before the registration is accepted. The acknowledged privacy-notice version is recorded with the registration.
+The participant supplies the details a race needs and acknowledges the current approved privacy
+notice before the registration is accepted. The acknowledged privacy-notice version is recorded
+with the registration.
+
+What is asked, and why each one is there:
+
+- **legal name** — first and last. This is the name the declaration is signed with and the name
+  on any list the club must hand to an authority;
+- **public display name** — what a start list or a results table shows. It is the legal name
+  by default, because that is what a start list normally says and what the club prints. The
+  form carries a collapsed section for changing it, so somebody who would rather appear as
+  "Ana P." — or under the name everyone at the club actually uses — says so there, without
+  changing the name their declaration is signed with. Appearing nowhere at all is a different
+  question, asked separately;
+- **date of birth** — age categories are worked out against the day of the race, so the platform
+  stores the date and never a number that would be wrong a year later;
+- **sex** — race categories. Female, male, or unspecified;
+- **nationality** and **city** — results and the club's own record of who it reaches;
+- **telephone**, and an **emergency contact** name and number — the organizer needs to reach
+  somebody on the day. Required for that reason;
+- **t-shirt size** and **club or team** — optional, and only useful when there is a shirt;
+- **“I am a Brașov Runners team member”** — optional, and a **claim rather than a fact**. The
+  club has members who run its races and organizers who run them too, and until now the only way
+  to tell them from a stranger was whether somebody happened to type the club's name into a free
+  text box. Nobody's answer is checked against anything: most members of this club have no
+  backoffice account, so a verified flag would say "no" for exactly the people the question is
+  asked to find. It is therefore for the club's own information only — it changes no price, no
+  place, and no position in a queue — and every screen that shows it says "declared". An
+  organizer corrects one that is wrong.
+
+An organizer entering a registration for somebody who telephoned may leave unknown details
+blank. Refusing the row would lose the registration; an incomplete one can be completed later.
+
+**Health information is asked separately, or not at all.** Anything about a medical condition,
+an allergy or a medication is a special category of personal data. It is optional, it carries
+its own consent worded on its own, it appears on no public page, it is left out of the
+registrations export, and withdrawing the consent erases the text rather than hiding it.
 
 Control of the email address is confirmed through an emailed link before the registration can progress. The confirmation link is valid for 48 hours. When it is not used in time the registration expires, and the person may start again while registration is still open.
 
-Zitadel authentication is reserved for staff using the CMS and backoffice.
+Sign-in exists only for staff using the CMS and backoffice.
 
 ### BR-BUS-032 — Email identity and duplicate prevention
 
@@ -333,6 +391,29 @@ The recommended resend follows the current state:
 
 A resend creates a new delivery record and a new action token where needed. It must not duplicate the registration, change its state, extend an offer without an explicit Admin action, or silently bypass declaration requirements.
 
+An organizer may also **enter a registration for somebody** who asks in person, on the phone,
+or after a run. It is that person's registration, not the club's: it takes its place in the same
+order as one made online, it starts unconfirmed, and the participant receives the ordinary email
+and signs the declaration themselves. Nobody signs a declaration for somebody else, and the
+organizer confirms on the form that they are relaying a request rather than inventing one.
+
+The administrative changes to a registration are entering one, correcting the name it carries,
+cancelling it, and erasing it. Each is recorded with who did it and when.
+
+**Cancelling and erasing are different answers to different questions.** A runner who drops out
+is cancelled: the place goes to the first person waiting, and the record of what they agreed to
+stays, which is what the club needs if a question comes up later. A person who asks to be
+removed from the club's records is erased: their registration and the declaration they signed
+are deleted outright, the place is released the same way, and what remains is a line in the log
+saying an administrator deleted a registration on a date and why — not who it was.
+
+The second one exists because the first cannot answer it. A cancelled registration still holds
+a name, an email address and a signed declaration, so "we cancelled you" is not a reply to
+somebody asking to be forgotten, and "we cannot remove you" is not a reply the club may give.
+
+Erasing is deliberately the heavier action: it asks for a reason, it says plainly that it cannot
+be undone, and it is available to an Administrator alone.
+
 The verified email is the participant identity. Staff must not overwrite a verified email directly or merge participant records in V1. An unverified typo is handled by cancelling the pending registration and restarting with the correct address. A verified identity change requires a later explicit verification workflow; it is never performed by an unaudited database edit.
 
 ### BR-BUS-038 — Optional public runner profile
@@ -362,12 +443,43 @@ Rules:
 - profiles (M4) are public by direct URL but excluded from the public sitemap and runner directory, and served with `noindex, nofollow`;
 - Strava support is an outbound profile link only, not OAuth or activity synchronization.
 
+### BR-BUS-039 — Public participant list
+
+For a particular event, the club may choose to publish on the event page the names of the
+people who have confirmed a place. This is a disclosure of personal data, not a display
+setting, and it is treated as one.
+
+Rules:
+
+- **off unless the club turns it on, for one event at a time.** Every event is created with no
+  public list, and no event acquires one by being copied from an event that had one;
+- only people who have **confirmed** appear. Somebody part-way through registering has not
+  agreed to anything yet, and publishing that they tried is a disclosure they never made;
+- **the registered name and nothing else.** No email address, no status, no place number, no
+  count of who is still deciding, and nothing at all about a waiting list;
+- **a participant may keep their own name off it.** The registration form asks, in plain words,
+  on every event — including one with no list today, because the club may add one later and a
+  question nobody was asked cannot be answered on their behalf. A participant may also ask
+  afterwards, by writing to the club;
+- **it may not be switched on until the approved privacy notice describes it.** The sample
+  notice carries the paragraph with the club's facts left as placeholders; the approved wording
+  is the club's to write;
+- an event registered elsewhere never publishes a list here: those entries are the other
+  organizer's, and this platform holds none of them;
+- a demonstration registration is never a person and never appears (BR-BUS-037).
+
+Names are listed in the order people confirmed — the one order that is a fact about them
+rather than an accident of storage.
+
 ### BR-BUS-040 — Bilingual experience
 
 Romanian and English are supported from V1.
 
 - Romanian is the default language.
-- Navigation, forms, validation messages, action pages, emails, declarations, and editorial content are localized.
+- Navigation, forms, validation messages, action pages, emails, declarations, and editorial content are localized. This is about the **public site** and the email participants receive.
+- The backoffice is the club's own tool, used by a handful of people who all speak Romanian, and its labels for the club's own vocabulary — a publication state, a staff role, a registration state — are written once, in Romanian. Two copies of the same seven words made the screen harder to work on rather than easier.
+- **What is written twice is only what a translator would change**: the title, the page address, the short description and the two search-engine fields. The time, the type, the capacity, the meeting point, the street address, the difficulty and the cost are one answer for the whole event, given once. Those last four used to be asked per language, and the second answer was not a translation — it was the same fact again. The trade the club accepted: the English page shows those four in the club's own words.
+- **The difficulty and the cost are now chosen from a list, not typed.** Difficulty is easy, moderate or hard; cost is free or paid. An organizer picks one answer for the event and the English page says it in English, which the typed version could not do. Both may be left unanswered, and then the page says nothing about them — an event with no stated cost is not thereby free. Cost says only *whether* the event charges; if the club ever runs one that does, the amount is a separate question nobody has had to answer yet.
 - Content may exist in Romanian before an English translation is ready.
 - Public URLs identify the language.
 - Dates and numbers are formatted for the selected language.
@@ -384,7 +496,13 @@ Rules:
 - every participant journey can be completed on a phone with one hand, without horizontal
   scrolling, in either language;
 - the essential facts of an event are visible on the first screen of a phone;
-- deadlines on the declaration and offer pages are visible without searching;
+- deadlines on the declaration and offer pages are visible without searching, and stated as a
+  time of day rather than only as "thirty minutes";
+- registration is one page, not a sequence of steps. Questions nobody has to answer are folded
+  away behind a heading that says what they are; every consent is asked in the open, because a
+  choice somebody never saw is not a choice they declined;
+- when a form is refused, the page says which answers to fix and takes the person to the first
+  of them, rather than returning them to the top;
 - nothing important is available only by hovering with a mouse;
 - emails are designed to be read on a phone;
 - the organizer surfaces needed on race morning, finding a participant and seeing their
@@ -397,6 +515,11 @@ The mini CMS exists so approved club members can maintain content without code c
 
 It supports only:
 
+- **standing pages the club writes about itself** — "About Brașov Runners", "Contact" and their
+  like. They appear in the site menu in the order the club chooses, go live in both languages
+  together like an event, and their address stops changing once published, so a link already
+  shared keeps working. Deliberately plain: a title and text, no photo galleries and no layout
+  choices, because the club needs to say things rather than design them;
 - articles and announcements;
 - event titles, descriptions, locations, images, and SEO text;
 - selected static content such as About and homepage introduction;
@@ -408,18 +531,36 @@ It supports only:
 
 It is not a generic website builder.
 
+Legal documents — the privacy notice, the terms, and the event declaration — are **not** CMS
+content. No staff role edits them here in any form; new versions are loaded by the maintainer
+following a written procedure, and the backoffice may only show them.
+
+The event half of this is built and in use, and it is now the whole of an event: an organizer
+creates a race, sets its times, its place, its distance and whether it takes entries at all,
+duplicates last year's to make this year's, previews it, publishes it, archives it when it is
+over, and deletes one made by mistake — without a developer. Deleting is refused for an event
+anybody has registered for; archiving is the answer there. Articles, static pages, galleries and
+the media library are not built yet.
+
 ### BR-BUS-051 — Editorial workflow
 
 Editorial statuses are:
 
 - **Draft:** work in progress and not public.
 - **In review:** submitted by an author for an editor.
-- **Published:** visible publicly in that language.
+- **Published:** visible publicly, in every language the item has.
 - **Archived:** no longer active and not public.
+
+The status belongs to the event, not to one of its languages: publishing puts Romanian and
+English live in the same moment, and unpublishing takes both down.
 
 An author creates and updates drafts and submits them for review. An editor or administrator decides what is published.
 
-Once content is published, only an editor or administrator may change the live version in V1. The interface clearly warns when a save affects the public site.
+Once content is published, only an editor or administrator may change the live version in V1. The interface clearly warns when a save affects the public site, and the warning has to be answered before the save is accepted.
+
+When two people edit the same text at once, the second save is refused rather than silently overwriting the first, and the person is told to reload and reapply their change. Nothing is lost quietly.
+
+A page address may be changed while the text has never been published. Once it has been public, it stays as it is: people and search engines have followed it.
 
 Scheduled publication, comments, full revision history, and simultaneous collaborative editing are not planned.
 
@@ -450,15 +591,61 @@ Each legal or declaration document has a version and effective date. A registrat
 
 Changing a declaration creates a new version. It does not rewrite the historical record of people who accepted an earlier version.
 
+The club writes this wording itself, in the backoffice, and what it may take back is deliberately
+narrow. A version that has been **approved** is never edited, never deleted, and its approval is
+never withdrawn — once the club has published words as its own, the record of what it published
+stands whether or not anybody happened to sign against it. What may be removed is a **draft
+nobody has ever seen**: an unapproved version is not on the public site and nobody can have
+agreed to it, so a paragraph somebody started and thought better of does not have to stay in the
+club's document list for ever. A correction to approved wording is the next version, which is
+what versioning is for.
+
+Until the club approves its own wording, every environment except production carries a clearly
+marked **sample** privacy notice, terms and declaration: complete in structure so the club or its
+lawyer can edit a concrete draft rather than face a blank page, and blank in substance so nothing
+in them can be mistaken for a decision the club made. Each one says so at the top of its own
+page, in both languages. Production carries none, and registration there correctly refuses
+everyone until the approved text is loaded.
+
 ### BR-BUS-060 — Staff roles and least privilege
 
-| Staff role | Main purpose |
+Five roles, and **they nest**: each can do everything the one below it can, plus one thing more.
+That property matters more than the individual grants — a permission is a threshold rather than a
+list of roles, so adding a role later cannot silently take one away.
+
+| Staff role | Adds, on top of the role below |
 | --- | --- |
-| Author | Write and translate drafts |
-| Editor | Review and publish content; manage event content |
-| Admin | Manage participants, waiting lists, declarations, roles, exports, profiles, and operations |
+| Contributor | Writes and translates drafts, and submits their own for approval. Proposes; does not decide |
+| Moderator | Edits any event and approves — publishing, unpublishing, archiving. The club's editorial hands |
+| Technical (dev) | The configuration report at `/devs`. **No participant data** |
+| Admin | Registrations, participants, waiting lists, exports, test registrations, and deleting an event |
+| Superadmin | The staff list itself: who is here and what they may do |
+
+**The line that matters is between Technical and Admin, and it is personal data.** Everything up
+to Technical is about the club's own content and its own configuration; everything from Admin up
+is about the people who registered. That is what lets the club give somebody technical help
+without also giving them the participant list.
+
+The top of the hierarchy is defined by one capability: only a superadmin manages the staff list.
+A role that could grant itself a higher one would make every rule beneath it decorative — so an
+admin may read every participant record and still cannot change who else may.
+
+Only a superadmin manages the staff list: they add a colleague by email address and role,
+change a role, and revoke access. Adding someone does not send them anything yet — the platform
+has no sending domain — so the entry simply waits, and access begins at that person's first
+sign-in with that address. Nobody outside the list can sign in at all.
+
+A superadmin cannot change their own role or remove their own access, and the club can never be
+left without a superadmin: those refusals exist so the club cannot lock itself out of its own
+backoffice.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
+
+An administrator can also fill an event's queue with clearly labelled **test registrations**, so
+the waiting list can be watched working without ten real mailboxes, and remove them again so the
+demonstration is repeatable. They behave exactly like real entries — they take places and are
+promoted in turn — and they are left out of every count the club is given. They cannot be created
+in production at all, and the addresses behind them can never receive mail.
 
 ### BR-BUS-070 — Participant privacy
 
@@ -740,7 +927,9 @@ The club must approve:
 
 - final brand identity and public wording;
 - privacy, terms, and declaration text;
-- whether typed-name acceptance is sufficient for the intended events;
+- whether typed-name acceptance is sufficient for the intended events, or whether the drawn
+  (mouse or touch) signature and emailed PDF copy the owner sketched on 2026-09-16 replace it —
+  and, if a copy goes to a club mailbox, that the privacy notice says so (`DECISIONS.md` §56);
 - retention, deletion, and historical-record policy;
 - support and organizer contact addresses;
 - production sender name and email address;
@@ -767,6 +956,8 @@ transferred to a club-owned organization before handover, so that the club, not 
 individual, owns the code.
 
 The public domain is bound at the end of M1. Until then both applications run on their provider-assigned hostnames. Binding the real domain must be a configuration and DNS change only, with no change to application behavior.
+
+The club may hold more than one domain name over time. Exactly one of them is the site's canonical address at any moment; every other one redirects to it, so a visitor, a search engine and an email link all arrive at the same place. Which domain is canonical is an operational setting, and changing it must be a configuration change with no change to application behavior.
 
 ## 10. Document synchronization
 

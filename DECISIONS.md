@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.14-2026-09-03 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.14-2026-09-03`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -1168,3 +1168,2099 @@ comma; distances now go through next-intl's number formatter, which is what BR-R
 for. Neither was caught by types or by tests — both were caught by looking at the running page.
 
 Baseline bumped to `BR-V1.14-2026-09-03`.
+
+## 24. Decided — Auth.js alone for staff, no external identity provider (2026-09-04)
+
+Two documents disagreed, and the disagreement was encoded in a column name. `AGENTS.md` §13.1
+said "use the Auth.js Zitadel provider" and §12.1 called the column `zitadel_subject`, while
+`CLAUDE.md` and `WEEKEND.md` both recorded the direction as Auth.js alone with a server-side
+allowlist and no external IdP. Nothing had been built either way, so this was the last cheap
+moment to settle it: a column rename after rows exist is a migration nobody wants to write, and
+the name is what every later reader would have believed.
+
+**Decided: Auth.js alone. The `staff_users` table is the allowlist, and the column is
+`auth_subject`.** `AGENTS.md` §13.1 and §12.1 are corrected accordingly, along with the provider
+tables in §3.1, §7.1 and §7.2, `SETUP.md` §15, and the environment lists.
+
+The reasoning, in the order it mattered:
+
+- **Scale.** Zitadel is an identity platform. The club has, at most, a handful of staff
+  accounts, and it would be operating that platform — instances, projects, applications,
+  callback registrations per environment — for them. `AGENTS.md` §1.3 forbids exactly this kind
+  of structure without a population.
+- **Cost and ownership.** A custom domain on Zitadel sits on its paid tier (recorded in §20),
+  and every provider added is another account the club must own, pay for and recover
+  (`AGENTS.md` §24). The identity of five volunteers does not justify it.
+- **The provider was verified before it was dropped, not instead.** Auth.js does ship a Zitadel
+  provider — `@auth/core/providers/zitadel`, with `AUTH_ZITADEL_ID` and `AUTH_ZITADEL_SECRET` —
+  so this is a decision about what the club should run, not a discovery that the documented path
+  was impossible.
+- **Nothing about the boundary changes.** Participants still never receive accounts or passwords
+  (§10.3), the three roles are unchanged, and the server helpers are the ones §13.1 already
+  named: `getCurrentStaffUser`, `requireStaff`, `requireStaffRole`.
+
+**What was built, and what deliberately was not.** The table, the roles, the helpers, staff
+administration and the development switcher exist. The sign-in method does not, and that is the
+uncomfortable half of this decision: the method that suits volunteers with no passwords is an
+emailed link, and delivery to a real person needs the club's sending domain — the same blocker
+registration waits on. So `STAFF_AUTH_MODE` is `dev-switcher` in local and test and `disabled`
+everywhere else, where every staff request is answered by nobody and the backoffice returns 404.
+**The backoffice is therefore usable on a developer's machine and unusable on production until
+the domain exists.** Recorded plainly rather than papered over: the organizer story is complete
+except for the door.
+
+The switcher itself is guarded twice, because a development-only feature that reaches production
+is how a backoffice loses its lock: the process refuses to start with that mode outside local
+and test, and every function it exposes refuses again when it is called.
+
+**The invitation model that fell out of it.** With no external directory to consult, the table
+*is* the directory: an Administrator adds a colleague by email address and role, the row waits,
+and the first sign-in from that address binds the provider's subject to it. So `auth_subject` is
+nullable, `email` is unique and lowercased, and two checks hold the shape — an address that is
+not lowercase is refused, and a sign-in timestamp without a subject is refused. No row, no
+access, whatever any provider asserts. An Administrator cannot change their own role, remove
+their own access, or leave the club with no Administrator at all; those three refusals are the
+difference between a mistake and a locked-out club.
+
+## 25. Decided — the event half of the CMS, built during M1 rather than M5 (2026-09-04)
+
+`SPECS.md` §3 puts the mini CMS in M5, and `WEEKEND.md` defers it explicitly. It was built now
+anyway, and the reordering is recorded here rather than hidden by relabelling the requirements:
+BR-REQ-050-01, BR-REQ-051-01 and BR-REQ-051-02 keep `Release: M5` and gained a **Status** line
+naming the part that exists.
+
+**Why it could not wait.** Until this shipped, changing an event meant editing
+`src/db/seeds/pilot.ts` and re-running the seed — a developer, a laptop and a deploy for a
+sentence about a start time. The site exists so people can find the club's next race, and the
+club could not correct that race without a programmer. Everything else left in M1 is blocked on
+the domain or on approved legal text; this was blocked on nothing.
+
+**What shipped:** both of an event's times, its map link, the featured flag, and every editorial
+field on `event_translations` per locale, with DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED, a
+staff-only preview, and optimistic concurrency.
+
+**What did not, and why the boundary is exactly there:** no articles, static pages, galleries or
+media library, and **no rich text**. §11.3 makes the canonical body validated Tiptap JSON with an
+allowlisted schema, and a body editor built without that contract is the arbitrary-HTML problem
+the rule exists to prevent. Legal documents have no editor screen in any form (§11.1), and the
+backoffice says so in place of one.
+
+**Three decisions inside it worth keeping.**
+
+*The featured flag is a database constraint, not a convention.* A partial unique index over
+`featured` refuses a second featured row, in the same spirit as the pilot capacity guard.
+Application code that remembers to clear the previous flag is a race between two organizers, not
+a rule. Setting a new one clears the old inside a single transaction, so there is never an
+instant with two, and never a clear that survives a failed set.
+
+*The map link is stored, never assembled.* §8 forbids a hostname literal anywhere under `src/`
+and exempts no provider, so the application cannot build a maps URL from the latitude and
+longitude it already holds, nor allowlist a map host — `yarn docs:check` fails on the literal
+either way. The organizer pastes the link they already share. https is required at the form and
+again by a check constraint, so a `javascript:` URL cannot be stored by a seed or a hand-written
+`UPDATE` either, and the link renders with `rel="noopener noreferrer"`. The coordinates stay
+where they are and are not a substitute: they are a point, not the named place a club shares
+before a run.
+
+*A second time, without touching the first.* `starts_at` keeps its meaning exactly — when the
+event begins — because the ordering, the upcoming/past cut-off, the sitemap and the listing all
+read it, and redefining it would have moved every one of those. `race_starts_at` is the gun
+time, constrained to fall inside the event, and the page shows one time or two, each labelled.
+In the JSON-LD, `startDate` is the race start and `doorTime` is the event start: a search result
+showing the gathering time as the start is how somebody misses a race. The two times are
+converted in the event's own timezone, twice — a single pass uses the offset of the wrong
+instant, which is wrong by an hour on exactly the two Sundays a year the clocks change, and one
+of those is the last Sunday in March.
+
+**The concurrency rule got the test it actually needs.** BR-REQ-051-01 criterion 5 says a stale
+save is a conflict. Proving that requires two connections racing, and PGlite — the in-process
+PostgreSQL the rest of the suite runs on — has one. `tests/concurrency/` therefore runs against a
+real server through `yarn test:concurrency`, with its own Vitest configuration, excluded from
+`yarn check` for the same reason the end-to-end suite is: that gate has to work on a machine with
+no database. It fails loudly rather than skipping when `DATABASE_URL` is unset, because a
+concurrency suite that quietly passes with nothing connected is worse than no suite at all. The
+test holds one transaction open, watches the second organizer's save block on the row lock,
+commits the first, and asserts the second comes back as a conflict with the first save intact.
+
+**A cycle the schema created, and the file that broke it.** `events` needs `staff_users` for its
+attribution columns; `staff_users` needed the `locale` enum, which lived in `events`. Drizzle
+loads schema modules eagerly, so that is not a style problem — it is
+`Cannot access 'locale' before initialization` at migration time. The enum now lives in
+`src/db/schema/locale.ts`, which imports nothing.
+
+Baseline bumped to `BR-V1.15-2026-09-04`.
+
+## 26. Decided — staff sign-in is Auth.js with the Zitadel provider, superseding §24 (2026-09-04)
+
+§24 decided "Auth.js alone, no external identity provider," and corrected `AGENTS.md` §13.1
+and §12.1, the provider tables in §3.1/§7.1/§7.2, `SETUP.md` §15 and the environment lists to
+say so. Nothing built against that decision ever ran anywhere but a developer's own machine:
+`staff_users.auth_subject` never held a row with a subject, because the sign-in method §24
+itself deferred — the emailed link — was never built either. This section reverses §24, and it
+is a correction of an unshipped plan, not a migration of live identities. The same six
+documents §24 touched are corrected again, back the other way, in the same pull request as
+this entry.
+
+**Decided: Auth.js with the Zitadel OAuth provider.** `staff_users` stays exactly what §24 made
+it — the server-side allowlist — and the boundary is unchanged: an unknown Zitadel account is
+refused before a session is ever issued, the same as an uninvited address was refused under the
+switcher. The column is `zitadel_subject` again; the rename is a real migration
+(`0007_drop_staff_auth_subject.sql`, `0008_add_staff_zitadel_subject.sql`) because migrations
+after `0004` are shipped and column renames are not silently rewritten, even when — as here —
+the column being renamed has never held a production row. A local database that had used the
+development switcher keeps its `staff_users` rows; the migration only clears the now-orphaned
+`first_signed_in_at` on any row whose subject did not survive the rename, so those identities
+simply bind again on next sign-in rather than violating the table's own "a subject and a
+sign-in arrive together" check. `ensureDevStaffUser` needed the same fix `resolveZitadelSignIn`
+already has: an insert guarded only by `ON CONFLICT (zitadel_subject)` cannot see a row that
+already claims the identity's address with no subject yet — exactly the shape that rename just
+produced — so it now looks up by subject, then by email, and binds rather than inserting when
+it finds the row by email. The end-to-end suite caught this the same afternoon it was written.
+
+The reasoning, in the order it matters now:
+
+- **Passwordless sign-in no longer waits on the sending domain.** §24's blocker was structural:
+  the only method AGENTS.md §13.1 considered for volunteers with no passwords was an emailed
+  link, and delivery needs the club's domain — the same blocker registration itself waits on.
+  Zitadel's login policy offers both password and passwordless (passkey/magic-link-style)
+  sign-in configured entirely on Zitadel's side, so the backoffice can have a real door before
+  the domain exists at all.
+- **Standing up the identity provider is an account-creation task, not application work.** §24
+  weighed "operating an identity platform for a handful of volunteers" against the club's
+  actual population and found it disproportionate. That calculus does not change; what changes
+  is who does the operating. A Zitadel tenant is configured once, by the owner, the same way
+  Neon and Vercel projects are — it is not code this repository runs, maintains, or scales.
+  `AGENTS.md` §1.3's warning against structure without a population is about engineering
+  effort inside this codebase, and this decision adds none: the provider table in §3.1 grows by
+  one row, not by a subsystem.
+- **Nothing about the boundary or the helpers moves.** Participants still never receive
+  accounts or passwords (§10.3), the three roles are unchanged, and `getCurrentStaffUser`,
+  `requireStaff`, `requireStaffRole` are the same functions, now with a second branch (session
+  strategy JWT, no adapter, no `accounts`/`sessions` tables) alongside the switcher's cookie
+  branch. `staff_users` is still the only persisted identity state this application owns.
+
+**What §24 got right and this section keeps.** The invitation model — an Administrator adds a
+colleague by email and role, the row waits, first sign-in binds the subject — needed no change
+at all: it was never really about which provider issues the subject, only about `staff_users`
+being the thing that grants access regardless of what any provider asserts. The three
+self-protection refusals (no changing your own role, no removing your own access, no leaving
+the club with no Administrator) and the double-guarded development switcher are untouched.
+
+**Verified before written, not discovered by trying.** `next-auth@5.0.0-beta.32` ships
+`next-auth/providers/zitadel`; `AUTH_ZITADEL_ID`, `AUTH_ZITADEL_SECRET` and (by Auth.js's
+environment-variable inference) `AUTH_ZITADEL_ISSUER` are its configuration, alongside
+`AUTH_SECRET` for the JWT session itself — checked against Auth.js's current documentation
+before `src/auth.ts` was written, the same discipline §24 applied when it verified the provider
+existed before dropping it.
+
+`STAFF_AUTH_MODE` gains a third value, `provider` — named for the mechanism rather than the
+vendor, matching `EMAIL_DELIVERY_MODE`'s own style, so a future change to what Zitadel's login
+policy offers is a Zitadel console change, not an environment-variable rename. `dev-switcher`
+is unchanged; `disabled` remains the safe default until an operator explicitly turns `provider`
+on for an environment.
+
+## 27. Decided — legal document versioning ships now; no placeholder ever reaches qa or production (2026-09-04)
+
+`AGENTS.md` §12.5's versioning machinery, `legal_documents` and `legal_document_translations`,
+is built in this same change set as registration itself, ahead of the club approving real
+privacy-notice, terms or declaration wording. Building the machinery early is safe; the
+question this section settles is what a database with no approved text yet should do, in every
+environment that is not a developer's own machine.
+
+**Decided: a clearly marked `PLACEHOLDER` version is seeded in local and test only.**
+`seedPlaceholderLegalDocuments` (`src/db/seeds/legal-placeholder.ts`) refuses to run — throws,
+does not silently skip — when `APP_ENV` is anything but `local` or `test`, and `pilot.ts` never
+calls it for any other environment either. This is the same double-guard shape as the
+development staff switcher: refused at the call site, and refused again inside the function
+itself if some future caller forgets the first refusal.
+
+The reasoning:
+
+- **`AGENTS.md` §1.2 forbids inventing legal text that could reach a real person.** A
+  placeholder is invented text by construction — it says so in both languages, in the body
+  itself — so the only safe environments for it are the ones no real participant's browser ever
+  reaches.
+- **Registration's own refusal is the correctness guarantee; the seed guard is defense in
+  depth.** `submitRegistration` calls `findCurrentApprovedDocument` and refuses with
+  `VALIDATION_ERROR` when it finds nothing (BR-REQ-053-01's acceptance criteria). That is what
+  actually stops a qa or production registration from proceeding with no approved privacy
+  notice — a property of the data, true regardless of what any seed script does. The seed guard
+  exists so the *invented* text specifically can never exist outside local and test, which is a
+  stronger and separate promise than "registration merely refuses when nothing is approved."
+- **The real approved versions are a migration, not a seed.** When the club approves Romanian
+  and English wording, whoever writes that migration is a person accountable for the words —
+  `docs/RUNBOOKS.md` § Legal document version is the procedure. `pilot.ts` and its placeholder
+  are exactly the seed data WEEKEND.md already called out as needing replacement before
+  anything reaches a real participant; this is the same rule extended to legal text.
+
+Baseline bumped to `BR-V1.16-2026-09-04`.
+
+## 28. Decided — publication is one state per event, superseding the per-locale rule of §25 (2026-09-04)
+
+`AGENTS.md` §11.2 said "publishing per locale", and `event_translations.editorial_status` was
+where it lived: Romanian could be PUBLISHED while English was still a draft, and BR-REQ-040-02
+existed partly to describe what the public site must do in that state. That is reversed here.
+**An event is published or it is not, and both languages go live together.**
+
+**Why.** The per-locale rule solved a problem the club does not have. It exists for an editorial
+team large enough that one language's translation lags the other's by weeks — a newsroom, not a
+running club with three volunteers. What it actually produced was a race advertised in Romanian
+whose English page 404'd, which reads to an English-speaking visitor as a broken site rather than
+as unfinished content, and which nobody notices because the person who published Romanian was
+looking at the Romanian page. Publishing both together turns "the English half is missing" from a
+state the site has to survive into a thing the interface refuses to let you do.
+
+**What changed.**
+
+- `editorial_status` and `published_at` moved from `event_translations` to `events`, in migration
+  `0011`. `event_translations.version` stayed: a save of one language's text is still guarded on
+  its own row, and `events.version` was added so an event-level save or transition is guarded the
+  same way.
+- Reaching PUBLISHED requires a complete translation in **every** locale — every field a public
+  page renders, present in each (`fields.ts` `REQUIRED_PUBLIC_TRANSLATION_FIELDS`: title, slug,
+  meeting point, description). The transition refuses otherwise and names the language and the
+  fields.
+- The database asserts the two halves it can state honestly: a PUBLISHED event has a
+  `published_at`, and a translation's required fields are non-blank rather than merely NOT NULL.
+  The set-level rule cannot be a CHECK — it reads rows in another table — so it lives in
+  `transitionEvent` and has its own tests.
+- BR-REQ-040-02 was rewritten rather than left to be read the old way. The rule it protects is
+  unchanged and is now stronger: an unpublished event 404s in both languages, and a language with
+  no translation 404s in that language, but never by serving the other language's text.
+
+**What happened to rows already in the half-published state.** The migration carries the state up
+to the event and takes the conservative reading: an event becomes PUBLISHED only if it has a
+translation in each locale, all of them PUBLISHED, and a first-publication date to record.
+Anything else becomes a DRAFT — including an event that was live in Romanian only. That
+unpublishes a page somebody could read this morning, and that is the intended answer: the
+alternative is a Romanian event quietly beginning to serve an English stub, which is exactly what
+BR-REQ-040-02 forbids. `published_at` is carried across regardless of the resulting status,
+because slug stability keys on it and it is never cleared. In practice the blast radius was nil:
+QA's seed publishes both languages for every event.
+
+**Full CRUD came with it, and it is the larger half of the change.** §25 built an editor over
+three fields and left `src/db/seeds/pilot.ts` as the only way to set the rest. Now every column
+of `events` an organizer owns is editable through the backoffice — kind, event status, both times
+and the timezone, the end time, the coordinates, the map link, distance, climb, the featured flag,
+and the whole registration block including the capacity, the window and the approved declaration
+version an internal event points at — and there is a create form, a duplicate, an archive and a
+delete.
+
+Three decisions inside that worth keeping:
+
+*A new event needs both languages before it exists.* The create form asks for a title, a page
+address, a meeting point and a description in each. A form that let one language be skipped would
+produce an event that cannot be published, and nobody would remember why.
+
+*A duplicate copies the configuration and none of the standing.* Not the publication, not the
+first-publication date, not the featured flag, and not the slugs — the copy takes the first free
+`-2`, `-3` suffix in each language, asked of the database rather than assumed, because
+`UNIQUE(locale, slug)` would otherwise reject the whole copy. A copy that led the landing page the
+moment it was made is not a starting point, it is an incident.
+
+*Deleting is the Administrator's, and is refused for an event anybody has registered for.*
+Archiving is what an event that happened gets; deletion is for a row that should not exist —
+a duplicate, a mistake made five minutes ago. A registration carries the privacy-notice version
+its participant acknowledged and, once signed, the declaration they accepted; cascading those away
+to tidy up is destroying the evidence §10.8 exists to keep.
+
+Baseline bumped to `BR-V1.17-2026-09-04`.
+
+## 29. Decided — sample legal documents everywhere but production, superseding §27 (2026-09-04)
+
+§27 seeded a clearly marked two-sentence `PLACEHOLDER` version of each legal document in local
+and test only, and refused every other environment outright. This narrows that rule rather than
+widening it in spirit: **sample text is permitted in every environment except production, and
+production is refused hard.**
+
+**Why the old rule was wrong at the edge.** Registration correctly refuses when no approved
+privacy notice exists (BR-REQ-053-01), and QA had none. So the whole participant journey — the
+thing QA exists to let a colleague look at — was unreachable there, and the only way to see it was
+a developer's laptop. §27's reasoning was that invented legal text must never reach a real
+person's browser; QA is a system no real participant reaches, on a hostname nobody has been given.
+The line that matters is production, and it was drawn one environment too early.
+
+**Why production is different in kind, not in degree.** Everywhere else, sample text is a draft
+somebody is reviewing on a system nobody has entered a race on. In production it would be the
+wording a real person is told they have agreed to: text that says of itself that it has no legal
+effect, presented as the notice under which their data is processed. There is no configuration
+that makes that acceptable. `assertSampleLegalDocumentsAllowed` throws rather than skipping
+quietly — a seed that silently did nothing is indistinguishable from one that worked, and the
+difference matters on exactly one deployment — and the refusal has its own test.
+
+**What the samples are.** Three documents, `PRIVACY_NOTICE`, `TERMS` and `EVENT_DECLARATION`, in
+Romanian and English, each language written as its own complete text rather than translated
+sentence by sentence, and both marked as drafts awaiting one named reviewer. Two properties carry
+the whole thing:
+
+*Complete in structure, blank in substance.* Every section such a document normally carries is
+present; every club-specific fact is an `<ANGLE BRACKET>` placeholder rather than a plausible
+invention — the controller's legal name, address and contact, any representative, each retention
+period, the lawful basis for each purpose, the governing law. AGENTS.md §1.2 forbids inventing
+legal wording, and a well-formed invention is far more dangerous than a visible gap: a lawyer
+edits a concrete draft in an afternoon and never notices a fabricated retention period. The point
+is that the club faces a draft rather than a blank page, and that nobody can mistake the draft for
+the real thing.
+
+*The banner is in the rendered body, in both languages.* Not a code comment, not a column nobody
+renders: the first section of each document, on the public page, says that this is sample text,
+not approved by the club, not legal advice, and that it must be replaced before any real
+participant registers. The person who most needs to know is whoever opens the page.
+
+The privacy notice describes what this application actually does, read from the schema rather than
+guessed: the name, address and language a participant gives; the normalized and canonical forms of
+the address and why they exist; the consent for a name in results and the notice version it was
+given under; the lifecycle and every timestamp it records; the declaration acceptance and its
+hash; the transactional messages. The processors are named by role — database host, application
+host, email provider, staff identity provider — as `<PROVIDER>` placeholders. It says plainly that
+no medical information, emergency contact or data about minors is kept, because §12.13 has no
+tables for any.
+
+**The seed is version-aware rather than destructive.** Unlike the event seed, it never deletes:
+a version an acceptance references is immutable (§12.5), and QA will have acceptances against
+these rows. Re-running with unchanged text does nothing; re-running after the text changes inserts
+the next version, which is what a correction is.
+
+Baseline bumped to `BR-V1.17-2026-09-04`.
+
+## 30. Decided — a registration kind, so the queue can be exercised without ten mailboxes (2026-09-04)
+
+The waiting list is the part of the registration lifecycle nobody sees until it is too late to
+find a mistake in it. Exercising it by hand needs a capacity's worth of real inboxes, which nobody
+has, so in practice it was exercised only by tests.
+
+**Decided: `registrations.kind`, a database enum, `REAL` by default and `TEST`.** Not a "test
+user" account type — participants have no accounts at all by design (§10.3) — and not a fourth
+staff role. It is a property of the registration.
+
+**The rule that gives it its point: a test registration is a real registration in every way that
+affects the queue.** It goes through `modules/registrations/service.ts` like any other, occupies a
+place, expires on the same hold deadlines, and is promoted from the waiting list by the same
+allocator. `kind` appears in no condition inside the allocator or the capacity formula — that is
+the whole of it, and `tests/integration/registrations/test-kind.test.ts` asserts it by running the
+same scenario as each kind and comparing the transitions. A demonstration that behaved differently
+from the real thing would be worse than no demonstration: it would be a rehearsal of a system
+nobody ships.
+
+**The export omits them; every screen labels them.** Both were possible; the reasoning for the
+split is that context travels differently. Inside the backoffice, a chip sits next to the row and
+the person reading it is looking at this application. An export is a file that leaves: it is
+opened in a spreadsheet, sorted, filtered, and printed at a start line by a volunteer who never saw
+that screen, and a column they filtered away an hour ago is not a warning. A row that is not there
+cannot be miscounted.
+
+**It cannot exist in production, guarded twice** — in `test-registrations.ts` at the feature's own
+entrance, and again in `repository.ts` at the only statement that can write such a row. The same
+belt and braces §13.1 gives the development staff switcher, for the same reason: one guard
+eventually gets refactored away by somebody who can see only one of them.
+
+**The address is a third layer.** Synthetic participants use `@test.invalid`, reserved by RFC 2606
+so that it can never be registered or delivered to — the participant-side equivalent of the
+switcher's `.test` identities. `kind` carries the meaning; the domain is what guarantees that a
+bug in email-mode selection still cannot reach a stranger's inbox. Each gets a distinct local
+part, because `canonicalizeEmail` collapses dots and `+` tags for Gmail (BR-REQ-032-02) and
+because the per-event uniqueness index would refuse the second registration of one participant
+anyway.
+
+**It stops at email confirmation, deliberately.** The next step is signing the declaration, and
+§10.8 says staff cannot sign on a participant's behalf — stated flatly, with no exception for a
+participant who does not exist. So a test registration sits on a declaration hold exactly as a
+real one does: occupying a place, expiring on the same deadline, releasing it to the front of the
+queue when it lapses. That is the queue behaviour worth watching anyway.
+
+Baseline bumped to `BR-V1.17-2026-09-04`.
+
+## 31. Decided — deployment is a procedure with a mechanism, not a habit (2026-09-04)
+
+`BR-V1.17` merged to `qa`, Vercel built it, the build went green, and every public page returned
+500. The cause was not in the change: migration `0011` had never been applied to the QA database,
+so code that selects `events.published_at` was running against a schema that has no such column.
+
+**Nothing in this repository applied migrations to a deployed database.** `yarn db:migrate` runs
+against whatever `DATABASE_URL` `.env.local` happens to hold; CI runs it against a disposable
+container; the Vercel build does not run it at all. The QA database had been migrated exactly
+once, by hand, months of commits ago, using an incantation recorded in a comment in a git-ignored
+file. `AGENTS.md` §7.6 already said "QA before production" and "production migration is
+explicit/gated/observable" — it simply never said by what, and a step with no mechanism is a step
+that eventually does not happen.
+
+Two things made it worse than it needed to be, and both are fixed here.
+
+**`/api/health` reported `database: ok` throughout.** It ran `select 1`, which succeeds perfectly
+well against a stale schema. The one endpoint whose job is to say whether a deployment works was
+green while the deployment was entirely broken, so the only symptom was a 500 with nothing to
+point at.
+
+**Migration `0011` dropped two columns in the same release as the code change.** §7.6 already
+asks for expand/contract "when app/schema overlap is possible", and a push to `qa` starts the
+Vercel build and any migration at the same instant, so overlap is not merely possible — it is
+guaranteed for a few seconds. An additive migration survives that window. A destructive one
+cannot, in either direction: old code breaks on the new schema, and new code breaks on the old.
+
+### What was built
+
+- **`scripts/db-migrate.mjs`, run as `yarn db:migrate:env <local|qa|production>`.** The target
+  environment is an argument, so the connection string cannot be whatever was exported in this
+  shell; it prints the host with credentials masked and the exact pending migrations before
+  applying anything; production requires `--yes`; it exits non-zero on failure. It deliberately
+  does not read `drizzle.config.ts`, because that file loads `.env.local` and a migration tool
+  whose target depends on which dotenv file is present is the accident being prevented.
+- **`.github/workflows/migrate.yml`.** QA applies automatically when a migration lands on `qa`;
+  production is a reviewed `workflow_dispatch`. It uses **GitHub Environments rather than
+  repository secrets**, unlike `scheduled-jobs.yml`, for one reason: the secret could live either
+  way, but a required reviewer is the "gated" half of §7.6 and only an Environment provides one.
+- **Schema-drift detection in `/api/health`.** `next.config.ts` inlines the journal's head into
+  the build — the same pattern the build badge already uses — and `checkSchemaVersion` compares
+  it against Drizzle's own bookkeeping table. `behind` reports `down` with a 503, because in that
+  state the site is already failing. `ahead` is degraded rather than down: that is what a
+  rollback looks like, and whether it breaks anything depends on what the migration did.
+- **`scripts/smoke.mjs`, run as `yarn smoke <base-url>`.** `/api/health` as an exit code, run by
+  the workflow after a migration and by a person after any deploy. When the schema is behind it
+  says so and names the migration, because that is the failure whose remedy is a command rather
+  than an investigation.
+- **`yarn db:seed:legal`.** A second, smaller consequence of the same incident: the sample legal
+  documents could only be seeded by `pilot.ts`, which deletes every event and translation first.
+  That is right on a laptop and destructive on an environment an organizer has been editing, so
+  QA had no privacy notice and registration there refused everyone — nobody was going to run the
+  seed that would wipe their work. The legal seed now has its own entry point and never deletes.
+- **`docs/RUNBOOKS.md` § Deploy a release**, which is the procedure itself, and the ordering rule
+  written as the thing a person actually decides: an additive migration ships with its code, a
+  drop ships in the release after.
+
+### What was deliberately not built
+
+**Migrating from the Vercel build, or from application startup.** It would have prevented this
+exact incident and it is forbidden by §7.6 for better reasons than this one: a build runs on
+every preview deployment of every branch, so a preview of an unmerged experiment would migrate
+the shared database, and a destructive migration would then run because somebody opened a pull
+request. Startup is worse — it runs because a page was requested. The mechanism has to be
+something a person or a reviewed workflow triggers, which is what the above is.
+
+**Blocking the Vercel deploy on the migration.** GitHub Actions cannot order itself against
+Vercel's own trigger, and building that coupling would mean taking deployment away from Vercel
+entirely. The honest answer is the ordering rule plus detection: with expand/contract the overlap
+window is harmless, and when somebody gets it wrong the health check says which migration is
+missing within seconds instead of after an afternoon.
+
+Baseline bumped to `BR-V1.18-2026-09-04`.
+
+---
+
+## 32. Decided — the public participant list exists, and is off (2026-09-05)
+
+**Context.** The event page said nothing about who was coming, and the club asked for a start
+list: the ordinary thing a race page carries, and the thing that makes a small club's event look
+like an event. The data is already in the database — a `CONFIRMED` registration carries the name
+the participant typed.
+
+That is exactly what makes it a decision rather than a screen. Publishing those names is a
+disclosure of personal data by the club, under a privacy notice that is presently sample text
+with `<PLACEHOLDER>` facts and no approval from anybody. `AGENTS.md` §10.8 and §29 already say
+the club's own wording is the club's to write, and BR-REQ-053-01 already refuses registration in
+production while nothing is approved.
+
+**Decision.** Build the whole thing, and ship it switched off.
+
+- `events.participant_list_visibility` is `HIDDEN` | `NAMES`, default `HIDDEN`. Every event that
+  exists has it; every event created or duplicated after it has it. A duplicate never inherits
+  `NAMES` — the decision was made about the people who entered the original event, not about a
+  copy of its columns.
+- The published set is `CONFIRMED`, `REAL`, not opted out, in confirmation order, and the select
+  list is the registered name alone. Not "the name for now": there is no query behind this page
+  that can return an address, a status, an identifier or a count of who is still deciding, and
+  `tests/privacy/public-surface.test.ts` fails if one appears.
+- `registrations.list_opt_out` is the participant's own refusal, and the form asks **on every
+  event**, including the ones with no list today. An organizer can switch a list on months after
+  somebody registered, and a question that was never put to that person cannot be answered later
+  on their behalf. The label says "if the club publishes one" for that reason.
+- `NAMES` is refused for `NONE` and `EXTERNAL`, in the service and again as a CHECK. For `NONE`
+  there is nobody to list; for `EXTERNAL` the entrants are the other organizer's and the club
+  holds none of them.
+- The sample privacy notice gains section 5, "the public participant list", describing the
+  disclosure with the legal basis and the retention period as placeholders.
+
+### The open question, which is the club's and not this repository's
+
+**The approved privacy notice must describe this before the switch may be used.** No environment
+has an approved notice at all, so nothing is blocked today; what is being recorded is that
+turning it on is not a UI decision. The wording — the legal basis for publishing, and how long a
+list stays up — is section 5 of the sample notice, with the facts in angle brackets. Until the
+club or its adviser fills those in and approves the version, `HIDDEN` is the only correct value
+everywhere, which is what it already is.
+
+### Why opt-out rather than opt-in
+
+Opt-in is the safer default in the abstract, and it is the wrong shape here. The event-level
+switch is already an opt-in — by the club, deliberately, per event, with the disclosure spelled
+out next to the checkbox — and a second opt-in underneath it would produce a start list that is
+mostly absent and therefore useless, which is how a feature ends up switched on with the list
+padded by hand. The participant's control is real: it is asked on the form, before they submit,
+and it can be exercised afterwards through the club. That is recorded here rather than argued
+again later.
+
+### What was deliberately not built
+
+**A count of who has not confirmed.** "12 registered, 8 confirmed" is a second disclosure with a
+second decision behind it, and it tells a reader something about people who never agreed to
+appear at all. The free-place count the CTA shows is a different number: it is about the event's
+capacity, not about anybody.
+
+**Removing a name from the backoffice.** A participant who asks to be taken off is handled by
+the club today, and the correction path for it belongs with the rest of the registration
+corrections (BR-REQ-037-03) rather than as a one-off button here.
+
+Baseline bumped to `BR-V1.19-2026-09-05`.
+
+---
+
+## 33. Decided — the registrations backoffice can change a registration, within three moves (2026-09-05)
+
+**Context.** The registrations screen could list, filter, export and resend. It could not change
+anything, which meant the club's actual working day — somebody asks to be signed up after a run,
+somebody's name is spelled wrong on the start list, somebody drops out by text message — ended
+with "ask a developer". The owner's words: "not much I can do with the registrations list, I
+need a full CRUD on them."
+
+The obvious reading of that request is dangerous, and the interesting part of this decision is
+what "full" was allowed to mean.
+
+**Decision.** Three administrative changes exist, and no fourth.
+
+- **Create.** `createRegistrationByStaff` calls the same `submitRegistration` the public form
+  calls. The same allocator, the same event-row lock, the same place in the queue, the same
+  `PENDING_EMAIL_CONFIRMATION` start. `source = STAFF` and `created_by_staff_user_id` record how
+  the row arrived, and `tests/integration/registrations/staff-crud.test.ts` asserts that a
+  staff-entered registration lands behind everyone already waiting.
+- **Update.** The registered name, and nothing else. No verified-email edit and no participant
+  merge, which is BR-REQ-037-03 criterion 2 asking for exactly that absence: the verified address
+  *is* the identity (§10.3), and a typo is fixed by cancelling and registering again.
+- **Delete.** There is none. "Remove this registration" means cancelled — the same transition a
+  participant makes from their own link, with `cancellation_source = ADMIN`, releasing the place
+  to the front of the waiting list. A registration is the record of what somebody agreed to and
+  when; deleting it would destroy the evidence §10.8 exists to keep, and `deleteEvent` already
+  refuses an event that has one for the same reason.
+
+`audit_logs` arrives with them. AGENTS.md §12.12 has described the table since the first
+baseline and nothing ever created it; it was owed the moment the backoffice started changing
+things rather than only reading them.
+
+### Consent cannot be forged, and this is where that was decided
+
+A staff-entered registration reaches `CONFIRMED` by exactly one route: the participant opens the
+link in their own email and signs the declaration. Nothing in the admin service touches that
+transition, and there is no argument that could make it. §10.8 is unambiguous — staff cannot sign
+on a participant's behalf — and the whole feature is built so that the queue cannot tell a
+staff-entered registration from an online one.
+
+The privacy notice is the harder half. The row carries `privacy_notice_version` and
+`privacy_acknowledged_at`, both NOT NULL, and the person at the desk did not click a checkbox.
+Rejected: leaving them null (the column is the record of which version applies, and a null is a
+registration nobody can later say anything about), and inventing a separate "acknowledged by
+staff" version scheme (a second consent model for six registrations a year). Decided: the
+organizer ticks one box saying they are relaying a request from that person — the service refuses
+the registration without it, so the box is binding rather than decorative — and the `audit_logs`
+row names who ticked it. What the columns then record is honest: this version was in force, and
+this member of staff is on record as having relayed it.
+
+### The open question, for the club rather than for this repository
+
+**There is no way to discard a registration whose address was never confirmed.** §10.5 has no
+edge from `PENDING_EMAIL_CONFIRMATION` to `CANCELLED`, deliberately: such a row occupies no
+place and expires by itself after 48 hours. An organizer who mistypes an address at a desk
+therefore has to wait it out, and the interface says so rather than failing with a bare conflict.
+Adding that edge is a change to the state machine and to §10.5, with the matrix that implies, and
+it should be made only if the club actually finds the 48 hours a problem.
+
+### What was deliberately not built
+
+**Exceptional waiting-list promotion (BR-REQ-035-05).** It is a real requirement and it is not
+one of the three above: promoting one person over another is a different act from correcting a
+name, and it needs its own reason field, its own audit action and its own thinking about what it
+does to the people it skipped.
+
+**Removing one name from a published start list.** BR-REQ-039-01's opt-out is set at
+registration, and a later request goes through the club today. The button belongs with this
+group of corrections when it exists, not as a one-off on the public page.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 34. Decided — the staff entrance is the build badge, not a link in the footer (2026-09-05)
+
+**Context.** Every public page carried a "Staff" link in the footer, and the sign-in button read
+"Sign in with Zitadel". Neither is wrong exactly, and both are things a small club's website
+should not say. The link advertises a backoffice to every visitor for the benefit of three people
+who already know the URL; the button names an identity provider the club has no relationship
+with — Zitadel is an implementation detail of how the three of them get in, and a person reading
+it learns only that there is something else they are supposed to recognise.
+
+**Decision.**
+
+- **The footer link is gone.** `SiteFooter` renders the two public legal routes and nothing else,
+  which is what AGENTS.md §9.2 actually requires of it.
+- **The build badge is the way in.** A double-click on it, or `Enter` when it has focus, opens
+  `/sign-in`. A single click does nothing: the badge sits in the bottom-right corner, which on a
+  320px screen is where a thumb lands, and a fixed element that navigates on one tap is a trap
+  rather than a shortcut. Where `STAFF_AUTH_MODE=disabled` the badge stays exactly what it was —
+  a label with `pointerEvents: "none"` — because there is no door to open.
+- **The badge says less.** The visible text is the environment (except in production, where it is
+  noise) and when the code was last changed. The baseline and the commit moved into its `title`
+  and its accessible name: four facts in a corner label is three too many to read at a glance,
+  and `/api/health` reports the same values exactly to anybody who needs them.
+- **The sign-in button reads "Autentificare" / "Sign in".** The provider id in
+  `signIn("zitadel", …)` is code and stays; no user-visible string names it.
+
+**This is not a security change, and must not be read as one.** The backoffice is guarded on the
+server on every request (BR-REQ-060-01 criterion 4), `robots.txt` disallows the path, and a link
+to a locked door was never a weakness. What changed is what the club's public pages advertise.
+For the same reason the badge is a `role="button"` with an accessible name that says what the
+gesture does: a control only a sighted mouse user can discover would be a worse answer than a
+discreet one everybody can reach.
+
+### What was deliberately not built
+
+**A keyboard shortcut, or a URL only staff know.** Both are the same mistake in a smaller font:
+an entrance whose safety depends on nobody finding it. The guard is the server, and it already
+holds.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 35. Decided — the backoffice's enum labels are Romanian, once (2026-09-05)
+
+**Context.** The owner, mid-way through `BR-V1.19`: *"enums and stuff should not be in 2
+languages, the entire bilingual admin management is confusing."*
+
+They are right about the cost. `Admin.status.PUBLISHED` existed in `ro.json` and again in
+`en.json`, and so did the transitions, the staff roles, the event status, the registration mode
+and the seven registration statuses — six enums, two copies each, kept in step by a parity test,
+for a screen three people in one club use, all of whom speak Romanian. Every one of those pairs
+is a place where a change has to be made twice and a review has to check both.
+
+**Decision.** Those six sets of labels move out of both catalogues into
+`modules/staff-identity/domain/staff-labels.ts`, in Romanian, as `Record<Enum, string>` — so
+adding a value to an enum is a TypeScript error at the label map rather than a raw token
+appearing on an organizer's screen.
+
+**What did not change, and this is the whole boundary.** The public site is fully bilingual and
+stays so: every word a visitor or a participant reads, on a page or in an email, is a key in both
+catalogues. `Event.kind.*` is the edge case and it stays in the catalogues, because a public page
+reads it too — the rule is "who is reading it", not "which screen renders it". Error messages stay
+bilingual as well; they are sentences addressed to a person, not names for the club's own
+vocabulary.
+
+The backoffice itself is still locale-prefixed and still reachable at `/en/admin`; what an English
+URL now gets is English chrome with Romanian names for Romanian things. That is the smaller,
+reversible half of the owner's question. **The larger one — whether the backoffice should be
+Romanian-only, with no `/en/admin` at all — is deliberately still open**, and the owner asked for
+it to be considered separately from this baseline.
+
+BR-REQ-040-04 is amended rather than quietly broken: criterion 3 gains the exception in words,
+criterion 4 is new and asserts the catalogues carry none of these labels, and
+`tests/unit/i18n/messages.test.ts` checks the label maps against the enums instead of checking two
+copies against each other. That is a stronger test than the one it replaced — the old one proved
+the two files agreed, and could not prove either of them was complete.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 36. Decided — what is written twice is only what a translator would change (2026-09-05)
+
+**Context.** The owner, on the backoffice: *"I have to do everything twice… the common stuff
+should be just 1 time, it's not like the English version of the event has a different time or a
+different type than the Romanian version, just the descriptions should be different."*
+
+The times, the type, the capacity and the registration window were already on the event row and
+entered once. What was still being asked twice was `event_translations`: the meeting point, the
+street address, the difficulty and the cost. The club's own seed proves the point — the street
+address is byte-for-byte identical in both rows, and "Mediu"/"Moderate" and "Gratuit"/"Free" are
+one decision the club made once, wearing two words.
+
+**Decision.** `location_name`, `location_address`, `difficulty_label` and `cost_text` move to
+`events`. What stays per language is what a translator would actually change: the title, the page
+address, the short description and the two search-engine fields.
+
+The split is now a question with an answer rather than an accident of which table a column landed
+in: **would a translator change this?** A title yes; a street address no.
+
+### The consequence, accepted rather than discovered
+
+Those four render on the English page in the club's own words. `/en/events/tampa-trail` shows
+"Stația de telecabină Tâmpa" and "Gratuit". The owner was shown this before choosing and chose it
+over entering every event's meeting point twice.
+
+It is worth being precise about what it is not. It is **not** a cross-locale fallback, and
+BR-REQ-040-02 is unchanged: nothing borrows another row, a locale with no translation is still a
+404, and no English page will ever show a Romanian *title* or *description*. It is one stored
+value, written once, rendered wherever it is asked for. `tests/e2e/event-pages.spec.ts` now
+asserts exactly that, so a later reader who thinks they have found a translation bug finds the
+decision instead.
+
+The alternative that keeps both — difficulty as an enum and cost as an amount-or-free, each
+rendered per locale from the message catalogue — was offered and not chosen. It remains the way
+to get the English words back without reintroducing the retyping, if the club ever wants them.
+
+### Expand and contract, because this is a move and not an addition
+
+Migration `0014` **adds** the four columns and carries the values up from the Romanian
+translation. It does **not** drop the old ones: AGENTS.md §7.6 ships a drop in the release *after*
+the code that stopped needing it, so a rollback finds a schema its code can still run against.
+Until that release, `event_translations.location_name` is still NOT NULL and still named by
+`event_translations_required_fields_present`, so `createEvent` and `duplicateEvent` keep writing a
+*copy* of the event-row value into every translation. Nothing reads it. **The next baseline owes
+migration `0015`: drop the four columns and that CHECK's third clause.**
+
+**Done in `BR-V1.21`, as migration `0017`.** 0015 and 0016 were taken by work that shipped
+in between, so the number this section predicted is not the number it got. The drop itself is
+exactly as described: the four columns and the CHECK's third clause, one release after the
+code stopped reading them, per §7.6.
+
+`location_name` is required by the field schema on every save and by `transitionEvent` before
+publication; the column is nullable only so it could be added to rows that predate it.
+
+### The tabs, while we were here
+
+The content tabs said "Conținut (RO)" and "Conținut (EN)", which named the panel and said nothing
+about whether anybody had filled it in — so a missing English translation was found at the moment
+publication was refused, which is the worst moment to find it. They now read "Română" and
+"English", carry an "incomplet" mark when that language is not ready, and the section says in one
+line that these are the same event in two languages and that everything factual is in Settings
+above.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 37. Decided — Mailgun is wired, and it is tested on a sandbox before the domain exists (2026-09-05)
+
+**Context.** The owner: *"I want the domain to be last… first I wanna test and then I do the
+bindings."* And, on being asked which sender address to use: *"minimize these decisions, AI was
+supposed to help and make decisions for me."*
+
+Both are reasonable, and the second is a fair complaint. The decisions below were made rather
+than asked, with defaults chosen so that nothing has to be decided again to start testing.
+
+**Decision.**
+
+- **The Mailgun adapter is wired**, over `fetch` and `FormData`, with no SDK. §1.5 ranks "prefer
+  nothing, then the platform" above convenience, and what the official client adds here is a
+  dependency and its own error shapes in exchange for four form fields and a status code. Its
+  stated blocker — "the Romanian and English templates of BR-REQ-080-01, which do not exist yet"
+  — had been stale since `BR-V1.16`; all ten message types exist in both languages.
+- **Testing happens on a Mailgun sandbox domain, before the club buys anything.** A sandbox needs
+  no DNS and reaches only addresses authorized in Mailgun, which is precisely what
+  `EMAIL_DELIVERY_MODE=allowlist` was built for — `delivery.ts` has said so in a comment since
+  `BR-V1.16`. QA is the only environment where this is permitted, and it already marks every
+  subject `[QA]`.
+- **The sender identity is configuration with a working default.** `EMAIL_FROM_ADDRESS` falls
+  back to `noreply@<MAILGUN_DOMAIN>`, valid on a sandbox from the moment the account exists;
+  `EMAIL_FROM_NAME` defaults to the club's name. The club's real sender address remains an owner
+  decision (`BUSINESS.md` §9) and changing it is one environment variable.
+- **Replies go wherever `EMAIL_REPLY_TO` points**, sent as Mailgun's `h:Reply-To`. Unset, a reply
+  to a `noreply@` sender goes nowhere, which is the state to avoid: these messages are the club's
+  side of a conversation with somebody about to run a race, and "do not reply" is a poor answer to
+  "can I still change my mind?". Mailgun inbound routing was considered and not built — a
+  `Reply-To` pointing at a mailbox the club already reads needs no machinery.
+- **A failure's meaning is mapped conservatively.** 400, 401 and 403 are permanent, because
+  retrying an unchanged message that was already refused destroys a sending domain's reputation
+  (§16.1). 429, 5xx, a timeout and any network error are transient. Everything else that is not
+  clearly the caller's fault is retried.
+
+### What a test caught, and it was not the test's fault
+
+The first version of the adapter truncated a provider error into `email_outbox.last_error`
+without redacting it. Mailgun's commonest rejection on a sandbox domain is *"…is not among the
+authorized recipients"* — **with the participant's address in it** — and that column is read by an
+organizer in the backoffice and shipped into logs. §14.5 forbids exactly that. The sanitizer now
+redacts anything address-shaped and the API key before truncating, and the test that found it
+asserts both.
+
+`docs:check` caught the first draft of the adapter with `https://api.mailgun.net` written into
+it, and the check was right: §8 forbids a hostname under `src/` and exempts no provider, which is
+the same rule that keeps the map service's URL in configuration. `MAILGUN_API_BASE_URL` is now
+required by any transmitting mode — and it is not ceremony, because Mailgun's EU region is a
+different host and a club storing European participants' data may well have to move to it.
+
+### Order of operations, since the domain is last
+
+1. Mailgun account, sandbox domain, API key. No purchase, no DNS.
+2. Authorize the two or three real addresses that will do the testing. **Authorize the exact
+   spelling**: this application's allowlist compares canonical identities, so `ana.pop+qa@gmail.com`
+   passes it, while Mailgun's authorized-recipient list is literal and will refuse that address
+   unless it was authorized as typed.
+3. QA gets `EMAIL_DELIVERY_MODE=allowlist`, `EMAIL_ALLOWLIST=<those addresses>`,
+   `MAILGUN_API_KEY`, `MAILGUN_DOMAIN=sandboxNNN.mailgun.org`. Nothing else changes.
+4. Walk the participant journey on QA against a real inbox. Test registrations stay on
+   `@test.invalid`, are not on the allowlist, and are captured — so filling a queue still costs no
+   authorized-recipient slots.
+5. The webhook works on the provider-assigned QA hostname: Mailgun needs a reachable HTTPS URL,
+   not a domain the club owns.
+6. When the domain exists: verify it in Mailgun, swap `MAILGUN_DOMAIN`, and production moves to
+   `live`. No code change.
+
+Zitadel's own email — staff invitations, address verification, password reset — is a separate
+pipeline that shares only a sending domain. It is configured in Zitadel's own SMTP settings and
+nothing in this repository affects it.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+---
+
+## 38. Decided — five staff roles that nest, and where the personal-data line falls (2026-09-05)
+
+**Context.** The owner asked for a hierarchy: *"superadmin (me), admins (Amalia & Marius),
+moderator (Dani: can edit events and approve edits) and contributors (can propose edits but needs
+approval)… superuser - admin - dev - moderator - contributor"*.
+
+Three roles existed — AUTHOR, EDITOR, ADMIN — and the workflow they drove was already the right
+shape: an author edits their own drafts and submits them, an editor approves. What was missing
+was the two ends: somebody above ADMIN who alone decides who is on the staff, and a role for
+technical help that does not come with the participant list.
+
+**Decision.** `CONTRIBUTOR < MODERATOR < DEV < ADMIN < SUPERADMIN`, strictly nesting, with the
+rank written in exactly one place and every capability expressed as `atLeast(role, MINIMUM)`.
+
+That last part is the load-bearing bit. A capability written as a list of roles is a capability
+somebody forgets to add the next role to; a threshold inherits correctly by construction.
+`session.ts` kept its own second copy of the rank and now imports the one in `domain/roles.ts`.
+
+### The two decisions inside the decision
+
+**What DEV is for.** The owner named it in the hierarchy and did not describe it, so it is
+defined here: DEV is a moderator plus the configuration report, and **no participant data**. The
+line between DEV and ADMIN is exactly personal data — below it is the club's own content and its
+own configuration, at and above it are the people who registered. That is what makes it possible
+to give somebody technical access to diagnose a problem without handing them the club's
+participant list, which is the actual reason to have the role at all. It is why `/devs` sits at
+DEV rather than at ADMIN.
+
+**Every existing ADMIN migrates to SUPERADMIN.** Staff administration moved from ADMIN to
+SUPERADMIN, so mapping ADMIN to ADMIN would have removed a power those accounts have today — and
+could have left the club with nobody able to manage staff at all. A role migration must never
+take away access somebody already had. Demoting Amalia and Marius to ADMIN afterwards is a click;
+being locked out of the staff screen is not.
+
+### What the change found
+
+`canManageStaff` was doing two jobs. The registrations list, the detail page, the CSV export and
+the new-registration form all gated on it — so "may read the participant list" and "may decide
+who is on the staff" were the same permission. Splitting them into `canManageRegistrations`
+(ADMIN) and `canManageStaff` (SUPERADMIN) is what the hierarchy required, and it is a real
+tightening: an administrator can now read every registration and still cannot promote themselves.
+
+The lockout guards moved with it. They counted `role = 'ADMIN'`; they count SUPERADMIN now,
+because the role that can be lost is the one that can administer staff.
+
+Drizzle's generated migration would have aborted on real data — it casts the old column straight
+into the new enum, and `'AUTHOR'` is not a value in it. `0016` is hand-written: remap while the
+column is still `text`, then convert.
+
+### What was deliberately not built
+
+**Per-event or per-section permissions.** "Dani moderates the trail races, Amalia the road races"
+is a real thing clubs want and a different model entirely — it is authorization on rows, not on
+roles, and it would touch every query rather than one file. If the club asks, that is its own
+decision with its own migration.
+
+Baseline stays `BR-V1.19-2026-09-05`; this section is part of that bump.
+
+## 39. Decided — the throttle covers every surface that exists, and the key is never a caller (2026-09-05)
+
+`AGENTS.md` §19.4 names five surfaces to protect. Two were built in `BR-V1.19`; the debt table in
+`docs/PLATFORM.md` carried the rest. Two of the three remaining are real endpoints today, so they
+are guarded now. The fifth, uploads, has nothing behind it: media storage is deferred (§17).
+
+### Token validation is keyed on the token, not on whoever presents it
+
+The obvious reading of "rate-limit token validation" is a brute-force defence, and it is the wrong
+one. An action token is 32 random bytes (`token-secret.ts`); nobody guesses one, and a limit that
+made guessing harder would be defending against a threat that does not exist. Worse, that reading
+leads straight to a per-IP key — and `rate_limit_buckets.key` is *persisted*, so a per-IP throttle
+would write visitors' addresses into the database to defend against nothing, which §19.4 forbids
+in the same sentence it asks for the limit.
+
+The threat that does exist is **one token being hammered**. A link that reached a mailing list, a
+scanner in a retry loop, a captured URL replayed: each request is a SHA-256, an indexed query and
+a serverless invocation the club pays for. So the key is the presented token's **hash** — one
+bucket per link. A hammered link cannot slow anybody else's, and the hash is precisely what
+`email_action_tokens` already stores, so this adds no secret at rest. Keying on the secret would
+have put working links in a stolen backup, which is the thing §14.5 and the hashing exist to
+prevent.
+
+**Ten per hour, at the route boundary.** Not in `action-tokens/repository.ts`, where its own
+comment had invited it, for two reasons that only appear when you try:
+`readActionTokenContext` runs inside a read-only transaction and PostgreSQL refuses a write in
+one; and `consumeAndSignDeclaration` calls `consumeActionToken` twice for a single click — once
+for `COMPLETE_DECLARATION`, once for `WAITLIST_OFFER` (§15.7) — so a throttle there would charge
+one participant two attempts on the only surface where the actor is definitely a human. It lives
+in `modules/action-tokens/throttle.ts`, called once per request from
+`registrations/token-actions.ts`, and outside the caller's transaction so a rollback cannot erase
+the count. A throttle a failing request resets is a throttle an attacker resets by failing.
+
+A refusal returns `TOKEN_NOT_FOUND`. That is not a shortcut: §13.2 already required one generic
+invalid-or-expired answer, so telling a stranger "you are being rate limited" would be new
+information this application had decided not to give.
+
+### The job endpoints authenticate and now also throttle
+
+`JOB_SECRET` answers *who*. Nothing answered *how often*, and that gap is worth more than it
+looks: an unlimited outbox drain is every message the club will ever send, in somebody else's
+hands, and Mailgun's daily allowance gone in an afternoon (`docs/PLATFORM.md`, limit 1 of the
+four that bite).
+
+Keyed on the **job name** — one bucket per endpoint, not per caller, because there is exactly one
+legitimate caller and no identity to key on beyond the secret already checked. Thirty an hour,
+against a scheduler asking for twelve and actually delivering about one every two hours
+(`docs/PLATFORM.md` limit 4), leaves room for a manual run and a catch-up burst. Each endpoint
+gets its own bucket: a hammered maintenance run must not stop confirmations going out.
+
+**Counted after the secret check, never before.** This is the one ordering that matters here. A
+bucket an unauthenticated caller can fill is a way to switch the club's scheduler off with a
+loop and no credentials — a strictly worse outage than the flood it would be refusing, and it is
+asserted end to end in `tests/integration/jobs/job-throttle.test.ts` rather than left as a
+comment.
+
+### What was deliberately not built
+
+**A shared refusal helper for the two job routes.** §1.5 abstracts on the third occurrence, not
+the second. Four lines twice, each naming its own job, reads better than an indirection.
+
+**Per-IP limiting anywhere.** Named here so it is not proposed again as an improvement. §19.4
+forbids IP as participant identity, and this table persists its key.
+
+Baseline bumped to `BR-V1.21-2026-09-05`.
+
+## 40. Decided — a spent allowance defers a message; it does not throw it away (2026-09-05)
+
+`docs/PLATFORM.md` has said since `BR-V1.19` that Mailgun Free's 100 messages a day is the limit
+that binds on registration day. What it had never said is what actually *happens* when the club
+crosses it, and the answer turned out to be the worst available one.
+
+### The defect, because its shape will recur with the next provider
+
+Mailgun refuses a send whose account allowance is spent with the **same HTTP 400** it uses for a
+malformed message: `Domain <domain> is not allowed to send: recipient limit exceeded`. The
+adapter mapped every 400 to `permanent_failure`, which the outbox records as `BOUNCED`, which is
+terminal — nothing ever retries out of it.
+
+So on the club's busiest day, every message queued after the cap would have been **discarded**.
+Not delayed: discarded, silently, while the registrations themselves committed perfectly well and
+the participants waited for confirmations that no longer existed anywhere. Three messages per
+completed registration against a hundred a day is about 33 registrations, so a race opening
+entries to a hundred people would have reached that before lunch.
+
+### Why the mapping alone was not the fix
+
+Reclassifying it as `transient_failure` looked like a one-line change and would not have worked.
+The retry schedule is bounded exponential — 1, 2, 4, 8, 16, 32 minutes, six attempts — and spends
+itself in about an hour. A message queued when a **daily** cap was reached would have burned all
+six attempts by mid-afternoon and been marked `FAILED` around ninety minutes later, roughly eight
+hours before the allowance it was waiting for came back.
+
+Two guards were in tension and both are real: retries must be bounded, because an unbounded retry
+against a provider that is rejecting messages is how a sending domain's reputation is spent
+(§16.1, §16.5); and a confirmation the club owes a participant must not be thrown away because of
+a limit that clears at midnight.
+
+### The decision: a fourth outcome, on a day scale
+
+`SendResult` gains `throttled` — *the provider refused because this account's allowance is spent,
+and nothing was transmitted*. It is not a shade of transient and the distinction is the point:
+
+- **Nothing left the building**, so no reputation was spent and there is nothing to back off from.
+- **What there is, is a reset to wait for.** The outbox leaves the row `PENDING` and schedules the
+  next attempt for just after the next UTC midnight (`nextAllowanceResetAt`), or for the instant
+  the adapter names if it knows one.
+- **The attempt still counts.** Six attempts a day apart outlast any daily cap and keep this
+  bounded: a message nobody has delivered in six days needs a person, which is the same judgment
+  `MAX_SEND_ATTEMPTS` already makes on its own scale. It does not become a message that retries
+  forever.
+- **A deferral is not an error.** `job_runs.errorCount` counts failures and bounces, not
+  deferrals, because a plan's limit is the plan working as bought. `/devs` shows the volume
+  against the allowance, which is where that belongs.
+
+UTC midnight is an assumption, stated rather than buried: Mailgun publishes the daily limit and
+not the instant it resets. Being wrong costs one attempt out of six, not a message.
+
+### The narrow pattern is a guard, not a detail
+
+Only a 400 whose body carries **limit** language moves out of permanent. Widening it to "not
+allowed to send" would sweep in a disabled domain and — worse — the sandbox's own "is not among
+the authorized recipients", and retrying *those* once a day forever is precisely the reputation
+cost the permanent/transient split exists to prevent. Both directions are asserted in
+`tests/unit/notifications/mailgun-classification.test.ts`, and neither may be relaxed to make the
+other pass.
+
+429 is deliberately left transient. It is Mailgun's *hourly* rate limit, which clears within the
+hour; deferring it to the next daily reset would delay a confirmation by a day to avoid waiting a
+minute.
+
+### And it is visible before the day, not after it
+
+`/devs` now carries the arithmetic `docs/PLATFORM.md` could only describe: registrations today ×
+3 against the daily allowance, with what is left of today, amber when the projection exceeds the
+remainder and red when it is spent. Test registrations are counted and counted **separately** —
+§12.6 keeps them out of every count the *club* is given, and this is not one of those: it is an
+operator's forecast of what will reach the provider, and a synthetic participant on an
+`@test.invalid` address consumes the allowance exactly like a real one. A number that excluded
+them would be the only number on the page that was wrong.
+
+Baseline stays `BR-V1.21-2026-09-05`; this section is part of that bump.
+
+## 41. Decided — the diagnostics page explains a setting, not just its value (2026-09-05)
+
+`/devs` could say which mode a deployment was in and had no way to say what the alternatives
+were, or what choosing one would do. Somebody asking "what else could `EMAIL_DELIVERY_MODE` be,
+and what would that mean?" had to open the source — which defeats a page whose whole purpose is
+that nobody should have to.
+
+The values now live in `shared/config/env-enums.ts`, defined **once**: `env.ts` builds its
+`z.enum` from those arrays and `/devs` renders them. Before this, a second list would have been a
+second place to forget, and a diagnostics page that lies about what the process accepts is worse
+than no diagnostics page.
+
+Each setting and each of its values carries a sentence saying what it is and what it does, in
+`messages/*.json` under `Devs.setting.*` — not in the module, which `env.ts` imports and which
+therefore runs before anything is translated, and because §9.3 keeps user-facing prose out of
+code anyway. The value in force is marked rather than merely listed.
+
+**Nothing here can print a value.** The page pairs a list of allowed *tokens* with the current
+setting it already held; no secret is in scope, which is the same structural argument
+`modules/diagnostics/configuration.ts` makes for itself.
+
+Also corrected on the way, because it was the same class of mistake: `APP_BASE_URL` defaulted to
+`http://localhost:3000` and `scripts/dev.mjs` has always started the dev server on **47821**,
+deliberately far from 3000, 5173, 8000 and 8080 so it does not collide with another project.
+Every absolute URL this application emits derives from `APP_BASE_URL` (§8), so a locally rendered
+confirmation link pointed at a port with nothing listening on it. The default is the real port
+now.
+
+Baseline stays `BR-V1.21-2026-09-05`; this section is part of that bump.
+
+## 42. Decided — navigation is gated by capability, because one equality operator hid four features (2026-09-06)
+
+The owner reported, over the course of an afternoon, that the registrations page was not in the
+menu, that they could not see who was registered for an event, that unconfirmed registrations
+were not listed, and that the legal documents were not visible — and concluded, reasonably, that
+"a lot of features are half-baked".
+
+**All four were one bug, and none of the four features was missing.** `admin/layout.tsx` decided
+which tabs to render with `staffUser.role === "ADMIN"`, a raw equality test against a hierarchy of
+five nesting roles (§38). `"SUPERADMIN" !== "ADMIN"`, so **a Superadministrator was shown only the
+Events tab** — and migration `0016` had turned every existing ADMIN into a SUPERADMIN precisely so
+that nobody lost access. The people most likely to be running the club were the only ones who
+could not navigate to the registrations, the legal documents, the staff screen or `/devs`.
+
+It was wrong in the other direction too, quietly: a DEV was offered no `/devs` link although that
+screen exists for exactly that role, and an ADMIN was offered a Staff tab that 404s on arrival.
+
+### What this was not
+
+**Not a security defect, and worth being precise about that.** Every one of those pages asserts
+its own capability on the server and answers 404 to a typed URL — `canManageRegistrations`,
+`requireStaffRole("ADMIN")`, `canManageStaff`, `canSeeDiagnostics`. BR-REQ-060-01 held throughout;
+nothing was reachable that should not have been. What failed is the other half of a backoffice:
+navigation is how a person learns what the system can do, and a section nobody can see is a
+feature nobody knows exists.
+
+**Not a missing filter, either.** The registrations list has always taken an `eventId` query
+parameter and has never filtered by status by default, so "per event" and "including unconfirmed"
+both already worked — the screen was simply unreachable. The one real gap was direction: the only
+way to ask "who entered this race" was to open the list and pick from a dropdown, so the event
+row now links to its own registrations. That link is gated on `canManageRegistrations` and only
+appears for an event that takes entries.
+
+### The decision
+
+Which sections a role may see is a **rule**, so it is a pure function — `visibleAdminSections` in
+`domain/roles.ts`, beside the capabilities it composes — rather than a conditional inside a React
+component. §1.5 already required that of every rule that can be one; this is what it costs to
+skip it. Each entry names the capability the page behind it asserts, so the two cannot drift.
+
+The test that matters is not the per-role list but the property: **a higher role is offered every
+section a lower one is**, asserted across every pair in the hierarchy. An equality test against a
+role name fails that immediately, which is why it is written as a property and not as four
+expectations. Any future role added to the middle of the hierarchy is checked by it for free.
+
+### Also
+
+The backoffice header now shows the signed-in **address** as well as the display name. A display
+name does not distinguish a personal Zitadel account from a club one, and the address is what the
+`staff_users` allowlist actually matches on. It is the reader's own address shown to themselves —
+§10.3's protections concern participants, and a member of staff seeing their own sign-in is not
+that.
+
+Baseline stays `BR-V1.21-2026-09-05`; this section is part of that bump.
+
+---
+
+## 43. Decided — the difficulty and the cost are closed sets; the price is not one of them (2026-09-06)
+
+**Status:** Decided. Narrows §36, which is otherwise unchanged.
+
+Two of the four fields §36 moved onto the event row were free text: `difficulty_label` and
+`cost_text`. §36 accepted a consequence for all four — that the English page would show
+whatever Romanian the club typed — because a street address and the name of a park genuinely
+are the club's own words, and retyping them per language was asking the same question twice.
+
+For the other two that reasoning does not hold. "Mediu" is not a name; it is one of three
+answers to a question with three answers, and the only reason an English reader saw it in
+Romanian was that the column happened to be `text`. Migration `0018` makes them
+`event_difficulty` (`EASY|MODERATE|HARD`) and `event_cost_type` (`FREE|PAID`), backfilled from
+the words already stored, and `0019` drops the text columns behind them. The organizer still
+answers once; the page now says it in the reader's language. §36's trade stands for
+`location_name` and `location_address`, which is where it always belonged.
+
+### Why the cost enum says whether and not how much
+
+The owner asked for "cost as an enum". A price is not an enum — it is an amount, a currency,
+and usually a deadline, and inventing a shape for money nobody charges yet would be exactly the
+speculative structure §1.3 warns against. `cost_type` answers the question every event page has
+to answer today: does a runner need their wallet. The day the club runs an event that charges,
+`PAID` is what the amount column hangs off, and adding it is a migration against three rows.
+
+The migration keeps the fact and loses the figure: "50 lei" becomes `PAID`, and the number is
+gone. Nothing in either database charges money — every row read "Gratuit" — so this discards no
+figure anyone has published, and the alternative was inventing the amount column now to avoid a
+loss that does not exist.
+
+### Null is a third answer, and it is not the safe default of the other two
+
+Neither column has a default. An event with no stated cost is **not** free, and one with no
+stated difficulty is **not** easy — the page omits the row entirely rather than answering on the
+club's behalf, which is §1.2 applied to a dropdown. `optionalEnum` in
+`content/events/fields.ts` reads `""` and null as "not stated" and **refuses** anything else,
+rather than `.catch(null)`: a value outside the set cannot have come from the dropdown that
+posts the field, and silently calling it "not stated" would hide a stale or tampered form
+instead of refusing it.
+
+Baseline bumped to `BR-V1.22-2026-09-06`.
+
+---
+
+## 44. Decided — a registration can be erased, because cancelling was never an answer to "remove me" (2026-09-06)
+
+**Status:** Decided. Supersedes the "there is no delete" of §33 and of `AGENTS.md` §15.11.
+
+§33 settled that staff may enter, rename and cancel a registration and nothing else, on the
+reasoning that a registration records what somebody agreed to and when, so "remove them" means
+cancelled — the place goes back to the queue and the record stays. That is right for the case it
+was thought about: a runner who drops out.
+
+It is wrong for the case it was not. A cancelled registration still holds a name, an email
+address and a signed declaration. Somebody who writes to the club asking to be removed from its
+records is not asking to be cancelled, and "we cannot delete you" is not an answer the club may
+give. A rule that forbids erasure is not a safeguard; it is a defect with a principle in front
+of it.
+
+The owner asked for this twice. The first refusal cited §15.11 correctly and stopped there,
+which was the mistake — the rule deserved re-examining rather than restating.
+
+### What erasing does, and the order it does it in
+
+Each step is load-bearing and the order is not arbitrary:
+
+1. **Release the place through the ordinary allocator** (`unregister`), so a deletion behaves in
+   the queue exactly as a withdrawal does. Deleting the row first would strand the place until
+   something noticed the count no longer matched, and the person at the front of the waiting
+   list would pay for the difference.
+2. **Write the `audit_logs` row second**, while the registration still exists to be described.
+3. **Delete the declaration acceptance and the registration last**, in one transaction. Action
+   tokens and outbox rows cascade at the database.
+
+No message is sent. A deletion is not a notification, and the person who asked for it does not
+want one.
+
+### What the audit row may say
+
+Who, when, why, and the status it was in. **Never the name and never the address** — those are
+what the deletion exists to remove, and a log that keeps a copy of them has not erased anything.
+It survives the row it describes because `audit_logs.entity_id` carries no foreign key, which
+was already true and is now load-bearing rather than incidental.
+
+### Why the declaration acceptance goes too
+
+It is the record of a consent given by a person who is being erased. Keeping it would preserve
+exactly the link the erasure is meant to break. The count of accepted declarations is not worth
+more than the request.
+
+### What is still refused
+
+No verified-email edit and no participant merge (§10.3): the verified address is the identity,
+and a typo is still fixed by cancelling and registering again. No staff-signed declaration.
+Erasing is Administrator-only, asks for a reason, and says plainly that it cannot be undone —
+it is meant to be the heavier of the two, because it is.
+
+Baseline bumped to `BR-V1.23-2026-09-06`.
+
+---
+
+## 45. Decided — a retention sweep deletes what is spent, and never what belongs to a person (2026-09-06)
+
+**Status:** Decided.
+
+The owner asked for hard deletes "to keep the DB light". Two answers, because the request
+contains two different things.
+
+**Deletes here were already hard.** Erasing a registration (§44) is `DELETE`, and cancelling is
+a status rather than a hidden row: nothing in this schema is soft-deleted, so there was no
+tombstone to sweep up.
+
+**What actually grows is mechanism, not data.** Measured against the QA database, the whole
+thing is under a megabyte and `job_runs` holds 67 rows — but it gains one every five minutes
+whether or not anybody registers. That is 288 a day and roughly 105,000 a year, to answer a
+question that only ever reads the newest row. Three other tables grow with traffic and then
+never shrink: throttle buckets whose window has passed, action tokens that are spent, and
+messages sent months ago.
+
+So the sweep takes four tables and no others:
+
+| Table | Window | Why that window |
+| --- | --- | --- |
+| `job_runs` | 30 days | `/api/health` and `/devs` read the newest run only |
+| `rate_limit_buckets` | 1 day | a bucket outside its window can never be read again |
+| `email_action_tokens` | 30 days, spent or long expired | the row holds a hash and a link, and cannot be accepted again |
+| `email_outbox` | 90 days, `SENT` only | a delivered row keeps the recipient's address; a bounced one is evidence |
+
+Two of those are privacy improvements rather than housekeeping. A sent message keeps a
+participant's address and a token keeps the link between a participant and a registration;
+holding either for years because nothing deleted them was not a decision anybody made.
+
+### What it must never touch, and why that is not squeamishness
+
+`registrations`, `participants`, `declaration_acceptances`, `audit_logs` and `events` are
+untouched, and a test asserts it ten years past every window. **How long the club keeps a
+runner's entry after a race is a policy question with legal weight**, and it belongs to the club
+(`BUSINESS.md` §9) rather than to a sweep that runs every five minutes and would answer it by
+accident. Erasing one person is §44: deliberate, per-row, audited, and asked for.
+
+### Where it runs
+
+Inside the registration-maintenance job, last, in its own `try`/`catch`. Last because expiring a
+hold is that job's actual duty and deleting month-old rows must never delay it; caught
+separately because a failure here is untidiness that no participant would notice, and marking
+the whole run failed for it would make `/api/health` cry wolf.
+
+Baseline bumped to `BR-V1.24-2026-09-06`.
+
+---
+
+## 46. Decided — the club writes its own legal text; immutability is about acceptance, not authorship (2026-09-06)
+
+**Status:** Decided. Narrows §6.7 and `AGENTS.md` §12.5; BR-REQ-053-01 criterion 4 is rewritten
+rather than removed.
+
+The rule said V1 has no editor screen for legal documents, and the reasoning behind it was
+sound: a participant signed version 3, `declaration_acceptances` records that they signed
+version 3, and rewriting its words afterwards would leave every one of those signatures
+pointing at text nobody ever agreed to.
+
+But the rule was broader than its reason. It also prevented *creating* a version, which put a
+developer and a migration on the critical path of a decision that is entirely the club's — and
+the club's approved wording was, at the time this was written, the single item still blocking a
+real registration on a deployed and otherwise working system. Nothing about immutability
+requires that a lawyer's paragraph reach the database through a pull request.
+
+### The line, stated once
+
+A version is a **draft** until approved. A draft may be rewritten freely. The moment it is
+approved — or accepted by a participant, or pointed at by an event — it is frozen, and a
+correction is the next version. Approval is one-way: un-approving would mean somebody could
+accept a version on Monday that the club treats as never in force by Wednesday, while their
+acceptance row still says they signed it.
+
+That is asserted in exactly one function, `service.ts#assertStillADraft`, and the repository
+deliberately exports no update, delete or approve at all — so there is no path to a bare UPDATE
+that skips the check. `tests/integration/cms/boundary.test.ts` asserts that shape as a property
+rather than trusting it.
+
+### The editor is a textarea, and that is a decision
+
+The body is structured JSON, and the Tiptap contract that will eventually own it is M5. Pulling
+that dependency forward to type a privacy notice would decide the body schema for the wrong
+reason. So the format is the one everybody already writes in: a blank line between paragraphs,
+`## ` for a heading, converted by `domain/body-text.ts`, which round-trips — nothing an
+organizer typed is reshaped behind their back.
+
+### What did not change
+
+Inventing legal wording is still forbidden (§1.2), and the editor says so above the fields every
+time it is opened. Sample text still refuses to seed in production (§29). Both languages are
+still required before a version can exist at all, because BR-REQ-040-02 forbids falling back to
+the other and the alternative to both is a public page that cannot render.
+
+Baseline bumped to `BR-V1.25-2026-09-06`.
+
+## 47. Decided — the registration form stays one page; what was cut is the half nobody has to answer (2026-09-06)
+
+**Status:** Decided. Adds a rule to `AGENTS.md` §15.1 and §18.5, and a criterion to
+BR-REQ-041-01. Nothing in §10.5, §12.6 or the allocator changes, which is most of the point.
+
+The public registration form asked fifteen things on one screen. On a 390-pixel phone that is a
+very long page, and it is the only page in this product a stranger is asked to complete. The
+question put was whether to make it a multi-step form.
+
+### Why not a wizard, in the three shapes a wizard could take
+
+An anonymous visitor has no account and no session, so any form split across steps has to keep
+partial answers somewhere. There were three candidate somewheres and each costs more than the
+scrolling it saves.
+
+**Hidden fields carried forward through server round-trips.** No JavaScript, no storage — and
+it puts `healthNotes` into a hidden input on the rendered HTML of every step after the one that
+asked for it. That is special-category data under GDPR Article 9, and BR-REQ-031-05 criterion 5
+says plainly that no public page renders health text in its markup under any condition. The
+design is refused by a rule that already exists, before anyone weighs the ergonomics.
+
+**A partial registration row, completed as they go.** Durable and resumable, and wrong in three
+places at once. `registrations` has a `UNIQUE(event_id, participant_id)` and a status enum with
+no draft in it (§10.5), so a half-finished entry either invents an eighth status or consumes
+the uniqueness of a real one. BR-REQ-031-02 criterion 1 refuses a submission with no privacy
+acknowledgment and says no registration row is created — a row written at step one is created
+before that acknowledgment exists. And the row would then have to be invisible to the
+allocator, the capacity formula and the export, which is exactly the sort of condition
+`AGENTS.md` §12.6 keeps out of the allocator: the rule there is that `kind` appears in no
+condition inside it, and a `status = DRAFT` check would be the same mistake with a different
+column.
+
+**A client-side stepper.** One island, sections shown and hidden, everything posted together.
+It works, and the cost is not the kilobytes. Native `required` on a field inside a hidden step
+stops the submission with no visible message — the browser refuses to focus what it cannot show
+— so a wizard has to reimplement validation in JavaScript, which means reimplementing the
+browser's own messages, in Romanian and English, with the focus management and the screen-reader
+announcements that come free today. That is a large amount of new code, on the one page that
+must work everywhere, to replace something that already works. `AGENTS.md` §1.5 makes that
+trade a bad one before the accessibility argument is even reached.
+
+### What the page's length actually was
+
+Fifteen questions, of which four are optional data (`displayName`, `tshirtSize`, `clubName`,
+`healthNotes` with its consent) and two are optional consents. Measured at 390 pixels wide, the
+page was 2,697 pixels tall — more than three phone screens — and a fifth of that was things
+nobody has to answer to be registered.
+
+So the optional data is behind native `<details>`, closed, each summary naming what is inside —
+the pattern already used for the display name and for the destructive actions on the
+registrations list. It needs no JavaScript, no island and no new component. What loads is the
+required set, the consents and the button: 2,117 pixels rather than 2,697. That is not what a
+wizard would have saved, and it was bought without any of what a wizard would have cost.
+
+The optional *consents* stay open, and that asymmetry is deliberate: BR-REQ-072-01 criterion 1
+and BR-REQ-039-01 require the choice to be **presented**, and a question behind a summary
+somebody never opens has not been put to them. Collapsing a t-shirt size loses nothing;
+collapsing a consent quietly turns "asked and declined" into "never asked".
+
+### The round trip, which was the real accessibility failure
+
+Native validation catches almost everything before a request is made. What it cannot catch —
+and what somebody without JavaScript always meets — was answered by a redirect that put a
+person back at the top of a long form with a red box listing field names as plain text.
+
+The redirect now carries `#registration-errors`, the summary at that anchor is focusable, and
+each field it names is a link to that field's own anchor. Following one moves focus to the
+input. No JavaScript is involved in any of it; a fragment and `tabindex="-1"` are the whole
+mechanism. The field is also marked at the field, with a message under it that MUI wires to
+`aria-describedby`, because a summary at the top is a route and not a replacement for saying
+what is wrong where it is wrong.
+
+The `fields` parameter is matched against a known list (`modules/registrations/form-errors.ts`)
+rather than trusted. It is a query string anybody can type, and it was reaching
+`t("fieldNames.<x>")` directly.
+
+### The rest of the journey
+
+The declaration page did not show its deadline. §18.5 has required one in the first screen
+since the rule was written, and BR-REQ-041-01 criterion 3 says so too; the page showed the
+declaration and a button and nothing about the thirty minutes running underneath. It now names
+the event and the instant the hold expires, in the event's own timezone, above the declaration
+body — read from the registration row and not from the token that opened the page, because a
+message rendered by a late outbox batch gives its token a fourteen-day default rather than the
+hold's expiry, and printing that would be a wrong deadline on the one page whose subject is a
+deadline. Absolute time and no countdown: a countdown alone is unusable for somebody who
+stepped away, and a server-rendered "29 minutes left" is stale before it is read.
+
+Touch targets are the other thing that had quietly drifted. MUI's medium button is about 37
+pixels tall and its checkbox is 42 by 42, both under the 44 that BR-REQ-041-01 criterion 6 makes
+a hard rule; `RegistrationCta` had already noticed and fixed it locally. That local constant is
+now `shared/ui/tap-target.ts` and every control in the four participant pages carries it. A
+theme-level `MuiButton` default was considered and rejected: it would enlarge the backoffice
+too, where density is worth more than reach, and would put the rule in a file nobody opens while
+looking at the registration form.
+
+### What this costs
+
+The optional questions are one tap further away than they were. Somebody who wants a t-shirt
+has to open a summary that says "T-shirt and club". That is the trade, and it is accepted
+because the required path is what a stranger walks and the optional path is what a returning
+club member goes looking for.
+
+Baseline bumped to `BR-V1.26-2026-09-06`.
+
+## 48. Decided — the club's own people declare themselves, and the declaration grants nothing (2026-09-06)
+
+**Status:** Decided. Adds `registrations.club_member_declared` and BR-REQ-031-06; adds a rule to
+`AGENTS.md` §12.6 and to `BUSINESS.md` BR-BUS-031. The allocator and the capacity formula are
+untouched, deliberately.
+
+The request was for a tick on the registration form — "I am a Brașov Runners team member" — so
+that the club's own administrators and moderators could sign up for races.
+
+### The premise was wrong, and the want underneath it was not
+
+Nothing has ever stopped a staff member registering. `participants` and `staff_users` are
+separate tables with no shared constraint and no foreign key between them, and the public
+registration form reads no session at all: an organizer opens it, enters their own address,
+confirms their own email and signs their own declaration, exactly like a stranger. There was
+nothing to unblock.
+
+What the club actually lacked was a way to **tell its own people apart from strangers in a list
+of entries**. The only existing signal was the free-text `club_name`, which depends on somebody
+choosing to type "Brașov Runners" and spelling it the same way twice.
+
+### Why it is a claim and not a lookup
+
+The obvious implementation is to match the registration's canonical email against `staff_users`
+and store a fact rather than a claim. It was rejected, because **app staff and club members are
+not the same population and the smaller one is the wrong one**. `staff_users` holds the handful
+of people with backoffice access. A member who pays dues, wears the vest and runs every event
+has no row there and never will — so a verified flag would answer "no" for most of the people
+the question exists to find, and it would answer it confidently.
+
+A second reason: a staff member signs in with whatever address the club's identity provider
+knows, and races with whatever address they actually read. Matching the two is a guess.
+
+So the value is what the person said about themselves, stored as given. The column is named
+`club_member_declared` rather than `club_member` for that reason, and every screen that shows it
+says "declared". A future reader who takes it for a verified fact will hand a member's benefit
+to whoever ticked a box, and the name is the cheapest defence against that.
+
+### It grants nothing, and that is the load-bearing part
+
+A self-ticked box that decided a price, a reserved place or a position in the queue would decide
+it for anybody at all. The rule is therefore the same one `kind` already carries: **it appears
+in no condition in the allocator or the capacity formula** (§12.6, §10.6). One of the tests in
+`club-member.test.ts` exists purely to fail if that changes — a declared member and a stranger
+reaching a full event both land on the waiting list.
+
+If the club ever does want a member price or a members' allocation, the thing it needs first is
+a real roster and a decision recorded here, not this column.
+
+### "False" is not "no"
+
+Somebody who never opened the optional section and somebody who is not in the club produce the
+same stored `false`. Two surfaces are shaped around that:
+
+- **the export prints "Yes" or an empty cell, never "No"** — a volunteer sorting the file at a
+  start line cannot tell a missing answer from a negative one, and printing "No" against both
+  turns a question nobody answered into an answer;
+- **the backoffice filter only ever narrows to the people who declared it.** There is no
+  "show me the non-members" option, because that list would be "everybody who did not tick a
+  box" presented as something else.
+
+### Where it sits on the form
+
+Inside the optional disclosure with `club_name` and the t-shirt size, whose summary now reads
+"Brașov Runners member, club and t-shirt". That keeps §47's rule intact — optional data is
+collapsed, consents are not — and it puts the club's name in the summary, so a member scanning
+the page finds it without opening anything. It sits beside `club_name` because they are the same
+question asked twice: somebody who ticks this is in the club whose name they would have typed.
+
+Asked on the staff-entered form too. An organizer taking a registration over the telephone is
+usually taking it from somebody in the club.
+
+Baseline `BR-V1.26-2026-09-06`, alongside §47.
+
+## 49. Decided — the route is its own link, not an overloaded map link (2026-09-07)
+
+**Status:** Decided. Adds `events.route_url` and BR-REQ-011-01 criterion 8; narrows what
+`map_url` is for. No decision here is reversed — `map_url`'s docstring simply claimed a job it
+should not have had.
+
+The club wanted a link to the track for each race. There was already a column that could hold
+one: `map_url`, whose own comment listed "a route the club has already drawn" among the things
+it exists for.
+
+### Why that column could not be the answer
+
+Because a runner asks two questions and they have two answers. *Where do I turn up* is a pin on
+a corner of a park. *Where does it go* is a drawn line on Strava, Komoot, or whatever the club
+mapped it with. An event that has both — which is every race the club puts on — could store only
+one of them, and whichever the organizer pasted, the label on the page was "meeting point".
+
+`map_url` is now documented as the meeting-point override and nothing else, and `route_url` is
+the course. Two columns, two questions, two labels.
+
+### A link and not a file
+
+Media storage is deferred (`AGENTS.md` §17): there is no adapter, no bucket, and no upload
+surface, so a GPX has nowhere to go. That is the reason today. The reason it would still be a
+link afterwards is that the route already lives on the service the club drew it on, where it can
+be re-drawn, followed on a watch, and looked at on a phone by somebody standing at the start —
+and a GPX copied into this application is a second copy that goes stale the first time the
+course changes.
+
+If the club later wants the file as well, that is an upload feature with its own decision, and
+this column is not in its way.
+
+### https, twice
+
+Same as `map_url`: `httpsUrl` in the form schema so an organizer gets a message naming the
+field, and `events_route_url_is_https` at the database so a seed, a migration or a hand-written
+`UPDATE` cannot store `javascript:` behind a link a visitor is invited to click. Neither check
+is redundant; they defend different doors.
+
+### Where it renders, and where it does not
+
+Beside the distance and the climb on the event page, because it belongs with "how far" rather
+than with "where do I meet" — and the meeting point stays above them, where BR-REQ-041-01
+criterion 2 wants the first-screen facts.
+
+Not on a listing card. The card is already one link (`CardLink`, for the 44-pixel tap target)
+and an anchor inside an anchor is invalid HTML that the browser silently splits — the same
+reason the map link waits for the detail page.
+
+No `SportsEvent` property carries it. schema.org has `hasMap` for a place and nothing for a
+course, and inventing a property that no consumer reads would be worse than omitting one.
+
+### Carried on a duplicate
+
+Duplicating last year's event is how the club creates this year's, and last year's race is run
+on last year's route. It copies, like the distance and the climb, and unlike the publication
+state, the date and the featured flag.
+
+Baseline `BR-V1.26-2026-09-06`.
+
+## 50. Decided — being a non-profit is not the carve-out; how the money is framed is (2026-09-07)
+
+**Status:** Decided. Narrows the commercial-usage reasoning in `docs/PLATFORM.md`, and records a
+product consequence that is **not built**: `events.cost_type` cannot express the distinction the
+rule turns on.
+
+The club is a Romanian **ONG**, and the owner's reasonable position was that a race contribution
+is a donation or cost recovery rather than profit, so Vercel's non-commercial Hobby plan still
+applies. Re-reading the guidelines against that claim changed what the platform page says.
+
+### What the terms actually test
+
+Verified against Vercel's fair-use guidelines on 2026-09-07. Commercial usage is any deployment
+"used for the purpose of financial gain of **anyone** involved in **any part of the production**
+of the project, including a paid employee or consultant writing the code", with five listed
+examples: requesting or processing payment from visitors; advertising the sale of a product or
+service; receiving payment to create, update or host the site; affiliate linking as the primary
+purpose; and advertisements.
+
+**"Non-profit" does not appear in the document.** Legal form is not a test, and an ONG that
+advertises a priced service is in the same position as a company that does.
+
+What *is* explicit is the opposite of what was assumed: **"Asking for Donations does not fall
+under commercial usage."** The carve-out the club needs exists, and it is about framing rather
+than about the club.
+
+### Three consequences, in the order they will bite
+
+1. **A contribution presented as a donation is allowed.** This is the club's actual intent and
+   the terms accommodate it directly.
+2. **A mandatory entry fee is not**, and the reason is wider than payment processing — this site
+   has no payment integration and never touches money. "Advertising the sale of a service" is on
+   the list, and an event page stating a required fee does that whoever collects it and however.
+3. **Paying anybody to build or host this site is commercial usage on its own.** The clause names
+   a paid consultant writing the code. For a club whose platform is built by a professional
+   developer this is the likelier trigger, and it is unaffected by anything the club charges.
+
+### What this changed in the software
+
+The `/admin/tasks` verdict previously flipped to a flat "not free" on any `PAID` event, which
+overstated a rule the club can satisfy by wording. It is now a **caution** that states the
+donation carve-out, the advertising clause and the paid-developer trigger, so an organizer reads
+what to do rather than only that something is wrong.
+
+### What is owed, and deliberately not built here
+
+`events.cost_type` is `FREE|PAID` (`DECISIONS.md` §43). A donation and a price are the same value
+in that enum, and they are on opposite sides of the rule above — so the platform cannot currently
+tell an organizer whether their own event is inside the carve-out, and the caution has to hedge.
+
+The fix is a third value, and it is a business decision rather than a schema one: what the club
+intends to ask for, in the club's own words, before a column is named after it. Not built, not
+guessed. Until then the caution says "check how this is worded", which is honest about what the
+data supports.
+
+Baseline `BR-V1.26-2026-09-06`.
+
+### Settled by the owner, 2026-09-07
+
+**Brașov Runners sells nothing and takes no money.** The owner confirmed it after the analysis
+above, and that is the fact this record ends on: four of Vercel's five examples of commercial
+usage cannot apply to a club that requests no payment, advertises the sale of nothing, carries no
+affiliate links and runs no advertisements. The deployment is inside the Hobby plan, and
+`/admin/tasks` reports it that way rather than hedging.
+
+The reasoning is kept for two reasons rather than deleted. The first is the one trigger that is
+**independent of anything the club sells** — payment to create, update or host the site — which
+stays worth knowing for a platform built by a professional developer. The second is that "should
+we ask for a contribution towards costs" is a question a volunteer committee will raise again, and
+when it does, the answer should be read rather than re-derived: a donation is explicitly carved
+out, a mandatory fee is not, and the difference is wording rather than intent.
+
+## 51. Decided — standing pages are a small content type, not the start of the M5 CMS (2026-09-07)
+
+**Status:** Decided. Adds `pages`/`page_translations`, BR-REQ-050-03 and `AGENTS.md` §12.9.
+Narrows nothing; M5 keeps articles, galleries, the media library and the Tiptap body contract.
+
+The club needs to say things that are not events and are not legal wording: "About Brașov
+Runners" first, "Contact" soon after. `CLAUDE.md` scoped all non-event content to M5, which
+would have meant no About page until a content system existed.
+
+### The thing that made this small
+
+`DECISIONS.md` §46 already faced the same fork for legal documents and chose a textarea over
+Tiptap, on the grounds that pulling the M5 body contract forward to type a privacy notice would
+decide that schema for the wrong reason. That reasoning transfers exactly, and so does the
+implementation: `domain/body-text.ts` converts a blank-line/`## ` document to the stored section
+shape and back, round-trips, and is already the format the club writes in.
+
+So a page is a title, an address, a body and two SEO fields, per language. That is the whole
+type. There is no cover image, no gallery, no layout choice and no block editor, and adding any
+of them is M5's job rather than this one's.
+
+### What was reused, and the one thing that reuse costs
+
+The editorial status enum is `events`', not a second one with the same four values. So are
+`allowedTransitions`, `canTransition` and the role predicates. "May this person publish" has one
+answer in this product, and a second copy of it is a second place for it to go wrong — which is
+the failure `AGENTS.md` §1.5 rule 3 exists to prevent.
+
+The cost is a naming smell: `canEditEventFields` and `canCreateEvent` now gate pages too, and
+read oddly at those call sites. Renaming them touches the event editor, which is about to run a
+real registration window, so it is written down here and deliberately not done today.
+
+The body converter and its renderer are **imported** from `legal-documents` rather than moved to
+a shared module. §1.5 rule 6 abstracts on the third occurrence, not the second; the third is when
+that move becomes right.
+
+### What it inherits rather than reinvents
+
+Publication is one state for the whole page and requires every locale complete, because a page
+that renders in Romanian and 404s in English is exactly BR-REQ-040-02's failure. A slug is fixed
+once published (§11.5): links already shared have to keep working. A save carries the version it
+was loaded with, so two organizers produce a CONFLICT rather than one silently losing the English
+half — and the page row and both translations are one transaction, so a stale version anywhere
+writes none of it.
+
+### Two differences from an event, both deliberate
+
+**A page may be deleted.** An event with a registration against it is refused because somebody's
+entry hangs off it (§15.11). Nothing hangs off a page, so deleting one made by mistake loses only
+what its author typed. Archiving remains the answer for a page that was real and is now over.
+
+**Both languages are on one screen**, where the event editor uses a tab each. An event carries
+thirty fields and two panels of thirty do not fit; a page carries four. Seeing both at once is
+what makes "the English one is empty" obvious before somebody presses publish and is told so by
+a validation error.
+
+### The navigation stopped being a constant
+
+`SiteNav` held a literal list with a comment saying the club's own pages were M5. They are not
+any more, and they are created by an organizer rather than a developer, so the header reads them.
+That is one indexed query on every public page — a cost worth naming, since the header is what
+every visitor pays for (§1.5) — and it buys a menu the club can change without a deployment. It
+fails soft: a page that cannot be loaded costs a navigation entry, never the header itself,
+because a site whose header throws has no way out of any page at all.
+
+Baseline `BR-V1.26-2026-09-06`.
+
+## 52. Decided — two error boundaries, Next's own digest, and one gap named rather than hidden (2026-09-07)
+
+**Status:** Decided. Adds `src/app/[locale]/error.tsx` and `src/app/global-error.tsx`, and a rule
+to `AGENTS.md` §14.3, which covered domain error codes and said nothing about boundaries.
+
+There was no error boundary anywhere in this application. Any unhandled throw — a database blip,
+a Neon instance waking from scale-to-zero, the pool's `statement_timeout` — gave a stranger
+Next's default production page: "Application error: a server-side exception has occurred",
+unstyled, in English, with no way back and no hint whether to try again.
+
+### Two boundaries, because they do different jobs
+
+`[locale]/error.tsx` catches everything below the layout, which is almost every failure. It has
+the locale, the theme and the catalogue, so it apologises in the reader's own language.
+
+`global-error.tsx` catches the failures *above* it — a broken locale resolution, a provider that
+threw, a layout that never rendered — and it replaces the whole document. There is no translator
+at that point, because replacing the root layout replaces `NextIntlClientProvider` with it, so
+it says everything twice: Romanian first, English under it. That is the documented exception to
+§11.3 rather than an oversight, and the styles are inline for the same reason the strings are
+hard-coded — the theme is gone too.
+
+### The correlation id already existed
+
+The question was whether to show one, and the answer is that Next already generates it. Every
+server error is hashed into `digest`, logged beside the stack, and handed to the boundary — so a
+runner can say "it said 2060393594" and the owner can find that line. No id generator, no new
+logging decision, and no temptation to write a participant's address into a log to make it
+findable (§14.5). The message and the stack are never shown: they carry SQL, provider text and
+sometimes an address (§14.3).
+
+A retry is offered because `reset()` is free and the failures this application will actually meet
+— a cold start, a dropped connection — are the kind a second attempt fixes.
+
+### The gap, measured rather than assumed
+
+**A visitor with JavaScript disabled sees a blank page, not the error page.** Verified against a
+production build pointed at a dead database, in a real browser: with JavaScript the club's page
+renders in full; without it the body is empty. `error.tsx` is a Client Component by Next's design
+and cannot render on the server, so a server-side throw streams a shell and the boundary only
+appears on hydration.
+
+That is worth stating plainly because this site is built to work without JavaScript, and it means
+the boundary is a safety net for the common case rather than a guarantee. **The only thing that
+produces server-rendered HTML on a failure is catching the failure where it happens** — guarding
+the data read on the route and rendering a degraded page, the way `SiteHeader#navigationPages`
+now does for the standing pages. Doing that route by route is the next piece of work; the
+boundary is what stops the default page appearing in the meantime.
+
+Baseline `BR-V1.26-2026-09-06`.
+
+## 53. Decided — reliance freezes a legal version, and an unapproved draft may be deleted (2026-09-07)
+
+**Status:** Decided. Adds `deleteDraftVersion` to `modules/legal-documents/service.ts`, a third
+reliance count to `listVersionsForBackoffice`, and a row-count check to `approveVersion`.
+Narrows §46 rather than reversing it. `AGENTS.md` §12.5, BR-REQ-053-02.
+
+§46 froze an approved legal version, and gave one reason: a participant signed version 3, and
+rewriting version 3 leaves their signature describing text nobody agreed to. That reason is
+about **reliance**, not about approval — so the obvious next move was to let the club edit,
+un-approve and delete any approved version nothing had relied on. Three of those four verbs are
+not being built, and the reasons are worth recording, because each one looks safe until the
+codebase is read.
+
+### What is built: delete, for a version that was never approved
+
+A draft has never been in force. `findCurrentApprovedDocument` filters on `is_approved`, so no
+public page has rendered it; a registration records whichever version was current, so none can
+name it; and an acceptance is written only against what was current, so none can point at it.
+Nothing can have relied on it, and without this the club's document list grew by a row every
+time somebody started typing and thought better of it, with no way back.
+
+An approved version is still never deleted, whatever its counts say — and that is a *different*
+rule from "nothing relies on it". Approval is the club publishing words as its own; the record
+of what it published, and when, outlives whether anybody happened to act on it.
+
+### The reliance nobody could see
+
+`listVersionsForBackoffice` showed two counts, one per foreign key: acceptances and events.
+Both are real, and together they were wrong about the most relied-upon document the club has.
+
+A privacy notice is referenced from `registrations` by **version number** —
+`privacy_notice_version`, `results_consent_version` and `health_consent_version` are all plain
+`integer` columns with no foreign key at all. Only `EVENT_DECLARATION` versions ever get a
+`declaration_acceptances` row, so a privacy notice that four hundred people had acknowledged
+appeared on the backoffice screen as "not used yet", and PostgreSQL would have raised nothing
+whatsoever if it were deleted. The third count exists so the screen stops saying something
+false, and it is checked before any deletion.
+
+### Why un-approve is not built, which is the substantive finding
+
+Withdrawing an approval is the verb the club would actually want, and it cannot be made safe
+here without changing the registration lifecycle.
+
+**A declaration is bound to the participant at POST, not at render.**
+`registrations/declare/[token]/page.tsx` resolves the text with
+`findCurrentApprovedDocument(...)` and renders it. The form posts four fields — `locale`,
+`token`, `accepted`, `typedName` — and no version, no document id and no hash. Then
+`registrations/service.ts` calls `findCurrentApprovedDocument` **again**, independently, and
+writes the acceptance from whatever *that* returned. So the row records the version that was
+current when the button was pressed, not the version the person read.
+
+Un-approving exists precisely to change which version is current, on the next request, with no
+deploy. It would therefore let somebody read version 3 and have version 2 recorded as the text
+they signed — the exact failure §46 exists to prevent, arrived at from the other direction. The
+same split applies to the privacy notice at submission, and there the fallback is worse: every
+environment but production seeds a **sample** notice whose own first heading reads "SAMPLE TEXT
+— NOT APPROVED", so withdrawing a real version can silently promote that back into force and
+stamp real consent records against it.
+
+The fix is to bind the signature where it is read: carry the resolved document id and
+`content_sha256` as hidden fields and refuse a signature against anything else. That is a change
+to the registration lifecycle, it needs its own requirement and its own tests, and it must land
+before un-approve is worth revisiting. **This is a pre-existing defect** — approving a *new*
+version between a participant's GET and POST already triggers it today — and it is recorded here
+rather than fixed here because the console work was scoped to exclude the lifecycle.
+
+Editing an approved-but-unreferenced version is refused for a smaller reason: `content_sha256`
+is published under a version number and `docs/RUNBOOKS.md` verifies against it, so text that
+changes under a fixed number makes that check meaningless.
+
+### One thing the new verb broke, and the guard for it
+
+Until a `legal_documents` row could be deleted, `approveVersion`'s `UPDATE ... WHERE id = $1`
+could never match zero rows, so it ignored the count. It now asserts one row and refuses
+otherwise: a draft deleted in another tab would have left the update matching nothing and the
+screen reporting that the club's legal text was in force when no such row existed.
+
+Baseline `BR-V1.27-2026-09-07`.
+
+## 54. Decided — a loading boundary may not sit above a `notFound()` (2026-09-07)
+
+**Status:** Decided, after the end-to-end suite caught it. Shapes where `loading.tsx` files live
+under `src/app/[locale]/admin`, and adds a `layout.tsx` per gated section. BR-REQ-060-01.
+
+The application had no `loading.tsx` anywhere, so every backoffice click left the old page on
+screen — unchanged and unmarked — until the server answered. Adding one per route is the
+obvious fix and it quietly broke authorization.
+
+### What happened
+
+`loading.tsx` wraps what is below it in Suspense, and Next flushes the shell as soon as it has
+one. The status line goes out with that flush. Every `/admin` page authorizes by calling
+`notFound()` — deliberately, because §10.2 refuses to confirm that a screen an Author may not
+open exists at all — and a `notFound()` raised *after* the flush cannot change a status that has
+already been sent.
+
+So an Author requesting `/admin/staff` got **200, with the not-found page in the body**. It looks
+identical in a browser and is not the same thing at all: a 200 is not a refusal to a crawler, a
+monitor, an uptime check or a script. Two end-to-end tests assert `404` on exactly those two
+routes, which is how this was caught rather than shipped.
+
+### Two rules, and the route groups that follow from them
+
+**A `loading.tsx` must not sit above a `notFound()`.** It applies to its own segment *and every
+descendant*, so:
+
+- the root `admin/loading.tsx` is gone. It covered all six sections, and defeated every gate
+  beneath it — including gates written into section layouts specifically to outrank it;
+- a section's role gate moved into a `layout.tsx` beside its boundary, which renders **before**
+  there is anything to flush. The page still asserts the same rule, because a page is a request
+  of its own and a guard that depends on a parent is one that disappears the first time the page
+  is rendered from somewhere else. The layout is there for the status code alone;
+- the lists that have `[id]` and `new` siblings — registrations, pages, legal, and the events
+  overview — moved into a `(list)` route group, so their boundary covers the list and nothing
+  else. A route group changes no URL, which is why `routing.pathnames` is untouched and the
+  architecture test that pins it still passes;
+- the editor and detail routes get **no** boundary at all. Their `notFound()` is a missing row —
+  a deleted event's URL — and that has to stay a 404. They are also the routes where a stale
+  page on screen is least confusing, because the organizer arrived by clicking a specific row.
+
+The trade is explicit: the longest waits in the backoffice are the editors, and they are the
+routes that keep no loading state. Fixing that means moving the row lookup into a layout and
+querying twice, which buys a skeleton with a duplicated query on the slowest page. Not worth it
+today, and written down so the next person does not rediscover the constraint by breaking a
+status code.
+
+Baseline `BR-V1.27-2026-09-07`.
+
+## 55. Decided — the production half of the topology, and a domain that will change (2026-09-16)
+
+**Status:** Decided and largely done. Creates the production Vercel and Neon projects and the
+GitHub gate; records the domain plan; corrects what the documents claimed and the providers did
+not. BR-REQ-101-01, BR-REQ-101-02, BR-REQ-080-03, BR-BUS-101. Written to the owner's standing
+instruction, restated today as "the entire codebase must be vibecode friendly": every step below
+is a command, every value is where a command can read it, and the reasoning sits next to both.
+
+### What was true before anything was touched — read back, not assumed
+
+- **GitHub.** A `qa` environment with `DATABASE_URL` and `APP_BASE_URL`; `Production` and
+  `Preview` environments created by Vercel's GitHub app on 2026-09-04, empty, with no protection
+  rules. Environment names are case-insensitive, so `migrate.yml`'s `production` already resolved
+  to that `Production` — and with no reviewer on it, the "gate" §7.6 promised was a formality.
+  The repository is public, which is what makes required reviewers available on the Free plan.
+- **Vercel.** One project. `serverlessFunctionRegion: iad1` and Node `24.x`, while every
+  document said `fra1` and the database sits in `eu-central-1`. The documents described the
+  intent; nobody had read the setting back.
+- **Neon.** The QA project in AWS Frankfurt; no production project; no Neon credential on the
+  machine. The CLI authenticates through a browser, which an agent's shell cannot open — and a
+  login it starts prints a callback link on a port that is closed by the time a person clicks it.
+  The owner ran `npx neonctl auth` in his own terminal; that is the one step that stays his.
+- **Mailgun.** An account since 2026-09-05 with exactly one domain, the sandbox. `CLAUDE.md`
+  still listed "a Mailgun account" as owed. What is owed is a *verified sending domain*.
+- **Domains.** Neither candidate resolved on the morning of 2026-09-16 (RDAP 404, NXDOMAIN). By
+  the afternoon the owner had bought the `.com`, and `yarn domain:bind production` bound it —
+  apex serving, `www` redirecting, `APP_BASE_URL` moved — with Vercel accepting the domain on a
+  project that had never deployed.
+- **`main`** is sixty commits behind `qa` — the last promotion was PR #7 — and `migrate.yml` does
+  not exist there. The first production deployment is therefore the first release PR, and the
+  production database cannot be migrated by the workflow until that PR lands.
+- **`scripts/bind-domain.mjs`** read the token from the Vercel CLI's credentials file. CLI 59
+  stores an OAuth access token with an expiry — 2026-09-07, in this case — refreshes its copy in
+  memory and never rewrites the file, and the REST API answers 403 `invalidToken` to the stale
+  one. The script also took the project from `.vercel/project.json`, which links this checkout to
+  QA: `yarn domain:bind production` would have bound the club's domain to the QA project.
+- **The environment marker of `AGENTS.md` §7.4** — `app_environment_metadata`, checked at
+  startup, migrate, seed and reset — is not implemented. Nothing under `src/db` creates or reads
+  it. Named in §7.4 and in `SETUP.md` §25 rather than ticked.
+
+### What was done
+
+- **GitHub `production`:** required reviewer (the owner), deployment branch policy `main` only,
+  `APP_BASE_URL` and `DATABASE_URL` secrets. `can_admins_bypass` stays true — a dashboard-only
+  setting, and the owner is both admin and reviewer, so the gate is a deliberate click either way.
+- **Vercel `brasov-runners-production`:** Next.js, `fra1`, Node `22.x`, GitHub-linked with
+  production branch `main`, and an ignored build step that builds only `main` — a pull-request
+  branch would otherwise get a preview deployment on the production project running with no
+  variables at all, that is, with `APP_ENV`'s local defaults. Variables: `APP_ENV=production`,
+  `APP_BASE_URL`, `DATABASE_URL` (Neon production, pooled), `MAP_LINK_BASE_URL`,
+  `ENABLE_EXPERIMENTAL_COREPACK=1`, a fresh `JOB_SECRET`, a fresh `AUTH_SECRET`,
+  `STAFF_AUTH_MODE=disabled`, `EMAIL_DELIVERY_MODE=capture`. Nothing copied from QA. Set through
+  a scratch directory linked to the production project, so this checkout stays linked to QA.
+- **Neon `brasov-runners-production`** (`lively-haze-50960748`), `aws-eu-central-1`, PostgreSQL
+  18, on the Free plan — which allows 100 projects (checked 2026-09-16), so the second one costs
+  nothing. Pooled URL to Vercel, direct URL to the GitHub environment, neither anywhere else.
+- **Production email is `capture`, on purpose,** until a sending domain is verified. `env.ts`
+  deliberately does not force `live` in production — its own comment says why — and `/devs`
+  reports capture on a deployed environment as *limited* (BR-REQ-090-04). §7.2 now says so.
+- **The QA region fix was refused** by the agent's permission layer as a change to a shared
+  resource; the command is in `SETUP.md` §26 for the owner. Production was created correctly
+  from the start.
+- **`bind-domain.mjs` rewritten:** every call through `vercel api`, the project by the
+  environment's name, `www` → apex as a 308 set on the host at add time, `--alias-of` for a
+  second domain. The DNS records come from Vercel's domain-config endpoint rather than from a
+  literal in the script.
+- **`scheduled-jobs.yml`** gained the production row; it skips with a notice until the two
+  repository secrets exist. They are set on deployment day, not before — a host that is not
+  serving yet turns every five-minute run red, and a red run nobody reads is how the next real
+  failure gets missed.
+- **Smoke and scheduler targets stay on the provider hostname**, which resolves whether or not
+  the club's DNS does yet. `/api/health` does not care which host it is asked on.
+
+### The domain: `.com` now, `.ro` in a year, both alive
+
+The owner's decision, 2026-09-16: register the `.com` for a year, add the `.ro` later, keep
+both, and **switching must be easy**. Everything needed already followed from rules in force:
+`APP_BASE_URL` is the one canonical host (§8); every other hostname is a permanent redirect to it
+(BR-REQ-101-02 criterion 4, now criterion 5 for the second domain); cookies are host-only, so a
+switch costs each staff member one more sign-in and participants nothing — they hold no session,
+and every email link is built from `APP_BASE_URL` at send time. The Mailgun sending domain need
+not match the site's host; DKIM alignment is about the `From` address. So the switch is
+`yarn domain:bind production <new> --apply`, `yarn domain:bind production <old> --alias-of <new>
+--apply`, the new redirect URI in Zitadel, a redeploy, `yarn smoke`. `docs/RUNBOOKS.md` § Switching
+the canonical domain is the checklist; nothing under `src/` moves.
+
+Price, so it is not re-researched: Verisign's `.com` wholesale is $10.26 a year until 2026-11-01
+and $10.97 from then on (announced 2026-04-23; checked 2026-09-16). `/admin/tasks` and
+`docs/PLATFORM.md` quote it in USD, the registry's own currency, and keep asking what the
+registrar actually charged.
+
+### Zoho Mail beside Mailgun — asked, answered, not decided
+
+The owner asked whether the club can also have mailboxes on the domain. Zoho Mail's free plan
+(checked 2026-09-16): up to five users, 5 GB each, one domain, web access only. It coexists with
+Mailgun cleanly if the domain is split by function: Zoho owns the apex — its MX, its SPF include,
+its DKIM — and Mailgun sends from a subdomain, `mail.<domain>`, which `MAILGUN_DOMAIN` and
+`EMAIL_FROM_ADDRESS` then carry, with `EMAIL_REPLY_TO` on a Zoho mailbox somebody reads. Two
+services on one apex would fight over the MX and the SPF record; two hostnames never do.
+Configuration only. It becomes a decision on the day the DNS is edited
+(`docs/RUNBOOKS.md` § Domain binding, step 2).
+
+### Two questions asked during this work, recorded so they are not re-researched
+
+- **"Next, we need to be able to edit documents."** The next task. Not *edit*: §46 and §53 fix an
+  approved version's words for good, because a participant relied on them. What is wanted is
+  drafting the next version in the backoffice and approving it there — which exists for drafts
+  today — with the ergonomics of an editor rather than a JSON body, and the §53 binding defect
+  fixed with it, because a version change between a participant's GET and POST records the wrong
+  text today.
+- **"What is a good solution for online document signing?"** The declaration acceptance already
+  built — a typed name, a verified email address, the `content_sha256` of the version shown, the
+  time — is what eIDAS calls a *simple* electronic signature: admissible as evidence, not
+  presumed equivalent to a handwritten one. Whether that suffices for a race declaration is the
+  club's adviser's call, not this repository's, and the runbook already forbids calling it
+  *qualified*. A qualified signature needs a qualified trust-service provider from the EU trusted
+  list, costs per signer, and is an integration rather than a rule change — disproportionate for
+  a start-line declaration unless the adviser says otherwise.
+
+### What is still owed, and who
+
+| Owed | Who | How |
+| --- | --- | --- |
+| DNS records for the `.com` at the registrar — an A record on the apex, a CNAME on `www` | owner | printed by `yarn domain:bind production <domain> --apply`, which on 2026-09-16 bound the apex and `www` to the production project and moved `APP_BASE_URL`; the records are in the owner's `.env.local` copy and on the Vercel Domains screen |
+| Zitadel production application | owner, console | `docs/RUNBOOKS.md` § Staff sign-in; the four variables by the commands there |
+| Mailgun sending domain, EU region, on `mail.<domain>` | owner, console + registrar DNS | § Domain binding, step 2 |
+| Release PR `qa → main`, gated migration, `staff_users` row, smoke | owner + agent | § The first production deployment |
+| `PRODUCTION_APP_BASE_URL`, `PRODUCTION_JOB_SECRET`, two pinger monitors | owner | deployment day, `SETUP.md` §26 |
+| QA function region `fra1` | owner | one command, `SETUP.md` §26 |
+| Approved legal text | the club | § Legal document version |
+| Environment marker (§7.4) | a future task | not built; named, not ticked |
+
+Baseline `BR-V1.28-2026-09-16`.
+
+## 56. Owner direction — team mail on Zoho, application mail on a subdomain, a signed declaration PDF by email (2026-09-16; planned, not specified)
+
+**Status:** Recorded, not decided into a rule. Nothing here is built, and nothing here changes a
+requirement yet. It arrived as a handoff from a conversation the owner had elsewhere and is written
+down so the next task starts from the facts and the contradictions, not from a second conversation.
+
+### CURRENT, verified on 2026-09-16
+
+- `<domain>` (the `.com`) is registered at ROMARG for one year, on ROMARG's nameservers, edited in
+  its cPanel Zone Editor. The zone holds exactly three records — the apex `A`, the `www` CNAME and
+  a `qa` CNAME — and the registrar's default FTP, `mail` CNAME and MX records were removed on
+  purpose. No MX, no `mail.` record: nothing on the domain receives mail. HTTPS is Vercel's; FTP
+  is not used. `SETUP.md` §26 has the table, and is the only file allowed to.
+- Production: apex serves, `www` answers 308 to it, `APP_BASE_URL` is the apex. QA: the `qa`
+  hostname is attached and verified on the QA project, but QA's `APP_BASE_URL` still names the
+  provider host, so QA's sitemap and email links do too; the switch waits on the QA Zitadel
+  application's redirect URI (`SETUP.md` §26). The handoff's "QA is `qa.<domain>`" is therefore
+  half true today.
+- The deployment `<domain>` serves is a **production-target build of the feature branch**
+  (`c600e2e`, 2026-09-16 11:15Z, source `git`), made before `main` carried any of it, against an
+  unmigrated database — `/api/health` answers 500. How Vercel came to treat that push as
+  production while `productionBranch` reads `main` was not determined. It is superseded the
+  moment the release PR lands and the gated migration runs; nothing points a visitor at the
+  domain yet.
+
+### PLANNED, in the owner's words, and what each collides with
+
+1. **Team mail on Zoho Mail** — mailboxes for the administrator and two organizers, and a public
+   `contact@<domain>` all three read (a shared mailbox, or a group if the plan lacks one). No
+   collision: Zoho takes the apex MX, SPF include and DKIM. Free plan checked 2026-09-16: five
+   users, 5 GB each, one domain, web access only. The owner may drop Zoho — its usable tier is
+   paid — for **Google Workspace for Nonprofits**, applied for on 2026-09-16 and pending; the
+   split with application mail is identical whichever provider takes the apex.
+2. **Application mail on a subdomain, planned name `mail.<domain>`** — not configured, no DNS
+   values exist, none invented. §55 had said `mg.<domain>`; the owner's name wins and the runbook
+   now says `mail.<domain>`. **The provider is Mailgun**: the adapter is built, the account exists,
+   the webhook verifies Mailgun's signature. The handoff says "Mailgun/Brevo". Brevo is a
+   different HTTP API, a different failure vocabulary for the outbox (§40 mapped Mailgun's), and a
+   different webhook — an adapter and a rule change (`AGENTS.md` §16, BR-REQ-080-*), not a
+   configuration switch. Not decided; Mailgun stands until it is.
+3. **A signed declaration PDF by email.** Desired: form → read and accept the declaration → draw a
+   signature with mouse or touch → the server renders a PDF in memory → emails it to the
+   participant and a copy to `contact@<domain>` → stores no PDF, no signature image, only
+   `accepted / signedAt / version`. Four collisions, none fatal, all to be settled before it is
+   specified:
+   - **Where signing happens.** Today the declaration is signed from the participant's own
+     verified email link, inside the 30-minute hold, never straight after the form — that is what
+     makes "no registration without a verified address and a declaration" true (`AGENTS.md`
+     §10.8, §15.3; BR-REQ-035-*). A drawn signature can sit on that page; it cannot move the step
+     before verification.
+   - **What is already stored.** `declaration_acceptances` (§12.7) records the version, its
+     `content_sha256`, the timestamp, the typed name and the request context — more than the
+     handoff's three fields, and it *is* the evidentiary record. Adding a drawn signature adds a
+     picture, not proof: typed name plus verified email is already a simple electronic signature
+     (§55). The picture is a product choice, and the rule that no signature binary is persisted is
+     compatible with today.
+   - **The copy to the club mailbox is a disclosure.** A PDF naming a participant and their
+     address, sent to a shared inbox and kept there as the archive, is personal data processed
+     for a purpose the privacy notice has to name, with a retention period `SETUP.md` §30 still
+     lists as owed (BR-REQ-070-*; `AGENTS.md` §19.2). A mailbox is also a place three people can
+     forward from. This is the club's decision to make with its adviser, added to `BUSINESS.md`
+     §9.
+   - **The §53 defect comes first.** The PDF must carry the exact version the participant
+     accepted; today the accepted version is resolved twice, at GET and at POST, and can differ.
+     Fixing that binding is a prerequisite, not a follow-up.
+   Suggested subject `Declaratie - <event> - <participant>` and attachment
+   `declaratie-<participant>-<event>.pdf`, PDF content: name, address, event, declaration text,
+   signing time, visual signature, version — recorded as the owner's sketch, to be made a
+   requirement in `SPECS.md` with the collisions above resolved. Rendering a PDF in a serverless
+   function is also a dependency decision under `AGENTS.md` §1.5; no library is chosen here.
+
+### Storage decision, as stated and as it maps
+
+No signed PDF in PostgreSQL, Vercel Blob, R2, S3, the filesystem or a base64 column; the
+participant's inbox and the club's mailbox are the archive. Compatible with everything built: the
+application stores an acceptance row and never a document. If a requirement later wants the PDF
+reproducible, it is regenerated from the stored version and hash, not retrieved.
+
+Baseline `BR-V1.28-2026-09-16`.

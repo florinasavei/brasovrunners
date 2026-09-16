@@ -12,8 +12,11 @@ import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
+import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
-import { listPublishedEvents } from "@/modules/events/repository";
+import JsonLd from "@/shared/ui/JsonLd";
+import { findLatestPastEvent, listUpcomingEvents } from "@/modules/events/repository";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -38,13 +41,37 @@ export default async function EventsPage({ params }: Props) {
 
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
-  const events = await listPublishedEvents(getDb(), locale);
+  const tSite = await getTranslations("Site");
   // One timestamp for the whole page, so two cards cannot disagree about whether
-  // registration has closed.
+  // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
+  const db = getDb();
+  const upcoming = await listUpcomingEvents(db, locale, now);
+  // Only asked for when there is nothing to lead with: between seasons an empty page reads as
+  // a broken site, so the last event that happened stands in, dated.
+  const latestPast = upcoming.length === 0 ? await findLatestPastEvent(db, locale, now) : undefined;
+  const events = upcoming.length > 0 ? upcoming : latestPast ? [latestPast] : [];
+
+  /**
+   * The club's lead event, shown in full above the list.
+   *
+   * Taken from the rows already fetched rather than queried again: `listUpcomingEvents` orders
+   * featured first, so if there is one it is the first row. It is then dropped from the list
+   * below — the same event as both the hero and the first card reads as a duplicate, not as
+   * emphasis.
+   */
+  const featured = upcoming.length > 0 && upcoming[0].featured ? upcoming[0] : undefined;
+  const listed = featured ? events.filter((event) => event.id !== featured.id) : events;
 
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+      {/*
+        BR-REQ-052-02 criterion 1 asks the homepage to carry one SportsOrganization block, and
+        this page is now the homepage — the site root redirects here. Incomplete by design:
+        logo and sameAs are absent until the club supplies them. See structured-data.ts.
+      */}
+      <JsonLd data={sportsOrganizationJsonLd(tSite("name"))} />
+
       <Typography variant="h1" gutterBottom>
         {t("title")}
       </Typography>
@@ -52,11 +79,19 @@ export default async function EventsPage({ params }: Props) {
         {t("intro")}
       </Typography>
 
-      {events.length === 0 ? (
-        <Alert severity="info">{t("empty")}</Alert>
+      {upcoming.length === 0 && latestPast && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {t("noUpcoming")}
+        </Alert>
+      )}
+
+      {featured && <FeaturedEventHero event={featured} now={now} />}
+
+      {listed.length === 0 ? (
+        !featured && <Alert severity="info">{t("empty")}</Alert>
       ) : (
         <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
-          {events.map((event) => (
+          {listed.map((event) => (
             <Card key={event.id} component="li" variant="outlined">
               <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
                 <CardContent>
@@ -83,6 +118,24 @@ export default async function EventsPage({ params }: Props) {
                   )}
 
                   <EventFacts event={event} now={now} variant="compact" />
+
+                  {/*
+                    The card has always been one big link (`CardLink`), and nothing said so.
+                    On a listing where only the featured event carried buttons, the other three
+                    read as inert panels — the affordance was a hover colour, which a phone does
+                    not have and a glance does not find.
+
+                    Text plus an arrow rather than a second button: the whole card is already
+                    the tap target (BR-REQ-041-01 criterion 6), and a real button inside a link
+                    would be a control inside a control.
+                  */}
+                  <Typography
+                    aria-hidden="true"
+                    variant="body2"
+                    sx={{ mt: 2, color: "primary.main", fontWeight: 500 }}
+                  >
+                    {tEvent("seeDetails")} →
+                  </Typography>
                 </CardContent>
               </CardLink>
             </Card>

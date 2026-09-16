@@ -1,5 +1,5 @@
 import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { locale } from "./events";
+import { locale } from "./locale";
 
 /**
  * Participants (AGENTS.md §12.2).
@@ -35,3 +35,5 @@ export const participants = pgTable("participants", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export type Participant = typeof participants.$inferSelect;
