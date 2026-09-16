@@ -3147,7 +3147,7 @@ registrar actually charged.
 The owner asked whether the club can also have mailboxes on the domain. Zoho Mail's free plan
 (checked 2026-09-16): up to five users, 5 GB each, one domain, web access only. It coexists with
 Mailgun cleanly if the domain is split by function: Zoho owns the apex — its MX, its SPF include,
-its DKIM — and Mailgun sends from a subdomain, `mg.<domain>`, which `MAILGUN_DOMAIN` and
+its DKIM — and Mailgun sends from a subdomain, `mail.<domain>`, which `MAILGUN_DOMAIN` and
 `EMAIL_FROM_ADDRESS` then carry, with `EMAIL_REPLY_TO` on a Zoho mailbox somebody reads. Two
 services on one apex would fight over the MX and the SPF record; two hostnames never do.
 Configuration only. It becomes a decision on the day the DNS is edited
@@ -3176,11 +3176,89 @@ Configuration only. It becomes a decision on the day the DNS is edited
 | --- | --- | --- |
 | DNS records for the `.com` at the registrar — an A record on the apex, a CNAME on `www` | owner | printed by `yarn domain:bind production <domain> --apply`, which on 2026-09-16 bound the apex and `www` to the production project and moved `APP_BASE_URL`; the records are in the owner's `.env.local` copy and on the Vercel Domains screen |
 | Zitadel production application | owner, console | `docs/RUNBOOKS.md` § Staff sign-in; the four variables by the commands there |
-| Mailgun sending domain, EU region, on `mg.<domain>` | owner, console + registrar DNS | § Domain binding, step 2 |
+| Mailgun sending domain, EU region, on `mail.<domain>` | owner, console + registrar DNS | § Domain binding, step 2 |
 | Release PR `qa → main`, gated migration, `staff_users` row, smoke | owner + agent | § The first production deployment |
 | `PRODUCTION_APP_BASE_URL`, `PRODUCTION_JOB_SECRET`, two pinger monitors | owner | deployment day, `SETUP.md` §26 |
 | QA function region `fra1` | owner | one command, `SETUP.md` §26 |
 | Approved legal text | the club | § Legal document version |
 | Environment marker (§7.4) | a future task | not built; named, not ticked |
+
+Baseline `BR-V1.28-2026-09-16`.
+
+## 56. Owner direction — team mail on Zoho, application mail on a subdomain, a signed declaration PDF by email (2026-09-16; planned, not specified)
+
+**Status:** Recorded, not decided into a rule. Nothing here is built, and nothing here changes a
+requirement yet. It arrived as a handoff from a conversation the owner had elsewhere and is written
+down so the next task starts from the facts and the contradictions, not from a second conversation.
+
+### CURRENT, verified on 2026-09-16
+
+- `<domain>` (the `.com`) is registered at ROMARG for one year, on ROMARG's nameservers, edited in
+  its cPanel Zone Editor. The zone holds exactly three records — the apex `A`, the `www` CNAME and
+  a `qa` CNAME — and the registrar's default FTP, `mail` CNAME and MX records were removed on
+  purpose. No MX, no `mail.` record: nothing on the domain receives mail. HTTPS is Vercel's; FTP
+  is not used. `SETUP.md` §26 has the table, and is the only file allowed to.
+- Production: apex serves, `www` answers 308 to it, `APP_BASE_URL` is the apex. QA: the `qa`
+  hostname is attached and verified on the QA project, but QA's `APP_BASE_URL` still names the
+  provider host, so QA's sitemap and email links do too; the switch waits on the QA Zitadel
+  application's redirect URI (`SETUP.md` §26). The handoff's "QA is `qa.<domain>`" is therefore
+  half true today.
+- The deployment `<domain>` serves is a **production-target build of the feature branch**
+  (`c600e2e`, 2026-09-16 11:15Z, source `git`), made before `main` carried any of it, against an
+  unmigrated database — `/api/health` answers 500. How Vercel came to treat that push as
+  production while `productionBranch` reads `main` was not determined. It is superseded the
+  moment the release PR lands and the gated migration runs; nothing points a visitor at the
+  domain yet.
+
+### PLANNED, in the owner's words, and what each collides with
+
+1. **Team mail on Zoho Mail** — mailboxes for the administrator and two organizers, and a public
+   `contact@<domain>` all three read (a shared mailbox, or a group if the plan lacks one). No
+   collision: Zoho takes the apex MX, SPF include and DKIM. Free plan checked 2026-09-16: five
+   users, 5 GB each, one domain, web access only.
+2. **Application mail on a subdomain, planned name `mail.<domain>`** — not configured, no DNS
+   values exist, none invented. §55 had said `mg.<domain>`; the owner's name wins and the runbook
+   now says `mail.<domain>`. **The provider is Mailgun**: the adapter is built, the account exists,
+   the webhook verifies Mailgun's signature. The handoff says "Mailgun/Brevo". Brevo is a
+   different HTTP API, a different failure vocabulary for the outbox (§40 mapped Mailgun's), and a
+   different webhook — an adapter and a rule change (`AGENTS.md` §16, BR-REQ-080-*), not a
+   configuration switch. Not decided; Mailgun stands until it is.
+3. **A signed declaration PDF by email.** Desired: form → read and accept the declaration → draw a
+   signature with mouse or touch → the server renders a PDF in memory → emails it to the
+   participant and a copy to `contact@<domain>` → stores no PDF, no signature image, only
+   `accepted / signedAt / version`. Four collisions, none fatal, all to be settled before it is
+   specified:
+   - **Where signing happens.** Today the declaration is signed from the participant's own
+     verified email link, inside the 30-minute hold, never straight after the form — that is what
+     makes "no registration without a verified address and a declaration" true (`AGENTS.md`
+     §10.8, §15.3; BR-REQ-035-*). A drawn signature can sit on that page; it cannot move the step
+     before verification.
+   - **What is already stored.** `declaration_acceptances` (§12.7) records the version, its
+     `content_sha256`, the timestamp, the typed name and the request context — more than the
+     handoff's three fields, and it *is* the evidentiary record. Adding a drawn signature adds a
+     picture, not proof: typed name plus verified email is already a simple electronic signature
+     (§55). The picture is a product choice, and the rule that no signature binary is persisted is
+     compatible with today.
+   - **The copy to the club mailbox is a disclosure.** A PDF naming a participant and their
+     address, sent to a shared inbox and kept there as the archive, is personal data processed
+     for a purpose the privacy notice has to name, with a retention period `SETUP.md` §30 still
+     lists as owed (BR-REQ-070-*; `AGENTS.md` §19.2). A mailbox is also a place three people can
+     forward from. This is the club's decision to make with its adviser, added to `BUSINESS.md`
+     §9.
+   - **The §53 defect comes first.** The PDF must carry the exact version the participant
+     accepted; today the accepted version is resolved twice, at GET and at POST, and can differ.
+     Fixing that binding is a prerequisite, not a follow-up.
+   Suggested subject `Declaratie - <event> - <participant>` and attachment
+   `declaratie-<participant>-<event>.pdf`, PDF content: name, address, event, declaration text,
+   signing time, visual signature, version — recorded as the owner's sketch, to be made a
+   requirement in `SPECS.md` with the collisions above resolved. Rendering a PDF in a serverless
+   function is also a dependency decision under `AGENTS.md` §1.5; no library is chosen here.
+
+### Storage decision, as stated and as it maps
+
+No signed PDF in PostgreSQL, Vercel Blob, R2, S3, the filesystem or a base64 column; the
+participant's inbox and the club's mailbox are the archive. Compatible with everything built: the
+application stores an acceptance row and never a document. If a requirement later wants the PDF
+reproducible, it is regenerated from the stored version and hash, not retrieved.
 
 Baseline `BR-V1.28-2026-09-16`.

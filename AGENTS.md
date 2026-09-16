@@ -701,9 +701,6 @@ Startup/migrate/seed/reset verifies marker against `APP_ENV` and aborts on misma
 **Not yet implemented.** Nothing under `src/db` creates or reads this table (found 2026-09-16,
 `DECISIONS.md` §55). The rule stands; the gap is named in `SETUP.md` §25 rather than ticked.
 
-**Not yet implemented.** Nothing under `src/db` creates or reads this table (found 2026-09-16,
-`DECISIONS.md` §55). The rule stands; the gap is named in `SETUP.md` §25 rather than ticked.
-
 ### 7.5 QA safeguards
 
 QA:
@@ -747,9 +744,6 @@ database fine.
   `qa`; production is a reviewed `workflow_dispatch`. It uses GitHub Environments rather than
   repository secrets specifically because a required reviewer is the "gated" half of this
   section and a repository secret cannot provide one. GitHub environment names are
-  case-insensitive: the workflow's `production` is the `Production` environment Vercel's GitHub
-  app created, and since 2026-09-16 it carries the required reviewer and a `main`-only deployment
-  branch policy — a production migration can only be dispatched from `main`. GitHub environment names are
   case-insensitive: the workflow's `production` is the `Production` environment Vercel's GitHub
   app created, and since 2026-09-16 it carries the required reviewer and a `main`-only deployment
   branch policy — a production migration can only be dispatched from `main`.

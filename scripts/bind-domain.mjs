@@ -258,7 +258,7 @@ function main() {
   console.log(`             and the post-logout URI: ${baseUrl}`);
   console.log("             Keep the old entries until the new host is proven.\n");
   console.log("    Mailgun  add a sending domain and create its SPF and DKIM records — a subdomain");
-  console.log("             such as mg.<domain> if the apex carries mailboxes (RUNBOOKS § Domain");
+  console.log("             such as mail.<domain> if the apex carries mailboxes (RUNBOOKS § Domain");
   console.log("             binding, step 2). Until it verifies, mail stays capped at the sandbox's");
   console.log("             five authorised recipients. Then repoint the webhook:");
   console.log(`               ${baseUrl}/api/webhooks/mailgun\n`);

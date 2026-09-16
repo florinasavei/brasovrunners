@@ -65,8 +65,9 @@ Required:
 
 - GitHub organization or organization-controlled repository;
 - Vercel account (Hobby) with two projects, QA and production;
-- a registrar account for the club's domain and its DNS — the `.com`, bought 2026-09-16, and a
-  `.ro` at a ROTLD-accredited registrar a year later, both kept (`DECISIONS.md` §55);
+- a registrar account for the club's domain and its DNS — **ROMARG** holds the `.com`
+  (registered 2026-09-16) and edits its DNS; a `.ro` at a ROTLD-accredited registrar a year
+  later, both kept (`DECISIONS.md` §55);
 - Cloudflare account for R2 object storage;
 - Neon account;
 - Mailgun account/domain;
@@ -106,6 +107,7 @@ Brașov Runners / R2 QA
 Brașov Runners / R2 Production
 Brașov Runners / Scheduler QA
 Brașov Runners / Scheduler Production
+Brașov Runners / Zoho Mail            (planned — team mailboxes, DECISIONS.md §56)
 ```
 
 Never store secrets in email, chat, spreadsheets, issues, PR descriptions, repository files, screenshots, or documentation.
@@ -1068,7 +1070,7 @@ provider-assigned default hostnames; the custom domain is bound at the end of M1
 
 | Project | Production branch | APP_ENV | Current hostname | Final hostname |
 | --- | --- | --- | --- | --- |
-| `brasov-runners-qa` | `qa` | `qa` | `brasov-runners-qa-nu.vercel.app` | `qa.brasovrunners.com`, optional |
+| `brasov-runners-qa` | `qa` | `qa` | `brasov-runners-qa-nu.vercel.app` — and `qa.brasovrunners.com` is attached and verified since 2026-09-16, but `APP_BASE_URL` still names the provider host, so sitemap, canonical tags and email links say `brasov-runners-qa-nu.vercel.app` until the switch below | `qa.brasovrunners.com` |
 | `brasov-runners-production` | `main` | `production` | `brasov-runners-production.vercel.app` (created 2026-09-16, never deployed; stays reachable as the smoke and scheduler target) | `brasovrunners.com`, with `www.brasovrunners.com` redirecting to it — bought and bound 2026-09-16, DNS at the registrar pending; a year later `brasovrunners.ro` and its `www`, redirecting too, until the club decides otherwise (`DECISIONS.md` §55) |
 
 The QA project's hostname carries a `-nu` suffix Vercel appended because the plain name was
@@ -1076,50 +1078,45 @@ taken. It is not cosmetic: `APP_BASE_URL` must match it character for character,
 sitemap, the canonical tags and every email action link name a host that is not this one. The
 first deployment got this wrong and the sitemap proved it within a minute.
 
+**Registrar and DNS, as they are (2026-09-16) — CURRENT.** Registrar **ROMARG** (registry
+authority OpenSRS), registered 2026-09-16 for one year, renews 2027-09-16. Nameservers
+`ns1`–`ns4.romarg.com`; records are edited in ROMARG's cPanel Zone Editor. Every record the zone
+holds:
+
+| Name | TTL | Type | Value |
+| --- | ---: | --- | --- |
+| `brasovrunners.com.` | 30 | A | `216.198.79.1` |
+| `www.brasovrunners.com.` | 30 | CNAME | `0b1d9745f650b685.vercel-dns-017.com` |
+| `qa.brasovrunners.com.` | 30 | CNAME | `c3b032cf9c2dea0e.vercel-dns-017.com` |
+
+ROMARG's default records — an FTP host, a `mail` CNAME and an MX — were removed on purpose:
+there is **no MX and no `mail.` record today**, so nothing on the domain receives mail yet. HTTPS
+is issued and renewed by Vercel; nothing is bought or installed at the registrar. FTP is not used.
+Vercel reports both production hostnames configured (`A` and `CNAME`), and `www` answers 308 to
+the apex.
+
+**Moving QA to `qa.brasovrunners.com` — pending one console step.** The hostname is attached; the
+switch is `yarn domain:bind qa qa.brasovrunners.com --apply` followed by a QA deployment. Run it
+only after `https://qa.brasovrunners.com/api/auth/callback/zitadel` and the post-logout URI
+`https://qa.brasovrunners.com` exist on the QA Zitadel application, or the next QA deployment
+refuses every staff sign-in (`docs/RUNBOOKS.md` § Domain binding, step 1).
+
+**Email on the domain — PLANNED, nothing configured.** Team mail goes to **Zoho Mail**: planned
+mailboxes `admin@brasovrunners.com`, `amalia@brasovrunners.com`, `dani@brasovrunners.com`, and a
+public `contact@brasovrunners.com` that all three read — a shared mailbox or, failing that on the
+plan chosen, a group. Application mail stays separate, on a subdomain: the planned name is
+`mail.brasovrunners.com`, **not configured, no DNS values exist for it yet — none are to be
+invented here**. The provider is Mailgun, whose adapter is built and whose account exists; the
+owner also named Brevo as a candidate, which would be a new adapter and webhook rather than
+configuration (`DECISIONS.md` §56). Until a sending domain is verified, production email stays
+`capture`.
+
 Two projects rather than one project with preview deployments, so each environment has its
 own environment variables and its own stable hostname. Set the function region to `fra1` on
 both. Verify the exact setting names in the Vercel dashboard when creating them.
 
 Fill the current hostname column when each application is created, and replace this table
 with the final values once binding is complete.
-
-**The function region is a project setting, and it drifted.** On 2026-09-16 the QA project
-reported `serverlessFunctionRegion: iad1` — Virginia — while every document here said `fra1` and
-the database sits in Frankfurt, so each query crossed the Atlantic twice. Read the setting back
-rather than trusting the documents, and set it with the CLI's API passthrough. `vercel api` is
-what a script must use: the token in the CLI's own credentials file expires, the CLI refreshes its
-copy in memory and never rewrites the file, and the REST API answers 403 to the stale one.
-
-```bash
-TEAM=$(node -p "require('./.vercel/project.json').orgId")
-npx vercel api "/v9/projects/brasov-runners-qa?teamId=$TEAM" --raw      # read serverlessFunctionRegion, nodeVersion
-echo '{"serverlessFunctionRegion":"fra1","nodeVersion":"22.x"}' | npx vercel api "/v9/projects/brasov-runners-qa?teamId=$TEAM" -X PATCH --input -
-```
-
-It takes effect on the next deployment. The production project was created with `fra1` and Node
-`22.x` from the start, and with an *ignored build step* — `if [ "$VERCEL_ENV" = "production" ];
-then exit 1; else exit 0; fi` — so it builds `main` and nothing else: a pull-request branch never
-produces a preview deployment on the production project, where it would run with no environment
-variables and therefore `APP_ENV`'s local defaults. On Git Bash, prefix any `vercel api` call with
-`MSYS_NO_PATHCONV=1`, or the shell rewrites the leading `/` of the API path into a Windows path.
-
-**Addressing the production project from this repository.** The checkout is linked to the QA
-project (`.vercel/project.json`), and `vercel env` acts on the linked project. Do not relink the
-repository; link an empty scratch directory to production and pass `--cwd`:
-
-```bash
-npx vercel link --project brasov-runners-production --yes --cwd <empty directory>
-npx vercel env add DATABASE_URL production --value "<pooled Neon URL>" --yes --cwd <that directory>
-npx vercel env ls production --cwd <that directory>
-```
-
-**What the production project holds, as of 2026-09-16:** `APP_ENV=production`, `APP_BASE_URL`,
-`DATABASE_URL` (the Neon production pooled URL), `MAP_LINK_BASE_URL`, `ENABLE_EXPERIMENTAL_COREPACK=1`,
-a fresh `JOB_SECRET`, a fresh `AUTH_SECRET`, `STAFF_AUTH_MODE=disabled` and
-`EMAIL_DELIVERY_MODE=capture`. Nothing was copied from QA. The four Zitadel variables arrive with
-the production Zitadel application (`docs/RUNBOOKS.md` § Staff sign-in); the Mailgun variables
-with the verified sending domain. The smoke and scheduler targets stay on the provider hostname
-on purpose — it resolves whether or not the club's DNS does.
 
 **The function region is a project setting, and it drifted.** On 2026-09-16 the QA project
 reported `serverlessFunctionRegion: iad1` — Virginia — while every document here said `fra1` and
@@ -1525,8 +1522,9 @@ Operations/privacy:
       to a real inbox is not confirmed.
 - [ ] Ownership/recovery/handover documented — §2 and §31 exist; the repository, Vercel, Neon,
       Mailgun and Zitadel accounts are the maintainer's personal ones (BR-BUS-101).
-- [ ] Domain renewal date and owner recorded — the `.com` was bought 2026-09-16, for one year;
-      record the registrar and the renewal date here when the invoice arrives.
+- [x] Domain renewal date and owner recorded — the `.com` at ROMARG, registered 2026-09-16 for
+      one year, renews 2027-09-16, DNS in ROMARG's Zone Editor (§26). The registrar's invoice
+      amount is still to be recorded in `docs/PLATFORM.md` § Cost.
 
 ## 31. Freelancer onboarding and offboarding
 
