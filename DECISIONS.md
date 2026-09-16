@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3050,3 +3050,217 @@ today, and written down so the next person does not rediscover the constraint by
 status code.
 
 Baseline `BR-V1.27-2026-09-07`.
+
+## 55. Decided — the production half of the topology, and a domain that will change (2026-09-16)
+
+**Status:** Decided and largely done. Creates the production Vercel and Neon projects and the
+GitHub gate; records the domain plan; corrects what the documents claimed and the providers did
+not. BR-REQ-101-01, BR-REQ-101-02, BR-REQ-080-03, BR-BUS-101. Written to the owner's standing
+instruction, restated today as "the entire codebase must be vibecode friendly": every step below
+is a command, every value is where a command can read it, and the reasoning sits next to both.
+
+### What was true before anything was touched — read back, not assumed
+
+- **GitHub.** A `qa` environment with `DATABASE_URL` and `APP_BASE_URL`; `Production` and
+  `Preview` environments created by Vercel's GitHub app on 2026-09-04, empty, with no protection
+  rules. Environment names are case-insensitive, so `migrate.yml`'s `production` already resolved
+  to that `Production` — and with no reviewer on it, the "gate" §7.6 promised was a formality.
+  The repository is public, which is what makes required reviewers available on the Free plan.
+- **Vercel.** One project. `serverlessFunctionRegion: iad1` and Node `24.x`, while every
+  document said `fra1` and the database sits in `eu-central-1`. The documents described the
+  intent; nobody had read the setting back.
+- **Neon.** The QA project in AWS Frankfurt; no production project; no Neon credential on the
+  machine. The CLI authenticates through a browser, which an agent's shell cannot open — and a
+  login it starts prints a callback link on a port that is closed by the time a person clicks it.
+  The owner ran `npx neonctl auth` in his own terminal; that is the one step that stays his.
+- **Mailgun.** An account since 2026-09-05 with exactly one domain, the sandbox. `CLAUDE.md`
+  still listed "a Mailgun account" as owed. What is owed is a *verified sending domain*.
+- **Domains.** Neither candidate resolved on the morning of 2026-09-16 (RDAP 404, NXDOMAIN). By
+  the afternoon the owner had bought the `.com`, and `yarn domain:bind production` bound it —
+  apex serving, `www` redirecting, `APP_BASE_URL` moved — with Vercel accepting the domain on a
+  project that had never deployed.
+- **`main`** is sixty commits behind `qa` — the last promotion was PR #7 — and `migrate.yml` does
+  not exist there. The first production deployment is therefore the first release PR, and the
+  production database cannot be migrated by the workflow until that PR lands.
+- **`scripts/bind-domain.mjs`** read the token from the Vercel CLI's credentials file. CLI 59
+  stores an OAuth access token with an expiry — 2026-09-07, in this case — refreshes its copy in
+  memory and never rewrites the file, and the REST API answers 403 `invalidToken` to the stale
+  one. The script also took the project from `.vercel/project.json`, which links this checkout to
+  QA: `yarn domain:bind production` would have bound the club's domain to the QA project.
+- **The environment marker of `AGENTS.md` §7.4** — `app_environment_metadata`, checked at
+  startup, migrate, seed and reset — is not implemented. Nothing under `src/db` creates or reads
+  it. Named in §7.4 and in `SETUP.md` §25 rather than ticked.
+
+### What was done
+
+- **GitHub `production`:** required reviewer (the owner), deployment branch policy `main` only,
+  `APP_BASE_URL` and `DATABASE_URL` secrets. `can_admins_bypass` stays true — a dashboard-only
+  setting, and the owner is both admin and reviewer, so the gate is a deliberate click either way.
+- **Vercel `brasov-runners-production`:** Next.js, `fra1`, Node `22.x`, GitHub-linked with
+  production branch `main`, and an ignored build step that builds only `main` — a pull-request
+  branch would otherwise get a preview deployment on the production project running with no
+  variables at all, that is, with `APP_ENV`'s local defaults. Variables: `APP_ENV=production`,
+  `APP_BASE_URL`, `DATABASE_URL` (Neon production, pooled), `MAP_LINK_BASE_URL`,
+  `ENABLE_EXPERIMENTAL_COREPACK=1`, a fresh `JOB_SECRET`, a fresh `AUTH_SECRET`,
+  `STAFF_AUTH_MODE=disabled`, `EMAIL_DELIVERY_MODE=capture`. Nothing copied from QA. Set through
+  a scratch directory linked to the production project, so this checkout stays linked to QA.
+- **Neon `brasov-runners-production`** (`lively-haze-50960748`), `aws-eu-central-1`, PostgreSQL
+  18, on the Free plan — which allows 100 projects (checked 2026-09-16), so the second one costs
+  nothing. Pooled URL to Vercel, direct URL to the GitHub environment, neither anywhere else.
+- **Production email is `capture`, on purpose,** until a sending domain is verified. `env.ts`
+  deliberately does not force `live` in production — its own comment says why — and `/devs`
+  reports capture on a deployed environment as *limited* (BR-REQ-090-04). §7.2 now says so.
+- **The QA region fix was refused** by the agent's permission layer as a change to a shared
+  resource; the command is in `SETUP.md` §26 for the owner. Production was created correctly
+  from the start.
+- **`bind-domain.mjs` rewritten:** every call through `vercel api`, the project by the
+  environment's name, `www` → apex as a 308 set on the host at add time, `--alias-of` for a
+  second domain. The DNS records come from Vercel's domain-config endpoint rather than from a
+  literal in the script.
+- **`scheduled-jobs.yml`** gained the production row; it skips with a notice until the two
+  repository secrets exist. They are set on deployment day, not before — a host that is not
+  serving yet turns every five-minute run red, and a red run nobody reads is how the next real
+  failure gets missed.
+- **Smoke and scheduler targets stay on the provider hostname**, which resolves whether or not
+  the club's DNS does yet. `/api/health` does not care which host it is asked on.
+
+### The domain: `.com` now, `.ro` in a year, both alive
+
+The owner's decision, 2026-09-16: register the `.com` for a year, add the `.ro` later, keep
+both, and **switching must be easy**. Everything needed already followed from rules in force:
+`APP_BASE_URL` is the one canonical host (§8); every other hostname is a permanent redirect to it
+(BR-REQ-101-02 criterion 4, now criterion 5 for the second domain); cookies are host-only, so a
+switch costs each staff member one more sign-in and participants nothing — they hold no session,
+and every email link is built from `APP_BASE_URL` at send time. The Mailgun sending domain need
+not match the site's host; DKIM alignment is about the `From` address. So the switch is
+`yarn domain:bind production <new> --apply`, `yarn domain:bind production <old> --alias-of <new>
+--apply`, the new redirect URI in Zitadel, a redeploy, `yarn smoke`. `docs/RUNBOOKS.md` § Switching
+the canonical domain is the checklist; nothing under `src/` moves.
+
+Price, so it is not re-researched: Verisign's `.com` wholesale is $10.26 a year until 2026-11-01
+and $10.97 from then on (announced 2026-04-23; checked 2026-09-16). `/admin/tasks` and
+`docs/PLATFORM.md` quote it in USD, the registry's own currency, and keep asking what the
+registrar actually charged.
+
+### Zoho Mail beside Mailgun — asked, answered, not decided
+
+The owner asked whether the club can also have mailboxes on the domain. Zoho Mail's free plan
+(checked 2026-09-16): up to five users, 5 GB each, one domain, web access only. It coexists with
+Mailgun cleanly if the domain is split by function: Zoho owns the apex — its MX, its SPF include,
+its DKIM — and Mailgun sends from a subdomain, `mail.<domain>`, which `MAILGUN_DOMAIN` and
+`EMAIL_FROM_ADDRESS` then carry, with `EMAIL_REPLY_TO` on a Zoho mailbox somebody reads. Two
+services on one apex would fight over the MX and the SPF record; two hostnames never do.
+Configuration only. It becomes a decision on the day the DNS is edited
+(`docs/RUNBOOKS.md` § Domain binding, step 2).
+
+### Two questions asked during this work, recorded so they are not re-researched
+
+- **"Next, we need to be able to edit documents."** The next task. Not *edit*: §46 and §53 fix an
+  approved version's words for good, because a participant relied on them. What is wanted is
+  drafting the next version in the backoffice and approving it there — which exists for drafts
+  today — with the ergonomics of an editor rather than a JSON body, and the §53 binding defect
+  fixed with it, because a version change between a participant's GET and POST records the wrong
+  text today.
+- **"What is a good solution for online document signing?"** The declaration acceptance already
+  built — a typed name, a verified email address, the `content_sha256` of the version shown, the
+  time — is what eIDAS calls a *simple* electronic signature: admissible as evidence, not
+  presumed equivalent to a handwritten one. Whether that suffices for a race declaration is the
+  club's adviser's call, not this repository's, and the runbook already forbids calling it
+  *qualified*. A qualified signature needs a qualified trust-service provider from the EU trusted
+  list, costs per signer, and is an integration rather than a rule change — disproportionate for
+  a start-line declaration unless the adviser says otherwise.
+
+### What is still owed, and who
+
+| Owed | Who | How |
+| --- | --- | --- |
+| DNS records for the `.com` at the registrar — an A record on the apex, a CNAME on `www` | owner | printed by `yarn domain:bind production <domain> --apply`, which on 2026-09-16 bound the apex and `www` to the production project and moved `APP_BASE_URL`; the records are in the owner's `.env.local` copy and on the Vercel Domains screen |
+| Zitadel production application | owner, console | `docs/RUNBOOKS.md` § Staff sign-in; the four variables by the commands there |
+| Mailgun sending domain, EU region, on `mail.<domain>` | owner, console + registrar DNS | § Domain binding, step 2 |
+| Release PR `qa → main`, gated migration, `staff_users` row, smoke | owner + agent | § The first production deployment |
+| `PRODUCTION_APP_BASE_URL`, `PRODUCTION_JOB_SECRET`, two pinger monitors | owner | deployment day, `SETUP.md` §26 |
+| QA function region `fra1` | owner | one command, `SETUP.md` §26 |
+| Approved legal text | the club | § Legal document version |
+| Environment marker (§7.4) | a future task | not built; named, not ticked |
+
+Baseline `BR-V1.28-2026-09-16`.
+
+## 56. Owner direction — team mail on Zoho, application mail on a subdomain, a signed declaration PDF by email (2026-09-16; planned, not specified)
+
+**Status:** Recorded, not decided into a rule. Nothing here is built, and nothing here changes a
+requirement yet. It arrived as a handoff from a conversation the owner had elsewhere and is written
+down so the next task starts from the facts and the contradictions, not from a second conversation.
+
+### CURRENT, verified on 2026-09-16
+
+- `<domain>` (the `.com`) is registered at ROMARG for one year, on ROMARG's nameservers, edited in
+  its cPanel Zone Editor. The zone holds exactly three records — the apex `A`, the `www` CNAME and
+  a `qa` CNAME — and the registrar's default FTP, `mail` CNAME and MX records were removed on
+  purpose. No MX, no `mail.` record: nothing on the domain receives mail. HTTPS is Vercel's; FTP
+  is not used. `SETUP.md` §26 has the table, and is the only file allowed to.
+- Production: apex serves, `www` answers 308 to it, `APP_BASE_URL` is the apex. QA: the `qa`
+  hostname is attached and verified on the QA project, but QA's `APP_BASE_URL` still names the
+  provider host, so QA's sitemap and email links do too; the switch waits on the QA Zitadel
+  application's redirect URI (`SETUP.md` §26). The handoff's "QA is `qa.<domain>`" is therefore
+  half true today.
+- The deployment `<domain>` serves is a **production-target build of the feature branch**
+  (`c600e2e`, 2026-09-16 11:15Z, source `git`), made before `main` carried any of it, against an
+  unmigrated database — `/api/health` answers 500. How Vercel came to treat that push as
+  production while `productionBranch` reads `main` was not determined. It is superseded the
+  moment the release PR lands and the gated migration runs; nothing points a visitor at the
+  domain yet.
+
+### PLANNED, in the owner's words, and what each collides with
+
+1. **Team mail on Zoho Mail** — mailboxes for the administrator and two organizers, and a public
+   `contact@<domain>` all three read (a shared mailbox, or a group if the plan lacks one). No
+   collision: Zoho takes the apex MX, SPF include and DKIM. Free plan checked 2026-09-16: five
+   users, 5 GB each, one domain, web access only. The owner may drop Zoho — its usable tier is
+   paid — for **Google Workspace for Nonprofits**, applied for on 2026-09-16 and pending; the
+   split with application mail is identical whichever provider takes the apex.
+2. **Application mail on a subdomain, planned name `mail.<domain>`** — not configured, no DNS
+   values exist, none invented. §55 had said `mg.<domain>`; the owner's name wins and the runbook
+   now says `mail.<domain>`. **The provider is Mailgun**: the adapter is built, the account exists,
+   the webhook verifies Mailgun's signature. The handoff says "Mailgun/Brevo". Brevo is a
+   different HTTP API, a different failure vocabulary for the outbox (§40 mapped Mailgun's), and a
+   different webhook — an adapter and a rule change (`AGENTS.md` §16, BR-REQ-080-*), not a
+   configuration switch. Not decided; Mailgun stands until it is.
+3. **A signed declaration PDF by email.** Desired: form → read and accept the declaration → draw a
+   signature with mouse or touch → the server renders a PDF in memory → emails it to the
+   participant and a copy to `contact@<domain>` → stores no PDF, no signature image, only
+   `accepted / signedAt / version`. Four collisions, none fatal, all to be settled before it is
+   specified:
+   - **Where signing happens.** Today the declaration is signed from the participant's own
+     verified email link, inside the 30-minute hold, never straight after the form — that is what
+     makes "no registration without a verified address and a declaration" true (`AGENTS.md`
+     §10.8, §15.3; BR-REQ-035-*). A drawn signature can sit on that page; it cannot move the step
+     before verification.
+   - **What is already stored.** `declaration_acceptances` (§12.7) records the version, its
+     `content_sha256`, the timestamp, the typed name and the request context — more than the
+     handoff's three fields, and it *is* the evidentiary record. Adding a drawn signature adds a
+     picture, not proof: typed name plus verified email is already a simple electronic signature
+     (§55). The picture is a product choice, and the rule that no signature binary is persisted is
+     compatible with today.
+   - **The copy to the club mailbox is a disclosure.** A PDF naming a participant and their
+     address, sent to a shared inbox and kept there as the archive, is personal data processed
+     for a purpose the privacy notice has to name, with a retention period `SETUP.md` §30 still
+     lists as owed (BR-REQ-070-*; `AGENTS.md` §19.2). A mailbox is also a place three people can
+     forward from. This is the club's decision to make with its adviser, added to `BUSINESS.md`
+     §9.
+   - **The §53 defect comes first.** The PDF must carry the exact version the participant
+     accepted; today the accepted version is resolved twice, at GET and at POST, and can differ.
+     Fixing that binding is a prerequisite, not a follow-up.
+   Suggested subject `Declaratie - <event> - <participant>` and attachment
+   `declaratie-<participant>-<event>.pdf`, PDF content: name, address, event, declaration text,
+   signing time, visual signature, version — recorded as the owner's sketch, to be made a
+   requirement in `SPECS.md` with the collisions above resolved. Rendering a PDF in a serverless
+   function is also a dependency decision under `AGENTS.md` §1.5; no library is chosen here.
+
+### Storage decision, as stated and as it maps
+
+No signed PDF in PostgreSQL, Vercel Blob, R2, S3, the filesystem or a base64 column; the
+participant's inbox and the club's mailbox are the archive. Compatible with everything built: the
+application stores an acceptance row and never a document. If a requirement later wants the PDF
+reproducible, it is regenerated from the stored version and hash, not retrieved.
+
+Baseline `BR-V1.28-2026-09-16`.

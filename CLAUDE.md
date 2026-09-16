@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.27-2026-09-07`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.28-2026-09-16`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -14,10 +14,12 @@ transactional email and a registrations backoffice — exists and is tested. **Q
 real host**: a Neon project in Frankfurt and a Vercel project on its provider-assigned
 hostname, serving the seeded events with a reachable database, and the participant journey can
 now be walked there end to end because every environment but production carries clearly marked
-sample legal text (`DECISIONS.md` §29). What is left is still not application code: a Mailgun
-account, the club's `.ro` domain, the club's *approved* privacy notice and declaration text, and
-the production half of the two-project topology. See "What is deployed" below and
-`DECISIONS.md` §26–§30 for what changed to get here.
+sample legal text (`DECISIONS.md` §29). What is left is still not application code: DNS for the
+club's `.com`, bought on 2026-09-16 — a `.ro` follows a year later, both alive at once
+(`DECISIONS.md` §55) — a Mailgun sending domain verified on it, a production Zitadel application,
+and the club's *approved* privacy notice and declaration text. Both halves of the production
+topology exist. See "What is deployed" below and `DECISIONS.md` §26–§30 and §55 for what
+changed to get here.
 
 [`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced — Romanian event pages
 only, no registration, no email, no login — and is now a historical scope document rather than
@@ -253,7 +255,10 @@ Not built: the rest of the CMS — articles, static pages, galleries, the media 
 Tiptap body contract (M5) — and everything M2–M4 name (multi-distance races, bibs, results,
 runner profiles).
 
-**What is deployed.** QA only, and none of what remains is application code. A Neon project in
+**What is deployed.** QA, plus a production Vercel project and a production Neon project that
+are configured and have never served a request — `main` is sixty commits behind `qa`, so the
+first production deployment *is* the `qa → main` release PR (`docs/RUNBOOKS.md` § The first
+production deployment). None of what remains is application code. A Neon project in
 Frankfurt holds the migrated schema and the seeded events; a Vercel project tracking `qa`
 serves them on its provider-assigned hostname, with `/api/health` reporting the database
 reachable. Its exact hostname lives in `SETUP.md` §26 and nowhere else, and `APP_BASE_URL` is
@@ -267,12 +272,15 @@ needs **"Include user's profile info in the ID Token"** enabled, or the ID token
 and the first Administrator is a `staff_users` row inserted by hand, because the screen that
 invites people is itself behind the sign-in it would be granting.
 
-**Still owed, all of it account creation or a decision rather than code.** A Mailgun account;
-the club's `.ro` domain; the club's *approved* privacy notice, terms and declaration text, which
-replace the sample versions through a migration (`docs/RUNBOOKS.md` § Legal document version) and
-without which production correctly refuses every registration; and the production half of the
-topology — its own Neon project and its own Vercel project tracking `main`, never sharing QA's
-database or secrets. `SETUP.md` §26 and `docs/RUNBOOKS.md` are the procedures.
+**Still owed, all of it account creation or a decision rather than code.** The DNS records for
+the club's `.com`, bought on 2026-09-16 (`yarn domain:bind` prints them); a Mailgun sending domain
+verified on it; a production Zitadel application and the two production monitors on the pinger;
+the `qa → main` release PR that is the first production deployment; and the club's *approved*
+privacy notice, terms and declaration text, which replace the sample versions through a migration
+(`docs/RUNBOOKS.md` § Legal document version) and without which production correctly refuses
+every registration. The production Vercel and Neon projects exist, track `main`, run in
+Frankfurt, and share nothing with QA — not a database, not a secret. `SETUP.md` §25–§26 and §30
+and `docs/RUNBOOKS.md` are the procedures; §30 is the checklist, walked on 2026-09-16.
 
 ## Stack and providers, as decided
 
@@ -281,8 +289,8 @@ database or secrets. `SETUP.md` §26 and `docs/RUNBOOKS.md` are the procedures.
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | QA project live, migrated and seeded; production project not created |
-| Hosting | Vercel Hobby, function region `fra1`; one project per environment | QA deployed on its provider hostname, tracking `qa`; production project not created |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | QA project live, migrated and seeded; production project created 2026-09-16, never migrated — the first migration is the gated workflow run after the release PR |
+| Hosting | Vercel Hobby, function region `fra1`; one project per environment | both projects exist; QA tracks `qa` and is deployed, production tracks `main` and has never deployed. QA's functions sat in `iad1` until 2026-09-16 — `SETUP.md` §26 |
 | Jobs | No in-process interval — serverless has no process for one. An external HTTP pinger POSTs both endpoints every five minutes with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | live in QA since `BR-V1.18`. It had never run before that: `QA_APP_BASE_URL` and `QA_JOB_SECRET` did not exist, so every run logged "qa is not configured; skipping" and exited green. Actions alone measured ~2-hour gaps, not five minutes — `SETUP.md` §26 has the numbers and the pinger setup |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |

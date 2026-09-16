@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1395,8 +1395,9 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 2. Given a change of `APP_BASE_URL`, when the application restarts, then email links, canonical tags, `hreflang` alternates, sitemap entries, Open Graph URLs, authentication callbacks, and the webhook URL all reflect the new host with no code change.
 3. Given cookies, when they are set, then no `domain` attribute is used.
 4. Given the binding runbook, when it is completed, then exactly one canonical production host serves the site and the other redirects to it.
+5. Given a second domain the club holds, when it is bound as an alias, then it and its `www` redirect permanently to the canonical host; and making it the canonical host instead is the same configuration change in reverse — `APP_BASE_URL` and the host-level redirects — with no code change.
 
-**Verification:** integration `hosting/base-url.test.ts`; `docs/RUNBOOKS.md` § Domain binding
+**Verification:** integration `hosting/base-url.test.ts`; `docs/RUNBOOKS.md` § Domain binding; `scripts/bind-domain.mjs`
 
 #### BR-REQ-090-03 — Scheduled work is a liveness concern only
 

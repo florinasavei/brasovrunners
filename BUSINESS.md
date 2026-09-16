@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -927,7 +927,9 @@ The club must approve:
 
 - final brand identity and public wording;
 - privacy, terms, and declaration text;
-- whether typed-name acceptance is sufficient for the intended events;
+- whether typed-name acceptance is sufficient for the intended events, or whether the drawn
+  (mouse or touch) signature and emailed PDF copy the owner sketched on 2026-09-16 replace it —
+  and, if a copy goes to a club mailbox, that the privacy notice says so (`DECISIONS.md` §56);
 - retention, deletion, and historical-record policy;
 - support and organizer contact addresses;
 - production sender name and email address;
@@ -954,6 +956,8 @@ transferred to a club-owned organization before handover, so that the club, not 
 individual, owns the code.
 
 The public domain is bound at the end of M1. Until then both applications run on their provider-assigned hostnames. Binding the real domain must be a configuration and DNS change only, with no change to application behavior.
+
+The club may hold more than one domain name over time. Exactly one of them is the site's canonical address at any moment; every other one redirects to it, so a visitor, a search engine and an email link all arrive at the same place. Which domain is canonical is an operational setting, and changing it must be a configuration change with no change to application behavior.
 
 ## 10. Document synchronization
 

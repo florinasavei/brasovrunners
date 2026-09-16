@@ -83,6 +83,17 @@ export default async function BuildBadge() {
     fontSize: "0.6875rem",
     lineHeight: 1.4,
     fontVariantNumeric: "tabular-nums",
+    /**
+     * A label, never a panel: at most three quarters of the viewport, one line, and an ellipsis
+     * when the text is longer — the full version is in `title`. The end-to-end test asserts the
+     * 75% bound at 320px, and the label first crossed it on the first two-digit day of a month
+     * ("16 sept." is one glyph wider than "7 sept.") under the fonts CI renders with — which is
+     * not a reason to cover the page.
+     */
+    maxWidth: "75vw",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   };
 
   if (env.STAFF_AUTH_MODE === "disabled") {

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -65,7 +65,9 @@ Required:
 
 - GitHub organization or organization-controlled repository;
 - Vercel account (Hobby) with two projects, QA and production;
-- a ROTLD-accredited registrar account for the `.ro` domain and its DNS once registered;
+- a registrar account for the club's domain and its DNS — **ROMARG** holds the `.com`
+  (registered 2026-09-16) and edits its DNS; a `.ro` at a ROTLD-accredited registrar a year
+  later, both kept (`DECISIONS.md` §55);
 - Cloudflare account for R2 object storage;
 - Neon account;
 - Mailgun account/domain;
@@ -105,6 +107,7 @@ Brașov Runners / R2 QA
 Brașov Runners / R2 Production
 Brașov Runners / Scheduler QA
 Brașov Runners / Scheduler Production
+Brașov Runners / Zoho Mail            (planned — team mailboxes, DECISIONS.md §56)
 ```
 
 Never store secrets in email, chat, spreadsheets, issues, PR descriptions, repository files, screenshots, or documentation.
@@ -1004,28 +1007,57 @@ Checklist:
 
 Use separate production boundary, not only schemas in one shared project.
 
-Recommended:
-
 ```text
-Neon QA project/database
-Neon Production project/database
+Neon QA project          exists — AWS Frankfurt (aws-eu-central-1), migrated, seeded (2026-09-04)
+Neon production project  exists — brasov-runners-production (lively-haze-50960748), aws-eu-central-1,
+                         PostgreSQL 18, created 2026-09-16, never migrated: its first migration is
+                         the gated workflow run after the first release PR
 ```
 
-Checklist:
+Free plan (checked 2026-09-16, neon.com/docs/introduction/plans): 100 projects, 0.5 GB storage and
+100 CU-hours per project per month. The second project costs nothing.
 
-- [ ] Dedicated connection strings.
-- [ ] Pooled connection appropriate for runtime.
-- [ ] Direct/admin connection only where migration tooling requires.
-- [ ] Environment marker initialized.
-- [ ] QA synthetic seed, including the sample legal documents (`DECISIONS.md` §29).
-- [ ] Production never auto-seeded, and the sample legal documents refuse it outright.
-- [ ] Migrations are applied by `.github/workflows/migrate.yml`, never by hand and never by a
-      build. Each GitHub **Environment** (`qa`, `production`) holds two secrets:
-      `DATABASE_URL` — that environment's own database, the direct (non-pooled) URL migration
-      tooling wants — and `APP_BASE_URL`, which the post-migration smoke check reads.
-      `production` has a required reviewer; `qa` does not.
-- [ ] Backup/restore capability documented and tested before launch.
-- [ ] No production clone into QA.
+**How it was created, for the next environment.** The Neon CLI authenticates through the browser,
+and a login started from an agent's shell prints a link whose callback port is closed by the time
+anybody clicks it — run the first command in your own terminal, the rest from anywhere:
+
+```bash
+npx neonctl auth                                  # once; saves credentials under your profile
+npx neonctl projects create --name brasov-runners-production --region-id aws-eu-central-1 \
+  --org-id <the organisation neonctl lists when asked> --output json
+npx neonctl connection-string --project-id <id> --pooled    # DATABASE_URL for the Vercel project
+npx neonctl connection-string --project-id <id>             # the direct URL, for the GitHub environment
+```
+
+Where the two URLs went (`AGENTS.md` §7.6): the pooled one is the production Vercel project's
+`DATABASE_URL`, set through the scratch link of §26; the direct one is the GitHub `production`
+environment's `DATABASE_URL`. Neither is in this repository, in `.env.local` as
+`DATABASE_URL_PRODUCTION`, or anywhere a `yarn db:migrate:env production` could pick it up by
+accident — production is migrated by the workflow, from `main`, behind the reviewer.
+
+Checklist, walked 2026-09-16:
+
+- [x] Dedicated connection strings — one project each, nothing shared.
+- [x] Pooled connection appropriate for runtime — the `-pooler` host in both Vercel projects.
+- [x] Direct/admin connection only where migration tooling requires — the GitHub environments
+      hold the direct URL, nothing else does.
+- [ ] Environment marker initialized — **not implemented**: nothing under `src/db` creates or
+      checks `app_environment_metadata` (`AGENTS.md` §7.4). Named here rather than ticked.
+- [x] QA synthetic seed, including the sample legal documents (`DECISIONS.md` §29).
+- [x] Production never auto-seeded, and the sample legal documents refuse it outright —
+      `tests/integration/legal/versions.test.ts`.
+- [x] Migrations are applied by `.github/workflows/migrate.yml`, never by hand and never by a
+      build. Each GitHub **Environment** (`qa`, `production`) holds two secrets: `DATABASE_URL` —
+      that environment's own database, the direct (non-pooled) URL migration tooling wants — and
+      `APP_BASE_URL`, which the post-migration smoke check reads. `production` has a required
+      reviewer and a `main`-only deployment branch policy since 2026-09-16; `qa` has neither, by
+      design.
+- [ ] Backup/restore capability documented and tested before launch — Neon's own restore exists;
+      nothing has been rehearsed, and its retention on the Free plan is not recorded here.
+- [x] No production clone into QA — nothing to clone yet, and no procedure does it.
+- [ ] PostgreSQL majors match — QA and production are both PostgreSQL 18 on Neon; the local
+      `docker-compose.yml` image is `postgres:17.6-alpine` and PGlite runs its own. Nothing has
+      broken on the gap, and it is named so a migration proven only on 17 is not a surprise on 18.
 
 ## 26. Create the Vercel QA and production projects
 
@@ -1038,13 +1070,47 @@ provider-assigned default hostnames; the custom domain is bound at the end of M1
 
 | Project | Production branch | APP_ENV | Current hostname | Final hostname |
 | --- | --- | --- | --- | --- |
-| `brasov-runners-qa` | `qa` | `qa` | `brasov-runners-qa-nu.vercel.app` | `qa.<domain>` |
-| `brasov-runners-production` | `main` | `production` | not created yet | `<domain>` and `www.<domain>` |
+| `brasov-runners-qa` | `qa` | `qa` | `brasov-runners-qa-nu.vercel.app` — and `qa.brasovrunners.com` is attached and verified since 2026-09-16, but `APP_BASE_URL` still names the provider host, so sitemap, canonical tags and email links say `brasov-runners-qa-nu.vercel.app` until the switch below | `qa.brasovrunners.com` |
+| `brasov-runners-production` | `main` | `production` | `brasov-runners-production.vercel.app` (created 2026-09-16, never deployed; stays reachable as the smoke and scheduler target) | `brasovrunners.com`, with `www.brasovrunners.com` redirecting to it — bought and bound 2026-09-16, DNS at the registrar pending; a year later `brasovrunners.ro` and its `www`, redirecting too, until the club decides otherwise (`DECISIONS.md` §55) |
 
 The QA project's hostname carries a `-nu` suffix Vercel appended because the plain name was
 taken. It is not cosmetic: `APP_BASE_URL` must match it character for character, or the
 sitemap, the canonical tags and every email action link name a host that is not this one. The
 first deployment got this wrong and the sitemap proved it within a minute.
+
+**Registrar and DNS, as they are (2026-09-16) — CURRENT.** Registrar **ROMARG** (registry
+authority OpenSRS), registered 2026-09-16 for one year, renews 2027-09-16. Nameservers
+`ns1`–`ns4.romarg.com`; records are edited in ROMARG's cPanel Zone Editor. Every record the zone
+holds:
+
+| Name | TTL | Type | Value |
+| --- | ---: | --- | --- |
+| `brasovrunners.com.` | 30 | A | `216.198.79.1` |
+| `www.brasovrunners.com.` | 30 | CNAME | `0b1d9745f650b685.vercel-dns-017.com` |
+| `qa.brasovrunners.com.` | 30 | CNAME | `c3b032cf9c2dea0e.vercel-dns-017.com` |
+
+ROMARG's default records — an FTP host, a `mail` CNAME and an MX — were removed on purpose:
+there is **no MX and no `mail.` record today**, so nothing on the domain receives mail yet. HTTPS
+is issued and renewed by Vercel; nothing is bought or installed at the registrar. FTP is not used.
+Vercel reports both production hostnames configured (`A` and `CNAME`), and `www` answers 308 to
+the apex.
+
+**Moving QA to `qa.brasovrunners.com` — pending one console step.** The hostname is attached; the
+switch is `yarn domain:bind qa qa.brasovrunners.com --apply` followed by a QA deployment. Run it
+only after `https://qa.brasovrunners.com/api/auth/callback/zitadel` and the post-logout URI
+`https://qa.brasovrunners.com` exist on the QA Zitadel application, or the next QA deployment
+refuses every staff sign-in (`docs/RUNBOOKS.md` § Domain binding, step 1).
+
+**Email on the domain — PLANNED, nothing configured.** Team mail goes to **Zoho Mail** — or to **Google Workspace for Nonprofits**, applied for on
+2026-09-16 and pending, which replaces Zoho if granted, since Zoho's usable tier is paid: planned
+mailboxes `admin@brasovrunners.com`, `amalia@brasovrunners.com`, `dani@brasovrunners.com`, and a
+public `contact@brasovrunners.com` that all three read — a shared mailbox or, failing that on the
+plan chosen, a group. Application mail stays separate, on a subdomain: the planned name is
+`mail.brasovrunners.com`, **not configured, no DNS values exist for it yet — none are to be
+invented here**. The provider is Mailgun, whose adapter is built and whose account exists; the
+owner also named Brevo as a candidate, which would be a new adapter and webhook rather than
+configuration (`DECISIONS.md` §56). Until a sending domain is verified, production email stays
+`capture`.
 
 Two projects rather than one project with preview deployments, so each environment has its
 own environment variables and its own stable hostname. Set the function region to `fra1` on
@@ -1052,6 +1118,45 @@ both. Verify the exact setting names in the Vercel dashboard when creating them.
 
 Fill the current hostname column when each application is created, and replace this table
 with the final values once binding is complete.
+
+**The function region is a project setting, and it drifted.** On 2026-09-16 the QA project
+reported `serverlessFunctionRegion: iad1` — Virginia — while every document here said `fra1` and
+the database sits in Frankfurt, so each query crossed the Atlantic twice. Read the setting back
+rather than trusting the documents, and set it with the CLI's API passthrough. `vercel api` is
+what a script must use: the token in the CLI's own credentials file expires, the CLI refreshes its
+copy in memory and never rewrites the file, and the REST API answers 403 to the stale one.
+
+```bash
+TEAM=$(node -p "require('./.vercel/project.json').orgId")
+npx vercel api "/v9/projects/brasov-runners-qa?teamId=$TEAM" --raw      # read serverlessFunctionRegion, nodeVersion
+echo '{"serverlessFunctionRegion":"fra1","nodeVersion":"22.x"}' | npx vercel api "/v9/projects/brasov-runners-qa?teamId=$TEAM" -X PATCH --input -
+```
+
+It takes effect on the next deployment. The production project was created with `fra1` and Node
+`22.x` from the start, and with an *ignored build step* — `if [ "$VERCEL_ENV" = "production" ];
+then exit 1; else exit 0; fi` — so it builds `main` and nothing else: a pull-request branch never
+produces a preview deployment on the production project, where it would run with no environment
+variables and therefore `APP_ENV`'s local defaults. On Git Bash, prefix any `vercel api` call with
+`MSYS_NO_PATHCONV=1`, or the shell rewrites the leading `/` of the API path into a Windows path.
+
+**Addressing the production project from this repository.** The checkout is linked to the QA
+project (`.vercel/project.json`), and `vercel env` acts on the linked project. Do not relink the
+repository; link an empty scratch directory to production and pass `--cwd`:
+
+```bash
+npx vercel link --project brasov-runners-production --yes --cwd <empty directory>
+npx vercel env add DATABASE_URL production --value "<pooled Neon URL>" --yes --cwd <that directory>
+npx vercel env ls production --cwd <that directory>
+```
+
+**What the production project holds, as of 2026-09-16:** `APP_ENV=production`, `APP_BASE_URL=https://brasovrunners.com` (set by `yarn domain:bind`
+on 2026-09-16 — `www.brasovrunners.com` answers 308 to it; the registrar's DNS records are still
+to be created), `DATABASE_URL` (the Neon production pooled URL), `MAP_LINK_BASE_URL`, `ENABLE_EXPERIMENTAL_COREPACK=1`,
+a fresh `JOB_SECRET`, a fresh `AUTH_SECRET`, `STAFF_AUTH_MODE=disabled` and
+`EMAIL_DELIVERY_MODE=capture`. Nothing was copied from QA. The four Zitadel variables arrive with
+the production Zitadel application (`docs/RUNBOOKS.md` § Staff sign-in); the Mailgun variables
+with the verified sending domain. The smoke and scheduler targets stay on the provider hostname
+on purpose — it resolves whether or not the club's DNS does.
 
 Connect the GitHub repository to each project and set its production branch as stated. Configure provider credentials only in the correct project.
 
@@ -1109,8 +1214,12 @@ for it, and a matrix row in that workflow:
 ```text
 QA_APP_BASE_URL          https://<the qa project's current hostname>
 QA_JOB_SECRET            the qa project's JOB_SECRET, character for character
-PRODUCTION_APP_BASE_URL  added with the production project
-PRODUCTION_JOB_SECRET    added with the production project
+PRODUCTION_APP_BASE_URL  https://<the production project's provider hostname> — set on deployment
+                         day, not before: the matrix row exists and skips with a notice until
+                         then, and setting it earlier turns every five-minute run red against
+                         a host that is not serving yet
+PRODUCTION_JOB_SECRET    the production project's JOB_SECRET, character for character — generated
+                         2026-09-16, held in that Vercel project and in the owner's .env.local copy
 ```
 
 A missing pair is skipped with a notice rather than failing the run, so the workflow can be
@@ -1353,45 +1462,70 @@ finished when it is on production, not when its last pull request merges.
 
 ## 30. Production readiness checklist
 
+Walked on 2026-09-16 (`DECISIONS.md` §55). A ticked row names its evidence; an unticked one
+names who owes it. Walk it again before the release PR, and tick nothing from memory.
+
 Repository/delivery:
 
-- [ ] `qa` default and protected.
-- [ ] `main` protected.
-- [ ] CI required.
-- [ ] Release PR process rehearsed.
-- [ ] AI reviewer read-only permissions verified.
+- [x] `qa` default and protected — default branch; the `docs-check` status is required and
+      strict on both branches.
+- [x] `main` protected — same rule, and it accepts releases from `qa` only.
+- [x] CI required — `docs-check` (`yarn check`) on both branches.
+- [ ] Release PR process rehearsed — once, `qa → main` PR #7, before M1 existed. The next one is
+      the first production deployment (`docs/RUNBOOKS.md` § The first production deployment).
+- [ ] AI reviewer read-only permissions verified — not re-verified this walk.
 
-Application:
+Application (true by test; `yarn check` runs 737 tests, `yarn test:e2e` 90, `yarn test:concurrency` 5):
 
-- [ ] Romanian/English flows.
-- [ ] MUI SSR/hydration/accessibility.
-- [ ] Staff auth/roles.
-- [ ] CMS Draft/Review/Publish.
-- [ ] Canonical email tests.
-- [ ] Email GET no mutation.
-- [ ] Declaration approved/versioned.
-- [ ] Capacity concurrency test.
-- [ ] Waitlist offer/expiry/promotion test.
-- [ ] Self-unregistration.
-- [ ] Admin resend/delivery history.
-- [ ] Public profile privacy/noindex.
+- [x] Romanian/English flows — end-to-end, both viewports.
+- [x] MUI SSR/hydration/accessibility — end-to-end.
+- [x] Staff auth/roles — `tests/unit/config/env.test.ts`, the `/admin` end-to-end runs.
+- [x] CMS Draft/Review/Publish — events and standing pages; articles are M5.
+- [x] Canonical email tests.
+- [x] Email GET no mutation.
+- [x] Declaration approved/versioned — with the binding defect of `DECISIONS.md` §53 still open,
+      as its own task.
+- [x] Capacity concurrency test — `yarn test:concurrency`.
+- [x] Waitlist offer/expiry/promotion test.
+- [x] Self-unregistration.
+- [x] Admin resend/delivery history.
+- [ ] Public profile privacy/noindex — M4, not built; nothing to verify yet.
 
 Providers:
 
-- [ ] Separate QA/production Vercel projects and Neon/R2 resources.
-- [ ] Mailgun production domain verified.
-- [ ] QA email restricted.
-- [ ] Webhook/job secrets configured.
-- [ ] Production config rejects unsafe resources/modes.
+- [x] Separate QA/production Vercel projects — both exist, `fra1`, separate variables, separate
+      secrets, separate Git production branches (2026-09-16).
+- [x] Separate QA/production Neon projects — both exist in `aws-eu-central-1`; production never
+      migrated yet (§25).
+- [ ] R2 resources — deferred (`AGENTS.md` §17); nothing uploads yet.
+- [ ] Mailgun production domain verified — needs the club's DNS. The account exists (2026-09-05),
+      sandbox only.
+- [x] QA email restricted — `allowlist`, and `live` is refused outside production at startup
+      (`tests/integration/notifications/modes.test.ts`).
+- [ ] Webhook/job secrets configured — QA: both. Production: `JOB_SECRET` set;
+      `MAILGUN_WEBHOOK_SIGNING_KEY` waits for the sending domain; the `PRODUCTION_*` repository
+      secrets and the two pinger monitors on deployment day (§26).
+- [x] Production config rejects unsafe resources/modes — the development switcher
+      (`tests/unit/config/env.test.ts`), live delivery anywhere else
+      (`notifications/modes.test.ts`), test registrations, twice
+      (`registrations/test-kind.test.ts`), sample legal text (`legal/versions.test.ts`). The
+      environment marker of `AGENTS.md` §7.4 is **not implemented** (§25).
 
 Operations/privacy:
 
-- [ ] Legal/privacy/terms/declaration approved.
-- [ ] Retention/deletion policy.
-- [ ] Participant/profile/photo support process.
-- [ ] Backups and restore test.
-- [ ] Monitoring/alerts.
-- [ ] Ownership/recovery/handover documented.
+- [ ] Legal/privacy/terms/declaration approved — the club; `docs/RUNBOOKS.md` § Legal document
+      version. Production refuses every registration until then, correctly.
+- [ ] Retention/deletion policy — erasure exists (BR-REQ-037-06); a written retention period is
+      the club's decision.
+- [ ] Participant/profile/photo support process — the club.
+- [ ] Backups and restore test — Neon's own restore, not rehearsed (§25).
+- [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; failure alerting from the pinger
+      to a real inbox is not confirmed.
+- [ ] Ownership/recovery/handover documented — §2 and §31 exist; the repository, Vercel, Neon,
+      Mailgun and Zitadel accounts are the maintainer's personal ones (BR-BUS-101).
+- [x] Domain renewal date and owner recorded — the `.com` at ROMARG, registered 2026-09-16 for
+      one year, renews 2027-09-16, DNS in ROMARG's Zone Editor (§26). The registrar's invoice
+      amount is still to be recorded in `docs/PLATFORM.md` § Cost.
 
 ## 31. Freelancer onboarding and offboarding
 
