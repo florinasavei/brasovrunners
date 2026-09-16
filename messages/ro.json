@@ -464,7 +464,7 @@
           "done": "Emailurile ajung la participanți."
         },
         "registerDomain": {
-          "title": "Înregistrează domeniul .ro",
+          "title": "Înregistrează domeniul clubului",
           "todo": "Site-ul funcționează, dar pe adresa furnizorului. Domeniul propriu este și condiția pentru emailuri către oricine. Comanda  face partea tehnică.",
           "done": "Site-ul răspunde pe domeniul clubului."
         },
@@ -495,11 +495,11 @@
         "notTaken": "nimic încă"
       },
       "nextSpend": {
-        "domain": "Prima cheltuială care urmează: domeniul .ro, {cost} + TVA pe an. Acesta este prețul oficial; o firmă de la care îl cumperi poate cere mai mult. Se plătește în lei, o dată pe an. Apare în ziua în care clubul îl cumpără; până atunci site-ul stă pe adresa gratuită a furnizorului.",
+        "domain": "Prima cheltuială care urmează: domeniul clubului, {cost} pe an la registru (prețul pentru .com de la 1 noiembrie 2026). Firma de la care îl cumperi cere puțin mai mult și adaugă TVA, în moneda ei, o dată pe an. Apare în ziua în care clubul îl cumpără; până atunci site-ul stă pe adresa gratuită a furnizorului.",
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}. Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}. Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
       },
-      "currencyNote": "Sumele sunt scrise în moneda în care cere fiecare firmă, fără să le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine. Excepția este domeniul, unde plata se face chiar în lei, la cursul zilei. TVA în România este {vat}%.",
+      "currencyNote": "Sumele sunt scrise în moneda în care cere fiecare firmă, fără să le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine. Domeniul este facturat de firma de la care se cumpără, în moneda ei. TVA în România este {vat}%.",
       "freshness": {
         "fresh": "Prețurile au fost verificate pe {checked}, acum {days} zile. Sunt destul de recente ca să te bazezi pe ele.",
         "ageing": "Prețurile au fost verificate pe {checked}, acum {days} zile. Încep să fie vechi — întreabă din nou înainte să plătești ceva.",
@@ -528,8 +528,8 @@
       },
       "services": {
         "domain": {
-          "name": "Adresa site-ului (domeniul .ro)",
-          "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește oricum. Prețul oficial este 12 EUR + TVA pe an, iar firma de la care îl cumperi poate cere mai mult.",
+          "name": "Adresa site-ului (domeniul .com)",
+          "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește oricum. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026 (10,26 USD până atunci); firma de la care îl cumperi cere mai mult și adaugă TVA.",
           "ceiling": "Prima limită: fără adresa proprie a clubului, e-mailurile nu pot pleca spre participanți.",
           "whenCrossed": "Adică pot fi trimise doar către cinci adrese de test. Din ziua în care domeniul este cumpărat, apare o factură pe an, plătită în lei.",
           "closeYes": "Cumpărat, iar site-ul răspunde pe el.",
@@ -586,7 +586,7 @@
       "decisions": {
         "domainRegistrar": {
           "question": "De unde cumpărăm domeniul și cât plătim de fapt?",
-          "open": "Prețul oficial este 12 EUR + TVA pe an, dar firmele de la care se cumpără cer sume diferite. Cine îl cumpără spune suma plătită, ca să apară aici. Până când: înainte de prima cursă cu înscrieri, pentru că e-mailurile către participanți depind de domeniu.",
+          "open": "Prețul de registru pentru un .com este 10,97 USD pe an, dar firmele de la care se cumpără cer sume diferite și adaugă TVA. Cine îl cumpără spune suma plătită, ca să apară aici. Până când: înainte de prima cursă cu înscrieri, pentru că e-mailurile către participanți depind de domeniu.",
           "answered": "Domeniul este cumpărat și site-ul răspunde pe el. Dacă suma plătită nu a fost încă spusă nimănui, acum este momentul."
         },
         "entryContribution": {

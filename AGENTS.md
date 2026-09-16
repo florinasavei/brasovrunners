@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -621,8 +621,8 @@ type AppEnvironment = "local" | "test" | "qa" | "production";
 | --- | --- | --- | --- | --- | --- |
 | local | Local PostgreSQL | Development switcher | Capture | Local/fake | Synthetic |
 | test | Disposable PostgreSQL | Development switcher | Capture | Fake | Disposable |
-| qa | Dedicated Neon | Auth.js + Zitadel, once the tenant exists; `disabled` until then | Capture/allowlist | Dedicated R2 | Persistent synthetic |
-| production | Dedicated Neon | Auth.js + Zitadel, once the tenant exists; `disabled` until then | Live | Dedicated R2 | Authorized real |
+| qa | Dedicated Neon | Auth.js + Zitadel, live | Capture/allowlist | Dedicated R2 | Persistent synthetic |
+| production | Dedicated Neon | Auth.js + Zitadel through its own Zitadel application; `disabled` until it exists | Live once a sending domain is verified; capture until then | Dedicated R2 | Authorized real |
 
 ### 7.2 Provider modes
 
@@ -638,8 +638,8 @@ Required combinations:
 | --- | --- | --- | --- |
 | local | dev-switcher | capture | local |
 | test | dev-switcher | capture | fake |
-| qa | provider (Zitadel), once the tenant exists; disabled until then | capture or allowlist | r2 |
-| production | provider (Zitadel), once the tenant exists; disabled until then | live | r2 |
+| qa | provider (Zitadel) | capture or allowlist | r2 |
+| production | provider (Zitadel), through its own application; disabled until it exists | live once a sending domain is verified; capture until then, which `/devs` reports as limited (BR-REQ-090-04) | r2 |
 
 Startup rejects unsafe combinations.
 
@@ -660,6 +660,13 @@ brasov-runners-production
 The custom domain is bound at the end of M1. `SETUP.md` §26 holds the only hostname
 table in the repository, and `docs/RUNBOOKS.md` § Domain binding is the binding procedure.
 Binding must be a configuration and DNS change only.
+
+The club may hold several domains over time (`DECISIONS.md` §55). Exactly one is canonical — it
+is what `APP_BASE_URL` names — and every other hostname on the project, `www` included, is a
+permanent redirect to it, set on the host and never in application code. `scripts/bind-domain.mjs`
+does both halves, and switching which domain is canonical is that script run twice and a redeploy.
+The function region is a project setting, not a repository one, and it drifted once — `iad1` while
+every document said `fra1` — so `SETUP.md` §26 records how to read it back and how to set it.
 
 Separate projects prevent environment-variable/deployment mixing. The host is an adapter, not part of the business/domain architecture. Vercel builds the app into serverless functions and never runs `yarn start`, so the portability contract below is verified in CI, not by the host.
 
@@ -690,6 +697,12 @@ app_environment_metadata(environment, provisioned_at)
 ```
 
 Startup/migrate/seed/reset verifies marker against `APP_ENV` and aborts on mismatch.
+
+**Not yet implemented.** Nothing under `src/db` creates or reads this table (found 2026-09-16,
+`DECISIONS.md` §55). The rule stands; the gap is named in `SETUP.md` §25 rather than ticked.
+
+**Not yet implemented.** Nothing under `src/db` creates or reads this table (found 2026-09-16,
+`DECISIONS.md` §55). The rule stands; the gap is named in `SETUP.md` §25 rather than ticked.
 
 ### 7.5 QA safeguards
 
@@ -733,7 +746,13 @@ database fine.
 - `.github/workflows/migrate.yml` runs it. QA applies automatically when a migration lands on
   `qa`; production is a reviewed `workflow_dispatch`. It uses GitHub Environments rather than
   repository secrets specifically because a required reviewer is the "gated" half of this
-  section and a repository secret cannot provide one.
+  section and a repository secret cannot provide one. GitHub environment names are
+  case-insensitive: the workflow's `production` is the `Production` environment Vercel's GitHub
+  app created, and since 2026-09-16 it carries the required reviewer and a `main`-only deployment
+  branch policy — a production migration can only be dispatched from `main`. GitHub environment names are
+  case-insensitive: the workflow's `production` is the `Production` environment Vercel's GitHub
+  app created, and since 2026-09-16 it carries the required reviewer and a `main`-only deployment
+  branch policy — a production migration can only be dispatched from `main`.
 - `yarn smoke <base-url>` (`scripts/smoke.mjs`) turns `/api/health` into an exit code, and every
   deployment ends with it. "The build went green" and "the site works" are different statements.
 

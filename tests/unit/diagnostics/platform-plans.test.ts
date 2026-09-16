@@ -3,7 +3,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import {
   annualCostToday,
-  DOMAIN_PRICE_EUR_PER_YEAR,
+  DOMAIN_PRICE_USD_PER_YEAR,
   freeTierVerdict,
   moneyDecisions,
   nextSpend,
@@ -108,7 +108,7 @@ describe("BR-REQ-090-05 criterion 1 the money question, answered with a number",
   it("totals the domain in the registry's own currency once it is bound", () => {
     const total = annualCostToday(platformServices({ ...BASE, clubDomainBound: true }));
     expect(total).toEqual([
-      { currency: "EUR", amount: DOMAIN_PRICE_EUR_PER_YEAR, plusVat: true },
+      { currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true },
     ]);
   });
 

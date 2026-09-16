@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.27-2026-09-07 -->
+<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -16,8 +16,8 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | Baseline | The `PROJECT_BASELINE` marker on line 1 of every root document; `MANIFEST.txt` repeats it. `docs:check` rejects a mismatch or a stale copy anywhere else. |
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
 | Code | M1 complete in code. Public event pages; a backoffice where an organizer creates, duplicates, configures, previews, publishes, archives and deletes a race, with every column an organizer owns and both languages going live together; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents, with clearly marked sample text everywhere but production and no invented text there at all; ten transactional message types through the outbox; a registrations backoffice that can enter, rename and cancel a registration — and nothing else — each with an audit row, and a CSV export and labelled test registrations for exercising the queue. Registration is reachable from the public pages, and a public participant list exists and is switched off everywhere until the club's approved privacy notice describes it. See [`DECISIONS.md`](./DECISIONS.md) §26–§34. |
-| Priority | Account creation and DevOps, not application code: a Zitadel tenant, a Mailgun account, the `.ro` domain, the club's approved privacy notice and declaration text, and the production Neon and Vercel projects |
-| Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in works there through Zitadel, gated by the `staff_users` allowlist; email is still `capture`, so nothing transmits until a sending domain exists. Production is not created. `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
+| Priority | Account creation and DevOps, not application code: DNS for the club's `.com` domain (bought 2026-09-16; a `.ro` follows in a year — [`DECISIONS.md`](./DECISIONS.md) §55), a Mailgun sending domain verified on it, a production Zitadel application, the first release PR, and the club's approved privacy notice and declaration text. The production Vercel and Neon projects exist and track `main` |
+| Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in works there through Zitadel, gated by the `staff_users` allowlist; email is still `capture`, so nothing transmits until a sending domain exists. The production Vercel and Neon projects exist, configured and never deployed — `main` is behind `qa`, and the first production deployment is the release PR ([`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) § The first production deployment). `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -83,7 +83,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`CHANGELOG.md`](./CHANGELOG.md) | One entry per baseline, newest first; top heading must equal the marker |
 | [`scripts/db-migrate.mjs`](./scripts/db-migrate.mjs) | `yarn db:migrate:env <local\|qa\|production>` — the only supported way to migrate a deployed database. Prints the target and the pending migrations before applying; production needs `--yes` (`AGENTS.md` §7.6) |
 | [`scripts/email-probe.ts`](./scripts/email-probe.ts) | `yarn email:probe [--fail] <address>` — sends one message through the real Mailgun adapter, to an address typed on the command line. Exercises the provider half of `AGENTS.md` §16 (key, region, sending domain, and the transient/permanent mapping) without going near the outbox |
-| [`scripts/bind-domain.mjs`](./scripts/bind-domain.mjs) | `yarn domain:bind <qa\|production> <domain> [--apply]` — the scriptable half of `docs/RUNBOOKS.md` § Domain binding: adds the hostnames to the Vercel project, sets `APP_BASE_URL`, prints the DNS records to create and the two consoles a machine must not touch. Dry run unless `--apply` |
+| [`scripts/bind-domain.mjs`](./scripts/bind-domain.mjs) | `yarn domain:bind <qa\|production> <domain> [--alias-of <canonical>] [--apply]` — the scriptable half of `docs/RUNBOOKS.md` § Domain binding, through `vercel api`: adds the hostnames to that environment's own Vercel project, redirects `www` to the apex, sets `APP_BASE_URL` for a canonical domain or a permanent redirect for a second one, prints the DNS records to create and the consoles a machine must not touch. Dry run unless `--apply` |
 | [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
@@ -397,8 +397,8 @@ email now exist — see [`DECISIONS.md`](./DECISIONS.md) §26 and the current-st
 | Database | PostgreSQL + Drizzle ORM | Neon in QA and production, Docker locally |
 | Validation | Zod | At every boundary, including environment variables |
 | Hosting | Vercel, region `fra1` | One project per environment; portable by rule |
-| Domain / DNS | ROTLD-accredited registrar | Bound at the end of M1; see [`SETUP.md`](./SETUP.md) §26 |
-| Staff authentication | Auth.js, `staff_users` as the allowlist | No external identity provider; roles and the backoffice are built, the sign-in method waits on the domain |
+| Domain / DNS | The club's registrar; a `.com` first, a `.ro` added later | Exactly one canonical host, every other domain redirects to it, switched by `yarn domain:bind`; see [`SETUP.md`](./SETUP.md) §26 |
+| Staff authentication | Auth.js with the Zitadel OAuth provider, `staff_users` as the allowlist | Live in QA; production needs its own Zitadel application ([`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) § Staff sign-in) |
 | Participant access | Verified email action links | No participant account or password, ever |
 | Email | Transactional outbox behind an adapter | Documented as Mailgun; needs the domain first — deferred |
 | Storage | Object storage behind an adapter | Documented as Cloudflare R2 — deferred |
@@ -459,7 +459,7 @@ email action links, canonical tags, `hreflang` alternates, `sitemap.xml`, `robot
 Open Graph URLs, authentication callbacks, and the Mailgun webhook URL. No hostname
 literal may appear in `src/`.
 
-The domain and normal DNS stay with whichever registrar holds the `.ro`; that may change over time and the application does not care. Cloudflare remains the documented object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
+The domain and normal DNS stay with whichever registrar holds the club's domains. The club may hold more than one; exactly one is canonical at a time, the others redirect to it, and the application does not care which ([`DECISIONS.md`](./DECISIONS.md) §55). Cloudflare remains the documented object-storage provider through R2; using R2 does not by itself require moving the main site's DNS to Cloudflare.
 
 Time-driven work such as email-outbox retries and waitlist/hold expiry must be idempotent and restart-safe. No capacity or queue decision may depend on the maintenance job having run: every read and every capacity-changing transaction evaluates hold expiry against the current time. The scheduler is a delivery and liveness mechanism only, it invokes protected internal job endpoints, and it is infrastructure rather than domain logic.
 

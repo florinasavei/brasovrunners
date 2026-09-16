@@ -91,19 +91,22 @@ export type ServiceRow = {
 };
 
 /**
- * The `.ro` registry price, from ROTLD's own price page, checked 2026-09-07.
+ * The `.com` registry price — Verisign's wholesale fee, checked 2026-09-16.
  *
- * "Costul serviciului de înregistrare pentru un domeniu .ro este de 12 EUR + TVA pe an", billed
- * to Romanian individuals and legal entities in lei at the National Bank's rate on the invoice
- * date. This is the **registry** price; an accredited registrar may charge more, which is why
- * the page still asks the club which registrar it used and what it actually paid.
+ * $10.26 a year until 2026-11-01 and $10.97 from then on (Verisign's announced increase, the
+ * first since September 2024). The higher figure is quoted because it is what the club renews
+ * at. This is the **registry** price, which no club can buy at directly: a registrar adds its
+ * margin and Romania's VAT and invoices in whatever currency it uses, which is why the page still
+ * asks which registrar was used and what was actually paid. The owner chose the `.com` first and
+ * a `.ro` a year later (`DECISIONS.md` §55); the `.ro` is 12 EUR + VAT at ROTLD and joins this
+ * row when it is bought.
  *
- * Romania's standard VAT has been 21% since 2025-08-01, so the gross figure is 14.52 EUR — but
- * the page prints "12 EUR + VAT" with the rate beside it rather than one blended number,
- * because those are two facts with two sources and two expiry dates.
+ * Romania's standard VAT has been 21% since 2025-08-01. The page prints the amount with "+ VAT"
+ * and the rate beside it rather than one blended number, because those are two facts with two
+ * sources and two expiry dates.
  */
-export const DOMAIN_PRICE_EUR_PER_YEAR = 12;
-export const DOMAIN_PRICE_CHECKED_ON = "2026-09-07";
+export const DOMAIN_PRICE_USD_PER_YEAR = 10.97;
+export const DOMAIN_PRICE_CHECKED_ON = "2026-09-16";
 export const ROMANIAN_VAT_PERCENT = 21;
 
 /** The date `docs/PLATFORM.md` verified the six vendor plan rows. */
@@ -161,15 +164,15 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       // Nothing is paid until it is registered, and the club is entitled to see that its
       // running cost today is genuinely zero rather than "zero except the thing we imply".
       costToday: input.clubDomainBound
-        ? { kind: "paid", amount: DOMAIN_PRICE_EUR_PER_YEAR, currency: "EUR", plusVat: true }
+        ? { kind: "paid", amount: DOMAIN_PRICE_USD_PER_YEAR, currency: "USD", plusVat: true }
         : { kind: "notTaken" },
       checkedOn: DOMAIN_PRICE_CHECKED_ON,
       headroom: { kind: "derived", reached: input.clubDomainBound },
       severity: input.clubDomainBound ? "ok" : "watch",
-      nextPlan: input.clubDomainBound ? null : "ROTLD",
+      nextPlan: input.clubDomainBound ? null : "Verisign .com",
       // The bare amount and its currency. "+ VAT", "per year" and the conversion to lei are
       // words, so they live in the catalogues and not in a string built here.
-      nextCost: input.clubDomainBound ? null : `${DOMAIN_PRICE_EUR_PER_YEAR} EUR`,
+      nextCost: input.clubDomainBound ? null : `$${DOMAIN_PRICE_USD_PER_YEAR}`,
       bump: null,
     },
     {
@@ -325,7 +328,7 @@ export function oldestCheckDate(rows: readonly ServiceRow[]): string {
  * A question somebody owes an answer to, as opposed to a fact somebody should read.
  *
  * The task list already separates blocking from open from done; the money needed the same
- * distinction. "The domain costs 12 EUR + VAT" is a fact. "Which registrar, and did we actually
+ * distinction. "The domain costs 10.97 USD + VAT at the registry" is a fact. "Which registrar, and did we actually
  * pay that?" is a question with a person attached to it, and rendering the two identically is
  * how a decision goes unmade for a year — every line looks equally like something to read.
  */

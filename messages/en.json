@@ -464,7 +464,7 @@
           "done": "Email reaches participants."
         },
         "registerDomain": {
-          "title": "Register the .ro domain",
+          "title": "Register the club's domain",
           "todo": "The site works, but on the provider’s address. The club’s own domain is also what unlocks email to anyone.  does the technical half.",
           "done": "The site answers on the club’s domain."
         },
@@ -495,11 +495,11 @@
         "notTaken": "nothing yet"
       },
       "nextSpend": {
-        "domain": "The next thing to cost money: the .ro domain, {cost} + VAT a year. That is the official price; the company you buy it from may charge more. It is paid in lei, once a year. It arrives the day the club buys it; until then the site sits on the provider's free address.",
+        "domain": "The next thing to cost money: the club's domain, {cost} a year at the registry (the .com price from 1 November 2026). The company you buy it from charges a little more and adds VAT, in its own currency, once a year. It arrives the day the club buys it; until then the site sits on the provider's free address.",
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}. Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}. It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
       },
-      "currencyNote": "Amounts are written in the currency each company charges in, not converted into lei: none of them invoices in lei, and an exchange rate written today would be wrong tomorrow. The exception is the domain, which is paid in lei at the day's rate. VAT in Romania is {vat}%.",
+      "currencyNote": "Amounts are written in the currency each company charges in, not converted into lei: none of them invoices in lei, and an exchange rate written today would be wrong tomorrow. The domain is invoiced by the company it is bought from, in that company's currency. VAT in Romania is {vat}%.",
       "freshness": {
         "fresh": "Prices were checked on {checked}, {days} days ago. Recent enough to rely on.",
         "ageing": "Prices were checked on {checked}, {days} days ago. They are getting old — ask again before spending anything.",
@@ -528,8 +528,8 @@
       },
       "services": {
         "domain": {
-          "name": "The site's address (.ro domain)",
-          "freeGives": "There is no free version — this is the one thing on the page that is paid for either way. The official price is 12 EUR + VAT a year, and the company you buy it from may charge more.",
+          "name": "The site's address (the .com domain)",
+          "freeGives": "There is no free version — this is the one thing on the page that is paid for either way. The registry price for a .com is 10.97 USD a year from 1 November 2026 (10.26 USD until then); the company you buy it from charges more and adds VAT.",
           "ceiling": "The first limit: without the club's own address, email cannot go out to participants.",
           "whenCrossed": "It can only go to five test addresses. From the day the domain is bought there is one invoice a year, paid in lei.",
           "closeYes": "Bought, and the site answers on it.",
@@ -586,7 +586,7 @@
       "decisions": {
         "domainRegistrar": {
           "question": "Where do we buy the domain, and what do we actually pay?",
-          "open": "The official price is 12 EUR + VAT a year, but the companies you buy from charge different amounts. Whoever buys it says what was paid, so it can appear here. By when: before the first race with entries, because email to participants depends on the domain.",
+          "open": "The registry price for a .com is 10.97 USD a year, but the companies you buy from charge different amounts and add VAT. Whoever buys it says what was paid, so it can appear here. By when: before the first race with entries, because email to participants depends on the domain.",
           "answered": "The domain is bought and the site answers on it. If nobody has been told what it cost, now is the moment."
         },
         "entryContribution": {

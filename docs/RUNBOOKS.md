@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.27-2026-09-07`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -154,6 +154,34 @@ to `provider`. Nothing here touches application code — `DECISIONS.md` §26 and
 - [ ] Set `AUTH_SECRET` (a fresh random value, not shared across environments),
       `AUTH_ZITADEL_ID`, `AUTH_ZITADEL_SECRET`, `AUTH_ZITADEL_ISSUER`, and
       `STAFF_AUTH_MODE=provider` in that environment's application settings, and restart.
+- [ ] For production, without relinking this checkout — it is linked to QA (`SETUP.md` §26):
+
+      ```bash
+      npx vercel link --project brasov-runners-production --yes --cwd <empty directory>
+      npx vercel env add    AUTH_ZITADEL_ID     production --value "<client id>"     --yes --cwd <that directory>
+      npx vercel env add    AUTH_ZITADEL_SECRET production --value "<client secret>" --yes --cwd <that directory>
+      npx vercel env add    AUTH_ZITADEL_ISSUER production --value "<issuer URL>"    --yes --cwd <that directory>
+      npx vercel env update STAFF_AUTH_MODE     production --value provider          --yes --cwd <that directory>
+      ```
+
+      `AUTH_SECRET` already exists there, generated on 2026-09-16 and shared with nothing. The
+      issuer is the same Zitadel instance QA uses; the client id and secret belong to the new
+      application alone. Then redeploy: a variable reaches the application only on a new
+      deployment.
+- [ ] For production, without relinking this checkout — it is linked to QA (`SETUP.md` §26):
+
+      ```bash
+      npx vercel link --project brasov-runners-production --yes --cwd <empty directory>
+      npx vercel env add    AUTH_ZITADEL_ID     production --value "<client id>"     --yes --cwd <that directory>
+      npx vercel env add    AUTH_ZITADEL_SECRET production --value "<client secret>" --yes --cwd <that directory>
+      npx vercel env add    AUTH_ZITADEL_ISSUER production --value "<issuer URL>"    --yes --cwd <that directory>
+      npx vercel env update STAFF_AUTH_MODE     production --value provider          --yes --cwd <that directory>
+      ```
+
+      `AUTH_SECRET` already exists there, generated on 2026-09-16 and shared with nothing. The
+      issuer is the same Zitadel instance QA uses; the client id and secret belong to the new
+      application alone. Then redeploy: a variable reaches the application only on a new
+      deployment.
 - [ ] **Enable "Include user's profile info in the ID Token"** in the application's Token
       Settings. Without it the ID token carries no `email` claim, the allowlist gate has no
       address to match, and every sign-in is refused as `AccessDenied` — indistinguishable, from
@@ -196,24 +224,40 @@ criteria for this runbook.
 
 ### The scriptable half
 
-Most of step 1 and step 3 is one command, so the day the domain finally exists is a paste of DNS
-records rather than an afternoon across five consoles:
+Most of the binding is one command, so the day the domain exists is a paste of DNS records rather
+than an afternoon across five consoles:
 
 ```bash
-yarn domain:bind qa qa.<domain>              # dry run: prints what it would change
-yarn domain:bind qa qa.<domain> --apply      # adds the hostname, sets APP_BASE_URL
+yarn domain:bind production <domain>                                      # dry run: prints what it would change
+yarn domain:bind production <domain> --apply                              # canonical: apex + www, www → apex (308), APP_BASE_URL
+yarn domain:bind production <second-domain> --alias-of <domain> --apply   # a second domain: apex + www → the canonical (308)
+yarn domain:bind qa qa.<domain> --apply                                   # QA, when wanted — see step 1
 ```
 
-It adds the hostnames to the Vercel project, sets `APP_BASE_URL` — the single source of every
-absolute URL the application emits (`AGENTS.md` §8), which is why nothing else needs editing —
-and prints both the DNS records to create and the two consoles it deliberately does not touch.
+It adds the hostnames to that environment's own Vercel project, sets each redirect on the host,
+sets `APP_BASE_URL` for a canonical domain — the single source of every absolute URL the
+application emits (`AGENTS.md` §8), which is why nothing else needs editing — and prints the DNS
+records to create and the consoles it deliberately does not touch. An alias changes no variable.
 It does not redeploy: `APP_BASE_URL` reaches a running application only on a new deployment, and
 when that happens is the operator's call.
 
-Needs `npx vercel login` once. The checklist below is still the record of what was done, and the
-steps the script prints are the same ones.
+Needs `npx vercel login` once; every call goes through `vercel api`, so the token the CLI holds is
+the token used (`SETUP.md` §26 says why the CLI's credentials file is not read directly). Vercel
+refuses to add a hostname to a project that has never had a successful production deployment, so
+on a brand-new project the order is deploy once, then bind. The checklist below is still the
+record of what was done, and the steps the script prints are the same ones.
 
 ### Step 1 — QA first
+
+Optional. QA works on its provider hostname indefinitely; moving it to `qa.<domain>` rehearses
+step 3 but is not a prerequisite for it. If you do it, add the Zitadel redirect URI for the new
+host *before* the redeploy that carries the new `APP_BASE_URL`, or QA sign-in is refused until you
+do.
+
+Optional. QA works on its provider hostname indefinitely; moving it to `qa.<domain>` rehearses
+step 3 but is not a prerequisite for it. If you do it, add the Zitadel redirect URI for the new
+host *before* the redeploy that carries the new `APP_BASE_URL`, or QA sign-in is refused until you
+do.
 
 - [ ] Add `qa.<domain>` to the QA application and let the provider issue the certificate.
 - [ ] Create the DNS record the provider's domain screen asks for. Do not guess the record
@@ -234,14 +278,67 @@ steps the script prints are the same ones.
       still passes.
 - [ ] Confirm the production sender name and address match what the club approved
       (`BUSINESS.md` §9).
+- [ ] **If the club also wants mailboxes on the domain** (Zoho Mail's free plan, checked
+      2026-09-16: up to five users, 5 GB each, one domain, web access only — no IMAP or POP),
+      split the domain by function so the two never share an MX or an SPF record: Zoho takes the
+      apex — its MX, its SPF include, its DKIM — and Mailgun takes a subdomain, `mg.<domain>`, as
+      the sending domain. `MAILGUN_DOMAIN` and `EMAIL_FROM_ADDRESS` then carry the subdomain
+      (`noreply@mg.<domain>`, so DKIM aligns), and `EMAIL_REPLY_TO` points at the Zoho mailbox
+      people should answer to. Configuration only; nothing under `src/` changes.
+- [ ] **If the club also wants mailboxes on the domain** (Zoho Mail's free plan, checked
+      2026-09-16: up to five users, 5 GB each, one domain, web access only — no IMAP or POP),
+      split the domain by function so the two never share an MX or an SPF record: Zoho takes the
+      apex — its MX, its SPF include, its DKIM — and Mailgun takes a subdomain, `mg.<domain>`, as
+      the sending domain. `MAILGUN_DOMAIN` and `EMAIL_FROM_ADDRESS` then carry the subdomain
+      (`noreply@mg.<domain>`, so DKIM aligns), and `EMAIL_REPLY_TO` points at the Zoho mailbox
+      people should answer to. Configuration only; nothing under `src/` changes.
 
 ### Step 3 — Production
 
 - [ ] Add the apex and `www` to the production application and issue certificates.
 - [ ] Create the apex and `www` DNS records.
 - [ ] Set `APP_BASE_URL=https://<domain>` in the production application and restart.
-- [ ] Configure the `www` to apex redirect so exactly one canonical host exists.
+- [ ] The `www` to apex redirect exists — `yarn domain:bind` sets it on the host when it adds the
+      apex; confirm with `curl -sI https://www.<domain>`, which answers 308 to the apex.
 - [ ] Staff authentication production: the same callback, post-logout and origin entries, derived from `APP_BASE_URL`.
+
+### Switching the canonical domain
+
+The club will hold two domains (`DECISIONS.md` §55). Making the other one canonical is the binding
+run twice and a redeploy, and touches no code:
+
+- [ ] `yarn domain:bind production <new-domain> --apply` — its apex serves, its `www` redirects,
+      `APP_BASE_URL` moves.
+- [ ] `yarn domain:bind production <old-domain> --alias-of <new-domain> --apply` — the old apex
+      and `www` now redirect, permanently.
+- [ ] Zitadel: add the new redirect and post-logout URIs before the redeploy; remove the old ones
+      once sign-in is proven on the new host.
+- [ ] Redeploy. Cookies are host-only (`AGENTS.md` §8), so every staff member signs in once more;
+      participants hold no session to lose, and every email link is built from `APP_BASE_URL` at
+      send time.
+- [ ] The Mailgun sending domain may stay where it is: it need not match the site's host, only the
+      `From` address.
+- [ ] `yarn smoke https://<new-domain>`; `curl -sI https://<old-domain>` answers 308 to the new
+      apex; the sitemap names the new host only.
+
+### Switching the canonical domain
+
+The club will hold two domains (`DECISIONS.md` §55). Making the other one canonical is the binding
+run twice and a redeploy, and touches no code:
+
+- [ ] `yarn domain:bind production <new-domain> --apply` — its apex serves, its `www` redirects,
+      `APP_BASE_URL` moves.
+- [ ] `yarn domain:bind production <old-domain> --alias-of <new-domain> --apply` — the old apex
+      and `www` now redirect, permanently.
+- [ ] Zitadel: add the new redirect and post-logout URIs before the redeploy; remove the old ones
+      once sign-in is proven on the new host.
+- [ ] Redeploy. Cookies are host-only (`AGENTS.md` §8), so every staff member signs in once more;
+      participants hold no session to lose, and every email link is built from `APP_BASE_URL` at
+      send time.
+- [ ] The Mailgun sending domain may stay where it is: it need not match the site's host, only the
+      `From` address.
+- [ ] `yarn smoke https://<new-domain>`; `curl -sI https://<old-domain>` answers 308 to the new
+      apex; the sitemap names the new host only.
 
 ### Step 4 — Canonical cleanup
 
@@ -328,6 +425,76 @@ half of it.
    required reviewer. Production is never migrated by a push.
 5. **Smoke production**, and this time without `--allow-degraded` once the schedulers have had a
    tick.
+
+### The first production deployment
+
+`main` has never carried the M1 code, so the first production deployment *is* the first release
+PR. In this order — the order matters more than any one step:
+
+1. **Prerequisites, all true since 2026-09-16 (`SETUP.md` §25–§26):** the production Vercel
+   project exists and tracks `main`; the production Neon project exists and its pooled URL is that
+   project's `DATABASE_URL`; its direct URL is the GitHub `production` environment's
+   `DATABASE_URL`; the environment has a required reviewer and a `main`-only branch policy.
+2. **Open and merge the `qa → main` release PR** (`AGENTS.md` §6.4, merge commit, never squash).
+   Vercel builds `main` on the production project the moment it lands. That deployment answers
+   `down` on `/api/health` — schema behind — until step 3, and nothing points at the hostname yet,
+   so that is acceptable exactly once.
+3. **Run the migrate workflow for `production`, from `main`** — the branch policy refuses any
+   other ref, and `migrate.yml` does not exist on `main` until the release PR lands:
+
+   ```bash
+   gh workflow run migrate.yml --ref main -f environment=production
+   ```
+
+   Approve it in the Actions tab — the required reviewer is the owner. The run prints the pending
+   list, applies it, and smokes the provider hostname with `--allow-degraded`.
+4. **Insert the first Administrator's `staff_users` row by hand** (§ Staff sign-in above): one
+   row, the address lowercased, role `ADMIN`. There is no other way in.
+5. **Wire the scheduler:** the two repository secrets `PRODUCTION_APP_BASE_URL` and
+   `PRODUCTION_JOB_SECRET` (`SETUP.md` §26), and the two pinger monitors. Both jobs move from
+   `stale` to `ok` within five minutes.
+6. **Smoke:** `yarn smoke https://<production host>` — `degraded` until the first tick, `ok`
+   after. Then bind the domain (§ Domain binding) if it was not bound before this deployment, and
+   redeploy once more so `APP_BASE_URL` takes effect.
+7. Staff sign-in comes with the production Zitadel application (§ Staff sign-in); email to real
+   people with the sending domain (§ Domain binding, step 2). Production correctly refuses every
+   registration until the club's legal text is loaded (§ Legal document version) — that is the
+   rule working, not a defect.
+
+### The first production deployment
+
+`main` has never carried the M1 code, so the first production deployment *is* the first release
+PR. In this order — the order matters more than any one step:
+
+1. **Prerequisites, all true since 2026-09-16 (`SETUP.md` §25–§26):** the production Vercel
+   project exists and tracks `main`; the production Neon project exists and its pooled URL is that
+   project's `DATABASE_URL`; its direct URL is the GitHub `production` environment's
+   `DATABASE_URL`; the environment has a required reviewer and a `main`-only branch policy.
+2. **Open and merge the `qa → main` release PR** (`AGENTS.md` §6.4, merge commit, never squash).
+   Vercel builds `main` on the production project the moment it lands. That deployment answers
+   `down` on `/api/health` — schema behind — until step 3, and nothing points at the hostname yet,
+   so that is acceptable exactly once.
+3. **Run the migrate workflow for `production`, from `main`** — the branch policy refuses any
+   other ref, and `migrate.yml` does not exist on `main` until the release PR lands:
+
+   ```bash
+   gh workflow run migrate.yml --ref main -f environment=production
+   ```
+
+   Approve it in the Actions tab — the required reviewer is the owner. The run prints the pending
+   list, applies it, and smokes the provider hostname with `--allow-degraded`.
+4. **Insert the first Administrator's `staff_users` row by hand** (§ Staff sign-in above): one
+   row, the address lowercased, role `ADMIN`. There is no other way in.
+5. **Wire the scheduler:** the two repository secrets `PRODUCTION_APP_BASE_URL` and
+   `PRODUCTION_JOB_SECRET` (`SETUP.md` §26), and the two pinger monitors. Both jobs move from
+   `stale` to `ok` within five minutes.
+6. **Smoke:** `yarn smoke https://<production host>` — `degraded` until the first tick, `ok`
+   after. Then bind the domain (§ Domain binding) if it was not bound before this deployment, and
+   redeploy once more so `APP_BASE_URL` takes effect.
+7. Staff sign-in comes with the production Zitadel application (§ Staff sign-in); email to real
+   people with the sending domain (§ Domain binding, step 2). Production correctly refuses every
+   registration until the club's legal text is loaded (§ Legal document version) — that is the
+   rule working, not a defect.
 
 ### Applying a migration by hand
 
