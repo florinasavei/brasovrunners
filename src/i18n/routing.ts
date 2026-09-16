@@ -6,6 +6,14 @@ export const routing = defineRouting({
   locales: ["ro", "en"],
   defaultLocale: "ro",
   localePrefix: "always",
+  /**
+   * The root URL is Romanian for everyone. next-intl would otherwise read `Accept-Language`
+   * and a session cookie and send an English-configured browser to `/en` — which is how the
+   * owner, on an English machine, kept landing on the English site. The club is Romanian, the
+   * default locale is `ro` (BR-REQ-040-01), and the switcher is one tap away for everyone else.
+   * The locale cookie stays: switching to English still sticks for the session.
+   */
+  localeDetection: false,
 
   /**
    * Localized pathnames, per AGENTS.md §9.2. The key is the internal route — the folder under

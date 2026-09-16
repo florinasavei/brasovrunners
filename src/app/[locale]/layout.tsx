@@ -1,7 +1,6 @@
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
-import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -20,26 +19,6 @@ const roboto = Roboto({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-roboto",
-});
-
-/**
- * Facón, the face on the club's kit. Self-hosted from `src/theme/fonts/`, unmodified — the
- * designer's licence forbids altering the file, and a TTF is served to browsers perfectly
- * well, so no WOFF2 conversion is performed. See `src/theme/fonts/Facon-LICENSE.txt` and
- * `docs/brand/README.md`.
- *
- * `adjustFontFallback` is off: Next's automatic fallback metric matching assumes the fallback
- * covers the same characters, and this font covers only ASCII. Roboto 900 italic is named
- * explicitly instead — the read-me identifies it as the base font Facón was drawn from.
- */
-const facon = localFont({
-  src: "../../theme/fonts/Facon.ttf",
-  weight: "900",
-  style: "italic",
-  display: "swap",
-  variable: "--font-facon",
-  adjustFontFallback: false,
-  fallback: ["Roboto", "Segoe UI", "Arial", "sans-serif"],
 });
 
 type Props = {
@@ -74,7 +53,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${roboto.variable} ${facon.variable}`}>
+      <body className={roboto.variable}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
             <NextIntlClientProvider>

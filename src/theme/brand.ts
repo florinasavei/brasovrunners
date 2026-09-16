@@ -168,9 +168,9 @@ export const LOGO = {
   /**
    * The mountains alone, cropped from the same artwork.
    *
-   * This is what the header uses, beside the club's name set as live text. That pairing is
-   * deliberate: the supplied wordmark reads BRASOV, without the ș, and the site's own name is
-   * Brașov. Live text lets the page spell it correctly while the artwork stays untouched.
+   * The header used this beside the club's name as live text until 2026-09-16, when the owner
+   * asked for the whole lockup instead (`SiteHeader.tsx` records the trade). Kept for the
+   * places a square-ish mark fits better than a 2.4:1 lockup.
    */
   mark: {
     src: "/brand/logo-mark.svg",

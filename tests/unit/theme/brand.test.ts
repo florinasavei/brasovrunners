@@ -125,7 +125,7 @@ describe("the brand assets the theme points at exist", () => {
     expect(FONT.fallback).toMatch(/sans-serif$/);
   });
 
-  describe("the header wordmark stays inside what the kit typeface can render", () => {
+  describe("the kit wordmark constant stays inside what the kit typeface can render", () => {
     it("is ASCII, because Facón contains no Romanian characters", () => {
       // Verified by reading the font's own cmap: 129 mapped characters, and not one of
       // ș ț ă â î in either the comma-below or the cedilla encoding. Writing "BRAȘOV" here

@@ -3215,7 +3215,9 @@ down so the next task starts from the facts and the contradictions, not from a s
 1. **Team mail on Zoho Mail** — mailboxes for the administrator and two organizers, and a public
    `contact@<domain>` all three read (a shared mailbox, or a group if the plan lacks one). No
    collision: Zoho takes the apex MX, SPF include and DKIM. Free plan checked 2026-09-16: five
-   users, 5 GB each, one domain, web access only.
+   users, 5 GB each, one domain, web access only. The owner may drop Zoho — its usable tier is
+   paid — for **Google Workspace for Nonprofits**, applied for on 2026-09-16 and pending; the
+   split with application mail is identical whichever provider takes the apex.
 2. **Application mail on a subdomain, planned name `mail.<domain>`** — not configured, no DNS
    values exist, none invented. §55 had said `mg.<domain>`; the owner's name wins and the runbook
    now says `mail.<domain>`. **The provider is Mailgun**: the adapter is built, the account exists,

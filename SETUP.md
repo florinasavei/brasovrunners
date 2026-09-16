@@ -1101,7 +1101,8 @@ only after `https://qa.brasovrunners.com/api/auth/callback/zitadel` and the post
 `https://qa.brasovrunners.com` exist on the QA Zitadel application, or the next QA deployment
 refuses every staff sign-in (`docs/RUNBOOKS.md` § Domain binding, step 1).
 
-**Email on the domain — PLANNED, nothing configured.** Team mail goes to **Zoho Mail**: planned
+**Email on the domain — PLANNED, nothing configured.** Team mail goes to **Zoho Mail** — or to **Google Workspace for Nonprofits**, applied for on
+2026-09-16 and pending, which replaces Zoho if granted, since Zoho's usable tier is paid: planned
 mailboxes `admin@brasovrunners.com`, `amalia@brasovrunners.com`, `dani@brasovrunners.com`, and a
 public `contact@brasovrunners.com` that all three read — a shared mailbox or, failing that on the
 plan chosen, a group. Application mail stays separate, on a subdomain: the planned name is

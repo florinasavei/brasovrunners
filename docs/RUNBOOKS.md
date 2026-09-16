@@ -259,12 +259,13 @@ do.
       still passes.
 - [ ] Confirm the production sender name and address match what the club approved
       (`BUSINESS.md` §9).
-- [ ] **If the club also wants mailboxes on the domain** (Zoho Mail's free plan, checked
-      2026-09-16: up to five users, 5 GB each, one domain, web access only — no IMAP or POP),
-      split the domain by function so the two never share an MX or an SPF record: Zoho takes the
+- [ ] **If the club also wants mailboxes on the domain** — Zoho Mail (free plan checked
+      2026-09-16: up to five users, 5 GB each, one domain, web access only — no IMAP or POP) or
+      Google Workspace for Nonprofits (applied for 2026-09-16, pending) — split the domain by
+      function so the two never share an MX or an SPF record: the mailbox provider takes the
       apex — its MX, its SPF include, its DKIM — and Mailgun takes a subdomain, `mail.<domain>`, as
       the sending domain. `MAILGUN_DOMAIN` and `EMAIL_FROM_ADDRESS` then carry the subdomain
-      (`noreply@mail.<domain>`, so DKIM aligns), and `EMAIL_REPLY_TO` points at the Zoho mailbox
+      (`noreply@mail.<domain>`, so DKIM aligns), and `EMAIL_REPLY_TO` points at the club mailbox
       people should answer to. Configuration only; nothing under `src/` changes.
 
 ### Step 3 — Production
