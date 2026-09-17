@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.31-2026-09-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.31-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3382,8 +3382,13 @@ in §11.3 was already written and agreed, so implementing it decides nothing tha
 - The build badge says `app-ver`, the version and an ISO date. "ultima actualizare · 17 sept.
   2026" was read as the date the *club* last posted something. ISO also reads identically in both
   languages, which a month name does not.
-- The header shows the club's name once. The lockup contains a wordmark, so with the kit text
-  beside it the name appeared twice on one row, and the two could not be aligned because one is
-  baked into a 2.4:1 image. The mark carries no text; the browser tab keeps the lockup.
+- The header shows the club's name once, and by 2026-09-17 evening it shows it in the club's own
+  lettering. Three arrangements were tried in one day, which is worth recording because each
+  failure explains the next: the **lockup at mark height** (28px) rendered its wordmark about
+  four pixels tall; the **mark plus live text in the kit face** put the name on the row twice, in
+  two typefaces, unalignable because one is baked into a 2.42:1 image; the **lockup at 44px** is
+  what shipped, because the problem was never which wordmark to show but how much room it had.
+  The browser tab showed the lockup throughout. With nothing rendering the kit face, its 36 kB is
+  no longer loaded — the saving that `BR-V1.29` claimed and `BR-V1.30` reversed.
 
 Baseline `BR-V1.30-2026-09-17`.

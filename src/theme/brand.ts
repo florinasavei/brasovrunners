@@ -168,9 +168,10 @@ export const LOGO = {
   /**
    * The mountains alone, cropped from the same artwork.
    *
-   * The header used this beside the club's name as live text until 2026-09-16, when the owner
-   * asked for the whole lockup instead (`SiteHeader.tsx` records the trade). Kept for the
-   * places a square-ish mark fits better than a 2.4:1 lockup.
+   * The mountains alone, with the wordmark cropped out. The header used this for a day; it
+   * shows the lockup now, because the club's name belongs in the club's own lettering
+   * (`SiteHeader.tsx` records both attempts). Kept for the places a wider, shorter shape fits
+   * better than a 2.42:1 lockup.
    */
   mark: {
     src: "/brand/logo-mark.svg",
@@ -197,6 +198,14 @@ export const LOGO = {
  * MARK_HEIGHT_PX is the upper bound, used for the `width`/`height` attributes that reserve the
  * box before the SVG loads; the CSS below overrides the drawn size.
  */
-export const HEADER_MARK_HEIGHT_PX = 28;
-export const HEADER_MARK_HEIGHT = "clamp(20px, 5.5vw, 28px)";
+/**
+ * The header logo's height. Taller than the 28px the mountains alone used, because the header
+ * shows the **lockup** now (2026-09-17, the owner's instruction): the wordmark is roughly the
+ * bottom quarter of that artwork, so at 28px it rendered about seven pixels tall — present and
+ * unreadable, which is what made the mark-plus-live-text pairing worth trying in the first place.
+ * At 44px the lettering is about eleven pixels and reads; at 2.42:1 the logo is then ~107px wide,
+ * which still leaves room for the navigation at 320px (BR-REQ-041-01 criterion 1).
+ */
+export const HEADER_MARK_HEIGHT_PX = 44;
+export const HEADER_MARK_HEIGHT = "clamp(32px, 9vw, 44px)";
 export const HEADER_WORDMARK_SIZE = "clamp(0.95rem, 4.2vw, 1.25rem)";

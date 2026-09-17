@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.31-2026-09-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.31-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -573,6 +573,11 @@ john+race@company.com != john@company.com
 Persist original verified delivery address separately. Do not claim this detects one person across unrelated mailboxes.
 
 ## 15. Configure staff authentication
+
+**The procedure is `docs/RUNBOOKS.md` § Staff sign-in**, which holds the field-by-field settings
+for both environments, the two settings that cost an afternoon each, the commands that verify a
+sign-in without guessing, the four reasons a refusal can have, and what the free tier refuses.
+This section is the decision and the shape; that one is what to do.
 
 Auth.js with the Zitadel OAuth provider, and `staff_users` as the server-side allowlist: an
 unknown Zitadel account is refused before a session ever issues. `DECISIONS.md` §26 records
