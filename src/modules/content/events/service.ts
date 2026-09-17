@@ -5,7 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
-import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { addWallClockInterval, fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
@@ -786,62 +786,224 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     const [copy] = await tx
       .insert(events)
-      .values({
-        raceId: source.raceId,
-        type: source.type,
-        surface: source.surface,
-        eventStatus: source.eventStatus,
-        startsAt: source.startsAt,
-        endsAt: source.endsAt,
-        raceStartsAt: source.raceStartsAt,
-        timezone: source.timezone,
-        mapUrl: source.mapUrl,
-        routeUrl: source.routeUrl,
-        locationName: source.locationName,
-        locationAddress: source.locationAddress,
-        difficulty: source.difficulty,
-        costType: source.costType,
-        distanceMeters: source.distanceMeters,
-        elevationGainMeters: source.elevationGainMeters,
-        featured: false,
-        capacity: source.capacity,
-        registrationMode: source.registrationMode,
-        registrationOpensAt: source.registrationOpensAt,
-        registrationClosesAt: source.registrationClosesAt,
-        declarationDocumentId: source.declarationDocumentId,
-        // Never copied: publishing names is a decision about the people who entered *that*
-        // event, and the copy has none. It starts HIDDEN like every other new event.
-        participantListVisibility: "HIDDEN" as const,
-        externalProvider: source.externalProvider,
-        externalRegistrationUrl: source.externalRegistrationUrl,
-        editorialStatus: "DRAFT",
-        publishedAt: null,
-        createdByStaffUserId: input.actor.id,
-        updatedByStaffUserId: input.actor.id,
-        createdAt: now,
-        updatedAt: now,
-      })
+      .values(copiedEventValues(source, input.actor, now))
       .returning();
 
     await tx.insert(eventTranslations).values(
-      sourceTranslations.map((translation) => ({
-        eventId: copy.id,
-        locale: translation.locale,
-        slug: slugs.get(translation.id) as string,
-        title: translation.title,
-        excerpt: translation.excerpt,
-        bodyJson: translation.bodyJson,
-        coverAltText: translation.coverAltText,
-        seoTitle: translation.seoTitle,
-        seoDescription: translation.seoDescription,
-        authorStaffUserId: input.actor.id,
-        createdAt: now,
-        updatedAt: now,
-      })),
+      sourceTranslations.map((translation) =>
+        copiedTranslationValues(translation, copy.id, slugs.get(translation.id) as string, input.actor, now),
+      ),
     );
 
     return copy;
   });
+}
+
+type EventRow = typeof events.$inferSelect;
+type TranslationRow = typeof eventTranslations.$inferSelect;
+
+/**
+ * Every column a copy inherits from its source, in one place for duplicating and repeating.
+ *
+ * What a copy deliberately does not inherit: publication and the first-publication date, the
+ * featured flag, and the start list switch — publishing names is a decision about the people
+ * who entered *that* event, and a copy has none. It starts HIDDEN like every other new event.
+ */
+function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
+  return {
+    raceId: source.raceId,
+    type: source.type,
+    surface: source.surface,
+    eventStatus: source.eventStatus,
+    startsAt: source.startsAt,
+    endsAt: source.endsAt,
+    raceStartsAt: source.raceStartsAt,
+    timezone: source.timezone,
+    mapUrl: source.mapUrl,
+    routeUrl: source.routeUrl,
+    locationName: source.locationName,
+    locationAddress: source.locationAddress,
+    difficulty: source.difficulty,
+    costType: source.costType,
+    distanceMeters: source.distanceMeters,
+    elevationGainMeters: source.elevationGainMeters,
+    featured: false,
+    capacity: source.capacity,
+    registrationMode: source.registrationMode,
+    registrationOpensAt: source.registrationOpensAt,
+    registrationClosesAt: source.registrationClosesAt,
+    declarationDocumentId: source.declarationDocumentId,
+    participantListVisibility: "HIDDEN" as const,
+    externalProvider: source.externalProvider,
+    externalRegistrationUrl: source.externalRegistrationUrl,
+    editorialStatus: "DRAFT" as const,
+    publishedAt: null,
+    createdByStaffUserId: actor.id,
+    updatedByStaffUserId: actor.id,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function copiedTranslationValues(
+  translation: TranslationRow,
+  eventId: string,
+  slug: string,
+  actor: Actor,
+  now: Date,
+) {
+  return {
+    eventId,
+    locale: translation.locale,
+    slug,
+    title: translation.title,
+    excerpt: translation.excerpt,
+    bodyJson: translation.bodyJson,
+    coverAltText: translation.coverAltText,
+    seoTitle: translation.seoTitle,
+    seoDescription: translation.seoDescription,
+    authorStaffUserId: actor.id,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/** How often a repeated event recurs. Three cadences, because three is what the club runs. */
+export const REPEAT_CADENCES = ["WEEKLY", "FORTNIGHTLY", "MONTHLY"] as const;
+export type RepeatCadence = (typeof REPEAT_CADENCES)[number];
+
+const CADENCE_INTERVAL: Record<RepeatCadence, { days?: number; months?: number }> = {
+  WEEKLY: { days: 7 },
+  FORTNIGHTLY: { days: 14 },
+  MONTHLY: { months: 1 },
+};
+
+/** At most a year of weekly copies in one go; a longer series is a second press. */
+export const REPEAT_MAX_COUNT = 52;
+
+export type RepeatEventInput = {
+  actor: Actor;
+  eventId: string;
+  cadence: RepeatCadence;
+  /** How many further occurrences to create, after the source. */
+  count: number;
+  /** Publish the copies as they are made. Only honoured when the source is itself published. */
+  publish: boolean;
+  now?: Date;
+};
+
+/**
+ * The same event again, every week, fortnight or month — the weekly run, made once.
+ *
+ * Each copy is the source shifted on the wall clock in its own zone (`addWallClockInterval`),
+ * and everything that has a time moves with it — the end, the gun time, the registration
+ * window — so the relationships the organizer set hold on every occurrence. The slug carries
+ * the date (`alergare-de-duminica-2026-10-04`) rather than a `-2`, `-3` suffix: a URL that
+ * says which Sunday it is, in both languages, and never collides with next year's series.
+ *
+ * Copies are drafts unless `publish` is asked for **and** the source is published: a published
+ * source is one whose both languages are complete (`transitionEvent` asserted that), so its
+ * copies can go live without re-checking; a draft source cannot be, and the flag is ignored
+ * rather than refused so a form with the box ticked still does something useful. Publishing
+ * copies needs the role that publishes (`AGENTS.md` §10.2), like any other publication.
+ *
+ * One transaction: all the occurrences or none, so a collision on the ninth slug does not
+ * leave eight events behind for somebody to find later.
+ */
+export async function repeatEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: RepeatEventInput,
+): Promise<{ created: number; published: boolean }> {
+  const now = input.now ?? new Date();
+
+  if (!canCreateEvent(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not repeat an event`);
+  }
+  if (!Number.isInteger(input.count) || input.count < 1 || input.count > REPEAT_MAX_COUNT) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `count: repeat an event between 1 and ${REPEAT_MAX_COUNT} times in one go`,
+    );
+  }
+
+  const [source] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
+  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  const sourceTranslations = await listTranslationsForEvent(db, input.eventId);
+
+  const publish = input.publish && source.editorialStatus === "PUBLISHED";
+  if (publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
+  }
+
+  const interval = CADENCE_INTERVAL[input.cadence];
+  const shift = (date: Date | null, times: number) =>
+    date === null
+      ? null
+      : addWallClockInterval(
+          date,
+          source.timezone,
+          { days: (interval.days ?? 0) * times, months: (interval.months ?? 0) * times },
+        );
+
+  // The slugs, all of them, checked before anything is written: the date suffix is what
+  // makes them distinct, and a series already made once collides on every one of them.
+  const occurrences = Array.from({ length: input.count }, (_, index) => {
+    const times = index + 1;
+    const startsAt = shift(source.startsAt, times) as Date;
+    const dateSuffix = startsAt.toISOString().slice(0, 10);
+    return {
+      times,
+      startsAt,
+      slugs: new Map(
+        sourceTranslations.map((translation) => [
+          translation.id,
+          `${translation.slug.replace(/-\d{4}-\d{2}-\d{2}$/, "")}-${dateSuffix}`,
+        ]),
+      ),
+    };
+  });
+  for (const translation of sourceTranslations) {
+    const wanted = occurrences.map((occurrence) => occurrence.slugs.get(translation.id) as string);
+    const taken = await findTakenSlugs(db, translation.locale, wanted);
+    const collision = wanted.find((slug) => taken.has(slug));
+    if (collision) {
+      throw new DomainError(
+        "CONFLICT",
+        `an event already has the address "${collision}" in ${translation.locale}; this series exists`,
+      );
+    }
+  }
+
+  await db.transaction(async (tx) => {
+    for (const occurrence of occurrences) {
+      const [copy] = await tx
+        .insert(events)
+        .values({
+          ...copiedEventValues(source, input.actor, now),
+          startsAt: occurrence.startsAt,
+          endsAt: shift(source.endsAt, occurrence.times),
+          raceStartsAt: shift(source.raceStartsAt, occurrence.times),
+          registrationOpensAt: shift(source.registrationOpensAt, occurrence.times),
+          registrationClosesAt: shift(source.registrationClosesAt, occurrence.times),
+          ...(publish ? { editorialStatus: "PUBLISHED" as const, publishedAt: now } : {}),
+        })
+        .returning();
+
+      await tx.insert(eventTranslations).values(
+        sourceTranslations.map((translation) =>
+          copiedTranslationValues(
+            translation,
+            copy.id,
+            occurrence.slugs.get(translation.id) as string,
+            input.actor,
+            now,
+          ),
+        ),
+      );
+    }
+  });
+
+  return { created: occurrences.length, published: publish };
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */

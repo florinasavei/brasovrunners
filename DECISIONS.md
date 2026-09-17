@@ -3726,3 +3726,66 @@ the catalogue in the **document's** language, not the reader's: a Romanian decla
 downloaded from the English backoffice is still a Romanian document.
 
 Baseline `BR-V1.34-2026-09-17`.
+
+## 64. Decided — a recurring event is a series of copies, not a rule the calendar evaluates (2026-09-17)
+
+**Status:** Decided and built. BR-REQ-050-02 criterion 7; `repeatEvent` in
+`modules/content/events/service.ts`. The owner asked "do recurring events work?"; they did not.
+
+Two shapes were possible. A **recurrence rule** on one row — "every Sunday at 08:00" — that the
+listing expands into occurrences at read time is how calendars do it, and it is wrong here: every
+occurrence of the club's weekly run is its own event in every way that matters — its own
+registrations, capacity, waiting list, cancellation, start list, page address, structured data —
+and the whole registration lifecycle keys on `event_id`. A rule would put a second notion of
+"which Sunday" inside the allocator. So a recurring event is **N ordinary events**, made in one
+press from a source, and nothing downstream knows they are related.
+
+What the copies keep and what they get: the same wall-clock time in the event's own zone, added
+on the calendar rather than to the instant (`addWallClockInterval`) — a run at 08:00 stays at
+08:00 across the March and October changes; every other time — the end, the gun time, the
+registration window — shifted by the same interval; a slug carrying the date in each language,
+so the URL says which Sunday it is and next year's series cannot collide with this year's;
+never the featured flag or the start list switch, for the reasons duplicating never copies them.
+Drafts, unless the source is published and publishing was asked for by a role that may publish:
+a published source has both languages complete, so its copies can go live without a review each.
+One transaction — a collision on the ninth slug leaves no eight events behind.
+
+Three cadences and a ceiling of 52, because a weekly run for a year is the largest series the
+club holds; a fourth cadence is one line in `REPEAT_CADENCES` and a label. Baseline
+`BR-V1.34-2026-09-17`.
+
+## 65. Decided — race numbers arrive in M1: per event, as a batch, printed two to a page (2026-09-17)
+
+**Status:** Decided and built. BR-REQ-038-01; migration `0024`; `modules/registrations/bibs.ts`
+and `bibs-pdf.ts`; `/api/admin/events/[id]/bibs`. The owner's words: "I need to see and generate
+the race bibs to print them, and as a batch — the BVR logo is super important."
+
+**What moved and what did not.** Bibs were M2 in every plan, alongside multi-distance races and
+results, because a bib is one number *per race* across its child distances and results are keyed
+by it. That coupling is real and it is still M2. What the club needs on a race morning is
+simpler: every confirmed runner of *this* event has a number, and the numbers are on paper. That
+half needs nothing from M2 — an event has confirmed registrations, and `bib_number` has sat on
+the row since the first migration, kept empty by a CHECK exactly as `capacity` once was — so it
+moves, and the CHECK goes the way the capacity guard went: only once the transaction that makes
+the column safe exists and is tested.
+
+**Assignment, not entry.** Numbers are never typed. An Administrator presses "assign", and every
+confirmed, real registration without a number gets the next one, in order of confirmation,
+inside a transaction that locks the event row — the same serialization point the capacity
+transaction uses, for the same reason: two organizers pressing at once would both read 17. A
+number once given never changes, so Friday's sheet is right on Sunday; a later batch continues
+after the highest ever given, whoever confirmed when. A cancelled registration keeps its number
+off the sheet and keeps it from anyone else — reuse is how two people wear 17. Test registrations
+get nothing: they are omitted from every count the club is given (§30), and a bib is the most
+physical count there is. The partial unique index on `(event_id, bib_number)` is the guarantee;
+the lock is what keeps the guarantee from surfacing as an error.
+
+**Printed two to an A4 page** with a dashed cut line, because that is what a club prints at
+home and an A4 halved is the size a number is worn at. The lockup, the number in the club's blue
+as large as the width allows, the registered name — the legal name, this is staff-facing — and
+the event's title and date. The same `pdfkit`, Roboto and rasterised lockup as the legal PDF
+(§63): one PDF stack. A `from`–`to` range reprints one bib or prints the late batch without
+reprinting everything.
+
+**Audit.** One row per batch, about the event, with the range — never about a participant;
+`entity_type` gains `event` for it. Baseline `BR-V1.34-2026-09-17`.

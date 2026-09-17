@@ -264,15 +264,16 @@ busiest day every message queued after the cap was thrown away (`DECISIONS.md` �
 shows the volume against the allowance before a window opens, and explains every configuration
 enum rather than only reporting its value (§41).
 
-**921 unit and integration tests, 128 end-to-end runs (64 per viewport project), and five
+**947 unit and integration tests, 132 end-to-end runs (66 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
 single-connection database.
 
-Not built: the rest of the CMS — articles, static pages, galleries, the media library and the
-Tiptap body contract (M5) — and everything M2–M4 name (multi-distance races, bibs, results,
-runner profiles).
+Not built: the rest of the CMS — articles, galleries, the media library on R2 and the Tiptap
+body contract (M5) — and what M2–M4 name (multi-distance races, one bib per race across
+distances, results, runner profiles). Per-event race numbers and the printed sheet, and
+recurring events, are M1 since 2026-09-17 (`DECISIONS.md` §64, §65).
 
 **What is deployed.** QA, plus a production Vercel project and a production Neon project that
 are configured and have never served a request — `main` is sixty commits behind `qa`, so the

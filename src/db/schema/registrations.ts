@@ -265,9 +265,17 @@ export const registrations = pgTable(
      */
     listOptOut: boolean("list_opt_out").notNull().default(false),
 
-    // M1 footprint only. Assignment is an M2 feature with its own uniqueness-per-race
-    // transaction; the CHECK below keeps this column physically empty until that exists,
-    // exactly as `events.capacity` was kept empty until this branch's capacity transaction.
+    /**
+     * The race number on the participant's chest (BR-REQ-038-01, `DECISIONS.md` §65).
+     *
+     * Assigned by `modules/registrations/bibs.ts` to confirmed, real registrations, in order
+     * of confirmation, one event at a time under a lock on the event row; never by the form
+     * and never by the allocator, which does not know the column exists. Unique per event while
+     * a number is set — the partial index below — and one-per-race across a race's child events
+     * is M2's, with `race_id`. The pilot's `CHECK (bib_number IS NULL)` guard is gone with
+     * migration `0024`, for the same reason the capacity guard went: the transaction that makes
+     * the column safe exists and is tested.
+     */
     bibNumber: integer("bib_number"),
 
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
@@ -305,7 +313,12 @@ export const registrations = pgTable(
     // The maintenance sweep's hold-expiry scan.
     index("registrations_event_hold_expires_at_idx").on(t.eventId, t.holdExpiresAt),
 
-    check("registrations_bib_number_not_assigned_in_m1", sql`${t.bibNumber} IS NULL`),
+    check("registrations_bib_number_positive", sql`${t.bibNumber} IS NULL OR ${t.bibNumber} > 0`),
+    // Two runners cannot wear the same number at one event. Partial, so the many rows with no
+    // number yet do not collide with each other.
+    uniqueIndex("registrations_event_bib_number_unique")
+      .on(t.eventId, t.bibNumber)
+      .where(sql`${t.bibNumber} IS NOT NULL`),
 
     // NOT NULL permits '', and an empty display name on a published start list is the legal
     // name leaking or a blank row. Neither is acceptable, so the emptiness is refused here too.

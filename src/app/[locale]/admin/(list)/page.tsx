@@ -75,7 +75,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const staffUser = await requireStaff();
   const current = await searchParams;
-  const { error, saved, archived, failed } = current;
+  const { error, saved, archived, failed, created } = current;
 
   const t = await getTranslations("Admin");
   const format = await getFormatter();
@@ -196,7 +196,12 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {t("events.eventsArchived", { archived: archived ?? "0", failed: failed ?? "0" })}
           </Alert>
         )}
-        {saved && saved !== "eventsArchived" && <Alert severity="success">{t("saved")}</Alert>}
+        {saved === "eventsRepeated" && (
+          <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
+        )}
+        {saved && saved !== "eventsArchived" && saved !== "eventsRepeated" && (
+          <Alert severity="success">{t("saved")}</Alert>
+        )}
       </Box>
 
       <Stack

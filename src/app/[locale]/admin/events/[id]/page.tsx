@@ -37,11 +37,16 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import MenuItem from "@mui/material/MenuItem";
+import { REPEAT_CADENCES, REPEAT_MAX_COUNT } from "@/modules/content/events/service";
+import { listBibs } from "@/modules/registrations/bibs";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
   deleteEventAction,
+  assignBibNumbersAction,
   duplicateEventAction,
+  repeatEventAction,
   removeTestRegistrationsAction,
   saveEventAndTranslationsAction,
   transitionEventAction,
@@ -49,7 +54,7 @@ import {
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -91,12 +96,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved } = await searchParams;
+  const { error, saved, assigned, total } = await searchParams;
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
   if (!record) notFound();
   const { event, translations } = record;
+  // How many numbers this event has, for the sentence beside the button; the sheet reads the
+  // same list. Only where the section that shows it renders.
+  const bibs =
+    canManageTestRegistrations(staffUser.role) && event.registrationMode === "INTERNAL"
+      ? await listBibs(db, event.id)
+      : [];
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
@@ -150,7 +161,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
-        {saved && <Alert severity="success">{t("saved")}</Alert>}
+        {saved === "bibsAssigned" && (
+          <Alert severity="success">
+            {t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
+          </Alert>
+        )}
+        {saved && saved !== "bibsAssigned" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
       {/* Publication, for the whole event. Its own forms: a transition is not an edit, and it
@@ -320,6 +336,58 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               {t("registrations.viewForEvent")}
             </Button>
           </Stack>
+
+          {/*
+            Race numbers (BR-REQ-038-01): assign to every confirmed registration without one,
+            then download the sheet — all numbers, or a range for a reprint or the late batch.
+            Assigning is a POST with a confirmation; the sheet is a GET that reads what it
+            assigned and writes nothing.
+          */}
+          <Typography variant="h3" sx={{ fontSize: "1rem", mt: 3, mb: 0.5 }}>
+            {t("bibs.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {bibs.length === 0 ? t("bibs.helpNone") : t("bibs.helpSome", { total: bibs.length })}
+          </Typography>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
+            <form action={assignBibNumbersAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={event.id} />
+              <ConfirmSubmitButton
+                label={t("bibs.assign")}
+                title={t("confirm.bibsTitle")}
+                body={t("confirm.bibsBody")}
+                confirmLabel={t("bibs.assign")}
+                cancelLabel={t("confirm.cancel")}
+              />
+            </form>
+            {bibs.length > 0 && (
+              <form action={`/api/admin/events/${event.id}/bibs`} method="get">
+                <input type="hidden" name="locale" value={locale} />
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                  <TextField
+                    name="from"
+                    type="number"
+                    label={t("bibs.from")}
+                    size="small"
+                    slotProps={{ htmlInput: { min: 1 } }}
+                    sx={{ width: 100 }}
+                  />
+                  <TextField
+                    name="to"
+                    type="number"
+                    label={t("bibs.to")}
+                    size="small"
+                    slotProps={{ htmlInput: { min: 1 } }}
+                    sx={{ width: 100 }}
+                  />
+                  <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                    {t("bibs.download")}
+                  </Button>
+                </Stack>
+              </form>
+            )}
+          </Stack>
         </Box>
       )}
 
@@ -408,6 +476,64 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {t("editor.deleteHelp")}
         </Typography>
+
+        {/*
+          The weekly run, made once. Its own form: it creates rows rather than editing this
+          one, and the count is the only thing to think about. Copies are drafts unless the
+          box is ticked and this event is itself published — then they go live as they are
+          made, because a published source is one whose both languages are complete.
+        */}
+        <Divider sx={{ my: 3 }} />
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+          {t("editor.repeatSection")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("editor.repeatHelp")}
+        </Typography>
+        <form action={repeatEventAction}>
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="eventId" value={event.id} />
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+            <TextField
+              select
+              name="cadence"
+              label={t("editor.repeatCadence")}
+              defaultValue="WEEKLY"
+              size="small"
+              sx={{ minWidth: 200 }}
+            >
+              {REPEAT_CADENCES.map((cadence) => (
+                <MenuItem key={cadence} value={cadence}>
+                  {t(`editor.repeatCadences.${cadence}`)}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              name="count"
+              type="number"
+              label={t("editor.repeatCount")}
+              defaultValue={4}
+              size="small"
+              slotProps={{ htmlInput: { min: 1, max: REPEAT_MAX_COUNT } }}
+              sx={{ width: 140 }}
+              required
+            />
+          </Stack>
+          {live && (
+            <Box sx={{ mt: 1 }}>
+              <CheckboxField name="publish">{t("editor.repeatPublish")}</CheckboxField>
+            </Box>
+          )}
+          <Box sx={{ mt: 2 }}>
+            <ConfirmSubmitButton
+              label={t("editor.repeat")}
+              title={t("confirm.repeatTitle")}
+              body={t("confirm.repeatBody")}
+              confirmLabel={t("editor.repeat")}
+              cancelLabel={t("confirm.cancel")}
+            />
+          </Box>
+        </form>
       </Box>
     </Stack>
   );

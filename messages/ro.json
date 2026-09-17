@@ -241,7 +241,8 @@
       "bulkArchivePending": "Se arhivează…",
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul în locul ștergerii.",
-      "deleteBlockedShort": "{count} înscrieri"
+      "deleteBlockedShort": "{count} înscrieri",
+      "eventsRepeated": "{created} ediții create."
     },
     "confirm": {
       "cancel": "Renunță",
@@ -254,7 +255,11 @@
       "removeTestTitle": "Ștergi înscrierile de test?",
       "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
       "cancelRegistrationTitle": "Anulezi înscrierea?",
-      "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”."
+      "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”.",
+      "repeatTitle": "Creezi edițiile?",
+      "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
+      "bibsTitle": "Aloci numerele de concurs?",
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
     },
     "errors": {
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
@@ -353,7 +358,18 @@
       },
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",
-      "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul."
+      "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
+      "repeatSection": "Repetă evenimentul",
+      "repeatHelp": "Creează următoarele ediții ale acestui eveniment, la interval fix, cu aceleași detalii și cu ora păstrată în fusul evenimentului. Fiecare copie primește o adresă cu data ei (de exemplu „alergare-de-duminica-2026-10-04”). Copiile sunt ciorne, dacă nu bifezi publicarea.",
+      "repeatCadence": "Interval",
+      "repeatCadences": {
+        "WEEKLY": "Săptămânal",
+        "FORTNIGHTLY": "La două săptămâni",
+        "MONTHLY": "Lunar"
+      },
+      "repeatCount": "Câte ediții",
+      "repeatPublish": "Publică edițiile create (evenimentul acesta este publicat, deci și copiile sunt complete).",
+      "repeat": "Creează edițiile"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -468,36 +484,71 @@
         "club": "Clubul",
         "developer": "Dezvoltatorul"
       },
+      "howTitle": "Cum fac asta, pas cu pas",
       "items": {
         "approveLegalText": {
           "title": "Aprobă textele legale",
           "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierea refuză pe toată lumea. Procedura: docs/RUNBOOKS.md § Legal document version.",
-          "done": "Textele aprobate de club sunt publicate."
+          "done": "Textele aprobate de club sunt publicate.",
+          "how": [
+            "Deschide /admin/legal și apasă „Versiune nouă”. Alege tipul: nota de confidențialitate, termenii sau declarația.",
+            "Lipește textul în română și în engleză, pe secțiuni: un titlu și paragrafele lui. Salvează ciorna.",
+            "Descarcă PDF-ul de pe pagina versiunii și dă-l cui trebuie să-l citească. O ciornă se poate rescrie oricât timp nu e aprobată.",
+            "Când e bun: bifează „am citit” și apasă „Aprobă”. Din acel moment textul e fix — o corectură înseamnă versiunea următoare, tot de aici.",
+            "Repetă pentru toate trei. Nota de confidențialitate aprobată este cea care deblochează înscrierile; declarația aprobată se alege apoi pe fiecare eveniment, la Înscriere."
+          ]
         },
         "liveEmail": {
           "title": "Email către participanți reali",
-          "todo": "Trebuie verificat domeniul de trimitere mail.<domeniu> în Mailgun (înregistrările DNS sunt în docs/RUNBOOKS.md), apoi EMAIL_DELIVERY_MODE=live pe producție. Până atunci mesajele fie sunt reținute (capture), fie ajung doar la 5 adrese autorizate în sandbox (allowlist). Modul de acum",
-          "done": "Emailurile ajung la participanți."
+          "todo": "Domeniul de trimitere {mailDomain} verificat în Mailgun, apoi EMAIL_DELIVERY_MODE=live pe producție — pașii sunt mai jos. Până atunci mesajele fie sunt reținute (capture), fie ajung doar la 5 adrese autorizate în sandbox (allowlist). Modul de acum",
+          "done": "Emailurile ajung la participanți.",
+          "how": [
+            "În Mailgun: Sending → Domains → „Add new domain”. Numele: {mailDomain}. Regiunea: EU. Nu folosi domeniul principal — el rămâne liber pentru poșta clubului.",
+            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking). Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat). Apoi „Verify” în Mailgun — poate dura până la o oră.",
+            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY). Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „delivered”, „permanent failure” și „temporary failure”.",
+            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_FROM_ADDRESS=noreply@{mailDomain}, EMAIL_FROM_NAME=Brașov Runners, EMAIL_REPLY_TO=o adresă pe care clubul o citește.",
+            "Probă: EMAIL_DELIVERY_MODE=allowlist și EMAIL_ALLOWLIST=adresa ta, redeploy, apoi înscrie-te la un eveniment — trebuie să primești emailul. Când merge: EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
+          ]
         },
         "scheduler": {
           "title": "Monitoarele de producție pe cron-job.org",
           "todo": "Câte un monitor pentru fiecare dintre cele două sarcini programate (email-outbox și registration-maintenance), la cinci minute, cu JOB_SECRET-ul mediului — SETUP.md §26. Fără ele emailurile nu pleacă și locurile rezervate nu expiră. Lipsește sau întârzie",
-          "done": "Ambele sarcini rulează la timp."
+          "done": "Ambele sarcini rulează la timp.",
+          "how": [
+            "Pe cron-job.org (cont gratuit): „Create cronjob”, de două ori.",
+            "Primul: URL {outboxUrl}; al doilea: URL {maintenanceUrl}. La amândouă: Schedule „every 5 minutes”, Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
+            "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. În cinci minute rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări."
+          ]
         },
         "inviteStaff": {
           "title": "Invită echipa",
           "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
-          "done": "Echipa are conturi."
+          "done": "Echipa are conturi.",
+          "how": [
+            "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
+            "Persoana își face cont în Zitadel cu exact aceeași adresă și își verifică emailul — sau i-l creezi tu din consola Zitadel → Users. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
+            "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
+          ]
         },
         "publishEvents": {
           "title": "Publică evenimente",
           "todo": "Nu este publicat niciun eveniment, deci vizitatorii văd o listă goală.",
-          "done": "Există evenimente publicate."
+          "done": "Există evenimente publicate.",
+          "how": [
+            "Deschide /admin/events → „Eveniment nou”. Completează tipul, data, locul și titlul în ambele limbi. Salvează.",
+            "Apasă „Trimite spre verificare”, apoi „Publică”. Ambele limbi apar deodată; până atunci pagina e 404 pentru vizitatori.",
+            "Un singur eveniment poate fi „principal” — el deschide prima pagină. Anul viitor: „Duplică” pe cel de anul acesta."
+          ]
         },
         "roDomain": {
           "title": "Domeniul .ro, peste un an",
           "todo": "Hotărât pe 16 septembrie 2026: .com acum, .ro la un an, amândouă active în același timp (12 EUR + TVA pe an la ROTLD). Nu blochează nimic; se bifează singur când site-ul răspunde pe .ro.",
-          "done": "Site-ul răspunde și pe domeniul .ro."
+          "done": "Site-ul răspunde și pe domeniul .ro.",
+          "how": [
+            "Peste un an (septembrie 2027), cumpără domeniul .ro cu același nume, la ROTLD sau la registrarul .com.",
+            "Rulează `yarn domain:bind production <numele>.ro --alias-of {apex}`: leagă domeniul de proiectul Vercel ca redirect permanent către .com și tipărește înregistrările DNS de creat.",
+            "Creează înregistrările la registrar. Rândul acesta devine verde când site-ul răspunde pe .ro."
+          ]
         }
       },
       "freeVerdict": {
@@ -671,6 +722,17 @@
         "seoTitle": "Titlu SEO",
         "seoDescription": "Descriere SEO"
       }
+    },
+    "bibs": {
+      "title": "Numere de concurs",
+      "assign": "Alocă numerele",
+      "assigned": "{assigned} numere alocate ({total} în total).",
+      "from": "De la",
+      "to": "Până la",
+      "download": "Descarcă foaia (PDF)",
+      "page": "Pagina {n} din {total}",
+      "helpNone": "Niciun număr alocat încă. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
+      "helpSome": "{total} numere alocate. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
     }
   },
   "NotFound": {
