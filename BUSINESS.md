@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
+<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -293,7 +293,7 @@ For internal registration, the normal sequence is:
 5. registration becomes confirmed;
 6. a confirmation email containing a secure management/unregistration link is sent.
 
-The declaration is versioned and tied to the event and registration. The participant signs by explicitly accepting the declaration and typing their full name.
+The declaration is versioned and tied to the event and registration. The participant signs by explicitly accepting the declaration and typing their full name. The participant signs the text they read: if the declaration changes between reading and signing, nothing is recorded and the participant is asked to read the current text and sign again.
 
 V1 records electronic acceptance evidence. It must not be described as a qualified electronic signature unless a separate legally reviewed implementation is introduced.
 

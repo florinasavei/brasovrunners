@@ -1,10 +1,18 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listPublishedPages } from "@/modules/content/pages/repository";
-import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO } from "@/theme/brand";
+import {
+  FONT,
+  HEADER_MARK_HEIGHT,
+  HEADER_MARK_HEIGHT_PX,
+  HEADER_WORDMARK_SIZE,
+  LOGO,
+  WORDMARK,
+} from "@/theme/brand";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
@@ -50,13 +58,13 @@ async function navigationPages(locale: Locale) {
  * `LogoLink` (AGENTS.md §14.1: narrow client boundaries).
  *
  * The logo is the supplied lockup — mountains and wordmark as one piece of artwork, in the
- * brand blue — by the owner's instruction of 2026-09-16. Until then the header showed the
- * mountains alone with `BRASOV RUNNERS` set as live text in the kit face, for two reasons that
- * are still true and now accepted as the cost: the lockup is 2.4:1, so at header height the
- * wordmark inside it is small; and artwork does not scale with the reader's font settings. The
- * artwork's wordmark reads BRASOV without the ș, which is the kit's logotype, not the club's
- * name — so the link's accessible name comes from the message catalogue and assistive
- * technology announces `Brașov Runners`, spelled properly, and never the artwork.
+ * brand blue — by the owner's instruction of 2026-09-16, with `BRASOV RUNNERS` set beside it as
+ * live text in the kit face by his instruction of 2026-09-17: at header height the wordmark
+ * inside the lockup is small, and the live text is what actually reads. The visible wordmark is
+ * unaccented, matching the printed kit — a logotype, not the club's name, and safe only because
+ * it is pure ASCII: Facón has no Romanian characters at all. So the link's accessible name comes
+ * from the message catalogue and assistive technology announces `Brașov Runners`, spelled
+ * properly, and never the artwork or the kit face.
  *
  * A plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for the image
  * optimizer to do, and serving one through `next/image` requires `dangerouslyAllowSVG`, which
@@ -128,6 +136,24 @@ export default async function SiteHeader() {
               width: "auto",
             }}
           />
+          <Typography
+            component="span"
+            sx={{
+              // Facón is one style: black, italic. Both are stated so the fallback, Roboto,
+              // lands in the same weight and slant if the font has not arrived yet.
+              fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,
+              fontWeight: 900,
+              fontStyle: "italic",
+              fontSize: HEADER_WORDMARK_SIZE,
+              lineHeight: 1,
+              // The face is wide and tightly fitted; a little tracking stops the letters
+              // touching at header size.
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {WORDMARK}
+          </Typography>
         </LogoLink>
         </Box>
 

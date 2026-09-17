@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
+<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3215,9 +3215,12 @@ down so the next task starts from the facts and the contradictions, not from a s
 1. **Team mail on Zoho Mail** — mailboxes for the administrator and two organizers, and a public
    `contact@<domain>` all three read (a shared mailbox, or a group if the plan lacks one). No
    collision: Zoho takes the apex MX, SPF include and DKIM. Free plan checked 2026-09-16: five
-   users, 5 GB each, one domain, web access only. The owner may drop Zoho — its usable tier is
-   paid — for **Google Workspace for Nonprofits**, applied for on 2026-09-16 and pending; the
-   split with application mail is identical whichever provider takes the apex.
+   users, 5 GB each, one domain, web access only. **Reopened 2026-09-17: the provider is not chosen.** Zoho's usable
+   tier is paid, so it is now the fallback rather than the plan. The club has applied for a
+   nonprofit grant from **Google**, and **Microsoft** is the other candidate; whichever is granted
+   first takes the apex. No entitlement of either grant is recorded until one is granted (§1.2).
+   The split with application mail is identical whichever provider wins, which is why this stays
+   one open question rather than three designs.
 2. **Application mail on a subdomain, planned name `mail.<domain>`** — not configured, no DNS
    values exist, none invented. §55 had said `mg.<domain>`; the owner's name wins and the runbook
    now says `mail.<domain>`. **The provider is Mailgun**: the adapter is built, the account exists,
@@ -3264,3 +3267,49 @@ application stores an acceptance row and never a document. If a requirement late
 reproducible, it is regenerated from the stored version and hash, not retrieved.
 
 Baseline `BR-V1.28-2026-09-16`.
+
+## 57. Decided — a signature is bound to the text that was read, and "editing" legal text is the next version, prefilled (2026-09-17)
+
+**Status:** Decided and built. Closes the defect §53 recorded. BR-REQ-033-02 criterion 6,
+BR-BUS-033, `AGENTS.md` §15.3. The owner's ask was "we need to be able to edit documents".
+
+### What was wrong, restated in one sentence
+
+The declare page resolved the current declaration and rendered it; the form posted a token, a
+checkbox and a typed name; the service resolved the current declaration *again* and recorded that
+— so a version approved between GET and POST was recorded as the text the participant signed.
+
+### What changed
+
+- The page posts `documentId` and `contentSha256` of the version it rendered. `signDeclaration`
+  compares both with the version current at signing time and throws `CONFLICT`
+  (`DECLARATION_CHANGED`) on a mismatch. The throw happens inside the transaction that also
+  consumed the action token, so the token is not spent; the action redirects to the same page
+  with `?changed=1`, which shows the current text and a notice to read and sign again. Two
+  integration tests in `registrations/lifecycle.test.ts`: a version approved between render and
+  post is refused with nothing written and the registration still `PENDING_DECLARATION`, then
+  re-reading records version 2 and its hash; a tampered hash or id is refused.
+- Nothing else in the lifecycle moved: the hold check, the allocation on a lapsed hold and the
+  waiting-list acceptance path run exactly as before, one `if` earlier than the insert.
+
+### What did not change, and why
+
+- **The privacy notice at submission** has the same GET/POST split (§53 named it). It is left as
+  is: the notice is *linked*, not read inline, the participant acknowledges "the current notice",
+  and approving a newer version is monotonic — the version recorded is at least as new as the one
+  linked. Binding it would need the notice rendered inline or its hash carried through a page the
+  participant never sees. Named here rather than done.
+- **Un-approving a version** is still not built. §53 made this fix its precondition; the
+  precondition is now met, and the verb is not asked for. If it is, it is a small change now.
+
+### "Editing", as the owner meant it
+
+Approved words are fixed by §46 and §53, because participants relied on them. What the owner ran
+into was not the rule but the ergonomics: version n+1 began as an empty form, so a one-word
+correction meant pasting the whole text back in. An approved version's page now offers *Start the
+next version from this one*, which opens the new-version form prefilled from it, key locked. A
+draft was and is editable in place. The notice on an approved version used to say legal text "is
+not edited from the backoffice" — false since §46 — and now says what the fixed text means and
+what to do instead.
+
+Baseline `BR-V1.29-2026-09-17`.

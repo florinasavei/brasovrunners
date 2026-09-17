@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
+<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2253,8 +2253,11 @@ On explicit POST with valid token/action session:
 ### 15.3 Declaration signing
 
 1. verify action session/registration/state;
-2. load exact declaration translation/version/hash;
-3. validate checkbox + typed name;
+2. load the current approved declaration version and hash;
+3. validate the checkbox, the typed name, and that the posted document id and content hash are
+   the current version's — a signature against any other text is refused with CONFLICT inside
+   the transaction, so the token is not spent and the participant re-reads the current text
+   (BR-REQ-033-02 criterion 6, `DECISIONS.md` §57);
 4. begin transaction and lock event/registration;
 5. expire stale holds;
 6. verify current hold still active;

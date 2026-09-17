@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
+<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -606,8 +606,9 @@ other participant link uses — never by a password.
 3. Given acceptance, when it is stored, then no raw IP address or user agent is stored by default.
 4. Given an acceptance form submitted without the explicit checkbox or without a typed name, when it is posted, then it is rejected.
 5. Given any surface presenting the declaration, when it renders, then it does not describe the acceptance as a qualified electronic signature.
+6. Given a declaration page that rendered one version, when a newer version is approved before the form is posted, then the signature is refused, nothing is recorded, the action link is not spent, and the participant is shown the current text to read and sign again — so the stored acceptance always names the version the participant read (`DECISIONS.md` §57).
 
-**Verification:** integration `declarations/acceptance.test.ts`; e2e `declaration.spec.ts`
+**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6); e2e `registration-form.spec.ts`
 
 #### BR-REQ-033-03 — Staff cannot sign for a participant
 
