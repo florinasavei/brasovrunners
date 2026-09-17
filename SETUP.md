@@ -574,6 +574,11 @@ Persist original verified delivery address separately. Do not claim this detects
 
 ## 15. Configure staff authentication
 
+**The procedure is `docs/RUNBOOKS.md` § Staff sign-in**, which holds the field-by-field settings
+for both environments, the two settings that cost an afternoon each, the commands that verify a
+sign-in without guessing, the four reasons a refusal can have, and what the free tier refuses.
+This section is the decision and the shape; that one is what to do.
+
 Auth.js with the Zitadel OAuth provider, and `staff_users` as the server-side allowlist: an
 unknown Zitadel account is refused before a session ever issues. `DECISIONS.md` §26 records
 why this reverses §24 — nothing was ever built against §24 beyond the development switcher.

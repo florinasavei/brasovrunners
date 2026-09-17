@@ -129,68 +129,208 @@ maintainer's own branches and credentials.
 
 ## Staff sign-in: Zitadel tenant
 
-Run once per environment (qa, production), before that environment's `STAFF_AUTH_MODE` is set
-to `provider`. Nothing here touches application code — `DECISIONS.md` §26 and `AGENTS.md`
-§13.1 are the reasoning; this is the account-creation checklist that follows from them.
+Run once per environment. Nothing here touches application code — `DECISIONS.md` §26 and
+`AGENTS.md` §13.1 are the reasoning; this is the procedure, and it is written to be followed
+without reading either.
 
-### Prerequisites
+**Zitadel does not decide who may sign in. `staff_users` does.** Zitadel proves an account is
+who it says it is; the allowlist in this application's own database decides whether that account
+is staff. An account Zitadel authenticates perfectly is refused if no row invites it. That split
+is the whole design, and it is why every refusal below is *our* refusal, not the provider's.
 
-- [ ] A Zitadel tenant (organization) owned by the club's account, not a personal one.
-- [ ] Two recovery-capable owners have access to it.
+### What exists today
 
-### Steps
+| | |
+| --- | --- |
+| Instance | `brasov-runners-8iqx8c.eu1.zitadel.cloud` — one instance, both environments |
+| Project | **Brasov Runners** — one project, one application per environment |
+| QA application | **Brasov Runners QA**, id `389311611728311022`, client `389311611745088238` |
+| Production application | **Brasov Runners Production**, id `391132995823612650` |
+| Plan | Free. See "What the free tier refuses" below before planning anything on it |
 
-- [ ] Create one Zitadel application per environment (qa, production) — never share one
-      application's credentials across environments, the same reasoning `AGENTS.md` §7.3 gives
-      for separate Vercel projects.
-- [ ] Verify the current Auth.js documentation for the exact redirect/callback URL shape it
-      expects before configuring it in Zitadel — do not assume last year's path.
-- [ ] Set the redirect and post-logout URLs from that environment's `APP_BASE_URL`.
-- [ ] Enable whichever sign-in methods the club wants (password, passwordless) in Zitadel's own
-      login policy. This application does not choose between them.
-- [ ] Invite each staff member in the backoffice first (`/admin/staff`, an Administrator, by
-      email and role) — the row is the allowlist entry, and a Zitadel account for an address
-      nobody invited is refused however valid its token is.
-- [ ] Set `AUTH_SECRET` (a fresh random value, not shared across environments),
-      `AUTH_ZITADEL_ID`, `AUTH_ZITADEL_SECRET`, `AUTH_ZITADEL_ISSUER`, and
-      `STAFF_AUTH_MODE=provider` in that environment's application settings, and restart.
-- [ ] For production, without relinking this checkout — it is linked to QA (`SETUP.md` §26):
+One application per environment, never one shared: the same reasoning `AGENTS.md` §7.3 gives for
+two Vercel projects. A shared application means a shared client secret, so rotating it for one
+environment breaks the other, and a mistake in QA's redirect list is a mistake in production's.
 
-      ```bash
-      npx vercel link --project brasov-runners-production --yes --cwd <empty directory>
-      npx vercel env add    AUTH_ZITADEL_ID     production --value "<client id>"     --yes --cwd <that directory>
-      npx vercel env add    AUTH_ZITADEL_SECRET production --value "<client secret>" --yes --cwd <that directory>
-      npx vercel env add    AUTH_ZITADEL_ISSUER production --value "<issuer URL>"    --yes --cwd <that directory>
-      npx vercel env update STAFF_AUTH_MODE     production --value provider          --yes --cwd <that directory>
-      ```
+### Creating an environment's application
 
-      `AUTH_SECRET` already exists there, generated on 2026-09-16 and shared with nothing. The
-      issuer is the same Zitadel instance QA uses; the client id and secret belong to the new
-      application alone. Then redeploy: a variable reaches the application only on a new
-      deployment.
-- [ ] **Enable "Include user's profile info in the ID Token"** in the application's Token
-      Settings. Without it the ID token carries no `email` claim, the allowlist gate has no
-      address to match, and every sign-in is refused as `AccessDenied` — indistinguishable, from
-      the outside, from an uninvited account. This is the single most likely cause of a refusal
-      when Zitadel itself reports the login as successful.
-- [ ] **Insert the first Administrator's `staff_users` row by hand** — one row, that person's
-      email lowercased, role `ADMIN`, `zitadel_subject` and `first_signed_in_at` left null. The
-      screen that invites people is behind the sign-in it would be granting, so the first row
-      cannot come from the backoffice. Every later colleague is invited there normally.
-- [ ] Verify a real staff member can sign in end to end, and that an address nobody invited is
-      refused.
-- [ ] Confirm the binding landed: that row now carries a `zitadel_subject` and a
-      `first_signed_in_at`. Both fill together or neither does — a CHECK constraint enforces it.
-- [ ] Verify the development switcher refuses to start in this environment
-      (`STAFF_AUTH_MODE=dev-switcher` must fail at boot outside local and test).
+Projects → **Brasov Runners** → Applications → **New** → type **Web** → auth method **Basic**.
+Then set these, which are identical in both environments:
+
+| Screen | Field | Value |
+| --- | --- | --- |
+| Settings | Response Types | `Code` |
+| Settings | Grant Types | `Authorization Code` |
+| Settings | Authentication Method | `Basic` |
+| Settings | Refresh Token | unchecked |
+| Settings | Use new Login UI | checked |
+| Settings | Custom base URL for the new Login UI | **empty** — see below |
+| Settings | Back-Channel Logout URI | empty |
+| Token Settings | Auth Token Type | `Bearer Token` |
+| Token Settings | User roles inside ID Token | unchecked |
+| Token Settings | **Include user profile info in the ID Token** | **checked** — see below |
+| Token Settings | ClockSkew | `0` |
+| Additional Origins | Origins | empty |
+
+And these, which differ:
+
+| | QA | Production |
+| --- | --- | --- |
+| Development Mode | **on** — only so `http://localhost` is accepted | **off** |
+| Redirect URIs | `https://qa.<domain>/api/auth/callback/zitadel`, `https://<the qa provider host>/api/auth/callback/zitadel`, `http://localhost:47821/api/auth/callback/zitadel` | `https://<domain>/api/auth/callback/zitadel`, `https://<the production provider host>/api/auth/callback/zitadel` |
+| Post Logout URIs | `https://qa.<domain>`, `https://<the qa provider host>` | `https://<domain>`, `https://<the production provider host>` |
+
+Keep the provider hostname in both lists alongside the club's domain. It is what still works when
+DNS has a bad day, and it is the host the smoke check and the scheduler call.
+
+**The redirect URI must match what the application sends, character for character.** Add a new
+hostname to a Vercel project and you have created a second redirect URI that Zitadel has never
+heard of; sign-in from that host is then refused until it is added. That is one of the two
+failures below, and it is the reason the order in § Domain binding matters.
+
+### The two settings that cost an afternoon each
+
+**1. "Include user profile info in the ID Token" — tick it.** Without it the ID token carries no
+`email` and no `email_verified`. This application's gate has nothing to match, so it refuses,
+and Auth.js shows its own **"Access Denied — You do not have permission to sign in"** page. That
+page is identical to the one an uninvited stranger sees, which is deliberate (§19.4: the screen
+must not confirm whether an address is staff) and is exactly why the cause is invisible. It has
+now cost an afternoon twice, on QA in September and on production the same month. The server log
+says `NO_EMAIL_CLAIM` when it happens.
+
+**2. "Custom base URL for the new Login UI" — leave it empty.** It points Zitadel at a
+*self-hosted copy of Zitadel's own login application*, not at this site. Empty means Zitadel uses
+its hosted login, which is what works. Putting the club's address there sends everyone signing in
+to a page that does not exist. To make the sign-in page look like the club, use **Branding** on
+the instance or organisation instead — logo, colours, background, free, and it leaves the URL
+alone.
+
+### Wiring the environment
+
+Four variables, from the application's own screens. The issuer is the instance, identical
+everywhere; it is on the application's **URLs** screen, without a path.
+
+```text
+AUTH_ZITADEL_ID      the Client ID from the application header
+AUTH_ZITADEL_SECRET  shown once at creation; Actions → Generate new client secret to get another
+AUTH_ZITADEL_ISSUER  https://brasov-runners-8iqx8c.eu1.zitadel.cloud
+STAFF_AUTH_MODE      provider
+```
+
+Set them on that environment's Vercel project. The repository is linked to QA, so production is
+addressed through an empty scratch directory rather than by relinking (`SETUP.md` §26):
+
+```bash
+npx vercel link --project brasov-runners-production --yes --cwd <empty directory>
+npx vercel env add    AUTH_ZITADEL_ID     production --value "<client id>"     --yes --cwd <that directory>
+npx vercel env add    AUTH_ZITADEL_SECRET production --value "<client secret>" --yes --cwd <that directory>
+npx vercel env add    AUTH_ZITADEL_ISSUER production --value "<issuer>"        --yes --cwd <that directory>
+npx vercel env update STAFF_AUTH_MODE     production --value provider          --yes --cwd <that directory>
+```
+
+**Order matters.** `src/shared/config/env.ts` refuses to start when `STAFF_AUTH_MODE=provider`
+and any of the other three is missing. Setting the mode first does not merely break sign-in — the
+next deployment fails to boot, and the whole site is down. Add the three, then the mode.
+
+Variables reach a running application only on a **new deployment**. Before deploying, prove the
+combination boots, from the repository root:
+
+```bash
+node --import tsx -e "import('./src/shared/config/env').then(({envSchema}) => console.log(envSchema.safeParse({APP_ENV:'production',APP_BASE_URL:'https://example.test',STAFF_AUTH_MODE:'provider',AUTH_SECRET:'x',AUTH_ZITADEL_ID:'x',AUTH_ZITADEL_SECRET:'x',AUTH_ZITADEL_ISSUER:'https://example.test',EMAIL_DELIVERY_MODE:'capture'}).success))"
+```
+
+`AUTH_SECRET` is Auth.js's own session secret, not Zitadel's. It is generated per environment and
+shared with nothing.
+
+### The first administrator
+
+**Insert the first `staff_users` row by hand.** The screen that invites people sits behind the
+sign-in it would be granting, so the first row cannot come from the backoffice. One row, the
+address lowercased, role `SUPERADMIN`, `zitadel_subject` and `first_signed_in_at` left null:
+
+```sql
+insert into staff_users (email, display_name, role)
+values ('<the administrator address>', '<their name>', 'SUPERADMIN');
+```
+
+Run it in the Neon console's SQL Editor, against that environment's project. Every later
+colleague is invited from `/admin/staff` normally.
+
+### Verifying, without guessing
+
+Each step proves one link in the chain, and they narrow a failure to one cause. Run them in
+order against the environment's own host.
+
+```bash
+# 1. Is the provider configured in the running build at all?
+curl -s https://<host>/api/auth/providers
+
+# 2. Does Zitadel accept the redirect URI the application actually sends?
+#    A 302 to the login page means yes. An error page names the mismatch.
+CSRF=$(curl -s -c /tmp/j https://<host>/api/auth/csrf | grep -o '"csrfToken":"[^"]*"' | cut -d'"' -f4)
+AUTH=$(curl -s -b /tmp/j -o /dev/null -w '%{redirect_url}' -X POST -d "csrfToken=$CSRF" https://<host>/api/auth/signin/zitadel)
+echo "$AUTH"; curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' "$AUTH"
+
+# 3. Is the client secret right? invalid_grant/Code.Invalid = yes, the code was fake.
+#    invalid_client = the secret is wrong.
+curl -s -u "<client id>:<client secret>" \
+  -d "grant_type=authorization_code&code=deliberately-invalid&redirect_uri=https://<host>/api/auth/callback/zitadel" \
+  https://brasov-runners-8iqx8c.eu1.zitadel.cloud/oauth/v2/token
+```
+
+Then sign in for real, and confirm it bound rather than trusting the screen: the row must now
+carry a `zitadel_subject` and a `first_signed_in_at`. Both fill together or neither does — a
+CHECK constraint enforces it.
+
+```sql
+select email, role, zitadel_subject is not null as bound, first_signed_in_at from staff_users;
+```
+
+### Diagnosing "Access Denied"
+
+That page is **Auth.js's, not Zitadel's**. It means Zitadel authenticated the account and this
+application's gate refused the result. The screen says nothing more, on purpose. The server log
+names which of four:
+
+| Logged | Means | Fix |
+| --- | --- | --- |
+| `NO_EMAIL_CLAIM` | The token has no `email` | Tick "Include user profile info in the ID Token" |
+| `EMAIL_NOT_VERIFIED` | The Zitadel user's address is unverified | Verify it in Zitadel → Users |
+| `NOT_INVITED` | No `staff_users` row for that address | Insert it, or invite from `/admin/staff` |
+| `EMAIL_BOUND_ELSEWHERE` | The row is already bound to a different Zitadel subject | Deliberate: one row, one account |
+
+`npx vercel logs https://<host> --cwd <the linked directory>` reads them.
+
+If the failure happens *before* the login page, it is Zitadel's own error and the cause is in
+step 2 or 3 above — a redirect URI or the client secret, not the allowlist.
+
+### What the free tier refuses
+
+Checked 2026-09-17 on zitadel.com/pricing. These are limits, not warnings:
+
+- **Zero custom domains.** Sign-in stays on `brasov-runners-8iqx8c.eu1.zitadel.cloud`. A
+  `login.<domain>` needs the **PRO tier at US$100/month** — roughly a hundred times this club's
+  entire running cost, for a hostname a volunteer reads for two seconds. It also buys a second
+  domain migration every time the club changes domain, since the redirect URIs would follow.
+  Decided against; **Branding** gives the club's look for nothing.
+- **One administrator.** One person can administer identity. A second needs the paid tier. This
+  is the club's real succession risk, not the domain: `BR-BUS-101` requires that no single
+  person be the only one able to recover the platform, and today one person is. Recovery for
+  Zitadel therefore rests on that account's own recovery, which must be in the password manager.
+- **100 daily active users.** Irrelevant at three to five staff, and it counts staff only —
+  participants never sign in at all (§10.3).
+- **One instance, one day of audit trail.** The audit trail this product relies on is its own
+  `audit_logs` table, not Zitadel's, so the one-day retention costs nothing here.
+
+If the free tier ever stops fitting, the alternative recorded in `DECISIONS.md` is Auth.js
+against Google or Microsoft directly — free, and natural if the club's nonprofit application
+lands and staff already hold club accounts (§56).
 
 ### Rollback
 
-Set `STAFF_AUTH_MODE=disabled` and restart. The backoffice returns 404 to every staff request —
-the same honest state it was in before the tenant existed. No `staff_users` row is affected.
-
-
----
+Set `STAFF_AUTH_MODE=disabled` and redeploy. The backoffice answers 404 to every staff request —
+the same honest state it was in before the application existed. No `staff_users` row is touched,
+and no Zitadel configuration needs undoing.
 
 ## Domain binding
 

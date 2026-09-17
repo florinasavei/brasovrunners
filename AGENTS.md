@@ -2032,6 +2032,16 @@ nobody has turned it on for yet — every guarded call asks who is signing the r
 nobody, so the backoffice answers 404 rather than being hidden. Standing up the Zitadel tenant
 itself is an account-creation task (`SETUP.md`), not application code.
 
+The ID token **must** carry `email` and `email_verified`; the gate has nothing to match
+otherwise and refuses an account that is otherwise perfectly valid. On Zitadel that is one
+checkbox per application, and it is off by default — `docs/RUNBOOKS.md` § Staff sign-in records
+the symptom, because on screen it is indistinguishable from an uninvited address, deliberately
+(§19.4). A refusal logs which of four reasons it was, naming nobody (§14.5).
+
+The provider's free tier permits **one identity administrator and no custom domain**. The second
+is cosmetic and was declined at US$100/month (`docs/PLATFORM.md`); the first is a succession risk
+against BR-BUS-101 and is recorded rather than solved.
+
 Local/test may provide a development-only seeded staff switcher:
 
 - unavailable in QA/production, refused at startup by `STAFF_AUTH_MODE` (§8);
