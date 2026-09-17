@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -259,11 +259,10 @@ do.
       still passes.
 - [ ] Confirm the production sender name and address match what the club approved
       (`BUSINESS.md` §9).
-- [ ] **If the club also wants mailboxes on the domain** — Zoho Mail (free plan checked
-      2026-09-16: up to five users, 5 GB each, one domain, web access only — no IMAP or POP) or
-      Google Workspace for Nonprofits (applied for 2026-09-16, pending) — split the domain by
-      function so the two never share an MX or an SPF record: the mailbox provider takes the
-      apex — its MX, its SPF include, its DKIM — and Mailgun takes a subdomain, `mail.<domain>`, as
+- [ ] **If the club also wants mailboxes on the domain** — the provider is not chosen yet: a
+      nonprofit grant from Google or Microsoft, or Zoho Mail as the fallback (`SETUP.md` §26) —
+      split the domain by function so the two never share an MX or an SPF record: the mailbox
+      provider takes the apex — its MX, its SPF include, its DKIM — and Mailgun takes a subdomain, `mail.<domain>`, as
       the sending domain. `MAILGUN_DOMAIN` and `EMAIL_FROM_ADDRESS` then carry the subdomain
       (`noreply@mail.<domain>`, so DKIM aligns), and `EMAIL_REPLY_TO` points at the club mailbox
       people should answer to. Configuration only; nothing under `src/` changes.
@@ -444,8 +443,10 @@ It prints what it will do before it does it. `production` additionally requires 
 ## Legal document version
 
 Applies to the privacy notice, the terms, and the event declaration. All three share the
-`legal_documents` mechanism described in `AGENTS.md` §12.5. V1 has no editor screen, by the
-decision recorded in `DECISIONS.md` §6.7.
+`legal_documents` mechanism described in `AGENTS.md` §12.5. The backoffice drafts, edits and approves versions
+(`DECISIONS.md` §46, §53, §57), and an approved version's page offers *the next version from this
+one*, prefilled. This runbook is the other path — text arriving as a migration — which production's
+first approved version may still use while no Administrator can sign in there.
 
 Related requirement: `BR-REQ-053-01`.
 

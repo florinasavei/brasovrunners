@@ -14,6 +14,7 @@ import {
   unregister,
 } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -125,6 +126,67 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     await approveLegalDocuments(db, NOW);
   });
 
+  /**
+   * BR-REQ-033-02 criterion 6 (DECISIONS.md §57): the acceptance names the text the participant
+   * read. Version 2 is approved between the page render and the form post — exactly the GET/POST
+   * split §53 found — and the signature against version 1 is refused, nothing is written, and
+   * the registration is still waiting for a declaration; re-reading and signing records version 2.
+   */
+  it("BR-REQ-033-02 criterion 6: refuses a signature against a version that is no longer current", async () => {
+    const event = await createInternalEvent(db);
+    await submitRegistration(db, event, submissionInput(), NOW);
+    const pending = await findOneRegistration(db, event.id);
+    await confirmEmail(db, event, pending.id, NOW);
+
+    const read = await signingInput(db, NOW); // what the page rendered: version 1
+
+    const revised: LegalDocumentTranslationInput[] = [
+      { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["d, revizuit"] }] } },
+      { locale: "en", title: "Declaration", body: { sections: [{ paragraphs: ["d, revised"] }] } },
+    ];
+    await insertLegalDocumentVersion(db, {
+      key: "EVENT_DECLARATION",
+      version: 2,
+      effectiveAt: new Date("2026-01-02T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(revised),
+      translations: revised,
+      now: NOW,
+    });
+
+    await expect(
+      signDeclaration(db, event, pending.id, read, new Date(NOW.getTime() + 60_000)),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+
+    const untouched = await findOneRegistration(db, event.id);
+    expect(untouched.status).toBe("PENDING_DECLARATION");
+    expect(await db.select().from(declarationAcceptances)).toHaveLength(0);
+
+    // The page re-renders version 2; signing that is recorded against version 2 and its hash.
+    const reread = await signingInput(db, NOW);
+    const confirmed = await signDeclaration(db, event, pending.id, reread, new Date(NOW.getTime() + 120_000));
+    expect(confirmed.status).toBe("CONFIRMED");
+    const [acceptance] = await db.select().from(declarationAcceptances);
+    expect(acceptance.declarationVersion).toBe(2);
+    expect(acceptance.contentSha256).toBe(reread.contentSha256);
+  });
+
+  it("BR-REQ-033-02 criterion 6: refuses a hash or an id that is not the current version's", async () => {
+    const event = await createInternalEvent(db);
+    await submitRegistration(db, event, submissionInput(), NOW);
+    const pending = await findOneRegistration(db, event.id);
+    await confirmEmail(db, event, pending.id, NOW);
+    const read = await signingInput(db, NOW);
+
+    await expect(
+      signDeclaration(db, event, pending.id, { ...read, contentSha256: "0".repeat(64) }, NOW),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(
+      signDeclaration(db, event, pending.id, { ...read, documentId: "00000000-0000-4000-8000-000000000000" }, NOW),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(await db.select().from(declarationAcceptances)).toHaveLength(0);
+  });
+
   it("BR-REQ-031-01: the submission surface asks only for name, email, locale, and consent — no password", async () => {
     const event = await createInternalEvent(db);
     const result = await submitRegistration(db, event, submissionInput(), NOW);
@@ -169,7 +231,7 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
       db,
       event,
       pending.id,
-      { accepted: true, typedName: "Ana Pop" },
+      await signingInput(db, NOW, "Ana Pop"),
       past31Minutes,
     );
     expect(resigned.status).toBe("CONFIRMED");
@@ -185,7 +247,7 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
       db,
       event,
       pending.id,
-      { accepted: true, typedName: "Ana Pop" },
+      await signingInput(db, NOW, "Ana Pop"),
       new Date(NOW.getTime() + 60_000),
     );
 
@@ -210,7 +272,7 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
       db,
       event,
       pending.id,
-      { accepted: true, typedName: "Ana Pop" },
+      await signingInput(db, NOW, "Ana Pop"),
       NOW,
     );
 
@@ -268,7 +330,7 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     await submitRegistration(db, event, submissionInput({ email: "first@example.ro" }), NOW);
     const first = await findOneRegistration(db, event.id);
     const confirmedFirst = await confirmEmail(db, event, first.id, NOW);
-    await signDeclaration(db, event, confirmedFirst.id, { accepted: true, typedName: "Ana Pop" }, NOW);
+    await signDeclaration(db, event, confirmedFirst.id, await signingInput(db, NOW, "Ana Pop"), NOW);
 
     await submitRegistration(db, event, submissionInput({ email: "second@example.ro" }), new Date(NOW.getTime() + 1000));
     const all = await db.select().from(registrations).where(eq(registrations.eventId, event.id));

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
+<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1101,9 +1101,13 @@ only after `https://qa.brasovrunners.com/api/auth/callback/zitadel` and the post
 `https://qa.brasovrunners.com` exist on the QA Zitadel application, or the next QA deployment
 refuses every staff sign-in (`docs/RUNBOOKS.md` § Domain binding, step 1).
 
-**Email on the domain — PLANNED, nothing configured.** Team mail goes to **Zoho Mail** — or to **Google Workspace for Nonprofits**, applied for on
-2026-09-16 and pending, which replaces Zoho if granted, since Zoho's usable tier is paid: planned
-mailboxes `admin@brasovrunners.com`, `amalia@brasovrunners.com`, `dani@brasovrunners.com`, and a
+**Email on the domain — PLANNED, nothing configured.** The provider for team mail is **not chosen** (2026-09-17). The club has applied for a nonprofit
+grant — **Google Workspace for Nonprofits**, and **Microsoft 365 for Nonprofits** is the other
+candidate — and whichever is granted first takes the apex. **Zoho Mail** is the fallback if
+neither is, since its usable tier is paid. What each grant actually includes is recorded here when
+one is granted and not before (`AGENTS.md` §1.2). The split with application mail is identical
+whichever wins: the mailbox provider owns the apex MX, SPF and DKIM, and Mailgun sends from the
+subdomain. Planned mailboxes `admin@brasovrunners.com`, `amalia@brasovrunners.com`, `dani@brasovrunners.com`, and a
 public `contact@brasovrunners.com` that all three read — a shared mailbox or, failing that on the
 plan chosen, a group. Application mail stays separate, on a subdomain: the planned name is
 `mail.brasovrunners.com`, **not configured, no DNS values exist for it yet — none are to be

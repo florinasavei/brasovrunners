@@ -11,7 +11,7 @@
       "en": "English"
     },
     "buildBadgeLabel": "Versiunea site-ului și data ultimei actualizări",
-    "buildBadgeSignIn": "Dublu clic, sau Enter, pentru autentificarea echipei.",
+    "buildBadgeSignIn": "Dublu clic, apăsare lungă pe telefon, sau Enter, pentru autentificarea echipei.",
     "lastBuild": "ultima actualizare",
     "environmentNotice": {
       "label": "Anunț despre această versiune a site-ului",
@@ -409,7 +409,9 @@
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
       "immutabilityNotice": "O versiune aprobată nu se mai modifică și nu se mai șterge: participanții au semnat exact acel text, iar ce a publicat clubul rămâne în evidență. O corectură înseamnă o versiune nouă. O ciornă neaprobată se poate șterge, pentru că nimeni nu a văzut-o.",
-      "readOnlyNotice": "Această pagină este doar pentru citire. Textul legal nu se editează din backoffice.",
+      "readOnlyNotice": "Această versiune este aprobată, așa că textul ei este fix: participanții s-au bazat pe el. Ca să schimbi formularea, pornește versiunea următoare din aceasta — se deschide precompletată, editezi, salvezi ciorna, o citești și o aprobi. Versiunea veche rămâne exact cum a fost.",
+      "nextVersion": "Pornește versiunea următoare din aceasta",
+      "newFromIntro": "Precompletat din versiunea {version}. Schimbă ce trebuie schimbat, salvează ciorna, citește-o, apoi aprob-o. Versiunea {version} rămâne neschimbată.",
       "backToList": "Înapoi la documentele legale",
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
@@ -680,6 +682,13 @@
     "title": "Pagina nu există",
     "back": "Înapoi la prima pagină"
   },
+  "Footer": {
+    "about": {
+      "summary": "Despre club",
+      "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale.",
+      "contact": "Scrie-ne:"
+    }
+  },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
     "privacyLinkLabel": "Confidențialitate",
@@ -796,6 +805,7 @@
       "typedName": "Scrie numele complet ca semnătură",
       "action": "Semnează și confirmă",
       "doneConfirmed": "Înscrierea a fost confirmată.",
+      "changed": "Declarația a fost actualizată în timp ce o citeai. Nu s-a înregistrat nimic. Mai jos este textul actual — te rugăm să îl citești și să semnezi din nou.",
       "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",

@@ -2,22 +2,19 @@
 
 import Box from "@mui/material/Box";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 /**
- * The build badge, when the deployment has a staff sign-in behind it.
- *
- * The badge replaced a "Staff" link in the footer, which was a permanent invitation on a page
- * every visitor reads. This is the same door with no signpost: a double-click opens sign-in, and
- * `Enter` does too when the badge has focus, so it is not a mouse-only gesture. A single click
- * does nothing at all — the corner it sits in is where a thumb lands on a 320px screen, and a
- * badge that navigated on one tap would be a trap rather than a shortcut.
- *
- * The one thing this is not is a security measure. The backoffice is guarded on the server on
- * every request (BR-REQ-060-01 criterion 4), and `robots.txt` disallows the path; making the
- * entrance quiet is about what the club's public site advertises, not about who can get in.
- * The accessible name says what the gesture does, because a control only a sighted mouse user
- * can find is a worse answer than a discreet one everybody can.
+ * How long a finger has to rest on the badge before it counts as "open the staff entrance".
+ * Long enough that a scroll that happens to start on the badge does not open it; short enough
+ * that nobody wonders whether it is working. Browsers use 500ms for their own long-press menus.
+ */
+const LONG_PRESS_MS = 600;
+
+/**
+ * The badge as the staff entrance: a double-click, `Enter` when focused, or — on a phone, where a
+ * double-tap is unreliable and zooms — a long press (the owner's ask, 2026-09-17). A single tap
+ * still does nothing, so the corner a thumb rests on stays inert.
  */
 export default function BuildBadgeLink({
   href,
@@ -35,6 +32,18 @@ export default function BuildBadgeLink({
   const router = useRouter();
   const open = () => router.push(href);
 
+  const pressTimer = useRef<number | null>(null);
+  const cancelPress = () => {
+    if (pressTimer.current !== null) {
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+  const startPress = () => {
+    cancelPress();
+    pressTimer.current = window.setTimeout(open, LONG_PRESS_MS);
+  };
+
   return (
     <Box
       component="p"
@@ -43,6 +52,13 @@ export default function BuildBadgeLink({
       aria-label={label}
       title={title}
       onDoubleClick={open}
+      onPointerDown={startPress}
+      onPointerUp={cancelPress}
+      onPointerLeave={cancelPress}
+      onPointerCancel={cancelPress}
+      // A long press is what opens the browser's own context menu on a phone; that menu would
+      // land on top of the navigation this press is for.
+      onContextMenu={(event) => event.preventDefault()}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -50,10 +66,18 @@ export default function BuildBadgeLink({
         }
       }}
       // `auto` overrides the `none` the inert badge carries: this one has to receive the
-      // double-click. Everything else about the box — the corner, the size, the layer below
-      // MUI's modal — is the same, and the comment in `BuildBadge.tsx` explains why each of
-      // those matters.
-      sx={{ ...sx, pointerEvents: "auto", cursor: "default" }}
+      // double-click and the press. `userSelect` and the touch callout are off so a long press
+      // selects no text and offers no "copy" bubble instead of opening the door. Everything else
+      // about the box — the corner, the size, the layer below MUI's modal — is the same, and the
+      // comment in `BuildBadge.tsx` explains why each of those matters.
+      sx={{
+        ...sx,
+        pointerEvents: "auto",
+        cursor: "default",
+        userSelect: "none",
+        WebkitTouchCallout: "none",
+        touchAction: "manipulation",
+      }}
     >
       {children}
     </Box>

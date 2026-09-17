@@ -23,6 +23,7 @@ import type { LegalDocumentBody as LegalBody } from "@/modules/legal-documents/d
 import LegalDocumentForm from "@/modules/legal-documents/ui/LegalDocumentForm";
 import { approveLegalVersionAction, updateLegalVersionAction } from "../actions";
 import { requireStaffRole } from "@/modules/staff-identity/session";
+import ButtonLink from "@/shared/ui/ButtonLink";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -160,6 +161,11 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
       ) : (
         <>
           <Alert severity="info">{t("legal.readOnlyNotice")}</Alert>
+          <Box>
+            <ButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} variant="contained">
+              {t("legal.nextVersion")}
+            </ButtonLink>
+          </Box>
 
           {document.translations.length === 0 ? (
             <Alert severity="warning">{t("legal.noTranslations")}</Alert>

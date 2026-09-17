@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.28-2026-09-16 -->
+<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.28-2026-09-16`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.29-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -173,7 +173,10 @@ that moment its words are fixed — a correction is the next version, and an eve
 approved declaration rather than editing one. A draft that was **never** approved may now be
 deleted, because nothing can have relied on it; an approved version is never deleted and its
 approval is never withdrawn, and §53 records why the second of those is a registration-lifecycle
-change rather than a missing button. The club no longer needs a developer to publish
+change rather than a missing button. The defect §53 found is fixed: the declaration page posts the
+id and hash of the text it showed, and a signature against any other version is refused
+(`DECISIONS.md` §57). An approved version's page offers **the next version from this one**,
+prefilled — that is what "editing" a legal document means here. The club no longer needs a developer to publish
 its own wording, which was the last thing standing between a real runner and a registration. Every environment except production is
 seeded with a full **sample** privacy notice, terms and declaration in both languages: complete in
 structure, every club-specific fact a visible `<PLACEHOLDER>`, and a not-approved banner as the

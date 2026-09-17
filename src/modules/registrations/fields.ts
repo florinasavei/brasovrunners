@@ -166,6 +166,13 @@ export type RegistrationSubmissionInput = z.infer<typeof registrationSubmissionS
 export const declarationSigningSchema = z.object({
   accepted: z.literal(true),
   typedName: z.string().trim().min(1).max(200),
+  /**
+   * The version the page rendered, by id and content hash (BR-REQ-033-02 criterion 6). The
+   * service compares both with the version that is current at signing time and refuses a
+   * mismatch, so the acceptance row can only ever name the text the participant actually read.
+   */
+  documentId: z.uuid(),
+  contentSha256: z.string().regex(/^[0-9a-f]{64}$/),
 });
 
 export type DeclarationSigningInput = z.infer<typeof declarationSigningSchema>;

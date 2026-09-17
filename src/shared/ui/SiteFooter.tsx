@@ -1,22 +1,28 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { env } from "@/shared/config/env";
 
 /**
- * The site footer: the two public legal routes (AGENTS.md §9.2 — "linked from the footer in
- * both locales"). A Server Component, like the header: nothing here is interactive.
+ * The footer: the two legal links on a row that is always visible — every public page offers
+ * them (AGENTS.md §11.4) — and below it a native `<details>` about the club, closed by default,
+ * which is what the owner asked for on 2026-09-17 when he said the footer should collapse.
  *
- * It used to carry a "Staff" link as well, and that link is gone. It was never a security
- * question — the backoffice is guarded on the server on every request (BR-REQ-060-01 criterion
- * 4), `robots.txt` disallows the path, and a link to a locked door is not a weakness. It was a
- * question of what a club's public page says: an invitation to a backoffice, on every page every
- * visitor reads, for the three people who already know the URL. The entrance moved to the build
- * badge, which those three people can find and nobody else is offered (`BuildBadge.tsx`).
+ * `<details>` rather than a client island: it works with JavaScript off, costs no client code,
+ * and is what a collapsible section *is* on the platform (AGENTS.md §1.5). The summary is a
+ * 44px tap target, because the footer is reached on a phone (BR-REQ-041-01).
+ *
+ * The contact line renders only when `EMAIL_REPLY_TO` is configured — the mailbox the club
+ * actually reads (AGENTS.md §8). Nothing here invents an address: until the club has one, the
+ * block says who the club is and no more.
  */
 export default async function SiteFooter() {
-  const t = await getTranslations("Legal");
+  const legal = await getTranslations("Legal");
+  const footer = await getTranslations("Footer");
+  const contact = env.EMAIL_REPLY_TO;
 
   return (
     <Box
@@ -24,9 +30,30 @@ export default async function SiteFooter() {
       sx={{ borderTop: 1, borderColor: "divider", bgcolor: "background.paper", mt: "auto" }}
     >
       <Container maxWidth="sm" sx={{ py: 2 }}>
-        <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
-          <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
-          <Link href="/legal/terms">{t("termsLinkLabel")}</Link>
+        <Stack spacing={1}>
+          <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+            <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
+            <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
+          </Stack>
+
+          <Box component="details">
+            <Box
+              component="summary"
+              sx={{ cursor: "pointer", color: "text.secondary", fontSize: "0.875rem", py: 1.5 }}
+            >
+              {footer("about.summary")}
+            </Box>
+            <Stack spacing={1} sx={{ pb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                {footer("about.description")}
+              </Typography>
+              {contact && (
+                <Typography variant="body2" color="text.secondary">
+                  {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>
+                </Typography>
+              )}
+            </Stack>
+          </Box>
         </Stack>
       </Container>
     </Box>

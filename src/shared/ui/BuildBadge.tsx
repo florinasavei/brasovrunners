@@ -16,7 +16,7 @@ import BuildBadgeLink from "./BuildBadgeLink";
  * two facts too many, and `/api/health` reports the same values to anybody who needs them
  * exactly.
  *
- * Where a staff sign-in exists, this is also the entrance: a double-click, or `Enter` when it
+ * Where a staff sign-in exists, this is also the entrance: a double-click, a long press on a phone, or `Enter` when it
  * has focus, opens it (`BuildBadgeLink`). That replaced a "Staff" link in the footer — a
  * permanent invitation on a page every visitor reads. Where `STAFF_AUTH_MODE=disabled` there is
  * no door at all, so the badge stays exactly what it was: a label with `pointerEvents: "none"`,

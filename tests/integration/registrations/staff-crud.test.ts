@@ -25,6 +25,7 @@ import {
   submitRegistration,
 } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -449,7 +450,7 @@ describe("BR-REQ-037-06 an Administrator erases a registration", () => {
   it("removes the row, its declaration acceptance, and its queued email", async () => {
     const event = await createInternalEvent(10);
     const registration = await registerPublicly(event, "erase@example.ro");
-    await signDeclaration(db, event, registration.id, { accepted: true, typedName: "Runner" }, NOW);
+    await signDeclaration(db, event, registration.id, await signingInput(db, NOW, "Runner"), NOW);
 
     const [acceptanceBefore] = await db
       .select()

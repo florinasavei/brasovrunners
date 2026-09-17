@@ -636,6 +636,20 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
     }
 
+    /**
+     * Bind the signature to the text that was read (BR-REQ-033-02 criterion 6, DECISIONS.md §57).
+     * The page posts the id and hash of the version it rendered; a newer version approved in
+     * between makes the two disagree, and recording the current one would stamp a text the
+     * participant never saw — the defect §53 found. Refused with CONFLICT, which rolls back the
+     * whole transaction, token spend included, so the same link re-renders the current text.
+     */
+    if (document.id !== parsed.data.documentId || document.contentSha256 !== parsed.data.contentSha256) {
+      throw new DomainError(
+        "CONFLICT",
+        `DECLARATION_CHANGED: the declaration that was read is not the current approved version ${document.version}; the participant must read the current text and sign again`,
+      );
+    }
+
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,

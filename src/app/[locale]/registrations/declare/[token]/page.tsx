@@ -23,7 +23,7 @@ import { signDeclarationAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; changed?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid } = await searchParams;
+  const { done, invalid, changed } = await searchParams;
   const t = await getTranslations("Registrations");
 
   if (done) {
@@ -126,11 +126,21 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          <LegalDocumentBody body={declaration.body} />
+          <LegalDocumentBody body={declaration.body} />
+          {changed && (
+            <Alert severity="warning" role="alert" sx={{ mb: 3 }}>
+              {t("declare.changed")}
+            </Alert>
+          )}
           <form action={signDeclarationAction}>
             <Stack spacing={2} sx={{ mt: 3 }}>
-              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="token" value={token} />
+              {/* The version being read, so the signature is refused against any other text
+
+                  (BR-REQ-033-02 criterion 6). */}
+              <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
+              <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
               <FormControlLabel
                 control={<Checkbox name="accepted" required sx={CHECKBOX_TAP_TARGET} />}
                 label={t("declare.accept")}

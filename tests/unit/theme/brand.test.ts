@@ -111,14 +111,14 @@ describe("the brand assets the theme points at exist", () => {
     });
   }
 
-  it("keeps the browser-tab icon identical to the mark", () => {
-    // `src/app/icon.svg` is a Next file convention: nothing imports it, so a new mark in
+  it("keeps the browser-tab icon identical to the lockup", () => {
+    // `src/app/icon.svg` is a Next file convention: nothing imports it, so a new lockup in
     // public/brand/ leaves the old one in the tab and no compiler notices. This is the only
     // thing that does.
-    const mark = readFileSync(join(process.cwd(), "public", LOGO.mark.src), "utf8");
+    const lockup = readFileSync(join(process.cwd(), "public", LOGO.lockup.src), "utf8");
     const icon = readFileSync(join(process.cwd(), "src", "app", "icon.svg"), "utf8");
 
-    expect(icon).toBe(mark);
+    expect(icon).toBe(lockup);
   });
 
   it("names a fallback stack, so a missing webfont does not fall back to Times", () => {

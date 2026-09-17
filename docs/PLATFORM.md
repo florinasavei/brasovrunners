@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.28-2026-09-16`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -34,7 +34,7 @@ waiting on.
 | **Mailgun** | *to record* — sandbox until a domain is verified | Transactional email, the delivery webhook, and Zitadel's SMTP | app.mailgun.com | Created 2026-09-05, **US region** (see limit 2); sandbox domain only, no domain verified |
 | **GitHub** | Free (public repository) | Code, Actions: `docs-check`, `migrate`, `scheduled-jobs` | github.com | Live, under the maintainer's personal account |
 | **Domain registrar** | ROMARG, one `.com` for one year | `<domain>` and its DNS, edited in ROMARG's Zone Editor — a `.com` first, a `.ro` a year later (`DECISIONS.md` §55) | ROMARG client area | **`.com` registered 2026-09-16, DNS live**, renews 2027-09-16; the invoice amount is still to be recorded below. `.ro` not registered. `.com` registry wholesale $10.26/year, **$10.97 from 2026-11-01** (Verisign, checked 2026-09-16); the registrar charges more and adds VAT |
-| **Team mail: Zoho Mail, or Google Workspace for Nonprofits** | *planned* — Google applied for 2026-09-16, pending; Zoho only if it is refused | Team mailboxes on `<domain>`, and a shared `contact@` — never application mail, which stays on a subdomain (`SETUP.md` §26, `DECISIONS.md` §56) | — | **Not created.** Zoho free plan checked 2026-09-16: up to 5 users, 5 GB each, one domain, web access only; its paid tier is why it may be dropped |
+| **Team mail** | *provider not chosen* — a nonprofit grant from **Google** (applied 2026-09-16, pending) or **Microsoft**; **Zoho Mail** only if neither is granted | Team mailboxes on `<domain>`, and a shared `contact@` — never application mail, which stays on a subdomain (`SETUP.md` §26, `DECISIONS.md` §56) | — | **Not created.** No entitlements quoted for either grant until one is granted (§1.2). Zoho free plan checked 2026-09-16: up to 5 users, 5 GB each, one domain, web access only — its paid tier is why it is the fallback rather than the plan |
 | **Cloudflare R2** | *no account* | Media, when a non-developer needs to upload | — | **Not signed up.** Deferred (`AGENTS.md` §17); its figures below are reference for the day it is needed |
 
 Hostnames: `SETUP.md` §26, which is the only file allowed to name one.

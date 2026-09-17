@@ -116,6 +116,19 @@ test.describe("the build badge", () => {
     await expect(page).toHaveURL(/\/ro\/autentificare$/);
   });
 
+  test("is the staff entrance on a phone too: press and hold opens sign-in", async ({ page }) => {
+    // A double-tap is unreliable on a phone and often zooms instead; a long press is the gesture
+    // a thumb can do on purpose and a scroll never does by accident.
+    await page.goto("/ro/evenimente");
+    // `hover` scrolls it into view first: below `sm` the badge is static, under the footer,
+    // so its coordinates are off-screen until the page is scrolled to it.
+    await badge(page).hover();
+    await page.mouse.down();
+    await page.waitForTimeout(900);
+    await page.mouse.up();
+    await expect(page).toHaveURL(/\/ro\/autentificare$/);
+  });
+
   test("no longer offers a staff link in the footer", async ({ page }) => {
     await page.goto("/ro/evenimente");
     const footer = page.getByRole("contentinfo");

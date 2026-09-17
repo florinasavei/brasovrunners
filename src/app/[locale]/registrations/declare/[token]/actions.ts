@@ -14,7 +14,12 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
   try {
     const result = await consumeAndSignDeclaration(
       token,
-      { accepted: form.get("accepted") === "on", typedName: String(form.get("typedName") ?? "") },
+      {
+        accepted: form.get("accepted") === "on",
+        typedName: String(form.get("typedName") ?? ""),
+        documentId: String(form.get("documentId") ?? ""),
+        contentSha256: String(form.get("contentSha256") ?? ""),
+      },
       new Date(),
     );
 
@@ -25,6 +30,11 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     // same as an invalid token rather than as a server error, since nothing was consumed (the
     // whole transaction, including the token spend, rolled back with the validation failure).
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") redirect(`${path}?invalid=1`);
+    // The text changed between reading and signing (BR-REQ-033-02 criterion 6). Nothing was
+    // recorded and the token was not spent, so the same page shows the current text again.
+    if (isDomainError(error) && error.code === "CONFLICT" && error.message.startsWith("DECLARATION_CHANGED")) {
+      redirect(`${path}?changed=1`);
+    }
     throw error;
   }
 }

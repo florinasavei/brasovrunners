@@ -5,20 +5,36 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import LegalDocumentForm from "@/modules/legal-documents/ui/LegalDocumentForm";
+import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
+import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
+import LegalDocumentForm, {
+  type LegalDocumentFormValues,
+} from "@/modules/legal-documents/ui/LegalDocumentForm";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { createLegalVersionAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; from?: string }>;
 };
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
+
+function pick(
+  translations: readonly { locale: string; title: string; body: unknown }[],
+  locale: "ro" | "en",
+) {
+  const found = translations.find((entry) => entry.locale === locale);
+  return {
+    title: found?.title ?? "",
+    body: (found?.body as LegalDocumentBody | undefined) ?? { sections: [] },
+  };
+}
 
 /**
  * Write a new version of a legal document (BR-REQ-053-02).
@@ -37,8 +53,21 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
 
   await requireStaffRole("SUPERADMIN");
 
-  const { error } = await searchParams;
+  const { error, from } = await searchParams;
   const t = await getTranslations("Admin");
+
+  /**
+   * "Editing" an approved version means starting the next one from it (`DECISIONS.md` §46,
+   * §53, §57): approved words are fixed because participants relied on them, so the correction
+   * is version n+1 — and until this existed, version n+1 began as an empty form and the whole
+   * text had to be pasted back in. `?from=<id>` prefills the key, titles and bodies from that
+   * version; the key is then locked, because a privacy notice's successor is a privacy notice.
+   * A `from` that resolves to nothing — deleted, mistyped — is the empty form, not an error.
+   */
+  const source = from ? await findVersionWithTranslations(getDb(), from) : undefined;
+  const values: LegalDocumentFormValues | undefined = source
+    ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }
+    : undefined;
 
   return (
     <Stack spacing={3}>
@@ -48,7 +77,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
           {t("legal.newTitle")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t("legal.newIntro")}
+          {source ? t("legal.newFromIntro", { version: source.version }) : t("legal.newIntro")}
         </Typography>
       </Stack>
 
@@ -61,6 +90,8 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
       <LegalDocumentForm
         action={createLegalVersionAction}
         locale={locale}
+        values={values}
+        keyLocked={Boolean(source)}
         submitLabel={t("legal.saveDraft")}
       />
     </Stack>

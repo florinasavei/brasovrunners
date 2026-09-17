@@ -76,7 +76,7 @@ export async function consumeAndConfirmEmail(secret: string, now: Date) {
 
 export async function consumeAndSignDeclaration(
   secret: string,
-  input: { accepted: boolean; typedName: string },
+  input: { accepted: boolean; typedName: string; documentId: string; contentSha256: string },
   now: Date,
 ) {
   const db = getDb();
