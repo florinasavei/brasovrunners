@@ -70,7 +70,9 @@ test.describe("the build badge", () => {
     for (const path of ["/ro/evenimente", "/en/events"]) {
       await page.goto(path);
       await expect(badge(page)).toHaveText(/app-ver/);
-      await expect(badge(page)).toHaveText(/\d{4}-\d{2}-\d{2}/);
+      // Date *and* time: two releases on one afternoon share a date, and the stamp exists to
+      // tell them apart.
+      await expect(badge(page)).toHaveText(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/);
     }
   });
 

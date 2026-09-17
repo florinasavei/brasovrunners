@@ -1,18 +1,10 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listPublishedPages } from "@/modules/content/pages/repository";
-import {
-  FONT,
-  HEADER_MARK_HEIGHT,
-  HEADER_MARK_HEIGHT_PX,
-  HEADER_WORDMARK_SIZE,
-  LOGO,
-  WORDMARK,
-} from "@/theme/brand";
+import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO } from "@/theme/brand";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
@@ -57,18 +49,20 @@ async function navigationPages(locale: Locale) {
  * A Server Component — nothing here is interactive except the link, and that lives in
  * `LogoLink` (AGENTS.md §14.1: narrow client boundaries).
  *
- * The mark is the mountains, and `BRASOV RUNNERS` beside it is live text in the club's kit
- * face. The full lockup was tried here on 2026-09-16 and replaced on 2026-09-17: the lockup
- * *contains* a wordmark, so with the kit text beside it the club's name appeared twice on one
- * row, the artwork's copy four pixels tall and the live copy full size — and the two could not
- * be aligned with each other because one is baked into a 2.4:1 image. The mark carries no text,
- * so there is exactly one wordmark and it is the one that scales with the reader's font
- * settings. The lockup is still what the browser tab shows, where its own wordmark is the point.
- * The visible wordmark is
- * unaccented, matching the printed kit — a logotype, not the club's name, and safe only because
- * it is pure ASCII: Facón has no Romanian characters at all. So the link's accessible name comes
- * from the message catalogue and assistive technology announces `Brașov Runners`, spelled
- * properly, and never the artwork or the kit face.
+ * The logo is the club's **lockup**, the supplied artwork entire: the mountains with
+ * `BRASOV RUNNERS` beneath them, set in the lettering the logo was drawn with. Settled on
+ * 2026-09-17 after two alternatives were tried in one day — the lockup alone at mark height,
+ * where the wordmark was four pixels tall, and the mark with the kit face beside it, which put
+ * the club's name on the row twice in two different typefaces and could not be aligned because
+ * one of them is baked into an image. The answer was neither the pairing nor a smaller logo but
+ * a bigger one: `HEADER_MARK_HEIGHT` is 44px now and the artwork's own lettering reads.
+ *
+ * Nothing renders the kit face any more, so the font is no longer loaded — 36 kB that every
+ * visitor used to pay for a word they can already see in the artwork.
+ *
+ * The artwork's wordmark reads BRASOV, without the ș: it is the printed logotype, not the
+ * club's name. So the link's accessible name comes from the message catalogue and assistive
+ * technology announces `Brașov Runners`, spelled properly, and never the artwork.
  *
  * A plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for the image
  * optimizer to do, and serving one through `next/image` requires `dangerouslyAllowSVG`, which
@@ -126,12 +120,12 @@ export default async function SiteHeader() {
         <LogoLink label={t("name")}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={LOGO.mark.src}
+            src={LOGO.lockup.src}
             // The attributes reserve the box at its largest, from the artwork's own
             // proportions, so the header does not reflow while the SVG loads; the CSS below
             // draws it at the fluid size. A differently shaped lockup needs no change here.
             height={HEADER_MARK_HEIGHT_PX}
-            width={Math.round((HEADER_MARK_HEIGHT_PX * LOGO.mark.width) / LOGO.mark.height)}
+            width={Math.round((HEADER_MARK_HEIGHT_PX * LOGO.lockup.width) / LOGO.lockup.height)}
             alt=""
             style={{
               display: "block",
@@ -140,24 +134,6 @@ export default async function SiteHeader() {
               width: "auto",
             }}
           />
-          <Typography
-            component="span"
-            sx={{
-              // Facón is one style: black, italic. Both are stated so the fallback, Roboto,
-              // lands in the same weight and slant if the font has not arrived yet.
-              fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,
-              fontWeight: 900,
-              fontStyle: "italic",
-              fontSize: HEADER_WORDMARK_SIZE,
-              lineHeight: 1,
-              // The face is wide and tightly fitted; a little tracking stops the letters
-              // touching at header size.
-              letterSpacing: "0.02em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {WORDMARK}
-          </Typography>
         </LogoLink>
         </Box>
 
