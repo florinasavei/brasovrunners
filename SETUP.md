@@ -1070,7 +1070,7 @@ provider-assigned default hostnames; the custom domain is bound at the end of M1
 
 | Project | Production branch | APP_ENV | Current hostname | Final hostname |
 | --- | --- | --- | --- | --- |
-| `brasov-runners-qa` | `qa` | `qa` | `brasov-runners-qa-nu.vercel.app` — and `qa.brasovrunners.com` is attached and verified since 2026-09-16, but `APP_BASE_URL` still names the provider host, so sitemap, canonical tags and email links say `brasov-runners-qa-nu.vercel.app` until the switch below | `qa.brasovrunners.com` |
+| `brasov-runners-qa` | `qa` | `qa` | `qa.brasovrunners.com` — `APP_BASE_URL` moved to it on 2026-09-17 by `yarn domain:bind qa`, effective on the next QA deployment; `brasov-runners-qa-nu.vercel.app` still serves and is what the QA pinger and the migrate smoke call, on purpose | `qa.brasovrunners.com` |
 | `brasov-runners-production` | `main` | `production` | `brasov-runners-production.vercel.app` (created 2026-09-16, never deployed; stays reachable as the smoke and scheduler target) | `brasovrunners.com`, with `www.brasovrunners.com` redirecting to it — bought and bound 2026-09-16, DNS at the registrar pending; a year later `brasovrunners.ro` and its `www`, redirecting too, until the club decides otherwise (`DECISIONS.md` §55) |
 
 The QA project's hostname carries a `-nu` suffix Vercel appended because the plain name was
@@ -1095,11 +1095,13 @@ is issued and renewed by Vercel; nothing is bought or installed at the registrar
 Vercel reports both production hostnames configured (`A` and `CNAME`), and `www` answers 308 to
 the apex.
 
-**Moving QA to `qa.brasovrunners.com` — pending one console step.** The hostname is attached; the
-switch is `yarn domain:bind qa qa.brasovrunners.com --apply` followed by a QA deployment. Run it
-only after `https://qa.brasovrunners.com/api/auth/callback/zitadel` and the post-logout URI
-`https://qa.brasovrunners.com` exist on the QA Zitadel application, or the next QA deployment
-refuses every staff sign-in (`docs/RUNBOOKS.md` § Domain binding, step 1).
+**QA moved to `qa.brasovrunners.com` on 2026-09-17.** The order that made it safe: the QA Zitadel
+application first gained `https://qa.brasovrunners.com/api/auth/callback/zitadel` and the
+post-logout URI `https://qa.brasovrunners.com` (verified by starting a sign-in from that host and
+seeing Zitadel answer with its login page rather than a redirect-URI error), then
+`yarn domain:bind qa qa.brasovrunners.com --apply` moved `APP_BASE_URL`. The reverse order
+refuses every staff sign-in until the URI is added — which is exactly what "QA sign-in stopped
+working" turned out to be the day the hostname was attached without it.
 
 **Email on the domain — PLANNED, nothing configured.** The provider for team mail is **not chosen** (2026-09-17). The club has applied for a nonprofit
 grant — **Google Workspace for Nonprofits**, and **Microsoft 365 for Nonprofits** is the other
