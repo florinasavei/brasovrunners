@@ -241,7 +241,8 @@
       "bulkArchivePending": "Se arhivează…",
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul în locul ștergerii.",
-      "deleteBlockedShort": "{count} înscrieri"
+      "deleteBlockedShort": "{count} înscrieri",
+      "eventsRepeated": "{created} ediții create."
     },
     "confirm": {
       "cancel": "Renunță",
@@ -254,7 +255,11 @@
       "removeTestTitle": "Ștergi înscrierile de test?",
       "removeTestBody": "Se șterg toate înscrierile de test ale acestui eveniment și participanții sintetici din spatele lor. Înscrierile reale rămân neatinse.",
       "cancelRegistrationTitle": "Anulezi înscrierea?",
-      "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”."
+      "cancelRegistrationBody": "Locul se eliberează imediat și este oferit primei persoane de pe lista de așteptare. Înscrierea rămâne înregistrată, cu starea „anulată”.",
+      "repeatTitle": "Creezi edițiile?",
+      "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
+      "bibsTitle": "Aloci numerele de concurs?",
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
     },
     "errors": {
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
@@ -353,7 +358,18 @@
       },
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",
-      "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul."
+      "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
+      "repeatSection": "Repetă evenimentul",
+      "repeatHelp": "Creează următoarele ediții ale acestui eveniment, la interval fix, cu aceleași detalii și cu ora păstrată în fusul evenimentului. Fiecare copie primește o adresă cu data ei (de exemplu „alergare-de-duminica-2026-10-04”). Copiile sunt ciorne, dacă nu bifezi publicarea.",
+      "repeatCadence": "Interval",
+      "repeatCadences": {
+        "WEEKLY": "Săptămânal",
+        "FORTNIGHTLY": "La două săptămâni",
+        "MONTHLY": "Lunar"
+      },
+      "repeatCount": "Câte ediții",
+      "repeatPublish": "Publică edițiile create (evenimentul acesta este publicat, deci și copiile sunt complete).",
+      "repeat": "Creează edițiile"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -706,6 +722,17 @@
         "seoTitle": "Titlu SEO",
         "seoDescription": "Descriere SEO"
       }
+    },
+    "bibs": {
+      "title": "Numere de concurs",
+      "assign": "Alocă numerele",
+      "assigned": "{assigned} numere alocate ({total} în total).",
+      "from": "De la",
+      "to": "Până la",
+      "download": "Descarcă foaia (PDF)",
+      "page": "Pagina {n} din {total}",
+      "helpNone": "Niciun număr alocat încă. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
+      "helpSome": "{total} numere alocate. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
     }
   },
   "NotFound": {

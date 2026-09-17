@@ -324,7 +324,7 @@ built in that order. Full lists: [`BUSINESS.md`](./BUSINESS.md) §8, [`AGENTS.md
 | Milestone | Delivers |
 | --- | --- |
 | **M1 — Launch** | Mobile-first public event pages with exact free-place counts; the complete registration journey: confirmation, declaration, holds, waiting list, timed offers, unregistration; staff login and a minimal backoffice; live transactional email; versioned legal documents; production on the custom domain |
-| **M2 — Race features** | Multi-distance races, bib assignment and export, results import and publishing with consent, backoffice completeness (resend, export, staff-created registrations) |
+| **M2 — Race features** | Multi-distance races, one bib per race across distances, results import and publishing with consent, backoffice completeness (resend, export, staff-created registrations). Per-event bib numbers and the printed sheet are M1 since 2026-09-17 |
 | **M3 — Announcements** | Timestamped event updates with editorial approval; notices to registered participants |
 | **M4 — Runner profiles** | Opt-in public profiles with social links, moderation |
 | **M5 — Mini CMS** | Articles, static pages, galleries and media, Author role in full |

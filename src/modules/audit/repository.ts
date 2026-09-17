@@ -32,13 +32,16 @@ export type AuditAction =
    */
   | "registration.deleted_by_staff"
   /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
-  | "registration.resend_rate_limited";
+  | "registration.resend_rate_limited"
+  /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
+  | "registration.bibs_assigned";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
   participantId?: string | null;
   action: AuditAction;
-  entityType: "registration";
+  // `event` for the one action that is about a whole event's registrations at once.
+  entityType: "registration" | "event";
   entityId: string;
   /**
    * The shape of the change, never a copy of what it was about. §12.12: no email body, no raw

@@ -39,7 +39,7 @@ are built strictly in that order (`DECISIONS.md` §12 and §13; `BUSINESS.md` §
 | Milestone | Scope | Requirements |
 | --- | --- | --- |
 | M1 — Launch | Event pages, complete registration journey with waiting list, staff login and minimal backoffice, live email, legal documents, production on the custom domain | Complete, in section 4 |
-| M2 — Race features | Multi-distance UI, bibs, results with consent, backoffice completeness | Written at milestone start; M1 carries the schema footprints (BR-REQ-012-01, BR-REQ-072-01) |
+| M2 — Race features | Multi-distance UI, one number per race across distances, results with consent, backoffice completeness | Written at milestone start; M1 carries the schema footprints (BR-REQ-012-01, BR-REQ-072-01) and, since 2026-09-17, per-event race numbers and the printed sheet (BR-REQ-038-01) |
 | M3 — Announcements | Event updates with approval, notices to registered participants | Written at milestone start |
 | M4 — Runner profiles | Opt-in profiles and moderation | Section 4.8 exists; re-confirmed at milestone start |
 | M5 — Mini CMS | Articles, static pages, galleries, media | Sections 4.9 and parts of 4.10 exist; re-confirmed at milestone start |
@@ -899,6 +899,26 @@ other participant link uses — never by a password.
 
 **Verification:** integration `backoffice/export.test.ts`
 
+#### BR-REQ-038-01 — Race numbers, assigned as a batch and printed as a sheet
+
+- **Source:** BR-BUS-037
+- **Implements:** AGENTS.md §12.6, §9.2
+- **Priority:** SHOULD
+- **Release:** M1 — pulled forward from M2 on 2026-09-17 (`DECISIONS.md` §65); the rest of M2's
+  bib story (one number per race across its distances, results keyed by bib) stays M2.
+- **Status:** built.
+
+**Acceptance criteria**
+
+1. Given an Administrator on an event that takes registrations here, when they assign race numbers, then every confirmed, real registration without a number receives the next free number for that event, in order of confirmation (earliest first, id as the tie-break), inside one transaction that locks the event row; the outcome states how many were assigned and how many the event has.
+2. Given a registration that already has a number, when numbers are assigned again, then its number is unchanged; new numbers continue after the highest ever given for that event, and a registration confirmed earlier than the first batch but numbered later gets a later number.
+3. Given a test registration, a waitlisted, pending, cancelled or expired one, when numbers are assigned, then it receives none; a cancelled registration that had a number keeps it, so the number is never given to somebody else.
+4. Given two registrations of one event, when both would carry the same number, then the database refuses the second.
+5. Given assigned numbers, when the sheet is requested — all of them, or a range `from`/`to` for a reprint or a late batch — then the response is a PDF, Administrator only, of A4 pages with two bibs each and a dashed cut line between them; each bib carries the club's lockup, the number in the club's blue as large as the paper allows, the participant's registered name, and the event's title and date in the requested language. Only confirmed, real registrations are printed.
+6. Given the assignment, when it completes with at least one number given, then one audit row records who, for which event, and the range assigned — never a participant.
+
+**Verification:** integration `registrations/bibs.test.ts`; unit `registrations/bibs-pdf.test.ts`
+
 ### 4.8 Public runner profiles
 
 #### BR-REQ-038-01 — Profiles are private by default
@@ -986,8 +1006,9 @@ other participant link uses — never by a password.
 4. Given an Administrator, when they delete an event that has no registration against it, then it and its translations are removed.
 5. Given an event that has any registration against it, when deletion is attempted, then it is refused with a reason and nothing is removed; archiving is the supported answer.
 6. Given an Author, when they attempt to create, duplicate or delete an event, then it is refused at the server.
+7. Given an event, when it is repeated — weekly, every two weeks or monthly, up to 52 times — then each occurrence is a copy with the same wall-clock time in the event's own zone (a Sunday 08:00 run stays 08:00 across a clock change), every other time moved by the same interval, a page address carrying its date in each language, no featured flag and no start list; the copies are drafts unless the source is published and publishing was asked for by a role that may publish, in which case they go live as they are made; a series whose addresses already exist is refused whole (`DECISIONS.md` §64).
 
-**Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`; e2e `cms-publish.spec.ts`
+**Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-050-03 — The club writes its own standing pages
 
@@ -1465,7 +1486,7 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 | BR-BUS-034 | BR-REQ-034-01, BR-REQ-034-02, BR-REQ-034-03, BR-REQ-052-02, BR-REQ-090-03 |
 | BR-BUS-035 | BR-REQ-035-01, BR-REQ-035-02, BR-REQ-035-03, BR-REQ-035-04, BR-REQ-035-05, BR-REQ-034-03, BR-REQ-090-03 |
 | BR-BUS-036 | BR-REQ-036-01, BR-REQ-036-02 |
-| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
+| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-038-01, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
 | BR-BUS-038 | BR-REQ-038-01, BR-REQ-038-02, BR-REQ-038-03 |
 | BR-BUS-039 | BR-REQ-039-01 |
 | BR-BUS-040 | BR-REQ-040-01, BR-REQ-040-02, BR-REQ-040-03, BR-REQ-040-04 |

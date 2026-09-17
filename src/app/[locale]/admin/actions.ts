@@ -10,6 +10,9 @@ import {
   createEvent,
   deleteEvent,
   duplicateEvent,
+  REPEAT_CADENCES,
+  repeatEvent,
+  type RepeatCadence,
   saveEventAndTranslations,
   transitionEvent,
 } from "@/modules/content/events/service";
@@ -30,7 +33,8 @@ import {
   revokeStaffUser,
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
-import { isDomainError } from "@/shared/errors/domain-error";
+import { assignBibNumbers } from "@/modules/registrations/bibs";
+import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
  * Server Actions for the backoffice.
@@ -316,6 +320,57 @@ export async function duplicateEventAction(form: FormData): Promise<void> {
 
   if (outcome) backTo(getPathname({ locale, href: "/admin" }), outcome);
   backTo(editorPath(locale, copyId as string), { saved: "duplicated" });
+}
+
+/**
+ * The weekly run, made once: N further occurrences of this event, a cadence apart.
+ *
+ * Lands on the events list rather than on one of the copies — there may be fifty — with the
+ * count in the outcome so the alert can say what was made.
+ */
+export async function repeatEventAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+
+  let outcome: { error?: string; saved?: string; created?: string };
+  try {
+    const actor = await requireStaff();
+    const cadence = text(form, "cadence");
+    if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
+      throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");
+    }
+    const result = await repeatEvent(getDb(), {
+      actor,
+      eventId,
+      cadence: cadence as RepeatCadence,
+      count: Number(text(form, "count")),
+      publish: form.get("publish") === "on",
+    });
+    outcome = { saved: "eventsRepeated", created: String(result.created) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  backTo(outcome.error ? editorPath(locale, eventId) : getPathname({ locale, href: "/admin" }), outcome);
+}
+
+/**
+ * Race numbers for every confirmed registration of the event that has none yet
+ * (BR-REQ-038-01). Lands back on the editor, where the sheet is downloaded from.
+ */
+export async function assignBibNumbersAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+
+  let outcome: { error?: string; saved?: string; assigned?: string; total?: string };
+  try {
+    const actor = await requireStaff();
+    const result = await assignBibNumbers(getDb(), { actor, eventId });
+    outcome = { saved: "bibsAssigned", assigned: String(result.assigned), total: String(result.total) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backTo(editorPath(locale, eventId), outcome);
 }
 
 export async function deleteEventAction(form: FormData): Promise<void> {

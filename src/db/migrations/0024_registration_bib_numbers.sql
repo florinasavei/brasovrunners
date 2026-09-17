@@ -1,0 +1,3 @@
+ALTER TABLE "registrations" DROP CONSTRAINT "registrations_bib_number_not_assigned_in_m1";--> statement-breakpoint
+CREATE UNIQUE INDEX "registrations_event_bib_number_unique" ON "registrations" USING btree ("event_id","bib_number") WHERE "registrations"."bib_number" IS NOT NULL;--> statement-breakpoint
+ALTER TABLE "registrations" ADD CONSTRAINT "registrations_bib_number_positive" CHECK ("registrations"."bib_number" IS NULL OR "registrations"."bib_number" > 0);

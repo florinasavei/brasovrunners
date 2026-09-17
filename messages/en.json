@@ -241,7 +241,8 @@
       "bulkArchivePending": "Archiving…",
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event instead.",
-      "deleteBlockedShort": "{count} registrations"
+      "deleteBlockedShort": "{count} registrations",
+      "eventsRepeated": "{created} editions created."
     },
     "confirm": {
       "cancel": "Never mind",
@@ -254,7 +255,11 @@
       "removeTestTitle": "Remove the test registrations?",
       "removeTestBody": "Every test registration for this event is deleted, along with the synthetic participants behind them. Real registrations are left untouched.",
       "cancelRegistrationTitle": "Cancel this registration?",
-      "cancelRegistrationBody": "The place is released immediately and offered to the first person on the waiting list. The registration itself is kept, marked cancelled."
+      "cancelRegistrationBody": "The place is released immediately and offered to the first person on the waiting list. The registration itself is kept, marked cancelled.",
+      "repeatTitle": "Create the editions?",
+      "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
+      "bibsTitle": "Assign the race numbers?",
+      "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay."
     },
     "errors": {
       "NOTHING_SELECTED": "You did not tick any registration.",
@@ -353,7 +358,18 @@
       },
       "notStated": "Not stated",
       "routeUrl": "Route link",
-      "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one."
+      "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
+      "repeatSection": "Repeat the event",
+      "repeatHelp": "Create the next editions of this event at a fixed interval, with the same details and the time kept in the event's own zone. Each copy gets an address with its date (for example “sunday-run-2026-10-04”). Copies are drafts unless you tick publish.",
+      "repeatCadence": "Interval",
+      "repeatCadences": {
+        "WEEKLY": "Weekly",
+        "FORTNIGHTLY": "Every two weeks",
+        "MONTHLY": "Monthly"
+      },
+      "repeatCount": "How many editions",
+      "repeatPublish": "Publish the editions as they are created (this event is published, so the copies are complete too).",
+      "repeat": "Create the editions"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -706,6 +722,17 @@
         "seoTitle": "SEO title",
         "seoDescription": "SEO description"
       }
+    },
+    "bibs": {
+      "title": "Race numbers",
+      "assign": "Assign numbers",
+      "assigned": "{assigned} numbers assigned ({total} in total).",
+      "from": "From",
+      "to": "To",
+      "download": "Download the sheet (PDF)",
+      "page": "Page {n} of {total}",
+      "helpNone": "No number assigned yet. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event.",
+      "helpSome": "{total} numbers assigned. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event."
     }
   },
   "NotFound": {
