@@ -29,7 +29,7 @@ describe("BR-REQ-011-01 event configuration", () => {
   async function insertEvent(values: Partial<typeof events.$inferInsert> = {}) {
     const [row] = await db
       .insert(events)
-      .values({ kind: "RACE", startsAt: START, ...values })
+      .values({ type: "RACE", startsAt: START, ...values })
       .returning();
     return row;
   }
@@ -51,7 +51,7 @@ describe("BR-REQ-011-01 event configuration", () => {
 
   describe("criterion 1 the minimal event", () => {
     it("stores an event with only a kind, a start and a registration mode of NONE", async () => {
-      const event = await insertEvent({ kind: "MEETUP", registrationMode: "NONE" });
+      const event = await insertEvent({ type: "MEETUP", registrationMode: "NONE" });
 
       expect(event.capacity).toBeNull();
       expect(event.raceStartsAt).toBeNull();
@@ -164,35 +164,27 @@ describe("BR-REQ-011-01 event configuration", () => {
     });
   });
 
-  describe("coordinates are a pair, and each half has a range", () => {
-    it("stores a pair", async () => {
-      const event = await insertEvent({ latitude: "45.6427", longitude: "25.5887" });
-      expect(Number(event.latitude)).toBeCloseTo(45.6427, 4);
-      expect(Number(event.longitude)).toBeCloseTo(25.5887, 4);
+  describe("the type is one of three and the surface is one of three or none", () => {
+    // BR-REQ-010-01: two closed sets where there was one (`DECISIONS.md` §61). The surface is
+    // stored beside the type and read back as stated, and null is a legitimate answer.
+    it("stores a type with a surface", async () => {
+      const event = await insertEvent({ type: "GROUP_RUN", surface: "TRAIL" });
+      expect(event.type).toBe("GROUP_RUN");
+      expect(event.surface).toBe("TRAIL");
     });
 
-    it.each([
-      ["latitude alone", { latitude: "45.6427" }],
-      ["longitude alone", { longitude: "25.5887" }],
-    ])("refuses %s", async (_name, values) => {
-      // Half a coordinate is not a partly known location; it is a point in the Atlantic.
-      await expectViolation(insertEvent(values), {
-        code: SQLSTATE.CHECK_VIOLATION,
-        constraint: "events_coordinates_are_a_pair",
-      });
+    it("stores a meetup with no surface", async () => {
+      const event = await insertEvent({ type: "MEETUP" });
+      expect(event.surface).toBeNull();
     });
 
-    it.each([
-      ["latitude past the pole", { latitude: "95", longitude: "25.5" }],
-      ["longitude past the date line", { latitude: "45.6", longitude: "200" }],
-      // Brașov is 45.65, 25.60. Typed the other way round it is inside the valid range for
-      // longitude but not for latitude, which is exactly why the range check catches it.
-      ["a transposed pair", { latitude: "125.5887", longitude: "45.6427" }],
-    ])("refuses %s", async (_name, values) => {
-      await expectViolation(insertEvent(values), {
-        code: SQLSTATE.CHECK_VIOLATION,
-        constraint: "events_coordinates_in_range",
-      });
+    it("ties a race grouping to the RACE type, not to any other", async () => {
+      // AGENTS.md §12.3: when `race_id` is set, the event's type is RACE. The M2 footprint
+      // moved from `kind` to `type` with the split and must still hold.
+      await expectViolation(
+        insertEvent({ type: "GROUP_RUN", raceId: "00000000-0000-4000-8000-000000000001" }),
+        { code: SQLSTATE.CHECK_VIOLATION, constraint: "events_race_id_implies_race_type" },
+      );
     });
   });
 
@@ -223,7 +215,7 @@ describe("BR-REQ-011-01 event configuration", () => {
         featured: true,
       });
       const run = await insertEvent({
-        kind: "COMMUNITY_RUN",
+        type: "GROUP_RUN",
         startsAt: new Date("2026-09-15T06:00:00Z"),
       });
 

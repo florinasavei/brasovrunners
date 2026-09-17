@@ -80,7 +80,7 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "OTHER",
+        type: "MEETUP",
         startsAt: new Date("2026-12-01T09:00:00.000Z"),
         registrationMode: "INTERNAL",
         capacity,

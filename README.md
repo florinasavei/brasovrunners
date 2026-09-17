@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -491,8 +491,8 @@ The CMS is part of the same application and supports only real club needs:
 - optimistic concurrency so one editor cannot silently overwrite another.
 
 **What is built today** is the whole of an event: create it, duplicate last year's, set every
-column it carries — kind, event status, both times, the end time and the time zone, the
-coordinates, the map link, distance, climb, the featured flag, and the whole registration block
+column it carries — type and surface, event status, both times, the end time and the time zone,
+the map link and the route link, distance, climb, difficulty, the featured flag, and the whole registration block
 including the capacity, the window and the approved declaration a participant signs — write both
 languages, preview it, publish it, archive it when it is over, delete one made by mistake. Draft →
 In review → Published → Archived belongs to the *event*: both languages go live together, and

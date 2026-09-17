@@ -3,9 +3,8 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
-import { env } from "@/shared/config/env";
-import { distanceInKm } from "../domain/event-kind";
-import { mapLinkFor } from "../domain/map-link";
+import SocialIcon from "@/shared/ui/SocialIcon";
+import { distanceInKm, isStravaLink } from "../domain/event-type";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 
@@ -31,9 +30,8 @@ export default async function EventFacts({
 
   const distance = distanceInKm(event.distanceMeters);
   const state = registrationState(event, now);
-  // Coordinates first, a pasted URL as the override, and nothing at all when the club has
-  // neither — the meeting point is then plain text, as it was before.
-  const mapLink = mapLinkFor(event, env.MAP_LINK_BASE_URL);
+  // The link the organizer pasted, or nothing — the meeting point is then plain text.
+  const mapLink = event.mapUrl;
 
   // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
   // local time regardless of where the page is opened.
@@ -115,7 +113,7 @@ export default async function EventFacts({
       value: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }),
     });
   }
-  if (variant === "full" && event.elevationGainMeters) {
+  if (event.elevationGainMeters) {
     facts.push({
       label: t("elevation"),
       value: t("elevationM", { m: format.number(event.elevationGainMeters) }),
@@ -144,8 +142,12 @@ export default async function EventFacts({
           // visitor came from.
           rel="noopener noreferrer"
           // 44px, like every other link a thumb has to find (BR-REQ-041-01 criterion 6).
-          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+          sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
         >
+          {/* The Strava mark when the link is a Strava page — the mark only, never Strava's
+              embed script, which is a processor the privacy notice does not name
+              (`DECISIONS.md` §61). The words stay: the mark decorates, the text is the link. */}
+          {isStravaLink(event.routeUrl) && <SocialIcon network="strava" size={18} />}
           {t("openRoute")}
         </Link>
       ),
@@ -153,7 +155,7 @@ export default async function EventFacts({
   }
   // Both are enums now (migration `0018`), so both render in the reader's own language
   // rather than in whichever one the organizer was typing in.
-  if (variant === "full" && event.difficulty) {
+  if (event.difficulty) {
     facts.push({ label: t("difficulty"), value: t(`difficultyValues.${event.difficulty}`) });
   }
   // Only when the club has stated one. Null means unstated, not free — guessing "free" on the

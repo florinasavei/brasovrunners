@@ -2,7 +2,7 @@
 
 # Practice guides
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 ## About these guides
@@ -677,7 +677,8 @@ whole site resolves to one entity rather than many.
 - `eventStatus`: `EventScheduled`, and `EventCancelled` for a cancelled event, which must
   keep its markup rather than losing it;
 - `eventAttendanceMode`: offline;
-- `location` as a `Place` with a `PostalAddress` and, where known, `geo` coordinates;
+- `location` as a `Place` with a `PostalAddress` and, where the organizer pasted one, `hasMap`
+  (no `geo`: there are no coordinates to build it from, `DECISIONS.md` §61);
 - `organizer` referencing the club `@id`;
 - `image`;
 - `offers` as an `Offer` with price `0`, `priceCurrency` `RON`, a `url` pointing at the

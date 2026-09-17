@@ -29,7 +29,7 @@ describe("BR-REQ-034-01 capacity is a real, internal-only value", () => {
   beforeEach(async () => resetTables(db));
 
   const internalEvent = {
-    kind: "COMMUNITY_RUN" as const,
+    type: "GROUP_RUN" as const,
     startsAt: new Date("2026-10-04T07:00:00Z"),
     registrationMode: "INTERNAL" as const,
   };
@@ -80,7 +80,7 @@ describe("BR-REQ-030-01 registration mode constraints", () => {
   beforeEach(async () => resetTables(db));
 
   const base = {
-    kind: "COMMUNITY_RUN" as const,
+    type: "GROUP_RUN" as const,
     startsAt: new Date("2026-10-04T07:00:00Z"),
   };
 
@@ -152,7 +152,7 @@ describe("event structural constraints", () => {
   beforeEach(async () => resetTables(db));
 
   const base = {
-    kind: "COMMUNITY_RUN" as const,
+    type: "GROUP_RUN" as const,
     startsAt: new Date("2026-10-04T07:00:00Z"),
   };
 
@@ -174,10 +174,10 @@ describe("event structural constraints", () => {
     await expectViolation(
       db.insert(events).values({
         ...base,
-        kind: "MEETUP",
+        type: "MEETUP",
         raceId: "00000000-0000-0000-0000-000000000001",
       }),
-      { code: SQLSTATE.CHECK_VIOLATION, constraint: "events_race_id_implies_race_kind" },
+      { code: SQLSTATE.CHECK_VIOLATION, constraint: "events_race_id_implies_race_type" },
     );
   });
 
@@ -198,14 +198,31 @@ describe("BR-REQ-010-01 event kinds", () => {
   afterAll(async () => close());
   beforeEach(async () => resetTables(db));
 
-  it("refuses a kind outside the documented set", async () => {
+  it("refuses a type outside the documented set", async () => {
     await expectViolation(
       db.insert(events).values({
         // Deliberately invalid: the enum is the guard, not application validation alone.
-        kind: "PUB_QUIZ" as never,
+        type: "PUB_QUIZ" as never,
         startsAt: new Date("2026-10-04T07:00:00Z"),
       }),
       { code: SQLSTATE.INVALID_ENUM_INPUT },
     );
+  });
+
+  it("refuses a surface outside the documented set, and accepts none at all", async () => {
+    await expectViolation(
+      db.insert(events).values({
+        type: "GROUP_RUN",
+        surface: "GRAVEL" as never,
+        startsAt: new Date("2026-10-04T07:00:00Z"),
+      }),
+      { code: SQLSTATE.INVALID_ENUM_INPUT },
+    );
+    // A meetup is run on nothing (`DECISIONS.md` §61), so the column is nullable.
+    const [meetup] = await db
+      .insert(events)
+      .values({ type: "MEETUP", startsAt: new Date("2026-10-04T07:00:00Z") })
+      .returning();
+    expect(meetup.surface).toBeNull();
   });
 });

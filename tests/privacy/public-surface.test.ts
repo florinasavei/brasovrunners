@@ -37,7 +37,7 @@ async function createEvent(overrides: Partial<typeof events.$inferInsert> = {}) 
   const [event] = await db
     .insert(events)
     .values({
-      kind: "COMMUNITY_RUN",
+      type: "GROUP_RUN",
       startsAt: new Date("2026-10-01T09:00:00.000Z"),
       registrationMode: "INTERNAL",
       ...overrides,

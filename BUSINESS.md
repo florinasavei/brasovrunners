@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -122,15 +122,18 @@ The club should not need separate systems for ordinary free meetups unless an ex
 
 ### BR-BUS-010 — Event categories
 
-The platform may present:
+An event has a **type** — what it is — and, where it is run at all, a **surface** — what it is run
+on. The two are separate questions, and one label could not answer both (`DECISIONS.md` §61).
 
-- community run;
-- trail run;
-- interval or training session;
-- long run;
-- meetup or social run;
+Types:
+
+- group run (the weekly runs, the intervals, the long run — the session shape is the title's job);
 - race or running contest;
-- another explicitly named running activity.
+- hike;
+- coffee;
+- meetup — anything else the club gathers for, with the theme in the title.
+
+Surfaces: asphalt, trail, mixed. A coffee or a meetup has none.
 
 A race is an event type, not a separate registration system.
 

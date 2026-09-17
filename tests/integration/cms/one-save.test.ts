@@ -19,17 +19,16 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const NOW = new Date("2026-09-05T10:00:00.000Z");
 
 const EVENT_FIELDS = {
-  kind: "COMMUNITY_RUN",
+  type: "GROUP_RUN",
   eventStatus: "SCHEDULED",
   timezone: "Europe/Bucharest",
   startsAtWallTime: "2026-10-01T09:00",
   endsAtWallTime: "",
   raceStartsAtWallTime: "",
-  latitude: "",
-  longitude: "",
   // One value for the whole event now (`DECISIONS.md` §36).
   locationName: "Parcul Tractorul",
   locationAddress: "",
+  surface: null,
   difficulty: null,
   costType: null,
   mapUrl: "",
@@ -82,7 +81,7 @@ beforeEach(async () => {
 async function createDraft(options: { authorStaffUserId?: string } = {}) {
   const [event] = await db
     .insert(events)
-    .values({ kind: "COMMUNITY_RUN", startsAt: new Date("2026-10-01T06:00:00.000Z") })
+    .values({ type: "GROUP_RUN", startsAt: new Date("2026-10-01T06:00:00.000Z") })
     .returning();
 
   const rows = await db

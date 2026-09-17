@@ -47,7 +47,6 @@ export type ConfigurableVariable =
   | "AUTH_ZITADEL_SECRET"
   | "AUTH_ZITADEL_ISSUER"
   | "JOB_SECRET"
-  | "MAP_LINK_BASE_URL"
   | "DATABASE_URL";
 
 export type ConfigurationFacts = {
@@ -178,24 +177,12 @@ function webhookCheck(facts: ConfigurationFacts): ConfigurationCheck {
   };
 }
 
-/** Optional, and its absence is a documented behaviour rather than a fault (AGENTS.md §8). */
-function mapCheck(facts: ConfigurationFacts): ConfigurationCheck {
-  const needed = requirements(facts, ["MAP_LINK_BASE_URL"]);
-  return {
-    key: "mapLink",
-    status: needed[0].present ? "ok" : "limited",
-    state: needed[0].present ? "configured" : "unconfigured",
-    requires: needed,
-  };
-}
-
 export function describeConfiguration(facts: ConfigurationFacts): ConfigurationCheck[] {
   return [
     emailCheck(facts),
     staffAuthCheck(facts),
     jobsCheck(facts),
     webhookCheck(facts),
-    mapCheck(facts),
   ];
 }
 

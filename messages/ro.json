@@ -23,7 +23,7 @@
     "nav": {
       "label": "Navigare principală",
       "events": "Evenimente",
-      "more": "Mai multe"
+      "more": "Meniu"
     }
   },
   "Home": {
@@ -58,14 +58,17 @@
     "registration": "Înscriere",
     "cancelled": "Anulat",
     "cancelledNotice": "Acest eveniment a fost anulat.",
-    "kind": {
-      "COMMUNITY_RUN": "Alergare de comunitate",
-      "TRAIL_RUN": "Tură pe munte",
-      "INTERVAL_SESSION": "Antrenament de intervale",
-      "LONG_RUN": "Alergare lungă",
-      "MEETUP": "Întâlnire",
-      "RACE": "Cursă",
-      "OTHER": "Alt tip"
+    "type": {
+      "GROUP_RUN": "Alergare de grup",
+      "RACE": "Concurs",
+      "HIKE": "Drumeție",
+      "COFFEE": "Cafea",
+      "MEETUP": "Întâlnire"
+    },
+    "surface": {
+      "ASPHALT": "Asfalt",
+      "TRAIL": "Trail",
+      "MIXED": "Mixt"
     },
     "startList": {
       "title": "Cine vine",
@@ -268,7 +271,7 @@
       "raceStartsAt": "Startul cursei",
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
       "mapUrl": "Link către hartă",
-      "mapUrlHelp": "Opțional. Linkul se construiește din coordonate; completează aici doar dacă vrei o pagină anume. Trebuie să înceapă cu https://.",
+      "mapUrlHelp": "Opțional. Un link către punctul de întâlnire — Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "saveEvent": "Salvează detaliile evenimentului",
@@ -293,9 +296,6 @@
         "difficulty": "Dificultate",
         "costType": "Cost"
       },
-      "latitude": "Latitudine",
-      "longitude": "Longitudine",
-      "coordinatesHelp": "Punctul exact de start, în grade zecimale — de exemplu 45.6427 și 25.5887. Copiază-le din hartă cu clic dreapta pe locul exact. Un nume de parc nu este un punct de start.",
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
       "tabIncomplete": "incomplet",
@@ -309,7 +309,8 @@
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
-      "kind": "Tip",
+      "type": "Tip eveniment",
+      "surface": "Suprafață",
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",
       "timezoneHelp": "Fusul în care sunt scrise orele de mai jos, de exemplu Europe/Bucharest.",
@@ -350,7 +351,7 @@
       },
       "notStated": "Nespecificat",
       "routeUrl": "Link către traseu",
-      "routeUrlHelp": "Unde poate fi văzut traseul — Strava, Komoot sau harta pe care ai desenat-o. Trebuie să înceapă cu https://. Lasă gol dacă nu există unul."
+      "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -460,28 +461,33 @@
       "items": {
         "approveLegalText": {
           "title": "Aprobă textele legale",
-          "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierile sunt refuzate. Procedura: docs/RUNBOOKS.md § Legal document version.",
+          "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierea refuză pe toată lumea. Procedura: docs/RUNBOOKS.md § Legal document version.",
           "done": "Textele aprobate de club sunt publicate."
         },
         "liveEmail": {
           "title": "Email către participanți reali",
-          "todo": "Acum mesajele fie sunt reținute, fie ajung doar la maximum 5 adrese autorizate în sandbox-ul Mailgun. Pentru toți participanții este nevoie de domeniul clubului, verificat în Mailgun.",
+          "todo": "Trebuie verificat domeniul de trimitere mail.<domeniu> în Mailgun (înregistrările DNS sunt în docs/RUNBOOKS.md), apoi EMAIL_DELIVERY_MODE=live pe producție. Până atunci mesajele fie sunt reținute (capture), fie ajung doar la 5 adrese autorizate în sandbox (allowlist). Modul de acum",
           "done": "Emailurile ajung la participanți."
         },
-        "registerDomain": {
-          "title": "Înregistrează domeniul clubului",
-          "todo": "Site-ul funcționează, dar pe adresa furnizorului. Domeniul propriu este și condiția pentru emailuri către oricine. Comanda  face partea tehnică.",
-          "done": "Site-ul răspunde pe domeniul clubului."
+        "scheduler": {
+          "title": "Monitoarele de producție pe cron-job.org",
+          "todo": "Câte un monitor pentru fiecare dintre cele două sarcini programate (email-outbox și registration-maintenance), la cinci minute, cu JOB_SECRET-ul mediului — SETUP.md §26. Fără ele emailurile nu pleacă și locurile rezervate nu expiră. Lipsește sau întârzie",
+          "done": "Ambele sarcini rulează la timp."
+        },
+        "inviteStaff": {
+          "title": "Invită echipa",
+          "todo": "Există un singur cont de staff — cel introdus de mână. Din /admin/staff, un Administrator invită organizatorii după adresa de email; contul lor Zitadel se leagă la prima autentificare.",
+          "done": "Echipa are conturi."
         },
         "publishEvents": {
           "title": "Publică evenimente",
           "todo": "Nu este publicat niciun eveniment, deci vizitatorii văd o listă goală.",
           "done": "Există evenimente publicate."
         },
-        "scheduler": {
-          "title": "Programatorul de sarcini",
-          "todo": "Sarcinile programate nu au rulat recent: emailurile nu pleacă și locurile rezervate nu expiră. Aceasta este o problemă tehnică.",
-          "done": "Sarcinile rulează la timp."
+        "roDomain": {
+          "title": "Domeniul .ro, peste un an",
+          "todo": "Hotărât pe 16 septembrie 2026: .com acum, .ro la un an, amândouă active în același timp (12 EUR + TVA pe an la ROTLD). Nu blochează nimic; se bifează singur când site-ul răspunde pe .ro.",
+          "done": "Site-ul răspunde și pe domeniul .ro."
         }
       },
       "freeVerdict": {
@@ -492,7 +498,7 @@
       "registrationsLeftToday": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
       "costTitle": "Cât costă",
       "costToday": {
-        "nothing": "Astăzi clubul nu plătește nimic. Toate serviciile sunt pe planuri gratuite, iar domeniul încă nu este cumpărat.",
+        "nothing": "Astăzi clubul nu plătește nimic. Toate serviciile sunt pe planuri gratuite.",
         "total": "Astăzi clubul plătește {total} pe an.",
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + TVA",
@@ -500,7 +506,6 @@
         "notTaken": "nimic încă"
       },
       "nextSpend": {
-        "domain": "Prima cheltuială care urmează: domeniul clubului, {cost} pe an la registru (prețul pentru .com de la 1 noiembrie 2026). Firma de la care îl cumperi cere puțin mai mult și adaugă TVA, în moneda ei, o dată pe an. Apare în ziua în care clubul îl cumpără; până atunci site-ul stă pe adresa gratuită a furnizorului.",
         "mailgun": "Prima cheltuială care urmează: o lună de Mailgun Basic, {cost}. Se cumpără pentru o singură cursă, atunci când într-o zi se așteaptă mai multe înscrieri decât acoperă e-mailurile gratuite.",
         "vercel": "Prima cheltuială care urmează: Vercel Pro, {cost}. Apare doar dacă site-ul începe să ceară bani pentru participare sau dacă codul site-ului se mută pe contul clubului."
       },
@@ -534,11 +539,11 @@
       "services": {
         "domain": {
           "name": "Adresa site-ului (domeniul .com)",
-          "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește oricum. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026 (10,26 USD până atunci); firma de la care îl cumperi cere mai mult și adaugă TVA.",
-          "ceiling": "Prima limită: fără adresa proprie a clubului, e-mailurile nu pot pleca spre participanți.",
-          "whenCrossed": "Adică pot fi trimise doar către cinci adrese de test. Din ziua în care domeniul este cumpărat, apare o factură pe an, plătită în lei.",
-          "closeYes": "Cumpărat, iar site-ul răspunde pe el.",
-          "closeNo": "Necumpărat. Site-ul răspunde pe adresa gratuită a furnizorului."
+          "freeGives": "Nu există variantă gratuită — este singurul lucru de pe pagină pentru care se plătește. Cumpărat pe 16 septembrie 2026 de la ROMARG, pentru un an. Prețul de registru pentru un .com este 10,97 USD pe an de la 1 noiembrie 2026; ROMARG facturează în lei, cu adaosul lui și cu TVA.",
+          "ceiling": "Nu are o limită: o factură pe an, în lei.",
+          "whenCrossed": "Pasul următor este domeniul .ro, la un an după .com, amândouă active — 12 EUR + TVA pe an la ROTLD.",
+          "closeYes": "Acest mediu răspunde pe domeniul clubului.",
+          "closeNo": "Acest mediu răspunde pe adresa furnizorului — pentru QA sau un laptop, așa trebuie."
         },
         "mailgun": {
           "name": "Mailgun (trimiterea e-mailurilor)",
@@ -567,76 +572,37 @@
         },
         "zitadel": {
           "name": "Zitadel (contul cu care intră echipa)",
-          "freeGives": "Gratuit: până la 100 de oameni pe zi și un singur administrator. Autentificarea se face pe adresa furnizorului, nu pe a clubului.",
-          "ceiling": "Prima limită: pe gratuit, echipa nu se poate autentifica pe adresa clubului și nu poate exista un al doilea administrator.",
-          "whenCrossed": "Cât timp echipa intră pe adresa furnizorului, nu contează. Din ziua în care clubul își cumpără domeniul, dacă vrei autentificare pe el sau un al doilea administrator, trebuie plătit.",
-          "closeYes": "Domeniul clubului este pus — de acum contează amândouă.",
-          "closeNo": "Echipa intră pe adresa furnizorului."
+          "freeGives": "Gratuit: până la 100 de autentificări pe zi și un singur administrator al contului Zitadel. Autentificarea se face pe adresa furnizorului, nu a clubului — hotărât, nu în așteptare: o adresă proprie de login ar costa 100 USD pe lună.",
+          "ceiling": "Singura limită care contează: un singur administrator al contului Zitadel. Dacă acea persoană nu mai e disponibilă, nimeni nu mai poate invita pe nimeni.",
+          "whenCrossed": "Nu se traversează — se notează cine este administratorul și unde sunt datele de acces (docs/RUNBOOKS.md § Staff sign-in).",
+          "closeYes": "—",
+          "closeNo": "Echipa intră pe adresa furnizorului, așa cum s-a hotărât."
         },
-        "githubActions": {
-          "name": "GitHub (sarcinile automate)",
-          "freeGives": "Gratuit și fără limită, cât timp programul site-ului este public.",
-          "ceiling": "Aici limita nu sunt banii, ci ritmul: sarcinile automate ar trebui să pornească din cinci în cinci minute, dar în realitate pornesc cam din două în două ore.",
-          "whenCrossed": "E-mailurile stau la coadă, iar locurile ținute pentru cineva se eliberează mai târziu decât ar trebui. Nu se strică nimic și nimeni nu pierde locul — dar confirmarea ajunge cu întârziere, iar în ziua înscrierilor asta se simte ca un site stricat.",
+        "scheduler": {
+          "name": "cron-job.org + GitHub (sarcinile automate)",
+          "freeGives": "Gratuit amândouă: cron-job.org apelează cele două sarcini la cinci minute, iar GitHub Actions este plasa de siguranță când primul nu răspunde.",
+          "ceiling": "Aici limita nu sunt banii, ci ritmul: fără monitoarele de pe cron-job.org, sarcinile pornesc doar din plasa de siguranță, cam la două ore.",
+          "whenCrossed": "E-mailurile stau la coadă, iar locurile ținute pentru cineva se eliberează mai târziu decât ar trebui. Nu se strică nimic și nimeni nu-și pierde locul — dar confirmarea vine târziu, iar în ziua înscrierilor asta pare un site stricat.",
           "closeYes": "O sarcină automată nu a mai rulat de prea mult timp.",
           "closeNo": "Sarcinile automate au rulat la timp."
         }
       },
       "decisionsTitle": "Ce așteaptă o hotărâre",
-      "decisionsIntro": "Restul paginii sunt lucruri de citit. Aici sunt întrebări la care trebuie să răspundă cineva anume, până la un moment anume.",
+      "decisionsIntro": "Restul paginii sunt lucruri de citit. Aici sunt doar întrebările încă fără răspuns, fiecare cu cineva anume care trebuie să-l dea.",
       "decisionState": {
-        "open": "de răspuns",
-        "answered": "răspuns"
+        "open": "de răspuns"
       },
       "decisions": {
-        "domainRegistrar": {
-          "question": "De unde cumpărăm domeniul și cât plătim de fapt?",
-          "open": "Prețul de registru pentru un .com este 10,97 USD pe an, dar firmele de la care se cumpără cer sume diferite și adaugă TVA. Cine îl cumpără spune suma plătită, ca să apară aici. Până când: înainte de prima cursă cu înscrieri, pentru că e-mailurile către participanți depind de domeniu.",
-          "answered": "Domeniul este cumpărat și site-ul răspunde pe el. Dacă suma plătită nu a fost încă spusă nimănui, acum este momentul."
-        },
         "entryContribution": {
           "question": "Va cere clubul vreodată bani pentru participare?",
           "open": "Este publicat un eveniment cu taxă, iar asta contrazice ce s-a hotărât pe 7 septembrie 2026. Cineva trebuie să spună dacă este o donație sau o taxă obligatorie: diferența stă în felul în care este scris, nu în intenție, iar de ea depinde dacă găzduirea gratuită se mai aplică. Până când: înainte ca evenimentul să primească înscrieri.",
           "answered": "Nu. Proprietarul a confirmat pe 7 septembrie 2026 că Brașov Runners nu vinde nimic și nu încasează bani. Dacă răspunsul se schimbă vreodată: o donație este permisă explicit pe planul gratuit, o taxă obligatorie nu."
-        },
-        "currency": {
-          "question": "În ce monedă arătăm sumele?",
-          "open": "Nehotărât: pagina ar amesteca monede fără să spună de ce.",
-          "answered": "În moneda în care cere fiecare firmă, fără să o transformăm în lei. Un curs scris pe pagină ar fi o cifră pe care nicio factură nu o confirmă, iar la domeniu plata se face oricum în lei, la cursul zilei. Hotărât de dezvoltator, iar motivul este scris lângă cifre, în programul site-ului."
         },
         "mailgunBeforeRace": {
           "question": "Luăm o lună de Mailgun plătit înainte de prima cursă adevărată?",
           "open": "Gratuit ajung vreo 33 de înscrieri pe zi. Dacă la o cursă sunt așteptați mai mulți, cei 15 dolari pe o lună se plătesc înainte de deschiderea înscrierilor, nu în timpul lor — altfel confirmările ajung a doua zi dimineață. Până când: cu o zi înainte să se deschidă înscrierile.",
           "answered": "Clubul nu mai depinde de limita zilnică gratuită."
         }
-      },
-      "optionsTitle": "Ce alternative avem",
-      "optionsIntro": "Pentru fiecare serviciu de mai sus a existat și altă variantă, cercetată și nealeasă. Scrise una lângă alta, se vede că nu suntem legați de nimeni: am ales, și fiecare alegere are o ieșire. Nimic de aici nu se schimbă acum; la final este scris unde stă hotărârea, pentru dezvoltator.",
-      "options": {
-        "vercel": {
-          "title": "Locul unde stă site-ul",
-          "why": "Render, tot gratuit și tot în Europa, poate ține acest site fără nicio modificare. Nu a fost ales pentru că varianta de acum este gratuită și funcționează; rămâne soluția de rezervă în ziua în care planul gratuit de acum nu ne mai este permis. Scris în:"
-        },
-        "mailgun": {
-          "title": "Trimiterea e-mailurilor",
-          "why": "Resend, cu serverele în Irlanda, ar fi gratuit la câte e-mailuri trimite clubul. Mailgun a fost ales pentru că firma este în Uniunea Europeană, iar mutarea de la unul la altul ar fi o schimbare mică. Scris în:"
-        },
-        "zitadel": {
-          "title": "Contul cu care intră echipa",
-          "why": "S-ar putea și fără firmă separată, doar cu lista de oameni din site, pentru trei-cinci organizatori care oricum nu își fac singuri cont. Varianta de acum este deja construită și funcționează; cealaltă contează în ziua în care autentificarea pe domeniul clubului ar cere plată. Scris în:"
-        },
-        "storage": {
-          "title": "Poze și fișiere",
-          "why": "Pozele stau chiar în site, fără serviciu separat, până când cineva care nu este dezvoltator va avea nevoie să încarce singur ceva. Abia atunci merită un cont nou și o factură în plus. Scris în:"
-        }
-      },
-      "cloudflare": {
-        "title": "Cloudflare, o singură dată — pentru că întrebarea revine",
-        "proxy": "Nu punem Cloudflare în fața site-ului. Ar fi două servicii care fac același lucru, iar orice problemă ar deveni de două ori mai greu de găsit.",
-        "dns": "Nu trebuie să mutăm la ei adresa site-ului. Domeniul rămâne la firma de la care este cumpărat.",
-        "workers": "Serviciul lor de rulat programe nu poate ține acest site: este construit altfel și nu i-ar ajunge nici puterea inclusă gratuit.",
-        "r2": "Pentru poze și fișiere, Cloudflare este chiar o variantă bună și ieftină. Contează abia când cineva care nu este dezvoltator va încărca singur poze.",
-        "turnstile": "Împotriva spamului, Cloudflare are un instrument bun, dacă protecția de acum nu mai ajunge. Dar este o firmă care ar vedea datele vizitatorilor, așa că nota de confidențialitate aprobată trebuie să o numească întâi."
       }
     },
     "richText": {
@@ -708,6 +674,7 @@
       "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale.",
       "facebook": "Facebook",
       "instagram": "Instagram",
+      "strava": "Strava",
       "contact": "Scrie-ne:"
     }
   },
@@ -907,10 +874,6 @@
       "webhook": {
         "title": "Webhook Mailgun",
         "body": "Cum ajunge un bounce înapoi la înscriere. Fără cheia de semnătură, cererile sunt refuzate și starea livrării rămâne necunoscută."
-      },
-      "mapLink": {
-        "title": "Link către hartă",
-        "body": "Opțional. Fără el, punctul de întâlnire rămâne text simplu, fără link — comportament documentat, nu defect."
       }
     },
     "rateLimits": "Limite de frecvență",

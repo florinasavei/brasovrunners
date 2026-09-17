@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1162,7 +1162,7 @@ npx vercel env ls production --cwd <that directory>
 
 **What the production project holds, as of 2026-09-16:** `APP_ENV=production`, `APP_BASE_URL=https://brasovrunners.com` (set by `yarn domain:bind`
 on 2026-09-16 — `www.brasovrunners.com` answers 308 to it; the registrar's DNS records are still
-to be created), `DATABASE_URL` (the Neon production pooled URL), `MAP_LINK_BASE_URL`, `ENABLE_EXPERIMENTAL_COREPACK=1`,
+to be created), `DATABASE_URL` (the Neon production pooled URL), `ENABLE_EXPERIMENTAL_COREPACK=1`,
 a fresh `JOB_SECRET`, a fresh `AUTH_SECRET`, `STAFF_AUTH_MODE=disabled` and
 `EMAIL_DELIVERY_MODE=capture`. Nothing was copied from QA. The four Zitadel variables arrive with
 the production Zitadel application (`docs/RUNBOOKS.md` § Staff sign-in); the Mailgun variables

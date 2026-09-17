@@ -51,7 +51,7 @@ describe("AGENTS.md §15.8 admin resend", () => {
 
     const [event] = await db
       .insert(events)
-      .values({ kind: "COMMUNITY_RUN", startsAt: new Date("2026-10-01T09:00:00.000Z"), registrationMode: "INTERNAL" })
+      .values({ type: "GROUP_RUN", startsAt: new Date("2026-10-01T09:00:00.000Z"), registrationMode: "INTERNAL" })
       .returning();
 
     const [registration] = await db

@@ -53,7 +53,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "RACE",
+        type: "RACE",
         startsAt: new Date("2026-10-11T06:00:00Z"),
         locationName: MEETING_POINT,
       })
