@@ -136,6 +136,25 @@ export default async function AdminTasksPage({ params }: Props) {
   const clubDomainBound =
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
   const roDomainBound = clubDomainBound && /\.ro$/i.test(hostname);
+
+  /**
+   * The values the step-by-step instructions under each task need, read from this deployment
+   * so the page can print the exact address to paste rather than a placeholder to work out:
+   * the club's apex domain (the mail subdomain hangs off it, whichever host QA answers on),
+   * the two job endpoints, and the webhook. Never a secret: `JOB_SECRET` is named, not shown.
+   */
+  const apex = clubDomainBound ? hostname.split(".").slice(-2).join(".") : hostname;
+  const howValues: Record<string, string> = {
+    apex,
+    mailDomain: `mail.${apex}`,
+    outboxUrl: `${env.APP_BASE_URL}/api/internal/jobs/email-outbox`,
+    maintenanceUrl: `${env.APP_BASE_URL}/api/internal/jobs/registration-maintenance`,
+    webhookUrl: `${env.APP_BASE_URL}/api/webhooks/mailgun`,
+    baseUrl: env.APP_BASE_URL,
+  };
+  /** `t.raw` returns the catalogue's array untouched, so the values are filled in here. */
+  const fill = (step: string) =>
+    step.replace(/\{(\w+)\}/g, (match, key: string) => howValues[key] ?? match);
   const jobsHealthy = jobs.every((job) => job.status === "ok");
   // Which ones, not how many: a single missing monitor and a stopped scheduler are the same
   // count and different problems.
@@ -224,9 +243,30 @@ export default async function AdminTasksPage({ params }: Props) {
               {t(`items.${task.id}.title`)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {t(`items.${task.id}.${task.state === "done" ? "done" : "todo"}`)}
+              {t(`items.${task.id}.${task.state === "done" ? "done" : "todo"}`, howValues)}
               {task.detail && ` — ${task.detail}`}
             </Typography>
+            {/*
+              How to do it, on the page, with this deployment's own values filled in — so the
+              answer to "what do I click" is under the task and not in a runbook ("things
+              should be self-explanatory in the admin console" — the owner, 2026-09-17). A
+              native <details>, closed: the list stays scannable, and no client code. Hidden
+              once the task is done; the steps are for doing it, not for reading about it.
+            */}
+            {task.state !== "done" && (
+              <Box component="details" sx={{ mt: 1.5 }}>
+                <Box component="summary" sx={{ cursor: "pointer", fontSize: "0.875rem", fontWeight: 500 }}>
+                  {t("howTitle")}
+                </Box>
+                <Box component="ol" sx={{ m: 0, mt: 1, pl: 2.5, "& li": { mb: 0.75 } }}>
+                  {(t.raw(`items.${task.id}.how`) as string[]).map((step, index) => (
+                    <Typography component="li" variant="body2" key={index} sx={{ wordBreak: "break-word" }}>
+                      {fill(step)}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         ))}
       </Stack>

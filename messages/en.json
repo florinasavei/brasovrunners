@@ -468,36 +468,71 @@
         "club": "The club",
         "developer": "The developer"
       },
+      "howTitle": "How to do it, step by step",
       "items": {
         "approveLegalText": {
           "title": "Approve the legal text",
           "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone. The procedure is docs/RUNBOOKS.md § Legal document version.",
-          "done": "The club’s approved wording is published."
+          "done": "The club’s approved wording is published.",
+          "how": [
+            "Open /admin/legal and press “New version”. Pick the type: the privacy notice, the terms or the declaration.",
+            "Paste the text in Romanian and in English, in sections: a heading and its paragraphs. Save the draft.",
+            "Download the PDF from the version's page and give it to whoever has to read it. A draft can be rewritten as long as it is unapproved.",
+            "When it is right: tick “I have read it” and press “Approve”. From that moment the text is fixed — a correction is the next version, from here too.",
+            "Repeat for all three. The approved privacy notice is what unlocks registrations; the approved declaration is then chosen on each event, under Registration."
+          ]
         },
         "liveEmail": {
           "title": "Email to real participants",
-          "todo": "The sending domain mail.<domain> has to be verified in Mailgun (the DNS records are in docs/RUNBOOKS.md), then EMAIL_DELIVERY_MODE=live on production. Until then messages are either captured or reach at most 5 authorised addresses in the sandbox (allowlist). Mode right now",
-          "done": "Email reaches participants."
+          "todo": "The sending domain {mailDomain} verified in Mailgun, then EMAIL_DELIVERY_MODE=live on production — the steps are below. Until then messages are either captured or reach at most 5 authorised addresses in the sandbox (allowlist). Mode right now",
+          "done": "Email reaches participants.",
+          "how": [
+            "In Mailgun: Sending → Domains → “Add new domain”. Name: {mailDomain}. Region: EU. Not the main domain — that stays free for the club's own mailboxes.",
+            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking). Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain). Then “Verify” in Mailgun — up to an hour.",
+            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY). Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “delivered”, “permanent failure” and “temporary failure”.",
+            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_FROM_ADDRESS=noreply@{mailDomain}, EMAIL_FROM_NAME=Brașov Runners, EMAIL_REPLY_TO=a mailbox the club reads.",
+            "Trial: EMAIL_DELIVERY_MODE=allowlist and EMAIL_ALLOWLIST=your address, redeploy, then register for an event — the email must arrive. When it does: EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
+          ]
         },
         "scheduler": {
           "title": "Production monitors on cron-job.org",
           "todo": "One monitor for each of the two scheduled jobs (email-outbox and registration-maintenance), every five minutes, with this environment’s JOB_SECRET — SETUP.md §26. Without them email does not go out and held places do not expire. Missing or late",
-          "done": "Both jobs are running on time."
+          "done": "Both jobs are running on time.",
+          "how": [
+            "On cron-job.org (free account): “Create cronjob”, twice.",
+            "First: URL {outboxUrl}; second: URL {maintenanceUrl}. Both: Schedule “every 5 minutes”, Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
+            "Turn on email notification on failure, so a dead monitor tells you. Within five minutes this row turns green; /devs shows each job with its last run."
+          ]
         },
         "inviteStaff": {
           "title": "Invite the team",
           "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
-          "done": "The team has accounts."
+          "done": "The team has accounts.",
+          "how": [
+            "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
+            "The person creates a Zitadel account with exactly that address and verifies the email — or you create it for them in the Zitadel console → Users. Zitadel only proves who they are; the list here decides whether they are staff.",
+            "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
+          ]
         },
         "publishEvents": {
           "title": "Publish events",
           "todo": "No event is published, so visitors see an empty list.",
-          "done": "Events are published."
+          "done": "Events are published.",
+          "how": [
+            "Open /admin/events → “New event”. Fill in the type, the date, the place and the title in both languages. Save.",
+            "Press “Submit for review”, then “Publish”. Both languages go live together; until then the page is a 404 for visitors.",
+            "Only one event can be “featured” — it opens the home page. Next year: “Duplicate” this year's."
+          ]
         },
         "roDomain": {
           "title": "The .ro domain, in a year",
           "todo": "Decided on 16 September 2026: the .com now, the .ro a year later, both alive at once (12 EUR + VAT a year at ROTLD). Blocks nothing; ticks itself when the site answers on .ro.",
-          "done": "The site also answers on the .ro domain."
+          "done": "The site also answers on the .ro domain.",
+          "how": [
+            "In a year (September 2027), buy the .ro domain with the same name, at ROTLD or at the .com registrar.",
+            "Run `yarn domain:bind production <name>.ro --alias-of {apex}`: it binds the domain to the Vercel project as a permanent redirect to the .com and prints the DNS records to create.",
+            "Create the records at the registrar. This row turns green when the site answers on .ro."
+          ]
         }
       },
       "freeVerdict": {
