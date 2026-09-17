@@ -1,12 +1,11 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -111,10 +110,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           <TextField name="clubName" label={rt("clubName")} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
               telephone is usually taking it from somebody in the club. */}
-          <FormControlLabel
-            control={<Checkbox name="clubMemberDeclared" />}
-            label={rt("clubMemberDeclared")}
-          />
+          <CheckboxField name="clubMemberDeclared">{rt("clubMemberDeclared")}</CheckboxField>
             <TextField
               name="email"
               type="email"
@@ -138,18 +134,14 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               ))}
             </TextField>
 
-            <FormControlLabel
-              control={<Checkbox name="listOptOut" />}
-              label={t("registrations.listOptOut")}
-            />
+            <CheckboxField name="listOptOut">{t("registrations.listOptOut")}</CheckboxField>
 
             {/* The service refuses the whole registration without this, so the warning is
                 binding rather than decorative — the same rule the live-edit acknowledgement
                 follows in the event editor. */}
-            <FormControlLabel
-              control={<Checkbox name="relayedByParticipantRequest" required />}
-              label={t("registrations.relayConfirmation")}
-            />
+            <CheckboxField name="relayedByParticipantRequest" required>
+              {t("registrations.relayConfirmation")}
+            </CheckboxField>
 
             <Box>
               <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>

@@ -138,8 +138,12 @@ test.describe("the build badge", () => {
     await page.goto("/ro/evenimente");
     const footer = page.getByRole("contentinfo");
     await expect(footer.getByRole("link", { name: /echipă|staff/i })).toHaveCount(0);
-    // The two public legal routes are still there — AGENTS.md §9.2 requires them in the footer.
+    // The two public legal routes are still there — AGENTS.md §9.2 requires them linked from the
+    // footer. The whole footer is one disclosure now, so they are behind its summary, which names
+    // them; a closed <details> hides its content from the accessibility tree, so open it first.
+    await footer.locator("summary").click();
     await expect(footer.getByRole("link", { name: /confidențialitate/i })).toBeVisible();
+    await expect(footer.getByRole("link", { name: /termeni/i })).toBeVisible();
   });
 
   test("does not widen the document past the viewport", async ({ page }) => {
@@ -157,7 +161,9 @@ test.describe("the build badge", () => {
     await page.goto("/ro/evenimente");
 
     // The badge sits above the footer's own corner: the link must still be clickable, which
-    // is the failure a fixed overlay actually causes on a 320px screen.
+    // is the failure a fixed overlay actually causes on a 320px screen. The footer is a
+    // disclosure, so open it; the link is then under the badge's corner exactly as before.
+    await page.getByRole("contentinfo").locator("summary").click();
     await page.getByRole("link", { name: /confidențialitate/i }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);
   });

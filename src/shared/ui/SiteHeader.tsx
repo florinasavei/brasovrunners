@@ -1,10 +1,18 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listPublishedPages } from "@/modules/content/pages/repository";
-import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO } from "@/theme/brand";
+import {
+  FONT,
+  HEADER_MARK_HEIGHT,
+  HEADER_MARK_HEIGHT_PX,
+  HEADER_WORDMARK_SIZE,
+  LOGO,
+  WORDMARK,
+} from "@/theme/brand";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
@@ -49,20 +57,18 @@ async function navigationPages(locale: Locale) {
  * A Server Component — nothing here is interactive except the link, and that lives in
  * `LogoLink` (AGENTS.md §14.1: narrow client boundaries).
  *
- * The logo is the club's **lockup**, the supplied artwork entire: the mountains with
- * `BRASOV RUNNERS` beneath them, set in the lettering the logo was drawn with. Settled on
- * 2026-09-17 after two alternatives were tried in one day — the lockup alone at mark height,
- * where the wordmark was four pixels tall, and the mark with the kit face beside it, which put
- * the club's name on the row twice in two different typefaces and could not be aligned because
- * one of them is baked into an image. The answer was neither the pairing nor a smaller logo but
- * a bigger one: `HEADER_MARK_HEIGHT` is 44px now and the artwork's own lettering reads.
+ * The logo is the club's **lockup** — the supplied artwork entire, mountains over the runner
+ * and the small `BRASOV RUNNERS` in the lettering the logo was drawn with — and beside it the
+ * wordmark again, large, in the kit face. Both, by the owner's instruction of 2026-09-17: the
+ * artwork because it carries the runner figure the mountains-only crop lost, and the live text
+ * because at header height the artwork's own lettering is small and the kit face is what reads.
+ * That the name appears twice on the row is the brand as printed on the shirt, and it is the
+ * club's call. Everything on the row is vertically centred on one line.
  *
- * Nothing renders the kit face any more, so the font is no longer loaded — 36 kB that every
- * visitor used to pay for a word they can already see in the artwork.
- *
- * The artwork's wordmark reads BRASOV, without the ș: it is the printed logotype, not the
- * club's name. So the link's accessible name comes from the message catalogue and assistive
- * technology announces `Brașov Runners`, spelled properly, and never the artwork.
+ * The visible wordmark is unaccented, matching the printed kit — a logotype, not the club's
+ * name, and safe only because it is pure ASCII: Facón has no Romanian characters at all. So the
+ * link's accessible name comes from the message catalogue and assistive technology announces
+ * `Brașov Runners`, spelled properly, and never the artwork or the kit face.
  *
  * A plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for the image
  * optimizer to do, and serving one through `next/image` requires `dangerouslyAllowSVG`, which
@@ -102,16 +108,23 @@ export default async function SiteHeader() {
       }}
     >
       <Container
-        maxWidth="md"
+        maxWidth="lg"
         sx={{
           display: "flex",
           alignItems: "center",
-          // The lockup takes the space it needs and the switcher sits at the end — until they
-          // do not both fit, and then the switcher takes a second row. Wrapping rather than
-          // shrinking, because at 320px the header has 288px to work with and this lockup has
-          // overflowed once already (BR-REQ-041-01 criterion 1). A wrap costs 44px of height
-          // on the narrowest phones; an overflow costs the whole page a sideways scrollbar.
-          flexWrap: "wrap",
+          /**
+           * One row from `sm` up, always. Flex decides where a line breaks from each item's
+           * *natural* width, before any shrinking, so with `wrap` a navigation wider than the
+           * free space jumped to a second row even though it is built to shrink and scroll —
+           * which is what the owner saw on 2026-09-17 and called "not a single line". `nowrap`
+           * lets the nav shrink to what is left (it has `minWidth: 0` and scrolls sideways) and
+           * keeps the logo, the sections and the language on one line.
+           *
+           * Phones still wrap: at 320px the header has 288px to work with and this lockup has
+           * overflowed once already (BR-REQ-041-01 criterion 1). There a wrap costs 44px of
+           * height; an overflow costs the whole page a sideways scrollbar.
+           */
+          flexWrap: { xs: "wrap", sm: "nowrap" },
           gap: 1,
           py: 1,
         }}
@@ -134,6 +147,24 @@ export default async function SiteHeader() {
               width: "auto",
             }}
           />
+          <Typography
+            component="span"
+            sx={{
+              // Facón is one style: black, italic. Both are stated so the fallback, Roboto,
+              // lands in the same weight and slant if the font has not arrived yet.
+              fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,
+              fontWeight: 900,
+              fontStyle: "italic",
+              fontSize: HEADER_WORDMARK_SIZE,
+              lineHeight: 1,
+              // The face is wide and tightly fitted; a little tracking stops the letters
+              // touching at header size.
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {WORDMARK}
+          </Typography>
         </LogoLink>
         </Box>
 
@@ -142,10 +173,10 @@ export default async function SiteHeader() {
           language sits at the far end, where a setting belongs. They were briefly grouped
           together at the end, which read as two settings rather than a place to go.
 
-          At 320px the lockup fills the first row and the sections take the whole of a
-          second, aligned under the name rather than crammed against the right edge.
-          Wrapping rather than shrinking: an overflow costs the page a sideways scrollbar
-          (BR-REQ-041-01 criterion 1), a wrap costs one row of height.
+          On a phone the lockup fills the first row and the sections take the whole of a
+          second, aligned under the name rather than crammed against the right edge. From
+          `sm` up nothing wraps: the sections shrink and scroll sideways instead, so the row
+          stays one row however many pages the club publishes.
         */}
         <Box
           sx={{

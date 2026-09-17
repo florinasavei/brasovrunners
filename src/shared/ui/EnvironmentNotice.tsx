@@ -43,7 +43,7 @@ export default async function EnvironmentNotice() {
         borderColor: "warning.dark",
       }}
     >
-      <Container maxWidth="md" sx={{ py: 1 }}>
+      <Container maxWidth="lg" sx={{ py: 1 }}>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {t("environmentNotice.title", { environment: env.APP_ENV })}
         </Typography>

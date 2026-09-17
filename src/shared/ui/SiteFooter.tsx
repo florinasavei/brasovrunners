@@ -6,108 +6,150 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
+import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 
 /**
- * The footer: one line, and nothing else until somebody asks for more.
+ * The height of the footer's one visible line. Thin, by the owner's instruction: the bar sits at
+ * the bottom of every page and should cost as little of the screen as a tap target allows. 40px
+ * is under the 44px BR-REQ-041-01 asks of the form's controls and above the 24px WCAG minimum;
+ * the two things on this line are a disclosure and two icons, not a submit button.
+ */
+const BAR_HEIGHT = 40;
+
+/**
+ * The footer: one thin line, with the social marks always on it and everything else behind it.
  *
- * The two legal links are always visible — every public page offers them (`AGENTS.md` §11.4) —
- * and "about the club" sits on that same line as a native `<details>`, closed. Opening it grows
- * the line downwards rather than adding a second permanent row, which is what the owner asked
- * for on 2026-09-17: a footer that is one line until it is wanted.
+ * Three things share the line. On the left, a `<summary>` that opens the rest — the club, the
+ * contact, the legal pages — and names them, so a visitor after the privacy notice knows to open
+ * it (`AGENTS.md` §9.2 asks the legal routes be *linked from* the footer; they are, and the
+ * registration form links the notice directly where it matters, BR-REQ-070-01). In the middle,
+ * the social marks, **outside the disclosure and always visible**, by the owner's instruction on
+ * 2026-09-17. On the right, the build badge keeps its fixed corner.
+ *
+ * ## Why the marks are positioned rather than laid out
+ *
+ * The middle of the line belongs to the `<details>`, whose summary must be its own first child
+ * and whose panel must open full-width beneath. A flex row cannot put a third element between a
+ * summary and its panel, and links inside a summary are links inside a button, which reads
+ * wrongly to assistive technology. So the marks are absolutely positioned on the line, centred
+ * from `sm` up and on the right below it, where the summary's text would otherwise run under
+ * them on a 320px screen. The badge is static there, so nothing else claims that corner.
+ *
+ * ## Aligned with the page, sticky at the bottom
+ *
+ * The container is `lg`, the same as the header and every content page, so the summary's left
+ * edge sits on the logo's column. Sticky like the header, below the badge's layer (1050) and the
+ * header's (1100); `mt: "auto"` still pushes it to the bottom of a short page.
  *
  * ## Why `<details>` and not a client island
  *
- * It is a collapsible section on the platform: it works with JavaScript off, costs no client
- * code, and needs no state (§1.5). The summary is a 44px tap target, because this is reached with
- * a thumb (BR-REQ-041-01).
- *
- * ## Why the summary keeps the browser's own triangle
- *
- * The first version styled the summary `display: flex` to make it a 44px tap target, which in
- * Chrome and Safari **removes the disclosure marker** — so the control read as a third piece of
- * plain text and nobody could tell it opened. The height now comes from padding, the display
- * stays the browser's `list-item`, and the triangle sits at the start of the label where a
- * reader already looks for it.
- *
- * ## Why the links are beside the `<details>` and not inside its summary
- *
- * A `<summary>` is a button. Links nested inside a button are invalid, and a screen reader
- * announcing "button, privacy link, terms link" describes something nobody built. Three siblings
- * in one flex row read correctly and look identical.
+ * It is a collapsible section on the platform: works with JavaScript off, costs no client code,
+ * needs no state (§1.5). The summary's height comes from its line-height — `display: flex` on a
+ * `<summary>` removes the disclosure triangle in Chrome and Safari.
  *
  * The contact line renders only when `EMAIL_REPLY_TO` is set — the mailbox the club actually
- * reads (§8). Until the club has one, the block says who the club is and no more; nothing here
- * invents an address.
+ * reads (§8) — and the marks only when configured. Nothing here invents an address.
  */
 export default async function SiteFooter() {
   const legal = await getTranslations("Legal");
   const footer = await getTranslations("Footer");
   const contact = env.EMAIL_REPLY_TO;
   const social = [
-    { href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
-    { href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
-  ].filter((entry): entry is { href: string; label: string } => Boolean(entry.href));
+    { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
+    { network: "instagram" as SocialNetwork, href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
+  ].filter((entry): entry is typeof entry & { href: string } => Boolean(entry.href));
 
   return (
     <Box
       component="footer"
-      sx={{ borderTop: 1, borderColor: "divider", bgcolor: "background.paper", mt: "auto" }}
+      sx={{
+        borderTop: 1,
+        borderColor: "divider",
+        bgcolor: "background.paper",
+        mt: "auto",
+        position: "sticky",
+        bottom: 0,
+        zIndex: 1000,
+      }}
     >
-      <Container maxWidth="sm" sx={{ py: 1 }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          // Centred as a group, and `flex-start` on the cross axis keeps the two links on the
-          // first line when the disclosure is open: the row grows under "about the club" alone,
-          // where the summary that opened it is.
-          sx={{ justifyContent: "center", flexWrap: "wrap", alignItems: "flex-start", rowGap: 0.5 }}
-        >
-          <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
-          <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
-
-          <Box component="details">
-            <Box
-              component="summary"
-              sx={{
-                cursor: "pointer",
-                color: "text.secondary",
-                // Padding rather than a flex box with a minimum height: it reaches the same 44px
-                // and leaves `display: list-item` alone, so the browser still draws the triangle.
-                py: 1.5,
-                "&::marker": { color: "text.secondary" },
-              }}
-            >
-              {footer("about.summary")}
-            </Box>
-            <Stack spacing={1} sx={{ pb: 1, maxWidth: "40rem", textAlign: "start" }}>
-              <Typography variant="body2" color="text.secondary">
-                {footer("about.description")}
-              </Typography>
-              {contact && (
-                <Typography variant="body2" color="text.secondary">
-                  {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>
-                </Typography>
-              )}
-              {social.length > 0 && (
-                <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
-                  {social.map((entry) => (
-                    // Off-site, so each opens in a new tab and carries its own `rel` — the same
-                    // rule the rich-text renderer applies to every external link.
-                    <MuiLink
-                      key={entry.href}
-                      href={entry.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="body2"
-                    >
-                      {entry.label}
-                    </MuiLink>
-                  ))}
-                </Stack>
-              )}
-            </Stack>
+      <Container maxWidth="lg" sx={{ position: "relative" }}>
+        <Box component="details">
+          <Box
+            component="summary"
+            sx={{
+              cursor: "pointer",
+              color: "text.secondary",
+              fontSize: "0.875rem",
+              lineHeight: `${BAR_HEIGHT}px`,
+              // Only as wide as its label. A block summary spans the line, which put its
+              // centre — where a pointer test clicks — under the social marks, and made empty
+              // space on the bar toggle the panel.
+              width: "fit-content",
+              "&::marker": { color: "text.secondary" },
+            }}
+          >
+            {footer("about.summary")}
           </Box>
-        </Stack>
+
+          {/* Indented to the summary's text, past its marker, so the panel reads as its body. */}
+          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: 2.5, maxWidth: "40rem" }}>
+            <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+              <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
+              <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
+            </Stack>
+            <Typography variant="body2" color="text.secondary">
+              {footer("about.description")}
+            </Typography>
+            {contact && (
+              <Typography variant="body2" color="text.secondary">
+                {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>
+              </Typography>
+            )}
+          </Stack>
+        </Box>
+
+        {social.length > 0 && (
+          <Stack
+            direction="row"
+            component="nav"
+            aria-label={footer("about.socialLabel")}
+            sx={{
+              position: "absolute",
+              top: 0,
+              height: BAR_HEIGHT,
+              alignItems: "center",
+              right: { xs: 16, sm: "auto" },
+              left: { xs: "auto", sm: "50%" },
+              transform: { xs: "none", sm: "translateX(-50%)" },
+              gap: 0.5,
+            }}
+          >
+            {social.map((entry) => (
+              // Off-site, so each opens in a new tab and carries its own `rel` — the same rule
+              // the rich-text renderer applies to every external link. The name is on the link,
+              // the mark is decoration.
+              <MuiLink
+                key={entry.href}
+                href={entry.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={entry.label}
+                title={entry.label}
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: BAR_HEIGHT,
+                  height: BAR_HEIGHT,
+                  borderRadius: 1,
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
+              >
+                <SocialIcon network={entry.network} size={22} />
+              </MuiLink>
+            ))}
+          </Stack>
+        )}
       </Container>
     </Box>
   );
