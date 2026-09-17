@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -8,6 +9,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findPublishedPageBySlug } from "@/modules/content/pages/repository";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import { PROSE_MEASURE } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -49,11 +51,15 @@ export default async function StandingPage({ params }: Props) {
   if (!page) notFound();
 
   return (
-    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
-      <Typography variant="h1" gutterBottom>
-        {page.title}
-      </Typography>
-      <RichText body={page.bodyJson} />
+    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+      {/* As wide as the header, so the title sits on the logo's column; the prose stops at a
+          readable measure rather than running the whole width (AGENTS.md §18.2). */}
+      <Box sx={{ maxWidth: PROSE_MEASURE }}>
+        <Typography variant="h1" gutterBottom>
+          {page.title}
+        </Typography>
+        <RichText body={page.bodyJson} />
+      </Box>
     </Container>
   );
 }

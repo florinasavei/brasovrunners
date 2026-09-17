@@ -1,13 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -193,10 +192,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   {tr("registrations.deleteHelp")}
                 </Typography>
                 <TextField name="reason" label={tr("registrations.deleteReason")} required />
-                <FormControlLabel
-                  control={<Checkbox name="confirm" required />}
-                  label={tr("registrations.deleteConfirm")}
-                />
+                <CheckboxField name="confirm" required>
+                  {tr("registrations.deleteConfirm")}
+                </CheckboxField>
                 <Box>
                   <Button type="submit" color="error" variant="contained">
                     {tr("registrations.deleteAction")}

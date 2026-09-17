@@ -1,12 +1,11 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
@@ -145,10 +144,9 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="versionId" value={document.id} />
               <Stack spacing={2}>
-                <FormControlLabel
-                  control={<Checkbox name="confirm" required />}
-                  label={t("legal.approveConfirm")}
-                />
+                <CheckboxField name="confirm" required>
+                  {t("legal.approveConfirm")}
+                </CheckboxField>
                 <Box>
                   <Button type="submit" color="warning" variant="contained">
                     {t("legal.approveAction")}

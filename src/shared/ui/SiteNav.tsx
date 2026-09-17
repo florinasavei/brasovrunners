@@ -82,7 +82,15 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
         // The current section is marked with a 2px underline; without room for it the scroll
         // container clips it away exactly on the entry it is meant to identify.
         pb: "2px",
-        scrollbarWidth: "thin",
+        /**
+         * No scrollbar chrome. On Windows even a thin one draws a grey bar under the club's
+         * name, and the row overflows only when the club publishes more pages than a wide
+         * header holds — the tab-bar convention every phone user knows. Scrolling still works
+         * by touch, trackpad and shift-wheel, and a focused link scrolls itself into view, so
+         * nothing here is reachable only by dragging.
+         */
+        scrollbarWidth: "none",
+        "&::-webkit-scrollbar": { display: "none" },
         // A scrollable row of links is still a row of links to a keyboard: nothing here is
         // reachable only by dragging.
         "& > *": { flexShrink: 0 },

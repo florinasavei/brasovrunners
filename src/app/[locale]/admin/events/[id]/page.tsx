@@ -1,13 +1,12 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -272,11 +271,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   The service refuses the save if the event is published and this is not ticked, so
                   the warning is binding rather than decorative. */}
               {live && (
-                <FormControlLabel
-                  control={<Checkbox name="acknowledgeLiveEdit" />}
-                  label={t("editor.acknowledgeLive")}
-                  sx={{ mb: 2, display: "flex" }}
-                />
+                <Box sx={{ mb: 2 }}>
+                  <CheckboxField name="acknowledgeLiveEdit">{t("editor.acknowledgeLive")}</CheckboxField>
+                </Box>
               )}
               <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
                 {t("editor.save")}

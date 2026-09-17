@@ -701,7 +701,8 @@
   },
   "Footer": {
     "about": {
-      "summary": "Despre club",
+      "summary": "Despre club, contact și termeni",
+      "socialLabel": "Clubul pe rețelele sociale",
       "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale.",
       "facebook": "Facebook",
       "instagram": "Instagram",
@@ -718,8 +719,8 @@
     "email": "Adresă de email",
     "privacyPrefix": "Am citit și sunt de acord cu",
     "privacyLinkLabel": "nota de confidențialitate",
-    "resultsNameConsent": "Sunt de acord ca numele meu să apară în rezultatele publice",
-    "listOptOut": "Nu vreau ca numele meu să apară pe lista publică de participanți, dacă clubul publică una pentru acest eveniment",
+    "resultsNameConsent": "Numele meu poate apărea în rezultatele publice",
+    "listOptOut": "Nu vreau să apar pe lista publică de participanți, dacă va exista una",
     "submit": "Trimite înscrierea",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "errors": {
@@ -731,7 +732,8 @@
     "sections": {
       "about": "Despre tine",
       "contact": "Contact",
-      "consents": "Acorduri"
+      "consents": "Acorduri",
+      "optional": "Opționale"
     },
     "firstName": "Prenume",
     "lastName": "Nume de familie",
@@ -758,7 +760,7 @@
     "optional": "Opțional",
     "healthNotes": "Afecțiuni, alergii sau medicație",
     "healthNotesHelp": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor în ziua cursei. Poți lăsa gol.",
-    "healthConsent": "Sunt de acord ca aceste informații medicale să fie păstrate și folosite doar pentru siguranța mea în ziua cursei",
+    "healthConsent": "Informațiile medicale pot fi păstrate, doar pentru siguranța mea în ziua cursei",
     "displayNameToggle": "Vrei să apari public sub alt nume?",
     "displayNamePlaceholder": "Ana P.",
     "fieldNames": {

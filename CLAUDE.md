@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.31-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.31-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.32-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -120,7 +120,8 @@ saves — hidden fields would put health text in the markup of every later step,
 would need a condition inside the allocator, and a client wizard would have to reimplement the
 browser's own validation in two languages. What loads now is what a submission is refused
 without, plus the consents; the t-shirt, the club, the display name and the health note sit
-behind native `<details>`. A consent is never collapsed — a question behind a summary nobody
+in native `<details>` — **open by default since 2026-09-17** (`DECISIONS.md` §59: the club field
+was reported missing while folded), still foldable. A consent is never collapsed — a question behind a summary nobody
 opens has not been put to them. A rejection the browser could not catch returns to a focusable
 error summary by URL fragment, with each field named as a link to that field. The declaration
 page names the event and the instant the hold expires, above the text rather than after it

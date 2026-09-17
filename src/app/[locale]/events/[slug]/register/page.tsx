@@ -2,9 +2,7 @@ import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
 import Container from "@mui/material/Container";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -23,7 +21,8 @@ import { countryOptions } from "@/modules/registrations/countries";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
-import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { submitRegistrationAction } from "./actions";
 
 type Props = {
@@ -41,7 +40,12 @@ export const metadata: Metadata = {
 const fieldId = (name: string) => `f-${name}`;
 
 /**
- * A collapsed optional group. Native `<details>`, styled to read as a panel.
+ * An optional group, **open by default** since 2026-09-17. It was collapsed to shorten the page
+ * (`DECISIONS.md` §47, 580px saved), and the cost turned out to be the one thing the club cares
+ * about in that group: the field for a runner's own club sat behind a summary nobody opened,
+ * and the owner reported the field as missing. Open, the page is longer and everything on it is
+ * seen; the element stays a `<details>` so anybody who wants it shorter can fold it. Native,
+ * styled to read as a panel.
  *
  * `<details>` and not a disclosure component: it opens with JavaScript switched off, costs no
  * client island (AGENTS.md §1.5), and is already how this codebase collapses things — the
@@ -54,10 +58,10 @@ const disclosureSx = {
   px: 2,
   "& > summary": {
     cursor: "pointer",
+    // Height from padding, not a flex box: `display: flex` on a <summary> removes the
+    // disclosure triangle in Chrome and Safari, and a group that can fold should look like it.
     py: 1.5,
     listStyle: "revert",
-    display: "flex",
-    alignItems: "center",
     ...TAP_TARGET,
   },
 } as const;
@@ -144,12 +148,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     helperText: invalid.has(name) ? t("errors.field") : help,
   });
 
-  // A rejected field inside a collapsed group would otherwise be unreachable from the summary.
-  const healthRejected = invalid.has("healthNotes") || invalid.has("healthConsent");
-  const raceRejected = invalid.has("tshirtSize") || invalid.has("clubName");
-
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title", { event: event.title })}
       </Typography>
@@ -240,6 +240,26 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               />
               <input type="hidden" name="renderedAt" value={now.toISOString()} />
 
+              {/*
+                Two columns from `md` up, one below (BR-REQ-041-01 is phone-first and the phone
+                is unchanged). Left: what a registration cannot be accepted without. Right: the
+                three optional groups, open, beside the required set rather than after it — on a
+                laptop the form used a 600px column of a 1200px page and scrolled for three
+                screens; now the whole of it is one screen (the owner, 2026-09-17: "use the space
+                more efficiently"). `alignItems: flex-start` so a short right column does not
+                stretch to match the left. The consents and the button stay full width beneath
+                both, because they close the form and must not look like part of one half.
+              */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  columnGap: 4,
+                  rowGap: 2,
+                  alignItems: "start",
+                }}
+              >
+              <Stack spacing={2} sx={{ minWidth: 0 }}>
               <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
                 {t("sections.about")}
               </Typography>
@@ -266,29 +286,6 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   fullWidth
                 />
               </Stack>
-
-              {/*
-                BR-REQ-039-02. Closed by default, because the default answer is the common one:
-                a start list says the name you just gave. Opening it changes what is published
-                without changing who the declaration is signed by.
-              */}
-              <Box component="details" open={invalid.has("displayName")} sx={disclosureSx}>
-                <Typography component="summary" variant="body2">
-                  {t("displayNameToggle")}
-                </Typography>
-                <Stack spacing={1.5} sx={{ pb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("displayNameHelp")}
-                  </Typography>
-                  <TextField
-                    {...field("displayName")}
-                    label={t("displayName")}
-                    placeholder={t("displayNamePlaceholder")}
-                    autoComplete="nickname"
-                    slotProps={{ htmlInput: { maxLength: 120 } }}
-                  />
-                </Stack>
-              </Box>
 
               <TextField
                 {...field("birthDate", t("birthDateHelp"))}
@@ -405,21 +402,43 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               </Stack>
 
+              </Stack>
+
               {/*
-                Everything from here to the consents is optional, and collapsed for that reason.
+                Everything from here to the consents is optional. The three groups are open by
+                default (DECISIONS.md §59) and still foldable, each summary naming what it holds.
 
-                On a 390-pixel screen these four controls were a third of the page, standing
-                between a runner and the button they came to press, and not one of them has to
-                be answered for a registration to be accepted. Collapsed, they are still asked —
-                each summary names what is inside, so somebody who wants a t-shirt or has an
-                allergy to declare finds it — and what a stranger has to complete is the required
-                set plus the consents.
-
-                The consents themselves stay open: BR-REQ-072-01 criterion 1 and BR-REQ-039-01
-                require the choice to be *presented*, and a question behind a summary nobody
-                opens has not been put to anyone.
+                The consents below the columns are never folded: BR-REQ-072-01 criterion 1 and
+                BR-REQ-039-01 require the choice to be *presented*, and a question behind a
+                summary nobody opens has not been put to anyone.
               */}
-              <Box component="details" open={raceRejected} sx={disclosureSx}>
+              <Stack spacing={2} sx={{ minWidth: 0 }}>
+              <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
+                {t("sections.optional")}
+              </Typography>
+              {/*
+                BR-REQ-039-02. Closed by default, because the default answer is the common one:
+                a start list says the name you just gave. Opening it changes what is published
+                without changing who the declaration is signed by.
+              */}
+              <Box component="details" open sx={disclosureSx}>
+                <Typography component="summary" variant="body2">
+                  {t("displayNameToggle")}
+                </Typography>
+                <Stack spacing={1.5} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("displayNameHelp")}
+                  </Typography>
+                  <TextField
+                    {...field("displayName")}
+                    label={t("displayName")}
+                    placeholder={t("displayNamePlaceholder")}
+                    autoComplete="nickname"
+                    slotProps={{ htmlInput: { maxLength: 120 } }}
+                  />
+                </Stack>
+              </Box>
+              <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.race")}
                 </Typography>
@@ -434,16 +453,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     It is a claim and it grants nothing; `DECISIONS.md` §48 says why it is not
                     checked against `staff_users`.
                   */}
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        id={fieldId("clubMemberDeclared")}
-                        name="clubMemberDeclared"
-                        sx={CHECKBOX_TAP_TARGET}
-                      />
-                    }
-                    label={t("clubMemberDeclared")}
-                  />
+                  <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared">
+                    {t("clubMemberDeclared")}
+                  </CheckboxField>
 
                   <TextField
                     {...field("tshirtSize")}
@@ -473,7 +485,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 wording that says plainly it may be left empty. The server refuses text without
                 the tick rather than silently dropping either one.
               */}
-              <Box component="details" open={healthRejected} sx={disclosureSx}>
+              <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.health")}
                 </Typography>
@@ -486,17 +498,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     autoComplete="off"
                     slotProps={{ htmlInput: { maxLength: 2000 } }}
                   />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        id={fieldId("healthConsent")}
-                        name="healthConsent"
-                        sx={CHECKBOX_TAP_TARGET}
-                      />
-                    }
-                    label={`${t("healthConsent")} — ${t("optionalSuffix")}`}
-                  />
+                  <CheckboxField id={fieldId("healthConsent")} name="healthConsent">
+                    {`${t("healthConsent")} — ${t("optionalSuffix")}`}
+                  </CheckboxField>
                 </Stack>
+              </Box>
+
+              </Stack>
               </Box>
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
@@ -512,35 +520,21 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 rendered "nota de confidențialitate * *" on the form. The two consents below
                 say "optional" in words, so the difference is legible without pressing anything.
               */}
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id={fieldId("privacyAcknowledged")}
-                    name="privacyAcknowledged"
-                    required
-                    sx={CHECKBOX_TAP_TARGET}
-                  />
-                }
-                label={
-                  <>
-                    {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
-                  </>
-                }
-              />
-              <FormControlLabel
-                control={<Checkbox name="resultsNameConsent" sx={CHECKBOX_TAP_TARGET} />}
-                label={`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
-              />
+              <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
+                {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
+              </CheckboxField>
+              <CheckboxField name="resultsNameConsent">
+                {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
+              </CheckboxField>
               {/*
                 BR-REQ-039-01. Asked on every form, including for an event that publishes no
                 start list today: an organizer can switch one on months later, and a question
                 nobody put to this person cannot be answered on their behalf afterwards. The
                 label says "if the club publishes one" for exactly that reason.
               */}
-              <FormControlLabel
-                control={<Checkbox name="listOptOut" sx={CHECKBOX_TAP_TARGET} />}
-                label={`${t("listOptOut")} — ${t("optionalSuffix")}`}
-              />
+              <CheckboxField name="listOptOut">
+                {`${t("listOptOut")} — ${t("optionalSuffix")}`}
+              </CheckboxField>
 
               {/*
                 Enabled, always, and deliberately.

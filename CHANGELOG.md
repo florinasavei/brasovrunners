@@ -8,6 +8,20 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.32-2026-09-17
+
+Owner review of the running site, second pass. Every item was a sentence from him and a screenshot;
+each was checked by rendering the page and looking before it was called done.
+
+- **The header is one row.** Flex breaks lines from each item's *natural* width before shrinking anything, so a navigation wider than the free space jumped to a second row even though it is built to shrink and scroll. `nowrap` from `sm` up; phones still wrap. The lockup and the kit-face wordmark sit side by side on that row, both, by instruction — the artwork carries the runner figure, the live text is what reads.
+- **The page is wider.** The shell and the content pages use `lg` (1200px) instead of `md`; prose pages keep a readable measure (`PROSE_MEASURE`, about 75 characters) inside it, so the wider page buys room for the navigation and not longer paragraphs. The navigation hides its scrollbar chrome — on Windows even a thin one drew a grey bar under the club's name.
+- **The footer is one thin line, sticky at the bottom, aligned to the logo's column, with the social marks always on it.** One `<details>` for everything else: the summary names what is inside — the club, contact and the legal pages — and the panel holds the legal links, the description and the contact. Facebook and Instagram sit in the middle of the bar outside the disclosure, as two inline SVG paths rather than an icon package, on the right of the bar on a phone. 40px tall. Sticky like the header, below the badge's layer.
+- **The registration form's optional groups are open.** `DECISIONS.md` §47 collapsed them to save 580px; the cost was the field for a runner's own club, which sat behind a summary nobody opened and was reported as missing. Open by default, still foldable. §59.
+- **The optional consents say the same thing in half the words.** Three still, because each is a rule (BR-REQ-070-01, BR-REQ-072-01, BR-REQ-039-01 criterion 5) that exists for a legal reason; §59 records which one could go and what it would cost.
+- **The registration form uses the page.** Two columns from `md` up — what a registration cannot be accepted without on the left, the three optional groups on the right, consents and the button full width beneath — so the whole form is one laptop screen instead of three. One column on a phone, unchanged.
+- **A 500 that took five builds to find, and a rule that prevents the next one.** Adding those two column wrappers broke the page with `Cannot read properties of undefined (reading 'disabled')` inside MUI's `FormControlLabel`. Its `control={<Checkbox />}` was written in a Server Component and crossed the client boundary *as a prop*; past a certain tree depth React delivers such an element as a lazy reference with no `props`. The dev server had been failing on that page since `BR-V1.26` for the same reason — recorded then as a bundler quirk. `shared/ui/CheckboxField` now makes the element on the client side and takes the label as children; every Server Component that built a checkbox this way uses it, including the declaration page. `DECISIONS.md` §60, and `AGENTS.md` §14.1 states the rule.
+- **Documents:** CLAUDE.md, AGENTS.md §14.1, DECISIONS.md §59 and §60, and this file.
+
 ## BR-V1.31-2026-09-17
 
 Three corrections to what `BR-V1.30` shipped, each found by the owner looking at the running site
