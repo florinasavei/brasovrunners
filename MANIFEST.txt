@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V1.29-2026-09-17
+Baseline: BR-V1.30-2026-09-17
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -62,7 +62,8 @@ Important current decisions:
 - Next.js modular monolith
 - Material UI
 - Romanian + English i18n
-- Mini CMS with Tiptap OSS
+- Mini CMS with Tiptap OSS; built for standing pages 2026-09-17, allowlisted and validated on
+  the server, images deferred with the media library (DECISIONS.md section 58)
 - Staff-only Auth.js authentication with the Zitadel OAuth provider, allowlisted by the
   staff_users table (DECISIONS.md §26)
 - Passwordless participant flows via verified email action links

@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { formatLastUpdated, formatVersion } from "@/shared/config/build-info";
+import { formatBuildDate, formatVersion } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 import BuildBadgeLink from "./BuildBadgeLink";
 
@@ -31,7 +31,7 @@ export default async function BuildBadge() {
   const t = await getTranslations("Site");
 
   const version = formatVersion();
-  const lastUpdated = formatLastUpdated(locale);
+  const builtOn = formatBuildDate();
 
   /**
    * Which deployment this is, first, and only where it is not production.
@@ -44,8 +44,9 @@ export default async function BuildBadge() {
    */
   const parts = [
     ...(env.APP_ENV === "production" ? [] : [env.APP_ENV]),
-    t("lastBuild"),
-    ...(lastUpdated ? [lastUpdated] : []),
+    t("appVersion"),
+    version,
+    ...(builtOn ? [builtOn] : []),
   ];
   const text = parts.join(" · ");
 

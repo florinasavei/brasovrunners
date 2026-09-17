@@ -12,8 +12,9 @@
     },
     "buildBadgeLabel": "Website version and when it was last updated",
     "buildBadgeSignIn": "Double-click, press and hold on a phone, or press Enter, to sign in as staff.",
-    "lastBuild": "last build",
+    "appVersion": "app-ver",
     "environmentNotice": {
+      "realSite": "Go to the club’s real site",
       "label": "Notice about this version of the site",
       "title": "Test site ({environment}) — this is not the club's real website.",
       "body": "Everything here is sample data for trying the site out, and it may be deleted at any time. Please do not use it to register for a real event. The club's official website is coming soon, at its own address."
@@ -636,6 +637,22 @@
         "turnstile": "Against spam, Cloudflare has a good tool, if the protection we have now stops being enough. But it is a company that would see visitors' data, so the approved privacy notice has to name it first."
       }
     },
+    "richText": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "heading2": "Heading",
+      "heading3": "Sub-heading",
+      "bulletList": "Bulleted list",
+      "orderedList": "Numbered list",
+      "quote": "Quote",
+      "link": "Link",
+      "linkUrl": "Web address",
+      "linkApply": "Apply",
+      "linkRemove": "Remove link",
+      "linkCancel": "Cancel",
+      "undo": "Undo",
+      "redo": "Redo"
+    },
     "pages": {
       "title": "Pages",
       "create": "New page",
@@ -686,6 +703,8 @@
     "about": {
       "summary": "About the club",
       "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races.",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
       "contact": "Write to us:"
     }
   },

@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
-import { bodyToText } from "@/modules/legal-documents/domain/body-text";
+import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 
 export type EditablePageTranslation = {
   locale: string;
@@ -44,6 +44,9 @@ export default async function PageFieldsForm({
   slugLocked: boolean;
 }) {
   const t = await getTranslations("Admin.pages");
+  // The editor is a client island and cannot read the catalogue itself, so its control names are
+  // resolved here and passed down (AGENTS.md §9.3: no user-facing string in code).
+  const rt = await getTranslations("Admin.richText");
 
   return (
     <Stack spacing={3}>
@@ -83,13 +86,27 @@ export default async function PageFieldsForm({
                 required
                 slotProps={{ input: { readOnly: slugLocked } }}
               />
-              <TextField
+              <RichTextEditor
                 name={name("body")}
                 label={t("fields.body")}
-                helperText={t("bodyHelp")}
-                defaultValue={translation ? bodyToText(asBody(translation.bodyJson)) : ""}
-                multiline
-                minRows={10}
+                initialBody={translation?.bodyJson}
+                accessibleSuffix={t(`language.${locale}`)}
+                labels={{
+                  bold: rt("bold"),
+                  italic: rt("italic"),
+                  heading2: rt("heading2"),
+                  heading3: rt("heading3"),
+                  bulletList: rt("bulletList"),
+                  orderedList: rt("orderedList"),
+                  quote: rt("quote"),
+                  link: rt("link"),
+                  linkUrl: rt("linkUrl"),
+                  linkApply: rt("linkApply"),
+                  linkRemove: rt("linkRemove"),
+                  linkCancel: rt("linkCancel"),
+                  undo: rt("undo"),
+                  redo: rt("redo"),
+                }}
               />
               <TextField
                 name={name("seoTitle")}
@@ -111,9 +128,3 @@ export default async function PageFieldsForm({
   );
 }
 
-/** `body_json` is `jsonb`, so the driver hands it back as `unknown`. An absent body is empty. */
-function asBody(value: unknown): { sections: { heading?: string; paragraphs: string[] }[] } {
-  return typeof value === "object" && value !== null && Array.isArray((value as { sections?: unknown }).sections)
-    ? (value as { sections: { heading?: string; paragraphs: string[] }[] })
-    : { sections: [] };
-}

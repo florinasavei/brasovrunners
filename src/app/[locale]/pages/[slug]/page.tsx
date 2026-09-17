@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findPublishedPageBySlug } from "@/modules/content/pages/repository";
-import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
+import RichText from "@/modules/content/rich-text/ui/RichText";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -53,7 +53,7 @@ export default async function StandingPage({ params }: Props) {
       <Typography variant="h1" gutterBottom>
         {page.title}
       </Typography>
-      <LegalDocumentBody body={page.bodyJson} />
+      <RichText body={page.bodyJson} />
     </Container>
   );
 }
