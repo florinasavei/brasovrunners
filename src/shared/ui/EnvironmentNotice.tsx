@@ -4,6 +4,7 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { env } from "@/shared/config/env";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 /**
  * "This is not the real site."
@@ -43,7 +44,7 @@ export default async function EnvironmentNotice() {
         borderColor: "warning.dark",
       }}
     >
-      <Container maxWidth="lg" sx={{ py: 1 }}>
+      <Container maxWidth={PAGE_WIDTH} sx={{ py: 1 }}>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {t("environmentNotice.title", { environment: env.APP_ENV })}
         </Typography>

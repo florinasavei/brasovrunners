@@ -16,7 +16,9 @@ import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
+import Wordmark from "@/shared/ui/Wordmark";
 import { findLatestPastEvent, listUpcomingEvents } from "@/modules/events/repository";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -64,7 +66,7 @@ export default async function EventsPage({ params }: Props) {
   const listed = featured ? events.filter((event) => event.id !== featured.id) : events;
 
   return (
-    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       {/*
         BR-REQ-052-02 criterion 1 asks the homepage to carry one SportsOrganization block, and
         this page is now the homepage — the site root redirects here. Incomplete by design:
@@ -72,7 +74,10 @@ export default async function EventsPage({ params }: Props) {
       */}
       <JsonLd data={sportsOrganizationJsonLd(tSite("name"))} />
 
-      <Typography variant="h1" gutterBottom>
+      {/* The kit-face wordmark, here and nowhere else — the owner moved it out of the header. */}
+      <Wordmark />
+
+      <Typography variant="h1" gutterBottom sx={{ mt: 2 }}>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>

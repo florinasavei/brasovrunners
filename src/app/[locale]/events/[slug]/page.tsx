@@ -19,6 +19,7 @@ import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import StartList from "@/modules/events/ui/StartList";
 import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -83,7 +84,7 @@ export default async function EventDetailPage({ params }: Props) {
   const mapLink = mapLinkFor(event, env.MAP_LINK_BASE_URL);
 
   return (
-    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <JsonLd data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"))} />
 
       <Typography variant="body2" sx={{ mb: 2 }}>

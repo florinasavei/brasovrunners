@@ -110,7 +110,7 @@ export const FONT = {
   body: "var(--font-roboto)",
   /**
    * Facón, the face the club's kit is printed in. Loaded by the locale layout from
-   * `src/theme/fonts/`, and used in exactly one place: the header wordmark.
+   * `src/theme/fonts/`, and used in exactly one place: the homepage wordmark.
    *
    * It is confined to that one string for a hard reason, not a stylistic one. The font
    * contains 129 characters and NONE of them are Romanian — not ș or ț in either encoding,
@@ -127,7 +127,7 @@ export const FONT = {
 } as const;
 
 /**
- * The header wordmark, as a logotype rather than as the club's name.
+ * The wordmark, as a logotype rather than as the club's name. On the homepage, in the kit face.
  *
  * Deliberately unaccented and deliberately not from the message catalogues. It matches the
  * kit, which is printed BRASOV RUNNERS, and it is the same in both locales because a logotype
@@ -209,10 +209,24 @@ export const LOGO = {
 export const HEADER_MARK_HEIGHT_PX = 44;
 export const HEADER_MARK_HEIGHT = "clamp(32px, 9vw, 44px)";
 /**
+ * How wide the page is. One value, used by the header, the footer, the environment notice and
+ * every public and backoffice page, so "allow a wider screen" (the owner, twice on 2026-09-17:
+ * `md` → `lg` → `xl`) is this line. MUI's `xl` is 1536px; `false` would make the page fluid
+ * with only the gutters. Prose keeps `PROSE_MEASURE` inside it whatever this says.
+ */
+export const PAGE_WIDTH = "xl" as const;
+
+/**
  * How wide a column of running text may be. About 75 characters at body size: the range
  * typography has settled on for reading, and the reason a wider page (`lg`, 2026-09-17) does
  * not mean wider paragraphs. Applied to prose pages, never to the header or lists.
  */
-export const PROSE_MEASURE = "44rem";
+export const PROSE_MEASURE = "60rem";
 
-export const HEADER_WORDMARK_SIZE = "clamp(0.95rem, 4.2vw, 1.25rem)";
+/**
+ * The homepage wordmark's size. A display face, but a signature rather than a banner — 4rem
+ * was "way too big" (the owner, 2026-09-17), 2.5rem still a bit; it caps at 2rem. Measured: the face renders
+ * about 10.5× its font size wide, so the 1.25rem floor (210px) fits well inside the 288px a 320px
+ * viewport leaves inside the gutters (BR-REQ-041-01 criterion 1).
+ */
+export const WORDMARK_SIZE = "clamp(1.25rem, 4vw, 2rem)";
