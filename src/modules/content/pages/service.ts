@@ -3,7 +3,7 @@ import { pages, pageTranslations, type Page } from "@/db/schema/pages";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
 import type { Database } from "@/db/types";
-import { textToBody } from "@/modules/legal-documents/domain/body-text";
+import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import {
   allowedTransitions,
   canCreateEvent,
@@ -116,7 +116,7 @@ export async function createPage<T extends Record<string, unknown>>(
         locale,
         slug: fields.translations[locale].slug,
         title: fields.translations[locale].title,
-        bodyJson: textToBody(fields.translations[locale].body),
+        bodyJson: fields.translations[locale].body,
         seoTitle: fields.translations[locale].seoTitle,
         seoDescription: fields.translations[locale].seoDescription,
         authorStaffUserId: input.actor.id,
@@ -177,7 +177,7 @@ export async function savePage<T extends Record<string, unknown>>(
         .set({
           slug: translation.slug,
           title: translation.title,
-          bodyJson: textToBody(translation.body),
+          bodyJson: translation.body,
           seoTitle: translation.seoTitle,
           seoDescription: translation.seoDescription,
           updatedAt: now,
@@ -206,8 +206,9 @@ export function describeIncompletePageLocales(
 
       const missing: string[] = [];
       if (translation.title.trim() === "") missing.push("title");
-      const sections = (translation.bodyJson as { sections?: unknown[] } | null)?.sections ?? [];
-      if (sections.length === 0) missing.push("body");
+      // Through the same reader the page renders with, so "complete" and "shows something"
+      // cannot disagree — including for a body written before the editor existed.
+      if (isRichTextEmpty(readRichText(translation.bodyJson))) missing.push("body");
       return { locale, missing };
     })
     .filter((entry) => entry.missing.length > 0);

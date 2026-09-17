@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
+import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { env } from "@/shared/config/env";
@@ -46,7 +47,27 @@ export default async function EnvironmentNotice() {
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {t("environmentNotice.title", { environment: env.APP_ENV })}
         </Typography>
-        <Typography variant="body2">{t("environmentNotice.body")}</Typography>
+        <Typography variant="body2">
+          {t("environmentNotice.body")}
+          {/*
+            And where to go instead. A visitor who was sent a link to this host has no way to
+            find the real one — the whole reason this notice exists — and telling them it is the
+            wrong site without saying where the right one is leaves them nowhere.
+
+            `PRODUCTION_SITE_URL` rather than a literal: §8 forbids a hostname under `src/`,
+            and it cannot derive from `APP_BASE_URL`, which is deliberately *this* environment's
+            host. Unset, the sentence simply ends — which is right on a laptop, where there is no
+            other site to point at.
+          */}
+          {env.PRODUCTION_SITE_URL && (
+            <>
+              {" "}
+              <Link href={env.PRODUCTION_SITE_URL} sx={{ color: "inherit", fontWeight: 600 }}>
+                {t("environmentNotice.realSite")}
+              </Link>
+            </>
+          )}
+        </Typography>
       </Container>
     </Box>
   );

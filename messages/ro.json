@@ -12,8 +12,9 @@
     },
     "buildBadgeLabel": "Versiunea site-ului și data ultimei actualizări",
     "buildBadgeSignIn": "Dublu clic, apăsare lungă pe telefon, sau Enter, pentru autentificarea echipei.",
-    "lastBuild": "ultima actualizare",
+    "appVersion": "app-ver",
     "environmentNotice": {
+      "realSite": "Mergi la site-ul real al clubului",
       "label": "Anunț despre această versiune a site-ului",
       "title": "Site de test ({environment}) — acesta nu este site-ul real al clubului.",
       "body": "Tot ce vezi aici sunt date de probă, pentru încercarea site-ului, și pot fi șterse oricând. Te rugăm să nu îl folosești pentru a te înscrie la un eveniment real. Site-ul oficial al clubului urmează, la adresa lui proprie."
@@ -636,6 +637,22 @@
         "turnstile": "Împotriva spamului, Cloudflare are un instrument bun, dacă protecția de acum nu mai ajunge. Dar este o firmă care ar vedea datele vizitatorilor, așa că nota de confidențialitate aprobată trebuie să o numească întâi."
       }
     },
+    "richText": {
+      "bold": "Îngroșat",
+      "italic": "Cursiv",
+      "heading2": "Titlu",
+      "heading3": "Subtitlu",
+      "bulletList": "Listă cu puncte",
+      "orderedList": "Listă numerotată",
+      "quote": "Citat",
+      "link": "Legătură",
+      "linkUrl": "Adresă web",
+      "linkApply": "Aplică",
+      "linkRemove": "Șterge legătura",
+      "linkCancel": "Renunță",
+      "undo": "Anulează",
+      "redo": "Refă"
+    },
     "pages": {
       "title": "Pagini",
       "create": "Pagină nouă",
@@ -686,6 +703,8 @@
     "about": {
       "summary": "Despre club",
       "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale.",
+      "facebook": "Facebook",
+      "instagram": "Instagram",
       "contact": "Scrie-ne:"
     }
   },

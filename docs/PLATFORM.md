@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -111,6 +111,16 @@ fallback. That is a dependency nobody had noticed between two things the club wa
 **4. Zitadel Free includes zero custom domains and one administrator.** Staff sign-in on the
 club's own domain, and a second person able to administer identity, both need a paid tier. At
 three to five staff the DAU cap (100) is irrelevant; these two are not.
+
+**The price, re-checked on 2026-09-17 because the owner was about to act on it:** a custom domain
+is Zitadel's **PRO tier, US$100/month**, and the Free tier includes none. That is roughly a
+hundred times the club's entire running cost, for a hostname a volunteer reads for two seconds
+while signing in. What it buys is cosmetic; what it costs is the largest line the club would
+have. The alternatives, in the order they are worth considering: keep the provider's own
+hostname (free, and nothing about access changes, because `staff_users` is what decides who may
+sign in); or drop Zitadel for Auth.js against Google or Microsoft directly, which is free and
+becomes natural if the nonprofit grant lands and the staff already have club accounts
+(`DECISIONS.md` §56 tracks that application).
 
 ### Two more worth knowing
 

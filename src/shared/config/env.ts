@@ -83,6 +83,30 @@ export const envSchema = z
      */
     MAP_LINK_BASE_URL: z.url().optional(),
 
+    /**
+     * The club's real site, for the "this is not the real site" banner to link to (§7.5).
+     *
+     * Deliberately not derived from `APP_BASE_URL`: that is *this* environment's host, and the
+     * whole point here is to name a different one. Optional, and unset on a developer's machine
+     * — there is no other site to send anybody to from localhost, and the banner just ends its
+     * sentence. Production never renders the banner at all.
+     */
+    PRODUCTION_SITE_URL: z.url().optional(),
+
+    /**
+     * The club's own profiles elsewhere, for the footer and for the `sameAs` of the
+     * `SportsOrganization` structured data (BR-REQ-052-02 criterion 1, which has been
+     * incomplete for exactly this reason: inventing a profile URL misinforms a search engine
+     * rather than merely being wrong).
+     *
+     * Configuration and not a constant, because §8 forbids a hostname anywhere under `src/` and
+     * exempts no provider — and because a club that changes network should not need a release.
+     * Both optional: unset, the footer shows no social links and `sameAs` is omitted entirely,
+     * which is the honest state rather than an empty array.
+     */
+    CLUB_FACEBOOK_URL: z.url().optional(),
+    CLUB_INSTAGRAM_URL: z.url().optional(),
+
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
     EMAIL_DELIVERY_MODE: z.enum(EMAIL_DELIVERY_MODES).default("capture"),
     EMAIL_ALLOWLIST: allowlist,

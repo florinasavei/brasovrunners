@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -991,10 +991,10 @@ other participant link uses — never by a password.
 - **Release:** M1
 
 "About Brașov Runners" and its like: text that is not an event and not legal wording. A
-deliberately small content type — no galleries, no media library, no cover image, and the body
-is the plain-text format the legal editor already uses, because the Tiptap contract is M5 and
-pulling it forward to write an About page would decide that schema for the wrong reason
-(`DECISIONS.md` §51, following §46).
+deliberately small content type — no galleries, no media library and no cover image. The body is
+written in the editor of `AGENTS.md` §11.3 and stored as validated JSON; it was the legal
+editor's plain-text format until 2026-09-17, when the club needed to write an About page and the
+format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 
 **Acceptance criteria**
 
@@ -1007,6 +1007,8 @@ pulling it forward to write an About page would decide that schema for the wrong
 7. Given a page address, when it is submitted, then it is lowercase letters, digits and hyphens, is not a reserved word, and is not already in use in that locale.
 8. Given published pages, when the public header renders, then each appears as a navigation entry in the order the club set, and when the sitemap is produced, then each published locale's address is listed.
 9. Given a Contributor, when they attempt to create or edit a page, then it is refused; given an Editor, then it is allowed.
+10. Given the page editor, when a body is written, then headings, bold, italic, links, bulleted and numbered lists and quotations are available, each with a keyboard-reachable control carrying its own name; and when the page renders, it shows what the editor showed.
+11. Given a body posted to the server, when it contains any node, mark or attribute outside the allowlist of `AGENTS.md` §11.3 — or a link that is not http, https, mailto or a path on this site — then the save is refused, whatever produced it.
 10. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; e2e `pages.spec.ts`
@@ -1072,7 +1074,7 @@ pulling it forward to write an About page would decide that schema for the wrong
 
 **Acceptance criteria**
 
-1. Given the homepage, when it renders, then it contains one `SportsOrganization` JSON-LD block with a stable `@id`, the club name, logo, URL, and `sameAs` entries for the club's official profiles.
+1. Given the homepage, when it renders, then it contains one `SportsOrganization` JSON-LD block with a stable `@id`, the club name, logo, URL, and `sameAs` entries for the club's official profiles. `sameAs` comes from `CLUB_FACEBOOK_URL` and `CLUB_INSTAGRAM_URL` and is omitted where neither is configured; `logo` is still absent and needs an approved raster (`DECISIONS.md` §58).
 2. Given a published event page, when it renders, then it contains a `SportsEvent` block whose start and end times carry the event timezone offset, whose `organizer` references the club `@id`, and whose `location` includes a postal address.
 3. Given a capped event, when the block renders, then `remainingAttendeeCapacity` equals the free-place count displayed on the same page.
 4. Given a cancelled event, when the page renders, then the block is still present with `eventStatus` set to cancelled.

@@ -19,13 +19,20 @@ export function clubId(): string {
 /**
  * BR-REQ-052-02 criterion 1.
  *
- * NOT YET COMPLETE, deliberately. The criterion also requires a logo and `sameAs` entries for
- * the club's official profiles. Neither exists: the club's social accounts and logo are an
- * owner decision (AGENTS.md §29, BUSINESS.md §9) and inventing plausible URLs would be worse
- * than omitting them — a wrong `sameAs` actively misinforms search engines. Add both here the
- * day the owner supplies them; the requirement is not satisfied until then.
+ * `sameAs` names the club's own profiles elsewhere, which is how a search engine knows that this
+ * site and those accounts are one organization. It comes from configuration (`AGENTS.md` §8: no
+ * hostname under `src/`) and is **omitted entirely when nothing is configured** — an empty array
+ * is a claim that the club has no profiles, and a guessed URL actively misinforms.
+ *
+ * Still missing for the criterion: `logo`, which needs an absolute URL to a raster the club has
+ * approved for the purpose. The SVG in `public/brand/` is not one — search engines want a
+ * bitmap of a stated size — and producing one is the club's call, not this file's.
  */
 export function sportsOrganizationJsonLd(name: string) {
+  const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL].filter(
+    (url): url is string => Boolean(url),
+  );
+
   return {
     "@context": "https://schema.org",
     "@type": "SportsOrganization",
@@ -34,6 +41,7 @@ export function sportsOrganizationJsonLd(name: string) {
     url: env.APP_BASE_URL,
     sport: "Running",
     areaServed: { "@type": "City", name: "Brașov" },
+    ...(sameAs.length > 0 ? { sameAs } : {}),
   };
 }
 

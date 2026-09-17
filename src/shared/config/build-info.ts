@@ -49,6 +49,22 @@ export function formatVersion(info: BuildInfo = buildInfo): string {
  * ordinary case while a milestone is in progress, and a badge that reads the same for both
  * cannot answer the only question it exists to answer.
  */
+/**
+ * The build's date as `YYYY-MM-DD`, for the badge every visitor can see.
+ *
+ * ISO rather than a locale format, on the owner's instruction of 2026-09-17: "17 sept. 2026"
+ * beside a version string was read as *the site's* last update — as though the club had not
+ * posted anything since — when it is the date this code was built. An ISO date next to
+ * "app-ver" reads as a build stamp, which is what it is. `/devs` keeps the readable form: its
+ * audience is one administrator looking at a deployment.
+ */
+export function formatBuildDate(info: BuildInfo = buildInfo): string | null {
+  if (!info.committedAt) return null;
+  const date = new Date(info.committedAt);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().slice(0, 10);
+}
+
 export function formatLastUpdated(locale: string, info: BuildInfo = buildInfo): string | null {
   if (!info.committedAt) return null;
 
