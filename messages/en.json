@@ -23,7 +23,7 @@
     "nav": {
       "label": "Main navigation",
       "events": "Events",
-      "more": "More"
+      "more": "Menu"
     }
   },
   "Home": {
@@ -58,14 +58,17 @@
     "registration": "Registration",
     "cancelled": "Cancelled",
     "cancelledNotice": "This event has been cancelled.",
-    "kind": {
-      "COMMUNITY_RUN": "Community run",
-      "TRAIL_RUN": "Trail run",
-      "INTERVAL_SESSION": "Interval session",
-      "LONG_RUN": "Long run",
-      "MEETUP": "Meetup",
+    "type": {
+      "GROUP_RUN": "Group run",
       "RACE": "Race",
-      "OTHER": "Other"
+      "HIKE": "Hike",
+      "COFFEE": "Coffee",
+      "MEETUP": "Meetup"
+    },
+    "surface": {
+      "ASPHALT": "Asphalt",
+      "TRAIL": "Trail",
+      "MIXED": "Mixed"
     },
     "startList": {
       "title": "Who's coming",
@@ -268,7 +271,7 @@
       "raceStartsAt": "Race start",
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
       "mapUrl": "Map link",
-      "mapUrlHelp": "Optional. The link is built from the coordinates; fill this in only to point at a specific page. It must start with https://.",
+      "mapUrlHelp": "Optional. A link to the meeting point — Google Maps or any other map. It must start with https://.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "saveEvent": "Save the event details",
@@ -293,9 +296,6 @@
         "difficulty": "Difficulty",
         "costType": "Cost"
       },
-      "latitude": "Latitude",
-      "longitude": "Longitude",
-      "coordinatesHelp": "The exact start point, in decimal degrees — for example 45.6427 and 25.5887. Right-click the spot on a map to copy them. A park name is not a start line.",
       "sharedFieldHelp": "The same in both languages. Filled in once.",
       "contentHelp": "The same event, in two languages. Only the words change here; the time, the place, the difficulty and the cost are in Settings above and are shared by both.",
       "tabIncomplete": "incomplete",
@@ -309,7 +309,8 @@
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
       "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
-      "kind": "Kind",
+      "type": "Event type",
+      "surface": "Surface",
       "eventStatus": "Event status",
       "timezone": "Time zone",
       "timezoneHelp": "The zone the times below are typed in, e.g. Europe/Bucharest.",
@@ -350,7 +351,7 @@
       },
       "notStated": "Not stated",
       "routeUrl": "Route link",
-      "routeUrlHelp": "Where the route can be seen — Strava, Komoot, or the map you drew it on. Must start with https://. Leave empty if there is not one."
+      "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -465,23 +466,28 @@
         },
         "liveEmail": {
           "title": "Email to real participants",
-          "todo": "Messages are either captured or reach at most 5 authorised addresses in the Mailgun sandbox. Reaching every participant needs the club’s domain, verified in Mailgun.",
+          "todo": "The sending domain mail.<domain> has to be verified in Mailgun (the DNS records are in docs/RUNBOOKS.md), then EMAIL_DELIVERY_MODE=live on production. Until then messages are either captured or reach at most 5 authorised addresses in the sandbox (allowlist). Mode right now",
           "done": "Email reaches participants."
         },
-        "registerDomain": {
-          "title": "Register the club's domain",
-          "todo": "The site works, but on the provider’s address. The club’s own domain is also what unlocks email to anyone.  does the technical half.",
-          "done": "The site answers on the club’s domain."
+        "scheduler": {
+          "title": "Production monitors on cron-job.org",
+          "todo": "One monitor for each of the two scheduled jobs (email-outbox and registration-maintenance), every five minutes, with this environment’s JOB_SECRET — SETUP.md §26. Without them email does not go out and held places do not expire. Missing or late",
+          "done": "Both jobs are running on time."
+        },
+        "inviteStaff": {
+          "title": "Invite the team",
+          "todo": "There is a single staff account — the one inserted by hand. From /admin/staff an Administrator invites organizers by email address; their Zitadel account is bound on first sign-in.",
+          "done": "The team has accounts."
         },
         "publishEvents": {
           "title": "Publish events",
           "todo": "No event is published, so visitors see an empty list.",
           "done": "Events are published."
         },
-        "scheduler": {
-          "title": "The scheduled jobs",
-          "todo": "The scheduled jobs have not run recently: email does not go out and held places do not expire. This one is technical.",
-          "done": "The jobs are running on time."
+        "roDomain": {
+          "title": "The .ro domain, in a year",
+          "todo": "Decided on 16 September 2026: the .com now, the .ro a year later, both alive at once (12 EUR + VAT a year at ROTLD). Blocks nothing; ticks itself when the site answers on .ro.",
+          "done": "The site also answers on the .ro domain."
         }
       },
       "freeVerdict": {
@@ -492,7 +498,7 @@
       "registrationsLeftToday": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
       "costTitle": "What it costs",
       "costToday": {
-        "nothing": "Today the club pays nothing at all. Every service is on a free plan, and the domain has not been bought yet.",
+        "nothing": "Today the club pays nothing at all. Every service is on a free plan.",
         "total": "Today the club pays {total} a year.",
         "amount": "{amount} {currency}",
         "amountPlusVat": "{amount} {currency} + VAT",
@@ -500,7 +506,6 @@
         "notTaken": "nothing yet"
       },
       "nextSpend": {
-        "domain": "The next thing to cost money: the club's domain, {cost} a year at the registry (the .com price from 1 November 2026). The company you buy it from charges a little more and adds VAT, in its own currency, once a year. It arrives the day the club buys it; until then the site sits on the provider's free address.",
         "mailgun": "The next thing to cost money: one month of Mailgun Basic, {cost}. Bought for a single race, when a day is expected to bring more entries than the free emails cover.",
         "vercel": "The next thing to cost money: Vercel Pro, {cost}. It arrives only if the site starts asking for money to take part, or if the site's code moves to the club's own account."
       },
@@ -534,11 +539,11 @@
       "services": {
         "domain": {
           "name": "The site's address (the .com domain)",
-          "freeGives": "There is no free version — this is the one thing on the page that is paid for either way. The registry price for a .com is 10.97 USD a year from 1 November 2026 (10.26 USD until then); the company you buy it from charges more and adds VAT.",
-          "ceiling": "The first limit: without the club's own address, email cannot go out to participants.",
-          "whenCrossed": "It can only go to five test addresses. From the day the domain is bought there is one invoice a year, paid in lei.",
-          "closeYes": "Bought, and the site answers on it.",
-          "closeNo": "Not bought. The site answers on the provider's free address."
+          "freeGives": "There is no free version — this is the one thing on the page that is paid for. Bought on 16 September 2026 from ROMARG, for a year. The registry price for a .com is 10.97 USD a year from 1 November 2026; ROMARG invoices in lei, with its margin and VAT.",
+          "ceiling": "No ceiling: one invoice a year, in lei.",
+          "whenCrossed": "The next step is the .ro domain, a year after the .com, both alive at once — 12 EUR + VAT a year at ROTLD.",
+          "closeYes": "This deployment answers on the club's domain.",
+          "closeNo": "This deployment answers on the provider's address — for QA or a laptop, that is as it should be."
         },
         "mailgun": {
           "name": "Mailgun (sending email)",
@@ -567,76 +572,37 @@
         },
         "zitadel": {
           "name": "Zitadel (how the team signs in)",
-          "freeGives": "Free: up to 100 people a day and a single administrator. Signing in happens on the provider's address, not the club's.",
-          "ceiling": "The first limit: on the free plan the team cannot sign in on the club's own address, and there can be only one administrator.",
-          "whenCrossed": "While the team signs in on the provider's address, none of this matters. From the day the club buys its domain, signing in on it or having a second administrator has to be paid for.",
-          "closeYes": "The club's domain is in place — both of these matter now.",
-          "closeNo": "The team signs in on the provider's address."
+          "freeGives": "Free: up to 100 sign-ins a day and a single administrator of the Zitadel account. Signing in happens on the provider's address, not the club's — decided, not pending: a login address of our own would cost 100 USD a month.",
+          "ceiling": "The one limit that matters: a single administrator of the Zitadel account. If that person is unavailable, nobody can invite anybody.",
+          "whenCrossed": "It is not crossed — it is written down: who the administrator is and where the credentials are (docs/RUNBOOKS.md § Staff sign-in).",
+          "closeYes": "—",
+          "closeNo": "The team signs in on the provider's address, as decided."
         },
-        "githubActions": {
-          "name": "GitHub (the automatic jobs)",
-          "freeGives": "Free and unlimited, as long as the site's code stays public.",
-          "ceiling": "Here the limit is not money but rhythm: the automatic jobs should run every five minutes, and in practice they run roughly every two hours.",
+        "scheduler": {
+          "name": "cron-job.org + GitHub (the automatic jobs)",
+          "freeGives": "Both free: cron-job.org calls the two jobs every five minutes, and GitHub Actions is the safety net when the first does not.",
+          "ceiling": "Here the limit is not money but rhythm: without the cron-job.org monitors the jobs only run from the safety net, roughly every two hours.",
           "whenCrossed": "Email waits in the queue, and places held for somebody are released later than they should be. Nothing breaks and nobody loses their place — but the confirmation arrives late, and on registration day that feels like a broken site.",
           "closeYes": "An automatic job has not run for too long.",
           "closeNo": "The automatic jobs ran on time."
         }
       },
       "decisionsTitle": "What is waiting on a decision",
-      "decisionsIntro": "The rest of this page is things to read. These are questions somebody in particular has to answer, by a particular time.",
+      "decisionsIntro": "The rest of this page is things to read. These are only the questions still without an answer, each with somebody in particular who has to give it.",
       "decisionState": {
-        "open": "needs an answer",
-        "answered": "answered"
+        "open": "needs an answer"
       },
       "decisions": {
-        "domainRegistrar": {
-          "question": "Where do we buy the domain, and what do we actually pay?",
-          "open": "The registry price for a .com is 10.97 USD a year, but the companies you buy from charge different amounts and add VAT. Whoever buys it says what was paid, so it can appear here. By when: before the first race with entries, because email to participants depends on the domain.",
-          "answered": "The domain is bought and the site answers on it. If nobody has been told what it cost, now is the moment."
-        },
         "entryContribution": {
           "question": "Will the club ever ask for money to take part?",
           "open": "A published event is marked as charging a fee, which contradicts what was decided on 7 September 2026. Somebody has to say whether it is a donation or a compulsory fee: the difference is in how it is written rather than in the intention, and free hosting depends on it. By when: before that event takes entries.",
           "answered": "No. The owner confirmed on 7 September 2026 that Brașov Runners sells nothing and takes no money. If that ever changes: a donation is explicitly allowed on the free plan, a compulsory fee is not."
-        },
-        "currency": {
-          "question": "Which currency do we show amounts in?",
-          "open": "Undecided: the page would mix currencies without saying why.",
-          "answered": "In the currency each company charges in, without converting to lei. An exchange rate on the page would be a figure no invoice ever confirms, and the domain is paid in lei anyway, at the day's rate. Decided by the developer, with the reason written next to the figures in the site's code."
         },
         "mailgunBeforeRace": {
           "question": "Do we take a paid month of Mailgun before the first real race?",
           "open": "The free allowance covers about 33 entries a day. If a race expects more, the $15 for one month is paid before entries open rather than during them — otherwise confirmations arrive the next morning. By when: the day before entries open.",
           "answered": "The club no longer depends on the free daily limit."
         }
-      },
-      "optionsTitle": "What our options are",
-      "optionsIntro": "For each service above there was another option, researched and not taken. Side by side, it is clear we are not tied to anybody: we chose, and every choice has a way out. Nothing here changes now; the note at the end says where the decision is written down, for the developer.",
-      "options": {
-        "vercel": {
-          "title": "Where the site lives",
-          "why": "Render, also free and also in Europe, could host this site with no changes at all. Not taken because what we use now is free and works; it stays the fallback for the day the current free plan is no longer allowed for us. Written in:"
-        },
-        "mailgun": {
-          "title": "Sending email",
-          "why": "Resend, with its servers in Ireland, would be free at the volume the club sends. Mailgun was chosen because the company is in the European Union, and moving from one to the other would be a small change. Written in:"
-        },
-        "zitadel": {
-          "title": "How the team signs in",
-          "why": "It could be done without a separate company, using only the list of people in the site, for three to five organizers who never sign themselves up anyway. What we have is already built and works; the other option matters the day signing in on the club's own address would have to be paid for. Written in:"
-        },
-        "storage": {
-          "title": "Photos and files",
-          "why": "Photos live in the site itself, with no separate service, until somebody who is not a developer needs to upload one. Only then is it worth a new account and another invoice. Written in:"
-        }
-      },
-      "cloudflare": {
-        "title": "Cloudflare, once — because the question keeps coming back",
-        "proxy": "We do not put Cloudflare in front of the site. That would be two services doing the same job, and any problem would be twice as hard to find.",
-        "dns": "We do not have to move the site's address to them. The domain stays with the company it is bought from.",
-        "workers": "Their service for running programs cannot host this site: it is built differently, and the power included for free would not be enough.",
-        "r2": "For photos and files, Cloudflare is genuinely a good, cheap option. It only matters once somebody who is not a developer starts uploading photos.",
-        "turnstile": "Against spam, Cloudflare has a good tool, if the protection we have now stops being enough. But it is a company that would see visitors' data, so the approved privacy notice has to name it first."
       }
     },
     "richText": {
@@ -708,6 +674,7 @@
       "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races.",
       "facebook": "Facebook",
       "instagram": "Instagram",
+      "strava": "Strava",
       "contact": "Write to us:"
     }
   },
@@ -907,10 +874,6 @@
       "webhook": {
         "title": "Mailgun webhook",
         "body": "How a bounce reaches the registration it belongs to. Without the signing key, requests are refused and delivery state stays unknown."
-      },
-      "mapLink": {
-        "title": "Map link",
-        "body": "Optional. Without it the meeting point stays plain text with no link — documented behaviour, not a fault."
       }
     },
     "rateLimits": "Rate limits",

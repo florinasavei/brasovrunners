@@ -211,8 +211,8 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
     await expect(page).toHaveURL(/\/en\/events$/);
   });
 
-  test("does not push the header past a 320px viewport", async ({ page }) => {
-    await page.goto("/ro/evenimente");
+  test("does not push the header past a 320px viewport, and keeps it to one row", async ({ page }) => {
+    await page.goto("/ro/evenimente", { waitUntil: "networkidle" });
 
     const header = page.locator("header");
     await expect(header).toBeVisible();
@@ -221,25 +221,60 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
       viewportWidth: document.documentElement.clientWidth,
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+
+    // One row at every width (the owner, 2026-09-17: "on mobile the logo and the navbar must
+    // fit on the same row"). The logo, the nav and the language switcher share a line, so the
+    // header is one tap target tall plus its padding — never a second row under the lockup.
+    const logo = page.getByRole("link", { name: "Brașov Runners" }).first();
+    const language = page.getByRole("navigation", { name: "Limbă" });
+    const nav = page.getByRole("navigation", { name: "Navigare principală" });
+    const [logoBox, languageBox, navBox] = await Promise.all([
+      logo.boundingBox(),
+      language.boundingBox(),
+      nav.boundingBox(),
+    ]);
+    const centre = (box: { y: number; height: number } | null) => (box ? box.y + box.height / 2 : NaN);
+    expect(Math.abs(centre(logoBox) - centre(languageBox))).toBeLessThan(8);
+    expect(Math.abs(centre(logoBox) - centre(navBox))).toBeLessThan(8);
+    // Less than two tap targets tall: the two-row header this replaced was 112px.
+    const headerBox = await header.boundingBox();
+    expect(headerBox?.height ?? 999).toBeLessThan(88);
   });
 
   test("carries navigation that marks the section you are in", async ({ page }) => {
-    await page.goto("/ro/evenimente/tura-pe-tampa");
+    // Network idle, so the nav has measured and folded what does not fit: at 320px that is
+    // every section, behind the "Meniu" button; on a desktop the entries are on the row.
+    await page.goto("/ro/evenimente/tura-pe-tampa", { waitUntil: "networkidle" });
 
     // The signpost an event page had none of: before this, the only way back to the listing
     // was the logo, which is a convention rather than something a visitor reads.
     const nav = page.getByRole("navigation", { name: "Navigare principală" });
     const events = nav.getByRole("link", { name: "Evenimente" });
-    await expect(events).toBeVisible();
+    const menu = nav.getByRole("button", { name: "Meniu" });
+    // `.first()`: on a wide screen with a few standing pages both can be visible at once.
+    await expect(events.or(menu).first()).toBeVisible();
 
-    // Marked current on a page *inside* the section, not only on its index.
+    // Marked current on a page *inside* the section, not only on its index — on the row, or
+    // on the folded entry, which stays in the DOM (SiteNav).
     await expect(nav.locator("[aria-current='page']")).toHaveCount(1);
 
-    // BR-REQ-041-01 criterion 6, on the control every page now carries.
-    const box = await events.boundingBox();
+    // BR-REQ-041-01 criterion 6, on the control every page now carries — the entry itself, or
+    // the menu button and the item behind it when the row is too narrow for the entry.
+    const control = (await events.isVisible()) ? events : menu;
+    const box = await control.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    await events.click();
+    if (await events.isVisible()) {
+      await events.click();
+    } else {
+      await menu.click();
+      const item = page.getByRole("menuitem", { name: "Evenimente" });
+      // Polled: the menu grows in, and a box read mid-animation is the scaled-down one.
+      await expect
+        .poll(async () => (await item.boundingBox())?.height ?? 0)
+        .toBeGreaterThanOrEqual(44);
+      await item.click();
+    }
     await expect(page).toHaveURL(/\/ro\/evenimente$/);
   });
 

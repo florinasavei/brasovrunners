@@ -12,13 +12,11 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
-import { mapLinkFor } from "@/modules/events/domain/map-link";
 import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
-import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -79,14 +77,13 @@ export default async function PreviewEventPage({ params }: Props) {
    */
   const preview: PublicEvent = {
     id: event.id,
-    kind: event.kind,
+    type: event.type,
+    surface: event.surface,
     eventStatus: event.eventStatus,
     startsAt: event.startsAt,
     endsAt: event.endsAt,
     raceStartsAt: event.raceStartsAt,
     timezone: event.timezone,
-    latitude: event.latitude,
-    longitude: event.longitude,
     mapUrl: event.mapUrl,
     routeUrl: event.routeUrl,
     featured: event.featured,
@@ -111,8 +108,6 @@ export default async function PreviewEventPage({ params }: Props) {
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
   };
-
-  const mapLink = mapLinkFor(preview, env.MAP_LINK_BASE_URL);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
@@ -142,9 +137,9 @@ export default async function PreviewEventPage({ params }: Props) {
       {preview.locationAddress && (
         <Stack sx={{ mt: 3 }}>
           <Typography variant="body2" color="text.secondary">
-            {mapLink ? (
+            {preview.mapUrl ? (
               <MuiLink
-                href={mapLink}
+                href={preview.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}

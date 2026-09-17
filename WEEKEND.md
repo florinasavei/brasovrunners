@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
 
 # WEEKEND.md — the pilot scope
 
-**Baseline `BR-V1.32-2026-09-17`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
+**Baseline `BR-V1.33-2026-09-17`** · [agent entry point](./CLAUDE.md) · [why](./DECISIONS.md)
 
 One weekend of AI-assisted building. This file says exactly what that weekend produces, in
 what order, and what it deliberately does not. When it conflicts with `SETUP.md` §29, this file

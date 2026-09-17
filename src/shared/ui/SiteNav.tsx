@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useSelectedLayoutSegments } from "next/navigation";
 import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import { Link } from "@/i18n/navigation";
+import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
 const SECTIONS = [{ segment: "events", href: "/events" }] as const;
 
@@ -194,6 +195,9 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
             fontSize: "inherit",
             borderRadius: 0,
             minWidth: 0,
+            // MUI's button padding on top of the entry's 44px made this the tallest thing on
+            // the row, and the row the tallest thing in the header. The same box as an entry.
+            py: 0,
             "&:hover": { color: "text.primary", bgcolor: "transparent" },
           }}
         >
@@ -232,9 +236,17 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
 /** Out of the flow and invisible, but still laid out, so its width can be read back. */
 const FOLDED = { position: "absolute", visibility: "hidden", pointerEvents: "none" } as const;
 
-/** One entry on the row, with the current one underlined — not colour alone (BR-REQ-041-01). */
+/**
+ * One entry on the row, with the current one underlined — not colour alone (BR-REQ-041-01).
+ *
+ * The underline is a pseudo-element scaled from the left, so it slides in under the pointer
+ * and is simply there on the current entry. The transparent border beneath it keeps the box
+ * the height it always was (44px plus the line), so the row does not move when the line does.
+ * Hover is behind `HOVER_OK`: on a phone `:hover` sticks after a tap.
+ */
 function entrySx(current: boolean) {
   return {
+    position: "relative",
     display: "inline-flex",
     alignItems: "center",
     // BR-REQ-041-01 criterion 6: a target a thumb can hit, on the phone this site is mostly
@@ -244,7 +256,24 @@ function entrySx(current: boolean) {
     color: current ? "text.primary" : "text.secondary",
     fontWeight: current ? 700 : 500,
     borderBottom: 2,
-    borderColor: current ? "primary.main" : "transparent",
-    "&:hover": { color: "text.primary" },
+    borderColor: "transparent",
+    transition: `color ${DURATION.fast}ms ${EASE}`,
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      left: 4,
+      right: 4,
+      bottom: -2,
+      height: 2,
+      bgcolor: "primary.main",
+      transform: current ? "scaleX(1)" : "scaleX(0)",
+      transformOrigin: "left",
+      transition: `transform ${DURATION.base}ms ${EASE}`,
+      "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+    },
+    [HOVER_OK]: {
+      "&:hover": { color: "text.primary" },
+      "&:hover::after": { transform: "scaleX(1)" },
+    },
   } as const;
 }

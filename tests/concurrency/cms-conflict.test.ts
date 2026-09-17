@@ -51,17 +51,16 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
 
   /** The event row as the form posts it, so a save here exercises the same path a page does. */
   const EVENT_FIELDS = {
-    kind: "OTHER",
+    type: "MEETUP",
     eventStatus: "SCHEDULED",
     timezone: "Europe/Bucharest",
     startsAtWallTime: "2026-10-11T09:00",
     endsAtWallTime: "",
     raceStartsAtWallTime: "",
-    latitude: "",
-    longitude: "",
     // One value for the whole event now (`DECISIONS.md` §36).
     locationName: "Parcul Tractorul",
     locationAddress: "",
+    surface: null,
     difficulty: null,
     costType: null,
     mapUrl: "",
@@ -90,7 +89,7 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
   beforeAll(async () => {
     // Only this suite's own rows are removed, never the whole database: this runs against a
     // developer's local PostgreSQL, which may hold seeded events they are working on.
-    await db.delete(events).where(eq(events.kind, "OTHER"));
+    await db.delete(events).where(eq(events.type, "MEETUP"));
     await db.delete(staffUsers).where(eq(staffUsers.email, "concurrency@dev.test"));
 
     [editor] = await db
@@ -111,7 +110,7 @@ describe("BR-REQ-051-01 criterion 5 two organizers saving at once", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "OTHER",
+        type: "MEETUP",
         startsAt: new Date("2026-10-11T06:00:00Z"),
         editorialStatus: "IN_REVIEW",
       })

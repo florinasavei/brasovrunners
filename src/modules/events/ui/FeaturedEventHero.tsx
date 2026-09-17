@@ -7,6 +7,7 @@ import ButtonLink from "@/shared/ui/ButtonLink";
 import type { PublicEvent } from "../repository";
 import EventFacts from "./EventFacts";
 import RegistrationCta from "./RegistrationCta";
+import { fadeIn } from "@/theme/motion";
 
 /**
  * The event the club is leading with, above the ordinary listing.
@@ -35,6 +36,8 @@ export default async function FeaturedEventHero({
       component="section"
       aria-labelledby="featured-event-title"
       sx={{
+        // Arrives with the page rather than snapping in; static for reduced motion.
+        ...fadeIn,
         mb: 4,
         p: { xs: 2, sm: 3 },
         borderRadius: 2,
@@ -45,7 +48,10 @@ export default async function FeaturedEventHero({
     >
       <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
         <Chip size="small" color="primary" label={t("featured")} />
-        <Chip size="small" label={tEvent(`kind.${event.kind}`)} />
+        <Chip size="small" label={tEvent(`type.${event.type}`)} />
+        {event.surface && (
+          <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />
+        )}
         {/* BR-REQ-020-01 criterion 2: a cancelled event says so wherever it appears. */}
         {event.eventStatus === "CANCELLED" && (
           <Chip size="small" color="error" label={tEvent("cancelled")} />

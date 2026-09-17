@@ -50,17 +50,16 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
   });
 
   const EVENT_FIELDS = {
-    kind: "RACE",
+    type: "RACE",
     eventStatus: "SCHEDULED",
     timezone: "Europe/Bucharest",
     startsAtWallTime: "2026-10-11T09:00",
     endsAtWallTime: "",
     raceStartsAtWallTime: "",
-    latitude: "",
-    longitude: "",
     // One value for the whole event now (`DECISIONS.md` §36).
     locationName: "Parcul Tractorul",
     locationAddress: "",
+    surface: null,
     difficulty: null,
     costType: null,
     mapUrl: "",

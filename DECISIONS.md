@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3482,3 +3482,113 @@ that any unrelated edit can alter. A rule at the boundary is the only thing that
 before a build.
 
 Baseline `BR-V1.32-2026-09-17`.
+
+## 61. Decided — an event has a type and a surface, the map is a pasted link, Strava is a mark and never a script, and the task board is today's list (2026-09-17)
+
+**Status:** Decided and built. Changes BR-BUS-010, BR-REQ-010-01, BR-REQ-011-01 criteria 7–8,
+BR-REQ-050-01 criterion 1, BR-REQ-052-02 criterion 1; `AGENTS.md` §8, §10.1, §12.3; migration
+`0023`. Owner direction, given in one sitting on 2026-09-17, with the reasoning recorded here so
+none of it has to be re-argued.
+
+### One enum was answering two questions
+
+`event_kind` had seven values — community run, trail run, interval session, long run, meetup,
+race, other — and the list mixed what an event *is* with *where* and *how* it is run. "Trail run"
+said the surface; "interval session" and "long run" said the session shape; and the club had to
+pick one chip for a long run on trail. It is two columns now:
+
+- **`events.type`** (`event_type`, NOT NULL): `GROUP_RUN`, `RACE`, `HIKE`, `COFFEE`, `MEETUP`.
+  The owner's first cut was three (group run, race, meetup — "special meetups like shoe testing
+  are MEETUP with the theme in the title, no fourth value"). Hike and coffee were added the same
+  afternoon, on his word that the club holds both regularly enough for each to be its own thing;
+  `MEETUP` is what is left. The session shape — intervals, the long run — is the title's job.
+- **`events.surface`** (`event_surface`, nullable): `ASPHALT`, `TRAIL`, `MIXED`. Null means the
+  club has not said, or it is a coffee and there is nothing to say.
+
+Conversion, in the migration: `COMMUNITY_RUN`, `INTERVAL_SESSION`, `LONG_RUN` → `GROUP_RUN`;
+`TRAIL_RUN` → `GROUP_RUN` with surface `TRAIL`; `RACE` → `RACE`; `MEETUP`, `OTHER` → `MEETUP`.
+Every old value maps to exactly one new one, and `TRAIL_RUN` is the only one that carried a
+surface. The `race_id ⇒ RACE` check moved from `kind` to `type` under a new name, and so did the
+`(kind, starts_at)` index.
+
+**The owner said he will "vibecode this later" and wants it flexible.** So, for the next person:
+a sixth type or a fourth surface is one migration — `ALTER TYPE "event_type" ADD VALUE 'X'` — plus
+the value in `src/db/schema/events.ts`, in `EVENT_TYPES` or `EVENT_SURFACES`
+(`modules/events/domain/event-type.ts`), and a label under `Event.type.*` or `Event.surface.*` in
+both catalogues. `tests/unit/i18n/messages.test.ts` fails until the label exists, which is the
+whole of the exhaustiveness check. Nothing else names a value: the editor, the chips and the
+overline iterate the arrays.
+
+### The migration is one file, against §7.6, on purpose
+
+`AGENTS.md` §7.6 prefers expand/contract: add in one release, drop in the next. `0023` adds,
+converts and drops in one step, by the owner's instruction, and the reason it is safe enough to
+record rather than refuse: `type` is NOT NULL from the first release that reads it, so no version
+of the code can run against both shapes — the split would buy a window in which `kind` is
+written and `type` is not, not a window in which both work. The cost is honest: on QA, the
+seconds between the migration finishing and the build going live serve 500s. Production has never
+served a request, so its first migration run applies the whole chain before any code reads the
+table. A future rename should still split; this one was a rename of a NOT NULL column with a
+data conversion, which is the case the split does not help.
+
+### Coordinates were "stupid — just a Google Maps link"
+
+`latitude` and `longitude` were two decimal numbers an organizer typed by hand so the application
+could assemble a link they could have pasted from the map they were already looking at. They are
+dropped in the same migration with their two CHECKs, and `map_url` — already there, already
+https-checked, already what the page preferred when set — is the meeting point on a map, full
+stop. `MAP_LINK_BASE_URL` went with them: it existed only to keep the assembled link's hostname
+out of `src/`, and a pasted link has no hostname in `src/` to keep out. `modules/events/domain/
+map-link.ts` is deleted rather than reduced to `return event.mapUrl`. The `SportsEvent` block no
+longer emits `geo`; `hasMap` stays and is the same link the page renders. A pin guessed from a
+place name would be wrong, and wrong is worse than absent.
+
+### Distance, climb, difficulty, route: all settable, and on the card
+
+All four were already on the editor and the event page. What was missing was the climb and the
+difficulty on the listing card, where only the distance showed; both are text and both render on
+the card now. The route link stays off the card, and that is not an omission: the card is one
+link (`CardLink`), and an anchor inside an anchor is invalid HTML the browser silently splits
+(BR-REQ-011-01 criterion 8, §49).
+
+### Strava: the mark, never the script
+
+The route link is labelled "link către traseu — a Strava route or activity, or any https link",
+and when its host is `strava.com` the page shows Strava's mark beside "Vezi traseul".
+**No Strava embed script**, for the same reason Turnstile is not built (`CLAUDE.md` § Spam): an
+embed is a third-party script that runs on the visitor's browser and reports to Strava, which
+makes Strava a processor the privacy notice does not name. The mark is an inline SVG path in
+`shared/ui/SocialIcon.tsx`, ships in the HTML, and phones home to nobody. The host check
+(`isStravaLink`) is a *comparison* of what an organizer pasted, not an emitted address, which is
+the distinction §8 draws — and `docs:check`'s scan is scheme-anchored, so it does not flag it.
+
+The club's Strava club page joins Facebook and Instagram in the footer and in `sameAs`:
+`CLUB_STRAVA_URL`, optional like the other two, set in `.env.local` and in both Vercel projects,
+never in a tracked file.
+
+### The task board is today's list
+
+`/admin/tasks` said the domain was not bought (it was, on 2026-09-16, and QA already answers on
+`qa.<domain>`), argued about a Zitadel custom login domain (decided against: the provider
+hostname, free tier — `docs/RUNBOOKS.md` § Staff sign-in), and carried a "decisions" section
+of answered questions and an "alternatives" section that was a history. It is six tasks now,
+every one still read from the system and none ticked by hand:
+
+- approve the legal texts — blocking until a non-sample privacy notice is approved;
+- the Mailgun sending domain `mail.<domain>` and `EMAIL_DELIVERY_MODE=live` — blocking; the
+  detail names the current mode;
+- the two production monitors — blocking, read from job health, naming the late job;
+- invite the team from `/admin/staff` — open until `staff_users` has more than the one row
+  inserted by hand;
+- publish events — open until the listing has one;
+- the `.ro` domain in a year — open, never blocking, done when `APP_BASE_URL` ends in `.ro`.
+
+The service rows stay where they read true: the domain row says *bought* and which hostname
+this deployment answers on; Zitadel's says the one limit that matters is the single account
+administrator; the scheduler row names cron-job.org as the clock and GitHub Actions as the
+backstop. "Decisions" lists only what is still open — the Mailgun month before the first race,
+and the entry-fee question only if a `PAID` event reopens it — and disappears when nothing is.
+The alternatives and the Cloudflare box are gone; they are this file's, and a re-decision would
+start here anyway.
+
+Baseline `BR-V1.33-2026-09-17`.

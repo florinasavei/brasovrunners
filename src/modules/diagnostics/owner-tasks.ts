@@ -4,13 +4,18 @@
  * `/devs` answers "is the deployment healthy" for somebody who can read a status enum. This
  * answers a different question, for a different person: **what is waiting on me?** The club's
  * organizers are volunteers, the outstanding work is mostly theirs rather than a developer's —
- * approving legal wording, buying a domain, deciding what an event costs — and until now the
+ * approving legal wording, verifying a sending domain, inviting the team — and until now the
  * only record of it was prose spread across `CLAUDE.md`, `SETUP.md` and three runbooks.
  *
  * A pure function over facts the caller has already read, so the whole list is testable without
- * a database and cannot drift from what the deployment actually reports. Every task states who
- * it belongs to, because "waiting on the club" and "waiting on a developer" are the difference
- * between a list somebody acts on and a list they scroll past.
+ * a database and cannot drift from what the deployment actually reports. **Nothing here is
+ * ticked by hand**: every state is derived from the environment, the database or the job
+ * heartbeats, which is the page's one rule. Every task states who it belongs to, because
+ * "waiting on the club" and "waiting on a developer" are the difference between a list somebody
+ * acts on and a list they scroll past.
+ *
+ * Rewritten on 2026-09-17 to today's list (`DECISIONS.md` §61): the domain is bought and bound,
+ * so "register the domain" is gone, and the `.ro` that follows it in a year is here instead.
  */
 
 export type TaskOwner = "club" | "developer";
@@ -35,13 +40,11 @@ export type OwnerTaskInputs = {
   /** Does an approved privacy notice exist at all? Without one, registration refuses everyone. */
   hasApprovedPrivacyNotice: boolean;
   /**
-   * Is the club's own domain bound and serving this deployment?
-   *
-   * False on a provider hostname *and* on a developer's machine. "Not a provider hostname" was
-   * the old test and it read `localhost` as a bound domain, which marked the domain task done
-   * on every developer's laptop.
+   * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
+   * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
+   * Going live is one thing on the club's side — the sending domain `mail.<domain>` verified at
+   * Mailgun (`docs/RUNBOOKS.md`) — and one variable on the deployment.
    */
-  clubDomainBound: boolean;
   emailDeliveryMode: "capture" | "allowlist" | "live";
   /**
    * Each scheduled job's own liveness, not one boolean for all of them.
@@ -56,8 +59,23 @@ export type OwnerTaskInputs = {
    * means a lapsed hold keeps occupying a place and the next runner is never offered it.
    */
   staleJobNames: readonly string[];
+  /**
+   * How many staff accounts exist. The first Administrator is a row inserted by hand, because
+   * the screen that invites people is itself behind the sign-in it would be granting; a second
+   * row means somebody used `/admin/staff`, which is the whole of "the team is invited".
+   */
+  staffCount: number;
   /** Events the club has published, so an empty site reads as work rather than as success. */
   publishedEventCount: number;
+  /**
+   * Does this deployment answer on a `.ro` hostname?
+   *
+   * The owner bought the `.com` on 2026-09-16 and decided a `.ro` follows a year later, both
+   * alive at once (`DECISIONS.md` §55). The only fact the software can read about that is the
+   * hostname it is serving on, so the task is open until `APP_BASE_URL` ends in `.ro` — which
+   * on QA is never, and that is honest: QA is not the club's address.
+   */
+  roDomainBound: boolean;
 };
 
 export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
@@ -82,24 +100,12 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   });
 
   // Nothing reaches a real person while the site captures mail, and the sandbox that replaces
-  // capture reaches five addresses. Both are steps on the way to the same place.
+  // capture reaches five addresses. The detail names the mode, so "not live" is not a mystery.
   tasks.push({
     id: "liveEmail",
     owner: "club",
     state: input.emailDeliveryMode === "live" ? "done" : "blocking",
-  });
-
-  // Not blocking: the site works on the provider's hostname, it simply is not the club's.
-  tasks.push({
-    id: "registerDomain",
-    owner: "club",
-    state: input.clubDomainBound ? "done" : "open",
-  });
-
-  tasks.push({
-    id: "publishEvents",
-    owner: "club",
-    state: input.publishedEventCount > 0 ? "done" : "open",
+    detail: input.emailDeliveryMode === "live" ? undefined : input.emailDeliveryMode,
   });
 
   // The one developer-owned entry, and it earns its place: when a job stops, no message is sent
@@ -111,6 +117,27 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     // Carried so the page can name the job rather than say "something is late". A missing
     // monitor and a broken one look identical from here; the job name is what tells them apart.
     detail: input.staleJobNames.join(", ") || undefined,
+  });
+
+  // Not blocking: one Administrator can run a race alone. It is open because a club with one
+  // account is a club whose backoffice goes with that one person's holiday.
+  tasks.push({
+    id: "inviteStaff",
+    owner: "club",
+    state: input.staffCount > 1 ? "done" : "open",
+  });
+
+  tasks.push({
+    id: "publishEvents",
+    owner: "club",
+    state: input.publishedEventCount > 0 ? "done" : "open",
+  });
+
+  // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.
+  tasks.push({
+    id: "roDomain",
+    owner: "club",
+    state: input.roDomainBound ? "done" : "open",
   });
 
   return tasks;

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.32-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.33-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -143,8 +143,8 @@ notice describes the disclosure — the sample notice carries the paragraph with
 (BR-REQ-039-01, `DECISIONS.md` §32).
 
 **The backoffice, and the whole of an event in it.** An organizer signs in, creates a race or
-duplicates last year's, sets every column the row carries — kind, event status, both times, the
-end time and the timezone, the coordinates, the map link, distance, climb, the featured flag, and
+duplicates last year's, sets every column the row carries — type and surface, event status, both
+times, the end time and the timezone, the map link and the route link, distance, climb, difficulty, the featured flag, and
 the whole registration block including capacity, the window and the approved declaration a
 participant signs — previews it, publishes it, archives it when it is over, and deletes one made
 by mistake. `src/db/seeds/pilot.ts` is no longer how an event is configured (`DECISIONS.md` §28).
@@ -263,7 +263,7 @@ busiest day every message queued after the cap was thrown away (`DECISIONS.md` �
 shows the volume against the allowance before a window opens, and explains every configuration
 enum rather than only reporting its value (§41).
 
-**737 unit and integration tests, 90 end-to-end runs (45 per viewport project), and five
+**921 unit and integration tests, 128 end-to-end runs (64 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a

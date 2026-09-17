@@ -106,7 +106,7 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
       );
       if (namespaces.length === 0) continue;
 
-      // Static keys only. A template literal such as t(`kind.${event.kind}`) is checked by
+      // Static keys only. A template literal such as t(`type.${event.type}`) is checked by
       // the exhaustiveness of the enum it interpolates, not here.
       for (const match of text.matchAll(/\bt\w*\(\s*["']([\w.]+)["']\s*[),]/g)) {
         const key = match[1];
@@ -120,13 +120,18 @@ describe("BR-REQ-040-04 every key used in src/ resolves", () => {
     expect(missing, "message keys used in src/ but absent from the catalogues").toEqual([]);
   });
 
-  it("resolves the dynamic event-kind keys for every kind in the enum", async () => {
-    // t(`kind.${event.kind}`) is dynamic, so the parity test cannot see it. The enum is the
-    // contract: every kind must have a label in both locales or a page renders "kind.RACE".
-    const { EVENT_KINDS } = await import("@/modules/events/domain/event-kind");
-    for (const kind of EVENT_KINDS) {
-      expect(roFlat[`Event.kind.${kind}`], `ro label for ${kind}`).toBeDefined();
-      expect(enFlat[`Event.kind.${kind}`], `en label for ${kind}`).toBeDefined();
+  it("resolves the dynamic event type and surface keys for every value in each enum", async () => {
+    // t(`type.${event.type}`) and t(`surface.${event.surface}`) are dynamic, so the parity
+    // test cannot see them. The enums are the contract: every value must have a label in both
+    // locales or a page renders "type.RACE" (BR-REQ-010-01 criterion 1).
+    const { EVENT_TYPES, EVENT_SURFACES } = await import("@/modules/events/domain/event-type");
+    for (const type of EVENT_TYPES) {
+      expect(roFlat[`Event.type.${type}`], `ro label for ${type}`).toBeDefined();
+      expect(enFlat[`Event.type.${type}`], `en label for ${type}`).toBeDefined();
+    }
+    for (const surface of EVENT_SURFACES) {
+      expect(roFlat[`Event.surface.${surface}`], `ro label for ${surface}`).toBeDefined();
+      expect(enFlat[`Event.surface.${surface}`], `en label for ${surface}`).toBeDefined();
     }
   });
 

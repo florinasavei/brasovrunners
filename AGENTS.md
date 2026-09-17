@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -785,10 +785,10 @@ APP_ENV
 APP_BASE_URL
 DATABASE_URL
 STAFF_AUTH_MODE
-MAP_LINK_BASE_URL
 PRODUCTION_SITE_URL
 CLUB_FACEBOOK_URL
 CLUB_INSTAGRAM_URL
+CLUB_STRAVA_URL
 Auth.js values required by the installed provider
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
@@ -825,18 +825,15 @@ Rules:
 - production rejects localhost/non-production identifiers;
 - QA rejects known production identifiers/live email;
 - do not invent Auth.js provider variable names; use installed official contract;
-- `MAP_LINK_BASE_URL` is the map service a coordinate becomes a link to. The application
-  appends `?q=<latitude>,<longitude>`, which Google Maps and OpenStreetMap both understand, so
-  the provider is a deployment decision rather than a code one — which is what keeps the
-  hostname out of `src/`. Unset, the meeting point renders as text with no link: a missing map
-  is a missing convenience, and a guessed one sends runners somewhere else;
 - `PRODUCTION_SITE_URL` is the club's real site, which the "this is not the real site" banner
   links to (§7.5). It cannot derive from `APP_BASE_URL`, which is deliberately *this*
   environment's host. Set it in qa; unset elsewhere, the banner simply ends its sentence;
-- `CLUB_FACEBOOK_URL` and `CLUB_INSTAGRAM_URL` are the club's own profiles, shown in the footer
-  and emitted as the `sameAs` of the `SportsOrganization` structured data (BR-REQ-052-02). Both
-  optional, and **omitted entirely when unset** rather than emitted empty: an empty `sameAs` is
-  a claim that the club has no profiles, and a guessed one misinforms a search engine;
+- `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL` and `CLUB_STRAVA_URL` are the club's own profiles,
+  shown in the footer and emitted as the `sameAs` of the `SportsOrganization` structured data
+  (BR-REQ-052-02). All optional, and **omitted entirely when unset** rather than emitted empty:
+  an empty `sameAs` is a claim that the club has no profiles, and a guessed one misinforms a
+  search engine. The map link on an event is not configuration at all any more: it is a link
+  the organizer pastes into `events.map_url` (`DECISIONS.md` §61), stored and never assembled;
 - `STAFF_AUTH_MODE` is `dev-switcher`, `provider`, or `disabled`. Unset, it derives: the
   switcher in local and test, `disabled` everywhere else. Stating `dev-switcher` outside local
   or test fails at startup, for the same reason live email does — a permissive deployment is
@@ -986,14 +983,10 @@ answered 404 where `STAFF_AUTH_MODE=disabled`; signing in lands back in the back
 ### 10.1 Event
 
 ```ts
-type EventKind =
-  | "COMMUNITY_RUN"
-  | "TRAIL_RUN"
-  | "INTERVAL_SESSION"
-  | "LONG_RUN"
-  | "MEETUP"
-  | "RACE"
-  | "OTHER";
+// What the event is. One seven-value `EventKind` until migration 0023 (DECISIONS.md §61).
+type EventType = "GROUP_RUN" | "RACE" | "HIKE" | "COFFEE" | "MEETUP";
+// What it is run on. Null on a coffee or a meetup.
+type EventSurface = "ASPHALT" | "TRAIL" | "MIXED";
 
 type EventStatus = "SCHEDULED" | "CANCELLED" | "COMPLETED";
 type EditorialStatus = "DRAFT" | "IN_REVIEW" | "PUBLISHED" | "ARCHIVED";
@@ -1002,7 +995,11 @@ type RegistrationMode = "NONE" | "INTERNAL" | "EXTERNAL";
 
 Rules:
 
-- race is event kind;
+- race is an event type, not a separate registration system;
+- the type and the surface are two questions, and the pace or the session shape is the title's
+  job — a shoe-testing evening is `MEETUP` with the theme in the title. Adding a value to either
+  enum is a migration (`ALTER TYPE … ADD VALUE`) plus a label in both catalogues; the
+  exhaustiveness test in `tests/unit/i18n/messages.test.ts` fails until the label exists;
 - one registration mode;
 - external creates no local participant/registration;
 - external provider is display label, not integration enum;
@@ -1529,7 +1526,8 @@ UNIQUE(race_id, locale)
 events
 - id uuid PK
 - race_id uuid null            -- M1 footprint for M2; null for events with no siblings
-- kind
+- type                         -- GROUP_RUN|RACE|HIKE|COFFEE|MEETUP; §10.1, DECISIONS.md §61
+- surface null                 -- ASPHALT|TRAIL|MIXED; null means the club has not said, or it is not run
 - event_status
 - editorial_status             -- publication, for the whole event: both locales go live together
 - published_at timestamptz null -- first publication; never cleared, so slugs stay stable
@@ -1538,9 +1536,7 @@ events
 - race_starts_at timestamptz null -- the gun time, when it differs from the event start
 - ends_at timestamptz null
 - timezone text NOT NULL DEFAULT Europe/Bucharest
-- latitude numeric null
-- longitude numeric null
-- map_url text null              -- the organizer's own map link, stored not assembled
+- map_url text null              -- the meeting point on a map: the organizer's own link, stored not assembled
 - route_url text null            -- BR-REQ-011-01 criterion 8; where the run goes, not where it starts
 - featured boolean NOT NULL DEFAULT false
 - distance_meters integer null
@@ -1566,16 +1562,15 @@ events
 
 Checks:
 
-- when `race_id` is set, the event's kind is `RACE`;
+- when `race_id` is set, the event's type is `RACE`;
 - end after start;
 - the race start is not before `starts_at` and not after `ends_at` where one exists;
-- `latitude` and `longitude` are present together or not at all, within ±90 and ±180. They are
-  the meeting point itself: the map link and the `geo` of the `SportsEvent` block are both built
-  from them, because a place name is not a start line;
-- `map_url` is https or null. It is the override for what coordinates cannot express — a venue
-  page, a shared list — and it is stored rather than built, because §8 forbids a hostname
-  literal under `src/` and exempts no provider. The ordinary link comes from the coordinates
-  plus `MAP_LINK_BASE_URL`, which is configuration;
+- `map_url` is https or null. It is the meeting point on a map, pasted by the organizer from
+  whatever map they were looking at, and it is stored rather than built, because §8 forbids a
+  hostname literal under `src/` and exempts no provider. `latitude` and `longitude` sat beside
+  it until migration `0023` and are gone (`DECISIONS.md` §61): two decimal numbers typed by hand
+  to produce a link the organizer could paste in one move, and the `SportsEvent` block no longer
+  emits `geo` — a pin guessed from a place name is worse than no pin;
 - `route_url` is https or null, and is **not** `map_url`. Where to turn up and where the run
   goes are two questions an event usually answers with two pages, so they are two columns
   (`DECISIONS.md` §49). It is a link and never an uploaded file while media storage is deferred
@@ -1600,7 +1595,7 @@ Indexes:
 ```text
 (event_status, starts_at)
 (editorial_status, starts_at)
-(kind, starts_at)
+(type, starts_at)
 (registration_mode, starts_at)
 ```
 
@@ -2705,6 +2700,10 @@ Target WCAG 2.2 AA:
 - narrow client islands;
 - every kilobyte on the critical path is argued for; the header and the landing page are the
   two surfaces every visitor pays for (§1.5, the owner's standing instruction);
+- motion on a public page is CSS, from `theme/motion.ts`, behind `prefers-reduced-motion`
+  (§18.2) and, for hover effects, `hover: hover`. A transition component (`Fade`, `Grow`,
+  `Collapse`) is a client island and is argued for like any other; a `loading.tsx` skeleton
+  may not sit above a `notFound()` (`DECISIONS.md` §54);
 - responsive images;
 - limited third-party scripts;
 - indexed queries/server pagination;

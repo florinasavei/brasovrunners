@@ -51,7 +51,7 @@ describe("BR-REQ-036-02 email action tokens", () => {
   async function seedRegistration(id: string) {
     const [event] = await db
       .insert(events)
-      .values({ kind: "COMMUNITY_RUN", startsAt: new Date("2026-10-01T09:00:00.000Z") })
+      .values({ type: "GROUP_RUN", startsAt: new Date("2026-10-01T09:00:00.000Z") })
       .returning();
 
     await db.insert(registrations).values({

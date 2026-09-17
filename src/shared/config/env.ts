@@ -71,19 +71,6 @@ export const envSchema = z
     JOB_SECRET: z.string().min(1).optional(),
 
     /**
-     * Where a coordinate becomes a map link, e.g. a maps service's base URL.
-     *
-     * Configuration rather than a literal, because AGENTS.md §8 forbids a hostname anywhere
-     * under `src/` and exempts no provider. The application appends `?q=<lat>,<lng>`, which is
-     * the query Google Maps and OpenStreetMap both understand, so switching provider is a
-     * deployment change.
-     *
-     * Optional, and unset means no link is built from coordinates: a club that has not chosen
-     * a map service shows the meeting point as text, which is what it did before.
-     */
-    MAP_LINK_BASE_URL: z.url().optional(),
-
-    /**
      * The club's real site, for the "this is not the real site" banner to link to (§7.5).
      *
      * Deliberately not derived from `APP_BASE_URL`: that is *this* environment's host, and the
@@ -101,11 +88,13 @@ export const envSchema = z
      *
      * Configuration and not a constant, because §8 forbids a hostname anywhere under `src/` and
      * exempts no provider — and because a club that changes network should not need a release.
-     * Both optional: unset, the footer shows no social links and `sameAs` is omitted entirely,
-     * which is the honest state rather than an empty array.
+     * All optional: unset, the footer shows no social links and `sameAs` is omitted entirely,
+     * which is the honest state rather than an empty array. Strava is where the club's runs are
+     * actually recorded, which for a running club is the profile that matters most.
      */
     CLUB_FACEBOOK_URL: z.url().optional(),
     CLUB_INSTAGRAM_URL: z.url().optional(),
+    CLUB_STRAVA_URL: z.url().optional(),
 
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
     EMAIL_DELIVERY_MODE: z.enum(EMAIL_DELIVERY_MODES).default("capture"),
@@ -115,7 +104,7 @@ export const envSchema = z
     /**
      * Mailgun's API base, e.g. its US or EU region endpoint.
      *
-     * Configuration for the same reason `MAP_LINK_BASE_URL` is: §8 forbids a hostname under
+     * Configuration for the same reason the club's profile URLs are: §8 forbids a hostname under
      * `src/` and exempts no provider. It also happens to matter — Mailgun's EU region is a
      * different host, and a club whose participants are European may need it.
      */

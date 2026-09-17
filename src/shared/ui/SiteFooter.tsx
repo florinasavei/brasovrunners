@@ -24,8 +24,9 @@ const BAR_HEIGHT = 40;
  * contact, the legal pages — and names them, so a visitor after the privacy notice knows to open
  * it (`AGENTS.md` §9.2 asks the legal routes be *linked from* the footer; they are, and the
  * registration form links the notice directly where it matters, BR-REQ-070-01). In the middle,
- * the social marks, **outside the disclosure and always visible**, by the owner's instruction on
- * 2026-09-17. On the right, the build badge keeps its fixed corner.
+ * the social marks — Facebook, Instagram and the Strava club — **outside the disclosure and
+ * always visible**, by the owner's instruction on 2026-09-17. On the right, the build badge
+ * keeps its fixed corner.
  *
  * ## Why the marks are positioned rather than laid out
  *
@@ -58,6 +59,7 @@ export default async function SiteFooter() {
   const social = [
     { network: "facebook" as SocialNetwork, href: env.CLUB_FACEBOOK_URL, label: footer("about.facebook") },
     { network: "instagram" as SocialNetwork, href: env.CLUB_INSTAGRAM_URL, label: footer("about.instagram") },
+    { network: "strava" as SocialNetwork, href: env.CLUB_STRAVA_URL, label: footer("about.strava") },
   ].filter((entry): entry is typeof entry & { href: string } => Boolean(entry.href));
 
   return (

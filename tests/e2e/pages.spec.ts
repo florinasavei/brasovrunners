@@ -100,19 +100,22 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // entry on the row, and the fold happens in the first layout effect after it.
     await page.goto(`/ro/pagini/${slug}`, { waitUntil: "networkidle" });
 
-    // The row shows what fits and folds the rest into "Mai multe" — on a phone, or once the
+    // The row shows what fits and folds the rest into "Meniu" — on a phone, or once the
     // club has a few pages, this one is in the menu. Either way it is reachable, and that is
     // the assertion.
     const nav = page.getByRole("navigation", { name: "Navigare principală" });
-    const more = nav.getByRole("button", { name: "Mai multe" });
-    await expect(nav.getByRole("link", { name: title }).or(more)).toBeVisible();
-    if (await more.isVisible()) {
+    const more = nav.getByRole("button", { name: "Meniu" });
+    // `.first()`: on a wide screen with a few standing pages both can be visible at once —
+    // this page on the row and a later one behind the button — so the row is checked first.
+    const link = nav.getByRole("link", { name: title });
+    await expect(link.or(more).first()).toBeVisible();
+    if (await link.isVisible()) {
+      await expect(link).toBeVisible();
+    } else {
       await more.click();
       await expect(page.getByRole("menuitem", { name: title })).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(page.getByRole("menu")).toHaveCount(0);
-    } else {
-      await expect(nav.getByRole("link", { name: title })).toBeVisible();
     }
 
     // Criterion 4: the switcher lands on the same page's English address, not on a 404 and not

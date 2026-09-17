@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distanceInKm } from "@/modules/events/domain/event-kind";
+import { distanceInKm } from "@/modules/events/domain/event-type";
 
 /**
  * BR-REQ-040-03 — localized formatting.

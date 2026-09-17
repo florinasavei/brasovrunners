@@ -105,7 +105,7 @@ describe("BR-REQ-053-02 legal document deletion", () => {
       NOW,
     );
     await db.insert(events).values({
-      kind: "COMMUNITY_RUN",
+      type: "GROUP_RUN",
       startsAt: new Date("2026-10-01T09:00:00.000Z"),
       registrationMode: "INTERNAL",
       declarationDocumentId: id,
@@ -132,7 +132,7 @@ describe("BR-REQ-053-02 legal document deletion", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "COMMUNITY_RUN",
+        type: "GROUP_RUN",
         startsAt: new Date("2026-10-01T09:00:00.000Z"),
         registrationMode: "INTERNAL",
       })
@@ -181,7 +181,7 @@ describe("BR-REQ-053-02 legal document deletion", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "COMMUNITY_RUN",
+        type: "GROUP_RUN",
         startsAt: new Date("2026-10-01T09:00:00.000Z"),
         registrationMode: "INTERNAL",
       })

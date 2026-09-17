@@ -22,17 +22,17 @@ export type Database = NodePgDatabase<Schema> | PgliteDatabase<Schema>;
  */
 const PUBLIC_COLUMNS = {
   id: events.id,
-  kind: events.kind,
+  type: events.type,
+  // What it is run on; null on a meetup (`DECISIONS.md` §61).
+  surface: events.surface,
   eventStatus: events.eventStatus,
   startsAt: events.startsAt,
   endsAt: events.endsAt,
   // The gun time, when it differs from when the event begins. Null on an ordinary run.
   raceStartsAt: events.raceStartsAt,
   timezone: events.timezone,
-  // The exact spot, and the override for it. The link itself is built by `mapLinkFor`, from
-  // configuration: AGENTS.md §8 forbids a provider hostname under src/.
-  latitude: events.latitude,
-  longitude: events.longitude,
+  // The meeting point on a map, as the organizer pasted it: stored, never assembled, because
+  // AGENTS.md §8 forbids a provider hostname under src/.
   mapUrl: events.mapUrl,
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
@@ -141,7 +141,7 @@ const eventEndsAt = sql`coalesce(${events.endsAt}, ${events.startsAt})`;
  * community run tomorrow. That is the intended reading of the page — the race is the thing
  * being advertised, the weekly run is the thing regulars already know about.
  */
-const RACES_FIRST = desc(sql`${events.kind} = 'RACE'`);
+const RACES_FIRST = desc(sql`${events.type} = 'RACE'`);
 
 /**
  * The featured event outranks even a race.

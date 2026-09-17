@@ -93,7 +93,6 @@ export default async function DevsPage({ params }: Props) {
       AUTH_ZITADEL_SECRET: Boolean(env.AUTH_ZITADEL_SECRET),
       AUTH_ZITADEL_ISSUER: Boolean(env.AUTH_ZITADEL_ISSUER),
       JOB_SECRET: Boolean(env.JOB_SECRET),
-      MAP_LINK_BASE_URL: Boolean(env.MAP_LINK_BASE_URL),
       DATABASE_URL: Boolean(env.DATABASE_URL),
     },
   };
