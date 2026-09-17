@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.31-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.31-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3392,3 +3392,93 @@ in §11.3 was already written and agreed, so implementing it decides nothing tha
   no longer loaded — the saving that `BR-V1.29` claimed and `BR-V1.30` reversed.
 
 Baseline `BR-V1.30-2026-09-17`.
+
+## 59. Decided — the optional groups open, the page widens, and the consents are reworded rather than removed (2026-09-17)
+
+**Status:** Decided by the owner from the running site; built. Reverses the collapse in §47.
+BR-REQ-041-01, BR-REQ-031-06, BR-REQ-072-01, BR-REQ-039-01.
+
+### The optional groups are open by default
+
+§47 folded the t-shirt, the club, the display name and the health note behind native `<details>`,
+closed, and saved 580px on a 390px-wide phone. The owner's report today was that the form was
+missing a field for the runner's own club. It was not missing; it was folded, and a field behind
+a summary nobody opens is a field nobody fills. The groups open by default now and stay
+`<details>`, so anybody who wants the page shorter can fold one. The consents were never folded
+(§47's own rule) and are unchanged in that respect.
+
+### The page is `lg`, and prose keeps its measure
+
+The header's navigation overflowed at `md` and grew a scrollbar; the owner asked for a wider
+page. The shell and the content pages are `lg` (1200px). Prose pages — standing pages, the
+legal texts — cap their column at `PROSE_MEASURE` (44rem, about 75 characters), because a wider
+page must not buy longer lines. Left edges therefore align with the logo, and paragraphs stay
+readable. Forms stay narrow and centred, which is what a form is.
+
+### Three consents remain, and why
+
+"Sunt prea multe acorduri." Each of the three exists because a rule says it must:
+
+| Consent | Rule | What removing it costs |
+| --- | --- | --- |
+| Privacy notice acknowledgement (required) | BR-REQ-070-01, GDPR Art. 13 | Cannot be removed |
+| Name in public results (optional) | BR-REQ-072-01 criterion 1 | M2 could not publish results for anyone who registered before it, without asking each again — criterion 5 says this consent exists *only* so M2 can publish lawfully |
+| Public participant list opt-out (optional) | BR-REQ-039-01 criterion 5: "on every event, whatever that event's current setting" | An organizer turning the list on after registrations closed would list people who never saw an opt-out — the exact case criterion 5 was written for |
+
+The one that *could* go with a rule change is the results consent, deferred to M2 and collected
+from the management page when results exist (criterion 4 already allows changing it there). The
+cost is asking again later; the benefit is one checkbox fewer now. Not done: it is the owner's
+call, recorded here so it is a decision rather than a rediscovery. What was done is wording —
+each optional consent now says the same thing in half the words.
+
+Baseline `BR-V1.32-2026-09-17`.
+
+## 60. Decided — no React element crosses the server/client boundary as a prop (2026-09-17)
+
+**Status:** Decided and applied everywhere it occurred. Adds a rule to `AGENTS.md` §14.1.
+Found while laying the registration form out in two columns.
+
+### What happened
+
+Two wrapper elements were added around the registration form's sections. Nothing else changed
+in what the page rendered, and the page began answering 500 with
+`TypeError: Cannot read properties of undefined (reading 'disabled')` from inside MUI's
+`FormControlLabel`. The production build and the development server failed identically, from
+a clean `.next`. Bisecting one piece at a time — the responsive spacing, the summary's style,
+the container width, the heading, the wrappers as MUI `Stack`, as a CSS-grid `Box` — took
+five builds and pointed only at "any wrapper at all", which made no sense until the browser's
+error overlay gave the frame the server log hides.
+
+### The mechanism
+
+`FormControlLabel` reads `control.props.disabled`. `control` is a prop, and the page is a
+Server Component, so `control={<Checkbox />}` is a React element crossing the server/client
+boundary **as a prop**. React serialises it. For a small tree the element arrives whole. Once
+the tree passes a certain depth, React outlines the subtree into a later row of the payload and
+the client component receives a lazy reference — an object with no `props` — in its place.
+The two wrappers were the depth that tipped it.
+
+The development server had been failing on this page since `BR-V1.26`, recorded in the local
+notes as a Turbopack manifest quirk with the advice to use a production build. It was this. The
+production build was one wrapper short of it the whole time.
+
+### The rule, and the fix
+
+Children are the channel React designs for; an element-valued prop is not. So: **a React element
+is never passed as a prop from a Server Component to a Client Component.** Where a client
+component's API demands one, a small client component makes the element on its own side of the
+boundary. `shared/ui/CheckboxField` does that for the checkbox-and-label pair and takes the
+label as children — which may carry a link, as the privacy acknowledgement does. Every Server
+Component that built a checkbox the old way now uses it: the registration form, the declaration
+page, the staff-entered registration, the event editor's live-edit acknowledgement, the legal
+approval and the registration delete confirmation. The declaration page is on a trust-carrying
+path and was one deep tree away from the same 500.
+
+### Why it is a rule rather than a fix
+
+The failure has no local symptom: the code that breaks is not the code that changed, the error
+names a library internal, the log hides the frame, and the trigger is the *shape* of a tree
+that any unrelated edit can alter. A rule at the boundary is the only thing that catches it
+before a build.
+
+Baseline `BR-V1.32-2026-09-17`.

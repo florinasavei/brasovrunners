@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.31-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.31-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2131,6 +2131,13 @@ Every participant mutation verifies scope, participant/registration binding, exp
 - route handlers for callbacks/webhooks/jobs/token exchange/downloads;
 - Server Actions may handle same-app forms when security/caching behavior is understood;
 - keep handlers thin, call application services.
+
+**A React element is never passed as a prop from a Server Component to a Client Component.**
+Children are fine; a prop is not. React serialises the element, and past a certain tree depth
+delivers it as a lazy reference with no `props` — so a client component that reads
+`control.props` throws, and the page answers 500 the day the tree grows (`DECISIONS.md` §60:
+the registration form, and every page that wrote `control={<Checkbox />}`). Make the element on
+the client side of the boundary — `shared/ui/CheckboxField` is the pattern — or pass children.
 
 ### 14.2 Validation
 

@@ -701,7 +701,8 @@
   },
   "Footer": {
     "about": {
-      "summary": "About the club",
+      "summary": "About the club, contact and legal",
+      "socialLabel": "The club on social media",
       "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races.",
       "facebook": "Facebook",
       "instagram": "Instagram",
@@ -718,8 +719,8 @@
     "email": "Email address",
     "privacyPrefix": "I have read and agree to the",
     "privacyLinkLabel": "privacy notice",
-    "resultsNameConsent": "I agree to my name appearing in public results",
-    "listOptOut": "Keep my name off the public participant list, if the club publishes one for this event",
+    "resultsNameConsent": "My name may appear in public results",
+    "listOptOut": "Keep me off the public participant list, if there is one",
     "submit": "Submit registration",
     "submitted": "Check your email to confirm your registration.",
     "errors": {
@@ -731,7 +732,8 @@
     "sections": {
       "about": "About you",
       "contact": "Contact",
-      "consents": "Consents"
+      "consents": "Consents",
+      "optional": "Optional"
     },
     "firstName": "First name",
     "lastName": "Last name",
@@ -758,7 +760,7 @@
     "optional": "Optional",
     "healthNotes": "Conditions, allergies or medication",
     "healthNotesHelp": "Only what an organizer would need to know if you needed help on race day. You may leave this empty.",
-    "healthConsent": "I agree that this health information may be kept and used only for my safety on race day",
+    "healthConsent": "This health information may be kept, only for my safety on race day",
     "displayNameToggle": "Want to appear publicly under a different name?",
     "displayNamePlaceholder": "Ana P.",
     "fieldNames": {

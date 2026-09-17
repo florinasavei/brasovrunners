@@ -208,4 +208,11 @@ export const LOGO = {
  */
 export const HEADER_MARK_HEIGHT_PX = 44;
 export const HEADER_MARK_HEIGHT = "clamp(32px, 9vw, 44px)";
+/**
+ * How wide a column of running text may be. About 75 characters at body size: the range
+ * typography has settled on for reading, and the reason a wider page (`lg`, 2026-09-17) does
+ * not mean wider paragraphs. Applied to prose pages, never to the header or lists.
+ */
+export const PROSE_MEASURE = "44rem";
+
 export const HEADER_WORDMARK_SIZE = "clamp(0.95rem, 4.2vw, 1.25rem)";

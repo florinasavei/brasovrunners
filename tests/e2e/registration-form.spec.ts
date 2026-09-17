@@ -36,8 +36,8 @@ async function fillRequired(page: Page, omit?: string) {
   await page.locator('[name="privacyAcknowledged"]').check();
 }
 
-test.describe("BR-REQ-041-01 the optional half of the form is collapsed", () => {
-  test("shows the required questions and the consents, and hides the rest until asked", async ({
+test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable", () => {
+  test("shows the required questions, the consents, and the optional groups open", async ({
     page,
   }) => {
     await signIn(page, "Dev Moderator");
@@ -64,23 +64,23 @@ test.describe("BR-REQ-041-01 the optional half of the form is collapsed", () => 
     await expect(page.locator('[name="resultsNameConsent"]')).toBeVisible();
     await expect(page.locator('[name="listOptOut"]')).toBeVisible();
 
-    // And the four that nobody has to answer are not, until they say so.
-    await expect(page.locator('[name="healthNotes"]')).toBeHidden();
-    await expect(page.locator('[name="clubName"]')).toBeHidden();
-    await expect(page.locator('[name="displayName"]')).toBeHidden();
+    // The optional groups are open as the page loads (the owner's instruction of 2026-09-17,
+    // reversing DECISIONS.md §47): a runner's own club was the field people missed when it sat
+    // behind a summary, and a field nobody sees is a field nobody fills.
+    await expect(page.locator('[name="healthNotes"]')).toBeVisible();
+    await expect(page.locator('[name="clubName"]')).toBeVisible();
+    await expect(page.locator('[name="displayName"]')).toBeVisible();
+    // BR-REQ-031-05 criterion 1: the health question keeps its own consent beside it.
+    await expect(page.locator('[name="healthConsent"]')).toBeVisible();
+    // BR-REQ-031-06: the club's own people say so here.
+    await expect(page.locator('[name="clubMemberDeclared"]')).toBeVisible();
 
-    // BR-REQ-031-05 criterion 1: the health question is named on its own summary rather than
-    // buried in a general one, and it still carries its own consent when opened.
+    // Still a disclosure: anybody who wants the page shorter can fold a group, and the summary
+    // names what it hides — the health one on its own, so the question is never buried.
+    await page.getByText("Informații medicale — opțional").click();
+    await expect(page.locator('[name="healthNotes"]')).toBeHidden();
     await page.getByText("Informații medicale — opțional").click();
     await expect(page.locator('[name="healthNotes"]')).toBeVisible();
-    await expect(page.locator('[name="healthConsent"]')).toBeVisible();
-
-    // BR-REQ-031-06: the club's own people say so here, and the summary names the club so a
-    // member finds it without opening every disclosure on the page.
-    await expect(page.locator('[name="clubMemberDeclared"]')).toBeHidden();
-    await page.getByText("Membru Brașov Runners, club și tricou — opțional").click();
-    await expect(page.locator('[name="clubName"]')).toBeVisible();
-    await expect(page.locator('[name="clubMemberDeclared"]')).toBeVisible();
   });
 
   test("accepts a registration from somebody who says they are in the club", async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is collapsed", () => 
     await page.goto(registerPath);
 
     await fillRequired(page);
-    await page.getByText("Membru Brașov Runners, club și tricou — opțional").click();
+    // The group is open as the page loads; the tick is reachable without opening anything.
     await page.locator('[name="clubMemberDeclared"]').check();
 
     // The timing check answers a too-fast form with the same generic success it gives a real
@@ -105,9 +105,10 @@ test.describe("BR-REQ-041-01 the optional half of the form is collapsed", () => 
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
 
-    // Criterion 1, with every disclosure open — the widest the page can be made.
-    for (const summary of ["Informații medicale — opțional", "Membru Brașov Runners, club și tricou — opțional"]) {
-      await page.getByText(summary).click();
+    // Criterion 1, with every disclosure open — the widest the page can be made. They open by
+    // default now, so nothing needs clicking; assert that rather than assume it.
+    for (const name of ["healthNotes", "clubName", "displayName"]) {
+      await expect(page.locator(`[name="${name}"]`)).toBeVisible();
     }
     const overflow = await page.evaluate(() => ({
       documentWidth: document.documentElement.scrollWidth,

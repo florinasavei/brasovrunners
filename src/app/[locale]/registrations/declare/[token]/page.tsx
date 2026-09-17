@@ -1,11 +1,10 @@
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
-import Checkbox from "@mui/material/Checkbox";
 import Container from "@mui/material/Container";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -18,7 +17,7 @@ import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { findRegistrationById } from "@/modules/registrations/repository";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
-import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
 
 type Props = {
@@ -141,10 +140,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   (BR-REQ-033-02 criterion 6). */}
               <input type="hidden" name="documentId" value={declaration?.id ?? ""} />
               <input type="hidden" name="contentSha256" value={declaration?.contentSha256 ?? ""} />
-              <FormControlLabel
-                control={<Checkbox name="accepted" required sx={CHECKBOX_TAP_TARGET} />}
-                label={t("declare.accept")}
-              />
+              <CheckboxField name="accepted" required>
+                {t("declare.accept")}
+              </CheckboxField>
               {/*
                 BR-REQ-031-04 criterion 6: the declaration is signed against the legal name,
                 not the display name, so the field says which one it wants. `autoComplete` is
