@@ -281,6 +281,8 @@
       "version": "version {version}",
       "liveWarning": "This event is published. Your changes become public the moment you save.",
       "acknowledgeLive": "I understand that I am editing published content.",
+      "acknowledgeLiveHint": "Tick that you understand you are changing published content to be able to save.",
+      "saving": "Saving…",
       "saveTranslation": "Save the text",
       "slugHelp": "The page address, in lowercase words joined by hyphens. It can only change before the first publication.",
       "slugLocked": "The page has been published, so its address stays as it is.",
@@ -415,6 +417,14 @@
       "immutabilityNotice": "An approved version is never edited and never deleted: participants signed exactly that text, and what the club published stays on the record. A correction is a new version. An unapproved draft can be deleted, because nobody has seen it.",
       "readOnlyNotice": "This version is approved, so its text is fixed: participants have relied on it. To change the wording, start the next version from this one — it opens prefilled, you edit, save the draft, read it and approve it. The old version stays exactly as it was.",
       "nextVersion": "Start the next version from this one",
+      "downloadPdf": "Download PDF ({locale})",
+      "pdf": {
+        "version": "Version {version}",
+        "effectiveFrom": "Effective from {date}",
+        "draftNotice": "DRAFT — unapproved version. The text below has no effect until it is approved and may still change.",
+        "generatedOn": "Generated on {date}",
+        "page": "Page {n} of {total}"
+      },
       "newFromIntro": "Prefilled from version {version}. Change what needs changing, save the draft, read it, then approve it. Version {version} stays as it is.",
       "backToList": "Back to legal documents",
       "noTranslations": "This version has no text yet.",

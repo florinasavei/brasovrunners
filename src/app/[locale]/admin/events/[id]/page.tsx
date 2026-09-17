@@ -37,6 +37,7 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
   deleteEventAction,
@@ -268,16 +269,24 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <Box component="section">
               <Divider sx={{ mb: 2 }} />
               {/* BR-REQ-051-01 criterion 4, once for the whole save now that there is one save.
-                  The service refuses the save if the event is published and this is not ticked, so
-                  the warning is binding rather than decorative. */}
+                  Binding three times over: `required`, so the browser refuses the submit and
+                  names the box; the dimmed button with its sentence, so the organizer sees why
+                  before pressing; and the service, which refuses a save of a published event
+                  without it whatever the browser did ("I shouldn't be able to save without
+                  ticking it" — the owner, 2026-09-17). */}
               {live && (
                 <Box sx={{ mb: 2 }}>
-                  <CheckboxField name="acknowledgeLiveEdit">{t("editor.acknowledgeLive")}</CheckboxField>
+                  <CheckboxField name="acknowledgeLiveEdit" required>
+                    {t("editor.acknowledgeLive")}
+                  </CheckboxField>
                 </Box>
               )}
-              <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>
-                {t("editor.save")}
-              </Button>
+              <SubmitButton
+                label={t("editor.save")}
+                pendingLabel={t("editor.saving")}
+                incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
+                size="medium"
+              />
             </Box>
           )}
         </Stack>

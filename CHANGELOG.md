@@ -8,6 +8,17 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.34-2026-09-17
+
+Two things the owner saw on his phone after `BR-V1.33` went to QA: the site down for the length
+of a build, and a header with room on it.
+
+- **A deployment never runs against the wrong schema.** `scripts/wait-for-migration.mjs` is the first step of `yarn build`: on a Vercel production deployment it polls the environment's database until the migration the build was compiled against is applied, then builds — it applies nothing, and a migration that never arrives fails the build and leaves the previous deployment serving. `yarn migrations:check`, in `yarn check`, refuses a migration that both expands and contracts, and a contract migration without a `-- contract:` line naming the release whose code stopped using what it drops. `migrate.yml` also fires on a push to `main`, held for the `production` reviewer, so the first production deployment is: merge, approve, done. `DECISIONS.md` §62; `AGENTS.md` §7.6; `docs/RUNBOOKS.md` § Deploy a release.
+- **The first section fits on the phone header, before the menu.** The language switcher stacks — the current language over the other, 22px each, the link's tap area extended to the full 44px — which is ~48px of width; the menu button is the ☰ glyph on a phone (its accessible name stays "Meniu"); the gaps tighten. `Evenimente ☰ RO/EN` fits at 320px, the header is 55px tall.
+- **A published event cannot be saved without the acknowledgement.** The "I understand I am changing published content" box is `required`, so the browser refuses the press and names the box; the save button dims and says so beneath itself (`SubmitButton`, as on the registration form); and the service still refuses without it whatever the browser did. Before, the refusal came back from the server as an error alert after the press.
+- **A legal document version downloads as a PDF.** One link per language on the version's page: the club's lockup, the title, the version and its effective date, a draft band when unapproved, the text, and on every page the name, the version, the content hash and the page number; the metadata carries the full hash. `pdfkit`, pinned, server only, with the site's Roboto embedded (the standard PDF fonts cannot spell ș or ț). Administrator only. BR-REQ-053-03; `DECISIONS.md` §63.
+- **Documents:** AGENTS.md §3.1, §7.6, §9.2, BUSINESS.md BR-BUS-053, SPECS.md BR-REQ-053-03, README, CLAUDE.md, docs/DEVELOPMENT.md, docs/RUNBOOKS.md, DECISIONS.md §62 and §63, and this file.
+
 ## BR-V1.33-2026-09-17
 
 The event model, by the owner's direction, in one sitting: what an event is and what it is run on

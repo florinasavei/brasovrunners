@@ -74,3 +74,41 @@ test.describe("legal documents: the next version starts from the current one", (
     await expect(page.locator('textarea[name="enBody"]')).not.toHaveValue("");
   });
 });
+
+/**
+ * BR-REQ-053-03 — a version can be downloaded as a PDF, in each language it has.
+ *
+ * The file itself is checked by the unit test; what only a browser can show is that the button
+ * on the version's page produces a download with the right name, that the response is a PDF,
+ * and that somebody below Administrator gets nothing from the address.
+ */
+test.describe("legal documents: a version downloads as a PDF", () => {
+  test("offers one download per language on the version page, and the file is a PDF", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/legal");
+    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):visible').first().click();
+    await expect(page).toHaveURL(/\/admin\/legal\/[0-9a-f-]{36}$/);
+
+    const download = page.waitForEvent("download");
+    await page.getByRole("link", { name: "Descarcă PDF (RO)" }).click();
+    const file = await download;
+    expect(file.suggestedFilename()).toMatch(/^[a-z_]+-v\d+-ro\.pdf$/);
+
+    // The same address, fetched: a PDF, and never cached by anything between here and there.
+    const id = page.url().match(/[0-9a-f-]{36}$/)?.[0];
+    const response = await page.request.get(`/api/admin/legal/${id}/pdf?locale=en`);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("application/pdf");
+    expect(response.headers()["content-disposition"]).toMatch(/-en\.pdf"$/);
+    expect((await response.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  });
+
+  test("refuses a Moderator, who may not read legal versions at all", async ({ page }) => {
+    await signIn(page, "Dev Moderator");
+    // Any well-formed id: the role is checked before the row is looked for (BR-REQ-060-01).
+    const response = await page.request.get(
+      "/api/admin/legal/00000000-0000-4000-8000-000000000000/pdf?locale=ro",
+    );
+    expect(response.status()).toBe(403);
+  });
+});

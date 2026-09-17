@@ -141,7 +141,9 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
       sx={{
         display: "flex",
         alignItems: "center",
-        gap: { xs: 1, sm: 2 },
+        // Tight on a phone: every pixel between the lockup and the language is a pixel of the
+        // first section, which the owner wants on the row before the menu ("mobile first").
+        gap: { xs: 0.5, sm: 2 },
         flexWrap: "nowrap",
         minWidth: 0,
         position: "relative",
@@ -184,6 +186,8 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
       <Box component="span" ref={moreRef} sx={overflow.length === 0 ? FOLDED : undefined}>
         <Button
           id="site-nav-more"
+          // The accessible name in every width; on a phone the visible label is the glyph.
+          aria-label={t("more")}
           aria-haspopup="menu"
           aria-expanded={anchor ? "true" : undefined}
           aria-controls={anchor ? "site-nav-more-menu" : undefined}
@@ -201,10 +205,27 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
             "&:hover": { color: "text.primary", bgcolor: "transparent" },
           }}
         >
-          {t("more")}
-          {/* A caret drawn with text: one glyph, no icon package (AGENTS.md §1.5). */}
-          <Box component="span" aria-hidden="true" sx={{ ml: 0.5, fontSize: "0.75em" }}>
+          {/*
+            "Meniu ▾" from `sm` up; on a phone the ☰ glyph alone, which is the convention there
+            and 40px narrower — the difference between the first section fitting on the row at
+            320px and not. Both drawn with text: no icon package (AGENTS.md §1.5).
+          */}
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+            {t("more")}
+          </Box>
+          <Box
+            component="span"
+            aria-hidden="true"
+            sx={{ ml: 0.5, fontSize: "0.75em", display: { xs: "none", sm: "inline" } }}
+          >
             ▾
+          </Box>
+          <Box
+            component="span"
+            aria-hidden="true"
+            sx={{ display: { xs: "inline", sm: "none" }, fontSize: "1.25em", lineHeight: 1 }}
+          >
+            ☰
           </Box>
         </Button>
       </Box>
@@ -252,7 +273,7 @@ function entrySx(current: boolean) {
     // BR-REQ-041-01 criterion 6: a target a thumb can hit, on the phone this site is mostly
     // read on.
     minHeight: 44,
-    px: 0.5,
+    px: { xs: 0.25, sm: 0.5 },
     color: current ? "text.primary" : "text.secondary",
     fontWeight: current ? 700 : 500,
     borderBottom: 2,
@@ -261,8 +282,8 @@ function entrySx(current: boolean) {
     "&::after": {
       content: '""',
       position: "absolute",
-      left: 4,
-      right: 4,
+      left: { xs: 2, sm: 4 },
+      right: { xs: 2, sm: 4 },
       bottom: -2,
       height: 2,
       bgcolor: "primary.main",

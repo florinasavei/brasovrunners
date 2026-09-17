@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.33-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.34-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -37,8 +37,9 @@ yarn typecheck    tsc --noEmit
 yarn test         unit and database tests; no database or Docker needed (PGlite)
 yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
-yarn check        docs:check + typecheck + lint + test; CI and the pre-commit hook run this
+yarn check        docs:check + migrations:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
+yarn migrations:check  a migration expands or contracts, never both (AGENTS.md §7.6)
 yarn db:migrate   apply migrations locally · db:seed sample events · db:studio browse
 yarn db:seed:legal  the sample legal documents alone; never deletes, safe on a live database
 yarn db:migrate:env  apply migrations to local|qa|production — the only supported way to

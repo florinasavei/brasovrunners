@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -305,6 +305,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 | MUI/Next | Official `@mui/material-nextjs` integration matching installed versions |
 | Editor | Tiptap open-source core |
 | Editorial storage | Validated Tiptap JSON; no arbitrary HTML |
+| PDF | `pdfkit`, pinned, server only, loaded by one module (`modules/legal-documents/pdf.ts`); text set in the site's Roboto from `src/theme/pdf/` (`DECISIONS.md` §63) |
 | Internationalization | `next-intl` |
 | Locales | `ro`, `en` |
 | Default locale | `ro` |
@@ -741,7 +742,8 @@ database fine.
   migrations before applying anything, refuses production without `--yes`, and exits non-zero
   on failure.
 - `.github/workflows/migrate.yml` runs it. QA applies automatically when a migration lands on
-  `qa`; production is a reviewed `workflow_dispatch`. It uses GitHub Environments rather than
+  `qa`; production applies when one lands on `main`, held for the environment's required
+  reviewer (`workflow_dispatch` remains for repairs). It uses GitHub Environments rather than
   repository secrets specifically because a required reviewer is the "gated" half of this
   section and a repository secret cannot provide one. GitHub environment names are
   case-insensitive: the workflow's `production` is the `Production` environment Vercel's GitHub
@@ -751,14 +753,23 @@ database fine.
   deployment ends with it. "The build went green" and "the site works" are different statements.
 
 **Ordering, and why expand/contract is not optional here.** A push to `qa` starts the Vercel
-build and the migration at the same moment, so for a few seconds the deployed code and the
-schema disagree. That window is harmless for an additive migration and guaranteed breakage for a
-destructive one, which is what "use expand/contract when app/schema overlap is possible" means in
-practice:
+build and the migration at the same moment. Two mechanisms make the order irrelevant
+(`DECISIONS.md` §62, after the one-file migration `0023` took QA down for the length of a build):
 
-- a migration that only **adds** may ship in the same release as the code that uses it;
-- a migration that **drops or renames** ships in the release *after* the code that stopped
-  using the old shape. The drop is its own migration, in its own pull request.
+- **the build waits for the database.** `scripts/wait-for-migration.mjs` runs first in
+  `yarn build` and, on a production deployment, polls the environment's database until the
+  journal head the build was compiled against is applied. It applies nothing — "no migration
+  from a build" stands — and a migration that never arrives fails the build, which leaves the
+  previous deployment serving. New code therefore never runs against an old schema;
+- **expand and contract never share a migration**, enforced by `yarn migrations:check` in
+  `yarn check`. A migration that only **adds** (table, type, column, index, value, constraint,
+  backfill) ships with the code that uses it. A migration that **drops, renames, changes a
+  type or makes an existing column NOT NULL** ships in the release *after* the code stopped
+  using the old shape, alone in its file, with a `-- contract:` line naming that release. Old
+  code — still serving while the migration runs — therefore never loses what it reads.
+
+`migrate.yml` runs on a push to `qa` unattended and on a push to `main` behind the
+`production` environment's required reviewer; `workflow_dispatch` remains for repairs.
 
 **Drift is detected, not assumed.** `next.config.ts` inlines the journal's head into the build,
 and `/api/health` compares it with what the database records as applied: `behind` is reported as
@@ -939,6 +950,10 @@ Non-human routes are unprefixed:
 /api/internal/jobs/email-outbox
 /api/internal/jobs/registration-maintenance
 /api/health
+/api/admin/registrations/export   the CSV (§15.10); Administrator only
+/api/admin/legal/[id]/pdf         a legal document version as a PDF, one language per
+                                 request (BR-REQ-053-03); Administrator only; a GET that
+                                 writes the file into the response and nowhere else
 ```
 
 `/login` is an alias, not a route: the proxy redirects it to the sign-in path — unprefixed, so

@@ -77,6 +77,18 @@ const nextConfig: NextConfig = {
   // Nothing host-specific belongs here. The app must run with `yarn build && yarn start`
   // on any Node host honouring PORT (BR-REQ-101-01); Vercel is an adapter, not a dependency.
 
+  /**
+   * The legal-document PDF (`modules/legal-documents/pdf.ts`). `pdfkit` is left as a real
+   * package rather than bundled, and the two Roboto weights and the logo it reads from
+   * `src/theme/pdf/` are traced into the route's serverless function explicitly — a file read
+   * with `fs` at runtime is invisible to the bundler, and a function shipped without its font
+   * renders nothing. Only that route pays for any of it.
+   */
+  serverExternalPackages: ["pdfkit"],
+  outputFileTracingIncludes: {
+    "/api/admin/legal/**": ["./src/theme/pdf/*"],
+  },
+
   // `next dev` otherwise appends a block to AGENTS.md and re-adds it on every run.
   // AGENTS.md is one of the six synchronized root documents: it carries the baseline marker,
   // docs:check verifies it, and AGENTS.md §1.4 governs who may edit it. A tool rewriting it

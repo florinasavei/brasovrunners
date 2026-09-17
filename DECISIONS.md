@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3592,3 +3592,137 @@ The alternatives and the Cloudflare box are gone; they are this file's, and a re
 start here anyway.
 
 Baseline `BR-V1.33-2026-09-17`.
+
+## 62. Decided — a deployment never runs against the wrong schema: the build waits, and expand and contract never share a file (2026-09-17)
+
+**Status:** Decided and built, after QA went down for the length of a build the same afternoon.
+Changes the mechanism half of `AGENTS.md` §7.6 and `docs/RUNBOOKS.md` § Deploy a release; adds
+`scripts/wait-for-migration.mjs`, `scripts/migration-check.mjs` and `yarn migrations:check`;
+`migrate.yml` now also fires on a push to `main`. The owner's instruction: "we need to prevent
+this from ever happening".
+
+### What happened
+
+PR #40 landed on `qa` with migration `0023`, which added `type` and `surface`, converted every
+row, and dropped `kind` — in one file, at the owner's request, and §61 recorded why that was
+tolerable: "the seconds between the migration finishing and the build going live serve 500s".
+The migration finished at 17:25:00Z in 25 seconds. The build took longer. For that gap the old
+code selected `events.kind` from a table that no longer had it, and every public page answered
+500. Tolerable on paper; not to the person who opened the site.
+
+The order could have gone the other way and been no better. A push to `qa` starts the Vercel
+build and `migrate.yml` at the same moment, and §7.6 said so, then asked people to keep the
+overlap harmless by hand: adds now, drops later. That is a rule with nothing enforcing it, and
+§61 is what a rule with nothing enforcing it looks like on a day somebody has a reason.
+
+### Two mechanisms, one per direction
+
+**New code never meets an old schema: the build waits.** `scripts/wait-for-migration.mjs` is the
+first step of `yarn build`. On a Vercel production deployment (`VERCEL_ENV=production`, which is
+the `qa` branch on the QA project and `main` on the production project) it reads the journal
+head the build is about to be compiled against and polls Drizzle's bookkeeping table in the
+environment's own database — the same comparison `/api/health` makes — until the database is at
+or beyond it. Then, and only then, `next build`. It **applies nothing**: "no migration from a
+build" (§7.6, and the runbook's must-never list) is untouched, because the thing that was wrong
+with migrating from a build — a destructive change running because somebody triggered a
+deployment — is not what waiting does. A migration that never arrives fails the build after
+`MIGRATION_WAIT_MINUTES` (20) and Vercel keeps the previous deployment serving, which is the safe
+state. Locally and on previews it exits immediately. The common case, a build with no migration,
+costs one query.
+
+**Old code never loses what it reads: expand and contract never share a migration.**
+`scripts/migration-check.mjs`, in `yarn check` and therefore in CI and the pre-commit hook,
+classifies every migration from `0024` on. A file that adds — table, type, column, index, enum
+value, constraint, backfill — may not also drop, rename, change a type, or make an existing
+column NOT NULL. A file that does any of those must carry a `-- contract:` line naming the
+release whose code stopped using what it removes, so the author answers that question before
+CI does. `0023` is left as it is and is the test's example of what is refused.
+
+Together: the migration runs while the old code serves, and the old code does not care,
+because an expand migration takes nothing away; the new code goes live only once the schema is
+there, because the build waited. There is no window in either order.
+
+### Production
+
+`migrate.yml` now runs on a push to `main` as well, targeting the `production` environment, whose
+required reviewer holds the run until the owner approves it. The production build is waiting
+for that click. That is the same gate §31 set up, reached by a merge rather than by a
+`workflow_dispatch` somebody has to remember — and the first production deployment loses a
+step: merge the release PR, approve the run, done (`docs/RUNBOOKS.md` § The first production
+deployment). Approve within the wait, or the build fails safe and a redeploy after the green run
+finishes the job.
+
+### What was considered and not done
+
+- **Migrating from the build command.** The vibe-friendliest shape — merge is the whole
+  deploy — and the one the runbook forbids by name. It also does not fix the incident: the
+  migration would run at the *start* of the build, and the old code would serve the dropped
+  column for the build's whole duration. Waiting fixes the ordering without touching the rule.
+- **Building in GitHub Actions and promoting with `vercel deploy --prebuilt`** after the
+  migration. Correct, and heavier: a Vercel token, a workflow that owns deployment, and the
+  Git integration switched off for two branches. The wait script gets the same guarantee from
+  one file and no new secret.
+- **Enforcing "the drop ships in the release after" mechanically.** A script cannot see releases.
+  The `-- contract:` line is the forcing function: a drop has to be written down as later than
+  something, and the reviewer can read whether that is true.
+
+Baseline `BR-V1.34-2026-09-17`.
+
+## 63. Decided — a legal document version downloads as a PDF, rendered by `pdfkit` from the stored text (2026-09-17)
+
+**Status:** Decided and built. Adds BR-REQ-053-03, one dependency (`pdfkit`, pinned), one route
+(`/api/admin/legal/[id]/pdf`), and three assets under `src/theme/pdf/`. The owner's words: "I
+should have the BVR logo in the participation declaration PDF, and the document's version — and
+be able to generate and download a PDF for preview."
+
+### What it is, and what it is not
+
+A **rendering** of a legal document version — the same rows the public page reads, the same
+content hash — as a file: the club's lockup, the title, "Version n · Effective from <date>", a
+draft band when the version is unapproved, the sections, and on every page the club's name, the
+version, the hash's first sixteen characters and "Page n of N". The metadata carries the full
+hash, so the file says what it is without being opened. Downloaded from the version's page in the
+backoffice, one link per language, Administrator only.
+
+It is **not** a place legal text is written (`AGENTS.md` §11.1 stands), not the signed
+declaration §56 sketches (that is a participant's acceptance rendered with their name, and it
+waits on the decisions §56 lists), and not public. But it is the renderer that one would use:
+the module takes a version and a set of labels and returns bytes, so a per-participant copy is
+one more caller, not a second PDF stack.
+
+### The dependency, argued for (`AGENTS.md` §1.5)
+
+Prefer nothing: a PDF cannot be written by hand in any quantity of code worth maintaining.
+Then the platform: there is none — a browser's print-to-PDF needs a browser, and a headless
+Chromium is a 50 MB binary a serverless function cannot carry. Then what is installed: nothing
+writes PDF. So one library, and the choice among them:
+
+- **`pdfkit`** (chosen): pure JavaScript, no native binary, text wrapping and page breaks built
+  in, TrueType embedding built in, `bufferPages` for page numbers, PNG images. Maintained.
+  Loaded by exactly one server module; no visitor pays a byte for it.
+- `pdf-lib`: lighter and pure, but no text wrapping — every line break would be ours to compute
+  — and no maintained release since 2021.
+- `@react-pdf/renderer`: JSX for documents, which is legible, and a layout engine, a bundling
+  story with Next that needs care, and several times the size, for a document that is headings
+  and paragraphs.
+
+### The font is embedded and is the site's own
+
+PDF's fourteen standard fonts cannot encode ș, ț, ă, â or î, so any Romanian document needs an
+embedded TrueType face. Two static weights of **Roboto** — the site's body face — subset to
+Latin Extended, 47 kB each, SIL OFL, licence beside them in `src/theme/pdf/`. The lockup is the
+same artwork as the header, rasterised once to a 1200px transparent PNG (46 kB), because PDF
+images are bitmaps. `pdfkit` is given the font buffer as its default, so it never loads
+Helvetica and never reads a metrics file from disk. `next.config.ts` keeps `pdfkit` a real
+package (`serverExternalPackages`) and traces `src/theme/pdf/*` into the route's function
+(`outputFileTracingIncludes`): a file read with `fs` at runtime is invisible to the bundler, and
+a function shipped without its font renders nothing.
+
+### Colours and words come from where they already live
+
+The PDF uses `COLOR` from `theme/brand.ts` — the one file allowed a hex value — and the draft
+band is the secondary orange at 14% rather than a new tint. Every label arrives translated from
+the catalogue in the **document's** language, not the reader's: a Romanian declaration
+downloaded from the English backoffice is still a Romanian document.
+
+Baseline `BR-V1.34-2026-09-17`.

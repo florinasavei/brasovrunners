@@ -19,6 +19,15 @@ export type LegalDocumentBody = {
   sections: readonly LegalDocumentSection[];
 };
 
+/** Is a stored `body_json` the shape above? Shared by the page and the PDF, so they agree. */
+export function isLegalDocumentBody(value: unknown): value is LegalDocumentBody {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Array.isArray((value as { sections?: unknown }).sections)
+  );
+}
+
 export type LegalDocumentTranslationInput = {
   locale: Locale;
   title: string;

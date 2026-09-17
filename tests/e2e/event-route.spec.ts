@@ -120,8 +120,14 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.goto(editorUrl);
     await page.locator('[name="event.routeUrl"]').fill("");
     // The event is published now, so the save carries the live-edit acknowledgement for the
-    // whole form (BR-REQ-051-01 criterion 4).
-    await page.locator('[name="acknowledgeLiveEdit"]').check();
+    // whole form (BR-REQ-051-01 criterion 4) — and cannot be sent without it: the box is
+    // required, the button says so beneath itself, and a press is refused by the browser.
+    const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
+    await expect(page.getByText("Bifează că ai înțeles că modifici conținut publicat")).toBeVisible();
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    expect(await acknowledge.evaluate((el) => (el as HTMLInputElement).checkValidity())).toBe(false);
+    await expect(page).not.toHaveURL(/saved=event/);
+    await acknowledge.check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 
