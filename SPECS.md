@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1159,6 +1159,27 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 14. Given an approved version, when withdrawing its approval is attempted, then there is no such operation: `DECISIONS.md` §53 records that a declaration is bound to the participant at submission rather than at render, so changing which version is current would let somebody sign text they never read.
 
 **Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`
+
+#### BR-REQ-053-03 — A legal document version downloads as a PDF
+
+- **Source:** BR-BUS-053
+- **Implements:** AGENTS.md §12.5, §9.2
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built (`DECISIONS.md` §63). A rendering of a stored version — never a source of
+  text — for the owner to read on paper, send to the club's adviser, or file.
+
+**Acceptance criteria**
+
+1. Given an Administrator on a version's page, when it renders, then it offers one download per language the version has, as a plain link to `GET /api/admin/legal/<id>/pdf?locale=<locale>` that works with JavaScript off.
+2. Given that request, when it is answered, then the response is `application/pdf`, named `<key>-v<version>-<locale>.pdf`, not cached, and nothing was written anywhere but the response.
+3. Given the file, when it is opened, then it carries the club's lockup, the version's title, its version number and effective date, and the text — headings and paragraphs as stored — with the club's name, the version, the content hash and the page number on every page; the metadata names the version and the full hash.
+4. Given an unapproved version, when its PDF renders, then a band under the title says it is a draft with no effect; an approved version carries no such band.
+5. Given the text, when it is set, then it is set in the site's own font with every Romanian diacritic, embedded in the file — the standard PDF fonts cannot spell ș or ț.
+6. Given a role below Administrator, or no session, when the address is requested, then it is refused (403, 401) before any row is read.
+7. Given the words on the file — "Version", "Effective from", the draft notice, "Page n of N" — when they render, then they are in the document's language, not the backoffice reader's.
+
+**Verification:** unit `legal-documents/pdf.test.ts`; e2e `legal-versions.spec.ts`
 
 ### 4.10 Transactional email
 

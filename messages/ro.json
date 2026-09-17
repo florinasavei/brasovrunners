@@ -281,6 +281,8 @@
       "version": "versiunea {version}",
       "liveWarning": "Evenimentul este publicat. Modificările devin publice în momentul salvării.",
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
+      "acknowledgeLiveHint": "Bifează că ai înțeles că modifici conținut publicat ca să poți salva.",
+      "saving": "Se salvează…",
       "saveTranslation": "Salvează textul",
       "slugHelp": "Adresa paginii, în cuvinte mici legate prin liniuțe. Se poate schimba doar înainte de prima publicare.",
       "slugLocked": "Pagina a fost publicată, așa că adresa rămâne neschimbată.",
@@ -415,6 +417,14 @@
       "immutabilityNotice": "O versiune aprobată nu se mai modifică și nu se mai șterge: participanții au semnat exact acel text, iar ce a publicat clubul rămâne în evidență. O corectură înseamnă o versiune nouă. O ciornă neaprobată se poate șterge, pentru că nimeni nu a văzut-o.",
       "readOnlyNotice": "Această versiune este aprobată, așa că textul ei este fix: participanții s-au bazat pe el. Ca să schimbi formularea, pornește versiunea următoare din aceasta — se deschide precompletată, editezi, salvezi ciorna, o citești și o aprobi. Versiunea veche rămâne exact cum a fost.",
       "nextVersion": "Pornește versiunea următoare din aceasta",
+      "downloadPdf": "Descarcă PDF ({locale})",
+      "pdf": {
+        "version": "Versiunea {version}",
+        "effectiveFrom": "În vigoare din {date}",
+        "draftNotice": "CIORNĂ — versiune neaprobată. Textul de mai jos nu are efect până la aprobare și poate fi încă modificat.",
+        "generatedOn": "Generat pe {date}",
+        "page": "Pagina {n} din {total}"
+      },
       "newFromIntro": "Precompletat din versiunea {version}. Schimbă ce trebuie schimbat, salvează ciorna, citește-o, apoi aprob-o. Versiunea {version} rămâne neschimbată.",
       "backToList": "Înapoi la documentele legale",
       "noTranslations": "Această versiune nu are încă niciun text.",

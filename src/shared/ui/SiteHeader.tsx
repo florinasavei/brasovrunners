@@ -124,13 +124,15 @@ export default async function SiteHeader() {
            *
            * Phones wrapped until later the same day, the sections on a second row under the
            * lockup: "on mobile we have to be more efficient — the logo and the navbar must fit on
-           * one row". They do now, because the nav measures itself: at 320px only the "Meniu"
-           * button is left on the row and every section is inside it; a wider phone keeps the
-           * first section beside the button. Nothing overflows — the nav shrinks to zero before
-           * the row does (BR-REQ-041-01 criterion 1) — and the header is 52px instead of 112px.
+           * one row". They do now, because the nav measures itself and folds the rest into its
+           * menu. And the first section stays on the row even at 320px ("at least one item
+           * before the menu — mobile first"): the language switcher stacks RO over EN on a
+           * phone, the menu button is the ☰ glyph there, and the gaps tighten, which together
+           * buy the ~100px "Evenimente" needs. Nothing overflows — the nav shrinks before the
+           * row does (BR-REQ-041-01 criterion 1) — and the header is 60px instead of 112px.
            */
           flexWrap: "nowrap",
-          gap: 1,
+          gap: { xs: 0.5, sm: 1 },
           py: { xs: 0.5, sm: 1 },
         }}
       >
@@ -174,7 +176,7 @@ export default async function SiteHeader() {
             flexGrow: 1,
             minWidth: 0,
             flexShrink: 1,
-            ml: { xs: 1, sm: 2 },
+            ml: { xs: 0.5, sm: 2 },
           }}
         >
           <SiteNav pages={pages.map((page) => ({ slug: page.slug, title: page.title }))} />

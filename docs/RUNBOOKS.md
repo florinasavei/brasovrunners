@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -537,25 +537,37 @@ Related: `AGENTS.md` §6.3, §6.4, §7.6; `DECISIONS.md` §31.
 
 ### The rule that prevents the incident
 
-A push to `qa` starts the Vercel build and the migration workflow at the same moment. For a few
-seconds the deployed code and the schema disagree. So:
+A push to `qa` starts the Vercel build and the migration workflow at the same moment. Two things
+keep the deployed code and the schema from ever disagreeing (`DECISIONS.md` §62):
+
+1. **The build waits for the migration.** `scripts/wait-for-migration.mjs` is the first step of
+   `yarn build`: on a production deployment it polls the environment's database until the
+   migration the build was compiled against is applied, then builds. New code never goes live
+   against an old schema. It applies nothing itself. If the migration never comes — it failed,
+   or on production nobody approved it — the build fails after `MIGRATION_WAIT_MINUTES` (20)
+   and the previous deployment keeps serving.
+2. **Expand and contract never share a migration**, and `yarn migrations:check` refuses one that
+   does. While the migration runs and until the new build is live, the *old* code is serving, and
+   a drop it still reads breaks it for exactly that long — which is what happened on 2026-09-17.
 
 | The migration | Ships |
 | --- | --- |
-| Adds a column, table, index or constraint | In the same release as the code that uses it |
-| Drops or renames anything | In the release **after** the code that stopped using it, as its own migration and its own pull request |
+| Adds a column, table, index, value or constraint, or backfills | In the same release as the code that uses it |
+| Drops, renames, changes a type, or makes an existing column NOT NULL | In the release **after** the code that stopped using it, as its own migration, with a `-- contract:` line naming that release |
 
-That is `AGENTS.md` §7.6's expand/contract rule, stated as the thing you actually decide. Get it
-right and the overlap window is harmless; get it wrong and the site returns 500 for as long as
-the two disagree.
+That is `AGENTS.md` §7.6's expand/contract rule, stated as the thing you actually decide, and the
+check is what makes deciding it wrong impossible to merge.
 
 ### Deploying to QA
 
-1. **Merge the pull request into `qa`.** Vercel builds; if the change touched
-   `src/db/migrations/**`, `.github/workflows/migrate.yml` applies it to the QA database at the
-   same time.
+1. **Merge the pull request into `qa`.** That is the whole of it. If the change touched
+   `src/db/migrations/**`, `.github/workflows/migrate.yml` applies it to the QA database, and
+   the Vercel build waits for it before building, so the new code goes live only once the
+   schema is there.
 2. **Watch the migrate run** if there was one. It prints the target host, the pending
-   migrations, and the head it finished on. A failure exits non-zero and the run is red.
+   migrations, and the head it finished on. A failure exits non-zero, the run is red, and the
+   build fails twenty minutes later with a message naming the migration — the previous
+   deployment keeps serving throughout.
 3. **Smoke it.** The workflow does this automatically where the environment has an
    `APP_BASE_URL` secret; do it by hand otherwise:
 
@@ -566,9 +578,9 @@ the two disagree.
    `ok` is what you want. `degraded` immediately after a deploy is normal — the scheduled jobs
    tick every five minutes and report as stale until the first one lands. Anything else, read
    the report: it names which of the database, the schema and the jobs is unhappy.
-4. **If the schema is behind**, the smoke output says so and names the migration. Run the
-   migrate workflow for `qa` from the Actions tab, then smoke again. This is the state that used
-   to present as an unexplained 500 on the landing page.
+4. **If the schema is behind**, the smoke output says so and names the migration. It should no
+   longer happen — the build waits — but a migration applied by hand to the wrong database
+   would produce it. Run the migrate workflow for `qa` from the Actions tab, then redeploy.
 
 ### Deploying to production
 
@@ -579,8 +591,11 @@ half of it.
 2. **Open the `qa → main` release PR.** Review the complete diff *and the migration plan* — the
    pending list the QA run printed is that plan.
 3. **Merge with a merge commit.** Do not squash: §6.4 preserves ancestry.
-4. **Run the migrate workflow manually**, choosing `production`. It waits for the environment's
-   required reviewer. Production is never migrated by a push.
+4. **Approve the migrate run in the Actions tab** if the release carries a migration: the push
+   to `main` starts it, the `production` environment holds it for its required reviewer, and
+   the Vercel build is waiting for it. Approve within twenty minutes; the build then proceeds by
+   itself. Miss the window and the build fails, the old deployment keeps serving, and a
+   redeploy from the Vercel dashboard (or an empty commit) after the run is green finishes it.
 5. **Smoke production**, and this time without `--allow-degraded` once the schedulers have had a
    tick.
 
@@ -594,18 +609,13 @@ PR. In this order — the order matters more than any one step:
    project's `DATABASE_URL`; its direct URL is the GitHub `production` environment's
    `DATABASE_URL`; the environment has a required reviewer and a `main`-only branch policy.
 2. **Open and merge the `qa → main` release PR** (`AGENTS.md` §6.4, merge commit, never squash).
-   Vercel builds `main` on the production project the moment it lands. That deployment answers
-   `down` on `/api/health` — schema behind — until step 3, and nothing points at the hostname yet,
-   so that is acceptable exactly once.
-3. **Run the migrate workflow for `production`, from `main`** — the branch policy refuses any
-   other ref, and `migrate.yml` does not exist on `main` until the release PR lands:
-
-   ```bash
-   gh workflow run migrate.yml --ref main -f environment=production
-   ```
-
-   Approve it in the Actions tab — the required reviewer is the owner. The run prints the pending
-   list, applies it, and smokes the provider hostname with `--allow-degraded`.
+   The push to `main` starts two things: the Vercel build, which waits for the database, and
+   the migrate run, which waits for you.
+3. **Approve the migrate run in the Actions tab** — the required reviewer is the owner. The run
+   prints the pending list (the whole chain, on a database that has never been migrated),
+   applies it, and smokes the provider hostname with `--allow-degraded`; the build then
+   proceeds on its own. If the release PR somehow landed without the workflow file, the manual
+   form still works: `gh workflow run migrate.yml --ref main -f environment=production`.
 4. **Insert the first Administrator's `staff_users` row by hand** (§ Staff sign-in above): one
    row, the address lowercased, role `ADMIN`. There is no other way in.
 5. **Wire the scheduler:** the two repository secrets `PRODUCTION_APP_BASE_URL` and
@@ -634,7 +644,8 @@ It prints what it will do before it does it. `production` additionally requires 
 ### What must never happen
 
 - Migrating from the Vercel build command or from application startup (`AGENTS.md` §7.6). A
-  destructive migration must never run because somebody requested a page.
+  destructive migration must never run because somebody requested a page. The build *waits*
+  for a migration (`scripts/wait-for-migration.mjs`); it never applies one.
 - A drop shipped in the same release as the code change that made it possible.
 - A deployment finished without a smoke check. "The build went green" is not "the site works".
 - `yarn db:seed` against a deployed database: it deletes every event and translation before

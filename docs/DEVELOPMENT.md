@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # Running this locally
 
-**Baseline `BR-V1.33-2026-09-17`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
+**Baseline `BR-V1.34-2026-09-17`** · [agent entry point](../CLAUDE.md) · [pilot scope](../WEEKEND.md)
 
 Everything here is a command that exists today. If a command is in this file it is in
 `package.json`; if it is not, it has not been built yet.
@@ -100,6 +100,7 @@ yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn typecheck           tsc --noEmit
 yarn lint                ESLint
 yarn docs:check          documentation consistency
+yarn migrations:check    a migration expands or contracts, never both (AGENTS.md §7.6)
 yarn db:generate         regenerate migrations after editing src/db/schema/
 yarn db:migrate          apply migrations
 yarn db:studio           browse the database

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.33-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.33-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -85,6 +85,8 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/email-probe.ts`](./scripts/email-probe.ts) | `yarn email:probe [--fail] <address>` — sends one message through the real Mailgun adapter, to an address typed on the command line. Exercises the provider half of `AGENTS.md` §16 (key, region, sending domain, and the transient/permanent mapping) without going near the outbox |
 | [`scripts/bind-domain.mjs`](./scripts/bind-domain.mjs) | `yarn domain:bind <qa\|production> <domain> [--alias-of <canonical>] [--apply]` — the scriptable half of `docs/RUNBOOKS.md` § Domain binding, through `vercel api`: adds the hostnames to that environment's own Vercel project, redirects `www` to the apex, sets `APP_BASE_URL` for a canonical domain or a permanent redirect for a second one, prints the DNS records to create and the consoles a machine must not touch. Dry run unless `--apply` |
 | [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
+| [`scripts/wait-for-migration.mjs`](./scripts/wait-for-migration.mjs) | First step of `yarn build`: on a Vercel production deployment, waits until the environment's database has applied the migration the build was compiled against, so new code never goes live against an old schema. Applies nothing (`AGENTS.md` §7.6, `DECISIONS.md` §62) |
+| [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; runs in `yarn check` (`AGENTS.md` §7.6) |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
 | [`scripts/db-reset-local.mjs`](./scripts/db-reset-local.mjs) | `yarn db:reset:local`: drops both schemas, migrates and seeds; refuses any non-local database |
@@ -586,6 +588,7 @@ yarn test:concurrency
 yarn test:e2e
 yarn check
 yarn docs:check
+yarn migrations:check
 yarn db:generate
 yarn db:migrate
 yarn db:seed
