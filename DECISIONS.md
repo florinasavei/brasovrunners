@@ -3789,3 +3789,58 @@ reprinting everything.
 
 **Audit.** One row per batch, about the event, with the range — never about a participant;
 `entity_type` gains `event` for it. Baseline `BR-V1.34-2026-09-17`.
+
+## 66. Decided — the gallery arrives as the small version: albums, two WebP variants, R2 through the §17 adapter, shrunk in the browser (2026-09-17)
+
+**Status:** Decided and built. BR-REQ-054-01; migration `0025`; `modules/media/{storage,images}.ts`,
+`modules/content/gallery/*`; `/galerie`, `/admin/gallery`; `STORAGE_MODE` derived in `env.ts`.
+The owner's words: "the photo gallery must be super light, an admin section, and let's not leave
+photos lying around on Vercel taking up space."
+
+### Why now, and why this shape
+
+The M5 media library — a picker for every content type, captions, the Tiptap image node — is
+still M5. What the club needs this season is an album per event that a phone can fill and a
+page can show, and that is a subset with a clean edge: `media_assets`, `gallery_albums`, their
+translations and `gallery_items`, in the shape §12.10 named, with `gallery_item_translations`
+left for the captions M5 will add. The editorial workflow, the version guard, the two-locale rule
+and the stable slug are the standing pages' verbatim; the one gallery rule added is that an album
+with no photo cannot be published.
+
+### "Super light" is three decisions
+
+1. **The original is never stored.** The browser shrinks each photo to 2000px WebP before it
+   leaves the phone — a client island that earns its place (§1.5): there is no server-only way to
+   make a file smaller before it is sent, the platform accepts 4.5 MB a request, and a bucket of
+   originals is twenty times a bucket of what the site shows. The server then re-encodes what
+   arrives into `web` (≤1600px) and `thumb` (≤480px), both WebP, with `sharp` — already on the
+   machine as Next's own image dependency, now pinned. `.rotate()` first, so a portrait photo is
+   upright; then nothing kept, so every EXIF field goes, the GPS position included (§17, §19.2).
+2. **Cloudflare serves the photos, never a function.** `R2_PUBLIC_BASE_URL` is the read side —
+   the bucket's `r2.dev` subdomain to start — and egress there is free. Keys are opaque and
+   prefixed with the environment, so QA and production share one bucket without seeing each
+   other, and nothing is listable.
+3. **No lightbox, no script on the public page.** A thumbnail is a link to the larger variant;
+   the back button returns. Every image carries its dimensions so the grid does not jump.
+
+### The adapter, and the fourth state
+
+§17's narrow adapter, three methods — `put`, `delete`, `publicUrl`; metadata is the row's — over
+R2's S3 API (`@aws-sdk/client-s3`, pinned; the S3 endpoint is configuration because §8 forbids
+assembling a hostname), a local directory, or memory, chosen by `STORAGE_MODE`. The mode is
+**derived**, never set: `local` on a laptop, `fake` under test, `r2` when the five variables are
+all present, and `unconfigured` when a deployed environment has not got them yet. That last
+state is the point: QA and production boot without a bucket, refuse an upload with a sentence,
+and `/admin/tasks` lists the bucket as an open task with the steps — read from the environment,
+not ticked by hand (§61). `R2_ACCOUNT_ID` in §8's contract became `R2_ENDPOINT`: the endpoint is
+what the client needs, and the account id was only ever a way to assemble it.
+
+### Deletions delete objects
+
+A photo removed is its rows, then its two objects; an album removed is every photo's. Rows first
+and objects after, deliberately: an object without a row is a cost nobody notices, a row without
+an object is a broken image somebody does. `sharp`'s check of the bytes stands whatever the
+client claimed, SVG refused outright (§17: a document that can carry script needs its own
+sanitizer before it may be served).
+
+Baseline `BR-V1.34-2026-09-17`.

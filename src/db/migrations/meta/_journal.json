@@ -176,6 +176,13 @@
       "when": 1789670326616,
       "tag": "0024_registration_bib_numbers",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789672576761,
+      "tag": "0025_gallery",
+      "breakpoints": true
     }
   ]
 }

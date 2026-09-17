@@ -427,7 +427,7 @@ MAILGUN_DOMAIN
 MAILGUN_WEBHOOK_SIGNING_KEY
 STORAGE_MODE
 JOB_SCHEDULER_ALLOWED
-R2_ACCOUNT_ID
+R2_ENDPOINT
 R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET
@@ -1569,16 +1569,19 @@ even on the free plan. Nothing is charged inside the allowance.
 2. **Enable R2.** Left menu → R2 Object Storage → "Purchase R2" (the free plan; this is where the
    card is asked for).
 3. **Bucket.** Create bucket → name `brasovrunners-media`, location hint **European Union** —
-   the participants' photos stay in the EU like everything else. Leave public access **off**:
-   the site serves images through its own URL, never a public bucket.
+   the photos stay in the EU like everything else. Then Settings → **Public access**: enable the
+   `r2.dev` subdomain (or connect a custom domain) and copy the public URL — that is
+   `R2_PUBLIC_BASE_URL`. Reads are public because the gallery is; writes only ever go through
+   the token below, and keys are opaque, so nothing is listable or guessable.
 4. **Token.** R2 → "Manage R2 API Tokens" → Create API token → name `brasovrunners-site`,
    permission **Object Read & Write**, scoped to that one bucket, no TTL. Copy the **Access Key
    ID**, the **Secret Access Key** and the **endpoint** (`https://<account id>.r2.cloudflarestorage.com`)
    before closing — the secret is shown once.
 5. **Hand over.** Paste into `.env.local` as a commented block, exactly as the other providers'
-   values are kept there (§3): the account id, the access key id, the secret, the bucket name.
-   The five `R2_*` variables of `AGENTS.md` §8 are declared in `env.ts` by the gallery pull
-   request, which also sets them on both Vercel projects.
+   values are kept there (§3): the S3 endpoint, the access key id, the secret, the bucket name
+   and the public URL — the five `R2_*` variables of `AGENTS.md` §8 — then set the same five on
+   both Vercel projects (`vercel env add`) and redeploy. `/admin/tasks` turns its storage row
+   green and the album page gets its upload button.
 
 Production and QA share one bucket with a per-environment prefix (`qa/`, `production/`) until
 a second bucket is worth a second token; the adapter takes the prefix from configuration.

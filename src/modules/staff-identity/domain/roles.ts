@@ -247,6 +247,7 @@ export function canManageStaff(role: StaffRole): boolean {
 export const ADMIN_SECTIONS = [
   "events",
   "pages",
+  "gallery",
   "registrations",
   "tasks",
   "legal",
@@ -260,7 +261,7 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     "events" as const,
     // Standing pages are editorial control of what the club says about itself, so the same
     // roles that configure an event write them (BR-REQ-050-03).
-    ...(isEditorial(role) ? (["pages"] as const) : []),
+    ...(isEditorial(role) ? (["pages", "gallery"] as const) : []),
     ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
     // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
     ...(canManageRegistrations(role) ? (["tasks"] as const) : []),

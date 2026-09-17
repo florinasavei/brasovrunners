@@ -806,7 +806,7 @@ EMAIL_ALLOWLIST
 MAILGUN_API_KEY
 MAILGUN_DOMAIN
 MAILGUN_WEBHOOK_SIGNING_KEY
-R2_ACCOUNT_ID
+R2_ENDPOINT
 R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET
@@ -832,7 +832,12 @@ Rules:
   CDNs, and anything the club could plausibly host are never exempt;
 - cookies are host-only, with no `domain` attribute set, so a hostname change breaks nothing;
 - CSP, CORS, and redirect allowlists read from configuration, never from a literal;
-- `R2_PUBLIC_BASE_URL` is configuration; start on the R2 development subdomain;
+- the five `R2_*` variables are the photo bucket (§17, BR-REQ-054-01). `R2_ENDPOINT` is the
+  bucket's S3 endpoint and `R2_PUBLIC_BASE_URL` where its objects are read — its `r2.dev`
+  subdomain to start with — both configuration because neither hostname may be assembled in
+  `src/`. All five or none: `STORAGE_MODE` derives `local` on a laptop, `fake` in tests,
+  `r2` when the five exist and `unconfigured` otherwise, and a deployed environment in the
+  last state boots, refuses uploads with a sentence and shows the task on `/admin/tasks`;
 - production rejects localhost/non-production identifiers;
 - QA rejects known production identifiers/live email;
 - do not invent Auth.js provider variable names; use installed official contract;
@@ -957,6 +962,11 @@ Non-human routes are unprefixed:
 /api/admin/events/[id]/bibs       the event's race numbers as a printable sheet, all or a
                                  range (BR-REQ-038-01); Administrator only; reads what the
                                  assign action wrote and writes nothing
+/api/admin/gallery/[id]/photos    POST, one photo per request, multipart (BR-REQ-054-01);
+                                 editorial roles; the bytes are checked whatever the client said
+/api/media/[...key]               serves a stored photo in `local` and `fake` storage mode
+                                 only; in `r2` mode a photo's address is Cloudflare's and this
+                                 route is never linked
 ```
 
 `/login` is an alias, not a route: the proxy redirects it to the sign-in path — unprefixed, so
@@ -1936,11 +1946,13 @@ UNIQUE(locale, slug)
 content_pages
 content_page_translations
 
-gallery_albums
-gallery_album_translations
-media_assets
-gallery_items
-gallery_item_translations
+gallery_albums                 -- built (BR-REQ-054-01): editorial_status, published_at, event_id null,
+                               --   taken_on, cover_media_asset_id null, version
+gallery_album_translations     -- built: slug, title, description; UNIQUE(album_id, locale), UNIQUE(locale, slug)
+media_assets                   -- built: key_prefix (opaque, unique), original_filename, width, height,
+                               --   byte_size of the web variant; objects are <env>/<prefix>/{web,thumb}.webp
+gallery_items                  -- built: album_id, media_asset_id, position; UNIQUE(album_id, media_asset_id)
+gallery_item_translations      -- M5: captions per photo
 ```
 
 Use the same translation/editorial/version patterns.
@@ -2605,6 +2617,13 @@ Rules:
 - reference check before delete;
 - orphan cleanup;
 - public profile participant upload deferred.
+
+Built for the gallery (BR-REQ-054-01, `DECISIONS.md` §66): `modules/media/storage.ts` is the
+adapter — `put`, `delete`, `publicUrl`; metadata is the row's — over R2's S3 API, a local
+directory, or memory, by `STORAGE_MODE`; `modules/media/images.ts` is the validation and the
+two WebP variants, with `sharp` (already installed by Next) rotating and stripping. Keys are
+`<env>/<opaque prefix>/<variant>.webp`, so two environments can share one bucket. The original
+file is not kept: the browser shrinks it before upload and the server re-encodes what arrives.
 
 ---
 

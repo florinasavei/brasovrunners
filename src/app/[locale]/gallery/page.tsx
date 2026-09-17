@@ -1,0 +1,92 @@
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import type { Metadata } from "next";
+import { hasLocale } from "next-intl";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { getDb } from "@/db/client";
+import { routing } from "@/i18n/routing";
+import { listPublishedAlbums } from "@/modules/content/gallery/repository";
+import CardLink from "@/shared/ui/CardLink";
+import { PAGE_WIDTH } from "@/theme/brand";
+import { liftOnHover, riseIn } from "@/theme/motion";
+
+type Props = { params: Promise<{ locale: string }> };
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
+  const t = await getTranslations({ locale, namespace: "Gallery" });
+  return { title: t("title"), description: t("intro") };
+}
+
+/**
+ * The albums (BR-REQ-054-01): a cover, a title, a date, a count — each card one link. Only
+ * published albums, only in a locale that has a translation (BR-REQ-040-02). Light on purpose:
+ * one thumbnail per album, lazy, sized on upload, no script.
+ */
+export default async function GalleryPage({ params }: Props) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  setRequestLocale(locale);
+
+  const t = await getTranslations("Gallery");
+  const format = await getFormatter();
+  const albums = await listPublishedAlbums(getDb(), locale);
+
+  return (
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+      <Typography variant="h1" gutterBottom>
+        {t("title")}
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        {t("intro")}
+      </Typography>
+
+      {albums.length === 0 ? (
+        <Typography variant="body1">{t("empty")}</Typography>
+      ) : (
+        <Box
+          component="ul"
+          sx={{
+            listStyle: "none",
+            m: 0,
+            p: 0,
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
+            gap: 2,
+          }}
+        >
+          {albums.map((album, index) => (
+            <Card key={album.id} component="li" variant="outlined" sx={{ ...liftOnHover, ...riseIn(index) }}>
+              <CardLink href={{ pathname: "/gallery/[slug]", params: { slug: album.slug } }}>
+                {album.coverThumbUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- our own WebP thumbnail, sized on upload
+                  <img
+                    src={album.coverThumbUrl}
+                    alt=""
+                    loading={index < 3 ? "eager" : "lazy"}
+                    style={{ display: "block", width: "100%", aspectRatio: "4 / 3", objectFit: "cover" }}
+                  />
+                )}
+                <CardContent>
+                  <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 0.5 }}>
+                    {album.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {format.dateTime(album.takenOn, { dateStyle: "long" })} · {t("photoCount", { count: album.photoCount })}
+                  </Typography>
+                </CardContent>
+              </CardLink>
+            </Card>
+          ))}
+        </Box>
+      )}
+    </Container>
+  );
+}

@@ -96,6 +96,24 @@ export const envSchema = z
     CLUB_INSTAGRAM_URL: z.url().optional(),
     CLUB_STRAVA_URL: z.url().optional(),
 
+    /**
+     * Where uploaded photos live (AGENTS.md §17; `DECISIONS.md` §66).
+     *
+     * Cloudflare R2 through its S3 API. Five values, all from the bucket's page and its API
+     * token (`SETUP.md` §32): the S3 endpoint is configuration rather than assembled from an
+     * account id, because §8 forbids a hostname literal under `src/` and exempts no provider;
+     * `R2_PUBLIC_BASE_URL` is the address the bucket's objects are read at — its `r2.dev`
+     * subdomain, or a custom one — so a photo is served by Cloudflare, never through a function.
+     *
+     * All optional here, and `STORAGE_MODE` below says what an incomplete set means: qa and
+     * production run without a gallery until the five exist, rather than refusing to boot.
+     */
+    R2_ENDPOINT: z.url().optional(),
+    R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+    R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    R2_BUCKET: z.string().min(1).optional(),
+    R2_PUBLIC_BASE_URL: z.url().optional(),
+
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
     EMAIL_DELIVERY_MODE: z.enum(EMAIL_DELIVERY_MODES).default("capture"),
     EMAIL_ALLOWLIST: allowlist,
@@ -265,6 +283,26 @@ export const envSchema = z
       (value.APP_ENV === "local" || value.APP_ENV === "test"
         ? ("dev-switcher" as const)
         : ("disabled" as const)),
+    /**
+     * Derived, never set: `local` writes under `.media/` on a developer's disk and `fake`
+     * keeps objects in memory for tests, so neither environment needs a bucket; `r2` when
+     * the five variables are all present, and `unconfigured` when a deployed environment has
+     * not got them yet — the gallery then refuses uploads with a sentence and `/admin/tasks`
+     * says what to create. Deriving it from the variables is what makes "is the bucket wired"
+     * a fact the task board can read rather than a mode somebody remembers to flip.
+     */
+    STORAGE_MODE:
+      value.APP_ENV === "local"
+        ? ("local" as const)
+        : value.APP_ENV === "test"
+          ? ("fake" as const)
+          : value.R2_ENDPOINT &&
+              value.R2_ACCESS_KEY_ID &&
+              value.R2_SECRET_ACCESS_KEY &&
+              value.R2_BUCKET &&
+              value.R2_PUBLIC_BASE_URL
+            ? ("r2" as const)
+            : ("unconfigured" as const),
   }));
 
 export type Env = z.infer<typeof envSchema>;

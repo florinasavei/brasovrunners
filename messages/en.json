@@ -23,6 +23,7 @@
     "nav": {
       "label": "Main navigation",
       "events": "Events",
+      "gallery": "Gallery",
       "more": "Menu"
     }
   },
@@ -134,7 +135,8 @@
       "legal": "Legal documents",
       "devs": "Configuration",
       "tasks": "To do",
-      "pages": "Pages"
+      "pages": "Pages",
+      "gallery": "Gallery"
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -226,6 +228,7 @@
       "featured": "Featured",
       "preview": "Preview",
       "edit": "Edit",
+      "editNamed": "Edit {title}",
       "moreActions": "More actions",
       "new": "New event",
       "registrations": "Registrations",
@@ -530,6 +533,18 @@
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
         },
+        "mediaStorage": {
+          "title": "Photo storage (Cloudflare R2)",
+          "todo": "The gallery needs somewhere to put photos. Until it is configured, albums can be created but cannot receive photos. Free at the club's size; Cloudflare still asks for a card on the account to enable R2.",
+          "done": "Photos have somewhere to live.",
+          "how": [
+            "A Cloudflare account (free) on the club's address. The domain does not move there.",
+            "Left menu → R2 Object Storage → enable R2 (this is where the card is asked for; nothing is charged under 10 GB).",
+            "Create bucket → name “brasovrunners-media”, location “European Union”. Then, in the bucket's settings, enable “Public access” through the r2.dev subdomain (or a custom domain) and copy the public address — that is R2_PUBLIC_BASE_URL.",
+            "R2 → “Manage R2 API Tokens” → Create API token → name “brasovrunners-site”, permission “Object Read & Write”, this bucket only. Copy the Access Key ID, the Secret Access Key and the S3 endpoint (shown once).",
+            "In Vercel → the production project (and QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy. This row turns green and the album page gets its upload button."
+          ]
+        },
         "publishEvents": {
           "title": "Publish events",
           "todo": "No event is published, so visitors see an empty list.",
@@ -723,6 +738,53 @@
         "seoDescription": "SEO description"
       }
     },
+    "gallery": {
+      "title": "Photo gallery",
+      "create": "New album",
+      "createHelp": "The album's details first, then the photos — uploaded on the album's page, straight from a phone.",
+      "intro": "The club's albums. Photos are shrunk on the phone before they are sent and kept in two sizes only, with no location data. An album is on the site once it is published and has at least one photo.",
+      "empty": "No album yet.",
+      "backToList": "← All albums",
+      "readOnly": "Your role can see the albums but not change them.",
+      "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
+      "photos": "Photos ({count})",
+      "upload": "Upload photos",
+      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are shrunk on the device before sending; the first becomes the cover.",
+      "uploading": "Uploading {done} of {total}…",
+      "uploaded": "{total} photos uploaded.",
+      "uploadFailed": "Could not upload: {names}",
+      "setCover": "Cover",
+      "removePhoto": "Remove",
+      "removePhotoTitle": "Remove the photo?",
+      "removePhotoBody": "The photo leaves the album and the storage. This cannot be undone.",
+      "delete": "Delete the album",
+      "deleteTitle": "Delete the album?",
+      "deleteBody": "The album, both translations and every photo in it are removed for good, from storage too. To take it off the site only, use “Archive”.",
+      "viewPublic": "View the public album →",
+      "photoAlt": "Photo {n}: {title}",
+      "columnTitle": "Title",
+      "columnTakenOn": "Date",
+      "columnStatus": "Status",
+      "columnPhotos": "Photos",
+      "tableCaption": "The gallery's albums",
+      "storageUnconfigured": "Photo storage is not configured for this environment: the R2 variables are missing. The steps are on the “To do” page, under “Photo storage”.",
+      "takenOnHelp": "The day the photos were taken. Albums are ordered by it.",
+      "eventHelp": "Optional. The album page will link to the event.",
+      "noEvent": "No event",
+      "slugHelp": "Lowercase letters, digits and hyphens. Becomes the album's address.",
+      "slugLocked": "The address is fixed after publication, so shared links keep working.",
+      "language": {
+        "ro": "Romanian",
+        "en": "English"
+      },
+      "fields": {
+        "takenOn": "Date of the photos",
+        "event": "Event",
+        "title": "Title",
+        "slug": "Address (slug)",
+        "description": "Description"
+      }
+    },
     "bibs": {
       "title": "Race numbers",
       "assign": "Assign numbers",
@@ -741,7 +803,8 @@
   },
   "Footer": {
     "about": {
-      "summary": "About the club, contact and legal",
+      "summaryShort": "About the club",
+      "summaryTail": ", contact and legal",
       "socialLabel": "The club on social media",
       "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races.",
       "facebook": "Facebook",
@@ -1037,5 +1100,13 @@
     "retry": "Try again",
     "home": "Back to the first page",
     "reference": "If it keeps happening, tell us this code:"
+  },
+  "Gallery": {
+    "title": "Gallery",
+    "intro": "Photos from the club's runs, races and meetups.",
+    "empty": "No published albums yet.",
+    "backToGallery": "← All albums",
+    "photoCount": "{count} photos",
+    "photoAlt": "Photo {n} of {total}: {title}"
   }
 }

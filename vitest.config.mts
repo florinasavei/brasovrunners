@@ -6,6 +6,13 @@ export default defineConfig({
     // Node, not jsdom: these are pure-rule and database tests. Component tests arrive with
     // their own environment when there are components worth testing.
     environment: "node",
+    /**
+     * The test environment, as `SETUP.md` §10 defines it: the same switcher and capture
+     * mode as local, and photo storage in memory (`STORAGE_MODE=fake`) rather than under
+     * `.media/` on the developer's disk. Nothing in `env.ts` behaves differently between
+     * `local` and `test` except that.
+     */
+    env: { APP_ENV: "test" },
     include: ["tests/**/*.test.ts"],
     // The concurrency suite needs two real connections to a PostgreSQL server, which this
     // command must never require: `yarn check` runs on every commit and in CI without a

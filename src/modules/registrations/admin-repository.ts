@@ -33,6 +33,8 @@ export type RegistrationListRow = {
   clubMemberDeclared: boolean;
   submittedAt: Date;
   confirmedAt: Date | null;
+  /** The race number, once assigned (BR-REQ-038-01). */
+  bibNumber: number | null;
 };
 
 export type RegistrationListFilters = {
@@ -182,6 +184,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       clubMemberDeclared: registrations.clubMemberDeclared,
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
+      bibNumber: registrations.bibNumber,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))

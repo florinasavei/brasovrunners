@@ -1,0 +1,126 @@
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { hasLocale } from "next-intl";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { getDb } from "@/db/client";
+import { getPathname, Link } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
+import { listAlbumsForAdmin, type AlbumListRow } from "@/modules/content/gallery/repository";
+import { isStorageConfigured } from "@/modules/media/storage";
+import { isEditorial } from "@/modules/staff-identity/domain/roles";
+import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import { requireStaff } from "@/modules/staff-identity/session";
+import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
+import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import ButtonLink from "@/shared/ui/ButtonLink";
+
+type Props = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+};
+
+export const dynamic = "force-dynamic";
+
+/**
+ * The albums, newest first (BR-REQ-054-01). Editorial roles; the section gate is in the
+ * layout beside this file's loading boundary (`DECISIONS.md` §54), and asserted again here.
+ */
+export default async function AdminGalleryPage({ params, searchParams }: Props) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  setRequestLocale(locale);
+
+  const actor = await requireStaff();
+  if (!isEditorial(actor.role)) notFound();
+
+  const current = await searchParams;
+  const { saved, error } = current;
+  const rows = await listAlbumsForAdmin(getDb(), locale);
+  const t = await getTranslations("Admin");
+  const format = await getFormatter();
+  const query = parseListQuery(current, { sortable: [], defaultSort: "takenOn", defaultPerPage: 100 });
+
+  const columns: readonly AdminColumn<AlbumListRow>[] = [
+    {
+      key: "title",
+      label: t("gallery.columnTitle"),
+      primary: true,
+      render: (row) => (
+        <Link href={{ pathname: "/admin/gallery/[id]", params: { id: row.id } }}>{row.title}</Link>
+      ),
+    },
+    {
+      key: "takenOn",
+      label: t("gallery.columnTakenOn"),
+      render: (row) => format.dateTime(row.takenOn, { dateStyle: "medium" }),
+    },
+    {
+      key: "status",
+      label: t("gallery.columnStatus"),
+      render: (row) => (
+        <Chip
+          size="small"
+          color={row.editorialStatus === "PUBLISHED" ? "success" : "default"}
+          label={EDITORIAL_STATUS_LABEL[row.editorialStatus]}
+        />
+      ),
+    },
+    {
+      key: "photos",
+      label: t("gallery.columnPhotos"),
+      align: "right",
+      hideBelow: "sm",
+      render: (row) => row.photoCount,
+    },
+  ];
+
+  return (
+    <Stack spacing={3}>
+      <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
+        {saved && <Alert severity="success">{t("saved")}</Alert>}
+        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+      </Box>
+
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+        <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
+          {t("gallery.title")}
+        </Typography>
+        <ButtonLink href="/admin/gallery/new" variant="contained" sx={{ minHeight: 44 }}>
+          {t("gallery.create")}
+        </ButtonLink>
+      </Stack>
+
+      <Typography variant="body2" color="text.secondary">
+        {t("gallery.intro")}
+      </Typography>
+
+      {/* Read from the environment, never remembered: the five R2 variables are there or not. */}
+      {!isStorageConfigured() && <Alert severity="warning">{t("gallery.storageUnconfigured")}</Alert>}
+
+      <AdminTable
+        caption={t("gallery.tableCaption")}
+        columns={columns}
+        rows={rows}
+        rowKey={(row) => row.id}
+        basePath={getPathname({ locale, href: "/admin/gallery" })}
+        currentParams={{}}
+        query={query}
+        total={rows.length}
+        labels={{
+          results: t("list.results", { count: rows.length }),
+          page: t("list.page", { page: query.page, pages: pageCount(rows.length, query.perPage) }),
+          previous: t("list.previous"),
+          next: t("list.next"),
+          perPage: t("list.perPage"),
+          actions: t("list.actions"),
+          sortBy: (column) => t("list.sortBy", { column }),
+        }}
+        empty={<Typography variant="body1">{t("gallery.empty")}</Typography>}
+      />
+    </Stack>
+  );
+}

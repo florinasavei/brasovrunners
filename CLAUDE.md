@@ -270,10 +270,16 @@ PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a see
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
 single-connection database.
 
-Not built: the rest of the CMS — articles, galleries, the media library on R2 and the Tiptap
-body contract (M5) — and what M2–M4 name (multi-distance races, one bib per race across
-distances, results, runner profiles). Per-event race numbers and the printed sheet, and
-recurring events, are M1 since 2026-09-17 (`DECISIONS.md` §64, §65).
+**A photo gallery, on R2.** Albums with photos shrunk in the browser and re-encoded on the
+server to two WebP variants (no original, no EXIF), stored through the §17 adapter —
+`STORAGE_MODE` derives `local`/`fake`/`r2`/`unconfigured` from the five `R2_*` variables
+(`SETUP.md` §32 is the bucket procedure). Public `/galerie`; "Galerie" in the nav while an
+album is published (BR-REQ-054-01, `DECISIONS.md` §66).
+
+Not built: the rest of the CMS — articles, a media library for other content, captions and the
+Tiptap image node (M5) — and what M2–M4 name (multi-distance races, one bib per race across
+distances, results, runner profiles). Per-event race numbers and the printed sheet, recurring
+events and the gallery are M1 since 2026-09-17 (`DECISIONS.md` §64–§66).
 
 **What is deployed.** QA, plus a production Vercel project and a production Neon project that
 are configured and have never served a request — `main` is sixty commits behind `qa`, so the

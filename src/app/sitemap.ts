@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { listPublishedAlbums } from "@/modules/content/gallery/repository";
 import { listPublishedPages } from "@/modules/content/pages/repository";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { env } from "@/shared/config/env";
@@ -70,6 +71,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         lastModified: page.updatedAt,
         changeFrequency: "yearly",
         priority: 0.4,
+      });
+    }
+  }
+
+  // Albums (BR-REQ-054-01): the listing once per locale, then each published album.
+  for (const locale of routing.locales) {
+    const albums = await listPublishedAlbums(getDb(), locale);
+    if (albums.length === 0) continue;
+    entries.push({
+      url: `${env.APP_BASE_URL}${getPathname({ locale, href: "/gallery" })}`,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    });
+    for (const album of albums) {
+      entries.push({
+        url: `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/gallery/[slug]", params: { slug: album.slug } } })}`,
+        lastModified: album.takenOn,
+        changeFrequency: "yearly",
+        priority: 0.3,
       });
     }
   }

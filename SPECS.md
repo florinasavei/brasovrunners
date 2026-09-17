@@ -1040,6 +1040,27 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; e2e `pages.spec.ts`
 
+#### BR-REQ-054-01 — The photo gallery: albums on R2, light by construction
+
+- **Source:** BR-BUS-050, BR-BUS-052
+- **Implements:** AGENTS.md §12.10, §17, §9.2, §8
+- **Priority:** SHOULD
+- **Release:** M1 — pulled forward from M5 on 2026-09-17 as the small version (`DECISIONS.md` §66); the media library for other content, captions and the Tiptap image node stay M5.
+- **Status:** built; needs the R2 bucket of `SETUP.md` §32 on a deployed environment.
+
+**Acceptance criteria**
+
+1. Given an editorial role, when they create an album, then it has a date the photos were taken, an optional event it is from, and a title, address and optional description in every language; it is a draft with no photos.
+2. Given an album, when a photo is uploaded, then the browser first shrinks it to at most 2000px on its long side and posts it as WebP, one request per photo; the server decides the format from the bytes, refuses anything but JPEG, PNG and WebP (SVG included), refuses a file over 6 MB or under 200px on a side, rotates it upright, drops every EXIF field including the GPS position, and stores exactly two WebP variants — `web` (≤1600px) and `thumb` (≤480px) — under an opaque key prefixed with the environment. The original is not kept.
+3. Given an album's first photo, when it is stored, then it becomes the album's cover; any photo can be made the cover later; removing the cover moves it to the first remaining photo.
+4. Given an album with no photo, when publication is attempted, then it is refused with a reason. Given one with photos, when it is published, then both languages go live together and its address stops changing (§11.5).
+5. Given the public gallery, when it renders, then it lists published albums newest first with cover, title, date and count, and an album page shows its photos as thumbnails in upload order, each a plain link to its `web` variant, every image with its dimensions and lazy loading, and no script — a locale with no translation is a 404, never the other language (BR-REQ-040-02). The "Galerie" section appears in the site navigation only while a published album exists.
+6. Given a photo or an album that is removed, when the removal completes, then its rows are gone first and its objects are deleted from storage afterwards — an object without a row is a cost nobody notices, a row without an object is a broken image somebody does.
+7. Given a deployed environment without the five `R2_*` variables, when it boots, then it boots; albums can be created, uploads are refused with a sentence, `/admin/tasks` shows the storage task open with the steps, and the site's public gallery is simply empty. Locally photos live under `.media/` and in tests in memory, so neither needs a bucket.
+8. Given the images the site serves, when they are loaded, then they come from `R2_PUBLIC_BASE_URL` (Cloudflare, egress free) and never through a function; a hostname appears nowhere in `src/` — the S3 endpoint and the public base are configuration.
+
+**Verification:** unit `media/images.test.ts`; integration `cms/gallery.test.ts`; e2e `gallery.spec.ts`
+
 #### BR-REQ-051-01 — Editorial workflow and permissions
 
 - **Source:** BR-BUS-051, BR-BUS-060

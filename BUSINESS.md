@@ -528,6 +528,10 @@ It supports only:
   together like an event, and their address stops changing once published, so a link already
   shared keeps working. Deliberately plain: a title and text, no photo galleries and no layout
   choices, because the club needs to say things rather than design them;
+- **photo albums** — from a run, a race, a meetup: a title and a date, the photos uploaded from a
+  phone and shrunk on it before they leave, kept in two sizes with no location data, published
+  in both languages together. Light by construction, on the club's own bucket, never on the
+  hosting provider's disk;
 - articles and announcements;
 - event titles, descriptions, locations, images, and SEO text;
 - selected static content such as About and homepage introduction;

@@ -23,6 +23,7 @@
     "nav": {
       "label": "Navigare principală",
       "events": "Evenimente",
+      "gallery": "Galerie",
       "more": "Meniu"
     }
   },
@@ -134,7 +135,8 @@
       "legal": "Documente legale",
       "devs": "Configurație",
       "tasks": "De făcut",
-      "pages": "Pagini"
+      "pages": "Pagini",
+      "gallery": "Galerie"
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -226,6 +228,7 @@
       "featured": "Principal",
       "preview": "Previzualizare",
       "edit": "Editează",
+      "editNamed": "Editează {title}",
       "moreActions": "Alte acțiuni",
       "new": "Eveniment nou",
       "registrations": "Înscrieri",
@@ -530,6 +533,18 @@
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
         },
+        "mediaStorage": {
+          "title": "Stocarea fotografiilor (Cloudflare R2)",
+          "todo": "Galeria are nevoie de un loc unde să pună fotografiile. Până la configurare, albumele pot fi create dar nu pot primi fotografii. Gratuit la mărimea clubului; Cloudflare cere totuși un card pe cont ca să activeze R2.",
+          "done": "Fotografiile au unde să stea.",
+          "how": [
+            "Cont Cloudflare (gratuit) pe adresa clubului. Nu trebuie mutat domeniul acolo.",
+            "În meniul din stânga → R2 Object Storage → activează R2 (aici cere cardul; nu se plătește nimic sub 10 GB).",
+            "Create bucket → numele „brasovrunners-media”, locația „European Union”. Apoi, în setările bucket-ului, activează „Public access” prin subdomeniul r2.dev (sau un domeniu propriu) și copiază adresa publică — este R2_PUBLIC_BASE_URL.",
+            "R2 → „Manage R2 API Tokens” → Create API token → nume „brasovrunners-site”, permisiune „Object Read & Write”, doar pe acest bucket. Copiază Access Key ID, Secret Access Key și endpoint-ul S3 (apar o singură dată).",
+            "În Vercel → proiectul de producție (și cel de QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy. Rândul acesta devine verde și pagina albumului primește butonul de încărcare."
+          ]
+        },
         "publishEvents": {
           "title": "Publică evenimente",
           "todo": "Nu este publicat niciun eveniment, deci vizitatorii văd o listă goală.",
@@ -723,6 +738,53 @@
         "seoDescription": "Descriere SEO"
       }
     },
+    "gallery": {
+      "title": "Galerie foto",
+      "create": "Album nou",
+      "createHelp": "Întâi datele albumului, apoi fotografiile — se încarcă pe pagina albumului, direct de pe telefon.",
+      "intro": "Albumele clubului. Fotografiile se micșorează pe telefon înainte de a fi trimise și se păstrează doar în două mărimi, fără date de localizare. Un album apare pe site când este publicat și are cel puțin o fotografie.",
+      "empty": "Nu există niciun album încă.",
+      "backToList": "← Toate albumele",
+      "readOnly": "Rolul tău poate vedea albumele, dar nu le poate modifica.",
+      "noPhotosYet": "Albumul nu are nicio fotografie. Încarcă cel puțin una ca să poată fi publicat.",
+      "photos": "Fotografii ({count})",
+      "upload": "Încarcă fotografii",
+      "uploadHelp": "Alege una sau mai multe fotografii (JPEG, PNG sau WebP). Se micșorează în telefon înainte de trimitere; prima devine coperta.",
+      "uploading": "Se încarcă {done} din {total}…",
+      "uploaded": "{total} fotografii încărcate.",
+      "uploadFailed": "Nu s-au putut încărca: {names}",
+      "setCover": "Copertă",
+      "removePhoto": "Șterge",
+      "removePhotoTitle": "Ștergi fotografia?",
+      "removePhotoBody": "Fotografia dispare din album și din stocare. Nu se poate anula.",
+      "delete": "Șterge albumul",
+      "deleteTitle": "Ștergi albumul?",
+      "deleteBody": "Albumul, ambele traduceri și toate fotografiile lui dispar definitiv, și din stocare. Dacă vrei doar să-l scoți de pe site, folosește „Arhivează”.",
+      "viewPublic": "Vezi albumul public →",
+      "photoAlt": "Fotografia {n}: {title}",
+      "columnTitle": "Titlu",
+      "columnTakenOn": "Data",
+      "columnStatus": "Stare",
+      "columnPhotos": "Fotografii",
+      "tableCaption": "Albumele galeriei",
+      "storageUnconfigured": "Stocarea fotografiilor nu este configurată pentru acest mediu: lipsesc variabilele R2. Pașii sunt pe pagina „De făcut”, la „Stocarea fotografiilor”.",
+      "takenOnHelp": "Ziua în care au fost făcute fotografiile. După ea se ordonează albumele.",
+      "eventHelp": "Opțional. Pagina albumului va trimite către eveniment.",
+      "noEvent": "Fără eveniment",
+      "slugHelp": "Litere mici, cifre și cratime. Devine adresa albumului.",
+      "slugLocked": "Adresa este fixă după publicare, ca să nu se strice linkurile distribuite.",
+      "language": {
+        "ro": "Română",
+        "en": "Engleză"
+      },
+      "fields": {
+        "takenOn": "Data fotografiilor",
+        "event": "Evenimentul",
+        "title": "Titlu",
+        "slug": "Adresă (slug)",
+        "description": "Descriere"
+      }
+    },
     "bibs": {
       "title": "Numere de concurs",
       "assign": "Alocă numerele",
@@ -741,7 +803,8 @@
   },
   "Footer": {
     "about": {
-      "summary": "Despre club, contact și termeni",
+      "summaryShort": "Despre club",
+      "summaryTail": ", contact și termeni",
       "socialLabel": "Clubul pe rețelele sociale",
       "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale.",
       "facebook": "Facebook",
@@ -1037,5 +1100,13 @@
     "retry": "Încearcă din nou",
     "home": "Înapoi la prima pagină",
     "reference": "Dacă se repetă, spune-ne acest cod:"
+  },
+  "Gallery": {
+    "title": "Galerie",
+    "intro": "Fotografii de la alergările, concursurile și întâlnirile clubului.",
+    "empty": "Nu există încă albume publicate.",
+    "backToGallery": "← Toate albumele",
+    "photoCount": "{count} fotografii",
+    "photoAlt": "Fotografia {n} din {total}: {title}"
   }
 }

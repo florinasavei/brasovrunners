@@ -167,7 +167,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // A Moderator gains the club's standing pages (BR-REQ-050-03): writing what the club says
     // about itself is editorial control of what it advertises, which is where an event's own
     // settings already sit. A Contributor still has drafts and nothing else.
-    expect(visibleAdminSections("MODERATOR")).toEqual(["events", "pages"]);
+    expect(visibleAdminSections("MODERATOR")).toEqual(["events", "pages", "gallery"]);
   });
 
   it("gives DEV the configuration report and no participant data", () => {
@@ -183,7 +183,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives ADMIN the registrations and the legal documents, but not staff administration", () => {
     const sections = visibleAdminSections("ADMIN");
 
-    expect(sections).toEqual(["events", "pages", "registrations", "tasks", "legal", "devs"]);
+    expect(sections).toEqual(["events", "pages", "gallery", "registrations", "tasks", "legal", "devs"]);
     // An Administrator reads every registration and still cannot promote themselves.
     expect(sections).not.toContain("staff");
   });
@@ -192,6 +192,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     expect(visibleAdminSections("SUPERADMIN")).toEqual([
       "events",
       "pages",
+      "gallery",
       "registrations",
       "tasks",
       "legal",

@@ -64,6 +64,9 @@ export const routing = defineRouting({
      * event slug are then two different URLs, so `contact` may be both without either winning.
      */
     "/pages/[slug]": { ro: "/pagini/[slug]", en: "/pages/[slug]" },
+    /** The photo gallery (BR-REQ-054-01): albums, then one album's photos. */
+    "/gallery": { ro: "/galerie", en: "/gallery" },
+    "/gallery/[slug]": { ro: "/galerie/[slug]", en: "/gallery/[slug]" },
 
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
@@ -96,6 +99,9 @@ export const routing = defineRouting({
     "/admin/pages": "/admin/pages",
     "/admin/pages/new": "/admin/pages/new",
     "/admin/pages/[id]": "/admin/pages/[id]",
+    "/admin/gallery": "/admin/gallery",
+    "/admin/gallery/new": "/admin/gallery/new",
+    "/admin/gallery/[id]": "/admin/gallery/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },
   },
