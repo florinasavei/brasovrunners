@@ -11,15 +11,16 @@ import {
  * The property worth protecting is that `done` is never a guess: every state comes from what the
  * deployment reports, so a task cannot be ticked by somebody who merely intends to do it. The
  * tests below are mostly about the states that must NOT be reachable — an unapproved notice
- * reading as done, a sandbox reading as live email.
+ * reading as done, a sandbox reading as live email, one hand-inserted account reading as a team.
  */
 const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   legalTextIsSample: false,
-  clubDomainBound: true,
   emailDeliveryMode: "live",
   staleJobNames: [],
+  staffCount: 3,
   publishedEventCount: 4,
+  roDomainBound: true,
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -42,16 +43,16 @@ describe("owner tasks", () => {
     ).toBe("blocking");
   });
 
-  it("does not count captured or allowlisted email as reaching participants", () => {
+  it("does not count captured or allowlisted email as reaching participants, and names the mode", () => {
     for (const mode of ["capture", "allowlist"] as const) {
-      expect(stateOf({ ...LAUNCHED, emailDeliveryMode: mode }, "liveEmail")).toBe("blocking");
+      const task = ownerTasks({ ...LAUNCHED, emailDeliveryMode: mode }).find(
+        (candidate) => candidate.id === "liveEmail",
+      );
+      expect(task?.state).toBe("blocking");
+      // The page appends it, so "not live" says which of the two not-live modes it is.
+      expect(task?.detail).toBe(mode);
     }
     expect(stateOf(LAUNCHED, "liveEmail")).toBe("done");
-  });
-
-  it("treats the provider hostname as work to do, not as a blocker", () => {
-    // The site genuinely works on it, which is the difference between this and the two above.
-    expect(stateOf({ ...LAUNCHED, clubDomainBound: false }, "registerDomain")).toBe("open");
   });
 
   it("blocks on a stopped scheduler, names the job, and says it belongs to the developer", () => {
@@ -66,13 +67,29 @@ describe("owner tasks", () => {
     expect(scheduler?.owner).toBe("developer");
   });
 
-  it("leaves every other task to the club", () => {
+  it("reads one staff account as a team still to invite, and never as a blocker", () => {
+    // The first Administrator is a row inserted by hand (CLAUDE.md § What is deployed), so one
+    // account proves nothing about `/admin/staff` having been used. A second one does.
+    expect(stateOf({ ...LAUNCHED, staffCount: 1 }, "inviteStaff")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, staffCount: 0 }, "inviteStaff")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, staffCount: 2 }, "inviteStaff")).toBe("done");
+  });
+
+  it("keeps the .ro domain open for a year without blocking anything", () => {
+    // `DECISIONS.md` §55: the .com now, the .ro a year later. The only fact the software can
+    // read is the hostname it serves on, so the task closes itself and is never ticked.
+    expect(stateOf({ ...LAUNCHED, roDomainBound: false }, "roDomain")).toBe("open");
+    expect(stateOf(LAUNCHED, "roDomain")).toBe("done");
+  });
+
+  it("leaves every task but the scheduler to the club", () => {
     const clubOwned = ownerTasks(LAUNCHED).filter((task) => task.owner === "club");
     expect(clubOwned.map((task) => task.id)).toEqual([
       "approveLegalText",
       "liveEmail",
-      "registerDomain",
+      "inviteStaff",
       "publishEvents",
+      "roDomain",
     ]);
   });
 
@@ -81,7 +98,7 @@ describe("owner tasks", () => {
       ownerTasks({
         ...LAUNCHED,
         legalTextIsSample: true,
-        clubDomainBound: false,
+        roDomainBound: false,
       }),
     );
     expect(sorted.map((task) => task.state)).toEqual(

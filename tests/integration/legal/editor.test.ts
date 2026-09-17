@@ -125,7 +125,7 @@ describe("BR-REQ-053-02 legal document editing", () => {
       .returning();
     const [event] = await db
       .insert(events)
-      .values({ kind: "RACE", startsAt: new Date("2026-10-01T09:00:00.000Z"), registrationMode: "INTERNAL" })
+      .values({ type: "RACE", startsAt: new Date("2026-10-01T09:00:00.000Z"), registrationMode: "INTERNAL" })
       .returning();
     const [registration] = await db
       .insert(registrations)

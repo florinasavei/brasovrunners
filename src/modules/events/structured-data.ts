@@ -1,5 +1,4 @@
 import { env } from "@/shared/config/env";
-import { mapLinkFor } from "./domain/map-link";
 import type { PublicEvent } from "./repository";
 
 /**
@@ -29,7 +28,7 @@ export function clubId(): string {
  * bitmap of a stated size — and producing one is the club's call, not this file's.
  */
 export function sportsOrganizationJsonLd(name: string) {
-  const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL].filter(
+  const sameAs = [env.CLUB_FACEBOOK_URL, env.CLUB_INSTAGRAM_URL, env.CLUB_STRAVA_URL].filter(
     (url): url is string => Boolean(url),
   );
 
@@ -97,8 +96,6 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
 
 /** BR-REQ-052-02 criteria 2 and 4. */
 export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string) {
-  const mapUrl = mapLinkFor(event, env.MAP_LINK_BASE_URL);
-
   return {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
@@ -131,22 +128,11 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
         addressCountry: "RO",
       },
       /**
-       * The exact spot, when the club has stated it.
-       *
-       * A place name is ambiguous to a search engine in the same way it is to a runner: a park
-       * is not a start line. `geo` is what lets a result show the right pin, and `hasMap` is
-       * the link a person follows — the same one the page renders, so the two cannot disagree.
+       * The map link a person follows — the same one the page renders, so the two cannot
+       * disagree. No `geo` any more: the coordinates it was built from left with migration
+       * `0023` (`DECISIONS.md` §61), and a pin guessed from a place name would be wrong.
        */
-      ...(event.latitude !== null && event.longitude !== null
-        ? {
-            geo: {
-              "@type": "GeoCoordinates",
-              latitude: Number(event.latitude),
-              longitude: Number(event.longitude),
-            },
-          }
-        : {}),
-      ...(mapUrl ? { hasMap: mapUrl } : {}),
+      ...(event.mapUrl ? { hasMap: event.mapUrl } : {}),
     },
     sport: "Running",
     // No `remainingAttendeeCapacity`: criterion 3 requires it to equal the free-place count

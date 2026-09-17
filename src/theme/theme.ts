@@ -1,5 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 import { COLOR, FONT } from "./brand";
+import { KEYFRAMES } from "./motion";
 
 /**
  * The MUI theme, assembled from the brand tokens.
@@ -40,7 +41,7 @@ export const theme = createTheme({
   shape: { borderRadius: 10 },
   components: {
     MuiCssBaseline: {
-      styleOverrides: {
+      styleOverrides: (theme) => ({
         /**
          * Room for the sticky header above anything the browser scrolls to.
          *
@@ -55,14 +56,31 @@ export const theme = createTheme({
          *
          * `scroll-padding-top` on the scroll container fixes every anchor on the site at once,
          * rather than each element remembering the header's height. The two values are the
-         * header's own two shapes: at `xs` the navigation takes a second row, above `sm` it
-         * sits beside the lockup on one.
+         * header's own two heights: one row everywhere since 2026-09-17, 8px of padding on a
+         * phone and 16px from `sm` up.
          */
         html: {
-          scrollPaddingTop: 120,
+          scrollPaddingTop: 72,
           "@media (min-width:600px)": { scrollPaddingTop: 76 },
         },
-      },
+
+        /**
+         * The site's motion, as named keyframes emitted once (`theme/motion.ts` says where
+         * each is used and why every one of them sits behind `prefers-reduced-motion`).
+         */
+        [`@keyframes ${KEYFRAMES.fade}`]: {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        },
+        [`@keyframes ${KEYFRAMES.rise}`]: {
+          from: { opacity: 0, transform: "translateY(8px)" },
+          to: { opacity: 1, transform: "none" },
+        },
+        [`@keyframes ${KEYFRAMES.headerShadow}`]: {
+          from: { boxShadow: "none" },
+          to: { boxShadow: theme.shadows[2] },
+        },
+      }),
     },
   },
 });

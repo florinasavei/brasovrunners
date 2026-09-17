@@ -100,6 +100,28 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
         <Typography variant="caption" color="text.secondary" sx={{ wordBreak: "break-all" }}>
           sha256 {document.contentSha256}
         </Typography>
+        {/*
+          The version as a PDF, one per language it has (BR-REQ-053-03): the lockup, the title,
+          the version and its date, the text, the hash on every page — a draft says so in a band
+          under its title. A plain link to a GET that writes the file into the response, so it
+          works with JavaScript off and the browser handles the download.
+        */}
+        {document.translations.length > 0 && (
+          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, pt: 1 }}>
+            {document.translations.map((translation) => (
+              <Button
+                key={translation.locale}
+                component="a"
+                href={`/api/admin/legal/${document.id}/pdf?locale=${translation.locale}`}
+                variant="outlined"
+                size="small"
+                sx={{ minHeight: 44 }}
+              >
+                {t("legal.downloadPdf", { locale: translation.locale.toUpperCase() })}
+              </Button>
+            ))}
+          </Stack>
+        )}
       </Stack>
 
       {saved && (

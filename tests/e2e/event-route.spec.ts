@@ -43,6 +43,10 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.goto("/ro/admin/events/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
+    // BR-REQ-010-01 criterion 1, on the way past: the type defaults to a group run, and the
+    // surface is chosen here so the public page can be checked for both labels below.
+    await page.getByRole("combobox", { name: "Suprafață" }).click();
+    await page.getByRole("option", { name: "Trail" }).click();
     await field("event.startsAtWallTime").fill("2027-05-01T09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Cursa cu traseu ${suffix}`);
@@ -73,6 +77,9 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.waitForURL(/saved=PUBLISHED/);
 
     await page.goto(`/ro/evenimente/${slug}`);
+
+    // The type and the surface, both as localized text, beside each other (BR-REQ-010-01).
+    await expect(page.getByText("Alergare de grup · Trail")).toBeVisible();
 
     // Its own labelled fact, not folded into the meeting point (`DECISIONS.md` §49).
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(1);
@@ -113,8 +120,14 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await page.goto(editorUrl);
     await page.locator('[name="event.routeUrl"]').fill("");
     // The event is published now, so the save carries the live-edit acknowledgement for the
-    // whole form (BR-REQ-051-01 criterion 4).
-    await page.locator('[name="acknowledgeLiveEdit"]').check();
+    // whole form (BR-REQ-051-01 criterion 4) — and cannot be sent without it: the box is
+    // required, the button says so beneath itself, and a press is refused by the browser.
+    const acknowledge = page.locator('[name="acknowledgeLiveEdit"]');
+    await expect(page.getByText("Bifează că ai înțeles că modifici conținut publicat")).toBeVisible();
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    expect(await acknowledge.evaluate((el) => (el as HTMLInputElement).checkValidity())).toBe(false);
+    await expect(page).not.toHaveURL(/saved=event/);
+    await acknowledge.check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 

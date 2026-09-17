@@ -12,7 +12,6 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
-import { mapLinkFor } from "@/modules/events/domain/map-link";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
@@ -81,8 +80,6 @@ export default async function EventDetailPage({ params }: Props) {
   const t = await getTranslations("Event");
   const tSite = await getTranslations("Site");
   const now = new Date();
-  const mapLink = mapLinkFor(event, env.MAP_LINK_BASE_URL);
-
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <JsonLd data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"))} />
@@ -98,8 +95,10 @@ export default async function EventDetailPage({ params }: Props) {
         </Alert>
       )}
 
+      {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61). */}
       <Typography variant="overline" color="text.secondary">
-        {t(`kind.${event.kind}`)}
+        {t(`type.${event.type}`)}
+        {event.surface && ` · ${t(`surface.${event.surface}`)}`}
       </Typography>
       <Typography variant="h1" gutterBottom>
         {event.title}
@@ -132,9 +131,9 @@ export default async function EventDetailPage({ params }: Props) {
               so it opens in a new tab with `rel="noopener noreferrer"` — the opened page can
               then neither reach back through `window.opener` nor learn where it came from.
             */}
-            {mapLink ? (
+            {event.mapUrl ? (
               <MuiLink
-                href={mapLink}
+                href={event.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}

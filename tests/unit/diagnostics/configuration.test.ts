@@ -81,7 +81,6 @@ describe("BR-REQ-090-04 email, where every misconfiguration has landed", () => {
           MAILGUN_DOMAIN: true,
           MAILGUN_API_BASE_URL: true,
           MAILGUN_WEBHOOK_SIGNING_KEY: true,
-          MAP_LINK_BASE_URL: true,
         },
       }),
     );
@@ -148,7 +147,6 @@ describe("BR-REQ-090-04 the report cannot carry a value", () => {
       "AUTH_ZITADEL_SECRET",
       "AUTH_ZITADEL_ISSUER",
       "JOB_SECRET",
-      "MAP_LINK_BASE_URL",
       "DATABASE_URL",
     ]);
 

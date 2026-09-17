@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EVENT_KINDS } from "@/modules/events/domain/event-kind";
+import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 
 /**
  * Exactly which fields the backoffice may write (BR-REQ-050-01 criterion 1).
@@ -64,28 +64,11 @@ export const translationFieldsSchema = z
 export type TranslationFields = z.infer<typeof translationFieldsSchema>;
 
 /**
- * A coordinate as typed: decimal degrees, empty when not stated.
- *
- * Not `z.number()`, because the field arrives as a string and an empty one must mean "not
- * stated" rather than 0 — and 0,0 is a real place in the Gulf of Guinea. Both halves are
- * required together; the service and the database each refuse half a pair.
- */
-const coordinate = (limit: number) =>
-  z
-    .string()
-    .trim()
-    .transform((value) => (value === "" ? null : value))
-    .nullable()
-    .refine(
-      (value) => value === null || (Number.isFinite(Number(value)) && Math.abs(Number(value)) <= limit),
-      { message: `must be a number between -${limit} and ${limit}` },
-    );
-
-/**
  * A whole number as typed, empty meaning "not stated".
  *
- * The same reasoning as `coordinate`: a distance field left blank means the club has not stated
- * one, and coercing "" to 0 would publish a race of zero kilometres. `min` is 1 rather than 0
+ * Not `z.number()`, because the field arrives as a string and an empty one must mean "not
+ * stated" rather than 0: a distance field left blank means the club has not stated one, and
+ * coercing "" to 0 would publish a race of zero kilometres. `min` is 1 rather than 0
  * for capacity — the database refuses a non-positive capacity, and "nobody may enter" is what
  * `registration_mode = NONE` says honestly.
  */
@@ -156,21 +139,22 @@ const timezone = z
  * ten o'clock in the event's own timezone, and the timezone is itself one of these fields, so
  * the conversion happens in the service where both are known rather than here.
  *
- * The coordinates are the meeting point itself, and the map link is built from them. `mapUrl`
- * is the override for the case they cannot express, and must be https at this layer and again
- * at the database. Neither check is redundant: this one gives the organizer a message, and the
- * constraint is what holds when a value arrives from a seed or a hand-written `UPDATE`.
+ * `mapUrl` is the meeting point on a map, pasted by the organizer, and must be https at this
+ * layer and again at the database. Neither check is redundant: this one gives the organizer a
+ * message, and the constraint is what holds when a value arrives from a seed or a hand-written
+ * `UPDATE`.
  */
 export const eventFieldsSchema = z
   .object({
-    kind: z.enum(EVENT_KINDS),
+    type: z.enum(EVENT_TYPES),
+    // Optional: a meetup is run on nothing, and "" from the unselected dropdown means exactly
+    // that (`DECISIONS.md` §61).
+    surface: optionalEnum(EVENT_SURFACES),
     eventStatus: z.enum(["SCHEDULED", "CANCELLED", "COMPLETED"]),
     timezone,
     startsAtWallTime: z.string().trim().min(1),
     endsAtWallTime: z.string().trim(),
     raceStartsAtWallTime: z.string().trim(),
-    latitude: coordinate(90),
-    longitude: coordinate(180),
 
     /**
      * The four facts that are the same event in either language (`DECISIONS.md` §36).

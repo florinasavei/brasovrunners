@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listPublishedPages } from "@/modules/content/pages/repository";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
+import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
@@ -92,6 +93,21 @@ export default async function SiteHeader() {
         position: "sticky",
         top: 0,
         zIndex: 1100,
+        /**
+         * A shadow that appears as the page scrolls under the header, so a stuck header reads
+         * as sitting *over* the content rather than being part of it. Scroll-driven, in CSS:
+         * the keyframes run against the scroll position over the first 80px, not against time,
+         * so there is no scroll listener and no client code. Behind `@supports` because a
+         * browser without scroll timelines would otherwise play the same keyframes as a
+         * zero-second animation and land on the shadow permanently; there it simply has none.
+         */
+        [MOTION_OK]: {
+          "@supports (animation-timeline: scroll())": {
+            animation: `${KEYFRAMES.headerShadow} linear both`,
+            animationTimeline: "scroll()",
+            animationRange: "0 80px",
+          },
+        },
       }}
     >
       <Container
@@ -100,23 +116,27 @@ export default async function SiteHeader() {
           display: "flex",
           alignItems: "center",
           /**
-           * One row from `sm` up, always. Flex decides where a line breaks from each item's
+           * One row, at every width. Flex decides where a line breaks from each item's
            * *natural* width, before any shrinking, so with `wrap` a navigation wider than the
-           * free space jumped to a second row even though it is built to shrink and scroll —
-           * which is what the owner saw on 2026-09-17 and called "not a single line". `nowrap`
-           * lets the nav shrink to what is left (it has `minWidth: 0` and scrolls sideways) and
-           * keeps the logo, the sections and the language on one line.
+           * free space jumped to a second row even though it is built to shrink — which is what
+           * the owner saw on 2026-09-17 and called "not a single line". `nowrap` lets the nav
+           * take what is left (it has `minWidth: 0`) and fold what does not fit into its menu.
            *
-           * Phones still wrap: at 320px the header has 288px to work with and this lockup has
-           * overflowed once already (BR-REQ-041-01 criterion 1). There a wrap costs 44px of
-           * height; an overflow costs the whole page a sideways scrollbar.
+           * Phones wrapped until later the same day, the sections on a second row under the
+           * lockup: "on mobile we have to be more efficient — the logo and the navbar must fit on
+           * one row". They do now, because the nav measures itself and folds the rest into its
+           * menu. And the first section stays on the row even at 320px ("at least one item
+           * before the menu — mobile first"): the language switcher stacks RO over EN on a
+           * phone, the menu button is the ☰ glyph there, and the gaps tighten, which together
+           * buy the ~100px "Evenimente" needs. Nothing overflows — the nav shrinks before the
+           * row does (BR-REQ-041-01 criterion 1) — and the header is 60px instead of 112px.
            */
-          flexWrap: { xs: "wrap", sm: "nowrap" },
-          gap: 1,
-          py: 1,
+          flexWrap: "nowrap",
+          gap: { xs: 0.5, sm: 1 },
+          py: { xs: 0.5, sm: 1 },
         }}
       >
-        <Box sx={{ order: 1 }}>
+        <Box sx={{ order: 1, flexShrink: 0 }}>
         <LogoLink label={t("name")}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -142,15 +162,12 @@ export default async function SiteHeader() {
           language sits at the far end, where a setting belongs. They were briefly grouped
           together at the end, which read as two settings rather than a place to go.
 
-          On a phone the lockup fills the first row and the sections take the whole of a
-          second, aligned under the name rather than crammed against the right edge. From
-          `sm` up nothing wraps: the sections shrink and scroll sideways instead, so the row
-          stays one row however many pages the club publishes.
+          Nothing wraps at any width: the sections fold into the nav's own menu instead, so the
+          row stays one row however many pages the club publishes and however narrow the phone.
         */}
         <Box
           sx={{
-            order: { xs: 3, sm: 2 },
-            flexBasis: { xs: "100%", sm: "auto" },
+            order: 2,
             // The nav measures itself against this box and folds what does not fit into a
             // menu (SiteNav). So the box must be *all* the room between the logo and the
             // language switcher: without `flexGrow` it shrank to the entries left on the row
@@ -159,13 +176,13 @@ export default async function SiteHeader() {
             flexGrow: 1,
             minWidth: 0,
             flexShrink: 1,
-            ml: { sm: 2 },
+            ml: { xs: 0.5, sm: 2 },
           }}
         >
           <SiteNav pages={pages.map((page) => ({ slug: page.slug, title: page.title }))} />
         </Box>
 
-        <Box sx={{ order: { xs: 2, sm: 3 }, ml: "auto" }}>
+        <Box sx={{ order: 3, ml: "auto", flexShrink: 0 }}>
           <LocaleSwitcher />
         </Box>
       </Container>

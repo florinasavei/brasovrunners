@@ -8,14 +8,13 @@ import { eventFieldsSchema } from "@/modules/content/events/fields";
  * one with no stated difficulty is not easy.
  */
 const BASE = {
-  kind: "COMMUNITY_RUN",
+  type: "GROUP_RUN",
+  surface: "",
   eventStatus: "SCHEDULED",
   timezone: "Europe/Bucharest",
   startsAtWallTime: "2026-10-01T09:00",
   endsAtWallTime: "",
   raceStartsAtWallTime: "",
-  latitude: "",
-  longitude: "",
   locationName: "Parcul Tractorul",
   locationAddress: "",
   mapUrl: "",

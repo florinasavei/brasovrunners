@@ -73,7 +73,7 @@ describe("BR-REQ-036-02 participant link request", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "COMMUNITY_RUN",
+        type: "GROUP_RUN",
         startsAt: new Date("2026-10-01T09:00:00.000Z"),
         registrationMode: "INTERNAL",
       })
@@ -168,7 +168,7 @@ describe("BR-REQ-036-02 participant link request", () => {
     const [other] = await db
       .insert(events)
       .values({
-        kind: "TRAIL_RUN",
+        type: "GROUP_RUN", surface: "TRAIL",
         startsAt: new Date("2026-11-01T09:00:00.000Z"),
         registrationMode: "INTERNAL",
       })

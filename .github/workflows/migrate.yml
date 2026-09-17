@@ -16,14 +16,21 @@ name: migrate
 # `DATABASE_URL`, pointing at that environment's own database — Neon's direct (non-pooled) URL,
 # which is what migration tooling wants.
 #
-# QA applies automatically when a migration lands on `qa`; production is always a deliberate
-# `workflow_dispatch`, reviewed, after QA has accepted it.
+# Both environments apply when a migration lands on their branch — `qa` unattended, `main`
+# only after the `production` environment's required reviewer approves the run, which is the
+# gate §7.6 asks for. `workflow_dispatch` stays for re-runs and repairs.
+#
+# **The Vercel build is waiting for this run** (`scripts/wait-for-migration.mjs`, first step of
+# `yarn build`, `DECISIONS.md` §62): it polls the database until the journal head it was
+# compiled against is applied, then builds, so new code is never live against an old schema.
+# On production that means the reviewer's click has to come within the build's wait
+# (MIGRATION_WAIT_MINUTES, 20 by default) — approve it, and the build proceeds on its own.
 
 on:
   push:
-    branches: [qa]
-    # Only when a migration actually changed. Every other push to `qa` leaves the schema alone,
-    # and a workflow that runs on all of them would be noise nobody reads.
+    branches: [qa, main]
+    # Only when a migration actually changed. Every other push leaves the schema alone, and a
+    # workflow that runs on all of them would be noise nobody reads.
     paths:
       - "src/db/migrations/**"
   workflow_dispatch:
@@ -38,16 +45,21 @@ on:
 permissions:
   contents: read
 
+# The environment follows the branch on a push and the input on a dispatch. Written once here
+# and read three times below, so the three cannot disagree.
+env:
+  TARGET: ${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'qa') }}
+
 concurrency:
   # Two migrations against one database at once is not a race worth having. Never cancel a
   # run in progress: a half-applied migration is worse than a queued one.
-  group: migrate-${{ inputs.environment || 'qa' }}
+  group: migrate-${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'qa') }}
   cancel-in-progress: false
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'qa' }}
+    environment: ${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'qa') }}
 
     # Job level, not step level: a step's own `env:` is not in scope for that step's `if:`, so
     # the conditional smoke below would never run if these were declared beside it.
@@ -74,7 +86,7 @@ jobs:
       # non-zero on failure, which is what makes "a failed migration blocks deployment" true
       # rather than aspirational.
       - name: Apply migrations
-        run: yarn db:migrate:env ${{ inputs.environment || 'qa' }} --yes
+        run: yarn db:migrate:env "$TARGET" --yes
 
       # Ask the deployment itself whether it works, rather than trusting that a green migration
       # and a green build add up to a working site — which is exactly the assumption that failed.

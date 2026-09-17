@@ -8,7 +8,9 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { count } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { staffUsers } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
@@ -22,7 +24,6 @@ import {
   oldestCheckDate,
   platformServices,
   priceFreshness,
-  PROVIDER_OPTIONS,
   registrationsLeftToday,
   ROMANIAN_VAT_PERCENT,
   type ServiceRow,
@@ -80,12 +81,10 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
  * volunteer needs them: what is waiting on somebody, then the money.
  *
  * The money half used to be four sections — a verdict, a limit list, a plan table and a bump
- * table — every fact on it defensible and none of it adding up to an answer. Mailgun appeared
- * three times with nothing connecting the mentions; the one line that was not free carried no
- * number at all; there was no total anywhere; and a treasurer was left to assemble "what do we
- * pay, and what is next" from `$15/mo`, `$0.106/CU-hour` and a date printed beside a table. It
- * is now one answer, one row per service, and the questions nobody has answered yet kept
- * visibly apart from the facts.
+ * table — every fact on it defensible and none of it adding up to an answer. It is one answer
+ * now, one row per service, and only the questions nobody has answered yet beneath. The
+ * alternatives-not-taken and the Cloudflare box left on 2026-09-17 (`DECISIONS.md` §61): they
+ * were history, and the page is today's list.
  *
  * Every line on both halves is derived from what this deployment reports, never from a
  * checklist somebody has to remember to tick, and every price is quoted from
@@ -121,18 +120,22 @@ export default async function AdminTasksPage({ params }: Props) {
    */
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
   const volume = await readEmailVolumeToday(db, now);
+  // One row is the Administrator inserted by hand; a second is somebody invited from
+  // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
+  const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
 
   /**
-   * Is the club's own domain bound, or is this still somebody else's hostname?
+   * Is this deployment on the club's own domain, or still on somebody else's hostname?
    *
    * "Not a provider hostname" was the obvious test and it was wrong on the machine every
-   * developer runs this on: `localhost` is not `*.vercel.app`, so the domain task read as done
-   * and the identity limit read as reached, on every laptop. A development hostname is not a
-   * bound domain, and saying so is one condition rather than two.
+   * developer runs this on: `localhost` is not `*.vercel.app`, so the domain read as bound on
+   * every laptop. A development hostname is not a bound domain, and saying so is one condition
+   * rather than two. The `.ro` test is the same hostname's suffix (`DECISIONS.md` §55).
    */
   const hostname = new URL(env.APP_BASE_URL).hostname;
   const clubDomainBound =
     !/vercel\.app$/i.test(hostname) && !/^(localhost|127\.0\.0\.1|\[::1\])$/i.test(hostname);
+  const roDomainBound = clubDomainBound && /\.ro$/i.test(hostname);
   const jobsHealthy = jobs.every((job) => job.status === "ok");
   // Which ones, not how many: a single missing monitor and a stopped scheduler are the same
   // count and different problems.
@@ -145,10 +148,11 @@ export default async function AdminTasksPage({ params }: Props) {
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.
       legalTextIsSample: /EXEMPLU|SAMPLE/i.test(privacyNotice?.title ?? ""),
-      clubDomainBound,
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
       staleJobNames,
+      staffCount,
       publishedEventCount,
+      roDomainBound,
     }),
   );
 
@@ -168,7 +172,9 @@ export default async function AdminTasksPage({ params }: Props) {
   const registrationsLeft = registrationsLeftToday(facts);
   const paidToday = annualCostToday(services);
   const next = nextSpend(services);
-  const decisions = moneyDecisions(facts);
+  // Only what is still undecided: a settled question rendered "answered" for ever is a line to
+  // scroll past, and the section disappears entirely when nothing is open.
+  const decisions = moneyDecisions(facts).filter((decision) => decision.state === "open");
   const freshness = priceFreshness(oldestCheckDate(services), now);
 
   /** How close this service is to its ceiling, in that service's own words. */
@@ -399,85 +405,39 @@ export default async function AdminTasksPage({ params }: Props) {
       </Box>
 
       {/*
-        A fact is something to read; a decision is a question with somebody's name on it. They
-        rendered identically before, which is how a question goes unanswered for a year.
+        A fact is something to read; a decision is a question with somebody's name on it. Only
+        the open ones — a question that has been answered is a fact, and lives above.
       */}
-      <Box component="section">
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("decisionsTitle")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("decisionsIntro")}
-        </Typography>
-        <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-          {decisions.map((decision) => (
-            <Box
-              component="li"
-              key={decision.id}
-              sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
-            >
-              <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                <Chip
-                  size="small"
-                  color={decision.state === "open" ? "warning" : "success"}
-                  label={t(`decisionState.${decision.state}`)}
-                />
-                <Chip size="small" variant="outlined" label={t(`owner.${decision.owner}`)} />
-              </Stack>
-              <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
-                {t(`decisions.${decision.id}.question`)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t(`decisions.${decision.id}.${decision.state === "open" ? "open" : "answered"}`)}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Box>
-
-      {/*
-        The options, including the ones deliberately not taken. Without them every provider
-        looks equally load-bearing and equally permanent; written down, "we are locked into five
-        vendors" becomes "we chose these, and here is the way out of each".
-      */}
-      <Box component="section">
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("optionsTitle")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("optionsIntro")}
-        </Typography>
-        <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-          {PROVIDER_OPTIONS.map((option) => (
-            <Box component="li" key={option.id}>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {t(`options.${option.id}.title`)} → {option.alternative}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t(`options.${option.id}.why`)}{" "}
-                <Box component="span" sx={{ fontFamily: "monospace", fontSize: "0.8125rem" }}>
-                  {option.source}
-                </Box>
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-
-        {/* Cloudflare, once, where somebody will read it. The repo had already answered this
-            three separate ways in three files nobody opens together. */}
-        <Box sx={{ mt: 2, border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
-          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
-            {t("cloudflare.title")}
+      {decisions.length > 0 && (
+        <Box component="section">
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("decisionsTitle")}
           </Typography>
-          <Stack component="ul" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
-            {["proxy", "dns", "workers", "r2", "turnstile"].map((key) => (
-              <Typography component="li" variant="body2" color="text.secondary" key={key}>
-                {t(`cloudflare.${key}`)}
-              </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("decisionsIntro")}
+          </Typography>
+          <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+            {decisions.map((decision) => (
+              <Box
+                component="li"
+                key={decision.id}
+                sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
+              >
+                <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
+                  <Chip size="small" color="warning" label={t("decisionState.open")} />
+                  <Chip size="small" variant="outlined" label={t(`owner.${decision.owner}`)} />
+                </Stack>
+                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
+                  {t(`decisions.${decision.id}.question`)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t(`decisions.${decision.id}.open`)}
+                </Typography>
+              </Box>
             ))}
           </Stack>
         </Box>
-      </Box>
+      )}
     </Stack>
   );
 }

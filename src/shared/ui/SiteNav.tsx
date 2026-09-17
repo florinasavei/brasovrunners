@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useSelectedLayoutSegments } from "next/navigation";
 import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 import { Link } from "@/i18n/navigation";
+import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
 const SECTIONS = [{ segment: "events", href: "/events" }] as const;
 
@@ -140,7 +141,9 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
       sx={{
         display: "flex",
         alignItems: "center",
-        gap: { xs: 1, sm: 2 },
+        // Tight on a phone: every pixel between the lockup and the language is a pixel of the
+        // first section, which the owner wants on the row before the menu ("mobile first").
+        gap: { xs: 0.5, sm: 2 },
         flexWrap: "nowrap",
         minWidth: 0,
         position: "relative",
@@ -183,6 +186,8 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
       <Box component="span" ref={moreRef} sx={overflow.length === 0 ? FOLDED : undefined}>
         <Button
           id="site-nav-more"
+          // The accessible name in every width; on a phone the visible label is the glyph.
+          aria-label={t("more")}
           aria-haspopup="menu"
           aria-expanded={anchor ? "true" : undefined}
           aria-controls={anchor ? "site-nav-more-menu" : undefined}
@@ -194,13 +199,33 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
             fontSize: "inherit",
             borderRadius: 0,
             minWidth: 0,
+            // MUI's button padding on top of the entry's 44px made this the tallest thing on
+            // the row, and the row the tallest thing in the header. The same box as an entry.
+            py: 0,
             "&:hover": { color: "text.primary", bgcolor: "transparent" },
           }}
         >
-          {t("more")}
-          {/* A caret drawn with text: one glyph, no icon package (AGENTS.md §1.5). */}
-          <Box component="span" aria-hidden="true" sx={{ ml: 0.5, fontSize: "0.75em" }}>
+          {/*
+            "Meniu ▾" from `sm` up; on a phone the ☰ glyph alone, which is the convention there
+            and 40px narrower — the difference between the first section fitting on the row at
+            320px and not. Both drawn with text: no icon package (AGENTS.md §1.5).
+          */}
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+            {t("more")}
+          </Box>
+          <Box
+            component="span"
+            aria-hidden="true"
+            sx={{ ml: 0.5, fontSize: "0.75em", display: { xs: "none", sm: "inline" } }}
+          >
             ▾
+          </Box>
+          <Box
+            component="span"
+            aria-hidden="true"
+            sx={{ display: { xs: "inline", sm: "none" }, fontSize: "1.25em", lineHeight: 1 }}
+          >
+            ☰
           </Box>
         </Button>
       </Box>
@@ -232,19 +257,44 @@ export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) 
 /** Out of the flow and invisible, but still laid out, so its width can be read back. */
 const FOLDED = { position: "absolute", visibility: "hidden", pointerEvents: "none" } as const;
 
-/** One entry on the row, with the current one underlined — not colour alone (BR-REQ-041-01). */
+/**
+ * One entry on the row, with the current one underlined — not colour alone (BR-REQ-041-01).
+ *
+ * The underline is a pseudo-element scaled from the left, so it slides in under the pointer
+ * and is simply there on the current entry. The transparent border beneath it keeps the box
+ * the height it always was (44px plus the line), so the row does not move when the line does.
+ * Hover is behind `HOVER_OK`: on a phone `:hover` sticks after a tap.
+ */
 function entrySx(current: boolean) {
   return {
+    position: "relative",
     display: "inline-flex",
     alignItems: "center",
     // BR-REQ-041-01 criterion 6: a target a thumb can hit, on the phone this site is mostly
     // read on.
     minHeight: 44,
-    px: 0.5,
+    px: { xs: 0.25, sm: 0.5 },
     color: current ? "text.primary" : "text.secondary",
     fontWeight: current ? 700 : 500,
     borderBottom: 2,
-    borderColor: current ? "primary.main" : "transparent",
-    "&:hover": { color: "text.primary" },
+    borderColor: "transparent",
+    transition: `color ${DURATION.fast}ms ${EASE}`,
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      left: { xs: 2, sm: 4 },
+      right: { xs: 2, sm: 4 },
+      bottom: -2,
+      height: 2,
+      bgcolor: "primary.main",
+      transform: current ? "scaleX(1)" : "scaleX(0)",
+      transformOrigin: "left",
+      transition: `transform ${DURATION.base}ms ${EASE}`,
+      "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+    },
+    [HOVER_OK]: {
+      "&:hover": { color: "text.primary" },
+      "&:hover::after": { transform: "scaleX(1)" },
+    },
   } as const;
 }

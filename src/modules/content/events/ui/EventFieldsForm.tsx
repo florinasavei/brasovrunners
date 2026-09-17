@@ -5,7 +5,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { EVENT_KINDS } from "@/modules/events/domain/event-kind";
+import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import {
   EVENT_STATUS_LABEL,
@@ -46,25 +46,44 @@ export default async function EventFieldsForm({
   declarations: readonly DeclarationOption[];
 }) {
   const t = await getTranslations("Admin");
-  // The kind labels already exist for the public pages, and an event kind reads the same to an
-  // organizer as to a visitor. Two catalogues of the same seven words would drift.
+  // The type and surface labels already exist for the public pages, and they read the same to
+  // an organizer as to a visitor. Two catalogues of the same eight words would drift.
   const tEvent = await getTranslations("Event");
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
 
   return (
     <Stack spacing={2}>
+      {/*
+        Two questions where there was one (`DECISIONS.md` §61): what the event is, then what it
+        is run on. The surface has an empty option and the type does not — a coffee is run on
+        nothing, but every event is one of the five types.
+      */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
           select
-          name="event.kind"
-          label={t("editor.kind")}
-          defaultValue={event?.kind ?? "COMMUNITY_RUN"}
+          name="event.type"
+          label={t("editor.type")}
+          defaultValue={event?.type ?? "GROUP_RUN"}
           sx={{ flex: 1 }}
           required
         >
-          {EVENT_KINDS.map((kind) => (
-            <MenuItem key={kind} value={kind}>
-              {tEvent(`kind.${kind}`)}
+          {EVENT_TYPES.map((type) => (
+            <MenuItem key={type} value={type}>
+              {tEvent(`type.${type}`)}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          select
+          name="event.surface"
+          label={t("editor.surface")}
+          defaultValue={event?.surface ?? ""}
+          sx={{ flex: 1 }}
+        >
+          <MenuItem value="">{t("editor.notStated")}</MenuItem>
+          {EVENT_SURFACES.map((surface) => (
+            <MenuItem key={surface} value={surface}>
+              {tEvent(`surface.${surface}`)}
             </MenuItem>
           ))}
         </TextField>
@@ -175,26 +194,8 @@ export default async function EventFieldsForm({
         </TextField>
       </Stack>
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
-          name="event.latitude"
-          label={t("editor.latitude")}
-          defaultValue={event?.latitude ?? ""}
-          inputMode="decimal"
-          sx={{ flex: 1 }}
-        />
-        <TextField
-          name="event.longitude"
-          label={t("editor.longitude")}
-          defaultValue={event?.longitude ?? ""}
-          inputMode="decimal"
-          sx={{ flex: 1 }}
-        />
-      </Stack>
-      <Typography variant="body2" color="text.secondary">
-        {t("editor.coordinatesHelp")}
-      </Typography>
-
+      {/* Where to meet, as one pasted link. Coordinates were asked for here until `DECISIONS.md`
+          §61: two decimal numbers to produce a link the organizer could paste in one move. */}
       <TextField
         name="event.mapUrl"
         type="url"

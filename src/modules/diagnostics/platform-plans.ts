@@ -1,10 +1,11 @@
 /**
- * What this platform costs the club, what its free plans refuse, and what the alternatives are.
+ * What this platform costs the club, and what its free plans refuse.
  *
  * `/devs` answers "is this deployment configured correctly" and the task list above it answers
  * "what is waiting on me". This answers the third question, the one a volunteer treasurer asks
- * before a race: **what do we pay today, what is the next thing to cost money, and what are our
- * options?**
+ * before a race: **what do we pay today, and what is the next thing to cost money?** The
+ * alternatives that were researched and not taken used to be here too; they are `DECISIONS.md`'s
+ * and were cut on 2026-09-17 (§61) so the page is today's answer and not a history of it.
  *
  * ## Every figure here is quoted with a source and a date, never computed and never remembered
  *
@@ -36,13 +37,14 @@
 
 export type CurrencyCode = "EUR" | "USD";
 
-export type ServiceId = "domain" | "mailgun" | "vercel" | "neon" | "zitadel" | "githubActions";
+export type ServiceId = "domain" | "mailgun" | "vercel" | "neon" | "zitadel" | "scheduler";
 
 /**
  * What this service costs the club per year, right now.
  *
- * `notTaken` is not `free`: nothing is bought yet, so nothing is being paid — but there is no
- * free plan to stay on either, which is the whole of the domain's story.
+ * `notTaken` is not `free`: nothing is bought, so nothing is being paid — but there is no free
+ * plan to stay on either. No row carries it today, since the domain was bought on 2026-09-16; it
+ * stays in the type because the `.ro` will be exactly this until it is bought.
  */
 export type AnnualCost =
   | { kind: "free" }
@@ -95,11 +97,11 @@ export type ServiceRow = {
  *
  * $10.26 a year until 2026-11-01 and $10.97 from then on (Verisign's announced increase, the
  * first since September 2024). The higher figure is quoted because it is what the club renews
- * at. This is the **registry** price, which no club can buy at directly: a registrar adds its
- * margin and Romania's VAT and invoices in whatever currency it uses, which is why the page still
- * asks which registrar was used and what was actually paid. The owner chose the `.com` first and
- * a `.ro` a year later (`DECISIONS.md` §55); the `.ro` is 12 EUR + VAT at ROTLD and joins this
- * row when it is bought.
+ * at. This is the **registry** price, which no club can buy at directly: the registrar (ROMARG,
+ * `DECISIONS.md` §56) adds its margin and Romania's VAT and invoices in lei at the National
+ * Bank's rate on the day, which is why the page calls this the registry price and not the
+ * invoice. The owner bought the `.com` on 2026-09-16 and a `.ro` follows a year later
+ * (`DECISIONS.md` §55); the `.ro` is 12 EUR + VAT at ROTLD and is this row's "next plan".
  *
  * Romania's standard VAT has been 21% since 2025-08-01. The page prints the amount with "+ VAT"
  * and the rate beside it rather than one blended number, because those are two facts with two
@@ -108,6 +110,8 @@ export type ServiceRow = {
 export const DOMAIN_PRICE_USD_PER_YEAR = 10.97;
 export const DOMAIN_PRICE_CHECKED_ON = "2026-09-16";
 export const ROMANIAN_VAT_PERCENT = 21;
+/** ROTLD's `.ro` registration fee, checked 2026-09-16 with the `.com` (`DECISIONS.md` §55). */
+export const RO_DOMAIN_PRICE_EUR_PER_YEAR = 12;
 
 /** The date `docs/PLATFORM.md` verified the six vendor plan rows. */
 export const VENDOR_PLANS_CHECKED_ON = "2026-09-05";
@@ -120,7 +124,11 @@ export type PlatformFacts = {
   messagesPerRegistration: number;
   /** Is any published event charging an entry fee? `events.cost_type = 'PAID'`. */
   hasPaidEvent: boolean;
-  /** Is the club's own domain bound and serving this deployment? False on localhost too. */
+  /**
+   * Is this deployment answering on the club's own domain? False on the provider hostname and
+   * on localhost. Not "is the domain bought" — that is recorded (2026-09-16, `DECISIONS.md`
+   * §55) and the software cannot read it; this is the one fact about the domain it can.
+   */
   clubDomainBound: boolean;
   /** Are the scheduled jobs reporting healthy right now? */
   jobsHealthy: boolean;
@@ -160,19 +168,20 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
   return [
     {
       id: "domain",
-      planToday: null,
-      // Nothing is paid until it is registered, and the club is entitled to see that its
-      // running cost today is genuinely zero rather than "zero except the thing we imply".
-      costToday: input.clubDomainBound
-        ? { kind: "paid", amount: DOMAIN_PRICE_USD_PER_YEAR, currency: "USD", plusVat: true }
-        : { kind: "notTaken" },
+      planToday: ".com (ROMARG)",
+      // Bought on 2026-09-16 (`DECISIONS.md` §55, §56), so it is paid whichever hostname this
+      // deployment answers on: QA runs on a subdomain of the same purchase. The registry price,
+      // for the reason the constant's comment gives; the registrar's lei invoice is the club's.
+      costToday: { kind: "paid", amount: DOMAIN_PRICE_USD_PER_YEAR, currency: "USD", plusVat: true },
       checkedOn: DOMAIN_PRICE_CHECKED_ON,
+      // The one fact about the domain the software can read: is *this* deployment on it.
       headroom: { kind: "derived", reached: input.clubDomainBound },
-      severity: input.clubDomainBound ? "ok" : "watch",
-      nextPlan: input.clubDomainBound ? null : "Verisign .com",
-      // The bare amount and its currency. "+ VAT", "per year" and the conversion to lei are
-      // words, so they live in the catalogues and not in a string built here.
-      nextCost: input.clubDomainBound ? null : `$${DOMAIN_PRICE_USD_PER_YEAR}`,
+      severity: "ok",
+      // The `.ro`, a year after the `.com`, both alive at once (§55). The bare amount and its
+      // currency: "+ VAT", "per year" and the conversion to lei are words, so they live in the
+      // catalogues and not in a string built here.
+      nextPlan: ".ro (ROTLD)",
+      nextCost: `${RO_DOMAIN_PRICE_EUR_PER_YEAR} EUR`,
       bump: null,
     },
     {
@@ -225,20 +234,23 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       planToday: "Free",
       costToday: { kind: "free" },
       checkedOn: VENDOR_PLANS_CHECKED_ON,
-      // Zero custom domains on Free, so binding the club's domain is the moment it bites.
-      headroom: { kind: "derived", reached: input.clubDomainBound },
-      severity: input.clubDomainBound ? "watch" : "ok",
+      // Zero custom domains on Free, and that is decided rather than pending: sign-in stays on
+      // the provider's hostname (`docs/RUNBOOKS.md` § Staff sign-in), so the club's domain
+      // being bound changes nothing here. The row is not a ceiling this deployment approaches.
+      headroom: { kind: "derived", reached: false },
+      severity: "ok",
       nextPlan: null,
       nextCost: null,
       bump: null,
     },
     {
-      id: "githubActions",
+      id: "scheduler",
       planToday: "Free",
       costToday: { kind: "free" },
       checkedOn: VENDOR_PLANS_CHECKED_ON,
-      // Unlimited on a public repository, so the ceiling here is cadence rather than money:
-      // this is the only thing draining the outbox, and a stale job is its visible edge.
+      // The external pinger every five minutes, with GitHub Actions as the backstop (`SETUP.md`
+      // §26). Neither costs money, so the ceiling here is cadence: a stale job is its visible
+      // edge, and the task list above names which one.
       headroom: { kind: "derived", reached: !input.jobsHealthy },
       severity: input.jobsHealthy ? "ok" : "act",
       nextPlan: null,
@@ -325,18 +337,20 @@ export function oldestCheckDate(rows: readonly ServiceRow[]): string {
 }
 
 /**
- * A question somebody owes an answer to, as opposed to a fact somebody should read.
+ * A question somebody still owes an answer to, as opposed to a fact somebody should read.
  *
  * The task list already separates blocking from open from done; the money needed the same
- * distinction. "The domain costs 10.97 USD + VAT at the registry" is a fact. "Which registrar, and did we actually
- * pay that?" is a question with a person attached to it, and rendering the two identically is
- * how a decision goes unmade for a year — every line looks equally like something to read.
+ * distinction. "The domain costs 10.97 USD + VAT at the registry" is a fact. "Do we buy a month
+ * of Mailgun before the race?" is a question with a person attached to it, and rendering the
+ * two identically is how a decision goes unmade for a year.
+ *
+ * Only what is **still undecided** is listed (`DECISIONS.md` §61). The registrar question
+ * closed when the domain was bought and the currency question is answered in this file's
+ * header; a settled question rendered as "answered" for ever was a line to scroll past. The
+ * researched-and-not-taken alternatives and the Cloudflare answer left with them — they live in
+ * `DECISIONS.md`, which is where a re-decision would start anyway.
  */
-export type MoneyDecisionId =
-  | "domainRegistrar"
-  | "entryContribution"
-  | "currency"
-  | "mailgunBeforeRace";
+export type MoneyDecisionId = "entryContribution" | "mailgunBeforeRace";
 
 export type MoneyDecision = {
   id: MoneyDecisionId;
@@ -346,45 +360,17 @@ export type MoneyDecision = {
 
 export function moneyDecisions(input: PlatformFacts): MoneyDecision[] {
   return [
-    // Open until the domain exists: the registry price is known, what a registrar actually
-    // charged is not, and only the person who paid it can close this.
-    { id: "domainRegistrar", owner: "club", state: input.clubDomainBound ? "answered" : "open" },
     /**
      * Answered by the owner on 2026-09-07 (`DECISIONS.md` §50): the club sells nothing and takes
      * no money. A published event marked `PAID` contradicts that recorded answer, so it reopens
-     * the question rather than quietly overriding it.
+     * the question rather than quietly overriding it — and it is listed only while it is open.
      */
     { id: "entryContribution", owner: "club", state: input.hasPaidEvent ? "open" : "answered" },
-    // Answered in this file's header, and shown so the reader knows a decision was taken rather
-    // than that the question was never noticed.
-    { id: "currency", owner: "developer", state: "answered" },
     // Open for as long as the club is on the free daily cap, and it is a decision with a
     // deadline attached: before a registration window opens, never during one.
     { id: "mailgunBeforeRace", owner: "club", state: "open" },
   ];
 }
-
-/**
- * The alternative that was researched and not taken, per service.
- *
- * The second half of the complaint this page answers was "options": with only the chosen
- * providers on screen, every one of them looks equally load-bearing and equally permanent. Each
- * of these is already recorded somewhere — what this adds is that they are recorded *together*.
- * Nothing here re-decides anything, and `source` is where the decision actually lives.
- */
-export type ProviderOption = {
-  id: ServiceId | "storage";
-  /** The alternative's own name, which is not translated. */
-  alternative: string;
-  source: string;
-};
-
-export const PROVIDER_OPTIONS: readonly ProviderOption[] = [
-  { id: "vercel", alternative: "Render Free (Frankfurt)", source: "DECISIONS.md" },
-  { id: "mailgun", alternative: "Resend (Ireland)", source: "DECISIONS.md" },
-  { id: "zitadel", alternative: "Auth.js", source: "DECISIONS.md" },
-  { id: "storage", alternative: "public/", source: "AGENTS.md §17" },
-];
 
 /**
  * What each limit means operationally, for `/devs` — and deliberately no prices.

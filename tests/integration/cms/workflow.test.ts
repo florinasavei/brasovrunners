@@ -69,17 +69,16 @@ describe("BR-REQ-051-01 editorial workflow", () => {
 
   /** The event row as the form posts it — every column an organizer owns. */
   const EVENT_FIELDS = {
-    kind: "RACE",
+    type: "RACE",
     eventStatus: "SCHEDULED",
     timezone: "Europe/Bucharest",
     startsAtWallTime: "2026-10-11T09:00",
     endsAtWallTime: "",
     raceStartsAtWallTime: "",
-    latitude: "",
-    longitude: "",
     // One value for the whole event now (`DECISIONS.md` §36).
     locationName: "Parcul Tractorul",
     locationAddress: "",
+    surface: null,
     difficulty: null,
     costType: null,
     mapUrl: "",
@@ -120,7 +119,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "RACE",
+        type: "RACE",
         startsAt: new Date("2026-10-11T06:00:00Z"),
         // The meeting point is the event's now, and publication requires it (`DECISIONS.md` §36).
         locationName: MEETING_POINT,
@@ -622,7 +621,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(saved.updatedByStaffUserId).toBe(editor.id);
     });
 
-    it("saves the kind, the status, the distance and the climb", async () => {
+    it("saves the type, the surface, the status, the distance and the climb", async () => {
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
@@ -631,14 +630,15 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         expectedVersion: event.version,
         fields: {
           ...EVENT_FIELDS,
-          kind: "TRAIL_RUN",
+          type: "GROUP_RUN", surface: "TRAIL",
           eventStatus: "CANCELLED",
           distanceMeters: "14000",
           elevationGainMeters: "600",
         },
       });
 
-      expect(saved.kind).toBe("TRAIL_RUN");
+      expect(saved.type).toBe("GROUP_RUN");
+      expect(saved.surface).toBe("TRAIL");
       expect(saved.eventStatus).toBe("CANCELLED");
       expect(saved.distanceMeters).toBe(14000);
       expect(saved.elevationGainMeters).toBe(600);
@@ -696,26 +696,23 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       ).toBe("VALIDATION_ERROR");
     });
 
-    it("saves the meeting point coordinates", async () => {
+    it("saves a meetup with no surface, and clears a surface with the empty option", async () => {
+      // A meetup is run on nothing (`DECISIONS.md` §61): "" from the unselected dropdown is
+      // "none", not a validation error — the same reading difficulty and cost get.
       const { event } = await seedEvent();
 
       const saved = await saveEventFields(db, {
         actor: editor,
         eventId: event.id,
         expectedVersion: event.version,
-        fields: { ...EVENT_FIELDS, latitude: "45.6427", longitude: "25.5887" },
+        fields: { ...EVENT_FIELDS, type: "MEETUP", surface: "" },
       });
 
-      expect(Number(saved.latitude)).toBeCloseTo(45.6427, 4);
-      expect(Number(saved.longitude)).toBeCloseTo(25.5887, 4);
+      expect(saved.type).toBe("MEETUP");
+      expect(saved.surface).toBeNull();
     });
 
-    it.each([
-      ["only a latitude", { latitude: "45.6427", longitude: "" }],
-      ["only a longitude", { latitude: "", longitude: "25.5887" }],
-      ["a latitude past the pole", { latitude: "95", longitude: "25.5887" }],
-      ["something that is not a number", { latitude: "nord", longitude: "25.5887" }],
-    ])("refuses %s with a message rather than a constraint", async (_name, coordinates) => {
+    it("refuses a surface outside the set with a message rather than a constraint", async () => {
       const { event } = await seedEvent();
 
       expect(
@@ -724,7 +721,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
             actor: editor,
             eventId: event.id,
             expectedVersion: event.version,
-            fields: { ...EVENT_FIELDS, ...coordinates },
+            fields: { ...EVENT_FIELDS, surface: "GRAVEL" },
           }),
         ),
       ).toBe("VALIDATION_ERROR");

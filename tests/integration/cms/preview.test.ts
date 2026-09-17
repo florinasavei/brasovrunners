@@ -28,7 +28,7 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "RACE",
+        type: "RACE",
         startsAt: new Date("2026-10-11T06:00:00Z"),
         editorialStatus: "DRAFT",
       })
@@ -69,7 +69,7 @@ describe("BR-REQ-051-02 the preview reads what the public cannot", () => {
   it("returns nothing for an event that has no translation in that locale", async () => {
     const [event] = await db
       .insert(events)
-      .values({ kind: "MEETUP", startsAt: new Date("2026-10-11T06:00:00Z") })
+      .values({ type: "MEETUP", startsAt: new Date("2026-10-11T06:00:00Z") })
       .returning();
 
     expect(await findTranslationForPreview(db, event.id, "ro")).toBeUndefined();

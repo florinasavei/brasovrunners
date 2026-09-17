@@ -160,7 +160,7 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
       // delete the event pages they wrote.
       const [event] = await db
         .insert(events)
-        .values({ kind: "RACE", startsAt: new Date("2026-10-11T06:00:00Z") })
+        .values({ type: "RACE", startsAt: new Date("2026-10-11T06:00:00Z") })
         .returning();
       await db.insert(eventTranslations).values({
         eventId: event.id,

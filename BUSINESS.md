@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -122,15 +122,18 @@ The club should not need separate systems for ordinary free meetups unless an ex
 
 ### BR-BUS-010 — Event categories
 
-The platform may present:
+An event has a **type** — what it is — and, where it is run at all, a **surface** — what it is run
+on. The two are separate questions, and one label could not answer both (`DECISIONS.md` §61).
 
-- community run;
-- trail run;
-- interval or training session;
-- long run;
-- meetup or social run;
+Types:
+
+- group run (the weekly runs, the intervals, the long run — the session shape is the title's job);
 - race or running contest;
-- another explicitly named running activity.
+- hike;
+- coffee;
+- meetup — anything else the club gathers for, with the theme in the title.
+
+Surfaces: asphalt, trail, mixed. A coffee or a meetup has none.
 
 A race is an event type, not a separate registration system.
 
@@ -599,6 +602,11 @@ nobody has ever seen**: an unapproved version is not on the public site and nobo
 agreed to it, so a paragraph somebody started and thought better of does not have to stay in the
 club's document list for ever. A correction to approved wording is the next version, which is
 what versioning is for.
+
+Any version can be downloaded from the backoffice as a PDF in either language, carrying the
+club's logo, the version number, its effective date and the text's fingerprint on every page —
+a copy to read on paper or send to an adviser. It is a rendering of the stored version, never a
+place the words are written.
 
 Until the club approves its own wording, every environment except production carries a clearly
 marked **sample** privacy notice, terms and declaration: complete in structure so the club or its

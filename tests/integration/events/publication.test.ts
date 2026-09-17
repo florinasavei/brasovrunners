@@ -35,13 +35,13 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication is per event", () => {
     eventStatus?: "SCHEDULED" | "CANCELLED" | "COMPLETED";
     startsAt?: Date;
     slug?: string;
-    kind?: "COMMUNITY_RUN" | "TRAIL_RUN" | "RACE";
+    type?: "GROUP_RUN" | "RACE" | "HIKE" | "COFFEE" | "MEETUP";
   }) {
     const editorialStatus = options.editorialStatus ?? "PUBLISHED";
     const [event] = await db
       .insert(events)
       .values({
-        kind: options.kind ?? "COMMUNITY_RUN",
+        type: options.type ?? "GROUP_RUN",
         eventStatus: options.eventStatus ?? "SCHEDULED",
         startsAt: options.startsAt ?? new Date("2026-10-04T07:00:00Z"),
         editorialStatus,
@@ -134,7 +134,7 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication is per event", () => {
       await seedEvent({ slug: "run-tomorrow", startsAt: new Date("2026-09-02T07:00:00Z") });
       await seedEvent({
         slug: "race-in-december",
-        kind: "RACE",
+        type: "RACE",
         startsAt: new Date("2026-12-01T07:00:00Z"),
       });
 
@@ -143,8 +143,8 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication is per event", () => {
     });
 
     it("orders races among themselves by date", async () => {
-      await seedEvent({ slug: "race-b", kind: "RACE", startsAt: new Date("2026-11-01T07:00:00Z") });
-      await seedEvent({ slug: "race-a", kind: "RACE", startsAt: new Date("2026-10-01T07:00:00Z") });
+      await seedEvent({ slug: "race-b", type: "RACE", startsAt: new Date("2026-11-01T07:00:00Z") });
+      await seedEvent({ slug: "race-a", type: "RACE", startsAt: new Date("2026-10-01T07:00:00Z") });
       await seedEvent({ slug: "run", startsAt: new Date("2026-09-05T07:00:00Z") });
 
       const list = await listUpcomingEvents(db, "ro", NOW);
@@ -152,7 +152,7 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication is per event", () => {
     });
 
     it("leaves out events that have already finished", async () => {
-      await seedEvent({ slug: "past-race", kind: "RACE", startsAt: new Date("2026-08-01T07:00:00Z") });
+      await seedEvent({ slug: "past-race", type: "RACE", startsAt: new Date("2026-08-01T07:00:00Z") });
       await seedEvent({ slug: "upcoming-run", startsAt: new Date("2026-09-05T07:00:00Z") });
 
       const list = await listUpcomingEvents(db, "ro", NOW);
@@ -189,7 +189,7 @@ describe("BR-REQ-040-02 slug and translation uniqueness", () => {
   async function newEvent() {
     const [event] = await db
       .insert(events)
-      .values({ kind: "MEETUP", startsAt: new Date("2026-10-04T07:00:00Z") })
+      .values({ type: "MEETUP", startsAt: new Date("2026-10-04T07:00:00Z") })
       .returning();
     return event;
   }
@@ -251,7 +251,7 @@ describe("BR-REQ-040-02 slug and translation uniqueness", () => {
   it("rejects a published event with no publication date", async () => {
     await expectViolation(
       db.insert(events).values({
-        kind: "MEETUP",
+        type: "MEETUP",
         startsAt: new Date("2026-10-04T07:00:00Z"),
         editorialStatus: "PUBLISHED",
       }),
@@ -286,7 +286,7 @@ describe("BR-REQ-040-01 criterion 5 alternate locales", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "COMMUNITY_RUN",
+        type: "GROUP_RUN",
         startsAt: new Date("2026-10-04T07:00:00Z"),
         editorialStatus,
         publishedAt: editorialStatus === "PUBLISHED" ? new Date("2026-09-01T00:00:00Z") : null,
@@ -341,7 +341,7 @@ describe("BR-REQ-040-01 criterion 5 alternate locales", () => {
   it("returns nothing for an event that has no translation at all", async () => {
     const [event] = await db
       .insert(events)
-      .values({ kind: "MEETUP", startsAt: new Date("2026-10-04T07:00:00Z") })
+      .values({ type: "MEETUP", startsAt: new Date("2026-10-04T07:00:00Z") })
       .returning();
     expect(await findPublishedTranslations(db, event.id)).toEqual([]);
   });

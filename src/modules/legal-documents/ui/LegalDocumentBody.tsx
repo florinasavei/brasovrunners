@@ -1,5 +1,5 @@
 import Typography from "@mui/material/Typography";
-import type { LegalDocumentBody as LegalDocumentBodyShape } from "../domain/content-hash";
+import { isLegalDocumentBody } from "../domain/content-hash";
 
 /**
  * Renders a legal document's stored body — headings and paragraphs, nothing else (see
@@ -28,13 +28,5 @@ export default function LegalDocumentBody({ body }: { body: unknown }) {
         </div>
       ))}
     </>
-  );
-}
-
-function isLegalDocumentBody(value: unknown): value is LegalDocumentBodyShape {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    Array.isArray((value as { sections?: unknown }).sections)
   );
 }

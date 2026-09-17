@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.32-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.32-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -187,20 +187,25 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 
 ### 4.2 Events and capacity
 
-#### BR-REQ-010-01 — Event kinds
+#### BR-REQ-010-01 — Event types and surfaces
 
 - **Source:** BR-BUS-010
 - **Implements:** AGENTS.md §10.1
 - **Priority:** MUST
 - **Release:** M1
 
+Two closed sets where there was one (`DECISIONS.md` §61): the **type** says what the event is —
+group run, race, hike, coffee, meetup — and the **surface** says what it is run on — asphalt,
+trail, mixed — and may be absent, because a coffee is run on nothing.
+
 **Acceptance criteria**
 
-1. Given an event of each supported kind, when it is displayed, then its kind is presented with a localized label in both locales.
-2. Given an event of kind `RACE`, when it is registered for, then it uses the same registration model as any other kind.
-3. Given a request to create an event with an unsupported kind, when it is submitted, then it is rejected.
+1. Given an event of each supported type, when it is displayed, then its type is presented with a localized label in both locales, and its surface beside it when one is stated — as a chip on the listing and the featured hero, and in the overline of the event page.
+2. Given an event of type `RACE`, when it is registered for, then it uses the same registration model as any other type.
+3. Given a request to create an event with an unsupported type or surface, when it is submitted, then it is rejected — by the form with a message, and by the database enum whatever the source.
+4. Given the editor, when it renders, then the type is required and the surface offers an empty "not stated" option, in that order, before the event status.
 
-**Verification:** unit `events/kind.test.ts`; e2e `events-listing.spec.ts`
+**Verification:** integration `events/configuration.test.ts`, `events/structural-constraints.test.ts`; unit `i18n/messages.test.ts`; e2e `event-route.spec.ts`
 
 #### BR-REQ-011-01 — Minimal and full event configurations
 
@@ -217,9 +222,10 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 4. Given an internal event, when `registration_opens_at` is absent, then registration opens when the event is published in that locale.
 5. Given a race with a gathering time and a gun time, when its page renders, then both are shown, each labelled, in the event's timezone; and when only one time is stated, only that one is shown. `starts_at` remains when the event begins and continues to drive ordering, the upcoming/past cut-off, the sitemap and the listing.
 6. Given a race start earlier than the event start, or later than the event end where one exists, when it is submitted, then the database refuses it.
-7. Given an event with coordinates, when its page renders, then the meeting point and the address link to that exact point, and the `SportsEvent` block carries `geo` and `hasMap`. The link is built from `MAP_LINK_BASE_URL`, which is configuration: `AGENTS.md` §8 forbids a map hostname under `src/` and exempts no provider, so a club with no map service configured sees the meeting point as text rather than a guessed link.
-7a. Given coordinates, when they are saved, then latitude and longitude are present together and within ±90 and ±180; the database refuses half a pair, a value out of range, and a transposed pair. A stored `map_url` overrides the built link, must be https at the form and at the database, and renders with `rel="noopener noreferrer"`.
-8. Given an event with a route link, when its page renders, then the route is offered as its own labelled fact, separate from the meeting point and its map link, opening in a new tab with `rel="noopener noreferrer"` and a tap target of at least 44 pixels. `events.route_url` must be https at the form and again at the database; it is a link and never an uploaded file, since media storage is deferred (`AGENTS.md` §17). It is absent from the listing card, where the whole card is already one link. An event with no route link says nothing about a route, and duplicating an event carries it (`DECISIONS.md` §49).
+7. Given an event with a map link (`events.map_url`, pasted by the organizer — a Google Maps link or any other https map page), when its page renders, then the meeting point and the address link to it with `rel="noopener noreferrer"`, and the `SportsEvent` block carries it as `hasMap`. The link is stored, never assembled: `AGENTS.md` §8 forbids a map hostname under `src/` and exempts no provider. An event with no map link shows the meeting point as text and no `hasMap`. There are no coordinates and no `geo` any more (`DECISIONS.md` §61).
+7a. Given a map link, when it is saved, then it must be https at the form and again at the database, and a stored `javascript:` or `data:` value is impossible whatever the source.
+7b. Given the editor, when it renders, then the distance, the climb, the difficulty and the route link are all settable on it; and given an event with any of them stated, when its page and its listing card render, then the distance, the climb and the difficulty appear as text on both, and the route link on the page alone (criterion 8).
+8. Given an event with a route link (`events.route_url` — a Strava route or activity, or any other https link), when its page renders, then the route is offered as its own labelled fact, separate from the meeting point and its map link, opening in a new tab with `rel="noopener noreferrer"` and a tap target of at least 44 pixels; and when the link's host is `strava.com`, the Strava mark is shown beside the words — the mark only, never Strava's embed script, which is a third-party processor the privacy notice does not name (`DECISIONS.md` §61). `events.route_url` must be https at the form and again at the database; it is a link and never an uploaded file, since media storage is deferred (`AGENTS.md` §17). It is absent from the listing card, where the whole card is already one link. An event with no route link says nothing about a route, and duplicating an event carries it (`DECISIONS.md` §49).
 8. Given two events, when both are marked as the featured event, then the database refuses the second; and when one is featured, the landing page leads with it, above the ordinary listing, ordered featured → race → soonest.
 
 **Verification:** integration `events/configuration.test.ts`; unit `events/zoned-time.test.ts`; e2e `event-pages.spec.ts`
@@ -974,7 +980,7 @@ other participant link uses — never by a password.
 
 **Acceptance criteria**
 
-1. Given an Editor or an Administrator, when they create an event, then they supply its kind, its status, its times and time zone, its coordinates, its distance and climb, the featured flag and the whole registration block, plus a title, address and description in every language, and the event is created as a draft.
+1. Given an Editor or an Administrator, when they create an event, then they supply its type and surface, its status, its times and time zone, its map link and route link, its distance and climb, the featured flag and the whole registration block, plus a title, address and description in every language, and the event is created as a draft.
 2. Given an existing event, when it is edited, then every one of those fields is editable through the interface, and no field of `events` requires a developer.
 3. Given an event, when it is duplicated, then the copy is a draft, is not featured, has never been published, and carries its own page address in each language.
 4. Given an Administrator, when they delete an event that has no registration against it, then it and its translations are removed.
@@ -1074,7 +1080,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 
 **Acceptance criteria**
 
-1. Given the homepage, when it renders, then it contains one `SportsOrganization` JSON-LD block with a stable `@id`, the club name, logo, URL, and `sameAs` entries for the club's official profiles. `sameAs` comes from `CLUB_FACEBOOK_URL` and `CLUB_INSTAGRAM_URL` and is omitted where neither is configured; `logo` is still absent and needs an approved raster (`DECISIONS.md` §58).
+1. Given the homepage, when it renders, then it contains one `SportsOrganization` JSON-LD block with a stable `@id`, the club name, logo, URL, and `sameAs` entries for the club's official profiles. `sameAs` comes from `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL` and `CLUB_STRAVA_URL` and is omitted where none is configured; `logo` is still absent and needs an approved raster (`DECISIONS.md` §58).
 2. Given a published event page, when it renders, then it contains a `SportsEvent` block whose start and end times carry the event timezone offset, whose `organizer` references the club `@id`, and whose `location` includes a postal address.
 3. Given a capped event, when the block renders, then `remainingAttendeeCapacity` equals the free-place count displayed on the same page.
 4. Given a cancelled event, when the page renders, then the block is still present with `eventStatus` set to cancelled.
@@ -1153,6 +1159,27 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 14. Given an approved version, when withdrawing its approval is attempted, then there is no such operation: `DECISIONS.md` §53 records that a declaration is bound to the participant at submission rather than at render, so changing which version is current would let somebody sign text they never read.
 
 **Verification:** integration `legal/editor.test.ts`, `legal/deletion.test.ts`
+
+#### BR-REQ-053-03 — A legal document version downloads as a PDF
+
+- **Source:** BR-BUS-053
+- **Implements:** AGENTS.md §12.5, §9.2
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built (`DECISIONS.md` §63). A rendering of a stored version — never a source of
+  text — for the owner to read on paper, send to the club's adviser, or file.
+
+**Acceptance criteria**
+
+1. Given an Administrator on a version's page, when it renders, then it offers one download per language the version has, as a plain link to `GET /api/admin/legal/<id>/pdf?locale=<locale>` that works with JavaScript off.
+2. Given that request, when it is answered, then the response is `application/pdf`, named `<key>-v<version>-<locale>.pdf`, not cached, and nothing was written anywhere but the response.
+3. Given the file, when it is opened, then it carries the club's lockup, the version's title, its version number and effective date, and the text — headings and paragraphs as stored — with the club's name, the version, the content hash and the page number on every page; the metadata names the version and the full hash.
+4. Given an unapproved version, when its PDF renders, then a band under the title says it is a draft with no effect; an approved version carries no such band.
+5. Given the text, when it is set, then it is set in the site's own font with every Romanian diacritic, embedded in the file — the standard PDF fonts cannot spell ș or ț.
+6. Given a role below Administrator, or no session, when the address is requested, then it is refused (403, 401) before any row is read.
+7. Given the words on the file — "Version", "Effective from", the draft notice, "Page n of N" — when they render, then they are in the document's language, not the backoffice reader's.
+
+**Verification:** unit `legal-documents/pdf.test.ts`; e2e `legal-versions.spec.ts`
 
 ### 4.10 Transactional email
 

@@ -29,7 +29,7 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
     const [event] = await db
       .insert(events)
       .values({
-        kind: "TRAIL_RUN",
+        type: "GROUP_RUN", surface: "TRAIL",
         startsAt: new Date("2026-09-20T05:00:00Z"),
         editorialStatus: "PUBLISHED",
         publishedAt: new Date("2026-09-01T00:00:00Z"),

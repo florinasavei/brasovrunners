@@ -19,6 +19,7 @@ import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { findLatestPastEvent, listUpcomingEvents } from "@/modules/events/repository";
 import { PAGE_WIDTH } from "@/theme/brand";
+import { liftOnHover, riseIn } from "@/theme/motion";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -96,8 +97,15 @@ export default async function EventsPage({ params }: Props) {
         !featured && <Alert severity="info">{t("empty")}</Alert>
       ) : (
         <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
-          {listed.map((event) => (
-            <Card key={event.id} component="li" variant="outlined">
+          {listed.map((event, index) => (
+            /* Each card rises into place in reading order and lifts under a pointer — CSS
+               only, and none of it for a reader who asked for less motion (`theme/motion.ts`). */
+            <Card
+              key={event.id}
+              component="li"
+              variant="outlined"
+              sx={{ ...liftOnHover, ...riseIn(index) }}
+            >
               <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
                 <CardContent>
                   <Stack
@@ -105,7 +113,11 @@ export default async function EventsPage({ params }: Props) {
                     spacing={1}
                     sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}
                   >
-                    <Chip size="small" label={tEvent(`kind.${event.kind}`)} />
+                    <Chip size="small" label={tEvent(`type.${event.type}`)} />
+                    {/* The surface beside the type, only when the club has said. */}
+                    {event.surface && (
+                      <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />
+                    )}
                     {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
                     {event.eventStatus === "CANCELLED" && (
                       <Chip size="small" color="error" label={tEvent("cancelled")} />

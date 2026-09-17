@@ -14,7 +14,6 @@ import {
   PRICE_AGEING_AFTER_DAYS,
   PRICE_STALE_AFTER_DAYS,
   priceFreshness,
-  PROVIDER_OPTIONS,
   registrationsLeftToday,
 } from "@/modules/diagnostics/platform-plans";
 import {
@@ -99,23 +98,20 @@ describe("BR-REQ-090-05 criterion 1 the free-tier verdict", () => {
 });
 
 describe("BR-REQ-090-05 criterion 1 the money question, answered with a number", () => {
-  it("pays nothing at all while the domain has not been bought", () => {
-    // The complaint this answers was that the one line which is not free carried no figure. The
-    // honest figure today is zero: nothing has been bought, the domain included.
-    expect(annualCostToday(platformServices(BASE))).toEqual([]);
+  it("totals the domain in the registry's own currency, on every hostname", () => {
+    // Bought on 2026-09-16 (`DECISIONS.md` §55). QA and a laptop are not on the club's domain
+    // and the club still pays for it, so the figure does not depend on where this runs.
+    for (const facts of [BASE, { ...BASE, clubDomainBound: true }]) {
+      expect(annualCostToday(platformServices(facts))).toEqual([
+        { currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true },
+      ]);
+    }
   });
 
-  it("totals the domain in the registry's own currency once it is bound", () => {
-    const total = annualCostToday(platformServices({ ...BASE, clubDomainBound: true }));
-    expect(total).toEqual([
-      { currency: "USD", amount: DOMAIN_PRICE_USD_PER_YEAR, plusVat: true },
-    ]);
-  });
-
-  it("names the domain as the next spend, and email once the domain is paid for", () => {
+  it("names email as the next spend now that the domain is paid for", () => {
     // `docs/PLATFORM.md`'s own expected order, walked against what the deployment reports
-    // rather than restated as prose.
-    expect(nextSpend(platformServices(BASE))?.id).toBe("domain");
+    // rather than restated as prose: the domain is bought, so Mailgun Basic is next.
+    expect(nextSpend(platformServices(BASE))?.id).toBe("mailgun");
     expect(nextSpend(platformServices({ ...BASE, clubDomainBound: true }))?.id).toBe("mailgun");
   });
 
@@ -161,17 +157,24 @@ describe("BR-REQ-090-05 criterion 4 how close this deployment is, right now", ()
     expect(charging?.severity).toBe("watch");
   });
 
-  it("does not shout at the club for having bought its own domain", () => {
-    // Both rows are `reached` once the domain is bound and they mean opposite things: the
-    // domain is good news, Zitadel's zero custom domains is a bill. Colour follows meaning.
-    const bound = platformServices({ ...BASE, clubDomainBound: true });
-    expect(bound.find((row) => row.id === "domain")?.severity).toBe("ok");
-    expect(bound.find((row) => row.id === "zitadel")?.severity).toBe("watch");
+  it("does not shout at the club about the domain or about sign-in, on any hostname", () => {
+    // The domain row states which hostname this deployment answers on and nothing is wrong
+    // either way; Zitadel's custom login domain is decided against, not pending, so binding the
+    // club's domain raises no bill there (`docs/RUNBOOKS.md` § Staff sign-in).
+    for (const facts of [BASE, { ...BASE, clubDomainBound: true }]) {
+      const rows = platformServices(facts);
+      expect(rows.find((row) => row.id === "domain")?.severity).toBe("ok");
+      expect(rows.find((row) => row.id === "zitadel")?.severity).toBe("ok");
+    }
+    expect(
+      platformServices({ ...BASE, clubDomainBound: true }).find((row) => row.id === "domain")
+        ?.headroom,
+    ).toEqual({ kind: "derived", reached: true });
   });
 
   it("marks the scheduler as something to fix when a job is late", () => {
     const late = platformServices({ ...BASE, jobsHealthy: false });
-    expect(late.find((row) => row.id === "githubActions")?.severity).toBe("act");
+    expect(late.find((row) => row.id === "scheduler")?.severity).toBe("act");
   });
 });
 
@@ -202,14 +205,11 @@ describe("BR-REQ-090-05 criterion 5 no price is invented, and none is undated", 
 });
 
 describe("BR-REQ-090-05 a decision is a question, not a grey fact among facts", () => {
-  it("asks what the domain actually cost until somebody has bought it", () => {
-    const open = moneyDecisions(BASE).find((decision) => decision.id === "domainRegistrar");
-    const closed = moneyDecisions({ ...BASE, clubDomainBound: true }).find(
-      (decision) => decision.id === "domainRegistrar",
-    );
-    expect(open?.state).toBe("open");
-    expect(open?.owner).toBe("club");
-    expect(closed?.state).toBe("answered");
+  it("lists only questions that can still be open — nothing settled for good", () => {
+    // The registrar and currency questions were answered and stayed on the page as "answered"
+    // lines to scroll past; today's list carries only what somebody still owes (§61).
+    const ids = moneyDecisions(BASE).map((decision) => decision.id);
+    expect(ids).toEqual(["entryContribution", "mailgunBeforeRace"]);
   });
 
   it("treats a paid event as reopening the question the owner already answered", () => {
@@ -292,35 +292,15 @@ describe("BR-REQ-090-05 nothing renders as an untranslated key, in either langua
     }
   });
 
-  it("translates every decision, both when it is open and when it is answered", () => {
-    for (const decision of moneyDecisions(BASE)) {
+  it("translates every decision the page can show, which is only the open ones", () => {
+    for (const decision of moneyDecisions({ ...BASE, hasPaidEvent: true })) {
       for (const [locale, messages] of LOCALES) {
-        for (const key of ["question", "open", "answered"]) {
+        for (const key of ["question", "open"]) {
           expect(
             messageAt(messages, `decisions.${decision.id}.${key}`),
             `${locale} ${decision.id}.${key}`,
           ).toBeTruthy();
         }
-      }
-    }
-  });
-
-  it("translates every option, and the Cloudflare answer that keeps being asked for", () => {
-    for (const option of PROVIDER_OPTIONS) {
-      for (const [locale, messages] of LOCALES) {
-        expect(messageAt(messages, `options.${option.id}.title`), `${locale} ${option.id}`)
-          .toBeTruthy();
-        expect(messageAt(messages, `options.${option.id}.why`), `${locale} ${option.id}`)
-          .toBeTruthy();
-      }
-    }
-
-    // Recorded in three files nobody reads together — the proxy, the DNS and Workers — plus the
-    // two places Cloudflare is genuinely a good option, both contingent on something else.
-    for (const [locale, messages] of LOCALES) {
-      for (const key of ["title", "proxy", "dns", "workers", "r2", "turnstile"]) {
-        expect(messageAt(messages, `cloudflare.${key}`), `${locale} cloudflare.${key}`)
-          .toBeTruthy();
       }
     }
   });

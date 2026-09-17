@@ -90,14 +90,14 @@ function eventFieldsFrom(form: FormData) {
   const value = (field: string) => text(form, `event.${field}`);
 
   return {
-    kind: value("kind"),
+    type: value("type"),
+    // Optional, like difficulty below: "" from the unselected dropdown means "none".
+    surface: value("surface") || null,
     eventStatus: value("eventStatus"),
     timezone: value("timezone"),
     startsAtWallTime: value("startsAtWallTime"),
     endsAtWallTime: value("endsAtWallTime"),
     raceStartsAtWallTime: value("raceStartsAtWallTime"),
-    latitude: value("latitude"),
-    longitude: value("longitude"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     locationAddress: value("locationAddress"),

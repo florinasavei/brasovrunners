@@ -221,13 +221,6 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
  * "approved" lives in another table.
  */
 function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
-  if ((fields.latitude === null) !== (fields.longitude === null)) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      "coordinates: give both latitude and longitude, or neither",
-    );
-  }
-
   if (fields.registrationMode !== "INTERNAL") {
     if (fields.capacity !== null || fields.declarationDocumentId !== null) {
       throw new DomainError(
@@ -269,14 +262,13 @@ function assertCoherentRegistrationBlock(fields: EventFieldsInput): void {
 /** The columns of `events` a form writes, in one place, so create and save cannot drift. */
 function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
   return {
-    kind: fields.kind,
+    type: fields.type,
+    surface: fields.surface,
     eventStatus: fields.eventStatus,
     timezone: fields.timezone,
     startsAt: times.startsAt,
     endsAt: times.endsAt,
     raceStartsAt: times.raceStartsAt,
-    latitude: fields.latitude,
-    longitude: fields.longitude,
     mapUrl: fields.mapUrl,
     routeUrl: fields.routeUrl,
     locationName: fields.locationName,
@@ -542,9 +534,9 @@ export type SaveEventFieldsInput = {
 };
 
 /**
- * Every column an organizer owns: the kind, the status, the times and the timezone, the
- * coordinates and the map link, the distance and the climb, the featured flag, and the whole
- * registration block.
+ * Every column an organizer owns: the type and the surface, the status, the times and the
+ * timezone, the map link and the route link, the distance and the climb, the featured flag, and
+ * the whole registration block.
  *
  * Editorial control of what the club advertises, so an Author is refused (§10.2). The times
  * arrive as wall-clock strings and are interpreted in the event's own timezone — never the
@@ -796,14 +788,13 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
       .insert(events)
       .values({
         raceId: source.raceId,
-        kind: source.kind,
+        type: source.type,
+        surface: source.surface,
         eventStatus: source.eventStatus,
         startsAt: source.startsAt,
         endsAt: source.endsAt,
         raceStartsAt: source.raceStartsAt,
         timezone: source.timezone,
-        latitude: source.latitude,
-        longitude: source.longitude,
         mapUrl: source.mapUrl,
         routeUrl: source.routeUrl,
         locationName: source.locationName,

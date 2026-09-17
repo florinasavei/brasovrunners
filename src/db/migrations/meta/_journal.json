@@ -162,6 +162,13 @@
       "when": 1788754816383,
       "tag": "0022_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1789657704764,
+      "tag": "0023_event_type_and_surface",
+      "breakpoints": true
     }
   ]
 }

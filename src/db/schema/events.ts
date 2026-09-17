@@ -5,7 +5,6 @@ import {
   index,
   integer,
   jsonb,
-  numeric,
   pgEnum,
   pgTable,
   text,
@@ -20,15 +19,29 @@ import { staffUsers } from "./staff-users";
 
 // AGENTS.md §10.1 defines these sets. They are database enums so an unsupported value is
 // rejected by the database, not only by application validation (BR-REQ-010-01 criterion 3).
-export const eventKind = pgEnum("event_kind", [
-  "COMMUNITY_RUN",
-  "TRAIL_RUN",
-  "INTERVAL_SESSION",
-  "LONG_RUN",
-  "MEETUP",
-  "RACE",
-  "OTHER",
-]);
+
+/**
+ * What the event *is*: a group run, a race, a hike, a coffee, or another kind of meetup.
+ *
+ * It was one seven-value `event_kind` — community run, trail run, interval session, long run,
+ * meetup, race, other — and that list mixed two questions. "Trail run" answered *where* you run,
+ * "interval session" answered *how*, and the club had to pick one chip for an event that was
+ * both. Migration `0023` split it (`DECISIONS.md` §61): this enum answers what the event is,
+ * `event_surface` below answers what you run on, and the pace or the session shape is the
+ * title's job. HIKE and COFFEE are the two things this club does on foot and at a table that are
+ * not runs, by the owner's word on 2026-09-17; MEETUP is what is left — a shoe-testing evening
+ * is a MEETUP whose title says so. A sixth value is a migration, not free text.
+ */
+export const eventType = pgEnum("event_type", ["GROUP_RUN", "RACE", "HIKE", "COFFEE", "MEETUP"]);
+
+/**
+ * What the event is run on. Nullable, because a meetup is run on nothing.
+ *
+ * Three values, the club's own three words. A fourth is a migration, not free text — the point
+ * of a closed set is that adding to it is a decision, and that the public page renders it in
+ * the reader's language rather than in whichever one the organizer typed.
+ */
+export const eventSurface = pgEnum("event_surface", ["ASPHALT", "TRAIL", "MIXED"]);
 
 export const eventStatus = pgEnum("event_status", ["SCHEDULED", "CANCELLED", "COMPLETED"]);
 
@@ -97,7 +110,8 @@ export const events = pgTable(
     // M2 footprint: a race groups child distance events (BR-REQ-012-01). No behaviour yet.
     raceId: uuid("race_id"),
 
-    kind: eventKind("kind").notNull(),
+    type: eventType("type").notNull(),
+    surface: eventSurface("surface"),
     eventStatus: eventStatus("event_status").notNull().default("SCHEDULED"),
 
     /**
@@ -155,28 +169,17 @@ export const events = pgTable(
     timezone: text("timezone").notNull().default("Europe/Bucharest"),
 
     /**
-     * The exact spot, in decimal degrees.
+     * The meeting point on a map: a link the organizer pasted, stored and never assembled.
      *
-     * A name is not a location: "Parcul Tractorul" puts a runner somewhere in a park, and the
-     * start is one corner of it. These are what the map link is built from, and what the
-     * `SportsEvent` block publishes as `geo` so a search result can show the right pin.
+     * `latitude` and `longitude` sat beside this until migration `0023` and are gone: an
+     * organizer was asked for two decimal numbers to produce a link they could have pasted in
+     * one move from the map they were already looking at (`DECISIONS.md` §61). Stored rather
+     * than built also keeps the map provider out of the code — AGENTS.md §8 forbids a hostname
+     * literal anywhere under `src/` and exempts no provider — and it lets the club link a named
+     * venue page or a pin it has already dropped, which coordinates never could.
      *
-     * Both or neither — half a coordinate is a point in the Atlantic.
-     */
-    latitude: numeric("latitude"),
-    longitude: numeric("longitude"),
-
-    /**
-     * An override for the map link, when the club wants one specific page.
-     *
-     * The ordinary way to get a map link is the coordinates above: the application builds one
-     * from them and `MAP_LINK_BASE_URL`, which is configuration. That indirection is not
-     * decoration — AGENTS.md §8 forbids a hostname literal anywhere under `src/` and exempts no
-     * provider, so a maps URL can be *configured* but never written into the code.
-     *
-     * This column wins when it is set, for the case coordinates cannot express: a named venue
-     * page, a shared list, a pin the club has already dropped. The database requires https, so
-     * `javascript:` and `data:` cannot be stored even by a seed or a hand-written `UPDATE`.
+     * The database requires https, so `javascript:` and `data:` cannot be stored even by a
+     * seed or a hand-written `UPDATE`.
      *
      * It is **where to meet**, and nothing else. The route is `route_url` below — the two were
      * one column until somebody needed both on the same event (`DECISIONS.md` §49).
@@ -326,23 +329,6 @@ export const events = pgTable(
       sql`${t.routeUrl} IS NULL OR ${t.routeUrl} LIKE 'https://%'`,
     ),
 
-    /**
-     * A coordinate is a pair, and each half has a range.
-     *
-     * Latitude beyond ±90 does not exist, and longitude beyond ±180 wraps — both are what a
-     * transposed pair looks like, which is the mistake this catches: Brașov is 45.65, 25.60,
-     * and typed the other way round it is a field in Somalia.
-     */
-    check(
-      "events_coordinates_are_a_pair",
-      sql`(${t.latitude} IS NULL) = (${t.longitude} IS NULL)`,
-    ),
-    check(
-      "events_coordinates_in_range",
-      sql`(${t.latitude} IS NULL OR (${t.latitude} >= -90 AND ${t.latitude} <= 90))
-          AND (${t.longitude} IS NULL OR (${t.longitude} >= -180 AND ${t.longitude} <= 180))`,
-    ),
-
     check(
       "events_non_negative_measurements",
       sql`(${t.distanceMeters} IS NULL OR ${t.distanceMeters} >= 0)
@@ -390,7 +376,7 @@ export const events = pgTable(
       "events_published_has_a_publication_date",
       sql`${t.editorialStatus} <> 'PUBLISHED' OR ${t.publishedAt} IS NOT NULL`,
     ),
-    check("events_race_id_implies_race_kind", sql`${t.raceId} IS NULL OR ${t.kind} = 'RACE'`),
+    check("events_race_id_implies_race_type", sql`${t.raceId} IS NULL OR ${t.type} = 'RACE'`),
 
     /**
      * At most one featured event, enforced by the database.
@@ -406,7 +392,7 @@ export const events = pgTable(
     // Every public query filters on publication and orders by the start, now that publication
     // is a column here rather than on the translation the query joins.
     index("events_editorial_status_starts_at_idx").on(t.editorialStatus, t.startsAt),
-    index("events_kind_starts_at_idx").on(t.kind, t.startsAt),
+    index("events_type_starts_at_idx").on(t.type, t.startsAt),
     index("events_registration_mode_starts_at_idx").on(t.registrationMode, t.startsAt),
   ],
 );
