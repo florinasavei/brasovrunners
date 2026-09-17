@@ -22,7 +22,8 @@
     "skipToContent": "Sari la conținut",
     "nav": {
       "label": "Navigare principală",
-      "events": "Evenimente"
+      "events": "Evenimente",
+      "more": "Mai multe"
     }
   },
   "Home": {
@@ -392,8 +393,9 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Nota de confidențialitate, termenii și declarația pe care o semnează participanții. Se pot citi aici; nu se pot modifica.",
+      "intro": "Nota de confidențialitate, termenii și declarația pe care o semnează participanții. O versiune se scrie ca ciornă, se aprobă și de atunci rămâne fixă; o modificare este versiunea următoare.",
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
+      "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă, alege documentul, lipește textul aprobat în ambele limbi, salvează ciorna, citește-o, aprob-o.",
       "document": "Document",
       "version": "Versiune",
       "state": "Stare",
@@ -722,6 +724,8 @@
     "resultsNameConsent": "Numele meu poate apărea în rezultatele publice",
     "listOptOut": "Nu vreau să apar pe lista publică de participanți, dacă va exista una",
     "submit": "Trimite înscrierea",
+    "submitting": "Se trimite…",
+    "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",

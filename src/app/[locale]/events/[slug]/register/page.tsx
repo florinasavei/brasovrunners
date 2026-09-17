@@ -1,7 +1,6 @@
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
@@ -23,7 +22,9 @@ import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import SubmitButton from "@/shared/ui/SubmitButton";
 import { submitRegistrationAction } from "./actions";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -149,7 +150,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   });
 
   return (
-    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title", { event: event.title })}
       </Typography>
@@ -537,20 +538,25 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </CheckboxField>
 
               {/*
-                Enabled, always, and deliberately.
+                Pressable, always, and deliberately — and, since 2026-09-17, honest about it.
 
-                A submit button disabled until a form validates cannot say *why* it is disabled:
-                somebody using a screen reader meets a control that does nothing and is told
-                nothing, and somebody using a mouse is left hunting for the field they missed.
-                Pressing it is what produces the answer — the browser refuses, focuses the first
-                unfilled field and says what it wants, in the reader's own language, with no
-                JavaScript at all. Disabling it would also need a client island, which the
-                standing rule keeps to the few that earn it (§1.5). The marking above is the fix;
-                the button is not.
+                A submit button *disabled* until a form validates cannot say why: somebody using
+                a screen reader meets a control that does nothing and is told nothing, and
+                somebody with a mouse is left hunting for the field they missed. Pressing it is
+                what produces the answer — the browser refuses, focuses the first unfilled field
+                and says what it wants, in the reader's own language. So the button stays
+                pressable. What the owner asked for is the *signal* that the form is not yet
+                complete, and `SubmitButton` gives that: dimmed, with one sentence beneath it,
+                while any required field is empty, and a press still runs the browser's check.
+                One client island, shared with every other form here.
               */}
-              <Button type="submit" variant="contained" sx={TAP_TARGET}>
-                {t("submit")}
-              </Button>
+              <SubmitButton
+                label={t("submit")}
+                pendingLabel={t("submitting")}
+                incompleteHint={t("incompleteHint")}
+                size="large"
+                fullWidth
+              />
             </Stack>
           </form>
         </>

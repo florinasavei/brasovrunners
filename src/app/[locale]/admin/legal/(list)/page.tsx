@@ -18,6 +18,7 @@ import { isReliedOn } from "@/modules/legal-documents/service";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import ButtonLink from "@/shared/ui/ButtonLink";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { deleteLegalVersionAction } from "../actions";
 
@@ -67,7 +68,13 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  await requireStaffRole("ADMIN");
+  const actor = await requireStaffRole("ADMIN");
+  // Creating a version is a Superadministrator's act (BR-REQ-053-02); an Administrator reads.
+  // Offered here rather than only from an existing version's page, because an environment with
+  // no version yet — production, by design — has no such page to start from, and the create
+  // route was reachable by typing its address and no other way (found on production,
+  // 2026-09-17: "I still can't create documents").
+  const mayCreate = actor.role === "SUPERADMIN";
 
   const current = await searchParams;
   const { saved, error } = current;
@@ -159,8 +166,16 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         </Typography>
       </Stack>
 
+      {mayCreate && (
+        <Box>
+          <ButtonLink href="/admin/legal/new" variant="contained" sx={{ minHeight: 44 }}>
+            {t("legal.newTitle")}
+          </ButtonLink>
+        </Box>
+      )}
+
       {versions.length === 0 ? (
-        <Alert severity="warning">{t("legal.empty")}</Alert>
+        <Alert severity="warning">{mayCreate ? t("legal.emptyCanCreate") : t("legal.empty")}</Alert>
       ) : (
         <AdminTable
           caption={t("legal.tableCaption")}

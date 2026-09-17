@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 /**
  * The height of the footer's one visible line. Thin, by the owner's instruction: the bar sits at
@@ -72,7 +73,7 @@ export default async function SiteFooter() {
         zIndex: 1000,
       }}
     >
-      <Container maxWidth="lg" sx={{ position: "relative" }}>
+      <Container maxWidth={PAGE_WIDTH} sx={{ position: "relative" }}>
         <Box component="details">
           <Box
             component="summary"

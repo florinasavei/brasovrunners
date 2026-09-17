@@ -22,7 +22,8 @@
     "skipToContent": "Skip to content",
     "nav": {
       "label": "Main navigation",
-      "events": "Events"
+      "events": "Events",
+      "more": "More"
     }
   },
   "Home": {
@@ -392,8 +393,9 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The privacy notice, the terms, and the declaration participants sign. Readable here; not editable.",
+      "intro": "The privacy notice, the terms, and the declaration participants sign. A version is written as a draft, approved, and from then on fixed; a change is the next version.",
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
+      "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version, choose the document, paste the approved wording in both languages, save the draft, read it, approve it.",
       "document": "Document",
       "version": "Version",
       "state": "State",
@@ -722,6 +724,8 @@
     "resultsNameConsent": "My name may appear in public results",
     "listOptOut": "Keep me off the public participant list, if there is one",
     "submit": "Submit registration",
+    "submitting": "Sending…",
+    "incompleteHint": "Fill in the fields marked with * to send.",
     "submitted": "Check your email to confirm your registration.",
     "errors": {
       "title": "The registration could not be submitted",

@@ -169,8 +169,10 @@ the backoffice afterwards.
 
 **The header carries the club's lockup** — the supplied artwork entire, mountains over
 `BRASOV RUNNERS` in the lettering the logo was drawn with, at 44px so that lettering reads. The
-browser tab shows the same file. Two other arrangements were tried on 2026-09-17 and are recorded
-in `SiteHeader.tsx` with what was wrong with each (`DECISIONS.md` §58).
+browser tab shows the same file. The kit-face wordmark (Facón) is on the **homepage**, above the
+listing, and nowhere else (`shared/ui/Wordmark`). Three other arrangements were tried on
+2026-09-17 and are recorded in `SiteHeader.tsx` with what was wrong with each (`DECISIONS.md`
+§58). The page is `xl` wide; `PAGE_WIDTH` in `theme/brand.ts` is the one place that says so.
 
 **Standing pages are written in an editor.** `modules/content/rich-text`: an allowlisted Tiptap
 schema (`AGENTS.md` §11.3) validated on the server, a server renderer that can only emit what the

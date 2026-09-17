@@ -20,6 +20,7 @@ import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import AdminTabs, { type AdminTab } from "@/modules/staff-identity/ui/AdminTabs";
 import { env } from "@/shared/config/env";
 import { signOutAction } from "./actions";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
 
@@ -93,7 +94,7 @@ export default async function AdminLayout({ children, params }: Props) {
       and wrong for a list of registrations with a status, a date, an address and an event title
       on every row — at `md` those wrap into four lines each and the list stops being scannable.
     */
-    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 5 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 5 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
