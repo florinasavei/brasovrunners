@@ -169,6 +169,13 @@
       "when": 1789657704764,
       "tag": "0023_event_type_and_surface",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789670326616,
+      "tag": "0024_registration_bib_numbers",
+      "breakpoints": true
     }
   ]
 }

@@ -357,6 +357,11 @@ Repeated unregistration requests are safe and show the current state rather than
 
 ### BR-BUS-037 — Backoffice registration management and resend
 
+The backoffice also gives an event's confirmed participants their **race numbers**, as a batch
+in order of confirmation — a number once given never changes — and prints them as a sheet, two
+per A4 page with the club's logo, the number and the name, all of them or a range. Test
+registrations get no number and are never printed.
+
 The backoffice shows, for each registration:
 
 - participant name and email;

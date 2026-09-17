@@ -49,6 +49,31 @@ function offsetMilliseconds(date: Date, timeZone: string): number {
   return asUtc - date.getTime();
 }
 
+/**
+ * The same wall-clock time, some days or months later, in the event's own zone.
+ *
+ * A weekly run is "Sunday at 08:00", not "Sunday at 08:00 plus 168 hours": across the March
+ * and October changes, adding hours to the instant moves the run to 07:00 or 09:00. So the
+ * interval is added to the calendar — the wall clock in `timeZone` — and the instant is derived
+ * from that, the same way an organizer's typed time is. Months clamp the way JavaScript's
+ * `Date` does: the 31st plus a month is the 1st or 2nd of the month after next, which for a
+ * monthly run on the 31st is the honest answer to a question with no right one.
+ */
+export function addWallClockInterval(
+  date: Date,
+  timeZone: string,
+  interval: { days?: number; months?: number },
+): Date {
+  const wall = toWallTimeInput(date, timeZone);
+  const [year, month, day, hour, minute] = wall.split(/[-T:]/).map(Number);
+  const shifted = new Date(
+    Date.UTC(year, month - 1 + (interval.months ?? 0), day + (interval.days ?? 0), hour, minute),
+  );
+  const result = fromWallTimeInput(shifted.toISOString().slice(0, 16), timeZone);
+  if (!result) throw new Error(`cannot shift ${date.toISOString()} in ${timeZone}`);
+  return result;
+}
+
 /** The value an `<input type="datetime-local">` shows: `YYYY-MM-DDTHH:mm`, no zone. */
 export function toWallTimeInput(date: Date | null, timeZone: string): string {
   if (!date) return "";

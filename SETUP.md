@@ -1556,6 +1556,33 @@ Offboarding:
 - [ ] Transfer branches/issues/runbooks.
 - [ ] Confirm Brașov Runners retains recovery ownership.
 
+## 32. Create the Cloudflare R2 bucket for the photo gallery
+
+Owner's step, about ten minutes, needed before the gallery (`AGENTS.md` §17; its own `DECISIONS.md` section
+arrives with it) can be built and tested. Free at the club's size — `docs/PLATFORM.md` has the
+allowance and the one catch: **Cloudflare requires a payment method on file to switch R2 on**,
+even on the free plan. Nothing is charged inside the allowance.
+
+1. **Account.** `dash.cloudflare.com` → Sign up, with the club's address (the password manager
+   record `Brașov Runners / Cloudflare R2`, §3). The free plan; no domain needs to be added —
+   the site's DNS stays at ROMARG (`DECISIONS.md` §50 on why Cloudflare is not in front of it).
+2. **Enable R2.** Left menu → R2 Object Storage → "Purchase R2" (the free plan; this is where the
+   card is asked for).
+3. **Bucket.** Create bucket → name `brasovrunners-media`, location hint **European Union** —
+   the participants' photos stay in the EU like everything else. Leave public access **off**:
+   the site serves images through its own URL, never a public bucket.
+4. **Token.** R2 → "Manage R2 API Tokens" → Create API token → name `brasovrunners-site`,
+   permission **Object Read & Write**, scoped to that one bucket, no TTL. Copy the **Access Key
+   ID**, the **Secret Access Key** and the **endpoint** (`https://<account id>.r2.cloudflarestorage.com`)
+   before closing — the secret is shown once.
+5. **Hand over.** Paste into `.env.local` as a commented block, exactly as the other providers'
+   values are kept there (§3): the account id, the access key id, the secret, the bucket name.
+   The five `R2_*` variables of `AGENTS.md` §8 are declared in `env.ts` by the gallery pull
+   request, which also sets them on both Vercel projects.
+
+Production and QA share one bucket with a per-environment prefix (`qa/`, `production/`) until
+a second bucket is worth a second token; the adapter takes the prefix from configuration.
+
 Final operational rule:
 
 > No direct production fixes, no participant password system, no state-changing email GET links, no raw tokens in storage or logs, no live email in QA, no external CMS, no unreviewed declaration wording, and no AI reviewer with repository write access.

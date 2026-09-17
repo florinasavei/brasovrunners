@@ -238,7 +238,7 @@ The launchable product is **M1**. Later milestones are scheduled in the owner's 
 | Milestone | Delivers |
 | --- | --- |
 | M1 — Launch | Foundation; staff auth and minimal backoffice; public event pages with exact free-place count and structured data; complete registration lifecycle including waiting list, offers, expiry, restart; outbox with capture adapter from the first registration and live Mailgun before real use; legal documents via runbook; production on the custom domain |
-| M2 — Race features | Multi-distance race pages and registration UI; bib batch assignment and export; results import and publishing with consent; backoffice completeness: state-aware resend, CSV export, staff-created registrations, exceptional promotion |
+| M2 — Race features | Multi-distance race pages and registration UI; one bib number per race across its distances; results import and publishing with consent; backoffice completeness: state-aware resend, CSV export, staff-created registrations, exceptional promotion. Per-event bib assignment and the printed sheet moved to M1 on 2026-09-17 (BR-REQ-038-01, `DECISIONS.md` §65) |
 | M3 — Announcements | Event updates with editorial approval; `EVENT_UPDATE_NOTICE` to active registrations |
 | M4 — Runner profiles | Opt-in public profiles, social links, moderation |
 | M5 — Mini CMS | Articles, static pages, galleries and media library, Author role in full |
@@ -954,6 +954,9 @@ Non-human routes are unprefixed:
 /api/admin/legal/[id]/pdf         a legal document version as a PDF, one language per
                                  request (BR-REQ-053-03); Administrator only; a GET that
                                  writes the file into the response and nowhere else
+/api/admin/events/[id]/bibs       the event's race numbers as a printable sheet, all or a
+                                 range (BR-REQ-038-01); Administrator only; reads what the
+                                 assign action wrote and writes nothing
 ```
 
 `/login` is an alias, not a route: the proxy redirects it to the sign-in path — unprefixed, so
@@ -1769,7 +1772,7 @@ registrations
 - results_consent_version integer NOT NULL
 - list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
-- bib_number integer null              -- M1 footprint; assigned in M2, unique per race, enforced in the assignment transaction
+- bib_number integer null              -- BR-REQ-038-01; assigned as a batch under the event-row lock, unique per event (partial index); per race across distances is M2
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null
