@@ -1,18 +1,10 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listPublishedPages } from "@/modules/content/pages/repository";
-import {
-  FONT,
-  HEADER_MARK_HEIGHT,
-  HEADER_MARK_HEIGHT_PX,
-  HEADER_WORDMARK_SIZE,
-  LOGO,
-  WORDMARK,
-} from "@/theme/brand";
+import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
@@ -58,17 +50,12 @@ async function navigationPages(locale: Locale) {
  * `LogoLink` (AGENTS.md §14.1: narrow client boundaries).
  *
  * The logo is the club's **lockup** — the supplied artwork entire, mountains over the runner
- * and the small `BRASOV RUNNERS` in the lettering the logo was drawn with — and beside it the
- * wordmark again, large, in the kit face. Both, by the owner's instruction of 2026-09-17: the
- * artwork because it carries the runner figure the mountains-only crop lost, and the live text
- * because at header height the artwork's own lettering is small and the kit face is what reads.
- * That the name appears twice on the row is the brand as printed on the shirt, and it is the
- * club's call. Everything on the row is vertically centred on one line.
- *
- * The visible wordmark is unaccented, matching the printed kit — a logotype, not the club's
- * name, and safe only because it is pure ASCII: Facón has no Romanian characters at all. So the
- * link's accessible name comes from the message catalogue and assistive technology announces
- * `Brașov Runners`, spelled properly, and never the artwork or the kit face.
+ * and the small `BRASOV RUNNERS` in the lettering the logo was drawn with. For most of
+ * 2026-09-17 the kit-face wordmark sat beside it, large, so the name would read at header
+ * height; the owner then moved it out of the header and onto the homepage (`shared/ui/Wordmark`),
+ * where it has the room a display face wants. The header is the artwork alone again, and the
+ * link's accessible name comes from the message catalogue, so assistive technology announces
+ * `Brașov Runners`, spelled properly, and never the artwork.
  *
  * A plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for the image
  * optimizer to do, and serving one through `next/image` requires `dangerouslyAllowSVG`, which
@@ -108,7 +95,7 @@ export default async function SiteHeader() {
       }}
     >
       <Container
-        maxWidth="lg"
+        maxWidth={PAGE_WIDTH}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -147,24 +134,6 @@ export default async function SiteHeader() {
               width: "auto",
             }}
           />
-          <Typography
-            component="span"
-            sx={{
-              // Facón is one style: black, italic. Both are stated so the fallback, Roboto,
-              // lands in the same weight and slant if the font has not arrived yet.
-              fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,
-              fontWeight: 900,
-              fontStyle: "italic",
-              fontSize: HEADER_WORDMARK_SIZE,
-              lineHeight: 1,
-              // The face is wide and tightly fitted; a little tracking stops the letters
-              // touching at header size.
-              letterSpacing: "0.02em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {WORDMARK}
-          </Typography>
         </LogoLink>
         </Box>
 
@@ -182,8 +151,12 @@ export default async function SiteHeader() {
           sx={{
             order: { xs: 3, sm: 2 },
             flexBasis: { xs: "100%", sm: "auto" },
-            // The nav below scrolls sideways rather than wrapping, and a flex child will not
-            // shrink below its content unless both it and the scroller say so.
+            // The nav measures itself against this box and folds what does not fit into a
+            // menu (SiteNav). So the box must be *all* the room between the logo and the
+            // language switcher: without `flexGrow` it shrank to the entries left on the row
+            // after the first fold, measured against that, and folded again — "wrapping
+            // happens way too soon, I still have room here" (the owner, 2026-09-17).
+            flexGrow: 1,
             minWidth: 0,
             flexShrink: 1,
             ml: { sm: 2 },

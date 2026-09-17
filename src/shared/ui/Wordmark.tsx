@@ -1,0 +1,42 @@
+import Typography from "@mui/material/Typography";
+import { getTranslations } from "next-intl/server";
+import { FONT, WORDMARK, WORDMARK_SIZE } from "@/theme/brand";
+
+/**
+ * `BRASOV RUNNERS` in the kit face, as it is printed on the shirt. The homepage shows it above
+ * the listing; nothing else does (the header carries the artwork lockup, which has its own
+ * lettering).
+ *
+ * The visible text is unaccented — a logotype, not the club's name, and safe only because it is
+ * pure ASCII: Facón has no Romanian characters. So the element is an image to assistive
+ * technology, named from the message catalogue, and announces `Brașov Runners` spelled
+ * properly rather than the kit's spelling.
+ *
+ * A Server Component: it renders one span and needs nothing from the client.
+ */
+export default async function Wordmark() {
+  const t = await getTranslations("Site");
+  return (
+    <Typography
+      component="p"
+      role="img"
+      aria-label={t("name")}
+      sx={{
+        // Facón is one style: black, italic. Both are stated so the fallback, Roboto, lands in
+        // the same weight and slant if the font has not arrived yet.
+        fontFamily: `${FONT.wordmark}, ${FONT.fallback}`,
+        fontWeight: 900,
+        fontStyle: "italic",
+        fontSize: WORDMARK_SIZE,
+        lineHeight: 1,
+        // The face is wide and tightly fitted; a little tracking stops the letters touching.
+        letterSpacing: "0.02em",
+        whiteSpace: "nowrap",
+        color: "primary.main",
+        m: 0,
+      }}
+    >
+      {WORDMARK}
+    </Typography>
+  );
+}

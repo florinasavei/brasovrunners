@@ -19,6 +19,7 @@ import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
 
@@ -114,7 +115,7 @@ export default async function PreviewEventPage({ params }: Props) {
   const mapLink = mapLinkFor(preview, env.MAP_LINK_BASE_URL);
 
   return (
-    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <Alert severity="warning" sx={{ mb: 3 }}>
         {t("preview.notice", { status: EDITORIAL_STATUS_LABEL[event.editorialStatus] })}
       </Alert>

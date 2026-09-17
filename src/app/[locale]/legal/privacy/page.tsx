@@ -8,6 +8,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
+import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -37,7 +38,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
   const document = await findCurrentApprovedDocument(getDb(), "PRIVACY_NOTICE", locale, new Date());
 
   return (
-    <Container id="main" component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       {document ? (
         <>
           <Typography variant="h1" gutterBottom>
