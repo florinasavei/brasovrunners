@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.29-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.30-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -165,6 +165,13 @@ is the real thing; local and test still use the development switcher of `AGENTS.
 environment without a Zitadel tenant runs `STAFF_AUTH_MODE=disabled`, answering 404 to every staff
 request. Everywhere there *is* a way in, a signed-out `/admin` goes to sign-in and comes back to
 the backoffice afterwards.
+
+**Standing pages are written in an editor.** `modules/content/rich-text`: an allowlisted Tiptap
+schema (`AGENTS.md` §11.3) validated on the server, a server renderer that can only emit what the
+allowlist names, and one client island for the writing. Headings, bold, italic, links, lists and
+quotations — and nothing else, because everything else in StarterKit is switched off in the editor
+*and* refused by the schema. Bodies written before it are read through the same module, so no
+migration ran. Images wait on a media library, which waits on R2 (`DECISIONS.md` §58).
 
 **Legal documents.** `legal_documents`/`legal_document_translations` (§12.5), immutable once
 approved or referenced. The backoffice **writes** them and never **rewrites** them

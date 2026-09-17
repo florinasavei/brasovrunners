@@ -63,12 +63,15 @@ test.describe("the build badge", () => {
     }
   });
 
-  test("shows when the code behind it was last changed, to the minute", async ({ page }) => {
-    await page.goto("/ro/evenimente");
-    // A year is the part that is stable across locales; the month name is not. The time is
-    // what separates two deploys on the same afternoon.
-    await expect(badge(page)).toHaveText(/\d{4}/);
-    await expect(badge(page)).toHaveText(/\d{2}:\d{2}/);
+  test("stamps the build with a version and an ISO date, in both locales", async ({ page }) => {
+    // "17 sept. 2026" beside a version was read as the date the *club* last posted something.
+    // `app-ver` and an ISO date read as what they are — the build — and they read identically in
+    // Romanian and English, which is the point of choosing ISO over either locale's format.
+    for (const path of ["/ro/evenimente", "/en/events"]) {
+      await page.goto(path);
+      await expect(badge(page)).toHaveText(/app-ver/);
+      await expect(badge(page)).toHaveText(/\d{4}-\d{2}-\d{2}/);
+    }
   });
 
   test("names the environment, so qa and production are never confused", async ({ page }) => {

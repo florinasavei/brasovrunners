@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -786,6 +786,9 @@ APP_BASE_URL
 DATABASE_URL
 STAFF_AUTH_MODE
 MAP_LINK_BASE_URL
+PRODUCTION_SITE_URL
+CLUB_FACEBOOK_URL
+CLUB_INSTAGRAM_URL
 Auth.js values required by the installed provider
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
@@ -827,6 +830,13 @@ Rules:
   the provider is a deployment decision rather than a code one — which is what keeps the
   hostname out of `src/`. Unset, the meeting point renders as text with no link: a missing map
   is a missing convenience, and a guessed one sends runners somewhere else;
+- `PRODUCTION_SITE_URL` is the club's real site, which the "this is not the real site" banner
+  links to (§7.5). It cannot derive from `APP_BASE_URL`, which is deliberately *this*
+  environment's host. Set it in qa; unset elsewhere, the banner simply ends its sentence;
+- `CLUB_FACEBOOK_URL` and `CLUB_INSTAGRAM_URL` are the club's own profiles, shown in the footer
+  and emitted as the `sameAs` of the `SportsOrganization` structured data (BR-REQ-052-02). Both
+  optional, and **omitted entirely when unset** rather than emitted empty: an empty `sameAs` is
+  a claim that the club has no profiles, and a guessed one misinforms a search engine;
 - `STAFF_AUTH_MODE` is `dev-switcher`, `provider`, or `disabled`. Unset, it derives: the
   switcher in local and test, `disabled` everywhere else. Stating `dev-switcher` outside local
   or test fails at startup, for the same reason live email does — a permissive deployment is
@@ -1361,6 +1371,16 @@ Rules:
 - do not store arbitrary client-generated HTML as authority;
 - no paid Tiptap Cloud/collaboration/comments/AI extension;
 - editor integrated with MUI and accessible keyboard controls.
+
+**Built, for standing pages** (`DECISIONS.md` §58). `modules/content/rich-text` holds the three
+parts this section requires and they are separate on purpose: `domain/schema.ts` is the allowlist
+and the only thing that decides what may be stored, `ui/RichText.tsx` renders through it on the
+server — a node type it has no case for cannot reach a page whatever is stored — and
+`ui/RichTextEditor.tsx` is the one client island, which switches off everything StarterKit ships
+beyond the list above. Bodies written before it existed are read through the same module and need
+no migration. Events keep a `body_json` column that no editor writes; legal documents keep the
+plain-text shape, because `content_sha256` is published under a version number and computed over
+it (§12.5).
 
 ### 11.4 Fixed pages
 

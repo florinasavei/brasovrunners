@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3313,3 +3313,77 @@ not edited from the backoffice" — false since §46 — and now says what the f
 what to do instead.
 
 Baseline `BR-V1.29-2026-09-17`.
+
+## 58. Decided — the editor arrives for standing pages, allowlisted end to end (2026-09-17)
+
+**Status:** Decided and built. Implements the Tiptap contract of `AGENTS.md` §11.3 for standing
+pages, and only for them. BR-REQ-050-03 criteria 10-11, BR-REQ-052-02 criterion 1.
+
+### Why now, when §51 said the opposite
+
+§51 chose a plain-text body for standing pages and gave a good reason: pulling the Tiptap contract
+forward to write one About page would decide the M5 schema for the wrong reason. What changed is
+that the owner sat down to write the About page and the format was the obstacle — "I need to
+create and edit the about page", 2026-09-17. The reason §51 gave has also weakened: the contract
+in §11.3 was already written and agreed, so implementing it decides nothing that was still open.
+
+### Three files, because they do three different jobs
+
+- **`domain/schema.ts` is the allowlist**, and the only thing that decides what may be stored. It
+  runs on the server, because the editor runs in somebody else's browser and what arrives is
+  whatever that browser chose to post.
+- **`ui/RichText.tsx` renders it**, by walking the document. This is the stronger half of the
+  security property: a node type with no `case` here cannot appear on a page whatever is in the
+  column. No `dangerouslySetInnerHTML`, no HTML generation, no virtual DOM on the server, and no
+  third dependency to do it.
+- **`ui/RichTextEditor.tsx` is the one client island**, and it switches off everything StarterKit
+  ships beyond §11.3's list. Not for safety — the schema already refuses them — but so that an
+  organizer is never offered a control whose output the save would then reject, at the end of a
+  long edit, with no explanation.
+
+### Decisions inside that are worth stating once
+
+- **Links are the dangerous part, and are treated as such.** An `href` is one of the few places a
+  string becomes code. `javascript:`, `data:` and `vbscript:` are refused; so is `//host`, which
+  parses as protocol-relative and leaves the site without looking like it. `target`, `rel` and
+  `class` are **dropped** on the way in and decided by the renderer on the way out, so every
+  external link carries `noopener noreferrer` — including in a body written before that rule.
+- **Attributes are stripped, node types are refused.** Dropping an unknown attribute loses nothing
+  the club wrote; dropping an unknown *node* would silently delete a paragraph. So one is a
+  `z.object` and the other a discriminated union.
+- **A read-time adapter, not a migration.** A deployment and its migration start together, so for
+  a few seconds code and rows disagree (§7.6). Converting the old section shape on read means old
+  and new rows both work during that window and for as long afterwards as nobody edits them.
+- **Legal documents are not touched and will not be.** `content_sha256` is computed over their
+  shape and published under a version number; changing it would invalidate every hash an
+  acceptance names (§12.5, §46). Their textarea stays.
+- **Events are not touched either.** They carry a `body_json` column no editor writes and no page
+  renders. Giving events a body is a product decision about what an event page says, not a
+  consequence of this one.
+- **No nested lists, no images, no hard breaks.** Nesting is one `z.lazy` away and nobody asked.
+  Images need a media library, which needs R2 and an upload route, and uploads are the one
+  unguarded surface §19.4 still names. Hard breaks, code, strikethrough and underline are simply
+  not in §11.3; adding one is a rule change in two places at once, which is the point.
+- **Words on the toolbar, not icons.** `@mui/icons-material` would be a dependency for one screen
+  (§1.5). "B", "I", "H2" also read without hovering.
+
+### Four smaller things the owner asked for in the same session
+
+- The footer is one line: legal links and "about the club" share it, the club block opens beneath,
+  and the club's Facebook and Instagram sit in it. Those two are **configuration**
+  (`CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL`), because §8 forbids a hostname under `src/` and
+  exempts no provider — and the same values complete the `sameAs` that BR-REQ-052-02 has wanted
+  since it was written, and that `structured-data.ts` said in a comment it was waiting for.
+  `logo` is still absent: it needs a raster the club has approved for the purpose, and the SVG is
+  not one.
+- The "not production" banner links to the club's real site (`PRODUCTION_SITE_URL`, qa only). A
+  visitor sent a QA link had no way to reach the real one, which is the entire reason §7.5 asks
+  for the banner.
+- The build badge says `app-ver`, the version and an ISO date. "ultima actualizare · 17 sept.
+  2026" was read as the date the *club* last posted something. ISO also reads identically in both
+  languages, which a month name does not.
+- The header shows the club's name once. The lockup contains a wordmark, so with the kit text
+  beside it the name appeared twice on one row, and the two could not be aligned because one is
+  baked into a 2.4:1 image. The mark carries no text; the browser tab keeps the lockup.
+
+Baseline `BR-V1.30-2026-09-17`.

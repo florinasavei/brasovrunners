@@ -40,6 +40,17 @@ async function seedStaff(db: TestDatabase, role: "MODERATOR" | "CONTRIBUTOR" | "
   return { id: row.id, role: row.role };
 }
 
+/** What the editor posts: a heading and a paragraph, as the JSON string the form carries. */
+function body(heading: string, paragraph: string): string {
+  return JSON.stringify({
+    type: "doc",
+    content: [
+      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: heading }] },
+      { type: "paragraph", content: [{ type: "text", text: paragraph }] },
+    ],
+  });
+}
+
 function fields(overrides: Record<string, unknown> = {}) {
   return {
     navOrder: "10",
@@ -47,14 +58,14 @@ function fields(overrides: Record<string, unknown> = {}) {
       ro: {
         slug: "despre-noi",
         title: "Despre Brașov Runners",
-        body: "## Cine suntem\n\nUn club de alergare din Brașov.",
+        body: body("Cine suntem", "Un club de alergare din Brașov."),
         seoTitle: "",
         seoDescription: "",
       },
       en: {
         slug: "about-us",
         title: "About Brașov Runners",
-        body: "## Who we are\n\nA running club in Brașov.",
+        body: body("Who we are", "A running club in Brașov."),
         seoTitle: "",
         seoDescription: "",
       },
@@ -96,10 +107,15 @@ describe("BR-REQ-050-03 standing pages", () => {
       .where(eq(pageTranslations.pageId, page.id));
     expect(translations.map((row) => row.locale).sort()).toEqual(["en", "ro"]);
 
-    // The body is stored structured, converted from the text an organizer typed.
+    // The body is stored as the validated document the editor produced — not as the string it
+    // arrived in, and not as anything the server had to guess at (§11.3).
     const romanian = translations.find((row) => row.locale === "ro");
     expect(romanian?.bodyJson).toEqual({
-      sections: [{ heading: "Cine suntem", paragraphs: ["Un club de alergare din Brașov."] }],
+      type: "doc",
+      content: [
+        { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Cine suntem" }] },
+        { type: "paragraph", content: [{ type: "text", text: "Un club de alergare din Brașov." }] },
+      ],
     });
 
     // A draft is not reachable by guessing its address.
@@ -363,7 +379,7 @@ describe("BR-REQ-050-03 what counts as complete", () => {
     expect(
       describeIncompletePageLocales([
         { locale: "ro", title: "Despre", bodyJson: { sections: [{ paragraphs: ["x"] }] } },
-        { locale: "en", title: "  ", bodyJson: { sections: [] } },
+        { locale: "en", title: "  ", bodyJson: { type: "doc", content: [] } },
       ]),
     ).toEqual([{ locale: "en", missing: ["title", "body"] }]);
   });

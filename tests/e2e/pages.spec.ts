@@ -15,6 +15,35 @@ let englishSlug = "";
 let editorUrl = "";
 let title = "";
 
+/**
+ * Write a body the way an organizer does: click into the editor, optionally turn the first line
+ * into a heading with the toolbar, then type. Scoped by `data-rich-text` because the form holds
+ * one editor per language and their controls are otherwise identical.
+ */
+async function writeBody(
+  page: import("@playwright/test").Page,
+  locale: "ro" | "en",
+  heading: string | null,
+  paragraph: string,
+) {
+  const editor = page.locator(`[data-rich-text="translations.${locale}.body"]`);
+  await editor.locator("[data-field]").click();
+
+  if (heading !== null) {
+    // `## ` at the start of a line becomes a heading as it is typed — the editor's own input
+    // rule, and the shortcut a writer reaches for. Typing it also proves the toolbar reads the
+    // document correctly, which is asserted below.
+    await page.keyboard.type(`## ${heading}`);
+    await expect(editor.getByRole("button", { name: /^(Titlu|Heading)$/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    // Enter leaves a heading for a paragraph, which is what a writer expects.
+    await page.keyboard.press("Enter");
+  }
+  await page.keyboard.type(paragraph);
+}
+
 /* Serial: all four tests act on the one page the first creates. */
 test.describe.serial("BR-REQ-050-03 standing pages", () => {
   test("is created, published, and reachable in both languages", async ({ page }) => {
@@ -30,10 +59,13 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await field("navOrder").fill("5");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
-    await field("translations.ro.body").fill("## Cine suntem\n\nUn club de alergare din Brașov.");
     await field("translations.en.title").fill(`About the club ${suffix}`);
     await field("translations.en.slug").fill(englishSlug);
-    await field("translations.en.body").fill("## Who we are\n\nA running club in Brașov.");
+
+    // The body is written in the editor, so the test writes it the way an organizer does:
+    // press the heading control, type, press Enter, type the paragraph (BR-REQ-050-03, §11.3).
+    await writeBody(page, "ro", "Cine suntem", "Un club de alergare din Brașov.");
+    await writeBody(page, "en", "Who we are", "A running club in Brașov.");
 
     await page.getByRole("button", { name: "Pagină nouă" }).click();
     await expect(page).toHaveURL(/\/admin\/pages\/[0-9a-f-]{36}/);
@@ -51,9 +83,10 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // Both languages go live together (`AGENTS.md` §11.2), each at its own address.
     await page.goto(`/ro/pagini/${slug}`);
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
-    // The body's `## ` heading became a real heading rather than literal text.
+    // What the organizer marked as a heading is a heading on the page, and the paragraph
+    // beneath it is text — the editor's output rendered through the §11.3 allowlist.
     await expect(page.getByRole("heading", { name: "Cine suntem" })).toBeVisible();
-    expect(await page.locator("body").innerText()).not.toContain("## Cine suntem");
+    await expect(page.getByText("Un club de alergare din Brașov.")).toBeVisible();
 
     expect((await page.goto(`/en/pages/${englishSlug}`))?.status()).toBe(200);
     await expect(page.getByRole("heading", { name: "Who we are" })).toBeVisible();
@@ -83,7 +116,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
     await field("translations.ro.title").fill(`Pe jumătate ${suffix}`);
     await field("translations.ro.slug").fill(`pe-jumatate-${suffix}`);
-    await field("translations.ro.body").fill("Un paragraf.");
+    await writeBody(page, "ro", null, "Un paragraf.");
     await field("translations.en.title").fill(`Half done ${suffix}`);
     await field("translations.en.slug").fill(`half-done-${suffix}`);
     // The English body is left empty on purpose.

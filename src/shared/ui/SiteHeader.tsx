@@ -57,10 +57,14 @@ async function navigationPages(locale: Locale) {
  * A Server Component — nothing here is interactive except the link, and that lives in
  * `LogoLink` (AGENTS.md §14.1: narrow client boundaries).
  *
- * The logo is the supplied lockup — mountains and wordmark as one piece of artwork, in the
- * brand blue — by the owner's instruction of 2026-09-16, with `BRASOV RUNNERS` set beside it as
- * live text in the kit face by his instruction of 2026-09-17: at header height the wordmark
- * inside the lockup is small, and the live text is what actually reads. The visible wordmark is
+ * The mark is the mountains, and `BRASOV RUNNERS` beside it is live text in the club's kit
+ * face. The full lockup was tried here on 2026-09-16 and replaced on 2026-09-17: the lockup
+ * *contains* a wordmark, so with the kit text beside it the club's name appeared twice on one
+ * row, the artwork's copy four pixels tall and the live copy full size — and the two could not
+ * be aligned with each other because one is baked into a 2.4:1 image. The mark carries no text,
+ * so there is exactly one wordmark and it is the one that scales with the reader's font
+ * settings. The lockup is still what the browser tab shows, where its own wordmark is the point.
+ * The visible wordmark is
  * unaccented, matching the printed kit — a logotype, not the club's name, and safe only because
  * it is pure ASCII: Facón has no Romanian characters at all. So the link's accessible name comes
  * from the message catalogue and assistive technology announces `Brașov Runners`, spelled
@@ -122,12 +126,12 @@ export default async function SiteHeader() {
         <LogoLink label={t("name")}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={LOGO.lockup.src}
+            src={LOGO.mark.src}
             // The attributes reserve the box at its largest, from the artwork's own
             // proportions, so the header does not reflow while the SVG loads; the CSS below
             // draws it at the fluid size. A differently shaped lockup needs no change here.
             height={HEADER_MARK_HEIGHT_PX}
-            width={Math.round((HEADER_MARK_HEIGHT_PX * LOGO.lockup.width) / LOGO.lockup.height)}
+            width={Math.round((HEADER_MARK_HEIGHT_PX * LOGO.mark.width) / LOGO.mark.height)}
             alt=""
             style={{
               display: "block",

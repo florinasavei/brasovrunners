@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -278,22 +278,85 @@ do.
 
 ### Switching the canonical domain
 
-The club will hold two domains (`DECISIONS.md` §55). Making the other one canonical is the binding
-run twice and a redeploy, and touches no code:
+Run once, on the day the club moves from one of its domains to the other — `.com` to `.ro`, or
+back (`DECISIONS.md` §55). Everything needed is here; nothing below requires reading another
+document, and **no application code changes**. If a step here turns out to need a code change,
+something has violated `AGENTS.md` §8.
 
-- [ ] `yarn domain:bind production <new-domain> --apply` — its apex serves, its `www` redirects,
-      `APP_BASE_URL` moves.
-- [ ] `yarn domain:bind production <old-domain> --alias-of <new-domain> --apply` — the old apex
-      and `www` now redirect, permanently.
-- [ ] Zitadel: add the new redirect and post-logout URIs before the redeploy; remove the old ones
-      once sign-in is proven on the new host.
-- [ ] Redeploy. Cookies are host-only (`AGENTS.md` §8), so every staff member signs in once more;
-      participants hold no session to lose, and every email link is built from `APP_BASE_URL` at
-      send time.
-- [ ] The Mailgun sending domain may stay where it is: it need not match the site's host, only the
-      `From` address.
-- [ ] `yarn smoke https://<new-domain>`; `curl -sI https://<old-domain>` answers 308 to the new
-      apex; the sitemap names the new host only.
+#### What follows automatically, and why
+
+`APP_BASE_URL` is the single source of every absolute URL this application emits (§8), so moving
+it moves all of these at once, on the next deployment:
+
+- canonical tags, `hreflang` alternates and Open Graph URLs;
+- `sitemap.xml` and `robots.txt`;
+- every email action link — built when the message is rendered, not when it is queued, so even
+  messages already waiting in the outbox go out with the new host;
+- the authentication callback and the Mailgun webhook URL.
+
+Two more things cost nothing by design. **Cookies are host-only** — no `domain` attribute — so the
+old host's cookies simply stop being sent; the only effect is that each staff member signs in once
+more, and participants hold no session at all. And **the identity provider's own hostname is not
+the club's**, so it does not move: the sign-in page keeps the address it has, and only the list of
+URIs it accepts changes. That is a direct consequence of staying on the provider's free tier
+(`docs/PLATFORM.md`, limit 4); a custom identity domain would add a second domain migration to
+every switch.
+
+#### The two commands
+
+```bash
+# 1. The new canonical: its apex serves the site, its www redirects to the apex, APP_BASE_URL moves.
+yarn domain:bind production <new-domain>            # dry run first — prints exactly what it will change
+yarn domain:bind production <new-domain> --apply
+
+# 2. The old one becomes a permanent redirect, so every link ever shared keeps working.
+yarn domain:bind production <old-domain> --alias-of <new-domain> --apply
+```
+
+Both print the DNS records to create at the registrar. The script never redeploys: `APP_BASE_URL`
+reaches a running application only on a new deployment, and choosing when is the operator's call.
+
+QA is the same two commands with `qa` and the QA hostnames, and is worth doing first: it rehearses
+the whole thing on a site nobody is reading.
+
+#### What does not follow automatically
+
+- [ ] **Identity provider redirect URIs.** Add `https://<new-domain>/api/auth/callback/zitadel`
+      and the post-logout URI `https://<new-domain>` **before** the redeploy, or the first person
+      to sign in afterwards is refused. Keep the old entries until sign-in is proven on the new
+      host, then remove them.
+- [ ] **`PRODUCTION_SITE_URL` in the qa project**, which is what the "this is not the real site"
+      banner links to. It is the only variable that names the real site from somewhere else, so
+      nothing else corrects it: miss it and QA keeps sending visitors to the domain you just left.
+- [ ] **The Mailgun sending domain may stay where it is.** DKIM aligns with the `From` address,
+      not with the site's host, so mail sent from a subdomain of the old name keeps delivering
+      from the new site. Move it only if the club wants the address to match the site — and if it
+      does, that is a fresh domain verification with its own SPF and DKIM records and its own
+      propagation wait, so start it days ahead, not on the day.
+- [ ] **Search Console**: add the new host as a property and submit its sitemap. Keep the old
+      property — it is what reports that the redirect is being followed.
+- [ ] **Anything printed.** A race number, a flyer or a shirt carries whichever address was
+      current when it went to print, and a redirect cannot fix a QR code somebody photographs in
+      a year. This is the reason to decide the final domain before the first print run rather
+      than after.
+
+#### Verify
+
+```bash
+yarn smoke https://<new-domain>
+curl -sI https://<old-domain>            # 308, pointing at the new apex
+curl -sI https://www.<new-domain>        # 308, pointing at the new apex
+curl -s https://<new-domain>/sitemap.xml | head -5   # every URL is the new host
+```
+
+Then sign in as a member of staff, end to end, and send one test registration to confirm the email
+link points at the new host and works.
+
+#### Rollback
+
+Run the two commands the other way round and redeploy. Certificates and DNS records for both names
+can stay in place — holding two domains is the normal state here, and which one is canonical is
+one variable and two redirects.
 
 ### Step 4 — Canonical cleanup
 

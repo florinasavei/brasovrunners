@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.29-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.29-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.30-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
