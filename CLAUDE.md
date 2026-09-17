@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.30-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.31-2026-09-17 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.30-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.31-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -165,6 +165,11 @@ is the real thing; local and test still use the development switcher of `AGENTS.
 environment without a Zitadel tenant runs `STAFF_AUTH_MODE=disabled`, answering 404 to every staff
 request. Everywhere there *is* a way in, a signed-out `/admin` goes to sign-in and comes back to
 the backoffice afterwards.
+
+**The header carries the club's lockup** — the supplied artwork entire, mountains over
+`BRASOV RUNNERS` in the lettering the logo was drawn with, at 44px so that lettering reads. The
+browser tab shows the same file. Two other arrangements were tried on 2026-09-17 and are recorded
+in `SiteHeader.tsx` with what was wrong with each (`DECISIONS.md` §58).
 
 **Standing pages are written in an editor.** `modules/content/rich-text`: an allowlisted Tiptap
 schema (`AGENTS.md` §11.3) validated on the server, a server renderer that can only emit what the

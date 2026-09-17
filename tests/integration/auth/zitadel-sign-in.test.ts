@@ -35,6 +35,36 @@ describe("BR-REQ-060-01 Zitadel sign-in", () => {
     expect(allowed).toBe(false);
   });
 
+  /**
+   * The refusal that has now cost an afternoon twice, on two environments, and looks on screen
+   * exactly like an uninvited account: the Zitadel application has "Include user profile info in
+   * the ID Token" switched off, so the token carries no `email` claim at all and the gate has
+   * nothing to match. An invited, already-bound, otherwise perfect staff user is still refused —
+   * which is why the server now logs `NO_EMAIL_CLAIM` while the screen keeps saying nothing.
+   */
+  it("refuses a token carrying no email claim, even for an invited and bound account", async () => {
+    const invited = await insertStaffUser(db, {
+      email: "ana@example.test",
+      displayName: "Ana",
+      role: "MODERATOR",
+    });
+    await resolveZitadelSignIn(
+      db,
+      { subject: "zitadel:ana", email: "ana@example.test", emailVerified: true },
+      NOW,
+    );
+    expect((await findStaffUserByZitadelSubject(db, "zitadel:ana"))?.id).toBe(invited.id);
+
+    // The same account, on a token whose profile claims are missing.
+    const allowed = await resolveZitadelSignIn(
+      db,
+      { subject: "zitadel:ana", email: null, emailVerified: true },
+      NOW,
+    );
+
+    expect(allowed).toBe(false);
+  });
+
   it("refuses a provider that has not verified the email", async () => {
     await insertStaffUser(db, { email: "ana@example.test", displayName: "Ana", role: "MODERATOR" });
 

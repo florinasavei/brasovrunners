@@ -21,6 +21,14 @@ import { env } from "@/shared/config/env";
  * code, and needs no state (§1.5). The summary is a 44px tap target, because this is reached with
  * a thumb (BR-REQ-041-01).
  *
+ * ## Why the summary keeps the browser's own triangle
+ *
+ * The first version styled the summary `display: flex` to make it a 44px tap target, which in
+ * Chrome and Safari **removes the disclosure marker** — so the control read as a third piece of
+ * plain text and nobody could tell it opened. The height now comes from padding, the display
+ * stays the browser's `list-item`, and the triangle sits at the start of the label where a
+ * reader already looks for it.
+ *
  * ## Why the links are beside the `<details>` and not inside its summary
  *
  * A `<summary>` is a button. Links nested inside a button are invalid, and a screen reader
@@ -49,9 +57,10 @@ export default async function SiteFooter() {
         <Stack
           direction="row"
           spacing={2}
-          // `flex-start` keeps the two links on the first line when the disclosure is open: the
-          // row grows under "about the club" alone, where the summary that opened it is.
-          sx={{ flexWrap: "wrap", alignItems: "flex-start", rowGap: 0.5 }}
+          // Centred as a group, and `flex-start` on the cross axis keeps the two links on the
+          // first line when the disclosure is open: the row grows under "about the club" alone,
+          // where the summary that opened it is.
+          sx={{ justifyContent: "center", flexWrap: "wrap", alignItems: "flex-start", rowGap: 0.5 }}
         >
           <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
           <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
@@ -62,14 +71,15 @@ export default async function SiteFooter() {
               sx={{
                 cursor: "pointer",
                 color: "text.secondary",
-                minHeight: 44,
-                display: "flex",
-                alignItems: "center",
+                // Padding rather than a flex box with a minimum height: it reaches the same 44px
+                // and leaves `display: list-item` alone, so the browser still draws the triangle.
+                py: 1.5,
+                "&::marker": { color: "text.secondary" },
               }}
             >
               {footer("about.summary")}
             </Box>
-            <Stack spacing={1} sx={{ pb: 1, maxWidth: "40rem" }}>
+            <Stack spacing={1} sx={{ pb: 1, maxWidth: "40rem", textAlign: "start" }}>
               <Typography variant="body2" color="text.secondary">
                 {footer("about.description")}
               </Typography>

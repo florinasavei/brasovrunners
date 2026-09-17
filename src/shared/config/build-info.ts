@@ -50,19 +50,33 @@ export function formatVersion(info: BuildInfo = buildInfo): string {
  * cannot answer the only question it exists to answer.
  */
 /**
- * The build's date as `YYYY-MM-DD`, for the badge every visitor can see.
+ * The build's moment as `YYYY-MM-DD HH:MM`, for the badge every visitor can see.
  *
  * ISO rather than a locale format, on the owner's instruction of 2026-09-17: "17 sept. 2026"
  * beside a version string was read as *the site's* last update — as though the club had not
- * posted anything since — when it is the date this code was built. An ISO date next to
- * "app-ver" reads as a build stamp, which is what it is. `/devs` keeps the readable form: its
- * audience is one administrator looking at a deployment.
+ * posted anything since — when it is the moment this code was built. An ISO stamp next to
+ * "app-ver" reads as a build stamp, which is what it is, and it reads identically in Romanian
+ * and English, which a month name does not.
+ *
+ * **The time is part of it**, restored on the same day it was dropped: two releases on one
+ * afternoon share a date, so a date alone cannot answer "is this the build I just shipped?" —
+ * which is the only question this stamp exists to answer.
+ *
+ * The recorded offset is kept rather than converted to UTC. `committedAt` is the commit's own
+ * timestamp, so `2026-09-17T11:40:00+03:00` shows as `11:40` — the time on the clock of
+ * whoever made the build. Converting it to `08:40` would be correct and unrecognisable.
+ * `/devs` keeps the readable form: its audience is one administrator looking at a deployment.
  */
 export function formatBuildDate(info: BuildInfo = buildInfo): string | null {
   if (!info.committedAt) return null;
-  const date = new Date(info.committedAt);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString().slice(0, 10);
+  if (Number.isNaN(new Date(info.committedAt).getTime())) return null;
+
+  const asRecorded = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(info.committedAt);
+  if (asRecorded) return `${asRecorded[1]} ${asRecorded[2]}`;
+
+  // Anything the regex does not recognise but `Date` does — fall back to UTC rather than
+  // dropping the stamp entirely.
+  return new Date(info.committedAt).toISOString().slice(0, 16).replace("T", " ");
 }
 
 export function formatLastUpdated(locale: string, info: BuildInfo = buildInfo): string | null {
