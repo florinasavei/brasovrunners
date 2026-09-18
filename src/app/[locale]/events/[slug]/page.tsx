@@ -15,6 +15,9 @@ import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/e
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventVideo from "@/modules/events/ui/EventVideo";
+import Box from "@mui/material/Box";
+import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
+import RichText from "@/modules/content/rich-text/ui/RichText";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import StartList from "@/modules/events/ui/StartList";
 import { env } from "@/shared/config/env";
@@ -146,6 +149,13 @@ export default async function EventDetailPage({ params }: Props) {
             )}
           </Typography>
         </Stack>
+      )}
+
+      {/* The description proper, when one was written (§11.3, §71). */}
+      {!isRichTextEmpty(readRichText(event.bodyJson)) && (
+        <Box sx={{ mt: 3 }}>
+          <RichText body={event.bodyJson} />
+        </Box>
       )}
 
       {/* Last year's film, when the club has one, loaded only when opened (criterion 9). */}

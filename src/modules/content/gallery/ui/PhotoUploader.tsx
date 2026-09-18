@@ -6,6 +6,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 
 /**
  * Photos in, from a phone, without the phone's file sizes.
@@ -41,20 +42,7 @@ export default function PhotoUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: string[] } | null>(null);
 
-  async function shrink(file: File): Promise<Blob> {
-    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-    const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("no canvas");
-    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("encode failed"))), "image/webp", 0.86);
-    });
-  }
+  const shrink = shrinkImageInBrowser;
 
   async function upload(files: FileList) {
     const list = Array.from(files);

@@ -5,7 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
-import { addWallClockInterval, fromWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
@@ -178,8 +178,13 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   };
 
   const startsAt = required(fields.startsAtWallTime, "startsAt");
-  const endsAt = optional(fields.endsAtWallTime, "endsAt");
-  const raceStartsAt = optional(fields.raceStartsAtWallTime, "raceStartsAt");
+  // A duration wins over an end time when both arrive: it is what the form asks for now.
+  const endsAt =
+    fields.durationMinutes != null
+      ? new Date(startsAt.getTime() + fields.durationMinutes * 60_000)
+      : optional(fields.endsAtWallTime, "endsAt");
+  // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
+  const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
   const registrationOpensAt = optional(fields.registrationOpensAtWallTime, "registrationOpensAt");
   const registrationClosesAt = optional(fields.registrationClosesAtWallTime, "registrationClosesAt");
 
@@ -272,6 +277,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     mapUrl: fields.mapUrl,
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
+    stravaEventUrl: fields.stravaEventUrl,
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     difficulty: fields.difficulty,
@@ -379,12 +385,14 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
+  const { body, ...columns } = fields;
   return updateTranslationWithVersionGuard(
     db,
     input.current.id,
     input.expectedVersion,
     {
-      ...fields,
+      ...columns,
+      bodyJson: body,
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -822,8 +830,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
-    // Not carried: a film is of one edition, and last year's would be wrong on next year's.
+    // Not carried: a film is of one edition, and last year's would be wrong on next year's;
+    // a Strava group event is one occurrence's page.
     videoUrl: null,
+    stravaEventUrl: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
     difficulty: source.difficulty,
@@ -883,13 +893,28 @@ const CADENCE_INTERVAL: Record<RepeatCadence, { days?: number; months?: number }
 
 /** At most a year of weekly copies in one go; a longer series is a second press. */
 export const REPEAT_MAX_COUNT = 52;
+/** Two a week for a year, with weekdays; a bigger series is a second press. */
+export const REPEAT_MAX_OCCURRENCES = 104;
+/** ISO weekdays, 1 = Monday … 7 = Sunday. */
+export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
 
 export type RepeatEventInput = {
   actor: Actor;
   eventId: string;
   cadence: RepeatCadence;
-  /** How many further occurrences to create, after the source. */
+  /**
+   * How many further occurrences to create after the source — or, with `weekdays`, how many
+   * weeks (fortnights) the series covers, the source's own week included.
+   */
   count: number;
+  /**
+   * "Every Monday and Wednesday" (2026-09-18, `DECISIONS.md` §64): the days of the week the
+   * event happens on, ISO numbered. With WEEKLY or FORTNIGHTLY only; MONTHLY ignores it. The
+   * source's own day need not be in the set — a Sunday run "every Monday and Wednesday" starts
+   * the Monday after. Empty or absent means the source's own weekday, as before.
+   */
+  weekdays?: readonly Weekday[];
   /** Publish the copies as they are made. Only honoured when the source is itself published. */
   publish: boolean;
   now?: Date;
@@ -939,23 +964,48 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   }
 
   const interval = CADENCE_INTERVAL[input.cadence];
-  const shift = (date: Date | null, times: number) =>
-    date === null
-      ? null
-      : addWallClockInterval(
-          date,
-          source.timezone,
-          { days: (interval.days ?? 0) * times, months: (interval.months ?? 0) * times },
-        );
+  const weekdays = input.cadence === "MONTHLY" ? [] : [...new Set(input.weekdays ?? [])].sort();
+  if (weekdays.some((day) => !WEEKDAYS.includes(day))) {
+    throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)");
+  }
+
+  /**
+   * How far each occurrence sits from the source, on the calendar. Without weekdays: one
+   * interval per occurrence, as before. With them: for each week the series covers, each
+   * chosen day at its offset from the source's own day — skipping anything on or before the
+   * source, so the source is never duplicated and a series never runs backwards.
+   */
+  const sourceWeekday = wallClockWeekday(source.startsAt, source.timezone);
+  const steps: Array<{ days?: number; months?: number }> =
+    weekdays.length === 0
+      ? Array.from({ length: input.count }, (_, index) => ({
+          days: (interval.days ?? 0) * (index + 1),
+          months: (interval.months ?? 0) * (index + 1),
+        }))
+      : Array.from({ length: input.count }, (_, week) =>
+          weekdays.map((day) => ({ days: day - sourceWeekday + (interval.days ?? 7) * week })),
+        )
+          .flat()
+          .filter((step) => (step.days ?? 0) > 0);
+  if (steps.length === 0) {
+    throw new DomainError("VALIDATION_ERROR", "the chosen days give no occurrence after this event");
+  }
+  if (steps.length > REPEAT_MAX_OCCURRENCES) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      `that is ${steps.length} occurrences; at most ${REPEAT_MAX_OCCURRENCES} in one go`,
+    );
+  }
+  const shift = (date: Date | null, step: { days?: number; months?: number }) =>
+    date === null ? null : addWallClockInterval(date, source.timezone, step);
 
   // The slugs, all of them, checked before anything is written: the date suffix is what
   // makes them distinct, and a series already made once collides on every one of them.
-  const occurrences = Array.from({ length: input.count }, (_, index) => {
-    const times = index + 1;
-    const startsAt = shift(source.startsAt, times) as Date;
+  const occurrences = steps.map((step) => {
+    const startsAt = shift(source.startsAt, step) as Date;
     const dateSuffix = startsAt.toISOString().slice(0, 10);
     return {
-      times,
+      step,
       startsAt,
       slugs: new Map(
         sourceTranslations.map((translation) => [
@@ -984,10 +1034,10 @@ export async function repeatEvent<T extends Record<string, unknown>>(
         .values({
           ...copiedEventValues(source, input.actor, now),
           startsAt: occurrence.startsAt,
-          endsAt: shift(source.endsAt, occurrence.times),
-          raceStartsAt: shift(source.raceStartsAt, occurrence.times),
-          registrationOpensAt: shift(source.registrationOpensAt, occurrence.times),
-          registrationClosesAt: shift(source.registrationClosesAt, occurrence.times),
+          endsAt: shift(source.endsAt, occurrence.step),
+          raceStartsAt: shift(source.raceStartsAt, occurrence.step),
+          registrationOpensAt: shift(source.registrationOpensAt, occurrence.step),
+          registrationClosesAt: shift(source.registrationClosesAt, occurrence.step),
           ...(publish ? { editorialStatus: "PUBLISHED" as const, publishedAt: now } : {}),
         })
         .returning();

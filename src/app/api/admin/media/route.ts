@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import { getDb } from "@/db/client";
+import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
+import { uploadBodyImage } from "@/modules/media/service";
+import { isStorageConfigured } from "@/modules/media/storage";
+import { requireStaff } from "@/modules/staff-identity/session";
+import { isDomainError } from "@/shared/errors/domain-error";
+
+/**
+ * A picture for a body, from the rich-text editor (BR-REQ-050-03 criterion 8). `POST`
+ * multipart with a `file`; answers the address the image node carries. Every staff session:
+ * a Contributor writes drafts and a draft may have pictures — what they may *publish* is the
+ * page's rule, not this route's. The bytes are checked by `processUploadedImage` whatever the
+ * client claimed, and nothing is written anywhere until they pass.
+ */
+export async function POST(request: Request): Promise<Response> {
+  let actor;
+  try {
+    actor = await requireStaff();
+  } catch (error) {
+    if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
+    throw error;
+  }
+  if (!isStorageConfigured()) {
+    return NextResponse.json({ error: "STORAGE_UNCONFIGURED" }, { status: 503 });
+  }
+
+  const form = await request.formData();
+  const file = form.get("file");
+  if (!(file instanceof File)) {
+    return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return NextResponse.json({ error: "VALIDATION_ERROR", detail: "too large" }, { status: 413 });
+  }
+  const originalFilename = String(form.get("originalFilename") || file.name || "picture");
+
+  try {
+    const result = await uploadBodyImage(getDb(), {
+      actorId: actor.id,
+      file: Buffer.from(await file.arrayBuffer()),
+      originalFilename,
+    });
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    if (isDomainError(error)) {
+      return NextResponse.json({ error: error.code, detail: error.message }, { status: 400 });
+    }
+    throw error;
+  }
+}

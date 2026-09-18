@@ -3754,6 +3754,22 @@ Three cadences and a ceiling of 52, because a weekly run for a year is the large
 club holds; a fourth cadence is one line in `REPEAT_CADENCES` and a label. Baseline
 `BR-V1.34-2026-09-17`.
 
+**Addendum, 2026-09-18 — days of the week, and recurrence at creation.** "On the event
+creation page I see no recurrence; we should have events that are every Monday and every
+Wednesday." Two things were true: the repeat form lived only on an existing event's page,
+where nobody creating one would look, and it knew one day a week. Now `repeatEvent` takes
+`weekdays` (ISO 1–7): with them, `count` is a number of weeks from the source's own week, and
+every chosen day *after* the source, at the source's wall time, is an occurrence — the source is
+never duplicated and a series never runs backwards, so a Sunday event ticked "Monday and
+Wednesday" starts the Monday after. The same fields sit on the creation form, "does not repeat"
+by default; a series made there is drafts, because the event is. Which raised the real problem:
+fifty-two drafts published one page at a time is not a workflow. So the events list gained
+"publish the ticked ones" beside "archive the ticked ones" — each event walks DRAFT → IN_REVIEW
+→ PUBLISHED through `transitionEvent`, so the role check and both-languages-complete check
+hold on every one, and a copy that cannot be published is counted and skipped. A rule engine
+("second Tuesday of the month") was refused again: two cadences, seven boxes and a number cover
+what the club runs.
+
 ## 65. Decided — race numbers arrive in M1: per event, as a batch, printed two to a page (2026-09-17)
 
 **Status:** Decided and built. BR-REQ-038-01; migration `0024`; `modules/registrations/bibs.ts`
@@ -4011,5 +4027,78 @@ a client island was refused because `<details>` does it with none. The embed is 
 the privacy notice describes as "loaded when you press" — the same line §61 drew for Strava,
 where the mark is shown and the script is not. A duplicate or a repeated edition does not carry
 the link: a film is of one edition.
+
+## 70. Decided — a time is typed on a 24-hour clock, in its own field, because the browser's combined picker speaks the browser's language and not the club's (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-02 criterion 8; `content/events/ui/WallTimeField.tsx`,
+joined back into the wall-clock string in `admin/actions.ts`. The owner's words, over a
+screenshot of "06:30 PM" and a month-first calendar: "time pickers should be 24h, not AM and PM."
+
+`<input type="datetime-local">` renders the clock and the date order of the *browser's* locale.
+An English-language Chrome — which is what the owner and most Romanian laptops run — offers
+AM/PM and MM/DD/YYYY, and no attribute on the input changes that: `lang` is ignored by Blink and
+WebKit for this control. The choices were to tell every organizer to change their browser
+language, to add a picker library (`@mui/x-date-pickers` and a date library, a client island of
+some hundred kilobytes on the editor), or to stop asking one control to do two jobs. The last is
+what was built: the date keeps the native picker, whose calendar is unambiguous whatever order it
+prints the digits in, and the time is a text field that accepts `HH:MM` on a 24-hour clock and
+nothing else — which is how every start time in Brașov is written, said and printed on a bib. The
+two fields post separately and the action joins them into the `<field>WallTime` string the
+service has read since `0011`, so nothing below the form changed and the old single field is
+still accepted. A date with no time is midnight; no date is no value.
+
+## 71. Decided — a duration, not an end; a gun time for races only; the description is the editor; a Strava event link (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-02 criterion 9, BR-REQ-011-01 criteria 10 and 11;
+migration `0028` (expand-only, `strava_event_url`); `EventFieldsForm`, `OnlyForType`,
+`TranslationFieldsForm`, `translationFieldsSchema.body`. The owner's words, four messages in a
+row: "event start date and race start date are kind of redundant — event start should be the
+driver; race is only for races"; "instead of event end date I should just have a duration";
+"all descriptions should be WYSIWYG and soon I can add pictures"; "an optional Strava event link".
+
+- **Duration.** Nobody thinks "it ends at 10:30"; they think "it takes ninety minutes". The
+  form asks for minutes and the service derives `ends_at` from the start — an instant plus a
+  duration, which is right across a clock change where a wall-clock end would not be. The old
+  `endsAtWallTime` is still accepted underneath, so nothing that posted it breaks; a duration
+  wins when both arrive.
+- **Race start only for a race.** The field follows the type select (a client island watching
+  MUI's hidden input — the select is MUI's and the form is one save, so a server round-trip was
+  the worse option) and the service ignores a gun time on anything that is not a race, rather
+  than refusing it: a form that hid the field cannot be blamed for what it still posted.
+- **The description is the editor.** `event_translations.body_json` existed from the pilot with
+  no editor writing it; `RichTextEditor` and the §11.3 allowlist existed for standing pages. The
+  two met: each language has a "full description" in the same editor, validated as `body` on the
+  way in and rendered by the same server renderer under the short description. The race-day
+  schedule the owner asked for is a list in it, not a new structure. Pictures follow when the
+  image node lands on top of the gallery's storage (§66) — the contract in §11.3 already names it.
+- **A Strava event link.** The club's group events live on Strava, where members RSVP; the
+  event page now offers that page as a fact with the mark, like the route. A Strava page only
+  (`isStravaLink`), and one occurrence's — never carried onto a duplicate or a repeat, because
+  next week's occurrence has its own address.
+
+## 72. Decided — pictures go in the editor, between paragraphs; the gallery stays, but it was not what was asked for (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-03 criterion 10; `rich-text/domain/schema.ts` (the
+`image` node), `rich-text/ui/RichTextEditor.tsx` (the picture control),
+`/api/admin/media`, `media/service.ts`, `media/browser-shrink.ts`. The owner's words: "you
+completely misunderstood the gallery concept — I don't want photos from events, I want photos
+in posts! I should be able to put pictures in that editor."
+
+§66 read "a photo gallery" as albums of race photos and built that. What the owner meant was
+the ordinary thing every publishing tool does: a picture in the text, where the text is. Both
+are now true, and §66's storage is what made the second cheap: the picture control shrinks the
+file in the browser (the same helper the gallery uploader uses), posts it to a route that
+stores it exactly as a gallery photo — two WebP variants, one `media_assets` row — and inserts
+an image block carrying the address the route answered. The schema accepts that address and
+no other: not a third party's image, not a data URI, not a page. So a body can never fetch
+from anywhere but the club's own store, which is what lets the renderer emit a plain lazy
+`<img>` without a second thought. A picture is a block between paragraphs, never inline: a
+page is text with pictures, not a layout tool.
+
+What was not built: alt text editing (the file name, without its extension, is the alt; a
+caption or a real alt is a follow-up), and a sweep for pictures removed from a body — they
+stay in the store, §17's "reference check before delete" is that sweep, and until it exists
+the cost is a few hundred kilobytes per forgotten picture. The gallery stays as built; nobody
+is made to use it.
 
 Baseline `BR-V1.35-2026-09-18`.

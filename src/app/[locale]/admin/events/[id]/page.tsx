@@ -37,8 +37,7 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import MenuItem from "@mui/material/MenuItem";
-import { REPEAT_CADENCES, REPEAT_MAX_COUNT } from "@/modules/content/events/service";
+import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
@@ -54,7 +53,7 @@ import {
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -96,7 +95,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total } = await searchParams;
+  const { error, saved, assigned, total, created } = await searchParams;
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -166,7 +165,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             {t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
           </Alert>
         )}
-        {saved && saved !== "bibsAssigned" && <Alert severity="success">{t("saved")}</Alert>}
+        {saved === "created" && created && (
+          <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
+        )}
+        {saved && saved !== "bibsAssigned" && !(saved === "created" && created) && (
+          <Alert severity="success">{t("saved")}</Alert>
+        )}
       </Box>
 
       {/* Publication, for the whole event. Its own forms: a transition is not an edit, and it
@@ -503,32 +507,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         <form action={repeatEventAction}>
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
-            <TextField
-              select
-              name="cadence"
-              label={t("editor.repeatCadence")}
-              defaultValue="WEEKLY"
-              size="small"
-              sx={{ minWidth: 200 }}
-            >
-              {REPEAT_CADENCES.map((cadence) => (
-                <MenuItem key={cadence} value={cadence}>
-                  {t(`editor.repeatCadences.${cadence}`)}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              name="count"
-              type="number"
-              label={t("editor.repeatCount")}
-              defaultValue={4}
-              size="small"
-              slotProps={{ htmlInput: { min: 1, max: REPEAT_MAX_COUNT } }}
-              sx={{ width: 140 }}
-              required
-            />
-          </Stack>
+          <RepeatFields />
           {live && (
             <Box sx={{ mt: 1 }}>
               <CheckboxField name="publish">{t("editor.repeatPublish")}</CheckboxField>

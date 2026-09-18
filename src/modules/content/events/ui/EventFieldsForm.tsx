@@ -6,7 +6,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
-import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import OnlyForType from "./OnlyForType";
+import WallTimeField from "./WallTimeField";
 import {
   EVENT_STATUS_LABEL,
   REGISTRATION_MODE_LABEL,
@@ -111,30 +112,42 @@ export default async function EventFieldsForm({
         required
       />
 
-      <TextField
-        name="event.startsAtWallTime"
-        type="datetime-local"
+      {/* A date and a 24-hour time each, whatever clock the browser speaks (§70). */}
+      <WallTimeField
+        name="event.startsAt"
         label={t("editor.startsAt")}
+        timeLabel={t("editor.timeOfDay")}
         helperText={t("editor.startsAtHelp", { timezone: zone })}
-        defaultValue={toWallTimeInput(event?.startsAt ?? null, zone)}
-        slotProps={{ inputLabel: { shrink: true } }}
+        value={event?.startsAt ?? null}
+        zone={zone}
         required
       />
+      {/* Only a race has a gun time apart from the meeting time (§71); the field follows the
+          type select and is empty — and ignored — for anything else. */}
+      <OnlyForType type="RACE" selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
+        <WallTimeField
+          name="event.raceStartsAt"
+          label={t("editor.raceStartsAt")}
+          timeLabel={t("editor.timeOfDay")}
+          helperText={t("editor.raceStartsAtHelp")}
+          value={event?.raceStartsAt ?? null}
+          zone={zone}
+        />
+      </OnlyForType>
+      {/* How long, not when it ends: the end is derived (§71). */}
       <TextField
-        name="event.raceStartsAtWallTime"
-        type="datetime-local"
-        label={t("editor.raceStartsAt")}
-        helperText={t("editor.raceStartsAtHelp")}
-        defaultValue={toWallTimeInput(event?.raceStartsAt ?? null, zone)}
-        slotProps={{ inputLabel: { shrink: true } }}
-      />
-      <TextField
-        name="event.endsAtWallTime"
-        type="datetime-local"
-        label={t("editor.endsAt")}
-        helperText={t("editor.endsAtHelp")}
-        defaultValue={toWallTimeInput(event?.endsAt ?? null, zone)}
-        slotProps={{ inputLabel: { shrink: true } }}
+        name="event.durationMinutes"
+        type="number"
+        label={t("editor.durationMinutes")}
+        helperText={t("editor.durationMinutesHelp")}
+        defaultValue={
+          event?.endsAt && event.startsAt
+            ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000)
+            : ""
+        }
+        slotProps={{ htmlInput: { min: 1, max: 7 * 24 * 60, step: 5 } }}
+        inputMode="numeric"
+        sx={{ width: 220 }}
       />
 
       {/*
@@ -219,6 +232,16 @@ export default async function EventFieldsForm({
         inputMode="url"
       />
 
+      {/* The club's Strava group event for this occurrence (criterion 10). */}
+      <TextField
+        name="event.stravaEventUrl"
+        type="url"
+        label={t("editor.stravaEventUrl")}
+        helperText={t("editor.stravaEventUrlHelp")}
+        defaultValue={event?.stravaEventUrl ?? ""}
+        inputMode="url"
+      />
+
       {/* A film of the event — a YouTube link, embedded on the page (criterion 9). */}
       <TextField
         name="event.videoUrl"
@@ -284,22 +307,20 @@ export default async function EventFieldsForm({
         inputMode="numeric"
       />
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
-          name="event.registrationOpensAtWallTime"
-          type="datetime-local"
+      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+        <WallTimeField
+          name="event.registrationOpensAt"
           label={t("editor.registrationOpensAt")}
-          defaultValue={toWallTimeInput(event?.registrationOpensAt ?? null, zone)}
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ flex: 1 }}
+          timeLabel={t("editor.timeOfDay")}
+          value={event?.registrationOpensAt ?? null}
+          zone={zone}
         />
-        <TextField
-          name="event.registrationClosesAtWallTime"
-          type="datetime-local"
+        <WallTimeField
+          name="event.registrationClosesAt"
           label={t("editor.registrationClosesAt")}
-          defaultValue={toWallTimeInput(event?.registrationClosesAt ?? null, zone)}
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ flex: 1 }}
+          timeLabel={t("editor.timeOfDay")}
+          value={event?.registrationClosesAt ?? null}
+          zone={zone}
         />
       </Stack>
       <Typography variant="body2" color="text.secondary">

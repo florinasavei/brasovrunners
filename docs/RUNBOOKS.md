@@ -601,7 +601,14 @@ half of it.
 
 ### The first production deployment
 
-`main` has never carried the M1 code, so the first production deployment *is* the first release
+**Done on 2026-09-17** (`qa → main` #45, `BR-V1.34`), and the second on 2026-09-18 (#47,
+`BR-V1.35`). Kept as the record of the order that made it safe, and because the same order is
+every release's. What #47 taught: the Vercel build waits at most twenty minutes for the
+migration run to be approved; approved later, the build had already failed and was redeployed
+by hand (`vercel redeploy <failed deployment>`), which is the documented recovery and costs
+nothing — the previous deployment served throughout.
+
+`main` had never carried the M1 code, so the first production deployment *was* the first release
 PR. In this order — the order matters more than any one step:
 
 1. **Prerequisites, all true since 2026-09-16 (`SETUP.md` §25–§26):** the production Vercel

@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { Link } from "@/i18n/navigation";
 import type { EditableTranslation } from "../repository";
 
@@ -35,6 +36,7 @@ export default async function TranslationFieldsForm({
   mayEdit: boolean;
 }) {
   const t = await getTranslations("Admin");
+  const rt = await getTranslations("Admin.richText");
   const name = (field: string) => `translations.${translation.locale}.${field}`;
 
   return (
@@ -85,6 +87,35 @@ export default async function TranslationFieldsForm({
             multiline
             minRows={2}
           />
+          {/* The description proper, in the same editor a standing page uses (§11.3, §71). */}
+          <RichTextEditor
+            name={name("body")}
+            label={t("editor.fields.body")}
+            initialBody={translation.bodyJson}
+            accessibleSuffix={translation.locale.toUpperCase()}
+            labels={{
+              bold: rt("bold"),
+              italic: rt("italic"),
+              heading2: rt("heading2"),
+              heading3: rt("heading3"),
+              bulletList: rt("bulletList"),
+              orderedList: rt("orderedList"),
+              quote: rt("quote"),
+              link: rt("link"),
+              linkUrl: rt("linkUrl"),
+              linkApply: rt("linkApply"),
+              linkRemove: rt("linkRemove"),
+              linkCancel: rt("linkCancel"),
+              undo: rt("undo"),
+              redo: rt("redo"),
+              image: rt("image"),
+              imageUploading: rt("imageUploading"),
+              imageFailed: rt("imageFailed"),
+            }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+            {t("editor.bodyHelp")}
+          </Typography>
           <TextField
             name={name("seoTitle")}
             label={t("editor.fields.seoTitle")}

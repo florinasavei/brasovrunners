@@ -86,6 +86,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     // difficulty and the cost are one value for the whole event (`DECISIONS.md` §36). What is
     // left here is what genuinely differs between two languages.
     expect(Object.keys(parsed).sort()).toEqual([
+      // The description proper, validated Tiptap JSON since 2026-09-18 (`DECISIONS.md` §71).
+      "body",
       "excerpt",
       "seoDescription",
       "seoTitle",
@@ -99,7 +101,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     ["the version, which is the concurrency guard itself", "version"],
     ["capacity, which belongs to the event row rather than to one language", "capacity"],
     ["the record id", "id"],
-    ["the rich-text body, which has no validated schema yet", "bodyJson"],
+    ["the stored body column itself — the form posts `body`, validated, never the column", "bodyJson"],
   ])("refuses a save that also posts %s", async (_name, field) => {
     const translation = await seedDraft();
 
