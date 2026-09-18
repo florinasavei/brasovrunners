@@ -4076,4 +4076,29 @@ driver; race is only for races"; "instead of event end date I should just have a
   (`isStravaLink`), and one occurrence's — never carried onto a duplicate or a repeat, because
   next week's occurrence has its own address.
 
+## 72. Decided — pictures go in the editor, between paragraphs; the gallery stays, but it was not what was asked for (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-03 criterion 10; `rich-text/domain/schema.ts` (the
+`image` node), `rich-text/ui/RichTextEditor.tsx` (the picture control),
+`/api/admin/media`, `media/service.ts`, `media/browser-shrink.ts`. The owner's words: "you
+completely misunderstood the gallery concept — I don't want photos from events, I want photos
+in posts! I should be able to put pictures in that editor."
+
+§66 read "a photo gallery" as albums of race photos and built that. What the owner meant was
+the ordinary thing every publishing tool does: a picture in the text, where the text is. Both
+are now true, and §66's storage is what made the second cheap: the picture control shrinks the
+file in the browser (the same helper the gallery uploader uses), posts it to a route that
+stores it exactly as a gallery photo — two WebP variants, one `media_assets` row — and inserts
+an image block carrying the address the route answered. The schema accepts that address and
+no other: not a third party's image, not a data URI, not a page. So a body can never fetch
+from anywhere but the club's own store, which is what lets the renderer emit a plain lazy
+`<img>` without a second thought. A picture is a block between paragraphs, never inline: a
+page is text with pictures, not a layout tool.
+
+What was not built: alt text editing (the file name, without its extension, is the alt; a
+caption or a real alt is a follow-up), and a sweep for pictures removed from a body — they
+stay in the store, §17's "reference check before delete" is that sweep, and until it exists
+the cost is a few hundred kilobytes per forgotten picture. The gallery stays as built; nobody
+is made to use it.
+
 Baseline `BR-V1.35-2026-09-18`.

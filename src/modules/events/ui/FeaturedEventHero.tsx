@@ -39,10 +39,15 @@ export default async function FeaturedEventHero({
         // Arrives with the page rather than snapping in; static for reduced motion.
         ...fadeIn,
         mb: 4,
-        p: { xs: 2, sm: 3 },
+        p: { xs: 2.5, sm: 4 },
         borderRadius: 2,
-        border: 1,
-        borderColor: "divider",
+        // The one event the club is leading with looks like it (the owner, 2026-09-18: "the
+        // main event must be more highlighted, the rest can be other events"): a two-pixel
+        // border in the club's blue, a shadow, a bigger title. Everything below it is a plain
+        // outlined card under "Other events".
+        border: 2,
+        borderColor: "primary.main",
+        boxShadow: 3,
         bgcolor: "background.paper",
       }}
     >
@@ -61,7 +66,7 @@ export default async function FeaturedEventHero({
       <Typography
         id="featured-event-title"
         variant="h2"
-        sx={{ fontSize: { xs: "1.5rem", sm: "2rem" }, mb: 1 }}
+        sx={{ fontSize: { xs: "1.75rem", sm: "2.5rem" }, lineHeight: 1.15, mb: 1.5 }}
       >
         {event.title}
       </Typography>

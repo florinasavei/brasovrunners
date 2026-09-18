@@ -122,12 +122,43 @@ const blockquoteNode = z.object({
   content: z.array(paragraphNode).min(1),
 });
 
+/**
+ * A picture (AGENTS.md §11.3's "media-library image reference", `DECISIONS.md` §72): a block
+ * of its own, never inline in a paragraph, so a page is text with pictures between paragraphs
+ * rather than a layout. `src` is the address the upload route answered — one of this
+ * application's own WebP variants, on the store's public host or the local `/api/media` route —
+ * and nothing else: not a data URI, not a third party's image, not a page. `alt` is what a
+ * screen reader says; empty means decorative. `width`/`height` are the variant's, so the page
+ * reserves the space before the bytes arrive.
+ */
+const imageSrc = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine(
+    (value) =>
+      /\/[0-9a-f-]{36}\/web\.webp$/.test(value) &&
+      (value.startsWith("https://") || value.startsWith("/api/media/")),
+    "a picture must be one this site stored",
+  );
+
+const imageNode = z.object({
+  type: z.literal("image"),
+  attrs: z.object({
+    src: imageSrc,
+    alt: z.string().max(300).nullable().optional().transform((value) => value ?? ""),
+    width: z.number().int().min(1).max(12_000).nullable().optional(),
+    height: z.number().int().min(1).max(12_000).nullable().optional(),
+  }),
+});
+
 const blockNode = z.discriminatedUnion("type", [
   paragraphNode,
   headingNode,
   bulletListNode,
   orderedListNode,
   blockquoteNode,
+  imageNode,
 ]);
 
 export const richTextSchema = z.object({
@@ -235,6 +266,10 @@ export function richTextToPlainText(doc: RichTextDoc): string {
         return block.content.flatMap((item) =>
           item.content.map((paragraph) => inline(paragraph.content)),
         );
+      case "image":
+        // A picture's words are its alt text: what a screen reader says is what a search
+        // index may know. Decorative pictures contribute nothing.
+        return [block.attrs.alt];
     }
   };
 

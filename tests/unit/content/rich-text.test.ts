@@ -37,9 +37,40 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
     // The threat is not a typo: it is a body posted by something other than this application's
     // editor. An unknown node is refused rather than dropped, because dropping one would delete
     // what the club wrote without saying so.
-    expect(() => parseRichText(doc({ type: "image", attrs: { src: "https://example.test/x.png" } }))).toThrow();
+    expect(() => parseRichText(doc({ type: "iframe", attrs: { src: "https://example.test/x" } }))).toThrow();
     expect(() => parseRichText(doc({ type: "codeBlock", content: [text("rm -rf /")] }))).toThrow();
     expect(() => parseRichText(doc(paragraph(text("hi", [{ type: "strike" }]))))).toThrow();
+  });
+
+  /**
+   * Pictures (`DECISIONS.md` §72): a block of its own, and only an address this site's upload
+   * route answers — one of its own WebP variants. Anything else is a way to put a third
+   * party's image, a tracking pixel or a data URI on the club's page.
+   */
+  describe("pictures", () => {
+    const ours = "https://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
+    const local = "/api/media/local/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
+
+    it("accepts one of this site's stored pictures, as a block, with its size and alt", () => {
+      const parsed = parseRichText(doc({ type: "image", attrs: { src: ours, alt: "Startul", width: 1600, height: 1067 } }));
+      expect(parsed.content?.[0]).toEqual({ type: "image", attrs: { src: ours, alt: "Startul", width: 1600, height: 1067 } });
+      expect(parseRichText(doc({ type: "image", attrs: { src: local } })).content?.[0]).toMatchObject({ attrs: { alt: "" } });
+      expect(richTextToPlainText(parsed)).toBe("Startul");
+    });
+
+    it("refuses any other address", () => {
+      for (const src of [
+        "https://example.test/x.png",
+        "data:image/png;base64,AAAA",
+        "https://pub-example.r2.dev/qa/not-a-uuid/web.webp",
+        "http://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp",
+        "javascript:alert(1)",
+      ]) {
+        expect(() => parseRichText(doc({ type: "image", attrs: { src } })), src).toThrow();
+      }
+      // Never inline: a picture inside a paragraph is a layout, not a body.
+      expect(() => parseRichText(doc(paragraph({ type: "image", attrs: { src: ours } } as never)))).toThrow();
+    });
   });
 
   it("refuses a heading level that is not 2 or 3", () => {
