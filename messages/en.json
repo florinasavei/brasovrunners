@@ -707,14 +707,15 @@
           ]
         },
         "clubMailbox": {
-          "title": "The club's own mailbox (Zoho Mail, free)",
-          "todo": "Messages to the contact address currently reach the organiser's Gmail through Mailgun. The club needs a mailbox on its own domain: Zoho Mail Free (custom domain, up to 5 users, web and app; no IMAP on the free plan). Cheap paid alternatives: Migadu (~€19/year), Purelymail (~$10/year).",
+          "title": "The club's own mailbox",
+          "todo": "Messages to the contact address currently reach the organiser's Gmail through Mailgun. Free, from today: a Gmail account of the club's (not a personal one) that Mailgun forwards to, with “Send mail as” through Mailgun's SMTP, so replies leave from the club's address. When you want a real mailbox on the domain, with a GDPR contract: Migadu Micro ($19/year, Switzerland, unlimited addresses) or Infomaniak (Switzerland, ~€2/month). Zoho Free is no longer an option.",
           "done": "The club has its own mailbox on its own domain.",
           "how": [
-            "Zoho Mail → Business email → the Free (Forever Free) plan → add the club's domain; verify it with the TXT record in the ROMARG DNS panel.",
-            "Add the MX/SPF/DKIM records Zoho shows for the main domain (Mailgun stays on the mail. subdomain — its records are not touched).",
-            "Create contact@ (and one per volunteer if you like). In Mailgun → Receiving → the “contact@mail.” route → the destination becomes the new mailbox.",
-            "On Vercel: EMAIL_REPLY_TO = the new address. Then, in /admin/legal, the next version of the privacy notice without the Gmail sentence (section “Who else sees the data”)."
+            "Create a Gmail account for the club (e.g. “<club>.contact@gmail.com”), with a password the club keeps, not a person.",
+            "In Mailgun → Receiving → the “contact@mail.” route → the destination becomes this Gmail (a second address may stay, comma-separated).",
+            "In Gmail → Settings → Accounts → “Send mail as” → add contact@mail.<domain> with SMTP smtp.eu.mailgun.org, port 587, user “postmaster@mail.<domain>” and the SMTP password from Mailgun → Domain settings → SMTP credentials. Replies leave from the club.",
+            "On Vercel: EMAIL_REPLY_TO = contact@mail.<domain>. The privacy notice already says it is hosted at Google.",
+            "Later, for a mailbox on the domain with a GDPR contract: Migadu Micro → add the domain, MX/SPF/DKIM at ROMARG for the main domain only (Mailgun stays on mail.), then the Mailgun route and EMAIL_REPLY_TO to the new address and the next version of the notice without the Google sentence."
           ]
         },
         "minorsOnline": {

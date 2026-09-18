@@ -4876,7 +4876,7 @@ bite — one page, first in the read order. `CLAUDE.md` stays the long form.
 **The queue, on the board.** "Add them in the TODO section — basically all the queued work,
 so I can continue tomorrow." `/admin/tasks` now carries the Turnstile row for the club (open
 until the two keys exist) and, developer-owned and open by design, the work asked for and not
-built: the club's mailbox (Zoho Mail Free, then the notice's Gmail sentence goes), a parent
+built: the club's mailbox (a Gmail of the club's with "send as" through Mailgun today, Migadu Micro at $19/year when it wants a mailbox on the domain — Zoho Free is gone), a parent
 registering a minor online, the programme as timed rows with an `.ics`, each signed
 declaration sent to a club archive mailbox too, Vercel usage in figures, the documentation
 shortened. Static rows (`BACKLOG` in `owner-tasks.ts`) with the plan as their steps; whoever
