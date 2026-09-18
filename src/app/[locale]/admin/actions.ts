@@ -30,6 +30,7 @@ import {
   ensureDevStaffUser,
 } from "@/modules/staff-identity/dev-switcher";
 import type { EditorialStatus, StaffRole } from "@/modules/staff-identity/domain/roles";
+import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import {
   changeStaffRole,
@@ -166,6 +167,7 @@ function translationFieldsFrom(form: FormData, locale: Locale) {
       title: value("title"),
       excerpt: value("excerpt"),
       excerptBody: value("excerptBody"),
+      checklist: value("checklist"),
       body: value("body"),
       seoTitle: value("seoTitle"),
       seoDescription: value("seoDescription"),
@@ -475,6 +477,25 @@ export async function assignBibNumbersAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     const result = await assignBibNumbers(getDb(), { actor, eventId });
     outcome = { saved: "bibsAssigned", assigned: String(result.assigned), total: String(result.total) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backTo(editorPath(locale, eventId), outcome);
+}
+
+/**
+ * The thank-you after the race (`DECISIONS.md` §82): once per event, to everyone who was
+ * checked in, with an optional link. Behind a confirmation on the page; audited by the service.
+ */
+export async function sendEventThanksAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+
+  let outcome: { error?: string; saved?: string; recipients?: string };
+  try {
+    const actor = await requireStaff();
+    const result = await sendEventThanks(getDb(), actor, { eventId, url: text(form, "url") }, new Date());
+    outcome = { saved: "thanksSent", recipients: String(result.recipients) };
   } catch (error) {
     outcome = outcomeOf(error);
   }

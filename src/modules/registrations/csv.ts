@@ -40,6 +40,9 @@ export type RegistrationCsvRow = {
   confirmedAt: string;
   /** The race number, once assigned (BR-REQ-038-01); empty until then, never 0. */
   bibNumber?: number | null;
+  /** Race day and the provider's verdict, the two columns an organizer sorts by afterwards (§83). */
+  checkedInAt: string;
+  emailBounced: boolean;
 };
 
 const HEADER = [
@@ -51,6 +54,8 @@ const HEADER = [
   "Submitted",
   "Confirmed",
   "Bib",
+  "Checked in",
+  "Email bounced",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -68,6 +73,8 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.submittedAt,
         row.confirmedAt,
         row.bibNumber ? String(row.bibNumber) : "",
+        row.checkedInAt,
+        row.emailBounced ? "Yes" : "",
       ]
         .map(csvCell)
         .join(","),

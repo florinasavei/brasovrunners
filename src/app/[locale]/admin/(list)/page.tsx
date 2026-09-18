@@ -12,6 +12,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
+  countConfirmedAndCheckedInByEvent,
   countRegistrationsByEvent,
   type EditableEvent,
   type EditableTranslation,
@@ -50,7 +51,13 @@ export const dynamic = "force-dynamic";
 /** The bulk form sits below the table and owns the checkboxes inside it. */
 const BULK_FORM = "bulk-archive";
 
-type EventRow = { event: EditableEvent; translations: EditableTranslation[]; entries: number };
+type EventRow = {
+  event: EditableEvent;
+  translations: EditableTranslation[];
+  entries: number;
+  /** Confirmed and here, shown on race day (§83): the desk's own two numbers. */
+  desk: { confirmed: number; checkedIn: number } | null;
+};
 
 /**
  * What there is to edit.
@@ -87,14 +94,22 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const format = await getFormatter();
 
   const db = getDb();
-  const [events, entriesByEvent] = await Promise.all([
+  const now = new Date();
+  const [events, entriesByEvent, deskByEvent] = await Promise.all([
     listEventsForBackoffice(db),
     countRegistrationsByEvent(db),
+    countConfirmedAndCheckedInByEvent(db),
   ]);
 
+  // Race day, give or take: from the day before the start to the day after (§83).
+  const DAY = 24 * 60 * 60_000;
   const rows: EventRow[] = events.map((row) => ({
     ...row,
     entries: entriesByEvent.get(row.event.id) ?? 0,
+    desk:
+      Math.abs(row.event.startsAt.getTime() - now.getTime()) <= DAY && row.event.registrationMode === "INTERNAL"
+        ? (deskByEvent.get(row.event.id) ?? { confirmed: 0, checkedIn: 0 })
+        : null,
   }));
 
   const query = parseListQuery(current, {
@@ -176,14 +191,23 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       label: t("events.columnEntries"),
       align: "right",
       hideBelow: "lg",
-      render: ({ event, entries }) =>
-        entries > 0 && canManageRegistrations(staffUser.role) ? (
-          <Link href={{ pathname: "/admin/registrations", query: { eventId: event.id } }}>
-            {entries}
-          </Link>
-        ) : (
-          entries
-        ),
+      render: ({ event, entries, desk }) => (
+        <>
+          {entries > 0 && canManageRegistrations(staffUser.role) ? (
+            <Link href={{ pathname: "/admin/registrations", query: { eventId: event.id } }}>
+              {entries}
+            </Link>
+          ) : (
+            entries
+          )}
+          {/* Race day: confirmed and here, the desk's numbers, beside the total (§83). */}
+          {desk && (
+            <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
+              {t("events.deskCounts", { confirmed: desk.confirmed, checkedIn: desk.checkedIn })}
+            </Typography>
+          )}
+        </>
+      ),
     },
   ];
 

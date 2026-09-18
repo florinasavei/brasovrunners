@@ -69,6 +69,8 @@
     "cost": "Cost",
     "registration": "Registration",
     "cancelled": "Cancelled",
+    "completed": "Finished",
+    "completedNotice": "This event has finished. Thank you to everyone who came.",
     "cancelledNotice": "This event has been cancelled.",
     "type": {
       "GROUP_RUN": "Group run",
@@ -97,7 +99,8 @@
       "opensOn": "Registration opens on {date}.",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
-      "cancelled": "The event has been cancelled, so registration has stopped."
+      "cancelled": "The event has been cancelled, so registration has stopped.",
+      "completed": "The event has finished."
     },
     "registrationState": {
       "NOT_APPLICABLE": "No registration needed",
@@ -105,7 +108,8 @@
       "NOT_YET_OPEN": "Registration has not opened yet",
       "OPEN": "Registration is open",
       "CLOSED": "Registration has closed",
-      "EVENT_CANCELLED": "The event has been cancelled"
+      "EVENT_CANCELLED": "The event has been cancelled",
+      "EVENT_COMPLETED": "The event has finished"
     },
     "difficultyValues": {
       "EASY": "Easy",
@@ -240,6 +244,8 @@
       "registrationDeleted": "The registration was permanently deleted.",
       "rowActions": "Actions",
       "clubMemberLabel": "Brașov Runners members",
+      "bouncedLabel": "Email",
+      "bouncedOnly": "Email bounced only",
       "clubMemberOnly": "Only those who declared membership",
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
@@ -259,6 +265,7 @@
       "searchHelp": "Search by name, with or without Romanian diacritics.",
       "resendShort": "Resend",
       "resendQr": "Resend the QR",
+      "sendReminder": "Send the reminder",
       "resendQrLong": "Send the confirmation again, with the QR code and the manage link",
       "raceDayTitle": "Race day",
       "bibNumber": "Race number",
@@ -283,6 +290,7 @@
       "columnTitle": "Event",
       "columnStatus": "Status",
       "columnDate": "Date",
+      "deskCounts": "{confirmed} confirmed · {checkedIn} here",
       "columnEntries": "Registrations",
       "tableCaption": "The club's events, with their status, date and number of registrations",
       "selectEvent": "Select \"{title}\"",
@@ -358,6 +366,7 @@
         "seoDescription": "Search engine description",
         "difficulty": "Difficulty",
         "costType": "Cost",
+        "checklist": "What to bring (one line, in the emails)",
         "body": "Full description"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
@@ -373,6 +382,7 @@
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
       "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
+      "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email and the reminder.",
       "type": "Event type",
       "surface": "Surface",
       "eventStatus": "Event status",
@@ -897,10 +907,21 @@
         "description": "Description"
       }
     },
+    "thanks": {
+      "title": "After the race",
+      "help": "A thank-you email to everyone marked present at the desk — once per event, sent by you, never automatically. You can add a link to the results or the photos.",
+      "url": "Link (optional)",
+      "urlHelp": "The results, the photos — an address starting with https://.",
+      "send": "Send the thank-you",
+      "confirmTitle": "Send the thank-you?",
+      "confirmBody": "One email to everyone marked present. It can be sent once per event.",
+      "sentOn": "The thank-you was sent on {date}."
+    },
     "bibs": {
       "title": "Race numbers",
       "assign": "Assign numbers",
       "assigned": "{assigned} numbers assigned ({total} in total).",
+      "thanksSent": "The thank-you went out: {recipients} emails.",
       "from": "From",
       "to": "To",
       "download": "Download the sheet (PDF)",
@@ -936,6 +957,7 @@
         "withoutBib": "No number: {n}",
         "pending": "Unconfirmed: {n}"
       },
+      "closed": "The event has finished. The desk is closed: the list still reads, but nobody is checked in any more.",
       "walkIn": "Add somebody",
       "foundByCode": "Found by code.",
       "unknownCode": "No participant has this code. Check the letters, or search by name.",
@@ -1365,7 +1387,7 @@
       "used": "{used} of 100 CU-hours used ({percent}%)",
       "awake": "Compute awake: {hours} h of {elapsed} h elapsed",
       "period": "Period ends {date}",
-      "unavailable": "Not configured: set NEON_API_KEY and NEON_PROJECT_ID (SETUP.md §33) to see consumption here.",
+      "unavailable": "Not configured. Two minutes: (1) Neon → avatar → Account settings → API keys → Create API key, or `npx neonctl api-keys create --name devs --project-id <id>`; (2) the project id is in the console address (console.neon.tech/app/projects/<id>) or `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`, then redeploy. The figure appears here.",
       "failed": "Neon did not answer: {reason}",
       "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
     }

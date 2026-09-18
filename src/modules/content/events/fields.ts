@@ -81,6 +81,11 @@ export const translationFieldsSchema = z
      */
     excerptBody: richTextField,
     /**
+     * "What to bring", one line for the confirmation and the reminder (§81). Optional in the
+     * input for callers from before it existed; absent means "leave it as it is".
+     */
+    checklist: optionalText(300).optional(),
+    /**
      * The description proper, written in the rich-text editor (AGENTS.md §11.3; `DECISIONS.md`
      * §71: "all descriptions should be WYSIWYG"). The same contract as a standing page's body:
      * a JSON string from `RichTextEditor`, parsed against the allowlist here so a bad body is

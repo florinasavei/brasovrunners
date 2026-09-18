@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.36-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -247,6 +247,7 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 1. Given an event whose translation for a locale is in Draft or In review, when that locale's public URL is requested, then the response is 404.
 2. Given an event with `event_status = CANCELLED` and a published translation, when its page is requested, then it renders with a clearly visible cancelled status.
 3. Given a cancelled or completed event, when a registration is attempted, then it is rejected.
+4. Given an event with `event_status = COMPLETED` (set by the organizer in the editor), when its page or card renders, then it says "S-a încheiat" in words and offers no registration control; when a check-in is attempted at the desk, then it is refused with a sentence and the desk shows the rows without buttons; and the maintenance job no longer touches the event (2026-09-18, `DECISIONS.md` §82).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
@@ -821,7 +822,7 @@ registration — and it lists registrations and never changes an address.
 
 **Acceptance criteria**
 
-1. Given each registration status, when an administrator resends, then the message type matches the mapping in `SETUP.md` §21 and no other type can be selected; for a confirmed registration that is the confirmation itself (`REGISTRATION_CONFIRMED`, with the desk code, its QR and the manage link — "retrimite QR-ul" in the list), not a bare manage link (2026-09-18, `DECISIONS.md` §79).
+1. Given each registration status, when an administrator resends, then the message type matches the mapping in `SETUP.md` §21 and no other type can be selected; for a confirmed registration that is the confirmation itself (`REGISTRATION_CONFIRMED`, with the desk code, its QR and the manage link — "retrimite QR-ul" in the list), not a bare manage link (2026-09-18, `DECISIONS.md` §79); and, while the registration is confirmed and the event has not started, the reminder by name ("Trimite reminderul", `EVENT_REMINDER`) — refused otherwise (`DECISIONS.md` §81).
 2. Given a resend, when it completes, then a new outbox row is created, marked as a manual resend with the acting administrator recorded.
 3. Given a resend, when it completes, then the registration status is unchanged and no deadline is extended.
 4. Given a cancelled or expired registration, when an administrator resends, then a `REGISTRATION_STATE_NOTICE` is queued that contains no confirmation link and no scoped token.
@@ -993,7 +994,7 @@ way through every step, and none of them is a way around the allocator.
 5. Given assigned numbers, when the sheet is requested — all of them, or a range `from`/`to` for a reprint or a late batch — then the response is a PDF, Administrator only, of A4 pages with two bibs each and a dashed cut line between them, or, with `layout=one` ("câte unul pe pagină"), the same A5-sized bib centred one per A4 page (2026-09-18, `DECISIONS.md` §79); each bib carries the club's lockup, the number in the club's blue as large as the paper allows, the participant's registered name, and the event's title and date in the requested language. Only confirmed, real registrations are printed.
 6. Given the assignment, when it completes with at least one number given, then one audit row records who, for which event, and the range assigned — never a participant.
 7. Given one confirmed registration, when any staff role types a number for it — or clears it — then the number is a whole number from 1 to 99999, a number already worn at that event is refused with a sentence rather than a stack trace, and an audit row records the number before and after (2026-09-18, `DECISIONS.md` §67).
-8. Given a registration for which Mailgun reported `permanent_fail` or `complained` on any message (BR-REQ-080-04), when the desk row or the registration page renders, then it carries an "email respins" chip with the provider's short reason, so the organizer knows before race day who never got the email and calls them; the participant sees nothing (2026-09-18, `DECISIONS.md` §76).
+8. Given a registration for which Mailgun reported `permanent_fail` or `complained` on any message (BR-REQ-080-04), when the desk row or the registration page renders, then it carries an "email respins" chip with the provider's short reason, so the organizer knows before race day who never got the email and calls them; the participant sees nothing (2026-09-18, `DECISIONS.md` §76). The registrations list filters to those rows ("doar email respins"), shows the same chip, and its CSV export carries `Checked in` and `Email bounced` columns; the events list shows confirmed and checked-in counts beside an event within a day of its start (`DECISIONS.md` §83).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`; unit `registrations/bibs-pdf.test.ts`
 
@@ -1320,8 +1321,11 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 1. Given each message type in `AGENTS.md` §16.3, when it is rendered, then complete Romanian and English HTML and plain-text bodies exist.
 2. Given a message, when it renders, then dates use the recipient's registration locale and the event timezone, and all links are localized absolute URLs derived from `APP_BASE_URL`.
 3. Given the message catalog, when CI runs, then no message type lacks a template in either locale.
+4. Given the confirmation or the reminder, when it renders, then it opens with one bold line — the event's date, time and meeting point — followed by the map link and the Strava event link when set, carries the translation's one-line "what to bring" (`event_translations.checklist`, ≤ 300 characters) when written, the desk code with its hosted QR, and the manage link; every message ends with "Reply to this email with questions" when `EMAIL_REPLY_TO` is set; text-first, no image but the QR, well under 100 KB (2026-09-18, `DECISIONS.md` §81).
+5. Given a CONFIRMED registration to a SCHEDULED event with local registration, when the maintenance job runs within 48 hours of the start, then one `EVENT_REMINDER` is queued for it with the key `registration:<id>:reminder`, and a job that runs again queues nothing more; a WAITLISTED entry, a cancelled or completed event and an event further out get none; the registration's state is untouched (`DECISIONS.md` §81).
+6. Given an event that has started, when an Administrator presses "Trimite mulțumirile" on its page and confirms, then one `EVENT_THANKS` is queued for every registration checked in at that event — with the optional `https://` link the organizer typed — `events.thanks_sent_at` is set so the button is gone afterwards and a second press is refused, and an audit row names the event and the count, never a recipient; never automatic (`DECISIONS.md` §82).
 
-**Verification:** unit `notifications/templates.test.ts`
+**Verification:** unit `notifications/templates.test.ts`; integration `notifications/event-mail.test.ts`
 
 #### BR-REQ-080-02 — Outbox is authoritative and idempotent
 

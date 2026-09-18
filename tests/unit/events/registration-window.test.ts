@@ -65,11 +65,12 @@ describe("BR-REQ-030-01 registration modes", () => {
 });
 
 describe("BR-REQ-020-01 cancelled and completed events", () => {
-  it.each(["CANCELLED", "COMPLETED"] as const)(
-    "reports %s events as closed to registration even mid-window",
-    (eventStatus) => {
-      // Mid-window on purpose: the status must win over an otherwise open window.
-      expect(registrationState(event({ eventStatus }), PUBLISHED)).toBe("EVENT_CANCELLED");
-    },
-  );
+  it.each([
+    ["CANCELLED", "EVENT_CANCELLED"],
+    // Its own state since `DECISIONS.md` §82, so the page can say "it has ended" rather than "cancelled".
+    ["COMPLETED", "EVENT_COMPLETED"],
+  ] as const)("reports %s events as closed to registration even mid-window", (eventStatus, state) => {
+    // Mid-window on purpose: the status must win over an otherwise open window.
+    expect(registrationState(event({ eventStatus }), PUBLISHED)).toBe(state);
+  });
 });

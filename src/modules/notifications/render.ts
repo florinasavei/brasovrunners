@@ -29,6 +29,8 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   WAITLIST_SPOT_OFFER: "WAITLIST_OFFER",
   REGISTRATION_CONFIRMED: "MANAGE_REGISTRATION",
   REGISTRATION_MANAGE_LINK: "MANAGE_REGISTRATION",
+  // "Can't come? cancel here" (§81): the same manage link the confirmation carries.
+  EVENT_REMINDER: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
 };
@@ -74,16 +76,33 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     eventLocationName: eventDetails?.locationName ?? undefined,
     eventStartsAtFormatted: eventDetails
       ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-          dateStyle: "long",
+          dateStyle: "full",
           timeStyle: "short",
           timeZone: eventDetails.timezone,
         }).format(eventDetails.startsAt)
       : undefined,
+    eventMapUrl: eventDetails?.mapUrl ?? undefined,
+    eventStravaEventUrl: eventDetails?.stravaEventUrl ?? undefined,
+    eventChecklist: eventDetails?.checklist ?? undefined,
     currentStatus: registration?.status,
+    // The footer line is there whenever somebody can answer (§81).
+    replyTo: env.EMAIL_REPLY_TO ?? undefined,
   };
-  // The desk code on the confirmation (BR-REQ-037-08). A confirmed registration made before
-  // codes existed gets one here, so a resent confirmation carries it too.
-  if (row.messageType === "REGISTRATION_CONFIRMED" && registration?.status === "CONFIRMED") {
+  // The thank-you's optional link (§82) rides in the payload; it is the action, and not a token.
+  let payloadActionUrl: string | undefined;
+  if (row.messageType === "EVENT_THANKS") {
+    const url = (row.payloadJson as { url?: unknown } | null)?.url;
+    if (typeof url === "string" && url.startsWith("https://")) {
+      data.thanksUrl = url;
+      payloadActionUrl = url;
+    }
+  }
+  // The desk code on the confirmation and the reminder (BR-REQ-037-08). A confirmed
+  // registration made before codes existed gets one here, so a resent confirmation carries it too.
+  if (
+    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER") &&
+    registration?.status === "CONFIRMED"
+  ) {
     let code = registration.checkinCode;
     if (!code) {
       code = newCheckinCode();
@@ -95,7 +114,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
 
-  let actionUrl: string | undefined;
+  let actionUrl: string | undefined = payloadActionUrl;
   if (purpose && row.participantId) {
     const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);

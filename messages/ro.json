@@ -69,6 +69,8 @@
     "cost": "Cost",
     "registration": "Înscriere",
     "cancelled": "Anulat",
+    "completed": "S-a încheiat",
+    "completedNotice": "Evenimentul s-a încheiat. Mulțumim tuturor celor care au venit.",
     "cancelledNotice": "Acest eveniment a fost anulat.",
     "type": {
       "GROUP_RUN": "Alergare de grup",
@@ -97,7 +99,8 @@
       "opensOn": "Înscrierile se deschid pe {date}.",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
-      "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit."
+      "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",
+      "completed": "Evenimentul s-a încheiat."
     },
     "registrationState": {
       "NOT_APPLICABLE": "Nu este necesară înscrierea",
@@ -105,7 +108,8 @@
       "NOT_YET_OPEN": "Înscrierile nu s-au deschis încă",
       "OPEN": "Înscrierile sunt deschise",
       "CLOSED": "Înscrierile s-au închis",
-      "EVENT_CANCELLED": "Evenimentul a fost anulat"
+      "EVENT_CANCELLED": "Evenimentul a fost anulat",
+      "EVENT_COMPLETED": "Evenimentul s-a încheiat"
     },
     "difficultyValues": {
       "EASY": "Ușor",
@@ -240,6 +244,8 @@
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
       "rowActions": "Acțiuni",
       "clubMemberLabel": "Membri Brașov Runners",
+      "bouncedLabel": "Email",
+      "bouncedOnly": "Doar email respins",
       "clubMemberOnly": "Doar cei care s-au declarat membri",
       "clubMemberChip": "Membru (declarat)",
       "columnName": "Nume",
@@ -259,6 +265,7 @@
       "searchHelp": "Caută după nume, cu sau fără diacritice.",
       "resendShort": "Retrimite",
       "resendQr": "Retrimite QR-ul",
+      "sendReminder": "Trimite reminderul",
       "resendQrLong": "Trimite din nou confirmarea, cu codul QR și linkul de gestionare",
       "raceDayTitle": "Ziua cursei",
       "bibNumber": "Număr de concurs",
@@ -283,6 +290,7 @@
       "columnTitle": "Evenimentul",
       "columnStatus": "Stare",
       "columnDate": "Data",
+      "deskCounts": "{confirmed} confirmate · {checkedIn} prezente",
       "columnEntries": "Înscrieri",
       "tableCaption": "Evenimentele clubului, cu starea, data și numărul de înscrieri",
       "selectEvent": "Selectează „{title}”",
@@ -358,6 +366,7 @@
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
         "costType": "Cost",
+        "checklist": "Ce să aduci (o linie, în emailuri)",
         "body": "Descriere completă"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
@@ -373,6 +382,7 @@
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
+      "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare și în reminder.",
       "type": "Tip eveniment",
       "surface": "Suprafață",
       "eventStatus": "Starea evenimentului",
@@ -897,10 +907,21 @@
         "description": "Descriere"
       }
     },
+    "thanks": {
+      "title": "După cursă",
+      "help": "Un email de mulțumire pentru toți cei marcați prezenți la masă — o singură dată pe eveniment, trimis de tine, niciodată automat. Poți pune un link către rezultate sau poze.",
+      "url": "Link (opțional)",
+      "urlHelp": "Rezultatele, pozele — o adresă care începe cu https://.",
+      "send": "Trimite mulțumirile",
+      "confirmTitle": "Trimiți mulțumirile?",
+      "confirmBody": "Un email tuturor celor marcați prezenți. Se poate trimite o singură dată pe eveniment.",
+      "sentOn": "Mulțumirile au fost trimise pe {date}."
+    },
     "bibs": {
       "title": "Numere de concurs",
       "assign": "Alocă numerele",
       "assigned": "{assigned} numere alocate ({total} în total).",
+      "thanksSent": "Mulțumirile au fost trimise: {recipients} emailuri.",
       "from": "De la",
       "to": "Până la",
       "download": "Descarcă foaia (PDF)",
@@ -936,6 +957,7 @@
         "withoutBib": "Fără număr: {n}",
         "pending": "Neconfirmați: {n}"
       },
+      "closed": "Evenimentul s-a încheiat. Masa este închisă: lista se mai poate citi, dar nu se mai marchează nimeni prezent.",
       "walkIn": "Adaugă pe cineva",
       "foundByCode": "Găsit după cod.",
       "unknownCode": "Nu există niciun participant cu acest cod. Verifică literele sau caută după nume.",
@@ -1365,7 +1387,7 @@
       "used": "{used} din 100 ore-CU folosite ({percent}%)",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
       "period": "Perioada se încheie la {date}",
-      "unavailable": "Nu este configurat: setează NEON_API_KEY și NEON_PROJECT_ID (SETUP.md §33) ca să vezi consumul aici.",
+      "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id <id>`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/<id>) sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
     }

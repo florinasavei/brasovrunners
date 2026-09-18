@@ -99,6 +99,12 @@ export default async function EventDetailPage({ params }: Props) {
           {t("cancelledNotice")}
         </Alert>
       )}
+      {/* The race is over (§82): said in words, and registration hides itself below. */}
+      {event.eventStatus === "COMPLETED" && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {t("completedNotice")}
+        </Alert>
+      )}
 
       {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61). */}
       <Typography variant="overline" color="text.secondary">

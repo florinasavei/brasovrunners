@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.36-2026-09-18`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.37-2026-09-18`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -269,7 +269,7 @@ busiest day every message queued after the cap was thrown away (`DECISIONS.md` �
 shows the volume against the allowance before a window opens, and explains every configuration
 enum rather than only reporting its value (§41).
 
-**1022 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
+**1033 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
@@ -302,6 +302,17 @@ publishing a whole series at once.
 outbox after its own response; the external monitors run every fifteen minutes by day and
 hourly at night, Romania time, because Neon's free month is 100 CU-hours and a five-minute
 pinger spends 180. `/devs` shows the month's figure with `NEON_API_KEY` (`SETUP.md` §33).
+
+**The email people keep, the reminder, and after the race** (`DECISIONS.md` §81–§83).
+The confirmation and the reminder open with a bold facts line (date, time, meeting point),
+the map and Strava links, the organizer's one-line "what to bring" (`checklist`, per
+language), the QR and the manage link; every email ends "reply to this email with questions".
+`EVENT_REMINDER` goes from the maintenance job 48 hours before the start, once per confirmed
+registration (`registration:<id>:reminder`). `COMPLETED` means over: "S-a încheiat", no
+registration control, the desk closed, the job hands off. `EVENT_THANKS` is sent by an
+Administrator from the event page, once, to everyone checked in, with an optional link —
+never automatic. The registrations list filters to bounced emails; the export carries
+`Checked in` and `Email bounced`; the events list shows confirmed · here on race day.
 
 **Race week, for the runner and the desk** (`DECISIONS.md` §76–§79). Within seven days of
 the featured event the homepage counts down on the event's own calendar and, once
@@ -348,8 +359,8 @@ invites people is itself behind the sign-in it would be granting.
    approved in `/admin/legal` on production. Until then production correctly refuses every
    registration.
 5. **Volunteer accounts** for race day (`SETUP.md` §34) and a rehearsal on QA.
-6. Optional: `NEON_API_KEY` + `NEON_PROJECT_ID` on both Vercel projects (`SETUP.md` §33 — a
-   QA-scoped key exists since 2026-09-18, waiting to be pasted); a custom domain for the R2
+6. ~~Neon keys~~ — done 2026-09-18 evening: a project-scoped key on each Vercel project,
+   `/devs` shows the database's month on both. Still optional: a custom domain for the R2
    bucket; the retention and support decisions of `SETUP.md` §30.
 
 Open pull requests are listed on GitHub; the convention below says who merges them.

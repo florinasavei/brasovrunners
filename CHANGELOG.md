@@ -8,6 +8,16 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.37-2026-09-18
+
+After the race, and the email people keep.
+
+- **Email that people will actually read.** The confirmation and the reminder open with one bold line — date, time, meeting point — then the map and the Strava event links, then "what to bring" (a new one-line field per language on the event, `checklist`), the QR and the manage link. Every email ends "Răspunde la acest email pentru întrebări" when the club has a reply address. Text-first, no image but the QR. BR-REQ-080-01 criterion 4; `DECISIONS.md` §81.
+- **The reminder.** `EVENT_REMINDER`, 48 hours before the start, to every confirmed participant, once per registration, from the maintenance job — with "can't come? cancel here". Resendable by hand while confirmed and ahead ("Trimite reminderul"). The free-day forecast counts four messages per registration now. BR-REQ-080-01 criterion 5, BR-REQ-037-02; `DECISIONS.md` §81. Migration `0031` (expand-only).
+- **After the race.** `COMPLETED` means over: the page says "S-a încheiat" and hides registration, the desk refuses check-in with a sentence, the maintenance job leaves the event alone. **The thank-you** (`EVENT_THANKS`): sent by an Administrator from the event page, once per event, to everyone checked in, with an optional link — behind a confirmation, audited with the event and the count, never automatic. BR-REQ-020-01 criterion 4, BR-REQ-080-01 criterion 6; `DECISIONS.md` §82.
+- **Organizer's numbers.** The registrations list filters to bounced emails and shows the chip; the CSV export gains `Checked in` and `Email bounced`; the events list shows confirmed · here beside an event within a day of its start. `/devs`'s Neon sentence carries the two-minute steps. `DECISIONS.md` §83.
+- **Accounts.** Both Vercel projects carry a project-scoped Neon key, so `/devs` shows the database's month on QA and production; QA sends from the club's verified `mail.` domain (allowlist mode) instead of the sandbox.
+
 ## BR-V1.36-2026-09-18
 
 Race week: pictures finished, the facts made readable, and what the desk and the runner still needed.

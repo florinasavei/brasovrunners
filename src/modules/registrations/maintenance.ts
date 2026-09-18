@@ -2,6 +2,7 @@ import type { Database } from "@/db/types";
 import { pruneExpiredRows, totalPruned } from "@/modules/jobs/retention";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { sweepOrphanAssets } from "@/modules/media/references";
+import { queueEventReminders } from "@/modules/notifications/event-mail";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
 
@@ -23,7 +24,13 @@ import { fillAvailableSpots } from "./service";
 export async function runRegistrationMaintenance<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-): Promise<{ eventsProcessed: number; errorCount: number; prunedRows: number; orphanPicturesDeleted: number }> {
+): Promise<{
+  eventsProcessed: number;
+  errorCount: number;
+  prunedRows: number;
+  orphanPicturesDeleted: number;
+  remindersQueued: number;
+}> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
   const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now);
@@ -65,6 +72,19 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
+   * The reminders (§81), after the queue work and in their own try/catch: two days before an
+   * event every confirmed participant gets one, once — the idempotency key holds across every
+   * run that sees the event inside the window. A failure here is a late reminder, not a
+   * failed run.
+   */
+  let remindersQueued = 0;
+  try {
+    remindersQueued = await queueEventReminders(db, now);
+  } catch {
+    errorCount += 1;
+  }
+
+  /**
    * The retention sweep, last and in its own try/catch.
    *
    * It rides on this job because it needs no scheduler of its own: four tables whose oldest
@@ -97,11 +117,12 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     db,
     jobRunId,
     {
-      itemsProcessed: eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted,
+      itemsProcessed:
+        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued,
       errorCount,
     },
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted };
+  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued };
 }

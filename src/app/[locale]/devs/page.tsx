@@ -286,7 +286,7 @@ export default async function DevsPage({ params }: Props) {
 
       {/*
         The arithmetic of `docs/PLATFORM.md` limit 1, done here so nobody has to do it by hand
-        on the morning it matters: three messages per completed registration against a daily
+        on the morning it matters: four messages per completed registration (the reminder since §81) against a daily
         allowance of a hundred. Test registrations are counted, and counted separately — §12.6
         keeps them out of every count the *club* is given, and this is an operator's forecast
         of what will reach the provider, which a synthetic participant consumes just the same.

@@ -173,6 +173,7 @@ async function EventCard({
             {event.surface && <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />}
             {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
             {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
+            {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}
           </Stack>
 
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>

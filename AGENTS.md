@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.36-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2426,7 +2426,8 @@ Rejoin:
 8. audit;
 9. commit.
 
-Resend never changes state or marks declaration accepted.
+Resend never changes state or marks declaration accepted. `EVENT_REMINDER` may be resent by
+hand while the registration is CONFIRMED and the event has not started (§81).
 
 ### 15.9 Profile management
 
@@ -2628,7 +2629,18 @@ WAITLIST_OFFER_EXPIRED
 REGISTRATION_MANAGE_LINK
 PROFILE_MANAGE_LINK
 REGISTRATION_STATE_NOTICE
+EVENT_REMINDER
+EVENT_THANKS
 ```
+
+`EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
+event 48 hours before its start, once per registration (`registration:<id>:reminder`), with
+the facts line, the QR and the manage link; never to a waiting-list entry, never for a
+cancelled or completed event (`DECISIONS.md` §81). `EVENT_THANKS` is sent by an organizer,
+once per event, to everyone checked in, with an optional link; never automatically, audited
+with the event and the count (§82). Every message carries the facts line where it has an
+event — date, time, meeting point in bold, then the map and the Strava event — and the
+footer "reply to this email with questions" when `EMAIL_REPLY_TO` is set.
 
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary

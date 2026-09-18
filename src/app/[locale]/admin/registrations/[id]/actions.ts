@@ -15,6 +15,8 @@ function toLocale(value: FormDataEntryValue | null): Locale {
 export async function resendRegistrationEmailAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const registrationId = String(form.get("registrationId") ?? "");
+  // "Trimite reminderul" asks for the reminder by name; anything else is the state's message.
+  const wanted = form.get("messageType") === "EVENT_REMINDER" ? ("EVENT_REMINDER" as const) : undefined;
   const path = getPathname({
     locale,
     href: { pathname: "/admin/registrations/[id]", params: { id: registrationId } },
@@ -23,7 +25,7 @@ export async function resendRegistrationEmailAction(form: FormData): Promise<voi
   let outcome: "sent" | { error: string };
   try {
     const actor = await requireStaff();
-    await resendRegistrationMessage(getDb(), actor, registrationId, new Date());
+    await resendRegistrationMessage(getDb(), actor, registrationId, new Date(), wanted);
     outcome = "sent";
   } catch (error) {
     if (isDomainError(error)) {

@@ -880,6 +880,7 @@ function copiedTranslationValues(
     excerpt: translation.excerpt,
     excerptJson: translation.excerptJson,
     bodyJson: translation.bodyJson,
+    checklist: translation.checklist,
     coverAltText: translation.coverAltText,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
