@@ -91,6 +91,18 @@ describe("job health reporting", () => {
     expect(health.status).toBe("stale");
   });
 
+  it("is patient at night: fifty minutes is ok at 03:00 in Brașov and stale at noon", async () => {
+    const night = new Date("2026-09-04T00:00:00.000Z"); // 03:00 in Brașov, summer time
+    await db.insert(jobRuns).values({
+      jobName: "email-outbox",
+      startedAt: new Date(night.getTime() - 50 * 60_000),
+      finishedAt: new Date(night.getTime() - 50 * 60_000),
+    });
+    expect((await checkJobHealth(db, "email-outbox", night)).status).toBe("ok");
+    // The same run, read at noon the same day: the day cadence applies.
+    expect((await checkJobHealth(db, "email-outbox", new Date(night.getTime() + 9 * 3_600_000))).status).toBe("stale");
+  });
+
   it("uses only the most recent run when several exist", async () => {
     await db.insert(jobRuns).values([
       {

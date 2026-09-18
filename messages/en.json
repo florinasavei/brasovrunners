@@ -539,13 +539,14 @@
         },
         "scheduler": {
           "title": "Production monitors on cron-job.org",
-          "todo": "One monitor for each of the two scheduled jobs (email-outbox and registration-maintenance), every 15 minutes, with this environment’s JOB_SECRET — SETUP.md §26. Email goes out right after each registration anyway; the monitors expire held places and retry what failed. Missing or late",
+          "todo": "Monitors for the two scheduled jobs (email-outbox and registration-maintenance), with this environment’s JOB_SECRET — SETUP.md §26: every 15 minutes by day (07–23, Romania time) and hourly at night. Email goes out right after each registration anyway; the monitors expire held places and retry what failed. Missing or late",
           "done": "Both jobs are running on time.",
           "how": [
-            "On cron-job.org (free account): “Create cronjob”, twice.",
-            "First: URL {outboxUrl}; second: URL {maintenanceUrl}. Both: Schedule “every 15 minutes” — not 5: at 5 the Neon database never sleeps and the 100 free CU-hours a month run out mid-month, and the site is down until the next month. Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
-            "Turn on email notification on failure, so a dead monitor tells you. Within 15 minutes this row turns green; /devs shows each job with its last run, and the database's consumption.",
-            "On QA set the same at 60 minutes (or pause it when not testing): QA spends its own project's 100 CU-hours too."
+            "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
+            "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
+            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45. Night: Custom → every day, hours 23, 0, 1, 2, 3, 4, 5, 6, minute 0. Not every 5 minutes: the Neon database would never sleep and the 100 free CU-hours a month would run out mid-month, with the site down until the next month.",
+            "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
+            "On QA: one pair only, every 60 minutes day and night (or paused when not testing): QA spends its own project's 100 CU-hours too."
           ]
         },
         "inviteStaff": {

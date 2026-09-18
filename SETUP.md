@@ -1255,11 +1255,20 @@ still runs when the pinger's own account lapses. Any service that can POST on a 
 header will do; the club needs no paid plan for it. Per environment, two monitors:
 
 ```text
-POST <APP_BASE_URL>/api/internal/jobs/email-outbox               every 15 minutes (production)
-POST <APP_BASE_URL>/api/internal/jobs/registration-maintenance   every 15 minutes (production)
-                                                                 every 60 minutes (QA)
+POST <APP_BASE_URL>/api/internal/jobs/email-outbox               production: every 15 min, 07:00–22:59 Europe/Bucharest
+POST <APP_BASE_URL>/api/internal/jobs/registration-maintenance               hourly (minute 0), 23:00–06:59
+                                                                 QA: hourly, day and night
 Header: Authorization: Bearer <that environment's JOB_SECRET>
 ```
+
+On cron-job.org that is Settings → Time zone `Europe/Bucharest`, then per production address
+two jobs with a **Custom** schedule: day = every day, hours 7–22, minutes 0/15/30/45; night =
+every day, hours 23 and 0–6, minute 0. The health check knows the two cadences
+(`modules/jobs/quiet-hours.ts`): fifty minutes since the last run is `ok` at 03:00 and `stale`
+at noon. The site is allowed to be slower at night — the first request after an idle hour
+pays Neon's cold start — because nobody in Brașov is registering at 03:00 and a warm database
+then costs the same CU-hours it costs at noon: about 50 a month this way, against 65 at
+fifteen minutes around the clock and 180 at five.
 
 **Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
 month and *suspends the compute* when they are spent, until the next month; the compute sleeps

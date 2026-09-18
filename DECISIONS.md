@@ -3964,6 +3964,19 @@ releases a place fifteen minutes late to the *right* person (§16.2's promptness
 correctness line). The compute is awake about 37% of the time: ~65 CU-hours a month plus real
 traffic. QA runs hourly.
 
+**And the night is slower on purpose** (the owner, the same day: "optimize per hours, Romania
+time — the app can run slower during off hours"). From 23:00 to 07:00 `Europe/Bucharest` the
+production monitors run hourly instead of every fifteen minutes; nobody is registering, no
+hold is expiring that a runner is waiting on, and a warm database at 03:00 costs exactly what
+it costs at noon. The first request after an idle hour pays Neon's cold start — a second or
+two, once — and that is the whole price. The health check reads the clock the same way
+(`jobs/quiet-hours.ts`): the threshold is twice the cadence in force plus five minutes, so a
+fifty-minute gap is `ok` at 03:00 and `stale` at noon, and the check stays honest at both. By
+day the compute is awake ~5.9 hours and by night ~0.75: about 50 CU-hours a month. A finer
+schedule — different cadences per weekday, or a race-morning burst — was refused as a rule
+nobody would remember; two cadences and one boundary are enough, and the boundary is a
+constant with a name.
+
 ### Seeing it
 
 `/devs` reads the project's row from Neon's API when `NEON_API_KEY` and `NEON_PROJECT_ID` are

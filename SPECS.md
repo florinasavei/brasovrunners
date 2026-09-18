@@ -1460,7 +1460,7 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 
 1. Given `NEON_API_KEY` and `NEON_PROJECT_ID`, when `/devs` renders, then it shows this project's CU-hours used in the current period against the Free plan's 100, the hours the compute was awake against the hours elapsed, and the period's end — read from Neon with a five-second timeout, and a sentence rather than an error when Neon does not answer; when they are not set, it says how to set them and shows the rest of the page.
 2. Given eighty percent of the allowance used, when the figure renders, then it is shown as a warning.
-3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence is fifteen minutes in a deployed environment, the health thresholds allow it, and the compute sleeps between runs.
+3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence in production is fifteen minutes by day and hourly by night (23:00–07:00 `Europe/Bucharest`, `jobs/quiet-hours.ts`), the health threshold is twice the cadence in force plus five minutes, and the compute sleeps between runs.
 
 **Verification:** unit `diagnostics/neon.test.ts`; integration `jobs/health.test.ts`
 

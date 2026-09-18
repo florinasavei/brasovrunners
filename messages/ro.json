@@ -539,13 +539,14 @@
         },
         "scheduler": {
           "title": "Monitoarele de producție pe cron-job.org",
-          "todo": "Câte un monitor pentru fiecare dintre cele două sarcini programate (email-outbox și registration-maintenance), la 15 minute, cu JOB_SECRET-ul mediului — SETUP.md §26. Emailurile pleacă oricum imediat după fiecare înscriere; monitoarele expiră locurile rezervate și retrimit ce a eșuat. Lipsește sau întârzie",
+          "todo": "Monitoare pentru cele două sarcini programate (email-outbox și registration-maintenance), cu JOB_SECRET-ul mediului — SETUP.md §26: la 15 minute ziua (07–23, ora României) și o dată pe oră noaptea. Emailurile pleacă oricum imediat după fiecare înscriere; monitoarele expiră locurile rezervate și retrimit ce a eșuat. Lipsește sau întârzie",
           "done": "Ambele sarcini rulează la timp.",
           "how": [
-            "Pe cron-job.org (cont gratuit): „Create cronjob”, de două ori.",
-            "Primul: URL {outboxUrl}; al doilea: URL {maintenanceUrl}. La amândouă: Schedule „every 15 minutes” — nu 5: la 5 minute baza de date Neon nu adoarme niciodată și cele 100 de ore-CU gratuite pe lună se termină pe la jumătatea lunii, iar atunci site-ul cade până luna următoare. Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
-            "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. În 15 minute rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date.",
-            "Pe QA pune același lucru la 60 de minute (sau oprește-l când nu testezi): și QA consumă din cele 100 de ore-CU ale proiectului lui."
+            "Pe cron-job.org (cont gratuit): Settings → Time zone = Europe/Bucharest. Apoi „Create cronjob”, de patru ori pentru producție: câte două pe fiecare adresă (una de zi, una de noapte).",
+            "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
+            "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45. Noapte: Custom → toate zilele, orele 23, 0, 1, 2, 3, 4, 5, 6, minutul 0. Nu la 5 minute: baza de date Neon nu ar adormi niciodată și cele 100 de ore-CU gratuite pe lună s-ar termina la jumătatea lunii, iar site-ul ar cădea până luna următoare.",
+            "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
+            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă din cele 100 de ore-CU ale proiectului lui."
           ]
         },
         "inviteStaff": {

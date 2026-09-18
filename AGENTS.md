@@ -2572,16 +2572,20 @@ Invocation has three layers, and on a serverless host none of them is a process:
   in the participant's inbox in seconds rather than at the next tick. Silent in `test` and
   outside a request; a failure leaves the row PENDING for the next layer;
 - primary: an external scheduler posting to the job endpoints with `JOB_SECRET`, **every
-  fifteen minutes** in a deployed environment. It was five: five keeps a Neon compute awake
-  around the clock, and the Free plan's 100 CU-hours a month then run out around the 17th
-  (§68 has the arithmetic; `/devs` shows the figure). This deploys to serverless functions
-  (§7), which have no persistent process for an in-process interval to live in;
+  fifteen minutes by day and hourly at night**, club time (`jobs/quiet-hours.ts`: quiet from
+  23:00 to 07:00 `Europe/Bucharest`). It was five around the clock: five keeps a Neon compute
+  awake, and the Free plan's 100 CU-hours a month then run out around the 17th (§68 has the
+  arithmetic; `/devs` shows the figure). The site MAY be slower at night — a cold start on the
+  first request after an idle hour — and MUST NOT be slower by day for the same reason. This
+  deploys to serverless functions (§7), which have no persistent process for an in-process
+  interval to live in;
 - backstop: a second, independent caller on the same endpoints, because the jobs are
   idempotent and two callers cost one wasted query while one caller that stops costs a
   participant their place in the queue.
 
-`JOB_STALENESS_THRESHOLDS_MS` is thirty-five minutes — twice the cadence plus a run — so a
-fifteen-minute scheduler reads `ok` on `/api/health`.
+`jobStalenessThresholdMs(now)` is twice the cadence in force plus five minutes — 35 by day,
+125 at night — so the scheduler reads `ok` on `/api/health` at either cadence and `stale` when
+it has actually missed a run.
 
 **A scheduler that fires late is a promptness failure, never a correctness one**, and the
 distinction decides how much to spend on it. Expiry is evaluated against `now` on every read
