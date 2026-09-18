@@ -201,6 +201,13 @@ export const events = pgTable(
      */
     routeUrl: text("route_url"),
 
+    /**
+     * Last year's film (BR-REQ-011-01 criterion 9): a YouTube link as the organizer pasted it,
+     * validated to carry a video id before it is stored (`events/domain/video.ts`), embedded
+     * on the page from the id alone. Text rather than the id, so the row says what was given.
+     */
+    videoUrl: text("video_url"),
+
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
 
@@ -327,6 +334,10 @@ export const events = pgTable(
     check(
       "events_route_url_is_https",
       sql`${t.routeUrl} IS NULL OR ${t.routeUrl} LIKE 'https://%'`,
+    ),
+    check(
+      "events_video_url_is_https",
+      sql`${t.videoUrl} IS NULL OR ${t.videoUrl} LIKE 'https://%'`,
     ),
 
     check(

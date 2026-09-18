@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -427,7 +427,7 @@ MAILGUN_DOMAIN
 MAILGUN_WEBHOOK_SIGNING_KEY
 STORAGE_MODE
 JOB_SCHEDULER_ALLOWED
-R2_ACCOUNT_ID
+R2_ENDPOINT
 R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET
@@ -1213,7 +1213,10 @@ Background jobs:
 - do not rely on an in-memory interval for correctness;
 - invoke the endpoints from two layers: an in-process interval inside the persistent
   application as the primary trigger, and an external scheduler as a watchdog;
-- run maintenance about every five minutes and the outbox every one to five minutes;
+- run both every fifteen minutes in a deployed environment (five until 2026-09-18 — see the
+  Neon arithmetic below); the outbox is also drained by the request that filled it
+  (`AGENTS.md` §16.2, `DECISIONS.md` §68), so the cadence sets how late an *expiry* message
+  can be, never how late a verification link is;
 - scheduler credentials are limited to the job endpoint and are separate per environment;
 - record every run in `job_runs` so a stalled scheduler is visible in the health check.
 
@@ -1252,10 +1255,29 @@ still runs when the pinger's own account lapses. Any service that can POST on a 
 header will do; the club needs no paid plan for it. Per environment, two monitors:
 
 ```text
-POST <APP_BASE_URL>/api/internal/jobs/email-outbox               every 5 minutes
-POST <APP_BASE_URL>/api/internal/jobs/registration-maintenance   every 5 minutes
+POST <APP_BASE_URL>/api/internal/jobs/email-outbox               production: every 15 min, 07:00–22:59 Europe/Bucharest
+POST <APP_BASE_URL>/api/internal/jobs/registration-maintenance               hourly (minute 0), 23:00–06:59
+                                                                 QA: hourly, day and night
 Header: Authorization: Bearer <that environment's JOB_SECRET>
 ```
+
+On cron-job.org that is Settings → Time zone `Europe/Bucharest`, then per production address
+two jobs with a **Custom** schedule: day = every day, hours 7–22, minutes 0/15/30/45; night =
+every day, hours 23 and 0–6, minute 0. The health check knows the two cadences
+(`modules/jobs/quiet-hours.ts`): fifty minutes since the last run is `ok` at 03:00 and `stale`
+at noon. The site is allowed to be slower at night — the first request after an idle hour
+pays Neon's cold start — because nobody in Brașov is registering at 03:00 and a warm database
+then costs the same CU-hours it costs at noon: about 50 a month this way, against 65 at
+fifteen minutes around the clock and 180 at five.
+
+**Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
+month and *suspends the compute* when they are spent, until the next month; the compute sleeps
+after five idle minutes and cannot be told not to. A monitor every five minutes means it never
+sleeps: 0.25 CU × 24 h = 6 CU-hours a day, 180 a month, exhausted around the 17th. QA measured
+exactly that — 74 CU-hours by 18 September. At fifteen minutes the compute is awake for about
+five and a half minutes per ping, some 37% of the time, ~65 CU-hours a month plus real traffic;
+hourly on QA is ~17. `/devs` shows the figure when `NEON_API_KEY` and `NEON_PROJECT_ID` are
+set (§33). The health thresholds are thirty-five minutes, so fifteen reads `ok`.
 
 Checklist:
 
@@ -1569,19 +1591,55 @@ even on the free plan. Nothing is charged inside the allowance.
 2. **Enable R2.** Left menu → R2 Object Storage → "Purchase R2" (the free plan; this is where the
    card is asked for).
 3. **Bucket.** Create bucket → name `brasovrunners-media`, location hint **European Union** —
-   the participants' photos stay in the EU like everything else. Leave public access **off**:
-   the site serves images through its own URL, never a public bucket.
+   the photos stay in the EU like everything else. Then Settings → **Public access**: enable the
+   `r2.dev` subdomain (or connect a custom domain) and copy the public URL — that is
+   `R2_PUBLIC_BASE_URL`. Reads are public because the gallery is; writes only ever go through
+   the token below, and keys are opaque, so nothing is listable or guessable.
 4. **Token.** R2 → "Manage R2 API Tokens" → Create API token → name `brasovrunners-site`,
    permission **Object Read & Write**, scoped to that one bucket, no TTL. Copy the **Access Key
    ID**, the **Secret Access Key** and the **endpoint** (`https://<account id>.r2.cloudflarestorage.com`)
    before closing — the secret is shown once.
 5. **Hand over.** Paste into `.env.local` as a commented block, exactly as the other providers'
-   values are kept there (§3): the account id, the access key id, the secret, the bucket name.
-   The five `R2_*` variables of `AGENTS.md` §8 are declared in `env.ts` by the gallery pull
-   request, which also sets them on both Vercel projects.
+   values are kept there (§3): the S3 endpoint, the access key id, the secret, the bucket name
+   and the public URL — the five `R2_*` variables of `AGENTS.md` §8 — then set the same five on
+   both Vercel projects (`vercel env add`) and redeploy. `/admin/tasks` turns its storage row
+   green and the album page gets its upload button.
 
 Production and QA share one bucket with a per-environment prefix (`qa/`, `production/`) until
 a second bucket is worth a second token; the adapter takes the prefix from configuration.
+
+## 33. Let `/devs` read the database's consumption from Neon
+
+Two minutes, optional, read-only (BR-REQ-090-07). The Free plan's 100 CU-hours a month per
+project is the one limit whose exhaustion takes the site down (§26 has the arithmetic), and the
+figure lives in Neon's console, which no organizer opens. With these two variables `/devs` shows
+it: CU-hours used against 100, hours awake against hours elapsed, and when the period ends.
+
+1. Neon console → your avatar → **Account settings** → **API keys** → **Create API key**, name
+   `brasovrunners-devs-readonly`. Copy it once. (Neon API keys are account-wide; this one is only
+   ever used to read one project's row, and `/devs` shows a number, never the key.)
+2. The project id is in the project's URL in the console (`console.neon.tech/app/projects/<id>`),
+   or `npx neonctl projects list`.
+3. `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`
+   with the production project's values; the same for QA with QA's project id. Redeploy.
+4. `/devs` → "Database (Neon)" shows the figures; red past 80%. Nothing else reads the key.
+
+## 34. Volunteer accounts for race day
+
+Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Contributor**.
+Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
+
+1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk
+   account such as `voluntar@<club domain>`), a name, an initial password; untick "email
+   verification required" if the address is the club's. Repeat per volunteer.
+2. Site → **Echipa** (`/admin/staff`, Superadministrator) → add the same email with the role
+   **Colaborator**. The name typed here is what the audit trail shows on every check-in.
+3. Hand them the guide: **Ghid** in the backoffice bar, first section — and have them open
+   **Ziua cursei** on their phone once, the day before, so sign-in is already done.
+
+One account per volunteer is the honest audit trail; one shared "Voluntar masă" account is
+acceptable when there is no time, and the trail then says "Voluntar masă". Remove or downgrade
+the accounts after the race from the same screen.
 
 Final operational rule:
 

@@ -1,6 +1,7 @@
 import { parseLocalizedPath } from "@/i18n/alternate-path";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { findPublishedAlbumSiblingSlug } from "@/modules/content/gallery/repository";
 import {
   findPublishedPageBySlug,
   findPublishedPageSiblingSlug,
@@ -55,6 +56,14 @@ export async function resolveLocaleSwitch(
    * listing when the other language has no published translation — which publication forbids,
    * but a switcher must not 404 on a rule it does not enforce.
    */
+  if (parsed.route === "/gallery/[slug]") {
+    const slug = parsed.params.slug;
+    if (!slug) return listing;
+    const sibling = await findPublishedAlbumSiblingSlug(db, parsed.locale, slug, target);
+    if (!sibling) return listing;
+    return getPathname({ locale: target, href: { pathname: parsed.route, params: { slug: sibling } } });
+  }
+
   if (parsed.route === "/pages/[slug]") {
     const slug = parsed.params.slug;
     if (!slug) return listing;
@@ -77,7 +86,8 @@ export async function resolveLocaleSwitch(
     parsed.route === "/preview/events/[id]" ||
     parsed.route === "/admin/registrations/[id]" ||
     parsed.route === "/admin/legal/[id]" ||
-    parsed.route === "/admin/pages/[id]"
+    parsed.route === "/admin/pages/[id]" ||
+    parsed.route === "/admin/gallery/[id]"
   ) {
     const id = parsed.params.id;
     if (!id) return listing;
@@ -94,6 +104,13 @@ export async function resolveLocaleSwitch(
     const token = parsed.params.token;
     if (!token) return listing;
     return getPathname({ locale: target, href: { pathname: parsed.route, params: { token } } });
+  }
+
+  // The desk code is the same in either language (BR-REQ-037-08).
+  if (parsed.route === "/admin/checkin/[code]") {
+    const code = parsed.params.code;
+    if (!code) return listing;
+    return getPathname({ locale: target, href: { pathname: parsed.route, params: { code } } });
   }
 
   return getPathname({ locale: target, href: parsed.route });

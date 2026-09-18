@@ -47,7 +47,8 @@ export type ConfigurableVariable =
   | "AUTH_ZITADEL_SECRET"
   | "AUTH_ZITADEL_ISSUER"
   | "JOB_SECRET"
-  | "DATABASE_URL";
+  | "DATABASE_URL"
+  | "NEON_API_KEY";
 
 export type ConfigurationFacts = {
   appEnv: AppEnvironment;

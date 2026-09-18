@@ -38,6 +38,8 @@ export type RegistrationCsvRow = {
   clubMemberDeclared: boolean;
   submittedAt: string;
   confirmedAt: string;
+  /** The race number, once assigned (BR-REQ-038-01); empty until then, never 0. */
+  bibNumber?: number | null;
 };
 
 const HEADER = [
@@ -48,6 +50,7 @@ const HEADER = [
   "Club member (declared)",
   "Submitted",
   "Confirmed",
+  "Bib",
 ];
 
 export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
@@ -64,6 +67,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.clubMemberDeclared ? "Yes" : "",
         row.submittedAt,
         row.confirmedAt,
+        row.bibNumber ? String(row.bibNumber) : "",
       ]
         .map(csvCell)
         .join(","),

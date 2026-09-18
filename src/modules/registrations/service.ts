@@ -10,6 +10,7 @@ import type { Database, Transaction } from "@/db/types";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
   findOrCreateParticipant,
@@ -69,9 +70,15 @@ export type EventForRegistration = {
   publishedAt: Date | null;
 };
 
-function assertRegistrationOpen(event: EventForRegistration, now: Date): void {
+function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDesk = false): void {
   if (event.registrationMode !== "INTERNAL") {
     throw new DomainError("VALIDATION_ERROR", "this event does not accept local registration");
+  }
+  if (atTheDesk) {
+    if (event.eventStatus !== "SCHEDULED") {
+      throw new DomainError("VALIDATION_ERROR", `the event is ${event.eventStatus}`);
+    }
+    return;
   }
   const state = registrationState(
     {
@@ -261,6 +268,13 @@ export type SubmitRegistrationResult = { ok: true };
 export type RegistrationOrigin = {
   source: RegistrationSource;
   createdByStaffUserId?: string | null;
+  /**
+   * The desk on race morning (BR-REQ-037-07): the window the public saw is closed, and the
+   * person is standing there. Staff only — a public submission can never set it — and it
+   * skips the window alone: the mode must still be INTERNAL, the event must still be
+   * SCHEDULED, and the capacity lock is exactly the same.
+   */
+  atTheDesk?: boolean;
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
@@ -372,7 +386,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   kind: RegistrationKind = "REAL",
   origin: RegistrationOrigin = PUBLIC_ORIGIN,
 ): Promise<SubmitRegistrationResult> {
-  assertRegistrationOpen(event, now);
+  const atTheDesk = origin.source === "STAFF" && origin.atTheDesk === true;
+  assertRegistrationOpen(event, now, atTheDesk);
 
   /**
    * Which details are insisted on depends on who is filling the form in, and on nothing
@@ -506,7 +521,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           changes: carriedFields,
           now,
         });
-        if (restarted) await enqueueVerificationEmail(tx, participant, restarted, now);
+        if (restarted && !atTheDesk) await enqueueVerificationEmail(tx, participant, restarted, now);
         return;
       }
 
@@ -546,7 +561,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       createdByStaffUserId: origin.createdByStaffUserId ?? null,
       now,
     });
-    await enqueueVerificationEmail(tx, participant, created, now);
+    // At the desk the address is about to be vouched for by the person typing it
+    // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
+    if (!atTheDesk) await enqueueVerificationEmail(tx, participant, created, now);
   });
 
   return { ok: true };
@@ -664,7 +681,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       id: current.id,
       to: "CONFIRMED",
       fromStatuses: ["PENDING_DECLARATION", "WAITLIST_OFFERED"],
-      changes: { confirmedAt: now, holdExpiresAt: null },
+      changes: { confirmedAt: now, holdExpiresAt: null, checkinCode: current.checkinCode ?? newCheckinCode() },
       now,
     });
     if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
@@ -685,6 +702,189 @@ export async function signDeclaration<T extends Record<string, unknown>>(
 }
 
 // --- §15.5 Self-unregistration, and offer decline (the same transition) ---------------------
+
+/** A confirmed registration made before codes existed gets one the first time it is needed. */
+export async function ensureCheckinCode<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<string> {
+  const current = await repo.findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  if (current.checkinCode) return current.checkinCode;
+  const code = newCheckinCode();
+  await db.update(registrations).set({ checkinCode: code }).where(eq(registrations.id, registrationId));
+  return code;
+}
+
+type StaffActor = { id: string };
+
+/**
+ * The declaration, signed on paper at the desk and recorded by a member of staff
+ * (BR-REQ-037-07, `DECISIONS.md` §67).
+ *
+ * The participant still signs — a printed copy of the current approved version, which the
+ * desk holds — and what staff record is that fact, under their own id. The row is the same
+ * shape as an email-link acceptance with `method = PAPER`, so everything downstream (the
+ * version it binds, the hash, the count on the legal page) reads it identically. No approved
+ * declaration means no confirmation, exactly as for the email path.
+ */
+async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  current: Registration,
+  actor: StaffActor,
+  now: Date,
+): Promise<Registration> {
+  const document = await findCurrentApprovedDocument(tx, "EVENT_DECLARATION", current.locale, now);
+  if (!document) {
+    throw new DomainError("VALIDATION_ERROR", "no approved declaration exists for this locale");
+  }
+  await repo.insertDeclarationAcceptance(tx, {
+    registrationId: current.id,
+    legalDocumentId: document.id,
+    declarationVersion: document.version,
+    contentSha256: document.contentSha256,
+    locale: current.locale,
+    typedName: current.registeredName,
+    acceptedAt: now,
+    method: "PAPER",
+    attestedByStaffUserId: actor.id,
+  });
+  const confirmed = await repo.transitionRegistration(tx, {
+    id: current.id,
+    to: "CONFIRMED",
+    fromStatuses: ["PENDING_DECLARATION", "WAITLIST_OFFERED"],
+    changes: { confirmedAt: now, holdExpiresAt: null, checkinCode: current.checkinCode ?? newCheckinCode() },
+    now,
+  });
+  if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+
+  await enqueueEmail(tx, {
+    participantId: confirmed.participantId,
+    registrationId: confirmed.id,
+    messageType: "REGISTRATION_CONFIRMED",
+    locale: confirmed.locale,
+    recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
+    payload: {},
+    idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
+    now,
+  });
+  return confirmed;
+}
+
+/**
+ * Confirm a registration at the desk, from whatever pending state it is in (BR-REQ-037-07).
+ *
+ * The same allocator, the same lock, the same queue: a person whose address was vouched for by
+ * staff still waits their turn if the event is full — this returns WAITLISTED then, and says
+ * so. What it skips is the two emails: the address is attested by the member of staff whose id
+ * goes on the row, and the declaration is on paper in front of them.
+ */
+export async function confirmByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  actor: StaffActor,
+  now: Date,
+): Promise<Registration> {
+  return db.transaction(async (tx) => {
+    const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+    if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+
+    let current = await repo.findRegistrationById(tx, registrationId);
+    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+    if (current.status === "CONFIRMED") return current;
+
+    if (current.status === "PENDING_EMAIL_CONFIRMATION") {
+      await tx
+        .update(registrations)
+        .set({ emailConfirmedAt: now, emailConfirmedByStaffUserId: actor.id, updatedAt: now })
+        .where(eq(registrations.id, current.id));
+      current = await allocateOrWaitlist(tx, event, current.id, now);
+    }
+    if (current.status === "PENDING_DECLARATION" || current.status === "WAITLIST_OFFERED") {
+      return acceptDeclarationOnPaper(tx, current, actor, now);
+    }
+    if (current.status === "WAITLISTED") return current;
+    throw new DomainError("CONFLICT", `a registration in status ${current.status} cannot be confirmed`);
+  });
+}
+
+/**
+ * Give a waiting-list registration a place ahead of its turn — the exceptional promotion of
+ * AGENTS.md §2 (M2) — only into a place that is actually free. Never past capacity: the count
+ * is the allocator's own, under the same lock, and "full" is refused with a sentence. The
+ * queue is jumped on purpose and the audit row says who did it.
+ */
+export async function promoteFromWaitlistByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForRegistration,
+  registrationId: string,
+  actor: StaffActor,
+  now: Date,
+): Promise<Registration> {
+  return db.transaction(async (tx) => {
+    const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+    if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    await repo.expireStaleHolds(tx, event.id, now);
+
+    const current = await repo.findRegistrationById(tx, registrationId);
+    if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+    if (current.status !== "WAITLISTED") {
+      throw new DomainError("CONFLICT", `only a waiting-list registration can be promoted; this one is ${current.status}`);
+    }
+    const occupied = computeOccupied(await repo.countOccupied(tx, event.id, now));
+    if (event.capacity !== null && occupied >= event.capacity) {
+      throw new DomainError("VALIDATION_ERROR", "the event is full: no place is free to promote into");
+    }
+    const offered = await repo.transitionRegistration(tx, {
+      id: current.id,
+      to: "WAITLIST_OFFERED",
+      fromStatuses: ["WAITLISTED"],
+      changes: { offerCreatedAt: now, holdExpiresAt: now },
+      now,
+    });
+    if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
+    return acceptDeclarationOnPaper(tx, offered, actor, now);
+  });
+}
+
+/**
+ * Check-in (BR-REQ-037-08): the participant is here. By staff at the desk, or by the
+ * participant from their own link — `checkedInBy` null. Idempotent; undoing it is its own call.
+ */
+export async function checkIn<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+  checkedInBy: StaffActor | null,
+  now: Date,
+): Promise<Registration> {
+  const current = await repo.findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  if (current.status !== "CONFIRMED") {
+    throw new DomainError("CONFLICT", `only a confirmed registration can check in; this one is ${current.status}`);
+  }
+  if (current.checkedInAt) return current;
+  const [updated] = await db
+    .update(registrations)
+    .set({ checkedInAt: now, checkedInByStaffUserId: checkedInBy?.id ?? null, updatedAt: now })
+    .where(eq(registrations.id, registrationId))
+    .returning();
+  return updated;
+}
+
+export async function undoCheckIn<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+  now: Date,
+): Promise<Registration> {
+  const [updated] = await db
+    .update(registrations)
+    .set({ checkedInAt: null, checkedInByStaffUserId: null, updatedAt: now })
+    .where(eq(registrations.id, registrationId))
+    .returning();
+  if (!updated) throw new DomainError("NOT_FOUND", "no such registration");
+  return updated;
+}
 
 export async function unregister<T extends Record<string, unknown>>(
   db: Database<T>,

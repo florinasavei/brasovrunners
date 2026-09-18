@@ -271,6 +271,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     raceStartsAt: times.raceStartsAt,
     mapUrl: fields.mapUrl,
     routeUrl: fields.routeUrl,
+    videoUrl: fields.videoUrl,
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     difficulty: fields.difficulty,
@@ -821,6 +822,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
+    // Not carried: a film is of one edition, and last year's would be wrong on next year's.
+    videoUrl: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
     difficulty: source.difficulty,

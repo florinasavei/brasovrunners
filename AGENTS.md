@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -806,7 +806,7 @@ EMAIL_ALLOWLIST
 MAILGUN_API_KEY
 MAILGUN_DOMAIN
 MAILGUN_WEBHOOK_SIGNING_KEY
-R2_ACCOUNT_ID
+R2_ENDPOINT
 R2_ACCESS_KEY_ID
 R2_SECRET_ACCESS_KEY
 R2_BUCKET
@@ -828,11 +828,20 @@ Rules:
 - no hostname literal may appear anywhere under `src/`; `yarn check` fails on one. The sole
   exception is a vocabulary namespace defined by a published standard, such as the JSON-LD
   `@context` of `https://schema.org`: it is an identifier, identical in every environment,
-  and deriving it from `APP_BASE_URL` would emit a context no consumer understands. Providers,
-  CDNs, and anything the club could plausibly host are never exempt;
+  and deriving it from `APP_BASE_URL` would emit a context no consumer understands. The second
+  exception (2026-09-18) is a third party's own fixed address that the application embeds or
+  calls, named in `DECISIONS.md` and listed in `scripts/docs-check.mjs`: YouTube's no-cookie
+  player host (§69) and Neon's API (§68). A provider whose address varies by account or region
+  (Mailgun) stays in configuration; CDNs and anything the club could plausibly host are never
+  exempt;
 - cookies are host-only, with no `domain` attribute set, so a hostname change breaks nothing;
 - CSP, CORS, and redirect allowlists read from configuration, never from a literal;
-- `R2_PUBLIC_BASE_URL` is configuration; start on the R2 development subdomain;
+- the five `R2_*` variables are the photo bucket (§17, BR-REQ-054-01). `R2_ENDPOINT` is the
+  bucket's S3 endpoint and `R2_PUBLIC_BASE_URL` where its objects are read — its `r2.dev`
+  subdomain to start with — both configuration because neither hostname may be assembled in
+  `src/`. All five or none: `STORAGE_MODE` derives `local` on a laptop, `fake` in tests,
+  `r2` when the five exist and `unconfigured` otherwise, and a deployed environment in the
+  last state boots, refuses uploads with a sentence and shows the task on `/admin/tasks`;
 - production rejects localhost/non-production identifiers;
 - QA rejects known production identifiers/live email;
 - do not invent Auth.js provider variable names; use installed official contract;
@@ -957,6 +966,11 @@ Non-human routes are unprefixed:
 /api/admin/events/[id]/bibs       the event's race numbers as a printable sheet, all or a
                                  range (BR-REQ-038-01); Administrator only; reads what the
                                  assign action wrote and writes nothing
+/api/admin/gallery/[id]/photos    POST, one photo per request, multipart (BR-REQ-054-01);
+                                 editorial roles; the bytes are checked whatever the client said
+/api/media/[...key]               serves a stored photo in `local` and `fake` storage mode
+                                 only; in `r2` mode a photo's address is Cloudflare's and this
+                                 route is never linked
 ```
 
 `/login` is an alias, not a route: the proxy redirects it to the sign-in path — unprefixed, so
@@ -1936,11 +1950,13 @@ UNIQUE(locale, slug)
 content_pages
 content_page_translations
 
-gallery_albums
-gallery_album_translations
-media_assets
-gallery_items
-gallery_item_translations
+gallery_albums                 -- built (BR-REQ-054-01): editorial_status, published_at, event_id null,
+                               --   taken_on, cover_media_asset_id null, version
+gallery_album_translations     -- built: slug, title, description; UNIQUE(album_id, locale), UNIQUE(locale, slug)
+media_assets                   -- built: key_prefix (opaque, unique), original_filename, width, height,
+                               --   byte_size of the web variant; objects are <env>/<prefix>/{web,thumb}.webp
+gallery_items                  -- built: album_id, media_asset_id, position; UNIQUE(album_id, media_asset_id)
+gallery_item_translations      -- M5: captions per photo
 ```
 
 Use the same translation/editorial/version patterns.
@@ -2460,10 +2476,39 @@ BR-REQ-037-05):
    `audit_logs.entity_id` carries no foreign key (§12.12), which is the whole reason it does
    not.
 
-Every one of the four writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
-`registrations`, a staff-signed declaration, a staff-confirmed registration, a staff-entered
-row that is allocated ahead of anybody already waiting, or a delete that skips the allocator and
-strands the place it held.
+5. **The desk (2026-09-18, BR-REQ-037-07, BR-REQ-037-08, `DECISIONS.md` §67).** Race morning
+   has people at a table whose email never arrived, whose QR is on a dead phone, or who never
+   registered. Every one of them is standing in front of a member of staff, which is the one
+   situation in which "verify the address" is answered by looking up. So the desk has a way
+   through every step — and none of them is a way around the allocator:
+   - **Confirm at the desk.** `confirmByStaff` takes a registration from any pending state
+     through the ordinary allocator under the event lock: CONFIRMED when a place is free,
+     WAITLISTED when the event is full. The address is *vouched for*
+     (`email_confirmed_by_staff_user_id`), not verified: the participant's own
+     `email_verified_at` stays unset. The declaration is signed **by the participant, on a
+     printed copy of the approved version**, and staff record that: a `declaration_acceptances`
+     row with `method = PAPER` and `attested_by_staff_user_id`, same version, same hash, same
+     shape as an email-link acceptance. §10.8 still holds — nobody signs for somebody else; what
+     changed is the evidence, not the signer. No approved declaration, no confirmation.
+   - **The fast track on entry.** `createRegistrationByStaff` with `fastTrack` skips the
+     verification email and confirms in the same request; it ignores the public window (the
+     desk decides) and nothing else — a cancelled event and a non-local mode still refuse.
+   - **A place ahead of the queue.** `promoteFromWaitlistByStaff` is the exceptional promotion
+     of §2, only into a place that is free under the lock; "full" is refused with a sentence.
+   - **A number by hand** (BR-REQ-038-01 criterion 7) and **check-in** (`checked_in_at`, by
+     whom or by the participant from their own link). The code the QR encodes is
+     `registrations.checkin_code`: an identifier, stored in clear, that confers nothing — the
+     page it opens is behind staff sign-in.
+   - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
+     a phone is a CONTRIBUTOR and the desk is their whole backoffice. The desk shows a name, a
+     state and a number, never an address; the list, the export, cancel, erase, rename and
+     resend stay Administrator-only. Each verb is audited under the volunteer's own id.
+
+Every one of the five writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
+`registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a
+confirmation that bypasses the allocator or the approved declaration, a staff-entered row that is
+allocated ahead of anybody already waiting, or a delete that skips the allocator and strands the
+place it held.
 
 ---
 
@@ -2519,15 +2564,28 @@ Capacity and queue correctness come from transaction-time expiry evaluation (§1
 job exists to send expiry messages, promote the queue on an otherwise idle event, and
 retry the outbox.
 
-Invocation has two layers, and on a serverless host the first of them does not exist:
+Invocation has three layers, and on a serverless host none of them is a process:
 
-- primary: an external scheduler posting to the job endpoints with `JOB_SECRET`, at roughly
-  five minutes for maintenance and one to five minutes for the outbox. This deploys to
-  serverless functions (§7), which have no persistent process for an in-process interval to
-  live in, so the external caller is the only mechanism rather than a watchdog over one;
+- **after the request that made the work** (2026-09-18, `DECISIONS.md` §68): `enqueueEmail`
+  schedules one drain of the outbox with `after()`, run once the response has gone out. Not
+  an interval — one shot, per request, for that request's message — so a verification link is
+  in the participant's inbox in seconds rather than at the next tick. Silent in `test` and
+  outside a request; a failure leaves the row PENDING for the next layer;
+- primary: an external scheduler posting to the job endpoints with `JOB_SECRET`, **every
+  fifteen minutes by day and hourly at night**, club time (`jobs/quiet-hours.ts`: quiet from
+  23:00 to 07:00 `Europe/Bucharest`). It was five around the clock: five keeps a Neon compute
+  awake, and the Free plan's 100 CU-hours a month then run out around the 17th (§68 has the
+  arithmetic; `/devs` shows the figure). The site MAY be slower at night — a cold start on the
+  first request after an idle hour — and MUST NOT be slower by day for the same reason. This
+  deploys to serverless functions (§7), which have no persistent process for an in-process
+  interval to live in;
 - backstop: a second, independent caller on the same endpoints, because the jobs are
   idempotent and two callers cost one wasted query while one caller that stops costs a
   participant their place in the queue.
+
+`jobStalenessThresholdMs(now)` is twice the cadence in force plus five minutes — 35 by day,
+125 at night — so the scheduler reads `ok` on `/api/health` at either cadence and `stale` when
+it has actually missed a run.
 
 **A scheduler that fires late is a promptness failure, never a correctness one**, and the
 distinction decides how much to spend on it. Expiry is evaluated against `now` on every read
@@ -2605,6 +2663,13 @@ Rules:
 - reference check before delete;
 - orphan cleanup;
 - public profile participant upload deferred.
+
+Built for the gallery (BR-REQ-054-01, `DECISIONS.md` §66): `modules/media/storage.ts` is the
+adapter — `put`, `delete`, `publicUrl`; metadata is the row's — over R2's S3 API, a local
+directory, or memory, by `STORAGE_MODE`; `modules/media/images.ts` is the validation and the
+two WebP variants, with `sharp` (already installed by Next) rotating and stripping. Keys are
+`<env>/<opaque prefix>/<variant>.webp`, so two environments can share one bucket. The original
+file is not kept: the browser shrinks it before upload and the server re-encodes what arrives.
 
 ---
 

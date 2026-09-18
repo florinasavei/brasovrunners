@@ -3,6 +3,7 @@ import Container from "@mui/material/Container";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
+import { listPublishedAlbums } from "@/modules/content/gallery/repository";
 import { listPublishedPages } from "@/modules/content/pages/repository";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
@@ -44,6 +45,15 @@ async function navigationPages(locale: Locale) {
   }
 }
 
+/** Whether the gallery section is offered: a published album in this locale, or nothing. */
+async function hasPublishedAlbum(locale: Locale) {
+  try {
+    return (await listPublishedAlbums(getDb(), locale)).length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The site header: the club's logo, whole, and a way back to the first page.
  *
@@ -75,6 +85,7 @@ export default async function SiteHeader() {
    */
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);
+  const showGallery = await hasPublishedAlbum(locale as Locale);
 
   return (
     <Box
@@ -179,7 +190,10 @@ export default async function SiteHeader() {
             ml: { xs: 0.5, sm: 2 },
           }}
         >
-          <SiteNav pages={pages.map((page) => ({ slug: page.slug, title: page.title }))} />
+          <SiteNav
+            pages={pages.map((page) => ({ slug: page.slug, title: page.title }))}
+            showGallery={showGallery}
+          />
         </Box>
 
         <Box sx={{ order: 3, ml: "auto", flexShrink: 0 }}>

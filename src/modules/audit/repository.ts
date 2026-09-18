@@ -34,7 +34,16 @@ export type AuditAction =
   /** A refusal rather than a change — BR-REQ-037-02 criterion 5 requires it be recorded. */
   | "registration.resend_rate_limited"
   /** Race numbers given to an event's confirmed registrations, as a batch (BR-REQ-038-01). */
-  | "registration.bibs_assigned";
+  | "registration.bibs_assigned"
+  /** One number typed by hand, or cleared (BR-REQ-038-01 criterion 7). */
+  | "registration.bib_set"
+  /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
+  | "registration.confirmed_by_staff"
+  /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
+  | "registration.promoted_by_staff"
+  /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
+  | "registration.checked_in"
+  | "registration.checkin_undone";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;

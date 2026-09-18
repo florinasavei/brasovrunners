@@ -88,10 +88,21 @@ export default async function SiteFooter() {
               // centre — where a pointer test clicks — under the social marks, and made empty
               // space on the bar toggle the panel.
               width: "fit-content",
+              // On a phone the marks sit on the right of this same line (three of them, ~130px
+              // with their gaps): the label stops before them, whatever its length, and its
+              // tail — ", contact and legal" — is dropped there so what is left reads whole.
+              // The owner saw "About the club, contact and lega" under the Facebook mark.
+              maxWidth: { xs: "calc(100% - 140px)", sm: "none" },
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
               "&::marker": { color: "text.secondary" },
             }}
           >
-            {footer("about.summary")}
+            {footer("about.summaryShort")}
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              {footer("about.summaryTail")}
+            </Box>
           </Box>
 
           {/* Indented to the summary's text, past its marker, so the panel reads as its body. */}

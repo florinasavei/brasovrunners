@@ -46,3 +46,4 @@ npm-debug.log*
 /public/flags/
 .vercel
 .env*
+.media/

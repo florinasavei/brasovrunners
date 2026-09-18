@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isYoutubeLink } from "@/modules/events/domain/video";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 
 /**
@@ -176,6 +177,19 @@ export const eventFieldsSchema = z
     // Where the run goes, as opposed to where it starts (BR-REQ-011-01 criterion 8). A link
     // and never a file: media storage is deferred (`AGENTS.md` §17).
     routeUrl: httpsUrl("a route link must start with https://"),
+    // A film of the event (criterion 9): a YouTube link, or nothing. Checked for a video id
+    // here so the page never meets a link it cannot embed.
+    // Optional in the input as well as in the value — a caller from before the field existed
+    // (a script, a duplicate) sends nothing and means "no film".
+    videoUrl: z
+      .string()
+      .trim()
+      .max(2000)
+      .optional()
+      .transform((value) => (value ? value : null))
+      .refine((value) => value === null || isYoutubeLink(value), {
+        message: "a video link must be a YouTube link (watch, youtu.be, shorts or embed)",
+      }),
     // 500 km is longer than any run the club will hold and shorter than a typo's extra zero.
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),

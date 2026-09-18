@@ -20,6 +20,8 @@ export type TemplateContent = {
   paragraphs: string[];
   /** Present only when the message carries an action link. */
   action?: { label: string; url: string };
+  /** Present on the confirmation: the QR the participant shows to pick up their number. */
+  image?: { url: string; alt: string; caption: string };
   closing: string;
 };
 
@@ -41,6 +43,7 @@ export function renderContent(content: TemplateContent, locale: EmailLocale): { 
     content.greeting,
     "",
     ...content.paragraphs,
+    ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     "",
     content.closing,
@@ -50,6 +53,14 @@ export function renderContent(content: TemplateContent, locale: EmailLocale): { 
   const htmlParts = [
     `<p>${escapeHtml(content.greeting)}</p>`,
     ...content.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`),
+    // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
+    // does not render is a participant at the desk with nothing to show.
+    ...(content.image
+      ? [
+          `<p><img src="${content.image.url}" alt="${escapeHtml(content.image.alt)}" width="240" height="240" style="display:block;width:240px;height:240px"></p>`,
+          `<p>${escapeHtml(content.image.caption)}</p>`,
+        ]
+      : []),
     ...(content.action
       ? [`<p><a href="${content.action.url}">${escapeHtml(content.action.label)}</a></p>`]
       : []),
@@ -66,6 +77,9 @@ export type TemplateData = {
   eventLocationName?: string;
   eventStartsAtFormatted?: string;
   currentStatus?: string;
+  /** The desk code and the address of its QR image, on the confirmation only (BR-REQ-037-08). */
+  checkinCode?: string;
+  checkinQrUrl?: string;
 };
 
 const T = {
@@ -103,9 +117,13 @@ const T = {
       subject: "Înscrierea este confirmată",
       body: (d: TemplateData) => [
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm${d.eventLocationName ? ` la ${d.eventLocationName}` : ""}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+        ...(d.checkinCode
+          ? [`La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
+          : []),
         "Poți gestiona sau anula înscrierea oricând, folosind linkul de mai jos.",
       ],
       action: "Gestionează înscrierea",
+      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
     },
     registrationCancelled: {
       subject: "Înscrierea a fost anulată",
@@ -169,9 +187,13 @@ const T = {
       subject: "Your registration is confirmed",
       body: (d: TemplateData) => [
         `Your registration for ${d.eventTitle ?? "the event"} is confirmed. See you${d.eventLocationName ? ` at ${d.eventLocationName}` : ""}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+        ...(d.checkinCode
+          ? [`When you pick up your race number, show the QR code below or say the code ${d.checkinCode}.`]
+          : []),
         "You can manage or cancel your registration at any time using the link below.",
       ],
       action: "Manage your registration",
+      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
     },
     registrationCancelled: {
       subject: "Your registration has been cancelled",
@@ -232,13 +254,19 @@ export function buildTemplateContent(
   const key = KEY_BY_MESSAGE_TYPE[messageType];
   // TypeScript can't see that every key but "hi"/"closing" shares this shape; the
   // `KEY_BY_MESSAGE_TYPE` map is what actually guarantees it.
-  const entry = copy[key] as { subject: string; body: (d: TemplateData) => string[]; action?: string };
+  const entry = copy[key] as {
+    subject: string;
+    body: (d: TemplateData) => string[];
+    action?: string;
+    image?: (d: TemplateData) => TemplateContent["image"];
+  };
 
   return {
     subject: entry.subject,
     greeting: copy.hi(data.participantName),
     paragraphs: entry.body(data),
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
+    image: entry.image?.(data),
     closing: copy.closing,
   };
 }

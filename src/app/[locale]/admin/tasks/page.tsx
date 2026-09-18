@@ -16,6 +16,7 @@ import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { ownerTasks, sortTasks, type TaskState } from "@/modules/diagnostics/owner-tasks";
+import { isStorageConfigured } from "@/modules/media/storage";
 import {
   annualCostToday,
   freeTierVerdict,
@@ -172,6 +173,7 @@ export default async function AdminTasksPage({ params }: Props) {
       staffCount,
       publishedEventCount,
       roDomainBound,
+      storageConfigured: isStorageConfigured(),
     }),
   );
 

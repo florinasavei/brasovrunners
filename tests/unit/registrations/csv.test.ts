@@ -51,7 +51,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,Email,Status,Club member (declared),Submitted,Confirmed");
+    expect(csv).toBe("Event,Name,Email,Status,Club member (declared),Submitted,Confirmed,Bib");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -85,14 +85,15 @@ describe("CSV formula neutralization", () => {
       confirmedAt: "",
     };
 
-    const member = buildRegistrationsCsv([{ ...row, clubMemberDeclared: true }]);
+    const member = buildRegistrationsCsv([{ ...row, clubMemberDeclared: true, bibNumber: 17 }]);
     expect(member.split("\r\n")[1]).toBe(
-      "Test,Ana,ana@example.ro,CONFIRMED,Yes,2026-09-04T10:00:00.000Z,",
+      "Test,Ana,ana@example.ro,CONFIRMED,Yes,2026-09-04T10:00:00.000Z,,17",
     );
 
+    // No number yet is an empty cell, never 0 (BR-REQ-038-01).
     const other = buildRegistrationsCsv([row]);
     expect(other.split("\r\n")[1]).toBe(
-      "Test,Ana,ana@example.ro,CONFIRMED,,2026-09-04T10:00:00.000Z,",
+      "Test,Ana,ana@example.ro,CONFIRMED,,2026-09-04T10:00:00.000Z,,",
     );
     expect(other).not.toContain("No");
   });

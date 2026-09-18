@@ -469,6 +469,9 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     locale: Locale;
     typedName: string;
     acceptedAt: Date;
+    /** `PAPER` with the staff id that recorded it; omitted for the email link (BR-REQ-037-07). */
+    method?: "EMAIL_LINK" | "PAPER";
+    attestedByStaffUserId?: string | null;
   },
 ): Promise<void> {
   await db.insert(declarationAcceptances).values({
@@ -479,5 +482,7 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     locale: input.locale,
     typedName: input.typedName,
     acceptedAt: input.acceptedAt,
+    method: input.method ?? "EMAIL_LINK",
+    attestedByStaffUserId: input.attestedByStaffUserId ?? null,
   });
 }

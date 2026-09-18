@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { jobRuns } from "@/db/schema/job-runs";
 import { checkJobHealth } from "@/modules/jobs/health";
@@ -70,14 +71,36 @@ describe("job health reporting", () => {
   });
 
   it("reports stale once the threshold has passed", async () => {
+    // Thirty-five minutes since `DECISIONS.md` §68: a fifteen-minute pinger, twice, plus a run.
+    // Twenty minutes ago is therefore still "ok"; forty is stale.
     await db.insert(jobRuns).values({
       jobName: "registration-maintenance",
       startedAt: new Date(NOW.getTime() - 20 * 60_000),
       finishedAt: new Date(NOW.getTime() - 20 * 60_000),
     });
+    expect((await checkJobHealth(db, "registration-maintenance", NOW)).status).toBe("ok");
+
+    await db.insert(jobRuns).values({
+      jobName: "registration-maintenance",
+      startedAt: new Date(NOW.getTime() - 40 * 60_000),
+      finishedAt: new Date(NOW.getTime() - 40 * 60_000),
+    });
+    await db.delete(jobRuns).where(eq(jobRuns.finishedAt, new Date(NOW.getTime() - 20 * 60_000)));
 
     const health = await checkJobHealth(db, "registration-maintenance", NOW);
     expect(health.status).toBe("stale");
+  });
+
+  it("is patient at night: fifty minutes is ok at 03:00 in Brașov and stale at noon", async () => {
+    const night = new Date("2026-09-04T00:00:00.000Z"); // 03:00 in Brașov, summer time
+    await db.insert(jobRuns).values({
+      jobName: "email-outbox",
+      startedAt: new Date(night.getTime() - 50 * 60_000),
+      finishedAt: new Date(night.getTime() - 50 * 60_000),
+    });
+    expect((await checkJobHealth(db, "email-outbox", night)).status).toBe("ok");
+    // The same run, read at noon the same day: the day cadence applies.
+    expect((await checkJobHealth(db, "email-outbox", new Date(night.getTime() + 9 * 3_600_000))).status).toBe("stale");
   });
 
   it("uses only the most recent run when several exist", async () => {

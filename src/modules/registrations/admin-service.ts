@@ -10,7 +10,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus } from "./domain/state-machine";
@@ -19,7 +19,15 @@ import {
   findRegistrationByEventAndParticipant,
   findRegistrationById,
 } from "./repository";
-import { type EventForRegistration, submitRegistration, unregister } from "./service";
+import {
+  checkIn,
+  confirmByStaff,
+  type EventForRegistration,
+  promoteFromWaitlistByStaff,
+  submitRegistration,
+  undoCheckIn,
+  unregister,
+} from "./service";
 
 /**
  * Admin resend (AGENTS.md §15.8; BR-REQ-060-01, BR-REQ-070-01). Administrator only — §10.2
@@ -35,6 +43,13 @@ function assertAdministrator(actor: Pick<StaffUser, "role">): void {
       "FORBIDDEN",
       `role ${actor.role} may not resend registration email; AGENTS.md §10.2 reserves it to ADMIN`,
     );
+  }
+}
+
+/** The desk verbs (BR-REQ-037-07, -08): every staff role, so a volunteer can run pickup. */
+function assertDesk(actor: Pick<StaffUser, "role">): void {
+  if (!canWorkTheDesk(actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${actor.role} may not work the desk`);
   }
 }
 
@@ -184,6 +199,13 @@ export type CreateRegistrationByStaffInput = {
    * registration reaches CONFIRMED no other way.
    */
   relayedByParticipantRequest: boolean;
+  /**
+   * Fast track (BR-REQ-037-07): the person is at the desk. Their address is vouched for by the
+   * member of staff entering it, and the declaration is signed on paper in front of them, so
+   * the registration goes through the allocator straight away — to CONFIRMED, or to the
+   * waiting list if the event is full, exactly as anyone else's would.
+   */
+  fastTrack?: boolean;
 };
 
 /**
@@ -193,8 +215,12 @@ export type CreateRegistrationByStaffInput = {
  * Identical to a public submission in every way that touches a place: the same
  * `submitRegistration`, so the same locked transaction, the same capacity formula, the same
  * position at the back of the waiting list, and the same PENDING_EMAIL_CONFIRMATION start. The
- * participant gets the ordinary verification email and finishes it themselves. Nothing here can
- * confirm anybody.
+ * participant gets the ordinary verification email and finishes it themselves — unless
+ * `fastTrack` says they are standing at the desk, in which case `confirmRegistrationByStaff`
+ * takes it from there (BR-REQ-037-07).
+ *
+ * A desk verb since `DECISIONS.md` §67: a walk-in on race morning is entered by whoever is at
+ * the table, and that is a volunteer.
  */
 export async function createRegistrationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -202,7 +228,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
   input: CreateRegistrationByStaffInput,
   now: Date,
 ): Promise<void> {
-  assertAdministrator(actor);
+  assertDesk(actor);
 
   if (!input.relayedByParticipantRequest) {
     throw new DomainError(
@@ -256,7 +282,7 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     },
     now,
     "REAL",
-    { source: "STAFF", createdByStaffUserId: actor.id },
+    { source: "STAFF", createdByStaffUserId: actor.id, atTheDesk: input.fastTrack === true },
   );
 
   const participant = await findParticipantByCanonicalEmail(db, identity.canonicalEmail);
@@ -270,9 +296,135 @@ export async function createRegistrationByStaff<T extends Record<string, unknown
     action: "registration.created_by_staff",
     entityType: "registration",
     entityId: created?.id ?? event.id,
-    metadata: { eventId: event.id, status: created?.status ?? null },
+    metadata: { eventId: event.id, status: created?.status ?? null, fastTrack: Boolean(input.fastTrack) },
     now,
   });
+
+  if (input.fastTrack && created) {
+    await confirmRegistrationByStaff(db, actor, created.id, now);
+  }
+}
+
+/**
+ * Confirm at the desk (BR-REQ-037-07): the address vouched for, the declaration on paper.
+ * Through the allocator — a full event answers WAITLISTED — and audited with the outcome.
+ */
+export async function confirmRegistrationByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  now: Date,
+): Promise<Registration> {
+  assertDesk(actor);
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  const event = await eventForRegistration(db, current.eventId);
+
+  const result = await confirmByStaff(db, event, registrationId, actor, now);
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: current.participantId,
+    action: "registration.confirmed_by_staff",
+    entityType: "registration",
+    entityId: registrationId,
+    metadata: { from: current.status, to: result.status },
+    now,
+  });
+  return result;
+}
+
+/** A place ahead of the queue, into a free one (BR-REQ-037-07); refused when full. */
+export async function promoteRegistrationByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  now: Date,
+): Promise<Registration> {
+  assertDesk(actor);
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  const event = await eventForRegistration(db, current.eventId);
+
+  const result = await promoteFromWaitlistByStaff(db, event, registrationId, actor, now);
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: current.participantId,
+    action: "registration.promoted_by_staff",
+    entityType: "registration",
+    entityId: registrationId,
+    metadata: { from: current.status, to: result.status },
+    now,
+  });
+  return result;
+}
+
+/**
+ * One race number by hand, or none (BR-REQ-038-01 criterion 7). The partial unique index is
+ * what refuses two runners with one number; here that surfaces as a sentence.
+ */
+export async function setBibNumberByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  bibNumber: number | null,
+  now: Date,
+): Promise<Registration> {
+  assertDesk(actor);
+  if (bibNumber !== null && (!Number.isInteger(bibNumber) || bibNumber < 1 || bibNumber > 99_999)) {
+    throw new DomainError("VALIDATION_ERROR", "a race number is a whole number from 1 to 99999");
+  }
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  if (current.bibNumber === bibNumber) return current;
+
+  let updated: Registration;
+  try {
+    [updated] = await db
+      .update(registrations)
+      .set({ bibNumber, updatedAt: now })
+      .where(eq(registrations.id, registrationId))
+      .returning();
+  } catch (error) {
+    const message = error instanceof Error ? `${error.message} ${String((error as { cause?: unknown }).cause ?? "")}` : "";
+    if (/registrations_event_bib_number_unique/.test(message)) {
+      throw new DomainError("CONFLICT", `number ${bibNumber} is already worn by somebody else at this event`);
+    }
+    throw error;
+  }
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: current.participantId,
+    action: "registration.bib_set",
+    entityType: "registration",
+    entityId: registrationId,
+    metadata: { from: current.bibNumber, to: bibNumber },
+    now,
+  });
+  return updated;
+}
+
+/** Check a participant in at the desk (BR-REQ-037-08), or take it back. */
+export async function checkInByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationId: string,
+  direction: "in" | "undo",
+  now: Date,
+): Promise<Registration> {
+  assertDesk(actor);
+  const current = await findRegistrationById(db, registrationId);
+  if (!current) throw new DomainError("NOT_FOUND", "no such registration");
+  const result = direction === "in" ? await checkIn(db, registrationId, actor, now) : await undoCheckIn(db, registrationId, now);
+  await recordAuditEvent(db, {
+    actorStaffUserId: actor.id,
+    participantId: current.participantId,
+    action: direction === "in" ? "registration.checked_in" : "registration.checkin_undone",
+    entityType: "registration",
+    entityId: registrationId,
+    metadata: {},
+    now,
+  });
+  return result;
 }
 
 /**

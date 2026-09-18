@@ -68,6 +68,12 @@ export type OwnerTaskInputs = {
   /** Events the club has published, so an empty site reads as work rather than as success. */
   publishedEventCount: number;
   /**
+   * Can this environment store a photo? Derived from the five `R2_*` variables (`env.ts`,
+   * `STORAGE_MODE`), so the row reads the environment and never a checklist. Local and test
+   * always can — disk and memory — which is why the task can only be open on QA or production.
+   */
+  storageConfigured: boolean;
+  /**
    * Does this deployment answer on a `.ro` hostname?
    *
    * The owner bought the `.com` on 2026-09-16 and decided a `.ro` follows a year later, both
@@ -131,6 +137,14 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     id: "publishEvents",
     owner: "club",
     state: input.publishedEventCount > 0 ? "done" : "open",
+  });
+
+  // Not blocking: registrations do not need photos. Open until the bucket exists, because an
+  // album page without an upload button is a gallery nobody can fill (BR-REQ-054-01).
+  tasks.push({
+    id: "mediaStorage",
+    owner: "club",
+    state: input.storageConfigured ? "done" : "open",
   });
 
   // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.

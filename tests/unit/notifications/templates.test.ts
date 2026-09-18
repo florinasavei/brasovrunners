@@ -66,6 +66,57 @@ describe("BR-REQ-080-01 message templates", () => {
     expect(email.html).toContain("https://example.test/en/registrations/manage/secret");
   });
 
+  /**
+   * BR-REQ-037-08: the confirmation carries the desk code and its QR — as a hosted image and
+   * as the plain code, in both bodies, so a client that strips images still gives the runner
+   * something to read out at the desk. No other message type carries it.
+   */
+  it("puts the desk code and its QR image on the confirmation, and nowhere else", () => {
+    const withCode = {
+      ...DATA,
+      checkinCode: "ABCDEFGH23",
+      checkinQrUrl: "https://example.test/api/registrations/qr/ABCDEFGH23.png",
+    };
+    for (const locale of ["ro", "en"] as const) {
+      const email = buildOutgoingEmail({
+        to: "ana@example.ro",
+        locale,
+        idempotencyKey: `test:qr:${locale}`,
+        messageType: "REGISTRATION_CONFIRMED",
+        data: withCode,
+        actionUrl: "https://example.test/manage",
+      });
+      expect(email.html).toContain('<img src="https://example.test/api/registrations/qr/ABCDEFGH23.png"');
+      expect(email.html).toContain("ABCDEFGH23");
+      expect(email.text).toContain("ABCDEFGH23");
+      expect(email.text).toContain("https://example.test/api/registrations/qr/ABCDEFGH23.png");
+      // Never inlined: a data URI is what mail clients strip.
+      expect(email.html).not.toContain("data:image");
+    }
+
+    const other = buildOutgoingEmail({
+      to: "ana@example.ro",
+      locale: "ro",
+      idempotencyKey: "test:qr:other",
+      messageType: "WAITLIST_SPOT_OFFER",
+      data: withCode,
+      actionUrl: "https://example.test/declare",
+    });
+    expect(other.html).not.toContain("<img");
+    expect(other.html).not.toContain("ABCDEFGH23");
+
+    // Without a code — a confirmation rendered for a row from before codes existed cannot
+    // happen (the renderer mints one), but the template must still degrade to no image.
+    const bare = buildOutgoingEmail({
+      to: "ana@example.ro",
+      locale: "ro",
+      idempotencyKey: "test:qr:bare",
+      messageType: "REGISTRATION_CONFIRMED",
+      data: DATA,
+    });
+    expect(bare.html).not.toContain("<img");
+  });
+
   it("never encodes the recipient's raw email or a stray HTML tag from interpolated data", () => {
     const email = buildOutgoingEmail({
       to: "ana@example.ro",

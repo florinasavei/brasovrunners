@@ -31,7 +31,8 @@ import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
+import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
+import PencilIcon from "@/shared/ui/PencilIcon";
 import { bulkArchiveEventsAction, deleteEventAction, duplicateEventAction } from "../actions";
 
 type Props = {
@@ -221,7 +222,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             href={getPathname({ locale, href: "/admin/events/new" })}
             variant="contained"
             size="small"
-            sx={TAP_TARGET}
+            // Dense, not the participant journey's 44px: a backoffice list is read by a
+            // person who scans it, and "the buttons are huge" was the owner's review of the
+            // phone rendering. Sentence case, because shouting is not a size.
+            sx={{ textTransform: "none", minHeight: 36 }}
           >
             {t("events.new")}
           </Button>
@@ -271,6 +275,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               />
             )}
 
+            {/*
+              The pen, with the word from `sm` up: on a phone the row has a checkbox, this and
+              the disclosure to fit, and an outlined "EDITEAZĂ" took a third of it. The
+              accessible name is the full sentence either way.
+            */}
             <Button
               component="a"
               href={getPathname({
@@ -279,9 +288,14 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               })}
               variant="outlined"
               size="small"
-              sx={TAP_TARGET}
+              aria-label={t("events.editNamed", { title: translations[0]?.title ?? event.id })}
+              title={t("events.edit")}
+              sx={{ textTransform: "none", minHeight: 40, minWidth: 40, px: { xs: 1, sm: 1.5 }, gap: 0.75 }}
             >
-              {t("events.edit")}
+              <PencilIcon />
+              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                {t("events.edit")}
+              </Box>
             </Button>
 
             {/*
@@ -301,15 +315,22 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
-                    minHeight: 44,
-                    px: 1.5,
+                    minHeight: 40,
+                    px: { xs: 1, sm: 1.5 },
                     borderRadius: 1,
                     border: 1,
                     borderColor: "divider",
                     fontSize: "0.8125rem",
                   }}
+                  aria-label={t("events.moreActions")}
                 >
-                  {t("events.moreActions")}
+                  {/* "⋯" on a phone, the words from `sm` up — same reason as the pen. */}
+                  <Box component="span" aria-hidden="true" sx={{ display: { xs: "inline", sm: "none" }, fontSize: "1.25rem", lineHeight: 1 }}>
+                    ⋯
+                  </Box>
+                  <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                    {t("events.moreActions")}
+                  </Box>
                 </Box>
 
                 <Stack spacing={1} sx={{ mt: 1, alignItems: "flex-end" }}>

@@ -4,7 +4,7 @@ import { consumeActionToken, readActionTokenContext } from "@/modules/action-tok
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findEventForRegistrationById } from "@/modules/events/repository";
 import { DomainError } from "@/shared/errors/domain-error";
-import { confirmEmail, type EventForRegistration, signDeclaration, unregister } from "./service";
+import { checkIn, confirmEmail, type EventForRegistration, signDeclaration, unregister } from "./service";
 import { findRegistrationById } from "./repository";
 
 /**
@@ -99,6 +99,48 @@ export async function consumeAndSignDeclaration(
     const updated = await signDeclaration(tx, event, registration.id, input, now);
     return { ok: true as const, token: consumed.token, registration: updated };
   });
+}
+
+/** How long before the start a participant may say "I am here" from their own link. */
+export const SELF_CHECKIN_OPENS_HOURS = 24;
+
+/**
+ * What the participant's own page shows about race day (BR-REQ-037-08): the desk code and
+ * whether the self check-in window is open. The manage token is read, never spent — the same
+ * link still has to cancel — and this reads nothing else.
+ */
+export async function readRaceDayContext(secret: string, now: Date) {
+  const db = getDb();
+  if (!(await tokenAttemptAllowed(db, secret, now))) return TOKEN_NOT_FOUND;
+  const context = await readActionTokenContext(db, { secret, purpose: "MANAGE_REGISTRATION", now });
+  if (!context.ok) return context;
+
+  const registration = await findRegistrationById(db, context.token.registrationId ?? "");
+  if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
+  const event = await loadEventForRegistration(db, registration.eventId);
+  const opensAt = new Date(event.startsAt.getTime() - SELF_CHECKIN_OPENS_HOURS * 60 * 60_000);
+  return {
+    ok: true as const,
+    registration,
+    selfCheckinOpen: registration.status === "CONFIRMED" && now >= opensAt,
+    selfCheckinOpensAt: opensAt,
+  };
+}
+
+/**
+ * Self check-in from the participant's own link (BR-REQ-037-08). Not a consuming action: the
+ * token authorizes the person, check-in is idempotent, and spending the manage link on it
+ * would cost them the ability to cancel. Only from the day before the start — an "I am here"
+ * a week early is not information.
+ */
+export async function checkInSelf(secret: string, now: Date) {
+  const context = await readRaceDayContext(secret, now);
+  if (!context.ok) return context;
+  if (!context.selfCheckinOpen) {
+    throw new DomainError("VALIDATION_ERROR", "self check-in opens the day before the event");
+  }
+  const registration = await checkIn(getDb(), context.registration.id, null, now);
+  return { ok: true as const, registration };
 }
 
 export async function consumeAndCancel(secret: string, now: Date) {

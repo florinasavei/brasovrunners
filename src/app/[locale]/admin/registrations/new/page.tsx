@@ -13,13 +13,13 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { createRegistrationAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ eventId?: string; error?: string }>;
+  searchParams: Promise<{ eventId?: string; error?: string; back?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -27,14 +27,16 @@ export const dynamic = "force-dynamic";
 /**
  * Enter a registration for somebody who asked in person (BR-REQ-037-05).
  *
- * Administrator only, asserted here and again in the action and once more in the service. The
- * form is short on purpose: the club is typing it while somebody waits, and every field it does
- * not ask for is one the participant answers themselves from the email that follows.
+ * Every staff role since `DECISIONS.md` §67 — the desk enters walk-ins — asserted here and
+ * again in the action and once more in the service. The form is short on purpose: the club is
+ * typing it while somebody waits, and every field it does not ask for is one the participant
+ * answers themselves from the email that follows.
  *
- * What this form cannot do, and says so on the page: confirm anybody. The registration starts
- * exactly where a public one does, the participant gets the ordinary verification email, and
- * the declaration is signed by them from their own link — nobody signs one for somebody else
- * (AGENTS.md §10.8).
+ * By default this confirms nobody: the registration starts exactly where a public one does and
+ * the participant finishes it from their own email. The one tick that changes that is the fast
+ * track (BR-REQ-037-07), for a person standing at the desk: the address is vouched for by
+ * whoever is typing, and the declaration is signed on paper in front of them — by the
+ * participant, still; nobody signs one for somebody else (AGENTS.md §10.8).
  */
 export default async function NewRegistrationPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -42,9 +44,10 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canManageRegistrations(actor.role)) notFound();
+  if (!canWorkTheDesk(actor.role)) notFound();
 
-  const { eventId, error } = await searchParams;
+  const { eventId, error, back } = await searchParams;
+  const fromDesk = back === "desk";
   const t = await getTranslations("Admin");
   const rt = await getTranslations("Registration");
   const format = await getFormatter();
@@ -53,7 +56,11 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   return (
     <Stack spacing={3}>
       <Typography variant="body2">
-        <Link href="/admin/registrations">{t("registrations.backToList")}</Link>
+        {fromDesk || !canManageRegistrations(actor.role) ? (
+          <Link href="/admin/checkin">{t("desk.backToDesk")}</Link>
+        ) : (
+          <Link href="/admin/registrations">{t("registrations.backToList")}</Link>
+        )}
       </Typography>
 
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
@@ -71,6 +78,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
       ) : (
         <form action={createRegistrationAction}>
           <input type="hidden" name="uiLocale" value={locale} />
+          {fromDesk && <input type="hidden" name="back" value="desk" />}
 
           <Stack spacing={2}>
             <TextField
@@ -142,6 +150,20 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             <CheckboxField name="relayedByParticipantRequest" required>
               {t("registrations.relayConfirmation")}
             </CheckboxField>
+
+            {/*
+              The fast track (BR-REQ-037-07). Ticked by default when the form was opened from the
+              desk, because that is what the desk is for; unticked from the list, where the
+              person is usually on the telephone and finishes from their own email.
+            */}
+            <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: 2, py: 1 }}>
+              <CheckboxField name="fastTrack" defaultChecked={fromDesk}>
+                {t("desk.fastTrack")}
+              </CheckboxField>
+              <Typography variant="body2" color="text.secondary">
+                {t("desk.fastTrackHelp")}
+              </Typography>
+            </Box>
 
             <Box>
               <Button type="submit" variant="contained" sx={{ minHeight: 44 }}>

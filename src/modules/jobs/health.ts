@@ -1,17 +1,15 @@
 import { desc, eq } from "drizzle-orm";
 import { jobRuns } from "@/db/schema/job-runs";
 import type { Database } from "@/db/types";
+import { jobStalenessThresholdMs } from "./quiet-hours";
 
 /**
- * Job liveness thresholds (AGENTS.md §12.12, §16.2): "the health check reports degraded when
- * the last successful run of a job is older than its agreed threshold." Matches §16.2's
- * watchdog cadence — roughly five minutes for maintenance, one to five for the outbox — with
- * headroom so one slow run does not flip the check before the next one has even had a chance.
+ * Job liveness (AGENTS.md §12.12, §16.2): "the health check reports degraded when the last
+ * successful run of a job is older than its agreed threshold." The threshold follows the
+ * monitor cadence in force — fifteen minutes by day, hourly at night, club time
+ * (`quiet-hours.ts`, `DECISIONS.md` §68) — as twice the cadence plus a run, so one slow run
+ * never flips the check before the next has had a chance. Both jobs share it.
  */
-export const JOB_STALENESS_THRESHOLDS_MS: Record<string, number> = {
-  "registration-maintenance": 15 * 60_000,
-  "email-outbox": 15 * 60_000,
-};
 
 export type JobHealth = { jobName: string; status: "ok" | "stale" | "never_run"; lastFinishedAt: string | null };
 
@@ -31,8 +29,7 @@ export async function checkJobHealth<T extends Record<string, unknown>>(
     return { jobName, status: "never_run", lastFinishedAt: null };
   }
 
-  const threshold = JOB_STALENESS_THRESHOLDS_MS[jobName] ?? 15 * 60_000;
-  const stale = now.getTime() - latest.finishedAt.getTime() > threshold;
+  const stale = now.getTime() - latest.finishedAt.getTime() > jobStalenessThresholdMs(now);
 
   return {
     jobName,
