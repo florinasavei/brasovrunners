@@ -35,8 +35,9 @@ yarn typecheck    tsc --noEmit
 yarn test         unit and database tests; no database or Docker needed (PGlite)
 yarn test:concurrency  two-connection suite (BR-REQ-051-01 criterion 5); needs the database
 yarn test:e2e     Playwright, 320px mobile and desktop; needs the database running
-yarn check        docs:check + migrations:check + typecheck + lint + test; CI and the pre-commit hook run this
+yarn check        docs:check + secrets:check + migrations:check + typecheck + lint + test; CI and the pre-commit hook run this
 yarn docs:check   documentation consistency
+yarn secrets:check  refuse a commit carrying a provider credential — the repository is public (§98)
 yarn migrations:check  a migration expands or contracts, never both (AGENTS.md §7.6)
 yarn db:migrate   apply migrations locally · db:seed sample events · db:studio browse
 yarn db:seed:legal  the sample legal documents alone; never deletes, safe on a live database
@@ -384,6 +385,9 @@ invites people is itself behind the sign-in it would be granting.
 8. **The three legal texts** approved on production from the platform's templates
    (`/admin/legal` → New version → "start from the platform's text", four facts to fill) —
    the same item as 4, with the texts now written.
+9. **The health monitor** on cron-job.org — `GET /api/health` every 30 minutes, "notify on
+   failure" — on both environments, so the club is emailed when email stops
+   (`DECISIONS.md` §98, `SETUP.md` §26; the fifth step of the "Monitors" row on `/admin/tasks`).
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 

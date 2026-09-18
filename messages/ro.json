@@ -616,6 +616,13 @@
       "intro": "Ce lipsește ca platforma să poată primi înscrieri reale. Fiecare linie este citită din sistem, nu bifată de mână.",
       "blockingSummary": "Blochează înscrierile reale: {count}.",
       "nothingBlocking": "Nimic nu blochează înscrierile. Restul sunt îmbunătățiri.",
+      "emailStalled": {
+        "title": "Emailurile nu pleacă.",
+        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure la {resumesAt} (ora României); nimic nu s-a pierdut.",
+        "failed": "Mesaje care nu au putut fi trimise în ultimele 7 zile: {count} — motivul dat de Mailgun: „{reason}”. Deschide Mailgun → Sending → Logs; dacă domeniul sau cheia s-au schimbat, actualizează variabilele MAILGUN_* în Vercel.",
+        "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
+        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
+      },
       "state": {
         "blocking": "Blochează",
         "open": "De făcut",
@@ -660,7 +667,8 @@
             "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
             "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45. Noapte: Custom → toate zilele, orele 23, 0, 1, 2, 3, 4, 5, 6, minutul 0. Nu la 5 minute: baza de date Neon nu ar adormi niciodată și cele 100 de ore-CU gratuite pe lună s-ar termina la jumătatea lunii, iar site-ul ar cădea până luna următoare.",
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
-            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă din cele 100 de ore-CU ale proiectului lui."
+            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă din cele 100 de ore-CU ale proiectului lui.",
+            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header, la 30 de minute (Custom → toate zilele, toate orele, minutele 0 și 30). La Notifications bifează „on failure” (și „when the job gets disabled”). Pagina răspunde 503 cât timp un mesaj e amânat de limita zilnică, a eșuat sau a rămas neridicat de monitoare — și cron-job.org îți trimite email de la el, nu prin Mailgun. Când se rezolvă, răspunde iar 200 și primești „job successful”."
           ]
         },
         "inviteStaff": {
@@ -1513,6 +1521,10 @@
     "emailVolume": "Volum de e-mail astăzi",
     "emailVolumeIntro": "Trei mesaje pentru fiecare înscriere finalizată, raportat la alocația zilnică a furnizorului. Verifică asta înainte de a deschide înscrierile, nu după. Numărat de la miezul nopții UTC.",
     "emailVolumeHeadroom": "Au mai rămas {remaining} din {allowance} mesaje astăzi.",
+    "emailHealth": {
+      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health răspunde 200.",
+      "stalled": "Trimiterea s-a oprit — amânate de limita zilnică: {deferred}; întârziate (monitoarele nu rulează): {overdue}; eșuate în ultimele 7 zile: {failed}. Ultimul motiv: „{reason}”. /api/health răspunde 503 până se rezolvă, ca monitorul să anunțe."
+    },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
     "projectedMessages": "Mesaje estimate",

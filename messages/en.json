@@ -616,6 +616,13 @@
       "intro": "What is missing before the platform can take real entries. Every line is read from the system, not ticked by hand.",
       "blockingSummary": "Blocking real registrations: {count}.",
       "nothingBlocking": "Nothing is blocking registrations. The rest are improvements.",
+      "emailStalled": {
+        "title": "Emails are not going out.",
+        "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves at {resumesAt} (Romania time); nothing is lost.",
+        "failed": "Messages that could not be sent in the last 7 days: {count} — Mailgun's reason: “{reason}”. Open Mailgun → Sending → Logs; if the domain or the key changed, update the MAILGUN_* variables in Vercel.",
+        "overdue": "Messages whose turn passed more than 90 minutes ago: {count} — the monitors are not running. See the “Monitors” row below.",
+        "notify": "To hear about this without opening the page: a cron-job.org monitor on /api/health with failure notifications on — the step in the “Monitors” row."
+      },
       "state": {
         "blocking": "Blocking",
         "open": "To do",
@@ -660,7 +667,8 @@
             "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
             "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45. Night: Custom → every day, hours 23, 0, 1, 2, 3, 4, 5, 6, minute 0. Not every 5 minutes: the Neon database would never sleep and the 100 free CU-hours a month would run out mid-month, with the site down until the next month.",
             "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
-            "On QA: one pair only, every 60 minutes day and night (or paused when not testing): QA spends its own project's 100 CU-hours too."
+            "On QA: one pair only, every 60 minutes day and night (or paused when not testing): QA spends its own project's 100 CU-hours too.",
+            "The third monitor, the one that tells you when emails stop going out: “Create cronjob” with the address {baseUrl}/api/health, Request method GET, no header, every 30 minutes (Custom → every day, every hour, minutes 0 and 30). Under Notifications tick “on failure” (and “when the job gets disabled”). The page answers 503 while a message is deferred by the daily allowance, has failed, or was left unpicked by the monitors — and cron-job.org emails you from its own mail, not through Mailgun. When it clears, it answers 200 again and you get “job successful”."
           ]
         },
         "inviteStaff": {
@@ -1513,6 +1521,10 @@
     "emailVolume": "Email volume today",
     "emailVolumeIntro": "Three messages per completed registration, against the provider's daily allowance. Check this before opening a registration window, not after. Counted from midnight UTC.",
     "emailVolumeHeadroom": "{remaining} of {allowance} messages left today.",
+    "emailHealth": {
+      "ok": "Sending works: nothing deferred, overdue or failed. /api/health answers 200.",
+      "stalled": "Sending has stopped — deferred by the daily allowance: {deferred}; overdue (the monitors are not running): {overdue}; failed in the last 7 days: {failed}. Last reason: “{reason}”. /api/health answers 503 until this clears, so the monitor can notify."
+    },
     "registrationsToday": "Registrations today",
     "testRegistrations": "test",
     "projectedMessages": "Projected messages",

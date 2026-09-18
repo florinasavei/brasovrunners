@@ -14,6 +14,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { checkEmailHealth } from "@/modules/notifications/health";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { ownerTasks, sortTasks, type TaskState } from "@/modules/diagnostics/owner-tasks";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -124,6 +125,8 @@ export default async function AdminTasksPage({ params }: Props) {
    */
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
   const volume = await readEmailVolumeToday(db, now);
+  // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
+  const email = await checkEmailHealth(db, now);
   // One row is the Administrator inserted by hand; a second is somebody invited from
   // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
   const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
@@ -246,6 +249,44 @@ export default async function AdminTasksPage({ params }: Props) {
       <Alert severity={blocking > 0 ? "warning" : "success"}>
         {blocking > 0 ? t("blockingSummary", { count: blocking }) : t("nothingBlocking")}
       </Alert>
+
+      {/* Email has stopped (§98). Red, above the list, because every row below assumes the
+          confirmations are going out — and this page is the one the club opens. */}
+      {email.status === "stalled" && (
+        <Alert severity="error">
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {t("emailStalled.title")}
+          </Typography>
+          {email.deferred > 0 && (
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("emailStalled.deferred", {
+                count: email.deferred,
+                allowance: MAILGUN_FREE_DAILY_MESSAGES,
+                resumesAt: email.resumesAt
+                  ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "Europe/Bucharest",
+                    }).format(new Date(email.resumesAt))
+                  : "—",
+              })}
+            </Typography>
+          )}
+          {email.failed > 0 && (
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("emailStalled.failed", { count: email.failed, reason: email.lastError ?? "—" })}
+            </Typography>
+          )}
+          {email.overdue > 0 && (
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("emailStalled.overdue", { count: email.overdue })}
+            </Typography>
+          )}
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            {t("emailStalled.notify")}
+          </Typography>
+        </Alert>
+      )}
 
       <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
         {tasks.map((task) => (

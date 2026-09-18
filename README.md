@@ -88,6 +88,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/wait-for-migration.mjs`](./scripts/wait-for-migration.mjs) | First step of `yarn build`: on a Vercel production deployment, waits until the environment's database has applied the migration the build was compiled against, so new code never goes live against an old schema. Applies nothing (`AGENTS.md` §7.6, `DECISIONS.md` §62) |
 | [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; runs in `yarn check` (`AGENTS.md` §7.6) |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
+| [`scripts/secrets-check.mjs`](./scripts/secrets-check.mjs) | Refuses a commit carrying a provider credential — the repository is public; runs in `yarn check` and CI (`DECISIONS.md` §98) |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
 | [`scripts/db-reset-local.mjs`](./scripts/db-reset-local.mjs) | `yarn db:reset:local`: drops both schemas, migrates and seeds; refuses any non-local database |
 | [`scripts/dev.mjs`](./scripts/dev.mjs) | `yarn dev`: starts on port 47821, or the next free one, and keeps `APP_BASE_URL` matching |
@@ -613,6 +614,7 @@ MANIFEST.txt
 
 scripts/
   docs-check.mjs        documentation synchronization check
+  secrets-check.mjs     no provider credential in a tracked or staged file
   release.mjs           versioned release build into dist/
   setup.mjs             yarn setup: installs the tracked git hooks
 

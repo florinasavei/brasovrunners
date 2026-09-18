@@ -86,7 +86,7 @@ validation, while an absent one is allowed. Come back here when you have a Neon 
 yarn dev                 dev server on http://localhost:47821 (next free port if taken)
 yarn build               production build
 yarn start               production server; honours PORT
-yarn check               docs:check + typecheck + lint + tests — the pre-commit gate
+yarn check               docs:check + secrets:check + migrations:check + typecheck + lint + tests — the pre-commit gate
 yarn test                all tests
 yarn test:unit           pure-rule tests only
 yarn test:integration    database tests only
@@ -100,6 +100,7 @@ yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn typecheck           tsc --noEmit
 yarn lint                ESLint
 yarn docs:check          documentation consistency
+yarn secrets:check       refuse a commit carrying a provider credential (the repository is public)
 yarn migrations:check    a migration expands or contracts, never both (AGENTS.md §7.6)
 yarn db:generate         regenerate migrations after editing src/db/schema/
 yarn db:migrate          apply migrations

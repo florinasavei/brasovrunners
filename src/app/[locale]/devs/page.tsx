@@ -20,6 +20,7 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { megabytes, NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
+import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
@@ -116,6 +117,7 @@ export default async function DevsPage({ params }: Props) {
     ),
   );
   const volume = await readEmailVolumeToday(db, now);
+  const emailHealth = await checkEmailHealth(db, now);
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
 
@@ -317,6 +319,15 @@ export default async function DevsPage({ params }: Props) {
           {t("emailVolumeHeadroom", {
             remaining: volume.remaining,
             allowance: volume.allowance,
+          })}
+        </Alert>
+        {/* The stall the monitors are told about (§98): `/api/health` answers 503 while it lasts. */}
+        <Alert severity={emailHealth.status === "stalled" ? "error" : "success"} sx={{ mb: 2 }}>
+          {t(`emailHealth.${emailHealth.status}`, {
+            deferred: emailHealth.deferred,
+            overdue: emailHealth.overdue,
+            failed: emailHealth.failed,
+            reason: emailHealth.lastError ?? "—",
           })}
         </Alert>
         <Stack spacing={0.5}>

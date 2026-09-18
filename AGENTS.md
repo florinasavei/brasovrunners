@@ -2036,7 +2036,11 @@ INDEX(job_name, started_at)
 ```
 
 `job_runs` exists so a stalled scheduler is visible. The health check reports degraded
-when the last successful run of a job is older than its agreed threshold.
+when the last successful run of a job is older than its agreed threshold, and when the outbox
+holds a message deferred by the provider's allowance, overdue, or failed
+(`notifications/health.ts`). Every status but `ok` is an HTTP 503 (`DECISIONS.md` §98): the
+external monitor's failure notification is how the club hears that email has stopped, and it
+must not go through email.
 
 Do not put email body, raw token, declaration body, or full participant export in audit metadata.
 

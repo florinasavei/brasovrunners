@@ -28,8 +28,9 @@
     "db:seed:legal": "node --import tsx --env-file-if-exists=.env.local src/db/seeds/legal.ts",
     "db:reset:local": "node --env-file-if-exists=.env.local scripts/db-reset-local.mjs",
     "docs:check": "node scripts/docs-check.mjs",
+    "secrets:check": "node scripts/secrets-check.mjs",
     "migrations:check": "node scripts/migration-check.mjs",
-    "check": "yarn docs:check && yarn migrations:check && yarn typecheck && yarn lint && yarn test",
+    "check": "yarn docs:check && yarn secrets:check && yarn migrations:check && yarn typecheck && yarn lint && yarn test",
     "release": "node scripts/release.mjs",
     "flags:sync": "node scripts/sync-flags.mjs",
     "postinstall": "node scripts/sync-flags.mjs"

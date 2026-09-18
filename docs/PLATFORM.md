@@ -260,8 +260,10 @@ was a **green skip**, which is exactly the failure `DECISIONS.md` §31 records, 
 straight after it returned **401** until the Vercel project's own `JOB_SECRET` matched, at about
 05:47Z — a green tick is not evidence that a job ran. And GitHub documents that scheduled
 workflows are disabled on repositories after a period of inactivity: still unconfirmed, still the
-case a club site quiet for a season would trip, and **there is still no alert on `degraded`** —
-somebody has to look.
+case a club site quiet for a season would trip. **Since `DECISIONS.md` §98 there is an alert
+on `degraded`:** `/api/health` answers 503 for every status but `ok`, and a cron-job.org
+monitor on it with "notify on failure" emails the club — from cron-job.org's own mail, which
+is the point, because the commonest reason is that the club cannot send any.
 
 ### 5. Neon Free scales to zero
 
@@ -428,7 +430,7 @@ Things already decided and owed, so they are not rediscovered.
 | A decision on whether the backoffice stays bilingual or becomes Romanian-only | The owner raised it; the enum labels were the smaller half and are done | `DECISIONS.md` §35 |
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |
-| An alert on `/api/health` going `degraded` | The health check is the detection; nothing watches it | this page, limit 4 |
+| ~~An alert on `/api/health` going `degraded`~~ | Done 2026-09-18: 503 on anything but `ok`, a cron-job.org monitor with failure notifications watches it | `DECISIONS.md` §98 |
 | Rate limiting on the one surface with no route yet | §19.4 names five. Built: submission, admin resend, token validation, the job endpoints as the auth-adjacent one, and the participant's own link request — `/registrations/resend` landed in `BR-V1.22`, throttled on the canonical email identity. Only uploads remain, and media storage is deferred (`AGENTS.md` §17), so there is nothing yet to guard | `AGENTS.md` §19.4 |
 
 ---

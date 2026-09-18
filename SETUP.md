@@ -1264,7 +1264,19 @@ Header: Authorization: Bearer <that environment's JOB_SECRET>
 
 On cron-job.org that is Settings → Time zone `Europe/Bucharest`, then per production address
 two jobs with a **Custom** schedule: day = every day, hours 7–22, minutes 0/15/30/45; night =
-every day, hours 23 and 0–6, minute 0. The health check knows the two cadences
+every day, hours 23 and 0–6, minute 0.
+
+**The third monitor — the one that tells the club when email has stopped (`DECISIONS.md`
+§98).** `GET <APP_BASE_URL>/api/health`, no header, every 30 minutes (Custom → every day,
+every hour, minutes 0 and 30), and under *Notifications* tick **on failure** and *when the job
+gets disabled*. `/api/health` answers 503 while any outbox message is deferred by Mailgun's
+daily allowance, has failed, or has waited more than ninety minutes for a scheduler that is
+not running; cron-job.org then emails the account's address from its own mail servers — the
+one path that does not go through the provider that is down. When the condition clears the
+page answers 200 again and the "job successful" mail follows. Not on the job endpoints: a
+job cron-job.org sees failing for long enough is disabled by it, and the outbox job is the
+thing that clears the condition. Every environment; on QA it also catches a monitor pair
+somebody paused and forgot. The health check knows the two cadences
 (`modules/jobs/quiet-hours.ts`): fifty minutes since the last run is `ok` at 03:00 and `stale`
 at noon. The site is allowed to be slower at night — the first request after an idle hour
 pays Neon's cold start — because nobody in Brașov is registering at 03:00 and a warm database
@@ -1399,6 +1411,16 @@ yarn setup
 `yarn setup` points git at the tracked `.githooks` directory. From then on `yarn check`
 runs before every commit and a failing commit is blocked. Skipping it is the one way to get a
 red pull request from a green working copy, so it is not optional.
+
+**The repository is public.** Anything committed is published, and a credential that was
+pushed is a credential to rotate, whatever happens to the commit afterwards. Three guards
+(`DECISIONS.md` §98): `yarn secrets:check` runs inside `yarn check` and refuses a commit
+carrying a Mailgun, Neon, Turnstile, Vercel or GitHub key, a private key block, a connection
+string with a real password, or a `JOB_SECRET`-style variable with a value; GitHub's secret
+scanning and push protection are on for the formats it knows; and every real value lives in
+`.env.local` (ignored) or in the host's environment variables — `.env.example` names
+variables and never fills them. If the check fires on an example, write the example
+differently; there is no allowlist to add it to, on purpose.
 
 **Per change:**
 

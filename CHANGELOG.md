@@ -12,6 +12,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **The club is told when email stops.** `/api/health` carries an `email` block (deferred by the allowance, overdue, failed) and answers 503 for anything but `ok`; a third cron-job.org monitor with "notify on failure" is the notification; `/admin/tasks` and `/devs` show the same in red. §98.
+- **The public repository:** GitHub secret scanning and push protection on, Dependabot alerts on, `yarn secrets:check` inside `yarn check`; the audit of every file and the whole history found nothing to rotate. §98.
+- **CI keeps the Playwright report and traces** on failure; the task-board test scopes its locators to `#main` because React 19.2's deferred reveal and MUI's mount re-render leave a hidden streamed copy of the page for one frame on a slow machine. §98.
+
 - **Telephone numbers** are a country and digits, stored as E.164; "asdasdasdas" is refused. `DECISIONS.md` §84.
 - **Consents.** The list opt-out is asked only on an event whose list is switched on; **who is coming** is a folded section with the count and shows the club beside the name (the privacy notice must name it — the sample does). §85.
 - **The signature** is typed in a hand; after signing, the page says what happens next; the desk row says what its buttons do. §86.

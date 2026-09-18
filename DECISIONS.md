@@ -4888,3 +4888,69 @@ a mailbox on the domain with a GDPR contract) stays the upgrade if the club want
 free plan is web-only now and not worth the account.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 98. Decided — the club is told when email stops, the public repository's guard rails, and a race the CI found (2026-09-18)
+
+**Context.** Three things from the last hours of the evening. The owner: "I must be notified
+when I can't send emails anymore!" — the outbox keeps every message Mailgun refuses (§40:
+a spent allowance defers, a socket error retries, an exhausted message is `FAILED` and kept),
+and nothing tells anybody, because the only channel the platform has *is* email. Then "make
+sure this public repo is safe": the repository has been public since it was created, and the
+weekend put more provider credentials in play than any week before it. And PR #57's end-to-end
+job failed four times on one test, `tasks-cost.spec.ts`, which passed on every laptop run.
+
+**Email has stopped — decided.** `modules/notifications/health.ts` reads three counts from
+the outbox rows the worker leaves behind: **deferred** (`PENDING` with a next attempt more
+than an hour away, which only the allowance reset produces), **overdue** (`PENDING` whose turn
+passed more than ninety minutes ago — longer than six backoffs and the hourly night cadence
+can explain, so the scheduler is not draining), and **failed** (every attempt spent, in the
+last seven days). Any of them above zero is `stalled`. `/api/health` carries the block as
+`email`, reports `degraded`, and — the change that matters — **answers 503 for every status
+but `ok`**, where it used to answer 200 for `degraded`. The word stays (a stalled job still
+delays a notification rather than breaking the site, §16.2); the code changes because a
+monitor that emails on a non-2xx is the one notification path that does not go through
+Mailgun. The third cron-job.org monitor, `GET /api/health` every thirty minutes with
+"notify on failure", is now a step in the "Monitors" row of `/admin/tasks` and in `SETUP.md`
+§26; cron-job.org sends its failure mail from its own servers. `yarn smoke` reads the JSON
+body, so `--allow-degraded` is unchanged. The same answer is red on `/admin/tasks` (the club's
+screen: how many, why, and when they resume) and on `/devs`. Bounces are not in it: a bounce
+is one address, and BR-REQ-080-04 shows it on the registration.
+
+*Rejected:* failing the outbox job endpoint instead — cron-job.org disables a job that keeps
+failing, which would stop the drain that clears the condition; a message to the club's
+mailbox — through the channel that is down; a Vercel or Neon alert — neither sees the outbox.
+
+**The public repository — decided.** The audit found nothing to rotate: no credential shape
+in any tracked file or in the whole history, no `.env` ever tracked, the owner's name and
+address in no file, phones only as the `+40712345678` examples. What it changes: GitHub's
+**secret scanning and push protection** are switched on (free on a public repository; they
+know Mailgun, Vercel, GitHub and AWS formats), Dependabot vulnerability alerts too, and
+`yarn secrets:check` runs inside `yarn check` — the local half, before the commit exists,
+knowing the shapes GitHub does not scan for: Neon (`npg_`, `napi_`), Turnstile, a
+`JOB_SECRET`, a connection string with a password that is not the local one. No allowlist
+file, deliberately: a false positive is escaped by writing the example differently. The
+Zitadel issuer hostname and client ids stay in `docs/RUNBOOKS.md`; both are in every
+sign-in redirect a browser makes and secure nothing on their own.
+
+**The CI race — understood, not fought.** `/admin/tasks` streams behind `loading.tsx`.
+React 19.2 reveals a streamed Suspense boundary on the next animation frame rather than in
+the script that delivers it (`$RC` queues, `$RV` reveals). On a slow CI machine the frame
+comes after hydration, and MUI's colour-scheme provider — there since §93, which is exactly
+when the failures began — re-renders once on mount (`useCurrentColorScheme`'s
+`setIsClient`); that update reaches the still-dehydrated boundary and React client-renders
+it from the RSC payload instead of waiting. For a frame the page holds two copies of every
+paragraph: the rendered one in `#main`, and the streamed one still parked in `<div hidden
+id="S:0">` at the end of `<body>`. Invisible to a person; a strict-mode violation for
+`getByText`. Traced from the retry's Playwright trace, which CI now keeps (the `github`
+reporter alone wrote nothing to disk — hence "no valid artifacts"). The test scopes its text
+locators to `#main`. MUI's `noSsr`, which removes that re-render, was rejected: it exposes the
+stored mode on the client's first render, so a visitor who chose dark would hydrate against
+a light server tree and React would throw the whole page away instead of one boundary.
+
+**Consequences.** `checkEmailHealth`; `/api/health` `email` block and 503 on `degraded`;
+the red alert on `/admin/tasks` and `/devs`; the fifth step of the "Monitors" row;
+`scripts/secrets-check.mjs` in `yarn check`; the repository settings; the Playwright HTML
+report and traces uploaded on failure; `tests/integration/notifications/email-health.test.ts`.
+BR-REQ-080-02 criterion 6.
+
+Baseline `BR-V1.38-2026-09-18`.

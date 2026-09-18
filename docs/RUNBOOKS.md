@@ -673,6 +673,30 @@ It prints what it will do before it does it. `production` additionally requires 
 
 ---
 
+## Email has stopped
+
+The monitor mail from cron-job.org says `/api/health` failed, or `/admin/tasks` is red at the
+top (`DECISIONS.md` §98). Three causes, told apart by the same page:
+
+1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
+   lost; the queue resumes at the time the alert names (the UTC reset, five minutes past).
+   If it is registration day and people are waiting for confirmations: Mailgun → Billing →
+   Basic removes the daily limit the moment it is paid, and the next scheduler tick sends
+   everything. `docs/PLATFORM.md` has the price.
+2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
+   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
+   `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
+   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
+3. **Failed** — Mailgun refused six times. The alert carries the last reason. A `401` is the
+   `MAILGUN_API_KEY`; a `404` is the domain or the API base (`SETUP.md` §35: EU domains
+   answer at `api.eu.mailgun.net`); "not allowed to send" is the account under review — open
+   Mailgun → Sending → Logs. A failed message is not retried; once the cause is fixed, resend
+   it from the registration's page (`/admin/registrations/<id>` → Retrimite).
+
+The health page answers 200 again on its own once no row is deferred, overdue or failed in
+the last seven days; a failed row that is not resent keeps the alert up for those seven days,
+which is deliberate — it is the one the club still owes somebody.
+
 ## Legal document version
 
 Applies to the privacy notice, the terms, and the event declaration. All three share the

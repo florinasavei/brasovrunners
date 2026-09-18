@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { checkSchemaVersion } from "@/db/schema-version";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { checkEmailHealth } from "@/modules/notifications/health";
 import { buildInfo } from "@/shared/config/build-info";
 
 /**
@@ -11,7 +12,11 @@ import { buildInfo } from "@/shared/config/build-info";
  *
  * "Degraded" for a stale or never-run job — not "down" — because §16.2 is explicit that the
  * job is a liveness mechanism, not a correctness one: a stalled scheduler delays a
- * notification, it does not put the site in a broken state.
+ * notification, it does not put the site in a broken state. The word is kept; the HTTP code
+ * is not: since `DECISIONS.md` §98 every answer but `ok` is a 503, because a monitor that
+ * emails on a non-2xx is the only way the owner hears that email itself has stopped — the
+ * platform cannot send that message through the channel that is down. `yarn smoke` reads the
+ * body, so `--allow-degraded` still means what it says.
  *
  * It also names the build itself. That is not decoration: an environment can be broken by
  * running code that is perfectly healthy and simply *old* — a deployment that never reached the
@@ -42,6 +47,8 @@ export async function GET(): Promise<Response> {
   const jobs = await Promise.all(
     ["registration-maintenance", "email-outbox"].map((jobName) => checkJobHealth(db, jobName, now)),
   );
+  // Whether the club can still send email (§98): deferred by the allowance, overdue, or failed.
+  const email = database === "ok" ? await checkEmailHealth(db, now) : null;
 
   const anyJobStale = jobs.some((job) => job.status !== "ok");
   /**
@@ -54,7 +61,11 @@ export async function GET(): Promise<Response> {
   const schemaDegraded = schema?.status === "ahead";
 
   const status =
-    database === "down" || schemaDown ? "down" : anyJobStale || schemaDegraded ? "degraded" : "ok";
+    database === "down" || schemaDown
+      ? "down"
+      : anyJobStale || schemaDegraded || email?.status === "stalled"
+        ? "degraded"
+        : "ok";
 
   return NextResponse.json(
     {
@@ -69,8 +80,9 @@ export async function GET(): Promise<Response> {
       database,
       schema,
       jobs,
+      email,
       checkedAt: now.toISOString(),
     },
-    { status: status === "down" ? 503 : 200 },
+    { status: status === "ok" ? 200 : 503 },
   );
 }

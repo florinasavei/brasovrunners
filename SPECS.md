@@ -1359,7 +1359,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 4. Given a permanent failure reported by the provider, when it is received, then further sends to that address for that trigger are suppressed and the failure is visible in the backoffice.
 5. Given an Administrator on `/admin/registrations`, when the outbox panel shows what is waiting and the day's count against the provider's allowance, and they press "Trimite acum", then the same worker the scheduled job runs drains the queue in batches — never past the day's remaining allowance, at most a hundred in one press, stopping when the provider defers — audited with the counts, throttled per Administrator apart from the job's own bucket; and when nothing is waiting or the allowance is spent, then a sentence says which, and there is no button (2026-09-18, `DECISIONS.md` §80).
 
-**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`
+6. Given an outbox row deferred by the provider's allowance, one whose turn passed more than ninety minutes ago, or one that spent every attempt in the last seven days, when `/api/health` answers, then it reports `email.status = stalled`, an overall `degraded`, and HTTP 503 — every status but `ok` is a 503 — so an external monitor that notifies on a non-2xx tells the club that email has stopped through a channel that is not email; the same counts, the reason and the resume time are shown on `/admin/tasks` and `/devs`; a bounce alone is not a stall (`DECISIONS.md` §98).
+
+**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`; integration `notifications/email-health.test.ts`
 
 #### BR-REQ-080-03 — Environment-appropriate delivery
 
