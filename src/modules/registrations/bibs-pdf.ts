@@ -27,6 +27,12 @@ export type BibSheetInput = {
   /** "Page n of N", called per page. */
   pageLabel: (n: number, total: number) => string;
   generatedAt: Date;
+  /**
+   * `two`: two A5-sized bibs on each A4 page with a dashed cut line — the default sheet.
+   * `one`: the same A5-sized bib, one per A4 page, centred, for a printer that will not take
+   * a cut or a club that pins the whole page (`DECISIONS.md` §79).
+   */
+  layout?: "two" | "one";
 };
 
 const ASSETS = path.join(process.cwd(), "src", "theme", "pdf");
@@ -119,7 +125,16 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       });
   };
 
-  for (let index = 0; index < input.rows.length; index += 2) {
+  if (input.layout === "one") {
+    // The bib keeps its size — an A5 number on a shirt is the size that reads from the finish
+    // line — and sits in the middle of the page, so the cut is optional.
+    for (const row of input.rows) {
+      doc.addPage();
+      drawBib(row, (PAGE.height - BIB.height) / 2);
+    }
+  }
+
+  for (let index = 0; input.layout !== "one" && index < input.rows.length; index += 2) {
     doc.addPage();
     drawBib(input.rows[index], MARGIN);
     if (input.rows[index + 1]) {

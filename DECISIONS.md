@@ -4273,3 +4273,64 @@ week): it is an account by another name. Cancelling several at once: two cancell
 decisions, and the second needs a fresh link.
 
 Baseline `BR-V1.36-2026-09-18`.
+
+## 78. Decided — the homepage counts down the last week, on the event's own calendar (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-011-01 criterion 12; `events/domain/race-week.ts`,
+`FeaturedEventHero.tsx`, `RegistrationCta.tsx` (`raceWeek`), `events/page.tsx`.
+
+The week of the race the homepage is opened by people who already know about it, and what
+they want is one line: when, exactly, and whether there is still a place. So within seven
+calendar days the hero says "În 3 zile, sâmbătă 07:00" — "Mâine", "Azi" — above the button,
+the free places stay as they were while registration is open, and once it has closed the
+sentence stops at "closed" no longer: "come to the desk with the QR from your email", which
+is the one thing a registered runner needs that week. Server-rendered, no script, no clock
+ticking on the page: a countdown that changes by the second is a widget, and a line that
+changes by the day is information.
+
+The days are counted on the event's own wall clock (§9.4), not the server's: Vercel's clock
+says UTC, where a Saturday 07:00 race in Brașov is still Friday 04:00, and "in 0 days" on a
+Friday evening would be a lie. `daysUntilOnWallClock` reads both instants as Brașov dates
+before subtracting, and the unit test walks the midnight where the two disagree.
+
+"Alte evenimente" folds on a phone. Under a highlighted lead event a scroll of six cards
+buries the page; a native `<details>` — open when there are four or fewer, closed past that,
+no script — keeps the phone's first screen to the one event that matters that week. On a wide
+screen the same element is forced open (`::details-content`, the marker hidden): there is
+room, and a reader there cannot tell a heading from a control.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 79. Decided — three small things reported and done: one bib per page, "resend the QR", the current tab in view (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-038-01 criterion 5, BR-REQ-037-02 criterion 1;
+`bibs-pdf.ts` (`layout`), `registrations/domain/resend.ts`, `AdminTabs.tsx`.
+
+**One bib per page.** The sheet stays two per A4 with a cut line; a second button asks for
+the same A5-sized bib centred one per page, for a printer that will not take a cut or a club
+that pins the whole page. The bib itself does not grow: an A5 number on a shirt is the size
+that reads from the finish line.
+
+**"Retrimite QR-ul".** A confirmed registration's resend was a bare manage link; it is the
+confirmation itself now — the desk code, its QR and the manage link in one message — because
+that is what "send it again" means the week of the race, for the organizer in the list and for
+the runner who asks for their link back. `REGISTRATION_MANAGE_LINK` stays in the catalogue,
+unsent. Bulk "assign bibs to selected" was asked about and refused: numbers are assigned in
+order of confirmation, and a selection is an order somebody else chose.
+
+**The current tab in view.** MUI scrolls the selected tab into view once, on mount; on a slow
+phone the fonts and the hydration land after that, and "Ziua cursei" sat off the right edge.
+The tab bar scrolls its own scroller to centre the selected tab again after hydration — the
+scroller's `scrollLeft`, never `scrollIntoView`, which also moves the *page* and yanked the
+viewport from under a tap. MUI's scroll arrows were tried on the phone and dropped: they
+re-lay the bar out after mount, and the desk's e2e story lost a click to it three times.
+
+**And the tests themselves.** The owner, the same afternoon: "tests are taking way too long
+in general." `yarn test` ran its 94 files one at a time because each opens a PGlite database
+in WebAssembly and memory was the worry; on a 32-core machine that was five minutes for a
+one-line change. Eight workers now — a few hundred megabytes, forty-six seconds — and CI's
+four cores get four. The e2e suite gained a `hydrated()` wait for the places a test clicks
+right after a navigation, because the backoffice pages carry four editors now and a click that
+lands mid-hydration is prevented by the router and never replayed.
+
+Baseline `BR-V1.36-2026-09-18`.

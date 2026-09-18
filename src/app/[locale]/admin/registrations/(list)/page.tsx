@@ -377,9 +377,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
                 <SubmitButton
-                  label={t("registrations.resendShort")}
-                  pendingLabel={t("registrations.resendShort")}
-                  ariaLabel={t("registrations.resend")}
+                  label={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
+                  pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
+                  ariaLabel={row.status === "CONFIRMED" ? t("registrations.resendQrLong") : t("registrations.resend")}
                   variant="outlined"
                 />
               </Box>

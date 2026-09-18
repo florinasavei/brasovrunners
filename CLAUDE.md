@@ -178,7 +178,14 @@ schema (`AGENTS.md` §11.3) validated on the server, a server renderer that can 
 allowlist names, and one client island for the writing. Headings, bold, italic, links, lists and
 quotations — and nothing else, because everything else in StarterKit is switched off in the editor
 *and* refused by the schema. Bodies written before it are read through the same module, so no
-migration ran. Images wait on a media library, which waits on R2 (`DECISIONS.md` §58).
+migration ran. **Pictures are in the text** (`DECISIONS.md` §72, §73): the picture control
+shrinks in the browser, stores on R2 like a gallery photo, and inserts a block whose address
+the schema accepts and no other; a click on the picture opens a panel for its alt text (empty
+until written, never the file name), a caption, one of four widths, and "choose one already
+uploaded". `/admin/gallery/pictures` lists every stored picture with where it is used; the
+orphan sweep (`media/references.ts`, on the maintenance job) deletes what nothing has
+referenced for seven days, drafts counting as references. An event's short description is the
+same editor (`excerpt_json`; the plain `excerpt` is derived on save).
 
 **Legal documents.** `legal_documents`/`legal_document_translations` (§12.5), immutable once
 approved or referenced. The backoffice **writes** them and never **rewrites** them
@@ -262,7 +269,7 @@ busiest day every message queued after the cap was thrown away (`DECISIONS.md` �
 shows the volume against the allowance before a window opens, and explains every configuration
 enum rather than only reporting its value (§41).
 
-**1004 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
+**1022 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
@@ -296,10 +303,19 @@ outbox after its own response; the external monitors run every fifteen minutes b
 hourly at night, Romania time, because Neon's free month is 100 CU-hours and a five-minute
 pinger spends 180. `/devs` shows the month's figure with `NEON_API_KEY` (`SETUP.md` §33).
 
-Not built: the rest of the CMS — articles, the media library for other content, captions and
-the Tiptap **image node** (the owner's next ask: "soon I can add pictures" — it goes on top of
-the gallery's storage, per §11.3) — and what M2–M4 name (multi-distance races, one bib per race
-across distances, results, runner profiles). A custom domain for the bucket
+**Race week, for the runner and the desk** (`DECISIONS.md` §76–§79). Within seven days of
+the featured event the homepage counts down on the event's own calendar and, once
+registration has closed, says to come to the desk with the QR; "Alte evenimente" folds on a
+phone. `/inscrieri/ale-mele` ("Înscrierile mele", in the footer): one address, one link, every
+active registration — code and QR, "I am here", cancel — on the `MANAGE_PROFILE` token, its
+first use; the same oracle rule as "send me my link again". The desk row and the registration
+page carry "email respins" with Mailgun's reason when a message bounced. A confirmed row's
+resend is the confirmation itself, QR included; the bib sheet prints one per page on request.
+**Gmail dots are two addresses** since canonicalization version 2 (`DECISIONS.md` §74): the
+club rehearses from its own inbox; the plus tag still collapses.
+
+Not built: the rest of the CMS — articles and what M2–M4 name (multi-distance races, one bib
+per race across distances, results, runner profiles). A custom domain for the bucket
 (`media.<domain>`) is optional and undone.
 
 **What is deployed.** Production on the club's `.com` and QA on its `qa.` subdomain,

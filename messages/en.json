@@ -40,7 +40,13 @@
     "pastNotice": "This event has already taken place.",
     "featured": "Featured event",
     "featuredCallToAction": "See the race details",
-    "others": "Other events"
+    "others": "Other events",
+    "othersCount": "Other events ({count})",
+    "raceWeek": {
+      "today": "Today, {when}",
+      "tomorrow": "Tomorrow, {when}",
+      "inDays": "In {days} days, {when}"
+    }
   },
   "Event": {
     "backToEvents": "Back to events",
@@ -90,6 +96,7 @@
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
       "opensOn": "Registration opens on {date}.",
       "closed": "Registration has closed for this event.",
+      "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped."
     },
     "registrationState": {
@@ -242,6 +249,8 @@
       "registrationsCancelled": "{cancelled} registrations cancelled. {failed} could not be cancelled.",
       "searchHelp": "Search by name, with or without Romanian diacritics.",
       "resendShort": "Resend",
+      "resendQr": "Resend the QR",
+      "resendQrLong": "Send the confirmation again, with the QR code and the manage link",
       "raceDayTitle": "Race day",
       "bibNumber": "Race number",
       "checkinCode": "Pickup code",
@@ -886,6 +895,7 @@
       "from": "From",
       "to": "To",
       "download": "Download the sheet (PDF)",
+      "downloadOnePerPage": "One per page",
       "page": "Page {n} of {total}",
       "helpNone": "No number assigned yet. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event.",
       "helpSome": "{total} numbers assigned. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event."

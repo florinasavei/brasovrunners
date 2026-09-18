@@ -3,6 +3,7 @@
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 export type AdminTab = { href: string; label: string };
 
@@ -37,8 +38,26 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
     .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
     .sort((a, b) => b.href.length - a.href.length)[0];
 
+  /**
+   * The current tab, in view, on a phone (`DECISIONS.md` §79). MUI scrolls the selected tab
+   * into view once, when it mounts; with nine tabs and a slow phone the fonts and the
+   * hydration land later than that, and "Ziua cursei" sat off the right edge. This does it
+   * again after hydration, and centres it, so a volunteer sees where they are.
+   */
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const scroller = root.current?.querySelector<HTMLElement>(".MuiTabs-scroller");
+    const selected = root.current?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!scroller || !selected) return;
+    // The scroller's own `scrollLeft`, never `scrollIntoView`: that also scrolls the *page*
+    // to bring the bar into view, which on a phone yanks the viewport away from whatever the
+    // volunteer was about to tap (the e2e walk-in test caught it on 2026-09-18).
+    scroller.scrollLeft = selected.offsetLeft - (scroller.clientWidth - selected.offsetWidth) / 2;
+  }, [active?.href]);
+
   return (
     <Tabs
+      ref={root}
       // `false` rather than a guess when nothing matches — a page under /admin that is not one
       // of these sections should light up no tab, and MUI warns about a value it cannot find.
       value={active?.href ?? false}

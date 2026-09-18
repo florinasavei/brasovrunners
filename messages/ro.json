@@ -40,7 +40,13 @@
     "pastNotice": "Acest eveniment a avut deja loc.",
     "featured": "Evenimentul principal",
     "featuredCallToAction": "Vezi detaliile cursei",
-    "others": "Alte evenimente"
+    "others": "Alte evenimente",
+    "othersCount": "Alte evenimente ({count})",
+    "raceWeek": {
+      "today": "Azi, {when}",
+      "tomorrow": "Mâine, {when}",
+      "inDays": "În {days} zile, {when}"
+    }
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
@@ -90,6 +96,7 @@
       "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
       "opensOn": "Înscrierile se deschid pe {date}.",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
+      "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit."
     },
     "registrationState": {
@@ -242,6 +249,8 @@
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
       "searchHelp": "Caută după nume, cu sau fără diacritice.",
       "resendShort": "Retrimite",
+      "resendQr": "Retrimite QR-ul",
+      "resendQrLong": "Trimite din nou confirmarea, cu codul QR și linkul de gestionare",
       "raceDayTitle": "Ziua cursei",
       "bibNumber": "Număr de concurs",
       "checkinCode": "Cod de ridicare",
@@ -886,6 +895,7 @@
       "from": "De la",
       "to": "Până la",
       "download": "Descarcă foaia (PDF)",
+      "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
       "helpNone": "Niciun număr alocat încă. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
       "helpSome": "{total} numere alocate. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."

@@ -867,7 +867,7 @@ PENDING_EMAIL_CONFIRMATION -> verify-email message
 PENDING_DECLARATION        -> complete-declaration message
 WAITLISTED                 -> waiting-list status/manage message
 WAITLIST_OFFERED           -> current claim-place offer
-CONFIRMED                  -> confirmation/manage-unregister message
+CONFIRMED                  -> the confirmation again (REGISTRATION_CONFIRMED: code, QR, manage link)
 CANCELLED or EXPIRED       -> REGISTRATION_STATE_NOTICE, with an eligible restart link
 ```
 

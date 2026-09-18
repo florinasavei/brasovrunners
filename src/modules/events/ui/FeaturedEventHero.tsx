@@ -2,8 +2,9 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 import ButtonLink from "@/shared/ui/ButtonLink";
+import { raceWeek } from "../domain/race-week";
 import type { PublicEvent } from "../repository";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
@@ -31,6 +32,10 @@ export default async function FeaturedEventHero({
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
+  const format = await getFormatter();
+  // The last seven days (`DECISIONS.md` §78): a countdown line, counted on the event's own
+  // calendar, above the button — the one thing a visitor wants to know that week.
+  const week = raceWeek(event, now);
 
   return (
     <Box
@@ -74,6 +79,25 @@ export default async function FeaturedEventHero({
 
       <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
+      {week && (
+        <Typography
+          variant="h3"
+          component="p"
+          data-testid="race-week-countdown"
+          sx={{ fontSize: { xs: "1.125rem", sm: "1.25rem" }, fontWeight: 700, color: "primary.main", mb: 2 }}
+        >
+          {t(week.days === 0 ? "raceWeek.today" : week.days === 1 ? "raceWeek.tomorrow" : "raceWeek.inDays", {
+            days: week.days,
+            when: format.dateTime(event.startsAt, {
+              timeZone: event.timezone,
+              weekday: "long",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          })}
+        </Typography>
+      )}
+
       <EventFacts event={event} now={now} />
 
       {/*
@@ -84,7 +108,7 @@ export default async function FeaturedEventHero({
         saying so, or nothing at all. "See the details" then steps down to outlined: two filled
         buttons side by side is two primary actions, which is none.
       */}
-      <RegistrationCta event={event} now={now} />
+      <RegistrationCta event={event} now={now} raceWeek={week !== null} />
 
       <Box sx={{ mt: 2 }}>
         <ButtonLink

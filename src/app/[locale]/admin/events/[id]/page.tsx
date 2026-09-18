@@ -395,8 +395,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     slotProps={{ htmlInput: { min: 1 } }}
                     sx={{ width: 100 }}
                   />
+                  {/* Two submit buttons, one form: the second names the layout it asks for. */}
                   <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                     {t("bibs.download")}
+                  </Button>
+                  <Button type="submit" name="layout" value="one" variant="text" size="small" sx={{ minHeight: 44 }}>
+                    {t("bibs.downloadOnePerPage")}
                   </Button>
                 </Stack>
               </form>

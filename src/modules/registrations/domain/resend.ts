@@ -18,7 +18,10 @@ export function deriveAllowedResendMessageType(status: RegistrationStatus): Emai
     case "WAITLIST_OFFERED":
       return "WAITLIST_SPOT_OFFER";
     case "CONFIRMED":
-      return "REGISTRATION_MANAGE_LINK";
+      // The confirmation itself, not a bare manage link: it carries the manage link *and* the
+      // desk code with its QR, which is what "send it again" means the week of the race
+      // (`DECISIONS.md` §79). REGISTRATION_MANAGE_LINK stays in the catalogue, unsent.
+      return "REGISTRATION_CONFIRMED";
     case "CANCELLED":
     case "EXPIRED":
       return "REGISTRATION_STATE_NOTICE";

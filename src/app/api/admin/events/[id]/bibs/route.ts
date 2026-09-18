@@ -50,6 +50,8 @@ export async function GET(
   if (Number.isNaN(from) || Number.isNaN(to)) {
     return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
   }
+  // Two per page unless "one" is asked for; anything else is the default, not an error.
+  const layout = url.searchParams.get("layout") === "one" ? ("one" as const) : ("two" as const);
 
   const db = getDb();
   const event = await findEventForBibs(db, id, locale);
@@ -66,9 +68,10 @@ export async function GET(
     eventDate: format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" }),
     pageLabel: (n, total) => t("bibs.page", { n, total }),
     generatedAt: now,
+    layout,
   });
 
-  const suffix = from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : "";
+  const suffix = `${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${layout === "one" ? "-one-per-page" : ""}`;
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {

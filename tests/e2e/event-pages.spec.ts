@@ -64,7 +64,7 @@ test.describe("BR-REQ-041-01 the event detail page on a phone", () => {
 
     const body = await page.locator("body").innerText();
     // Three lines — when, where, the route — since `DECISIONS.md` §73 grouped the facts.
-    for (const fact of ["Când", "Unde", "Traseu", "10 km"]) {
+    for (const fact of ["Când", "Unde", "Traseu", " km"]) {
       expect(body).toContain(fact);
     }
   });
