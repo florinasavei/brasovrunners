@@ -1580,8 +1580,9 @@ Operations/privacy:
 - [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; `/devs` shows the database's
       CU-hours once `NEON_API_KEY` is set (§33); failure alerting from the pinger to a real
       inbox is not confirmed.
-- [ ] Production staff sign-in — no production Zitadel application yet, `STAFF_AUTH_MODE=disabled`
-      there; §25 and the Zitadel runbook, then the first `staff_users` row by hand.
+- [x] Production staff sign-in — the "Brasov Runners Production" Zitadel application
+      (2026-09-17), `STAFF_AUTH_MODE=provider`, the owner's SUPERADMIN row; verified by the owner
+      signing in on 2026-09-18.
 - [ ] Volunteer accounts for race day — §34; and a rehearsal on QA with test registrations.
 - [ ] Ownership/recovery/handover documented — §2 and §31 exist; the repository, Vercel, Neon,
       Mailgun and Zitadel accounts are the maintainer's personal ones (BR-BUS-101).
