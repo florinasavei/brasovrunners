@@ -242,6 +242,16 @@ node --import tsx -e "import('./src/shared/config/env').then(({envSchema}) => co
 `AUTH_SECRET` is Auth.js's own session secret, not Zitadel's. It is generated per environment and
 shared with nothing.
 
+### Zitadel's own emails
+
+Invitations, password resets and verification codes are sent by Zitadel, not by the site, and
+from whatever SMTP provider is active on the instance. Since 2026-09-18 that is the club's
+Mailgun domain (`SETUP.md` §26 has the values), so a colleague invited from Zitadel gets a mail
+from `noreply@mail.<domain>` with the club's reply address. If a new colleague reports "no
+invitation arrived": Default Settings → SMTP Provider → the Mailgun provider must be the
+**active** one, and Mailgun → Reporting → Logs shows the attempt. Deactivate rather than delete
+an old provider; the delete confirmation wants the sender name character for character.
+
 ### The first administrator
 
 **Insert the first `staff_users` row by hand.** The screen that invites people sits behind the

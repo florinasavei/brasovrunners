@@ -12,7 +12,9 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 Evening of 2026-09-18, accounts rather than code (`SETUP.md` §26, §30): the six cron-job.org
 jobs exist and both environments' `/api/health` read `ok` for the first time; the club's
-sending domain is verified on Mailgun and **production email is live**; the R2 bucket exists.
+sending domain is verified on Mailgun and **production email is live**, with a `contact@`
+address that forwards to the owner and Zitadel's own invitations going out from the same
+domain; the R2 bucket exists.
 
 Race day, the way a real race works — and the one figure that would have taken the site down.
 

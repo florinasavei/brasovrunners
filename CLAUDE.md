@@ -323,8 +323,9 @@ invites people is itself behind the sign-in it would be granting.
 
 1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.
 2. ~~Mailgun sending domain~~ — done 2026-09-18 evening: `mail.` subdomain verified,
-   production sends live, webhook signed. QA still uses the sandbox (its own sending key is
-   optional).
+   production sends live, webhook signed; `contact@mail.<domain>` forwards to the owner until
+   the club has a mailbox; Zitadel's own mail goes through the same domain. QA still uses the
+   sandbox (its own sending key is optional).
 3. ~~Production Zitadel application~~ — done 2026-09-17: application, `STAFF_AUTH_MODE=provider`,
    the owner's SUPERADMIN row. Sign in at `/admin` on the production host.
 4. **The club's approved legal texts** — privacy notice, terms, declaration — written and

@@ -1281,8 +1281,27 @@ reads a key that ends early (split at exactly 255, "+ Add TXT string to record")
 base for an EU domain is `https://api.eu.mailgun.net/v3` — the US one answers 404 for it.
 Production variables: `MAILGUN_DOMAIN`, `MAILGUN_API_BASE_URL`, `MAILGUN_API_KEY` (the
 domain's sending key "brasovrunners-production"), `MAILGUN_WEBHOOK_SIGNING_KEY`,
-`EMAIL_FROM_ADDRESS=noreply@mail.brasovrunners.com`, `EMAIL_REPLY_TO` (the owner's mailbox),
+`EMAIL_FROM_ADDRESS=noreply@mail.brasovrunners.com`, `EMAIL_REPLY_TO=contact@mail.brasovrunners.com`,
 `EMAIL_DELIVERY_MODE=live`. Verified with `yarn email:probe` pointed at the domain.
+
+**The club's reply address, until it has a mailbox.** `contact@mail.brasovrunners.com` is a
+Mailgun **Route** (Send → Receiving → Routes): match recipient `contact@mail.brasovrunners.com`
+→ Forward to the owner's Gmail, Stop, priority 0, no "store and notify" (nothing reads incoming
+mail, and storing people's messages at a third party for nothing is not a feature). Receiving
+works because the `mail.` MX records point at Mailgun. When the club gets Google or Microsoft
+mailboxes, those take the **apex** (`@brasovrunners.com`) and this subdomain is untouched; only
+the two reply-to values move — `EMAIL_REPLY_TO` here and the Zitadel SMTP provider's.
+
+**Zitadel sends its own mail through the same domain.** Its invitations, password resets and
+codes went out from Zitadel's default sender; now from the club's. Zitadel console → Default
+Settings → **SMTP Provider** → Mailgun: host `smtp.eu.mailgun.org`, port 587, STARTTLS, user
+`postmaster@mail.brasovrunners.com`, password = the domain's SMTP credential (Domain settings →
+SMTP Credentials → reset; it is in `.env.local` and the password manager), sender
+`noreply@mail.brasovrunners.com` "Brașov Runners", reply-to `contact@mail.brasovrunners.com`.
+Test, save, **Activate**; the old sandbox provider is **deactivated**, not deleted (deleting
+asks for the sender name typed exactly as it was saved, and the comma-below `ș` is not the
+cedilla `ş` — a deactivated provider is harmless either way). The EU host, not
+`smtp.mailgun.org`: the domain lives in the EU region.
 
 **Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
 month and *suspends the compute* when they are spent, until the next month; the compute sleeps
