@@ -59,6 +59,8 @@ const PUBLIC_COLUMNS = {
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,
+  // The short description as written (§73) — null for events from before it; `excerpt` then.
+  excerptJson: eventTranslations.excerptJson,
   // The description, as a rich-text document (§11.3), rendered by `RichText`.
   bodyJson: eventTranslations.bodyJson,
   seoTitle: eventTranslations.seoTitle,

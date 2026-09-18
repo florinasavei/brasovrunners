@@ -2,16 +2,19 @@
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
-import { EMPTY_DOC, readRichText } from "../domain/schema";
+import { EMPTY_DOC, IMAGE_WIDTH_PERCENTS, readRichText } from "../domain/schema";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -76,13 +79,32 @@ export default function RichTextEditor({
     image: string;
     imageUploading: string;
     imageFailed: string;
+    imageAlt: string;
+    imageAltHelp: string;
+    imageCaption: string;
+    imageSize: string;
+    imageRemove: string;
+    imageDone: string;
+    /**
+     * The nag under the editor, one picture and several. Two strings rather than a function:
+     * props cross the server boundary, and the client island substitutes the count itself.
+     */
+    imageNoAltOne: string;
+    imageNoAltMany: string;
+    imageFromGallery: string;
+    imageGalleryLoading: string;
+    imageGalleryEmpty: string;
+    imageGalleryClose: string;
   };
 }) {
   const initialDoc = readRichText(initialBody);
   const [value, setValue] = useState(() => JSON.stringify(initialDoc));
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
   const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
+  const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
   const fileInputRef = useRef<HTMLInputElement>(null);
+  /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
+  const [gallery, setGallery] = useState<null | "loading" | StoredPicture[]>(null);
 
   const editor = useEditor({
     // Next renders this component's tree on the server first; Tiptap needs a DOM. Without this,
@@ -110,24 +132,58 @@ export default function RichTextEditor({
         },
       }),
       /**
-       * Pictures between paragraphs (§72): a block, never inline, with the stored variant's
-       * size carried so the page reserves the space. The address comes from the upload route
-       * alone — there is no "paste a URL" path, because the server refuses any other.
+       * Pictures between paragraphs (§72, §73): a block, never inline, with the stored
+       * variant's size carried so the page reserves the space. The address comes from the
+       * upload route alone — there is no "paste a URL" path, and `parseHTML` is empty so a
+       * pasted `<img>` from another site is dropped here rather than refused at save time.
+       * The size is a share of the column, rendered here as the same inline width the page
+       * uses; the caption shows on hover and in the picture's own panel.
        */
       Image.configure({ inline: false, allowBase64: false }).extend({
+        parseHTML() {
+          return [];
+        },
         addAttributes() {
           return {
             src: { default: null },
             alt: { default: "" },
+            caption: {
+              default: "",
+              renderHTML: (attrs) => (attrs.caption ? { title: attrs.caption } : {}),
+            },
             width: { default: null },
             height: { default: null },
+            widthPercent: {
+              default: 100,
+              renderHTML: (attrs) => ({ style: `width: ${attrs.widthPercent ?? 100}%` }),
+            },
           };
         },
       }),
     ],
     content: initialDoc.content?.length ? initialDoc : EMPTY_DOC,
-    onUpdate: ({ editor: current }) => setValue(JSON.stringify(current.getJSON())),
+    // Selection changes must re-render too: the picture panel opens on a click, which changes
+    // the selection and nothing else (Tiptap 3 stops re-rendering on transactions by default).
+    shouldRerenderOnTransaction: true,
+    onUpdate: ({ editor: current }) => {
+      setValue(JSON.stringify(current.getJSON()));
+      setMissingAlt(countMissingAlt(current.getJSON()));
+    },
     editorProps: {
+      // A picture pasted or dropped as a *file* goes through the same upload as the control.
+      handlePaste: (_view, event) => {
+        const file = Array.from(event.clipboardData?.files ?? []).find((f) => f.type.startsWith("image/"));
+        if (!file) return false;
+        void insertImage(file);
+        return true;
+      },
+      handleDrop: (_view, event) => {
+        const file = Array.from(event.dataTransfer?.files ?? []).find((f) => f.type.startsWith("image/"));
+        if (!file) return false;
+        event.preventDefault();
+        void insertImage(file);
+        return true;
+      },
       attributes: {
         "aria-label": accessibleSuffix ? `${label} — ${accessibleSuffix}` : label,
         role: "textbox",
@@ -152,15 +208,59 @@ export default function RichTextEditor({
       const response = await fetch("/api/admin/media", { method: "POST", body });
       if (!response.ok) throw new Error(String(response.status));
       const uploaded = (await response.json()) as { src: string; width: number; height: number };
+      // The alt is empty, not the file name: "IMG_4021" is not what a screen reader should say,
+      // and an empty alt is what the nag under the editor counts.
       editor
         ?.chain()
         .focus()
-        .setImage({ src: uploaded.src, alt: file.name.replace(/\.[^.]+$/, ""), width: uploaded.width, height: uploaded.height } as never)
+        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100 } as never)
         .run();
       setImageState("idle");
     } catch {
       setImageState("failed");
     }
+  };
+
+  /**
+   * The selected picture, when one is: ProseMirror marks the node's own element, and that
+   * element is what the panel anchors to. Read on every render — the selection is state the
+   * editor owns, and `shouldRerenderOnTransaction` is what keeps this current.
+   */
+  const selectedImage = editor?.isActive("image")
+    ? (editor.view.dom.querySelector("img.ProseMirror-selectednode") as HTMLElement | null)
+    : null;
+  const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
+  // Without `.focus()`: the panel's own field keeps the caret, and the node stays selected.
+  const setImageAttr = (attrs: Record<string, unknown>) => editor?.chain().updateAttributes("image", attrs).run();
+
+  /**
+   * "Choose one already uploaded": the same list the pictures page shows, fetched when the
+   * control is pressed and never before — a page body is written far more often than a
+   * picture is reused, and the list is a request the editor would otherwise make on every load.
+   */
+  const openGallery = async () => {
+    if (gallery !== null) {
+      setGallery(null);
+      return;
+    }
+    setGallery("loading");
+    try {
+      const response = await fetch("/api/admin/media");
+      if (!response.ok) throw new Error(String(response.status));
+      const { assets } = (await response.json()) as { assets: StoredPicture[] };
+      setGallery(assets);
+    } catch {
+      setGallery([]);
+    }
+  };
+
+  const insertStored = (picture: StoredPicture) => {
+    editor
+      ?.chain()
+      .focus()
+      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100 } as never)
+      .run();
+    setGallery(null);
   };
 
   const applyLink = () => {
@@ -262,6 +362,12 @@ export default function RichTextEditor({
             }}
           />
           <Control
+            label={labels.imageFromGallery}
+            text="🖼…"
+            active={gallery !== null}
+            onClick={() => void openGallery()}
+          />
+          <Control
             label={labels.undo}
             text="↶"
             active={false}
@@ -279,6 +385,42 @@ export default function RichTextEditor({
           <Typography variant="body2" color={imageState === "failed" ? "error" : "text.secondary"} sx={{ px: 1, py: 0.5 }}>
             {imageState === "failed" ? labels.imageFailed : labels.imageUploading}
           </Typography>
+        )}
+
+        {gallery !== null && (
+          <Box sx={{ p: 1, borderBottom: 1, borderColor: "divider" }} data-testid="rich-text-gallery">
+            {gallery === "loading" ? (
+              <Typography variant="body2" color="text.secondary">
+                {labels.imageGalleryLoading}
+              </Typography>
+            ) : gallery.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                {labels.imageGalleryEmpty}
+              </Typography>
+            ) : (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, maxHeight: 260, overflowY: "auto" }}>
+                {gallery.map((picture) => (
+                  // A plain button around the thumbnail: the file name is its accessible name,
+                  // and 88px is a thumb-sized target.
+                  <Box
+                    key={picture.id}
+                    component="button"
+                    type="button"
+                    aria-label={picture.name}
+                    title={picture.name}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => insertStored(picture)}
+                    sx={{ p: 0, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "transparent", cursor: "pointer", overflow: "hidden", width: 88, height: 88 }}
+                  >
+                    <Box component="img" src={picture.thumb} alt="" width={88} height={88} sx={{ display: "block", width: 88, height: 88, objectFit: "cover" }} />
+                  </Box>
+                ))}
+              </Box>
+            )}
+            <Button color="inherit" size="small" onClick={() => setGallery(null)} sx={{ mt: 1 }}>
+              {labels.imageGalleryClose}
+            </Button>
+          </Box>
         )}
 
         {linkDraft !== null && (
@@ -329,6 +471,22 @@ export default function RichTextEditor({
               outline: "none",
               "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: -2 },
             },
+            // A picture is never wider than the column, here as on the page; the selected one
+            // is outlined so the panel beside it is plainly about *this* picture.
+            "& .tiptap img": {
+              display: "block",
+              maxWidth: "100%",
+              height: "auto",
+              mx: "auto",
+              my: 2,
+              borderRadius: 1,
+              cursor: "pointer",
+            },
+            "& .tiptap img.ProseMirror-selectednode": {
+              outline: 3,
+              outlineColor: "primary.main",
+              outlineOffset: 2,
+            },
             "& .tiptap p": { my: 1 },
             "& .tiptap h2": { fontSize: "1.25rem", mt: 3, mb: 1 },
             "& .tiptap h3": { fontSize: "1.0625rem", mt: 2, mb: 1 },
@@ -345,8 +503,99 @@ export default function RichTextEditor({
           <EditorContent editor={editor} />
         </Box>
       </Box>
+
+      {/* Dimmed, not a block: a picture without alt text is a page that still publishes, and
+          a sentence somebody reads before they save. */}
+      {missingAlt > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="rich-text-missing-alt">
+          {missingAlt === 1 ? labels.imageNoAltOne : labels.imageNoAltMany.replace("{count}", String(missingAlt))}
+        </Typography>
+      )}
+
+      {/*
+        The picture's own panel: click a picture, say what it shows, caption it, choose its
+        size, or remove it. Anchored to the picture and kept inside the viewport; it closes
+        when the selection moves anywhere else, and "Done" moves it past the picture.
+      */}
+      <Popper
+        open={Boolean(selectedImage)}
+        anchorEl={selectedImage}
+        placement="bottom-start"
+        modifiers={[{ name: "preventOverflow", options: { altAxis: true, padding: 8 } }]}
+        sx={{ zIndex: (theme) => theme.zIndex.modal }}
+      >
+        <Paper elevation={6} sx={{ p: 1.5, width: 320, maxWidth: "calc(100vw - 32px)" }} data-testid="rich-text-image-panel">
+          <Stack spacing={1.5}>
+            <TextField
+              size="small"
+              label={labels.imageAlt}
+              helperText={labels.imageAltHelp}
+              value={String(imageAttrs?.alt ?? "")}
+              autoFocus
+              onChange={(event) => setImageAttr({ alt: event.target.value })}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.preventDefault();
+              }}
+              slotProps={{ htmlInput: { maxLength: 300 } }}
+            />
+            <TextField
+              size="small"
+              label={labels.imageCaption}
+              value={String(imageAttrs?.caption ?? "")}
+              onChange={(event) => setImageAttr({ caption: event.target.value })}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.preventDefault();
+              }}
+              slotProps={{ htmlInput: { maxLength: 500 } }}
+            />
+            <Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                {labels.imageSize}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={Number(imageAttrs?.widthPercent ?? 100)}
+                onChange={(_event, percent: number | null) => {
+                  if (percent !== null) setImageAttr({ widthPercent: percent });
+                }}
+                aria-label={labels.imageSize}
+              >
+                {IMAGE_WIDTH_PERCENTS.map((percent) => (
+                  <ToggleButton key={percent} value={percent} sx={{ minWidth: 56, minHeight: 40 }}>
+                    {percent}%
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
+            <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
+              <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
+                {labels.imageRemove}
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  const to = editor?.state.selection.to ?? 0;
+                  editor?.chain().focus().setTextSelection(to).run();
+                }}
+              >
+                {labels.imageDone}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      </Popper>
     </Box>
   );
+}
+
+/** One stored picture, as `GET /api/admin/media` lists it. */
+type StoredPicture = { id: string; src: string; thumb: string; width: number; height: number; name: string };
+
+/** How many pictures the document holds with nothing for a screen reader to say. */
+function countMissingAlt(doc: unknown): number {
+  const content = (doc as { content?: { type?: string; attrs?: { alt?: unknown } }[] })?.content ?? [];
+  return content.filter((node) => node.type === "image" && !String(node.attrs?.alt ?? "").trim()).length;
 }
 
 /**

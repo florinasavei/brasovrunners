@@ -17,6 +17,7 @@ import {
   worstStatus,
 } from "@/modules/diagnostics/configuration";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
@@ -112,6 +113,7 @@ export default async function DevsPage({ params }: Props) {
     ),
   );
   const volume = await readEmailVolumeToday(db, now);
+  const pictures = await countMediaAssets(db, now);
 
   /** The value each configuration enum currently holds, for marking it in the list below. */
   const currentSetting: Record<string, string> = {
@@ -470,6 +472,16 @@ export default async function DevsPage({ params }: Props) {
                 : ""}
             </Typography>
           ))}
+          {/* The orphan sweep's own figure (`DECISIONS.md` §73): what it left. "Sweepable" is
+              what the next run takes, and after a run it reads zero. */}
+          <Typography variant="body2" color={pictures.sweepable > 0 ? "warning.main" : "text.primary"}>
+            {t("pictures", {
+              total: pictures.total,
+              unreferenced: pictures.unreferenced,
+              sweepable: pictures.sweepable,
+              days: ORPHAN_ASSET_DAYS,
+            })}
+          </Typography>
         </Stack>
       </Box>
     </Stack>

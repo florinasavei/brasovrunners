@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { mediaAssets } from "@/db/schema/gallery";
 import type { Database } from "@/db/types";
 import { processUploadedImage } from "./images";
-import { getStorage, objectKey } from "./storage";
+import { bodyImageSrc, getStorage, objectKey } from "./storage";
 
 /**
  * A picture for a body (BR-REQ-050-03 criterion 8, `DECISIONS.md` §72): uploaded from the
@@ -48,7 +48,7 @@ export async function uploadBodyImage<T extends Record<string, unknown>>(
 
   return {
     assetId: asset.id,
-    src: storage.publicUrl(objectKey(keyPrefix, "web")),
+    src: bodyImageSrc(objectKey(keyPrefix, "web")),
     width: processed.width,
     height: processed.height,
   };

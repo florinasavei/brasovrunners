@@ -47,6 +47,10 @@
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
+    "gatheringAt": "gather at {time}",
+    "raceStartAt": "start at {time}",
+    "when": "When",
+    "where": "Where",
     "raceStartTime": "Race start",
     "meetingPoint": "Meeting point",
     "openMap": "Open the map",
@@ -54,7 +58,7 @@
     "distance": "Distance",
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
-    "elevationM": "{m} m",
+    "elevationM": "{m} m climb",
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",
@@ -169,6 +173,7 @@
       "expired": "Expired",
       "declaration": "Declaration signed",
       "outboxHistory": "Email history",
+      "emailRejected": "Email rejected",
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",
       "new": "Add a registration",
@@ -294,6 +299,7 @@
       "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay."
     },
     "errors": {
+      "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
       "NOTHING_SELECTED": "You did not tick any registration.",
       "UNAUTHENTICATED": "Your session has ended. Sign in again.",
       "FORBIDDEN": "Your role does not allow this.",
@@ -753,7 +759,18 @@
       "redo": "Redo",
       "image": "Picture (upload from your phone or computer)",
       "imageUploading": "Uploading the picture…",
-      "imageFailed": "The picture could not be uploaded. Try a JPEG, PNG or WebP up to 6 MB; if this environment has no storage configured, /admin/tasks says how."
+      "imageFailed": "The picture could not be uploaded. Try a JPEG, PNG or WebP up to 6 MB; if this environment has no storage configured, /admin/tasks says how.",
+      "imageAlt": "What the picture shows (alt text)",
+      "imageAltHelp": "A sentence a screen reader says instead of the picture. Leave it empty only when the picture is decorative.",
+      "imageCaption": "Caption (optional, under the picture)",
+      "imageSize": "Width on a wide screen",
+      "imageRemove": "Remove the picture",
+      "imageDone": "Done",
+      "imageFromGallery": "Choose a picture already uploaded",
+      "imageGalleryLoading": "Loading the pictures…",
+      "imageGalleryEmpty": "No picture has been uploaded yet.",
+      "imageNoAltOne": "One picture has no alt text — click the picture to write it.",
+      "imageNoAltMany": "{count} pictures have no alt text — click each one to write it."
     },
     "pages": {
       "title": "Pages",
@@ -795,6 +812,25 @@
         "seoTitle": "SEO title",
         "seoDescription": "SEO description"
       }
+    },
+    "pictures": {
+      "title": "Pictures",
+      "intro": "Every picture uploaded — from the text editor and from albums — with where each one is used. A picture used nowhere for 7 days deletes itself; one in use cannot be deleted here until you take it out of the page, the event or the album.",
+      "linkFromGallery": "Pictures in texts, and where they are used →",
+      "empty": "No picture has been uploaded.",
+      "columnPicture": "Picture",
+      "columnName": "File",
+      "columnUploaded": "Uploaded",
+      "columnUsedIn": "Used in",
+      "unused": "Nowhere (deleted automatically after 7 days)",
+      "usedInAlbum": "Album: {title}",
+      "usedInPage": "Page: {title}",
+      "usedInEvent": "Event: {title}",
+      "untitled": "(untitled)",
+      "size": "{width}×{height} px, {kb} KB",
+      "delete": "Delete",
+      "deleteConfirm": "Delete the picture for good?",
+      "tableCaption": "Uploaded pictures, newest first"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -1124,6 +1160,7 @@
     }
   },
   "Devs": {
+    "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",
     "intro": "What is configured here and what is missing. Variable names and whether they have a value — never the value.",
     "environment": "Environment",

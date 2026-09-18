@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.36-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -543,7 +543,7 @@ other participant link uses — never by a password.
 
 **Acceptance criteria**
 
-1. Given `a.n.a@gmail.com` and `ana@gmail.com`, when both are canonicalized, then they produce the same canonical value.
+1. Given `a.n.a@gmail.com` and `ana@gmail.com`, when both are canonicalized, then they produce **different** canonical values (version 2, 2026-09-18, `DECISIONS.md` §74; version 1 collapsed them, and migration `0030` re-canonicalized every stored row).
 2. Given `ana+club@gmail.com` and `ana@gmail.com`, when both are canonicalized, then they produce the same canonical value.
 3. Given `ana@googlemail.com` and `ana@gmail.com`, when both are canonicalized, then they produce the same canonical value, while each participant's `normalized_email` keeps its submitted domain.
 4. Given `a.n.a@example.ro` and `ana@example.ro`, when both are canonicalized, then they produce different canonical values.
@@ -1087,12 +1087,14 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 7. Given a page address, when it is submitted, then it is lowercase letters, digits and hyphens, is not a reserved word, and is not already in use in that locale.
 8. Given published pages, when the public header renders, then each appears as a navigation entry in the order the club set, and when the sitemap is produced, then each published locale's address is listed.
 9. Given a Contributor, when they attempt to create or edit a page, then it is refused; given an Editor, then it is allowed.
-10. Given the rich-text editor — on a page or on an event's description — when a staff member presses the picture control and chooses a JPEG, PNG or WebP, then the browser shrinks it to at most 2000px, `POST /api/admin/media` stores it exactly as a gallery photo is stored (two WebP variants through the §17 adapter, one `media_assets` row naming who uploaded it), and the editor inserts an image block carrying the stored variant's address, size and an alt text; the schema refuses an image whose address is not one of this site's stored variants (a third party's image, a data URI); the page renders it as a lazy `<img>` sized by its stored dimensions; a picture is a block between paragraphs, never inline (2026-09-18, `DECISIONS.md` §72).
-10. Given the page editor, when a body is written, then headings, bold, italic, links, bulleted and numbered lists and quotations are available, each with a keyboard-reachable control carrying its own name; and when the page renders, it shows what the editor showed.
-11. Given a body posted to the server, when it contains any node, mark or attribute outside the allowlist of `AGENTS.md` §11.3 — or a link that is not http, https, mailto or a path on this site — then the save is refused, whatever produced it.
-10. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
+10. Given the rich-text editor — on a page, on an event's description or on its short description — when a staff member presses the picture control and chooses a JPEG, PNG or WebP (or pastes or drops one as a file), then the browser shrinks it to at most 2000px, `POST /api/admin/media` stores it exactly as a gallery photo is stored (two WebP variants through the §17 adapter, one `media_assets` row naming who uploaded it), and the editor inserts an image block carrying the stored variant's address and size, an empty alt and no caption; the schema refuses an image whose address is not one of this site's stored variants (a third party's image, a data URI, a pasted `<img>` from another site); the page renders it as a lazy `<img>` sized by its stored dimensions; a picture is a block between paragraphs, never inline (2026-09-18, `DECISIONS.md` §72).
+11. Given a picture in the editor, when it is clicked, then a panel beside it offers its alt text, an optional caption, one of four widths (100, 75, 50 or 33 percent of the text column on a wide screen; always the full width on a phone), removal, and the pictures already stored to choose from instead of uploading again; the page renders the caption as a `<figcaption>` and the width as the figure's; and while any picture in the body has no alt text, a dimmed sentence under the editor says how many — a sentence, never a block on saving (2026-09-18, `DECISIONS.md` §73).
+12. Given the page editor, when a body is written, then headings, bold, italic, links, bulleted and numbered lists and quotations are available, each with a keyboard-reachable control carrying its own name; and when the page renders, it shows what the editor showed.
+13. Given a body posted to the server, when it contains any node, mark or attribute outside the allowlist of `AGENTS.md` §11.3 — or a link that is not http, https, mailto or a path on this site — then the save is refused, whatever produced it.
+14. Given a stored picture referenced by no gallery item, no album cover and no body — a draft page or event counts as a reference — for more than seven days, when the registration-maintenance job runs, then its row and both objects are deleted, last in the run and in its own try/catch, and `/devs` shows how many pictures are stored, how many are used nowhere and how many the next run will take; given the pictures page (`/admin/gallery/pictures`), when an editorial role opens it, then every stored picture is listed with where it is used, each use a link to that page, event or album, and a picture in use cannot be deleted from there (2026-09-18, `DECISIONS.md` §73).
+15. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
 
-**Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; e2e `pages.spec.ts`
+**Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
 
 #### BR-REQ-054-01 — The photo gallery: albums on R2, light by construction
 

@@ -39,10 +39,15 @@ describe("BR-REQ-032-01 whitespace and case", () => {
 });
 
 describe("BR-REQ-032-02 Gmail dots and tags", () => {
-  it("treats dotted and undotted Gmail addresses as one inbox", () => {
-    expect(canonicalizeEmail("a.n.a@gmail.com").canonicalEmail).toBe(
+  it("keeps Gmail dots distinct since version 2 — two spellings, two participants", () => {
+    // `DECISIONS.md` §74: the club rehearses with dotted spellings of its own inbox.
+    expect(canonicalizeEmail("a.n.a@gmail.com").canonicalEmail).toBe("a.n.a@gmail.com");
+    expect(canonicalizeEmail("a.n.a@gmail.com").canonicalEmail).not.toBe(
       canonicalizeEmail("ana@gmail.com").canonicalEmail,
     );
+    // Still one inbox, which is what the delivery allowlist compares on.
+    expect(canonicalizeEmail("a.n.a@gmail.com").inboxEmail).toBe("ana@gmail.com");
+    expect(canonicalizeEmail("a.n.a@example.ro").inboxEmail).toBe("a.n.a@example.ro");
   });
 
   it("ignores a Gmail plus tag", () => {
@@ -82,8 +87,9 @@ describe("BR-REQ-032-02 Gmail dots and tags", () => {
     expect(canonicalizeEmail("a.n.a@notgmail.com").canonicalEmail).toBe("a.n.a@notgmail.com");
   });
 
-  it("strips the tag before the dots, so a dotted tag cannot leak through", () => {
+  it("strips the whole tag, dots inside it included", () => {
     expect(canonicalizeEmail("ana+my.club@gmail.com").canonicalEmail).toBe("ana@gmail.com");
+    expect(canonicalizeEmail("a.na+my.club@gmail.com").canonicalEmail).toBe("a.na@gmail.com");
   });
 });
 
@@ -92,7 +98,7 @@ describe("BR-REQ-032-04 versioning", () => {
     expect(canonicalizeEmail("ana@example.ro").canonicalizationVersion).toBe(
       CANONICALIZATION_VERSION,
     );
-    expect(CANONICALIZATION_VERSION).toBe(1);
+    expect(CANONICALIZATION_VERSION).toBe(2);
   });
 });
 

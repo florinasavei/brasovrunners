@@ -123,14 +123,19 @@ const blockquoteNode = z.object({
 });
 
 /**
- * A picture (AGENTS.md §11.3's "media-library image reference", `DECISIONS.md` §72): a block
- * of its own, never inline in a paragraph, so a page is text with pictures between paragraphs
- * rather than a layout. `src` is the address the upload route answered — one of this
- * application's own WebP variants, on the store's public host or the local `/api/media` route —
- * and nothing else: not a data URI, not a third party's image, not a page. `alt` is what a
- * screen reader says; empty means decorative. `width`/`height` are the variant's, so the page
- * reserves the space before the bytes arrive.
+ * A picture (AGENTS.md §11.3's "media-library image reference", `DECISIONS.md` §72, §73): a
+ * block of its own, never inline in a paragraph, so a page is text with pictures between
+ * paragraphs rather than a layout. `src` is the address the upload route answered — one of
+ * this application's own WebP variants, on the store's public host or the local `/api/media`
+ * route — and nothing else: not a data URI, not a third party's image, not a page. `alt` is
+ * what a screen reader says; empty means decorative, and it is empty until somebody writes it
+ * (a file name is not a description). `caption` is a sentence under the picture, visible to
+ * everybody. `width`/`height` are the variant's, so the page reserves the space before the
+ * bytes arrive; `widthPercent` is how much of the text column the picture takes on a wide
+ * screen — one of four sizes, never a free number, and always the full width on a phone.
  */
+export const IMAGE_WIDTH_PERCENTS = [100, 75, 50, 33] as const;
+export type ImageWidthPercent = (typeof IMAGE_WIDTH_PERCENTS)[number];
 const imageSrc = z
   .string()
   .trim()
@@ -147,8 +152,14 @@ const imageNode = z.object({
   attrs: z.object({
     src: imageSrc,
     alt: z.string().max(300).nullable().optional().transform((value) => value ?? ""),
+    caption: z.string().max(500).nullable().optional().transform((value) => value ?? ""),
     width: z.number().int().min(1).max(12_000).nullable().optional(),
     height: z.number().int().min(1).max(12_000).nullable().optional(),
+    widthPercent: z
+      .union([z.literal(100), z.literal(75), z.literal(50), z.literal(33)])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? 100),
   }),
 });
 
@@ -267,9 +278,9 @@ export function richTextToPlainText(doc: RichTextDoc): string {
           item.content.map((paragraph) => inline(paragraph.content)),
         );
       case "image":
-        // A picture's words are its alt text: what a screen reader says is what a search
-        // index may know. Decorative pictures contribute nothing.
-        return [block.attrs.alt];
+        // A picture's words are its alt text and its caption: what a screen reader says and
+        // what everybody reads beneath it. A decorative, uncaptioned picture contributes nothing.
+        return [block.attrs.alt, block.attrs.caption];
     }
   };
 
@@ -282,4 +293,20 @@ export function richTextToPlainText(doc: RichTextDoc): string {
 /** Whether there is anything to render — a body of empty paragraphs is still empty. */
 export function isRichTextEmpty(doc: RichTextDoc): boolean {
   return richTextToPlainText(doc).trim() === "";
+}
+
+/** A plain string read as a one-paragraph document — how a short description written before the editor is shown in it. */
+export function fromPlainText(text: string | null | undefined): RichTextDoc {
+  if (!text || text.trim() === "") return EMPTY_DOC;
+  return { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] };
+}
+
+/** Whether a body holds anything at all — words, or a picture with nothing said about it. */
+export function hasRichTextContent(doc: RichTextDoc): boolean {
+  return !isRichTextEmpty(doc) || (doc.content ?? []).some((block) => block.type === "image");
+}
+
+/** The pictures in a body that a screen reader would have nothing to say for. */
+export function countImagesWithoutAlt(doc: RichTextDoc): number {
+  return (doc.content ?? []).filter((block) => block.type === "image" && block.attrs.alt.trim() === "").length;
 }

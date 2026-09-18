@@ -106,6 +106,16 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.kind === "TEST" && (
           <Chip size="small" color="warning" label={tr("registrations.testKind")} />
         )}
+        {/* Mailgun bounced or the recipient complained (§76): the reason, so somebody calls. */}
+        {registration.emailRejectedReason && (
+          <Chip
+            size="small"
+            color="error"
+            variant="outlined"
+            label={`${tr("registrations.emailRejected")} — ${registration.emailRejectedReason}`}
+            data-testid="email-rejected"
+          />
+        )}
         {/* BR-REQ-037-05: a staff-entered row behaves exactly like any other, and says so. */}
         {registration.source === "STAFF" && (
           <Chip size="small" variant="outlined" label={tr("registrations.enteredByStaff")} />

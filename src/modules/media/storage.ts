@@ -151,6 +151,17 @@ export function getStorage(): Storage {
   }
 }
 
+/**
+ * The address a *body* carries for a stored variant (`rich-text/domain/schema.ts`): the
+ * store's own https address on R2, and a site-relative `/api/media/…` path in `local` and
+ * `fake` mode — a body is served from this site, so the path is right, and the schema accepts
+ * exactly those two shapes and no other (a `http://localhost` absolute would be refused).
+ */
+export function bodyImageSrc(key: string): string {
+  const url = getStorage().publicUrl(key);
+  return url.startsWith("https://") ? url : new URL(url).pathname;
+}
+
 /** For the task board and the uploader's empty state: can this environment take a photo? */
 export function isStorageConfigured(): boolean {
   return env.STORAGE_MODE !== "unconfigured";

@@ -8,6 +8,15 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.36-2026-09-18
+
+Race week: pictures finished, the facts made readable, and what the desk and the runner still needed.
+
+- **Pictures, finished.** Click a picture in the editor and a small panel beside it takes its **alt text** (empty until written — never the file name), an optional **caption** (a `<figcaption>` on the page), one of four **widths** (100/75/50/33 % of the text column on a wide screen; always the full width on a phone — a picture is a block, never two side by side), "remove", and **"choose one already uploaded"**. A picture can also be pasted or dropped as a file; a pasted `<img>` from another site is dropped. A dimmed sentence under the editor counts the pictures without alt text; it never blocks a save. **`/admin/gallery/pictures`** lists every stored picture with where it is used — each use a link to its page, event or album — and deletes one that is used nowhere. **The orphan sweep**: a picture referenced by no gallery item, cover or body (drafts count) for more than seven days is deleted with its objects, last in the registration-maintenance run, in its own try/catch; `/devs` shows the figures. **The short description is the editor too**, pictures included (`event_translations.excerpt_json`; the plain `excerpt` is derived on save for the card, the meta description and the JSON-LD). Migration `0029` (expand-only). BR-REQ-050-03 criteria 10, 11, 14; `DECISIONS.md` §73.
+- **Gmail dots are two addresses** (canonicalization **version 2**): `a.savei@gmail.com` and `asavei@gmail.com` are two participants now, so the club can rehearse a registration end to end from its own inbox; the plus tag still collapses, `googlemail` still folds into `gmail`. Migration `0030` re-canonicalizes every stored row. BR-REQ-032-02; `AGENTS.md` §10.4; `DECISIONS.md` §74.
+- **The facts of an event are three lines**: *Când* (the date, "întâlnire la 09:00 · start la 10:00"), *Unde* (the meeting point and the map), *Traseu* (distance, climb, difficulty, cost, the route, the Strava event) — instead of nine labelled rows. A listing card shows the same two lines without labels and ends with the state of registration. `DECISIONS.md` §75.
+- **Fixes.** The duration field refused 120 minutes (`step` counted from `min: 1`); any whole minute is a duration now. The stale toolbar in the editor: bold and the rest now light up on a selection change, not only on a keystroke.
+
 ## BR-V1.35-2026-09-18
 
 Race day, the way a real race works — and the one figure that would have taken the site down.

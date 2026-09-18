@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import type { PublicEvent } from "../repository";
+import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import RegistrationCta from "./RegistrationCta";
 import { fadeIn } from "@/theme/motion";
@@ -71,11 +72,7 @@ export default async function FeaturedEventHero({
         {event.title}
       </Typography>
 
-      {event.excerpt && (
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-          {event.excerpt}
-        </Typography>
-      )}
+      <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       <EventFacts event={event} now={now} />
 

@@ -17,6 +17,7 @@ import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
@@ -109,6 +110,7 @@ export default async function PreviewEventPage({ params }: Props) {
     slug: translation.slug,
     title: translation.title,
     excerpt: translation.excerpt,
+    excerptJson: translation.excerptJson,
     bodyJson: translation.bodyJson,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
@@ -131,11 +133,7 @@ export default async function PreviewEventPage({ params }: Props) {
         {preview.title}
       </Typography>
 
-      {preview.excerpt && (
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          {preview.excerpt}
-        </Typography>
-      )}
+      <EventExcerpt excerptJson={preview.excerptJson} excerpt={preview.excerpt} />
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} />

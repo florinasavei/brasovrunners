@@ -105,6 +105,8 @@ export const routing = defineRouting({
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
     "/admin/gallery/new": "/admin/gallery/new",
+    /** Every stored picture and where it is used (`DECISIONS.md` §73). */
+    "/admin/gallery/pictures": "/admin/gallery/pictures",
     "/admin/gallery/[id]": "/admin/gallery/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },

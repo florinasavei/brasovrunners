@@ -47,6 +47,10 @@
     "date": "Data",
     "startTime": "Ora de start",
     "gatheringTime": "Ora de întâlnire",
+    "gatheringAt": "întâlnire la {time}",
+    "raceStartAt": "start la {time}",
+    "when": "Când",
+    "where": "Unde",
     "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
     "openMap": "Vezi pe hartă",
@@ -54,7 +58,7 @@
     "distance": "Distanță",
     "distanceKm": "{km} km",
     "elevation": "Diferență de nivel",
-    "elevationM": "{m} m",
+    "elevationM": "{m} m urcare",
     "difficulty": "Dificultate",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -169,6 +173,7 @@
       "expired": "Expirată",
       "declaration": "Declarație semnată",
       "outboxHistory": "Istoric email",
+      "emailRejected": "Email respins",
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",
       "new": "Adaugă o înscriere",
@@ -294,6 +299,7 @@
       "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
     },
     "errors": {
+      "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
@@ -753,7 +759,18 @@
       "redo": "Refă",
       "image": "Imagine (încarcă din telefon sau calculator)",
       "imageUploading": "Se încarcă imaginea…",
-      "imageFailed": "Imaginea nu a putut fi încărcată. Încearcă un JPEG, PNG sau WebP de până la 6 MB; dacă mediul nu are spațiu de stocare configurat, /admin/tasks spune cum."
+      "imageFailed": "Imaginea nu a putut fi încărcată. Încearcă un JPEG, PNG sau WebP de până la 6 MB; dacă mediul nu are spațiu de stocare configurat, /admin/tasks spune cum.",
+      "imageAlt": "Ce arată imaginea (text alternativ)",
+      "imageAltHelp": "O propoziție pe care un cititor de ecran o rostește în locul imaginii. Lasă gol doar dacă imaginea este decorativă.",
+      "imageCaption": "Legendă (opțional, sub imagine)",
+      "imageSize": "Lățime pe ecran lat",
+      "imageRemove": "Șterge imaginea",
+      "imageDone": "Gata",
+      "imageFromGallery": "Alege o imagine deja încărcată",
+      "imageGalleryLoading": "Se încarcă imaginile…",
+      "imageGalleryEmpty": "Nu există nicio imagine încărcată încă.",
+      "imageNoAltOne": "O imagine nu are text alternativ — apasă pe imagine ca să-l scrii.",
+      "imageNoAltMany": "{count} imagini nu au text alternativ — apasă pe fiecare ca să-l scrii."
     },
     "pages": {
       "title": "Pagini",
@@ -795,6 +812,25 @@
         "seoTitle": "Titlu SEO",
         "seoDescription": "Descriere SEO"
       }
+    },
+    "pictures": {
+      "title": "Imagini",
+      "intro": "Toate imaginile încărcate — din editorul de text și din albume — cu locul unde este folosită fiecare. O imagine nefolosită nicăieri timp de 7 zile se șterge singură; una folosită nu poate fi ștearsă de aici până nu o scoți din pagină, din eveniment sau din album.",
+      "linkFromGallery": "Imaginile din texte și unde sunt folosite →",
+      "empty": "Nu există nicio imagine încărcată.",
+      "columnPicture": "Imagine",
+      "columnName": "Fișier",
+      "columnUploaded": "Încărcată",
+      "columnUsedIn": "Folosită în",
+      "unused": "Nicăieri (se șterge automat după 7 zile)",
+      "usedInAlbum": "Album: {title}",
+      "usedInPage": "Pagină: {title}",
+      "usedInEvent": "Eveniment: {title}",
+      "untitled": "(fără titlu)",
+      "size": "{width}×{height} px, {kb} KB",
+      "delete": "Șterge",
+      "deleteConfirm": "Ștergi imaginea definitiv?",
+      "tableCaption": "Imaginile încărcate, cele mai noi primele"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -1124,6 +1160,7 @@
     }
   },
   "Devs": {
+    "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",
     "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",
     "environment": "Mediu",

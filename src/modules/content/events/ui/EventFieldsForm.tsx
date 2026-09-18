@@ -145,7 +145,9 @@ export default async function EventFieldsForm({
             ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000)
             : ""
         }
-        slotProps={{ htmlInput: { min: 1, max: 7 * 24 * 60, step: 5 } }}
+        // `step` is measured from `min`, so `min: 1, step: 5` made 120 invalid ("the two
+        // nearest valid values are 116 and 121"). Any whole minute is a duration.
+        slotProps={{ htmlInput: { min: 1, max: 7 * 24 * 60, step: 1 } }}
         inputMode="numeric"
         sx={{ width: 220 }}
       />

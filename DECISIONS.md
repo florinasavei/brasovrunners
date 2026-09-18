@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -4102,3 +4102,124 @@ the cost is a few hundred kilobytes per forgotten picture. The gallery stays as 
 is made to use it.
 
 Baseline `BR-V1.35-2026-09-18`.
+
+## 73. Decided — a picture has words, a caption, a size and a home; a picture nobody uses is swept; the short description is a body too (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-03 criteria 10, 11, 14; `rich-text/domain/schema.ts`
+(`caption`, `widthPercent`, `fromPlainText`), `rich-text/ui/RichTextEditor.tsx` (the picture
+panel, the stored-pictures picker, paste and drop), `rich-text/ui/RichText.tsx`
+(`<figcaption>`, the figure's width), `media/references.ts`, `/admin/gallery/pictures`,
+`event_translations.excerpt_json`, migration `0029` (expand-only).
+
+§72 shipped a picture with the file name as its alt, no caption, no way to size it, no way to
+see it again and no way to get rid of it. The owner's three asks the same afternoon: "I should
+be able to resize pictures"; "I don't see these uploaded pictures in the gallery so I can
+review and delete them — I need to know what picture and where it's used"; "in the short
+description I should be able to add pictures"; and the brief asked for alt and caption, the
+orphan sweep, and a nag rather than a block for a missing alt.
+
+**Words.** A click on a picture opens a small panel beside it: the alt text (empty until
+written — "IMG_4021" is not what a screen reader should say, so the file name is no longer
+the default), an optional caption rendered as `<figcaption>` under the picture, one of four
+widths, "remove", and "done". While any picture in the body has no alt, a dimmed sentence
+under the editor counts them; it never blocks a save, because a page with a picture that lacks
+a description is still a better page than the one the organizer gave up on.
+
+**Size.** Four shares of the text column — 100, 75, 50, 33 — rather than a drag handle or a
+free number: a drag handle is a node view and a dependency, and a free number is a layout
+tool, which §72 said a page is not. On a phone every picture is the full width whatever was
+chosen, and a picture is a block in the flow, never floated, so two pictures are never side by
+side. The editor shows the same width the page will.
+
+**Home.** `/admin/gallery/pictures` lists every stored picture — thumbnail, file, size, when
+and by whom — with every place it is used, each a link to that page, event or album, and
+offers "choose one already uploaded" from the editor's own picture control so a picture is
+stored once and used twice. A picture in use cannot be deleted from the list: the page it is on
+would show a broken image. One SQL predicate answers "is it referenced" for the list, the
+delete and the sweep — a gallery item, an album cover, a page body, an event body or excerpt,
+**drafts included** — so the three can never disagree.
+
+**Swept.** `media_assets.last_referenced_at`, set at upload and advanced by the sweep while a
+reference exists. A picture nothing has referenced for seven days, and that is at least seven
+days old, is deleted with its objects — last in the registration-maintenance run, in its own
+try/catch, row first with the reference re-checked in the same statement, then the objects,
+exactly as the gallery deletes a photo. Seven days from *last seen referenced*, not from
+upload: a picture removed from a body today can still be put back tomorrow, and a picture
+uploaded into an editor that is saved next week is not an orphan. `/devs` shows the figures;
+after a run, "to be deleted on the next run" reads zero.
+
+**The short description.** It was a plain textarea; it is the same editor now, pictures
+included, stored as `excerpt_json`. The plain `excerpt` column stays and is *derived* on save
+— the words of the rich excerpt, pictures left out, cut at 500 — because the listing card, the
+meta description, the JSON-LD and the publish check all read a string, and a card that is one
+big link cannot contain the links a body may. So the hero and the event page render the rich
+excerpt, the card shows its words, and an event written before this reads its plain text as a
+one-paragraph document. No migration of rows: `excerpt_json` is null until the editor saves
+it.
+
+**Refused.** A migration rewriting old bodies to carry the new attributes (the schema
+defaults them on read). Pasting a picture by URL (§72's rule stands: a body fetches from the
+club's store and nowhere else, and the editor now drops a pasted `<img>` outright rather than
+letting the server refuse it at save time). Deleting a referenced picture with a warning: a
+warning nobody reads is a broken page nobody meant.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 74. Decided — Gmail dots are two addresses now; the plus tag is still one (canonicalization version 2, 2026-09-18)
+
+**Status:** Decided and built. BR-REQ-032-02 criterion 1 reversed; AGENTS.md §10.4;
+`participants/domain/canonical-email.ts` (`CANONICALIZATION_VERSION = 2`); migration `0030`
+(a backfill, expand-only).
+
+The owner: "I want to allow the same Gmail account if I have for example
+`asavei.florin@gmail.com` and `a.saveiflorin@gmail.com` — not many people know about this
+hack, so we should allow it; this will help me test the app receives email." Version 1
+collapsed Gmail dots because Gmail delivers every dotted spelling to one inbox, and one inbox
+should be one runner. That is still true, and it is exactly what makes the dotted spellings
+useful: they are the only way one person gets several distinct identities that all land in the
+club's own inbox, which is how a registration is rehearsed end to end on QA — the verification
+link, the declaration, the confirmation with its QR — without asking friends for addresses.
+
+The plus tag still collapses. It is the trick everybody knows, and BR-REQ-032-02 exists so
+that one person cannot enter a full race twice from one inbox; a dotted spelling is a
+deliberate act few people know of, and the club accepts that risk for the rehearsal it buys.
+`googlemail.com` still collapses to `gmail.com`. Nothing else in §10.4 changed — except that
+the QA delivery allowlist (`EMAIL_DELIVERY_MODE=allowlist`) now compares on `inboxEmail`, the
+canonical value with the dots removed as well, because what it guards is *whose inbox* may
+receive mail, and the dotted spellings are that inbox. Otherwise the rehearsal would have
+minted the identities and captured every one of their messages.
+
+Versioned as §10.4 requires: the constant is 2, every row records it, and migration `0030`
+re-canonicalizes every version-1 row from the delivery address it stored — keeping dots can
+only separate values, never merge them, so the unique constraint cannot trip — rather than
+leaving old rows at version 1 and letting a returning runner become two people. There were no
+real participants anywhere when this ran (production refuses every registration until the
+club's legal texts exist), so the backfill cost nothing and the rule is one rule.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 75. Decided — the facts of an event are three lines, not nine rows (2026-09-18)
+
+**Status:** Decided and built. `events/ui/EventFacts.tsx`.
+
+The owner, with a screenshot of the nine-row table — date, gathering time, race start,
+meeting point, distance, climb, difficulty, cost, registration: "these details should be
+better organised. THE UX MUST BE SIMPLE AND EASY!" The rows were correct and unreadable: a
+reader scanned top to bottom to answer "when and where do I show up", which is the whole
+question.
+
+So the same facts are grouped by the question they answer, each line a row of short pieces
+separated by a middle dot, and the labels are the questions. *Când*: the date, then "întâlnire
+la 09:00 · start la 10:00" for a race and one time for anything else. *Unde*: the meeting
+point and the map link. *Traseu*: distance, climb ("180 m urcare" — a number alone said
+nothing), difficulty, cost, the route link, the Strava event. Still a `<dl>`, so a screen
+reader hears the question before the answer; the separators are hidden from it. On a listing
+card the same two lines carry no labels and end with the state of registration, because a card
+has no button to say it; on the page the button says it, and the facts mention registration
+only for an event that has none — "no registration needed" is worth one sentence.
+
+Fixed with it: the duration field refused 120 minutes ("the two nearest valid values are 116
+and 121") because `step` counts from `min`, and `min` was 1 with a step of 5. Any whole minute
+is a duration now.
+
+Baseline `BR-V1.36-2026-09-18`.

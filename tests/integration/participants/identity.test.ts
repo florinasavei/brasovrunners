@@ -40,7 +40,7 @@ describe("BR-REQ-032 the database enforces one participant per canonical email",
     expect(row.deliveryEmail).toBe("Ana.Pop@Example.RO");
     expect(row.normalizedEmail).toBe("ana.pop@example.ro");
     expect(row.canonicalEmail).toBe("ana.pop@example.ro");
-    expect(row.canonicalizationVersion).toBe(1);
+    expect(row.canonicalizationVersion).toBe(2);
     expect(row.emailVerifiedAt).toBeNull();
     expect(row.preferredLocale).toBe("ro");
   });
@@ -52,11 +52,11 @@ describe("BR-REQ-032 the database enforces one participant per canonical email",
     });
   });
 
-  it("refuses a dotted Gmail alias of an existing participant", async () => {
+  it("allows a dotted Gmail spelling beside an existing participant (version 2, `DECISIONS.md` §74)", async () => {
     await db.insert(participants).values(rowFor("ana@gmail.com"));
-    await expectViolation(db.insert(participants).values(rowFor("a.n.a@gmail.com")), {
-      code: SQLSTATE.UNIQUE_VIOLATION,
-    });
+    const [second] = await db.insert(participants).values(rowFor("a.n.a@gmail.com", "Ana Pop")).returning();
+    expect(second.canonicalEmail).toBe("a.n.a@gmail.com");
+    expect(second.canonicalizationVersion).toBe(2);
   });
 
   it("refuses a plus-tagged Gmail alias of an existing participant", async () => {
