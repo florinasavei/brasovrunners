@@ -708,7 +708,7 @@
         },
         "minorsOnline": {
           "title": "A parent registering a minor, online",
-          "todo": "The terms and the declaration already say a parent/guardian registers the child and signs for them; the form has nothing yet that makes it explicit. To build: on the form, when the birth date gives under 18, a section “I am the parent/guardian” with the parent's name and identity document; the declaration filled with “as parent of {{participant}}”; the kit handed to the parent.",
+          "todo": "The terms and the declaration already say a parent/guardian registers the child and signs for them; the form has nothing yet that makes it explicit. To build: on the form, when the birth date gives under 18, a section “I am the parent/guardian” with the parent's name and identity document; the declaration filled with “as parent of '{{participant}}'”; the kit handed to the parent.",
           "done": "A parent can register a child online, with the declaration signed on the child's behalf.",
           "how": [
             "fields.ts: guardianName, guardianIdDocument (required when birthDate < 18 at the event's date).",

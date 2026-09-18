@@ -27,7 +27,9 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? "github" : "list",
+  // The HTML report is what the failure artifact uploads; "github" alone writes nothing to
+  // disk, which is why the first failing runs had "no valid artifacts" and no trace to read.
+  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
 
   use: {
     baseURL,

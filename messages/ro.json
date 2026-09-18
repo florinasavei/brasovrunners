@@ -708,7 +708,7 @@
         },
         "minorsOnline": {
           "title": "Înscrierea unui minor de către părinte, online",
-          "todo": "Termenii și declarația spun deja că un părinte/tutore înscrie copilul și semnează pentru el; formularul nu are încă nimic care să o facă explicit. De construit: pe formular, când data nașterii dă sub 18 ani, o secțiune „Sunt părintele/tutorele” cu numele și actul de identitate ale părintelui; declarația completată cu „în calitate de părinte al {{participant}}”; kitul se predă părintelui.",
+          "todo": "Termenii și declarația spun deja că un părinte/tutore înscrie copilul și semnează pentru el; formularul nu are încă nimic care să o facă explicit. De construit: pe formular, când data nașterii dă sub 18 ani, o secțiune „Sunt părintele/tutorele” cu numele și actul de identitate ale părintelui; declarația completată cu „în calitate de părinte al '{{participant}}'”; kitul se predă părintelui.",
           "done": "Un părinte poate înscrie un copil online, cu declarația semnată în numele lui.",
           "how": [
             "fields.ts: guardianName, guardianIdDocument (cerute când birthDate < 18 ani la data evenimentului).",
