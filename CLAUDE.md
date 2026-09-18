@@ -378,6 +378,12 @@ invites people is itself behind the sign-in it would be granting.
 6. ~~Neon keys~~ — done 2026-09-18 evening: a project-scoped key on each Vercel project,
    `/devs` shows the database's month on both. Still optional: a custom domain for the R2
    bucket; the retention and support decisions of `SETUP.md` §30.
+7. **The anti-bot check** (Cloudflare Turnstile, `DECISIONS.md` §97): a widget in the club's
+   Cloudflare account, then `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` on both Vercel
+   projects. Off until then; `/admin/tasks` shows the row with the steps.
+8. **The three legal texts** approved on production from the platform's templates
+   (`/admin/legal` → New version → "start from the platform's text", four facts to fill) —
+   the same item as 4, with the texts now written.
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 

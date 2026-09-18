@@ -695,6 +695,76 @@
             "Un singur eveniment poate fi „principal” — el deschide prima pagină. Anul viitor: „Duplică” pe cel de anul acesta."
           ]
         },
+        "botCheck": {
+          "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
+          "todo": "Formularul de înscriere are deja un câmp-capcană și o verificare a timpului de completare, care opresc roboții simpli. Turnstile — captcha-ul Cloudflare, gratuit, de obicei fără niciun puzzle — oprește și restul. Este oprit până când există cele două chei; nimic nu se schimbă între timp.",
+          "done": "Formularul de înscriere are verificarea anti-bot pornită.",
+          "how": [
+            "Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
+            "Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
+            "În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
+            "Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
+          ]
+        },
+        "clubMailbox": {
+          "title": "Căsuța de email a clubului (Zoho Mail, gratuit)",
+          "todo": "Mesajele către adresa de contact ajung acum, prin Mailgun, în Gmail-ul organizatorului. Clubul are nevoie de propria căsuță pe domeniul lui: Zoho Mail Free (domeniu propriu, până la 5 utilizatori, web și aplicație; fără IMAP pe gratuit). Alternative plătite ieftine: Migadu (~19 €/an), Purelymail (~10 $/an).",
+          "done": "Clubul are propria căsuță de email pe domeniul lui.",
+          "how": [
+            "Zoho Mail → Business email → planul Free (Forever Free) → adaugă domeniul clubului; verifică-l prin înregistrarea TXT din panoul DNS de la ROMARG.",
+            "Adaugă înregistrările MX/SPF/DKIM pe care le arată Zoho pentru domeniul principal (Mailgun rămâne pe subdomeniul mail. — nu se ating înregistrările lui).",
+            "Creează căsuța contact@ (și, dacă vrei, una pe voluntar). În Mailgun → Receiving → ruta „contact@mail.” → destinația devine noua căsuță.",
+            "În Vercel: EMAIL_REPLY_TO = noua adresă. Apoi, în /admin/legal, versiunea următoare a notei de confidențialitate fără propoziția despre Gmail (secțiunea „Cine mai vede datele”)."
+          ]
+        },
+        "minorsOnline": {
+          "title": "Înscrierea unui minor de către părinte, online",
+          "todo": "Termenii și declarația spun deja că un părinte/tutore înscrie copilul și semnează pentru el; formularul nu are încă nimic care să o facă explicit. De construit: pe formular, când data nașterii dă sub 18 ani, o secțiune „Sunt părintele/tutorele” cu numele și actul de identitate ale părintelui; declarația completată cu „în calitate de părinte al {{participant}}”; kitul se predă părintelui.",
+          "done": "Un părinte poate înscrie un copil online, cu declarația semnată în numele lui.",
+          "how": [
+            "fields.ts: guardianName, guardianIdDocument (cerute când birthDate < 18 ani la data evenimentului).",
+            "Formularul: secțiunea apare când data nașterii dă minor; declarația (merge-fields) primește {{guardian}}; PDF-ul și rândul de la masă arată părintele.",
+            "Test de integrare pe lifecycle + un e2e; §-ul de decizie; criteriu în BR-REQ-031-04."
+          ]
+        },
+        "scheduleStructured": {
+          "title": "Programul evenimentului ca date (ore), nu doar text",
+          "todo": "Programul e acum text liber pe fiecare limbă (secțiunea „Program” din pagina evenimentului). Pentru o cursă mare ar merita rânduri structurate — ora, ce se întâmplă, unde — ca să apară la fel pe pagină, în emailuri și în calendarul din telefon (fișier .ics).",
+          "done": "Programul are rânduri cu ore și se poate adăuga în calendarul telefonului.",
+          "how": [
+            "Schemă: tabelă event_schedule_items (event_id, starts_at, ends_at?, label pe limbi, place) — sau JSON structurat pe eveniment.",
+            "Editor: rânduri „ora + text + loc”, în ordine; pagina le afișează ca o listă cu ore; emailul de reminder le trimite.",
+            "Un fișier .ics per eveniment (link „Adaugă în calendar”) generat din aceste rânduri."
+          ]
+        },
+        "declarationArchiveMail": {
+          "title": "Declarațiile semnate trimise automat și în arhiva clubului",
+          "todo": "Fiecare participant primește declarația semnată pe email, iar clubul le descarcă pe toate dintr-un PDF de pe pagina evenimentului. Când clubul are căsuța lui, fiecare declarație semnată poate ajunge automat și acolo, ca atașament — arhiva se face singură.",
+          "done": "Fiecare declarație semnată ajunge automat și în căsuța de arhivă a clubului.",
+          "how": [
+            "Variabilă DECLARATIONS_ARCHIVE_TO (căsuța clubului). Când e setată, la semnare se pune în coadă un al doilea DECLARATION_SIGNED către ea, cu același PDF atașat.",
+            "Depinde de căsuța clubului (rândul de mai sus); un Gmail personal nu e un loc de arhivă conform GDPR."
+          ]
+        },
+        "vercelUsage": {
+          "title": "Consumul Vercel în cifre, pe /devs",
+          "todo": "/devs arată deploy-ul curent și trimite la panoul Vercel → Usage; cifra nu poate fi citită de aplicație pe planul Hobby fără un token al contului. De făcut când merită: un token Vercel (read-only) în variabile și un apel la API-ul de usage, cu aceleași praguri ca la Neon.",
+          "done": "/devs arată consumul Vercel al lunii, cu prag de avertizare.",
+          "how": [
+            "Vercel → Account → Tokens → token read-only; VERCEL_API_TOKEN + VERCEL_TEAM_ID în variabile.",
+            "diagnostics/vercel.ts după modelul neon.ts; rând pe /devs și pe /admin/tasks (§ platform-plans)."
+          ]
+        },
+        "docsSimplify": {
+          "title": "Documentația scurtată (SETUP, RUNBOOKS, CLAUDE)",
+          "todo": "Documentele din repo au crescut în ritmul deciziilor. docs/VIBECODING.md e pagina scurtă; restul merită o trecere de simplificare: fiecare document să spună o dată ce e de făcut, cu valorile la vedere, iar istoricul să stea în DECISIONS.",
+          "done": "Fiecare document din repo e scurt și spune o dată ce e de făcut.",
+          "how": [
+            "SETUP.md: doar procedurile încă valabile, cu valorile; ce s-a făcut o dată trece în CHANGELOG/DECISIONS.",
+            "CLAUDE.md: secțiunea „Ce există acum” înlocuită cu trimiteri la §-urile din DECISIONS.",
+            "docs:check rămâne verde; MANIFEST/README actualizate."
+          ]
+        },
         "roDomain": {
           "title": "Domeniul .ro, peste un an",
           "todo": "Hotărât pe 16 septembrie 2026: .com acum, .ro la un an, amândouă active în același timp (12 EUR + TVA pe an la ROTLD). Nu blochează nimic; se bifează singur când site-ul răspunde pe .ro.",

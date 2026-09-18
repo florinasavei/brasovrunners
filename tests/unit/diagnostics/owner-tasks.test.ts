@@ -23,6 +23,7 @@ const LAUNCHED: OwnerTaskInputs = {
   publishedEventCount: 4,
   roDomainBound: true,
   storageConfigured: true,
+  botCheckConfigured: true,
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -30,7 +31,10 @@ const stateOf = (input: OwnerTaskInputs, id: string) =>
 
 describe("owner tasks", () => {
   it("says nothing is blocking once everything is really in place", () => {
-    expect(ownerTasks(LAUNCHED).every((task) => task.state === "done")).toBe(true);
+    const tasks = ownerTasks(LAUNCHED);
+    expect(tasks.some((task) => task.state === "blocking")).toBe(false);
+    // The club's rows are all done; the developer's queued work stays open by design (§97).
+    expect(tasks.filter((task) => task.owner === "club").every((task) => task.state === "done")).toBe(true);
   });
 
   it("treats sample legal text as blocking, not as done", () => {
@@ -89,6 +93,12 @@ describe("owner tasks", () => {
     // a photo, and a checklist somebody ticks would not know that.
     expect(stateOf({ ...LAUNCHED, storageConfigured: false }, "mediaStorage")).toBe("open");
     expect(stateOf(LAUNCHED, "mediaStorage")).toBe("done");
+    // The queued work: developer-owned, always open, after the club's rows.
+    const developer = ownerTasks(LAUNCHED).filter((task) => task.owner === "developer").map((task) => task.id);
+    expect(developer).toEqual(["scheduler", "clubMailbox", "minorsOnline", "scheduleStructured", "declarationArchiveMail", "vercelUsage", "docsSimplify"]);
+    // The bot check is a switch the club flips (§97): open without the keys, never blocking.
+    expect(stateOf({ ...LAUNCHED, botCheckConfigured: false }, "botCheck")).toBe("open");
+    expect(stateOf(LAUNCHED, "botCheck")).toBe("done");
   });
 
   it("leaves every task but the scheduler to the club", () => {
@@ -99,6 +109,7 @@ describe("owner tasks", () => {
       "inviteStaff",
       "publishEvents",
       "mediaStorage",
+      "botCheck",
       "roDomain",
     ]);
   });

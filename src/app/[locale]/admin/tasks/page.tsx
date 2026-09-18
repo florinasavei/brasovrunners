@@ -178,6 +178,7 @@ export default async function AdminTasksPage({ params }: Props) {
       publishedEventCount,
       roDomainBound,
       storageConfigured: isStorageConfigured(),
+      botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
     }),
   );
 

@@ -4873,4 +4873,13 @@ is registered by a parent, who signs for them — the declaration says so in its
 `docs/VIBECODING.md`: the loop, where things live, adding a field end to end, the rules that
 bite — one page, first in the read order. `CLAUDE.md` stays the long form.
 
+**The queue, on the board.** "Add them in the TODO section — basically all the queued work,
+so I can continue tomorrow." `/admin/tasks` now carries the Turnstile row for the club (open
+until the two keys exist) and, developer-owned and open by design, the work asked for and not
+built: the club's mailbox (Zoho Mail Free, then the notice's Gmail sentence goes), a parent
+registering a minor online, the programme as timed rows with an `.ics`, each signed
+declaration sent to a club archive mailbox too, Vercel usage in figures, the documentation
+shortened. Static rows (`BACKLOG` in `owner-tasks.ts`) with the plan as their steps; whoever
+finishes one removes it there and writes the §.
+
 Baseline `BR-V1.38-2026-09-18`.

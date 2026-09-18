@@ -75,6 +75,8 @@ export type OwnerTaskInputs = {
    * always can — disk and memory — which is why the task can only be open on QA or production.
    */
   storageConfigured: boolean;
+  /** Are both Turnstile keys set (`DECISIONS.md` §97)? Off, the honeypot and the timing check stand alone. */
+  botCheckConfigured: boolean;
   /**
    * Does this deployment answer on a `.ro` hostname?
    *
@@ -155,6 +157,14 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.storageConfigured ? "done" : "open",
   });
 
+  // Not blocking either: the form already refuses the dumb bots. Open until the two keys exist,
+  // because a race that opens entries to a hundred people is when the other kind shows up (§97).
+  tasks.push({
+    id: "botCheck",
+    owner: "club",
+    state: input.botCheckConfigured ? "done" : "open",
+  });
+
   // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.
   tasks.push({
     id: "roDomain",
@@ -162,8 +172,26 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.roDomainBound ? "done" : "open",
   });
 
+  /**
+   * The queued work (the owner, 2026-09-18: "all the queued work, so I can continue
+   * tomorrow"): what was asked and not built yet, or built without the last mile. Static and
+   * open — nothing in the system can tell when they are done; whoever finishes one removes it
+   * here and records it in `DECISIONS.md`. Developer-owned, so they sort after the club's.
+   */
+  for (const id of BACKLOG) tasks.push({ id, owner: "developer", state: "open" });
+
   return tasks;
 }
+
+/** In the order to take them. Each has its title, its "why" and its steps in `Admin.tasks.items`. */
+export const BACKLOG = [
+  "clubMailbox",
+  "minorsOnline",
+  "scheduleStructured",
+  "declarationArchiveMail",
+  "vercelUsage",
+  "docsSimplify",
+] as const;
 
 /** Blocking first, then open, then done — the order somebody scanning the page needs. */
 export function sortTasks(tasks: OwnerTask[]): OwnerTask[] {

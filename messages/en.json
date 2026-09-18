@@ -695,6 +695,76 @@
             "Only one event can be “featured” — it opens the home page. Next year: “Duplicate” this year's."
           ]
         },
+        "botCheck": {
+          "title": "The anti-bot check on registration (Cloudflare Turnstile)",
+          "todo": "The registration form already has a trap field and a fill-time check, which stop the simple bots. Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest. It is off until the two keys exist; nothing changes meanwhile.",
+          "done": "The registration form has the anti-bot check on.",
+          "how": [
+            "Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
+            "Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
+            "In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
+            "Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
+          ]
+        },
+        "clubMailbox": {
+          "title": "The club's own mailbox (Zoho Mail, free)",
+          "todo": "Messages to the contact address currently reach the organiser's Gmail through Mailgun. The club needs a mailbox on its own domain: Zoho Mail Free (custom domain, up to 5 users, web and app; no IMAP on the free plan). Cheap paid alternatives: Migadu (~€19/year), Purelymail (~$10/year).",
+          "done": "The club has its own mailbox on its own domain.",
+          "how": [
+            "Zoho Mail → Business email → the Free (Forever Free) plan → add the club's domain; verify it with the TXT record in the ROMARG DNS panel.",
+            "Add the MX/SPF/DKIM records Zoho shows for the main domain (Mailgun stays on the mail. subdomain — its records are not touched).",
+            "Create contact@ (and one per volunteer if you like). In Mailgun → Receiving → the “contact@mail.” route → the destination becomes the new mailbox.",
+            "On Vercel: EMAIL_REPLY_TO = the new address. Then, in /admin/legal, the next version of the privacy notice without the Gmail sentence (section “Who else sees the data”)."
+          ]
+        },
+        "minorsOnline": {
+          "title": "A parent registering a minor, online",
+          "todo": "The terms and the declaration already say a parent/guardian registers the child and signs for them; the form has nothing yet that makes it explicit. To build: on the form, when the birth date gives under 18, a section “I am the parent/guardian” with the parent's name and identity document; the declaration filled with “as parent of {{participant}}”; the kit handed to the parent.",
+          "done": "A parent can register a child online, with the declaration signed on the child's behalf.",
+          "how": [
+            "fields.ts: guardianName, guardianIdDocument (required when birthDate < 18 at the event's date).",
+            "The form: the section appears when the birth date gives a minor; the declaration (merge fields) gets {{guardian}}; the PDF and the desk row show the parent.",
+            "An integration test on the lifecycle + one e2e; a decision §; a criterion in BR-REQ-031-04."
+          ]
+        },
+        "scheduleStructured": {
+          "title": "The event programme as data (times), not only text",
+          "todo": "The programme is free text per language now (the “Programme” section of the event page). For a big race, structured rows — the time, what happens, where — would show the same on the page, in the emails and in the phone's calendar (an .ics file).",
+          "done": "The programme has timed rows and can be added to the phone's calendar.",
+          "how": [
+            "Schema: an event_schedule_items table (event_id, starts_at, ends_at?, label per language, place) — or structured JSON on the event.",
+            "Editor: rows “time + text + place”, in order; the page shows them as a timed list; the reminder email sends them.",
+            "One .ics per event (“Add to calendar” link) generated from those rows."
+          ]
+        },
+        "declarationArchiveMail": {
+          "title": "Signed declarations sent automatically to the club's archive too",
+          "todo": "Every participant receives their signed declaration by email, and the club downloads all of them as one PDF from the event page. Once the club has its own mailbox, every signed declaration can reach it automatically too, as an attachment — the archive builds itself.",
+          "done": "Every signed declaration also reaches the club's archive mailbox automatically.",
+          "how": [
+            "A DECLARATIONS_ARCHIVE_TO variable (the club's mailbox). When set, signing queues a second DECLARATION_SIGNED to it, with the same PDF attached.",
+            "Depends on the club's mailbox (the row above); a personal Gmail is not a GDPR-compliant archive."
+          ]
+        },
+        "vercelUsage": {
+          "title": "Vercel usage in figures, on /devs",
+          "todo": "/devs shows the current deployment and links to the Vercel dashboard → Usage; the figure cannot be read by the application on the Hobby plan without an account token. When worth it: a read-only Vercel token in the variables and a call to the usage API, with the same thresholds as Neon's.",
+          "done": "/devs shows the month's Vercel usage, with a warning threshold.",
+          "how": [
+            "Vercel → Account → Tokens → a read-only token; VERCEL_API_TOKEN + VERCEL_TEAM_ID in the variables.",
+            "diagnostics/vercel.ts after the pattern of neon.ts; a row on /devs and on /admin/tasks (§ platform-plans)."
+          ]
+        },
+        "docsSimplify": {
+          "title": "The documentation, shortened (SETUP, RUNBOOKS, CLAUDE)",
+          "todo": "The repository's documents grew at the pace of the decisions. docs/VIBECODING.md is the short page; the rest deserves a simplification pass: each document says once what is to be done, with the values in plain sight, and the history lives in DECISIONS.",
+          "done": "Every document in the repository is short and says once what is to be done.",
+          "how": [
+            "SETUP.md: only the procedures still valid, with values; what was done once moves to CHANGELOG/DECISIONS.",
+            "CLAUDE.md: the “What exists right now” section replaced by pointers to the DECISIONS §§.",
+            "docs:check stays green; MANIFEST/README updated."
+          ]
+        },
         "roDomain": {
           "title": "The .ro domain, in a year",
           "todo": "Decided on 16 September 2026: the .com now, the .ro a year later, both alive at once (12 EUR + VAT a year at ROTLD). Blocks nothing; ticks itself when the site answers on .ro.",
