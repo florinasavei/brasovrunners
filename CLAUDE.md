@@ -323,9 +323,10 @@ each a Vercel project (`fra1`) over its own Neon project (Frankfurt), sharing no
 Production tracks `main` and QA tracks `qa`; a release is the `qa → main` PR, whose merge
 fires the gated migration workflow and whose build waits for that migration
 (`docs/RUNBOOKS.md` § Deploy a release). The hostnames live in `SETUP.md` §26 and nowhere
-else; `APP_BASE_URL` is the only thing that knows them. **Staff sign-in works on QA** through
-the QA Zitadel application; production has no Zitadel application yet and runs
-`STAFF_AUTH_MODE=disabled`. Email is still `capture` everywhere, so nothing transmits.
+else; `APP_BASE_URL` is the only thing that knows them. **Staff sign-in works on both**: each
+has its own Zitadel application on the one tenant (`STAFF_AUTH_MODE=provider`), and the owner
+is SUPERADMIN on production. Production email is **live** since 2026-09-18; QA stays
+`allowlist`.
 
 Two settings that are not obvious and cost an afternoon between them: the Zitadel application
 needs **"Include user's profile info in the ID Token"** enabled, or the ID token carries no
@@ -336,13 +337,13 @@ invites people is itself behind the sign-in it would be granting.
 **Still owed, all of it account creation or a decision rather than code** (as of 2026-09-18;
 `/admin/tasks` shows the same list with the steps, read from the system):
 
-1. ~~cron-job.org monitors~~ — **done 2026-09-18**: six jobs (production day/night per
-   endpoint, QA hourly), `/api/health` answers `ok` on both environments since 12:27 UTC.
-2. **Mailgun sending domain** on the club's `.com`: DNS records at ROMARG, verification, then
-   `EMAIL_DELIVERY_MODE=live` on production (`SETUP.md` §35). Until then no participant
-   receives an email.
-3. **Production Zitadel application** and the first `staff_users` row (`SETUP.md` §25, §30),
-   then `STAFF_AUTH_MODE=provider` on production. Until then nobody can sign in to production.
+1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.
+2. ~~Mailgun sending domain~~ — done 2026-09-18 evening: `mail.` subdomain verified,
+   production sends live, webhook signed; `contact@mail.<domain>` forwards to the owner until
+   the club has a mailbox; Zitadel's own mail goes through the same domain. QA still uses the
+   sandbox (its own sending key is optional). Procedure: `SETUP.md` §35.
+3. ~~Production Zitadel application~~ — done 2026-09-17: application, `STAFF_AUTH_MODE=provider`,
+   the owner's SUPERADMIN row. Sign in at `/admin` on the production host.
 4. **The club's approved legal texts** — privacy notice, terms, declaration — written and
    approved in `/admin/legal` on production. Until then production correctly refuses every
    registration.

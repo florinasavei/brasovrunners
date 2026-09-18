@@ -1270,6 +1270,39 @@ pays Neon's cold start — because nobody in Brașov is registering at 03:00 and
 then costs the same CU-hours it costs at noon: about 50 a month this way, against 65 at
 fifteen minutes around the clock and 180 at five.
 
+**Mailgun, done 2026-09-18.** Sending domain `mail.brasovrunners.com` — a subdomain, so the
+apex stays free for mailboxes later (`docs/RUNBOOKS.md` § Step 2 — Email) — EU region, shared
+IP, self-managed DKIM 2048. The records at ROMARG (Zone Editor, TTL 30): TXT `mail` =
+`v=spf1 include:mailgun.org ~all`; TXT `mta._domainkey.mail` = the DKIM key, **entered as two
+TXT strings** because cPanel silently truncates one string at 255 characters and Mailgun then
+reads a key that ends early (split at exactly 255, "+ Add TXT string to record"); MX `mail` ×2
+= `mxa.eu.mailgun.org`, `mxb.eu.mailgun.org`, priority 10; CNAME `email.mail` =
+`eu.mailgun.org`; TXT `_dmarc.mail` = Mailgun's `p=none` record (reporting only). The API
+base for an EU domain is `https://api.eu.mailgun.net/v3` — the US one answers 404 for it.
+Production variables: `MAILGUN_DOMAIN`, `MAILGUN_API_BASE_URL`, `MAILGUN_API_KEY` (the
+domain's sending key "brasovrunners-production"), `MAILGUN_WEBHOOK_SIGNING_KEY`,
+`EMAIL_FROM_ADDRESS=noreply@mail.brasovrunners.com`, `EMAIL_REPLY_TO=contact@mail.brasovrunners.com`,
+`EMAIL_DELIVERY_MODE=live`. Verified with `yarn email:probe` pointed at the domain.
+
+**The club's reply address, until it has a mailbox.** `contact@mail.brasovrunners.com` is a
+Mailgun **Route** (Send → Receiving → Routes): match recipient `contact@mail.brasovrunners.com`
+→ Forward to the owner's Gmail, Stop, priority 0, no "store and notify" (nothing reads incoming
+mail, and storing people's messages at a third party for nothing is not a feature). Receiving
+works because the `mail.` MX records point at Mailgun. When the club gets Google or Microsoft
+mailboxes, those take the **apex** (`@brasovrunners.com`) and this subdomain is untouched; only
+the two reply-to values move — `EMAIL_REPLY_TO` here and the Zitadel SMTP provider's.
+
+**Zitadel sends its own mail through the same domain.** Its invitations, password resets and
+codes went out from Zitadel's default sender; now from the club's. Zitadel console → Default
+Settings → **SMTP Provider** → Mailgun: host `smtp.eu.mailgun.org`, port 587, STARTTLS, user
+`postmaster@mail.brasovrunners.com`, password = the domain's SMTP credential (Domain settings →
+SMTP Credentials → reset; it is in `.env.local` and the password manager), sender
+`noreply@mail.brasovrunners.com` "Brașov Runners", reply-to `contact@mail.brasovrunners.com`.
+Test, save, **Activate**; the old sandbox provider is **deactivated**, not deleted (deleting
+asks for the sender name typed exactly as it was saved, and the comma-below `ș` is not the
+cedilla `ş` — a deactivated provider is harmless either way). The EU host, not
+`smtp.mailgun.org`: the domain lives in the EU region.
+
 **Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
 month and *suspends the compute* when they are spent, until the next month; the compute sleeps
 after five idle minutes and cannot be told not to. A monitor every five minutes means it never
@@ -1537,14 +1570,18 @@ Providers:
       run at the §26 cadences or the compute is suspended mid-month (`DECISIONS.md` §68).
 - [x] R2 resources — bucket `brasovrunners-media`, one account token, the five variables on
       both Vercel projects (§32, 2026-09-18).
-- [ ] Mailgun production domain verified — needs the club's DNS. The account exists (2026-09-05),
-      sandbox only.
+- [x] Mailgun production domain verified — `mail.brasovrunners.com`, EU region, DKIM 2048,
+      all five records valid on 2026-09-18 (§26 has the records and the one trap: cPanel cuts
+      a TXT value at 255 characters, so the DKIM key is entered as two strings). Production
+      sends live since the same evening; one probe reached the owner's inbox.
 - [x] QA email restricted — `allowlist`, and `live` is refused outside production at startup
       (`tests/integration/notifications/modes.test.ts`).
-- [ ] Webhook/job secrets configured — QA: both. Production: `JOB_SECRET` set;
-      `MAILGUN_WEBHOOK_SIGNING_KEY` waits for the sending domain (§35). **The monitors exist**
-      (2026-09-18): six cron-job.org jobs — production day and night per endpoint, QA hourly —
-      and `/api/health` answers `ok` on both environments.
+- [x] Webhook/job secrets configured — both environments: `JOB_SECRET`, and the six
+      cron-job.org jobs of §26 (four production, day/night; two QA, hourly) created 2026-09-18
+      with `/api/health` reading `ok` on both. Production: `MAILGUN_WEBHOOK_SIGNING_KEY` set,
+      the domain-level webhook "brasovrunners production" on delivered / permanent failure /
+      temporary failure / spam complaints; a second webhook "brasovrunners qa" points at QA.
+      QA still sends from the sandbox until its own sending key is made (optional).
 - [x] Production config rejects unsafe resources/modes — the development switcher
       (`tests/unit/config/env.test.ts`), live delivery anywhere else
       (`notifications/modes.test.ts`), test registrations, twice
@@ -1562,8 +1599,9 @@ Operations/privacy:
 - [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; `/devs` shows the database's
       CU-hours once `NEON_API_KEY` is set (§33); failure alerting from the pinger to a real
       inbox is not confirmed.
-- [ ] Production staff sign-in — no production Zitadel application yet, `STAFF_AUTH_MODE=disabled`
-      there; §25 and the Zitadel runbook, then the first `staff_users` row by hand.
+- [x] Production staff sign-in — the "Brasov Runners Production" Zitadel application
+      (2026-09-17), `STAFF_AUTH_MODE=provider`, the owner's SUPERADMIN row; verified by the owner
+      signing in on 2026-09-18.
 - [ ] Volunteer accounts for race day — §34; and a rehearsal on QA with test registrations.
 - [ ] Ownership/recovery/handover documented — §2 and §31 exist; the repository, Vercel, Neon,
       Mailgun and Zitadel accounts are the maintainer's personal ones (BR-BUS-101).
