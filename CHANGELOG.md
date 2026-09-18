@@ -10,6 +10,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.35-2026-09-18
 
+Evening of 2026-09-18, accounts rather than code (`SETUP.md` §26, §30): the six cron-job.org
+jobs exist and both environments' `/api/health` read `ok` for the first time; the club's
+sending domain is verified on Mailgun and **production email is live**; the R2 bucket exists.
+
 Race day, the way a real race works — and the one figure that would have taken the site down.
 
 - **The race-day desk.** `/admin/checkin` ("Ziua cursei"), open to every staff role, on a phone: pick today's event, scan a runner's QR (the browser's own `BarcodeDetector` on Android; the camera app opens the same link everywhere else) or type a name, a number or the code, and press the one button the row offers. Confirmed runners get `Prezent`; a pending one whose email never arrived gets `Confirmă aici` — the address vouched for by the volunteer, the declaration signed by the participant on a printed copy and recorded under the volunteer's name (`declaration_acceptances.method = PAPER`, `attested_by_staff_user_id`); a waiting-list entry gets `Dă-i un loc` only while a place is free; a walk-in gets `Adaugă pe cineva`, which opens the staff entry form with the fast track ticked and skips the public window; a number can be typed or cleared; a mistake gets `Anulează prezența`. Counts — confirmed, here, without a number, unconfirmed — on the page, the whole process as folded steps on the page, and every press audited. Nothing at the desk can place anybody past capacity. Volunteers are Contributors; the desk shows a name, a state and a number and never an address. BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01 criterion 7; migration `0026` (expand-only); `DECISIONS.md` §67; `SETUP.md` §34 is the volunteer-account procedure.

@@ -320,11 +320,10 @@ invites people is itself behind the sign-in it would be granting.
 **Still owed, all of it account creation or a decision rather than code** (as of 2026-09-18;
 `/admin/tasks` shows the same list with the steps, read from the system):
 
-1. **cron-job.org monitors** for production — four jobs, day/night, and QA hourly (`SETUP.md`
-   §26). Until then production expires holds only when a request happens to evaluate them, and
-   `/api/health` reads `degraded`.
-2. **Mailgun sending domain** on the club's `.com`: DNS records at ROMARG, verification, then
-   `EMAIL_DELIVERY_MODE=live` on production. Until then no participant receives an email.
+1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.
+2. ~~Mailgun sending domain~~ — done 2026-09-18 evening: `mail.` subdomain verified,
+   production sends live, webhook signed. QA still uses the sandbox (its own sending key is
+   optional).
 3. **Production Zitadel application** and the first `staff_users` row (`SETUP.md` §25, §30),
    then `STAFF_AUTH_MODE=provider` on production. Until then nobody can sign in to production.
 4. **The club's approved legal texts** — privacy notice, terms, declaration — written and

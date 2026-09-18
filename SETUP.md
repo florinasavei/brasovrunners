@@ -1270,6 +1270,20 @@ pays Neon's cold start — because nobody in Brașov is registering at 03:00 and
 then costs the same CU-hours it costs at noon: about 50 a month this way, against 65 at
 fifteen minutes around the clock and 180 at five.
 
+**Mailgun, done 2026-09-18.** Sending domain `mail.brasovrunners.com` — a subdomain, so the
+apex stays free for mailboxes later (`docs/RUNBOOKS.md` § Step 2 — Email) — EU region, shared
+IP, self-managed DKIM 2048. The records at ROMARG (Zone Editor, TTL 30): TXT `mail` =
+`v=spf1 include:mailgun.org ~all`; TXT `mta._domainkey.mail` = the DKIM key, **entered as two
+TXT strings** because cPanel silently truncates one string at 255 characters and Mailgun then
+reads a key that ends early (split at exactly 255, "+ Add TXT string to record"); MX `mail` ×2
+= `mxa.eu.mailgun.org`, `mxb.eu.mailgun.org`, priority 10; CNAME `email.mail` =
+`eu.mailgun.org`; TXT `_dmarc.mail` = Mailgun's `p=none` record (reporting only). The API
+base for an EU domain is `https://api.eu.mailgun.net/v3` — the US one answers 404 for it.
+Production variables: `MAILGUN_DOMAIN`, `MAILGUN_API_BASE_URL`, `MAILGUN_API_KEY` (the
+domain's sending key "brasovrunners-production"), `MAILGUN_WEBHOOK_SIGNING_KEY`,
+`EMAIL_FROM_ADDRESS=noreply@mail.brasovrunners.com`, `EMAIL_REPLY_TO` (the owner's mailbox),
+`EMAIL_DELIVERY_MODE=live`. Verified with `yarn email:probe` pointed at the domain.
+
 **Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
 month and *suspends the compute* when they are spent, until the next month; the compute sleeps
 after five idle minutes and cannot be told not to. A monitor every five minutes means it never
@@ -1537,14 +1551,18 @@ Providers:
       run at the §26 cadences or the compute is suspended mid-month (`DECISIONS.md` §68).
 - [x] R2 resources — bucket `brasovrunners-media`, one account token, the five variables on
       both Vercel projects (§32, 2026-09-18).
-- [ ] Mailgun production domain verified — needs the club's DNS. The account exists (2026-09-05),
-      sandbox only.
+- [x] Mailgun production domain verified — `mail.brasovrunners.com`, EU region, DKIM 2048,
+      all five records valid on 2026-09-18 (§26 has the records and the one trap: cPanel cuts
+      a TXT value at 255 characters, so the DKIM key is entered as two strings). Production
+      sends live since the same evening; one probe reached the owner's inbox.
 - [x] QA email restricted — `allowlist`, and `live` is refused outside production at startup
       (`tests/integration/notifications/modes.test.ts`).
-- [ ] Webhook/job secrets configured — QA: both. Production: `JOB_SECRET` set;
-      `MAILGUN_WEBHOOK_SIGNING_KEY` waits for the sending domain; **the production monitors on
-      cron-job.org are not created yet** (four jobs, day/night, §26 — the owner, tonight), and
-      the QA pair is still at five minutes and must move to hourly.
+- [x] Webhook/job secrets configured — both environments: `JOB_SECRET`, and the six
+      cron-job.org jobs of §26 (four production, day/night; two QA, hourly) created 2026-09-18
+      with `/api/health` reading `ok` on both. Production: `MAILGUN_WEBHOOK_SIGNING_KEY` set,
+      the domain-level webhook "brasovrunners production" on delivered / permanent failure /
+      temporary failure / spam complaints; a second webhook "brasovrunners qa" points at QA.
+      QA still sends from the sandbox until its own sending key is made (optional).
 - [x] Production config rejects unsafe resources/modes — the development switcher
       (`tests/unit/config/env.test.ts`), live delivery anywhere else
       (`notifications/modes.test.ts`), test registrations, twice

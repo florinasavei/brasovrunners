@@ -393,10 +393,12 @@ do.
 
 ### Step 2 — Email
 
-- [ ] Add the sending domain in Mailgun and create the SPF, DKIM, and tracking records.
-- [ ] Wait for verification. Allow up to 48 hours, though it is usually much faster.
-- [ ] Point the Mailgun webhook at the production host and confirm signature verification
-      still passes.
+- [x] Add the sending domain in Mailgun and create the SPF, DKIM, and tracking records —
+      done 2026-09-18, `mail.<domain>` (`SETUP.md` §26 has the records and the 255-character
+      trap).
+- [x] Wait for verification — minutes, once the DKIM record was whole.
+- [x] Point the Mailgun webhook at the production host — four events, domain-level; the
+      signing key is on the production project. A second webhook points at QA.
 - [ ] Confirm the production sender name and address match what the club approved
       (`BUSINESS.md` §9).
 - [ ] **If the club also wants mailboxes on the domain** — the provider is not chosen yet: a
