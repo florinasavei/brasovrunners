@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -12,7 +13,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { deriveAllowedResendMessageType } from "./domain/resend";
+import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus } from "./domain/state-machine";
 import {
   findEventForAllocation,
@@ -58,11 +59,27 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
   actor: Pick<StaffUser, "id" | "role">,
   registrationId: string,
   now: Date,
+  /** `EVENT_REMINDER` asks for the reminder instead of the state's own message (§81). */
+  wanted?: "EVENT_REMINDER",
 ): Promise<void> {
   assertAdministrator(actor);
 
   const registration = await findRegistrationById(db, registrationId);
   if (!registration) throw new DomainError("NOT_FOUND", "no such registration");
+
+  if (wanted === "EVENT_REMINDER") {
+    const [event] = await db
+      .select({ startsAt: events.startsAt })
+      .from(events)
+      .where(eq(events.id, registration.eventId))
+      .limit(1);
+    if (!event || !canResendReminder(registration.status, event.startsAt, now)) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        "the reminder can be sent only for a confirmed registration to an event that has not started",
+      );
+    }
+  }
 
   /**
    * BR-REQ-037-02 criterion 5: "repeated resends... a rate limit applies and the refusal is
@@ -95,7 +112,7 @@ export async function resendRegistrationMessage<T extends Record<string, unknown
     );
   }
 
-  const messageType = deriveAllowedResendMessageType(registration.status);
+  const messageType = wanted ?? deriveAllowedResendMessageType(registration.status);
   if (!messageType) {
     throw new DomainError(
       "VALIDATION_ERROR",

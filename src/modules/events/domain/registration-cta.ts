@@ -29,6 +29,8 @@ export type RegistrationCta =
   | { kind: "NONE" }
   | { kind: "EXTERNAL"; url: string; provider: string | null }
   | { kind: "CANCELLED" }
+  /** The race is over (§82): "it has ended", and no control. */
+  | { kind: "COMPLETED" }
   | { kind: "NOT_YET_OPEN"; opensAt: Date }
   | { kind: "CLOSED" }
   /** `availablePlaces` is null for an uncapped event — open, with no number to show. */
@@ -47,6 +49,9 @@ export function registrationCta(event: RegistrationCtaInput, now: Date): Registr
       // `registrationState`: a link that takes somebody to an organizer's entry form for a race
       // the club has called off is worse than no link.
       return { kind: "CANCELLED" };
+
+    case "EVENT_COMPLETED":
+      return { kind: "COMPLETED" };
 
     case "EXTERNAL":
       // The URL is required of an EXTERNAL event by `content/events/service.ts`, and a row that

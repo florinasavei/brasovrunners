@@ -19,7 +19,7 @@ import {
   listDeclarationAcceptances,
   listOutboxHistory,
 } from "@/modules/registrations/admin-repository";
-import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
+import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -129,13 +129,26 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
 
-      <form action={resendRegistrationEmailAction}>
-        <input type="hidden" name="uiLocale" value={locale} />
-        <input type="hidden" name="registrationId" value={registration.id} />
-        <Button type="submit" variant="outlined" disabled={!canResend}>
-          {tr("registrations.resend")}
-        </Button>
-      </form>
+      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+        <form action={resendRegistrationEmailAction}>
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="registrationId" value={registration.id} />
+          <Button type="submit" variant="outlined" disabled={!canResend}>
+            {tr("registrations.resend")}
+          </Button>
+        </form>
+        {/* The reminder by hand (§81): confirmed, and the event still ahead. */}
+        {canResendReminder(registration.status, registration.eventStartsAt, new Date()) && (
+          <form action={resendRegistrationEmailAction}>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="registrationId" value={registration.id} />
+            <input type="hidden" name="messageType" value="EVENT_REMINDER" />
+            <Button type="submit" variant="outlined">
+              {tr("registrations.sendReminder")}
+            </Button>
+          </form>
+        )}
+      </Stack>
 
       <Divider />
 

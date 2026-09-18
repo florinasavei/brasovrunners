@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -4369,3 +4369,94 @@ an unsubscribe link and a privacy-notice paragraph, not a button; it goes on top
 counter when the club asks for it.
 
 Baseline `BR-V1.36-2026-09-18`.
+
+## 81. Decided — email that people will actually read: the facts line, the checklist, the footer, and a reminder two days before (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-080-01 criteria 4–5, BR-REQ-037-02 criterion 1;
+`notifications/templates.ts` (`facts`, `footer`, `eventReminder`), `notifications/render.ts`,
+`notifications/event-mail.ts` (`queueEventReminders`), `event_translations.checklist`
+(migration `0031`, expand-only), `registrations/maintenance.ts`.
+
+The confirmation is the one email a participant keeps, and it said "we look forward to seeing
+you at Parcul Tractorul, Saturday 26 September 2026 07:00" inside a sentence. The morning of,
+on a phone, the eye wants the facts, not the sentence: so the confirmation and the reminder
+open with one **bold line** — date, time, meeting point — followed by the map link and the
+Strava event link when the organizer set them, then "what to bring" as one line the organizer
+writes per language (`checklist`, ≤ 300 characters, on the translation because it is
+editorial), then the QR and the code, then the manage link. Text-first: the plain-text body
+reads the same, the HTML adds `<strong>` and three anchors, and nothing else — no image but
+the QR, and a whole message is a few kilobytes against the 100 KB the brief allowed.
+
+**The footer.** Every message ends "Răspunde la acest email pentru întrebări" when the club
+has a reply address (`EMAIL_REPLY_TO`, `contact@mail.<domain>` since §35's route); without
+one the line is absent rather than promising an inbox nobody reads.
+
+**The reminder.** `EVENT_REMINDER`, queued by the maintenance job for every CONFIRMED
+registration of a SCHEDULED event that starts within the next 48 hours — the event's own
+instant, not a calendar day — with the idempotency key `registration:<id>:reminder`, so every
+run inside the window after the first inserts nothing (§16.1: a job that runs twice sends
+once). Never a WAITLISTED entry, never a cancelled or completed event, never a state change.
+It carries the same facts line, the checklist, the QR and "can't come? cancel here" — the
+manage link, because a place freed two days before goes to the waiting list in time. It is
+also the second message an Administrator may resend by name for a confirmed registration
+while the event is ahead (§15.8). The forecast on `/devs` counts four messages per completed
+registration now, not three: 25 registrations fit a free Mailgun day, not 33
+(`docs/PLATFORM.md`).
+
+**Refused.** A reminder for the waiting list ("you are still 4th") — a queue position two days
+out is a promise the allocator does not make. Images of the route in the email — a link is
+what a phone opens.
+
+Baseline `BR-V1.37-2026-09-18`.
+
+## 82. Decided — after the race: COMPLETED means over, and the thank-you is sent by a person, once (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-020-01 criterion 4, BR-REQ-080-01 criterion 6;
+`events.thanks_sent_at` (migration `0031`), `notifications/event-mail.ts` (`sendEventThanks`),
+`registration-window.ts` (`EVENT_COMPLETED`), `registrations/service.ts` (`checkIn`),
+`registrations/repository.ts` (`findEventsNeedingMaintenance`), the event page's "După cursă".
+
+`event_status = COMPLETED` existed as a value and did nothing distinct: the window rule folded
+it into "cancelled", so a race that had happened read as a race that had not. Now the organizer
+sets COMPLETED in the editor and three things follow. The page and the card say **"S-a
+încheiat"** — its own sentence, not "anulat" — and offer no registration control. The desk
+refuses a check-in with a sentence, and shows the rows without buttons: nobody arrives at an
+event that is over, and a check-in after the organizer closed it would count somebody who was
+never there. The maintenance job leaves the event alone — a cancelled event still expires its
+holds, because nobody should keep a place on a race that will not run; a completed one has
+nothing left to expire.
+
+**The thank-you.** `EVENT_THANKS`, to everyone who was checked in — the people who came, not
+the people who registered — with an optional `https://` link to the results or the photos.
+Sent by an Administrator from the event page, behind a confirmation dialog, **once per event**:
+`thanks_sent_at` is claimed in the same transaction as the rows, so two organizers pressing at
+once produce one send, and the button is replaced by the date afterwards. Never automatic — a
+thank-you the system sent is not a thank-you. The audit row names the event and the count,
+never the recipients (§12.12).
+
+**Refused.** Sending the thank-you to everyone confirmed: the people who did not come are not
+thanked for coming. A COMPLETED status set by the job at the end time: the organizer knows
+when a race is over; the clock does not.
+
+Baseline `BR-V1.37-2026-09-18`.
+
+## 83. Decided — the organizer's numbers where the organizer is: bounces in the list and the export, the desk's counts in the events list (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-037-08 criterion 8; `admin-repository.ts`
+(`emailBounced`, `checkedInAt`, `emailRejectedReason` on the list), `csv.ts`,
+`content/events/repository.ts` (`countConfirmedAndCheckedInByEvent`).
+
+§76 put "email respins" on the desk row and the registration page. The organizer preparing the
+call list works from the registrations list, so the list filters to the bounced rows and shows
+the chip; the CSV export — the file that leaves the application and is read at a start line —
+gains `Checked in` (the time) and `Email bounced` (Yes or empty, like the club-member column,
+never "No"). The events list shows **confirmed · here** beside an event within a day of its
+start: `countDesk`'s two numbers, for the organizer watching from the office without opening
+the desk.
+
+`/devs`'s "Neon not configured" sentence now carries the two-minute procedure itself (the API
+key, the project id, the two `vercel env add`), so the person who sees it can act without
+opening SETUP §33 — and both deployed projects have their keys since this evening, so the
+sentence should not be seen again.
+
+Baseline `BR-V1.37-2026-09-18`.

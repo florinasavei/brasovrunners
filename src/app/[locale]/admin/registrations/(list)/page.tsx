@@ -85,7 +85,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canManageRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, q, saved, error, cancelled, failed, sent } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent } = current;
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -100,6 +100,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     // One-way: it narrows to the people who ticked the box and never to the ones who did not
     // (`admin-repository.ts` says why).
     clubMemberDeclared: clubMember === "1" || undefined,
+    emailBounced: bounced === "1" || undefined,
     search: q || undefined,
   };
 
@@ -125,6 +126,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     eventId,
     status,
     clubMember,
+    bounced,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -132,7 +134,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -340,6 +342,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
             <MenuItem value="1">{t("registrations.clubMemberOnly")}</MenuItem>
+          </TextField>
+          {/* Who never got the email (§76, §83): the rows to call. */}
+          <TextField
+            select
+            name="bounced"
+            label={t("registrations.bouncedLabel")}
+            defaultValue={bounced === "1" ? "1" : ""}
+            sx={{ minWidth: 220 }}
+          >
+            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
+            <MenuItem value="1">{t("registrations.bouncedOnly")}</MenuItem>
           </TextField>
           <TextField
             select

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.36-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -868,6 +868,7 @@ PENDING_DECLARATION        -> complete-declaration message
 WAITLISTED                 -> waiting-list status/manage message
 WAITLIST_OFFERED           -> current claim-place offer
 CONFIRMED                  -> the confirmation again (REGISTRATION_CONFIRMED: code, QR, manage link)
+CONFIRMED, event ahead     -> EVENT_REMINDER, by name ("Trimite reminderul")
 CANCELLED or EXPIRED       -> REGISTRATION_STATE_NOTICE, with an eligible restart link
 ```
 
@@ -1288,7 +1289,10 @@ domain's sending key "brasovrunners-production"), `MAILGUN_WEBHOOK_SIGNING_KEY`,
 Mailgun **Route** (Send → Receiving → Routes): match recipient `contact@mail.brasovrunners.com`
 → Forward to the owner's Gmail, Stop, priority 0, no "store and notify" (nothing reads incoming
 mail, and storing people's messages at a third party for nothing is not a feature). Receiving
-works because the `mail.` MX records point at Mailgun. When the club gets Google or Microsoft
+works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
+Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
+copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
+is right, because every email the site sends carries `Reply-To: contact@…`. When the club gets Google or Microsoft
 mailboxes, those take the **apex** (`@brasovrunners.com`) and this subdomain is untouched; only
 the two reply-to values move — `EMAIL_REPLY_TO` here and the Zitadel SMTP provider's.
 

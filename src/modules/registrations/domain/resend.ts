@@ -9,6 +9,14 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
  * `WAITLISTED` has no resend: nothing is waiting on the participant to act — they are simply
  * queued — so there is no link to hand them again.
  */
+/**
+ * The reminder may be resent by hand while the registration is confirmed and the event is
+ * still ahead (`DECISIONS.md` §81): after the start there is nothing to remind anybody of.
+ */
+export function canResendReminder(status: RegistrationStatus, eventStartsAt: Date, now: Date): boolean {
+  return status === "CONFIRMED" && eventStartsAt.getTime() > now.getTime();
+}
+
 export function deriveAllowedResendMessageType(status: RegistrationStatus): EmailMessageType | null {
   switch (status) {
     case "PENDING_EMAIL_CONFIRMATION":

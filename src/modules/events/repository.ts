@@ -221,7 +221,12 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
     .select({
       locale: eventTranslations.locale,
       title: eventTranslations.title,
+      // "What to bring", the translation's line (§81); the map and the Strava event are the
+      // event's own.
+      checklist: eventTranslations.checklist,
       locationName: events.locationName,
+      mapUrl: events.mapUrl,
+      stravaEventUrl: events.stravaEventUrl,
       startsAt: events.startsAt,
       timezone: events.timezone,
     })

@@ -33,6 +33,7 @@ export async function GET(request: Request): Promise<Response> {
   const eventId = url.searchParams.get("eventId");
   const status = url.searchParams.get("status");
   const clubMember = url.searchParams.get("clubMember");
+  const emailBounced = url.searchParams.get("bounced");
   const search = url.searchParams.get("q");
 
   /**
@@ -51,6 +52,7 @@ export async function GET(request: Request): Promise<Response> {
     eventId: eventId || undefined,
     status: isRegistrationStatus(status) ? status : undefined,
     clubMemberDeclared: clubMember === "1" || undefined,
+    emailBounced: emailBounced === "1" || undefined,
     search: search || undefined,
     excludeTest: true,
   });
@@ -65,6 +67,8 @@ export async function GET(request: Request): Promise<Response> {
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,
+      checkedInAt: row.checkedInAt?.toISOString() ?? "",
+      emailBounced: row.emailRejectedReason !== null,
     })),
   );
 

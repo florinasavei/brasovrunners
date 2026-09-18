@@ -108,6 +108,8 @@ export default async function RegistrationCta({
   const sentence =
     cta.kind === "CANCELLED"
       ? t("cta.cancelled")
+      : cta.kind === "COMPLETED"
+        ? t("cta.completed")
       : cta.kind === "CLOSED"
         ? raceWeek
           ? t("cta.closedRaceWeek")

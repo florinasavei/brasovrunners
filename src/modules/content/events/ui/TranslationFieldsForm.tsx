@@ -101,6 +101,14 @@ export default async function TranslationFieldsForm({
             accessibleSuffix={translation.locale.toUpperCase()}
             labels={richTextEditorLabels(rt)}
           />
+          {/* "What to bring": one line on the confirmation and the reminder (§81). */}
+          <TextField
+            name={name("checklist")}
+            label={t("editor.fields.checklist")}
+            helperText={t("editor.checklistHelp")}
+            defaultValue={translation.checklist ?? ""}
+            slotProps={{ htmlInput: { maxLength: 300 } }}
+          />
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
             {t("editor.bodyHelp")}
           </Typography>

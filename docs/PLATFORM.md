@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.36-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -92,10 +92,10 @@ not taken, so the club can see it is not locked in.
 ### The four that will actually bite this club
 
 **1. Mailgun's 100 emails/day is the binding constraint on registration day.** This application
-sends **three emails per completed registration** — verify the address, sign the declaration,
-confirmed — and a waitlisted entrant costs two more. So the free plan supports roughly **33
-registrations per day**, and a race that opens entries to a hundred people exceeds it before
-lunch. Basic at $15/mo removes the daily limit and includes 10,000/month. **Budget one month of
+sends **four emails per completed registration** — verify the address, sign the declaration,
+confirmed, and the reminder two days before (`DECISIONS.md` §81) — and a waitlisted entrant
+costs two more. So the free plan supports roughly **25 registrations per day**, and a race that
+opens entries to a hundred people exceeds it before lunch. Basic at $15/mo removes the daily limit and includes 10,000/month. **Budget one month of
 Basic per race, not a permanent subscription.**
 
 **2. Vercel Hobby cannot run the scheduler, and fails loudly.** Hobby cron is limited to *once
@@ -358,7 +358,7 @@ absorb load that a limit should have refused is paying for abuse.
 
 ### When the daily allowance runs out — decided, and it is not a bounce
 
-This will happen: three messages per completed registration against 100 a day is roughly 33
+This will happen: four messages per completed registration against 100 a day is 25
 registrations, and a race opening entries to a hundred people crosses it before lunch (limit 1).
 What happens then is now a decision rather than an accident.
 

@@ -150,6 +150,11 @@ export const events = pgTable(
      * race on a Sunday morning is the ordinary case, and last-write-wins would silently discard
      * one of them. Incremented by every save and every transition.
      */
+    /**
+     * When the organizer sent the thank-you (§82): once per event, by hand, to everyone who
+     * was checked in. Null until then; the button disappears afterwards.
+     */
+    thanksSentAt: timestamp("thanks_sent_at", { withTimezone: true }),
     version: integer("version").notNull().default(1),
 
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
@@ -452,6 +457,13 @@ export const eventTranslations = pgTable(
      */
     excerptJson: jsonb("excerpt_json"),
     bodyJson: jsonb("body_json"),
+    /**
+     * "What to bring", one line, per language (`DECISIONS.md` §81): it goes on the
+     * confirmation and the reminder — the two emails a participant keeps. Editorial, so it
+     * lives on the translation; plain text, at most 300 characters, because an email is read
+     * on a phone the morning of.
+     */
+    checklist: text("checklist"),
 
     /*
      * `location_name`, `location_address`, `difficulty_label` and `cost_text` were here and are

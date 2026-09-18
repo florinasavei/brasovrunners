@@ -41,7 +41,7 @@ import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
  * malformed message: `Domain <domain> is not allowed to send: recipient limit exceeded`. Mapped
  * as a flat permanent failure, that marked every message queued after the cap BOUNCED —
  * terminal, never retried — on the one day of the year the club most needs them: a race opening
- * entries sends three messages per completed registration against a 100/day allowance, so it
+ * entries sends four messages per completed registration against a 100/day allowance, so it
  * crosses the cap before lunch (`docs/PLATFORM.md`, limit 1). The messages that would have gone
  * out at midnight were being thrown away instead.
  *

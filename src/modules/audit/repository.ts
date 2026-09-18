@@ -45,7 +45,9 @@ export type AuditAction =
   | "registration.checked_in"
   | "registration.checkin_undone"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
-  | "outbox.sent_by_staff";
+  | "outbox.sent_by_staff"
+  /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
+  | "event.thanks_sent";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
