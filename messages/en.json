@@ -159,6 +159,15 @@
       "checkin": "Race day",
       "guide": "Guide"
     },
+    "outbox": {
+      "status": "Emails waiting: {waiting} · sent today: {sent} of {allowance} ({remaining} left)",
+      "sendNow": "Send now",
+      "nothingWaiting": "Nothing to send.",
+      "allowanceSpent": "The daily Mailgun allowance is spent; the rest goes out tomorrow.",
+      "sending": "Sending…",
+      "sendNowLong": "Send the queued emails now, without waiting for the monitor; stops at the daily allowance",
+      "sentNow": "Emails sent just now: {count}."
+    },
     "registrations": {
       "empty": "There are no registrations.",
       "filterAll": "All events",
@@ -575,10 +584,10 @@
           "done": "Email reaches participants.",
           "how": [
             "In Mailgun: Sending → Domains → “Add new domain”. Name: {mailDomain}. Region: EU. Not the main domain — that stays free for the club's own mailboxes.",
-            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking). Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain). Then “Verify” in Mailgun — up to an hour.",
-            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY). Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “delivered”, “permanent failure” and “temporary failure”.",
-            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_FROM_ADDRESS=noreply@{mailDomain}, EMAIL_FROM_NAME=Brașov Runners, EMAIL_REPLY_TO=a mailbox the club reads.",
-            "Trial: EMAIL_DELIVERY_MODE=allowlist and EMAIL_ALLOWLIST=your address, redeploy, then register for an event — the email must arrive. When it does: EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
+            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking). Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain). Mind the DKIM one: the value is over 255 characters and cPanel cuts it — enter it as two quoted strings on one line (“k=rsa; p=…first part” “…the rest”), or Mailgun sees it truncated. Then “Verify” in Mailgun — up to an hour.",
+            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY). Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “Permanent Failure” and “Spam Complaints” — the two the application acts on (a rejected address shows at the desk and on the registration). “Delivered” is optional.",
+            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=a mailbox the club reads (if none exists yet, leave the variable unset — an empty one is refused at startup). The sender is “Brașov Runners” <noreply@{mailDomain}> with no further setting.",
+            "Rehearse on QA, not on production (production refuses registrations until the legal texts are approved): on the QA Vercel project set the same MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (the mode stays allowlist, EMAIL_ALLOWLIST=your address), redeploy, register on QA — the email comes from noreply@{mailDomain}. When it does: on production EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
           ]
         },
         "scheduler": {

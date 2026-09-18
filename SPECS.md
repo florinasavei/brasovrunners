@@ -1336,8 +1336,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 2. Given a provider failure, when it occurs, then the committed registration state is unchanged and the outbox row is retried with bounded backoff up to a maximum attempt count.
 3. Given concurrent workers, when they claim work, then no message is sent twice for the same trigger.
 4. Given a permanent failure reported by the provider, when it is received, then further sends to that address for that trigger are suppressed and the failure is visible in the backoffice.
+5. Given an Administrator on `/admin/registrations`, when the outbox panel shows what is waiting and the day's count against the provider's allowance, and they press "Trimite acum", then the same worker the scheduled job runs drains the queue in batches — never past the day's remaining allowance, at most a hundred in one press, stopping when the provider defers — audited with the counts, throttled per Administrator apart from the job's own bucket; and when nothing is waiting or the allowance is spent, then a sentence says which, and there is no button (2026-09-18, `DECISIONS.md` §80).
 
-**Verification:** integration `notifications/outbox.test.ts`
+**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`
 
 #### BR-REQ-080-03 — Environment-appropriate delivery
 

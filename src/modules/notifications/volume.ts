@@ -54,6 +54,8 @@ export type EmailVolumeToday = {
   projectedMessages: number;
   /** Outbox rows created today, whatever their status. What has actually been asked for. */
   queuedMessages: number;
+  /** Rows not yet delivered — pending or mid-flight — whatever day they were queued. */
+  waitingMessages: number;
   /** Outbox rows actually transmitted today. What the allowance has actually paid for. */
   sentMessages: number;
   allowance: number;
@@ -96,6 +98,11 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     .from(emailOutbox)
     .where(and(gte(emailOutbox.sentAt, since), sql`${emailOutbox.sentAt} IS NOT NULL`));
 
+  const [waiting] = await db
+    .select({ value: count() })
+    .from(emailOutbox)
+    .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
+
   const realRegistrations = registrationCounts?.real ?? 0;
   const testRegistrations = registrationCounts?.test ?? 0;
   const sentMessages = sent?.value ?? 0;
@@ -106,6 +113,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     projectedMessages:
       (realRegistrations + testRegistrations) * MESSAGES_PER_COMPLETED_REGISTRATION,
     queuedMessages: queued?.value ?? 0,
+    waitingMessages: waiting?.value ?? 0,
     sentMessages,
     allowance: MAILGUN_FREE_DAILY_MESSAGES,
     remaining: Math.max(0, MAILGUN_FREE_DAILY_MESSAGES - sentMessages),

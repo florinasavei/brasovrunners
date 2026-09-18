@@ -4334,3 +4334,38 @@ right after a navigation, because the backoffice pages carry four editors now an
 lands mid-hydration is prevented by the router and never replayed.
 
 Baseline `BR-V1.36-2026-09-18`.
+
+## 80. Decided — the outbox can be sent by hand, and the day's counter is the ceiling (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-080-02 criterion 5; `notifications/send-now.ts`, the
+panel on `/admin/registrations`, the `admin-send-now` throttle, `outbox.sent_by_staff` in the
+audit trail.
+
+The owner: "I want to force sending emails, not wait for the cron if needed — but I must keep
+the counter for Mailgun, because I might want to send out newsletters and stuff." Since §68 a
+request that queues a message drains the outbox after its own response, so most mail already
+leaves in seconds; what the button is for is the rest — a batch deferred by a spent cap, a
+retry waiting on its backoff, a queue filled by the desk on race morning — and the wish to
+see it go without watching a clock.
+
+**The same worker.** `processOutboxBatch`, the function the job endpoint and the after-response
+drain call, called from a Server Action with an Administrator's session instead of
+`JOB_SECRET`. One code path (§16.2): a message sent by hand is claimed, rendered, retried and
+deferred exactly as it would be at 03:00. Its own throttle, per Administrator, so a person at
+the button and the monitor never spend each other's allowance; an audit row with the counts,
+so the trail says who emptied the queue before a window.
+
+**The counter is the ceiling.** The panel shows what is waiting and what went out today
+against the free plan's hundred (`readEmailVolumeToday`, the same figures `/devs` forecasts
+from). The button runs batches only while the day's remaining allowance is above zero, sizes
+each batch to what is left, and stops at five — a hundred, the whole of a free day, in one
+press. That is the counter the owner asked to keep: a newsletter, when one exists, will have
+to fit under the same number, and the provider's own refusal on a spent cap still defers the
+rest rather than losing it (§40). When nothing is waiting, or nothing may go, there is no
+button: a sentence says which, because a disabled button cannot (`SubmitButton`'s rule).
+
+**Refused.** A "send to everybody" — the newsletter itself. That is a message type, a consent,
+an unsubscribe link and a privacy-notice paragraph, not a button; it goes on top of this
+counter when the club asks for it.
+
+Baseline `BR-V1.36-2026-09-18`.

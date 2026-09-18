@@ -22,7 +22,8 @@ export type RateLimitScope =
   | "link-request"
   | "admin-resend"
   | "token-validate"
-  | "job-invoke";
+  | "job-invoke"
+  | "admin-send-now";
 
 /**
  * What each guarded action allows, as data.
@@ -84,6 +85,12 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * thing it guards is worse than none.
    */
   "job-invoke": { limit: 30, windowMs: 60 * 60_000 },
+  /**
+   * "Send now" from the backoffice (`DECISIONS.md` §80): its own bucket, per Administrator,
+   * so a person at the button and the monitor never spend each other's allowance. Ten an
+   * hour is more presses than a queue ever needs and fewer than a stuck finger.
+   */
+  "admin-send-now": { limit: 10, windowMs: 60 * 60_000 },
 };
 
 export type RateLimitVerdict = {
