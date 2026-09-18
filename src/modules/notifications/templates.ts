@@ -101,6 +101,8 @@ export type TemplateData = {
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
+  /** The race number, once given (§87) — on the confirmation and the reminder. */
+  bibNumber?: number;
   /** The event's map link and Strava event link, when set (§81). */
   eventMapUrl?: string;
   eventStravaEventUrl?: string;
@@ -159,6 +161,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm!`,
+        ...(d.bibNumber ? [`Numărul tău de concurs: ${d.bibNumber}. Îl primești la masă, în ziua cursei.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
@@ -173,6 +176,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "Evenimentul"} este peste două zile. Iată ce ai nevoie.`,
+        ...(d.bibNumber ? [`Numărul tău de concurs: ${d.bibNumber}.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`La masă arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
@@ -258,6 +262,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "The event"} is two days away. Here is what you need.`,
+        ...(d.bibNumber ? [`Your race number: ${d.bibNumber}.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
         "Can't come? Cancel with the link below — your place goes to somebody on the waiting list.",
@@ -279,6 +284,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `Your registration for ${d.eventTitle ?? "the event"} is confirmed. See you there!`,
+        ...(d.bibNumber ? [`Your race number: ${d.bibNumber}. You collect it at the desk on race day.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`When you pick up your race number, show the QR code below or say the code ${d.checkinCode}.`]

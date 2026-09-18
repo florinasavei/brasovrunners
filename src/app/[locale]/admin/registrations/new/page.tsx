@@ -6,6 +6,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import PhoneField from "@/modules/registrations/ui/PhoneField";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -112,9 +113,14 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
           <TextField name="displayName" label={rt("displayName")} />
           <TextField name="birthDate" type="date" label={rt("birthDate")} slotProps={{ inputLabel: { shrink: true } }} />
           <TextField name="city" label={rt("city")} />
-          <TextField name="phone" type="tel" label={rt("phone")} />
+          <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} locale={locale} />
           <TextField name="emergencyContactName" label={rt("emergencyContactName")} />
-          <TextField name="emergencyContactPhone" type="tel" label={rt("emergencyContactPhone")} />
+          <PhoneField
+            name="emergencyContactPhone"
+            label={rt("emergencyContactPhone")}
+            countryLabel={rt("phoneCountry")}
+            locale={locale}
+          />
           <TextField name="clubName" label={rt("clubName")} />
           {/* BR-REQ-031-06, asked here too: an organizer taking a registration over the
               telephone is usually taking it from somebody in the club. */}

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.37-2026-09-18`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.38-2026-09-18`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -302,6 +302,16 @@ publishing a whole series at once.
 outbox after its own response; the external monitors run every fifteen minutes by day and
 hourly at night, Romania time, because Neon's free month is 100 CU-hours and a five-minute
 pinger spends 180. `/devs` shows the month's figure with `NEON_API_KEY` (`SETUP.md` §33).
+
+**What the first real test found** (`DECISIONS.md` §84–§88): phones are a country plus digits
+(E.164); the list opt-out is asked only where a list exists and "who is coming" is folded with
+the club; the signature is typed in a hand and the page says what is next; race numbers are
+given at confirmation; erase removes the participant with the last registration; the database's
+size is on `/admin/tasks` and `/devs`; the repository's `.md` files render at `/devs/docs/<name>`.
+Then, the same evening (§89–§92): a month view on the listing; Open Graph cards drawn from the
+event, a square one for Instagram, share links; icons (`@mui/icons-material`, pinned, one file
+per glyph); the flow in five steps; every email on `/admin/emails`; the events list's ⋮ menu;
+one place field; the Neon row in dollars a month; the queue panel with the waiting list in order.
 
 **The email people keep, the reminder, and after the race** (`DECISIONS.md` §81–§83).
 The confirmation and the reminder open with a bold facts line (date, time, meeting point),

@@ -119,6 +119,16 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     sx={{ width: 160, height: 160, border: 1, borderColor: "divider", borderRadius: 1 }}
                   />
                   <Box>
+                    {item.bibNumber && (
+                      <>
+                        <Typography variant="body2" color="text.secondary">
+                          {t("mine.bib")}
+                        </Typography>
+                        <Typography sx={{ fontWeight: 700, fontSize: "1.75rem", color: "primary.main" }}>
+                          {item.bibNumber}
+                        </Typography>
+                      </>
+                    )}
                     <Typography variant="body2" color="text.secondary">
                       {t("mine.code")}
                     </Typography>

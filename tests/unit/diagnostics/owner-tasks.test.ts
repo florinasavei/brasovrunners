@@ -17,6 +17,7 @@ const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
+  appEnv: "production",
   staleJobNames: [],
   staffCount: 3,
   publishedEventCount: 4,
@@ -119,3 +120,17 @@ describe("owner tasks", () => {
     expect(sorted[0].state).toBe("blocking");
   });
 });
+
+describe("the email task off production", () => {
+  it("reads done on QA in allowlist mode, where live is refused by rule, and blocking in capture", async () => {
+    const { ownerTasks } = await import("@/modules/diagnostics/owner-tasks");
+    const qa = ownerTasks({ ...LAUNCHED, appEnv: "qa", emailDeliveryMode: "allowlist" });
+    expect(qa.find((task) => task.id === "liveEmail")?.state).toBe("done");
+    const captured = ownerTasks({ ...LAUNCHED, appEnv: "qa", emailDeliveryMode: "capture" });
+    expect(captured.find((task) => task.id === "liveEmail")?.state).toBe("blocking");
+    // Production still needs `live`.
+    const prod = ownerTasks({ ...LAUNCHED, appEnv: "production", emailDeliveryMode: "allowlist" });
+    expect(prod.find((task) => task.id === "liveEmail")?.state).toBe("blocking");
+  });
+});
+

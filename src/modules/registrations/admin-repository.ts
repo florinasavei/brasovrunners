@@ -599,3 +599,30 @@ export async function listEventsForDesk<T extends Record<string, unknown>>(
     )
     .orderBy(asc(events.startsAt));
 }
+
+/**
+ * One event's active registrations for the queue panel (`DECISIONS.md` §92): confirmed and
+ * holds first, then the waiting list in exactly the order `lockOldestWaitlisted` serves it —
+ * oldest `waitlisted_at` first, `id` breaking a tie — so the panel's numbering is a promise.
+ */
+export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
+  return db
+    .select({
+      id: registrations.id,
+      status: registrations.status,
+      kind: registrations.kind,
+      registeredName: registrations.registeredName,
+      submittedAt: registrations.submittedAt,
+      waitlistedAt: registrations.waitlistedAt,
+      holdExpiresAt: registrations.holdExpiresAt,
+    })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        sql`${registrations.status} in ('PENDING_DECLARATION', 'WAITLISTED', 'WAITLIST_OFFERED', 'CONFIRMED')`,
+      ),
+    )
+    .orderBy(asc(registrations.waitlistedAt), asc(registrations.id));
+}
+

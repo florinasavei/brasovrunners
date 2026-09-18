@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -4460,3 +4460,198 @@ opening SETUP §33 — and both deployed projects have their keys since this eve
 sentence should not be seen again.
 
 Baseline `BR-V1.37-2026-09-18`.
+
+## 84. Decided — a telephone number is a country and digits, stored as one thing a phone can dial (2026-09-18)
+
+**Status:** Decided and built. `registrations/phone.ts`, `ui/PhoneField.tsx`, `fields.ts`,
+`form-mapping.ts`; BR-REQ-031-04.
+
+The form accepted any three characters as a phone; "asdasdasdas" registered and the organizer
+would have found out on race morning. Now both phone fields are a country (a native select,
+Romania first, every nationality that has a calling code) and the digits; the server composes
+E.164 (`+40712345678`) and refuses what cannot be a number — fewer than four digits, letters,
+an international form for a different country than the one chosen. Tolerant of what people
+type (spaces, dots, dashes, a `00`, a repeated `+40`, the trunk zero before a mobile), strict
+about the one thing that matters. Not a per-country format check: a runner from anywhere may
+enter, and refusing a valid foreign number is worse than storing one nobody rings.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 85. Decided — who is coming, folded, with the club; the opt-out asked only where a list exists (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-039-02 criterion 4; `events/ui/StartList.tsx`,
+`listPublicStartList`, the sample privacy notice.
+
+Three consent boxes in two directions — agree, may appear, keep me off — read as a puzzle;
+the owner: "people usually accept all." The opt-out is now asked only on an event whose list
+is switched on (every event starts off), so most forms have two boxes in one direction.
+Switching a list on later is a question for the people already registered, and the answer is
+the notice and a message, not a box they never saw. The list itself is a folded section with
+the count in its summary, and shows the club beside the name — "who is coming" at a race is
+answered by clubs as much as by names. That widens the disclosure of §32 by one field, so the
+privacy notice that allows the list must name it: the sample notice does; the club's real one
+must before the list is switched on. The select list in the repository stays the guarantee,
+and the surface test names both columns and no third.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 86. Decided — the signature looks like one, and what happens next is said (2026-09-18)
+
+**Status:** Decided and built. The declaration page, the registration page's acceptance line,
+`layout.tsx` (Caveat, self-hosted).
+
+The owner asked for the typed name to appear in a hand, "or people should be able to draw, so
+it is compliant with Romanian law." The law first: under Legea 455/2001 and eIDAS a typed name
+with a click, a timestamp and the hash of the text signed — `declaration_acceptances` records
+all three, and refuses a signature against any other text (§57) — is a simple electronic
+signature; a drawn scribble is the same category and no stronger. So the hand is presentation,
+and presentation matters: the name is typed in a handwriting face (Caveat, self-hosted like
+every other font, loaded only where named) and shown the same way in the backoffice. A drawing
+pad — a canvas island, an image column, a size cap — is not built; it would add nothing but
+work, and is recorded here as refused for that reason, open to reversal if the club's lawyer
+says otherwise.
+
+After signing, the page said "confirmed" and stopped; the first person through asked "what is
+next?". It now says: the confirmation email with the QR is on its way, a reminder comes two
+days before, cancel from the link. The desk row says what its controls do, in one line above
+the rows, because the same person asked "what do I do here".
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 87. Decided — the race number is given at confirmation (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-038-01; `bibs.ts` (`nextBibNumber`), the two
+confirmation paths in `registrations/service.ts`, the confirmation and reminder emails, the
+runner's pages.
+
+"Bib numbers should be generated automatically." They are: the moment a registration is
+confirmed — by the participant's signature or at the desk on paper — it takes the next number
+after the highest ever given at that event, inside the transaction that already holds the event
+row locked for capacity, which is what makes "max + 1" safe; the unique constraint is the
+backstop. A cancelled number stays taken. A test registration wears none, as in the batch. The
+number goes in the confirmation email ("you collect it at the desk"), the reminder and "my
+registrations"; the batch assignment stays for events confirmed before this, and the hand-typed
+number at the desk stays for the day somebody swaps.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 88. Decided — erased means gone; the database's size where the organizer looks; the repository's documents in the app (2026-09-18)
+
+**Status:** Decided and built. `admin-service.ts` (erase), `diagnostics/database-size.ts`,
+`/admin/tasks`, `/devs`, `/devs/docs/<name>` (`marked`, pinned).
+
+**Erase.** BR-REQ-037-06 deleted the registration and its acceptance and left the participant
+row — the address — behind. Now the participant goes with their last registration, and with it,
+by cascade, their tokens and outbox rows; a participant with another registration stays. The
+audit row's `participant_id` is null from then on, which is the point.
+
+**Size.** `pg_database_size` against the Free plan's half gigabyte, read from Postgres itself
+with no key, on `/devs` and on the Neon row of `/admin/tasks` — "measured", where it said "not
+measured". CU-hours still come from Neon's API.
+
+**Docs.** The repository's Markdown, rendered at `/devs/docs/<name>` for `DEV` and above — the
+owner asked to read them "straight from the repo" without a checkout. A closed list of names,
+never a path from the URL; the files are traced into the function; `marked` renders GFM. One
+dependency, pinned, for one screen, because a Markdown renderer written by hand is the worse
+choice.
+
+Also: the email task on `/admin/tasks` reads done on QA in allowlist mode, where live is
+refused by rule (§16.4) — it read "blocking" for ever there and meant nothing.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 89. Decided — the listing has a month view, because the club runs on a week (2026-09-18)
+
+**Status:** Decided and built. `events/domain/calendar.ts`, `events/ui/EventCalendar.tsx`,
+`listPublishedEventsBetween`; BR-REQ-020-01 criterion 5.
+
+The owner: "I need a calendar on the events page, similar to Google Calendar — we usually
+have at least two events per week (every Monday and every Wednesday) and sometimes weekend
+long runs," and, of a series he had just published, "I still can't see recurring events."
+The list showed them, one card each, under the featured race, folded on a phone past four —
+a list is the wrong shape for a schedule. The month is now on the listing under the hero:
+`?month=YYYY-MM`, server-rendered, links only, so it costs no script and a crawler reads
+next month. From `sm` up a seven-column grid, Monday first, today ringed, a race in the brand
+blue and everything else quiet; at 320px an agenda of the month's days, because forty pixels
+a column holds a number and nothing a thumb can hit. Wall-clock arithmetic in the club's zone
+throughout — the month begins at midnight in Brașov — and the cards below stay, because the
+next race deserves more than a cell.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 90. Decided — an event shared is a card; icons throughout (2026-09-18)
+
+**Status:** Decided and built. `events/share-image.tsx`, `[locale]/opengraph-image.tsx`,
+`events/[slug]/opengraph-image.tsx`, `events/[slug]/share-image` (route),
+`events/ui/ShareLinks.tsx`; `@mui/icons-material` pinned; BR-REQ-052-02 criterion 8.
+
+"The posts and events should be Facebook and Instagram shareable, and should look nice on
+social media." A link pasted anywhere showed the title and no picture, because an event has
+no cover picture. Now every event page has an Open Graph card drawn on the server from its
+own facts — title, date and time, meeting point, distance, in the brand's blue with the kit
+orange — and every other page the site's own card; X gets the large-card tag. Instagram takes
+no link, so the event page offers the same card as a square PNG to save and post, beside
+"share on Facebook" and "send on WhatsApp", which are the networks' fixed share addresses
+and load nothing from them (`docs-check` allows the two hosts as it allows YouTube's). No
+photograph is stored and none is needed: a card that says when and where is what a runner
+wants from a share.
+
+**Icons.** `AGENTS.md` §1.5 prefers nothing over a dependency, and `SocialIcon.tsx` refused
+the icon package for three glyphs. The owner asked for icons — on the admin tabs, on the
+facts, "overall I need more icons in the app" — and the package is the honest answer:
+`@mui/icons-material`, pinned, imported one file per glyph so the bundle carries the dozen
+used and not the two thousand. The brand marks stay inline, because the package's brand
+glyphs are deprecated and not the networks' current shapes.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 91. Decided — the flow in five steps, the emails on a page, and four smaller things the test asked for (2026-09-18)
+
+**Status:** Decided and built. `registrations/ui/RegistrationSteps.tsx`, `/admin/emails`,
+`content/events/ui/EventRowMenu.tsx`, `EventFieldsForm.tsx`, `/admin/tasks`.
+
+**The flow.** "It must be super clear for users what the flow is." The journey strip on the
+form says where they stand; it did not say the whole of it. Five steps with a glyph each —
+form, email, declaration, confirmed with QR and number, race day — and one aside about the
+waiting list, folded on the event page under the button and on the form under the strip. The
+deadlines in it are the lifecycle's own constants, so the page cannot promise what the
+allocator does not keep.
+
+**The emails.** "I must be able to see the email templates that get sent to them."
+`/admin/emails`, for any staff role, renders every message type in both languages through
+the same `buildTemplateContent` and `renderContent` the outbox uses, with a made-up runner
+and links that go nowhere, each in a sandboxed `<iframe srcdoc>` — an email has its own
+`<html>`. Linked from the guide. There is no second copy of the wording to drift.
+
+**The row menu.** "More actions should be a context menu." The events list's native
+`<details>` held two buttons open under the row; it is now `⋮` with a menu anchored to it —
+preview, registrations, duplicate, delete or the reason it cannot be — and the verbs stay the
+same Server Actions on hidden forms the menu submits after its confirmation. The third client
+island on that page, and the first that earns it by doing what every app on the phone does.
+
+**One place.** "Meeting point and address are a bit redundant." One field, a name or a street
+or both; `location_address` stays for the rows that have one and nothing writes it. The map
+field is "Meeting point link", which is what it is.
+
+**The Neon row.** "That is a bit vague, I need a monthly cost." The row on `/admin/tasks`
+projects this month's CU-hours to a full month at Launch's rates read from Neon's pricing on
+2026-09-18 — no monthly fee, $0.106 a CU-hour, $0.35 a GB-month — and says the figure in
+dollars; without `NEON_API_KEY` it says the rates and what 100 CU-hours would cost.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 92. Decided — the queue is visible, in the order it is served (2026-09-18)
+
+**Status:** Decided and built. `registrations/ui/QueuePanel.tsx`, `listQueueForEvent`;
+BR-REQ-037-04 criterion 8.
+
+"I need to see and simulate the waiting list." Simulating existed — test registrations on
+`@test.invalid` addresses, §30 — but nothing showed the queue they filled: the list screen
+shows rows and statuses, not places. The event page now has the queue as the allocator sees
+it — places, confirmed, held, free by the public formula, waiting — and the waiting list
+numbered in exactly the order `lockOldestWaitlisted` serves it (oldest `waitlisted_at`, `id`
+on a tie), each with its offer deadline when one is out; and one paragraph saying how to make
+it move. Administrator only, because it names people. Reads through `countOccupied` and
+`computeOccupied`, so the panel and the public "free places" cannot disagree.
+
+Baseline `BR-V1.38-2026-09-18`.

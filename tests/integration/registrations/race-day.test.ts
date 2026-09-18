@@ -327,6 +327,9 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "a@example.org", { fastTrack: true });
     const b = await enter(event, "b@example.org", { fastTrack: true, at: new Date(NOW.getTime() + 60_000) });
+    // Confirmed at the desk, so numbered on the spot (§87): 1 and 2, in that order.
+    expect(a.registration.bibNumber).toBe(1);
+    expect(b.registration.bibNumber).toBe(2);
 
     await setBibNumberByStaff(db, volunteer, a.registration.id, 5, NOW);
     expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 5, NOW))).toBe("CONFLICT");
@@ -339,6 +342,6 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
       .select()
       .from(auditLogs)
       .where(eq(auditLogs.action, "registration.bib_set"));
-    expect(entry.metadataJson).toEqual({ from: null, to: 5 });
+    expect(entry.metadataJson).toEqual({ from: 1, to: 5 });
   });
 });

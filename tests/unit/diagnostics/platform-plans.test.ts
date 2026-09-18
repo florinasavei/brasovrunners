@@ -347,3 +347,16 @@ describe("BR-REQ-090-04 the operational half on /devs", () => {
     }
   });
 });
+
+describe("the Neon monthly figure (§88)", () => {
+  it("projects this month's pace to a full month at Launch's rates, with no base fee", async () => {
+    const { projectedNeonLaunchUsdPerMonth } = await import("@/modules/diagnostics/platform-plans");
+    // 50 CU-hours in 15 days is 100 in 30; 100 × $0.106 = $10.60; plus 1 GiB × $0.35.
+    expect(
+      projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: 50, neonHoursElapsed: 15 * 24, databaseBytes: 1024 ** 3 }),
+    ).toBe(10.95);
+    // Without the API figure there is no pace to project.
+    expect(projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: null, neonHoursElapsed: 100 })).toBeNull();
+    expect(projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: 10, neonHoursElapsed: 0 })).toBeNull();
+  });
+});

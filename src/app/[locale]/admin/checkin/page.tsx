@@ -189,6 +189,13 @@ export default async function DeskPage({ params, searchParams }: Props) {
         </Stack>
       )}
 
+      {/* What the buttons on a row do, in one line, always visible (the owner: "I do not
+          understand what to do here"). The folded steps above are the long version. */}
+      {counts && !closed && (
+        <Typography variant="body2" color="text.secondary">
+          {t("desk.rowHelp")}
+        </Typography>
+      )}
       {closed && <Alert severity="info">{t("desk.closed")}</Alert>}
       {byCode && <Alert severity="info">{t("desk.foundByCode")}</Alert>}
       {rows.length === 0 && eventId ? (

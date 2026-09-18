@@ -46,6 +46,8 @@ export type OwnerTaskInputs = {
    * Mailgun (`docs/RUNBOOKS.md`) — and one variable on the deployment.
    */
   emailDeliveryMode: "capture" | "allowlist" | "live";
+  /** Which deployment this is: off production, `allowlist` is the finished state (§16.4). */
+  appEnv: "local" | "test" | "qa" | "production";
   /**
    * Each scheduled job's own liveness, not one boolean for all of them.
    *
@@ -107,10 +109,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
   // Nothing reaches a real person while the site captures mail, and the sandbox that replaces
   // capture reaches five addresses. The detail names the mode, so "not live" is not a mystery.
+  // On QA the mode is `allowlist` by rule (§16.4: live is refused outside production), so the
+  // row would read "blocking" for ever there and mean nothing. Off production the task is done
+  // when the provider is configured at all; the detail still names the mode.
+  const emailDone =
+    input.emailDeliveryMode === "live" ||
+    (input.appEnv !== "production" && input.emailDeliveryMode === "allowlist");
   tasks.push({
     id: "liveEmail",
     owner: "club",
-    state: input.emailDeliveryMode === "live" ? "done" : "blocking",
+    state: emailDone ? "done" : "blocking",
     detail: input.emailDeliveryMode === "live" ? undefined : input.emailDeliveryMode,
   });
 

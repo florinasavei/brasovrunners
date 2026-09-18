@@ -42,6 +42,12 @@
     "featuredCallToAction": "See the race details",
     "others": "Other events",
     "othersCount": "Other events ({count})",
+    "calendar": {
+      "previous": "Previous month",
+      "next": "Next month",
+      "today": "Today",
+      "empty": "Nothing scheduled this month."
+    },
     "raceWeek": {
       "today": "Today, {when}",
       "tomorrow": "Tomorrow, {when}",
@@ -59,6 +65,12 @@
     "where": "Where",
     "raceStartTime": "Race start",
     "meetingPoint": "Meeting point",
+    "share": {
+      "title": "Share:",
+      "facebook": "Facebook",
+      "whatsapp": "WhatsApp",
+      "instagram": "Picture for Instagram"
+    },
     "openMap": "Open the map",
     "address": "Address",
     "distance": "Distance",
@@ -86,6 +98,7 @@
     },
     "startList": {
       "title": "Who's coming",
+      "titleCount": "Who's coming ({count})",
       "empty": "Nobody has confirmed a place yet.",
       "note": "Only people who confirmed their registration and did not ask to be left out are listed here."
     },
@@ -285,6 +298,7 @@
       "edit": "Edit",
       "editNamed": "Edit {title}",
       "moreActions": "More actions",
+      "registrationsLink": "Registrations ({count})",
       "new": "New event",
       "registrations": "Registrations",
       "columnTitle": "Event",
@@ -339,8 +353,9 @@
       "startsAtHelp": "Local time of the event ({timezone}). For a race this is the gathering time.",
       "raceStartsAt": "Race start",
       "raceStartsAtHelp": "When the gun goes, if that differs from the gathering time. Leave empty when there is only one time.",
-      "mapUrl": "Map link",
-      "mapUrlHelp": "Optional. A link to the meeting point — Google Maps or any other map. It must start with https://.",
+      "mapUrl": "Meeting point link",
+      "mapUrlHelp": "Optional. The meeting point on Google Maps or any other map. It must start with https://.",
+      "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The same in both languages, filled in once.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
       "saveEvent": "Save the event details",
@@ -492,6 +507,22 @@
       "empty": "There is no staff account yet.",
       "changeRolePending": "Saving…",
       "revokePending": "Removing…"
+    },
+    "queue": {
+      "title": "The registration queue",
+      "capacity": "Places",
+      "unlimited": "unlimited",
+      "confirmed": "Confirmed",
+      "holds": "Held",
+      "free": "Free",
+      "waiting": "Waiting",
+      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes) or answers a waiting-list offer (24 hours). Free = places − confirmed − held, exactly the formula the public sees.",
+      "lineTitle": "Waiting list ({count})",
+      "lineEmpty": "Nobody is waiting. The list fills once the places are gone.",
+      "test": "test",
+      "offered": "offer until {until}",
+      "since": "since {when}",
+      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (as 30-minute holds), the rest queue here, in order. Cancel a confirmed one or let a hold lapse (the maintenance job runs every 15 minutes) and the first in line gets the offer; its email shows in the Outbox on that registration."
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -732,6 +763,9 @@
           "freeGives": "Free: a small database (0.5 GB) and an amount of work included every month.",
           "ceiling": "The first limit: the space and the monthly amount of work included.",
           "whenCrossed": "On the free plan the database goes to sleep when nobody is using it, so the first page after a quiet spell is slow to load. Past the limit the site gets slow and errors can appear. The next step up is paid by usage, not as a fixed subscription.",
+          "closeMeasured": "Measured from the database: {used} MB of {of} MB used. Compute hours (CU) are on /devs.",
+          "monthly": "Monthly cost if we left Free, at this month's pace ({cu} CU-hours so far): about ${usd}/month on Launch ($0.106/CU-hour, $0.35/GB, no subscription).",
+          "monthlyUnknown": "Monthly cost on Launch: $0.106/CU-hour + $0.35/GB, no subscription — 100 CU-hours would be about $11/month. The exact pace appears once NEON_API_KEY is set.",
           "closeUnknown": "Not measured: the site does not know how much has been used. It is visible in the Neon account and worth a look before a race.",
           "bumpBack": "Taken for the days entries are open and dropped once they close."
         },
@@ -966,11 +1000,12 @@
       "nobody": "Nobody matches.",
       "backToDesk": "← Back to the desk",
       "scannedTitle": "Scanned participant",
-      "confirmHere": "Confirm here",
+      "confirmHere": "Confirm on paper",
+      "rowHelp": "On each row: type the race number (if not assigned already) → Save; when the person has arrived → Present. Somebody whose email never arrived signs the declaration on paper → Confirm on paper.",
       "givePlace": "Give a place",
       "bibField": "Race number",
-      "saveBib": "Save",
-      "checkIn": "Here",
+      "saveBib": "Save no.",
+      "checkIn": "Mark present",
       "undoCheckIn": "Undo",
       "checkedInAt": "Here since {time} · {who}",
       "bySelf": "themselves",
@@ -983,6 +1018,44 @@
         "bibSet": "Number saved.",
         "checkedIn": "Marked as here.",
         "checkinUndone": "Check-in undone."
+      }
+    },
+    "emails": {
+      "title": "The emails participants receive",
+      "intro": "Every message the platform sends, exactly as it reaches the participant, with sample data. The links in the samples go nowhere.",
+      "link": "See the emails participants receive →",
+      "subject": "Subject",
+      "lang": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "types": {
+        "VERIFY_REGISTRATION_EMAIL": "Confirm your email address",
+        "COMPLETE_DECLARATION": "Sign the declaration",
+        "WAITLIST_JOINED": "You are on the waiting list",
+        "WAITLIST_SPOT_OFFER": "A place has freed up",
+        "REGISTRATION_CONFIRMED": "Registration confirmed (with QR and number)",
+        "REGISTRATION_CANCELLED": "Registration cancelled",
+        "WAITLIST_OFFER_EXPIRED": "The offer expired",
+        "REGISTRATION_MANAGE_LINK": "Your registration link",
+        "PROFILE_MANAGE_LINK": "My registrations",
+        "REGISTRATION_STATE_NOTICE": "Registration status",
+        "EVENT_REMINDER": "Reminder 48 hours before",
+        "EVENT_THANKS": "Thank you after the race"
+      },
+      "when": {
+        "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
+        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. The place is held 30 minutes.",
+        "WAITLIST_JOINED": "After the address is confirmed, when the event is full.",
+        "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. 24 hours to sign.",
+        "REGISTRATION_CONFIRMED": "Right after the declaration is signed — or at the desk, on paper.",
+        "REGISTRATION_CANCELLED": "When the participant withdraws or an organizer cancels the registration.",
+        "WAITLIST_OFFER_EXPIRED": "When the offer's 24 hours pass without a signature.",
+        "REGISTRATION_MANAGE_LINK": "On request, from “Resend the link” (site or backoffice).",
+        "PROFILE_MANAGE_LINK": "On request, when somebody wants to see all their registrations.",
+        "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
+        "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once.",
+        "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came."
       }
     },
     "guide": {
@@ -1079,6 +1152,7 @@
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
+      "phone": "Type only the digits of the number, without the country code (that is chosen on the left).",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again."
     },
@@ -1103,6 +1177,8 @@
     "nationality": "Nationality",
     "city": "City",
     "phone": "Phone",
+    "phoneCountry": "Country",
+    "phoneHelp": "The number without the country code — for example 0712 345 678.",
     "emergencyContactName": "Emergency contact",
     "emergencyContactPhone": "Emergency contact phone",
     "tshirtSize": "T-shirt size",
@@ -1126,6 +1202,7 @@
       "nationality": "Nationality",
       "city": "City",
       "phone": "Phone",
+      "phoneCountry": "Country",
       "emergencyContactName": "Emergency contact",
       "emergencyContactPhone": "Emergency contact phone",
       "tshirtSize": "T-shirt size",
@@ -1144,6 +1221,15 @@
       "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
       "prompt": "Did the message not arrive?",
       "linkLabel": "Send it again"
+    },
+    "steps": {
+      "title": "How registration works",
+      "form": { "title": "Fill in the form", "body": "Your name, email, phone and an emergency contact. It takes a minute." },
+      "email": { "title": "Confirm your email address", "body": "You get a link. Open it within {hours} hours — otherwise the registration expires and the place stays free." },
+      "declaration": { "title": "Sign the declaration", "body": "From that same email, read the declaration and type your name. Your place is held for {minutes} minutes while you sign." },
+      "confirmed": { "title": "You are in", "body": "You get the confirmation email, with your QR code and race number. Two days before, we send a reminder." },
+      "raceDay": { "title": "On race day", "body": "Show the QR code (or say your name) at the registration desk and collect your number." },
+      "waitingList": { "title": "If it is full", "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offerHours} hours to sign the declaration." }
     },
     "journey": {
       "steps": {
@@ -1184,7 +1270,18 @@
       "doneTitle": "Your declaration is signed",
       "event": "For the event: {event}",
       "deadline": "Your place is held until {deadline}.",
-      "typedNameHelp": "Type the full name you registered with."
+      "typedNameHelp": "Type the full name you registered with. It appears as a signature.",
+      "nextTitle": "What happens next",
+      "nextConfirmed": [
+        "The confirmation email is on its way, with your QR code and your access code — keep it for race day.",
+        "Two days before the start you get a reminder with the time, the place, what to bring and, if assigned, your race number.",
+        "If you can no longer come, cancel from the link in the email: your place goes to somebody on the waiting list."
+      ],
+      "nextWaitlisted": [
+        "You are on the waiting list; if a place frees up, you get an email with a confirmation link.",
+        "The link has a deadline; if you do not confirm in time, the place moves on.",
+        "You can withdraw at any time from the email you received."
+      ]
     },
     "mine": {
       "title": "My registrations",
@@ -1196,6 +1293,7 @@
       "listTitle": "Your registrations",
       "empty": "You have no active registration at the moment.",
       "code": "Access code",
+      "bib": "Race number",
       "cancel": "Withdraw from this registration",
       "cancelledTitle": "Registration cancelled",
       "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",
@@ -1371,6 +1469,11 @@
         "body": "Enforced by this application rather than by Neon: db/client.ts sets both on the pool. The risk was never the connection count (max: 10 is per warm instance, and PgBouncer accepts far more) but one unbounded query holding a Vercel function for 300 seconds. The first timeout is enforced by PostgreSQL, so it holds even when the Node process is frozen; the second covers an instance killed between two statements of an open transaction. There is no connection timeout, deliberately: on Neon Free the first request after an idle period waits for the database to wake."
       }
     },
+    "docs": {
+      "title": "The repository's documents",
+      "back": "← Configuration",
+      "file": "{file} · {kb} KB · exactly what the deployed version carries"
+    },
     "theme": {
       "title": "Theme lab",
       "intro": "Try the site with bigger type, another typeface or other corners — in this browser only, with nothing published. Then open any page to see it; “Back to normal” clears everything.",
@@ -1385,6 +1488,8 @@
     },
     "neon": {
       "title": "Database (Neon)",
+      "size": "Storage used: {used} MB of {of} MB ({percent}%).",
+      "sizeUnknown": "The storage used could not be read.",
       "intro": "This project's consumption in the current period, read from Neon. The Free plan gives 100 CU-hours a month per project; when they run out the database stops until the next month begins.",
       "used": "{used} of 100 CU-hours used ({percent}%)",
       "awake": "Compute awake: {hours} h of {elapsed} h elapsed",

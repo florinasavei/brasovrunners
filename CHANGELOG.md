@@ -8,6 +8,21 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.38-2026-09-18
+
+The evening's test on QA, and what it found.
+
+- **Telephone numbers** are a country and digits, stored as E.164; "asdasdasdas" is refused. `DECISIONS.md` §84.
+- **Consents.** The list opt-out is asked only on an event whose list is switched on; **who is coming** is a folded section with the count and shows the club beside the name (the privacy notice must name it — the sample does). §85.
+- **The signature** is typed in a hand; after signing, the page says what happens next; the desk row says what its buttons do. §86.
+- **Race numbers are given at confirmation**, in the confirmation email, the reminder and "my registrations". §87.
+- **Erased means gone** (the participant row too); **the database's size** on `/admin/tasks` and `/devs`; **the repository's documents** at `/devs/docs/<name>`; the email task reads done on QA. §88.
+- **A month view on the listing** — grid from `sm`, agenda on a phone, `?month=` — because the club runs every Monday and Wednesday. §89.
+- **Shareable events.** An Open Graph card drawn from the event's facts on every event page, the site's card everywhere else, a square picture to post on Instagram, and Facebook / WhatsApp share links. **Icons** on the admin tabs, the facts and the flow (`@mui/icons-material`, pinned). §90.
+- **The flow in five steps** on the form and the event page; **every email on `/admin/emails`**; the events list's **⋮ menu**; **one place field** ("Meeting point link"); the Neon row says a **monthly cost**. §91.
+- **The queue panel** on the event page: places, holds, free, and the waiting list numbered in the order it is served. §92.
+- **Fixes.** The editor's picture buttons are words, not an emoji that rendered as a box. The repository documents' reads are statically traceable, so the deploy does not carry the whole project.
+
 ## BR-V1.37-2026-09-18
 
 After the race, and the email people keep.
@@ -16,7 +31,6 @@ After the race, and the email people keep.
 - **The reminder.** `EVENT_REMINDER`, 48 hours before the start, to every confirmed participant, once per registration, from the maintenance job — with "can't come? cancel here". Resendable by hand while confirmed and ahead ("Trimite reminderul"). The free-day forecast counts four messages per registration now. BR-REQ-080-01 criterion 5, BR-REQ-037-02; `DECISIONS.md` §81. Migration `0031` (expand-only).
 - **After the race.** `COMPLETED` means over: the page says "S-a încheiat" and hides registration, the desk refuses check-in with a sentence, the maintenance job leaves the event alone. **The thank-you** (`EVENT_THANKS`): sent by an Administrator from the event page, once per event, to everyone checked in, with an optional link — behind a confirmation, audited with the event and the count, never automatic. BR-REQ-020-01 criterion 4, BR-REQ-080-01 criterion 6; `DECISIONS.md` §82.
 - **Organizer's numbers.** The registrations list filters to bounced emails and shows the chip; the CSV export gains `Checked in` and `Email bounced`; the events list shows confirmed · here beside an event within a day of its start. `/devs`'s Neon sentence carries the two-minute steps. `DECISIONS.md` §83.
-- **Fixes.** The editor's two picture buttons are words — "Imagine", "Din galerie" — instead of an emoji that rendered as a broken box on the owner's machine.
 - **Accounts.** Both Vercel projects carry a project-scoped Neon key, so `/devs` shows the database's month on QA and production; QA sends from the club's verified `mail.` domain (allowlist mode) instead of the sandbox.
 
 ## BR-V1.36-2026-09-18

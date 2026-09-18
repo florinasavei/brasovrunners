@@ -162,9 +162,10 @@ export default async function DeskRow({
                     name="bibNumber"
                     type="number"
                     size="small"
+                    label={t("desk.bibField")}
                     defaultValue={row.bibNumber ?? ""}
-                    slotProps={{ htmlInput: { min: 1, max: 99999, "aria-label": t("desk.bibField") } }}
-                    sx={{ width: 96 }}
+                    slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
+                    sx={{ width: 120 }}
                   />
                   <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
                     {t("desk.saveBib")}

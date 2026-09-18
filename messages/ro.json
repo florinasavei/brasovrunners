@@ -42,6 +42,12 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Alte evenimente ({count})",
+    "calendar": {
+      "previous": "Luna anterioară",
+      "next": "Luna următoare",
+      "today": "Azi",
+      "empty": "Nimic programat în luna asta."
+    },
     "raceWeek": {
       "today": "Azi, {when}",
       "tomorrow": "Mâine, {when}",
@@ -59,6 +65,12 @@
     "where": "Unde",
     "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
+    "share": {
+      "title": "Dă mai departe:",
+      "facebook": "Facebook",
+      "whatsapp": "WhatsApp",
+      "instagram": "Poză pentru Instagram"
+    },
     "openMap": "Vezi pe hartă",
     "address": "Adresă",
     "distance": "Distanță",
@@ -86,6 +98,7 @@
     },
     "startList": {
       "title": "Cine vine",
+      "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
       "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei."
     },
@@ -285,6 +298,7 @@
       "edit": "Editează",
       "editNamed": "Editează {title}",
       "moreActions": "Alte acțiuni",
+      "registrationsLink": "Înscrieri ({count})",
       "new": "Eveniment nou",
       "registrations": "Înscrieri",
       "columnTitle": "Evenimentul",
@@ -339,8 +353,9 @@
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
-      "mapUrl": "Link către hartă",
-      "mapUrlHelp": "Opțional. Un link către punctul de întâlnire — Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
+      "mapUrl": "Link către punctul de întâlnire",
+      "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
+      "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă. La fel în ambele limbi, completat o dată.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "saveEvent": "Salvează detaliile evenimentului",
@@ -492,6 +507,22 @@
       "empty": "Nu există niciun cont în echipă.",
       "changeRolePending": "Se salvează…",
       "revokePending": "Se retrage…"
+    },
+    "queue": {
+      "title": "Coada de înscrieri",
+      "capacity": "Locuri",
+      "unlimited": "nelimitat",
+      "confirmed": "Confirmate",
+      "holds": "Rezervate",
+      "free": "Libere",
+      "waiting": "În așteptare",
+      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
+      "lineTitle": "Lista de așteptare ({count})",
+      "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
+      "test": "test",
+      "offered": "ofertă până la {until}",
+      "since": "din {when}",
+      "simulate": "Cum simulezi lista de așteptare (nu în producție): pune un număr mic de locuri în Setări, salvează, apoi adaugă mai jos mai multe înscrieri de test decât locuri — primele iau locurile (ca rezervări de 30 de minute), restul intră aici, în ordine. Anulează una confirmată sau lasă o rezervare să expire (jobul de întreținere rulează la 15 minute) și prima din listă primește oferta; emailul ei apare în Outbox, la înscrierea respectivă."
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -732,6 +763,9 @@
           "freeGives": "Gratuit: o bază de date mică (0,5 GB) și o cantitate de lucru inclusă în fiecare lună.",
           "ceiling": "Prima limită: spațiul și cantitatea de lucru incluse lunar.",
           "whenCrossed": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Peste limită, site-ul devine lent și pot apărea erori. Pasul următor se plătește la consum, nu ca abonament fix.",
+          "closeMeasured": "Măsurat din baza de date: {used} MB din {of} MB ocupați. Orele de calcul (CU) se văd pe /devs.",
+          "monthly": "Cost lunar dacă am ieși din gratuit, la ritmul acestei luni ({cu} ore-CU până acum): circa {usd} $/lună pe Launch (0,106 $/oră-CU, 0,35 $/GB, fără abonament).",
+          "monthlyUnknown": "Cost lunar pe Launch: 0,106 $/oră-CU + 0,35 $/GB, fără abonament — la 100 de ore-CU ar fi circa 11 $/lună. Ritmul exact apare când NEON_API_KEY e setat.",
           "closeUnknown": "Nemăsurat: site-ul nu știe cât s-a consumat. Se vede în contul Neon și merită privit înainte de o cursă.",
           "bumpBack": "Se ia pentru zilele înscrierilor și se coboară după ce acestea se închid."
         },
@@ -966,11 +1000,12 @@
       "nobody": "Nimeni nu se potrivește.",
       "backToDesk": "← Înapoi la masă",
       "scannedTitle": "Participant scanat",
-      "confirmHere": "Confirmă aici",
+      "confirmHere": "Confirmă pe hârtie",
+      "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu l-ai alocat deja) → Salvează; când persoana a ajuns → Prezent. Cine nu a confirmat emailul semnează declarația pe hârtie → Confirmă pe hârtie.",
       "givePlace": "Dă-i un loc",
       "bibField": "Număr de concurs",
-      "saveBib": "Salvează",
-      "checkIn": "Prezent",
+      "saveBib": "Salvează nr.",
+      "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
       "checkedInAt": "Prezent la {time} · {who}",
       "bySelf": "singur",
@@ -983,6 +1018,44 @@
         "bibSet": "Numărul a fost salvat.",
         "checkedIn": "Marcat prezent.",
         "checkinUndone": "Prezența a fost anulată."
+      }
+    },
+    "emails": {
+      "title": "Emailurile trimise participanților",
+      "intro": "Fiecare mesaj pe care platforma îl trimite, exact cum ajunge la participant, cu date de exemplu. Linkurile din exemple nu duc nicăieri.",
+      "link": "Vezi emailurile pe care le primesc participanții →",
+      "subject": "Subiect",
+      "lang": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "types": {
+        "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa de email",
+        "COMPLETE_DECLARATION": "Semnează declarația",
+        "WAITLIST_JOINED": "Ești pe lista de așteptare",
+        "WAITLIST_SPOT_OFFER": "S-a eliberat un loc",
+        "REGISTRATION_CONFIRMED": "Înscriere confirmată (cu QR și număr)",
+        "REGISTRATION_CANCELLED": "Înscriere anulată",
+        "WAITLIST_OFFER_EXPIRED": "Oferta a expirat",
+        "REGISTRATION_MANAGE_LINK": "Linkul tău de înscriere",
+        "PROFILE_MANAGE_LINK": "Înscrierile mele",
+        "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
+        "EVENT_REMINDER": "Reminder cu 48 de ore înainte",
+        "EVENT_THANKS": "Mulțumim după cursă"
+      },
+      "when": {
+        "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
+        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Locul e ținut 30 de minute.",
+        "WAITLIST_JOINED": "După confirmarea adresei, când nu mai sunt locuri.",
+        "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. 24 de ore să semneze.",
+        "REGISTRATION_CONFIRMED": "Imediat după semnarea declarației — sau la masă, pe hârtie.",
+        "REGISTRATION_CANCELLED": "Când participantul se retrage sau un organizator anulează înscrierea.",
+        "WAITLIST_OFFER_EXPIRED": "Când cele 24 de ore ale ofertei trec fără semnătură.",
+        "REGISTRATION_MANAGE_LINK": "La cerere, din „Retrimite linkul” (site sau backoffice).",
+        "PROFILE_MANAGE_LINK": "La cerere, când cineva vrea să-și vadă toate înscrierile.",
+        "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
+        "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată.",
+        "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți."
       }
     },
     "guide": {
@@ -1079,6 +1152,7 @@
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
+      "phone": "Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
     },
@@ -1103,6 +1177,8 @@
     "nationality": "Naționalitate",
     "city": "Oraș",
     "phone": "Telefon",
+    "phoneCountry": "Țara",
+    "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
     "emergencyContactName": "Persoană de contact în caz de urgență",
     "emergencyContactPhone": "Telefonul persoanei de contact",
     "tshirtSize": "Mărime tricou",
@@ -1126,6 +1202,7 @@
       "nationality": "Naționalitate",
       "city": "Oraș",
       "phone": "Telefon",
+      "phoneCountry": "Țara",
       "emergencyContactName": "Persoană de contact în caz de urgență",
       "emergencyContactPhone": "Telefonul persoanei de contact",
       "tshirtSize": "Mărime tricou",
@@ -1144,6 +1221,15 @@
       "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
       "prompt": "Nu a ajuns mesajul?",
       "linkLabel": "Trimite-l din nou"
+    },
+    "steps": {
+      "title": "Cum funcționează înscrierea",
+      "form": { "title": "Completezi formularul", "body": "Numele, emailul, telefonul și contactul de urgență. Durează un minut." },
+      "email": { "title": "Confirmi adresa de email", "body": "Primești un link. Apasă-l în {hours} de ore — altfel înscrierea expiră și locul rămâne liber." },
+      "declaration": { "title": "Semnezi declarația", "body": "Din același email, citești declarația și îți scrii numele. Locul e ținut {minutes} de minute cât semnezi." },
+      "confirmed": { "title": "Ești înscris", "body": "Primești emailul de confirmare, cu codul QR și numărul de concurs. Cu două zile înainte îți trimitem un reminder." },
+      "raceDay": { "title": "În ziua cursei", "body": "Arăți codul QR (sau spui numele) la masa de înscrieri și îți iei numărul." },
+      "waitingList": { "title": "Dacă nu mai sunt locuri", "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offerHours} de ore să semnezi declarația." }
     },
     "journey": {
       "steps": {
@@ -1184,7 +1270,18 @@
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
       "deadline": "Locul tău este rezervat până la {deadline}.",
-      "typedNameHelp": "Scrie numele complet cu care te-ai înscris."
+      "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
+      "nextTitle": "Ce urmează",
+      "nextConfirmed": [
+        "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
+        "Cu două zile înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
+        "Dacă nu mai poți veni, anulezi din linkul din email: locul tău merge la cineva de pe lista de așteptare."
+      ],
+      "nextWaitlisted": [
+        "Ești pe lista de așteptare; dacă se eliberează un loc, primești un email cu un link de confirmare.",
+        "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
+        "Poți renunța oricând din emailul primit."
+      ]
     },
     "mine": {
       "title": "Înscrierile mele",
@@ -1196,6 +1293,7 @@
       "listTitle": "Înscrierile tale",
       "empty": "Nu ai nicio înscriere activă în acest moment.",
       "code": "Cod de acces",
+      "bib": "Număr de concurs",
       "cancel": "Renunț la această înscriere",
       "cancelledTitle": "Înscrierea a fost anulată",
       "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",
@@ -1371,6 +1469,11 @@
         "body": "Impuse de această aplicație, nu de Neon: db/client.ts le setează pe pool. Riscul nu a fost niciodată numărul de conexiuni (max: 10 este per instanță caldă, iar PgBouncer acceptă mult mai multe), ci o interogare nemărginită care ține o funcție Vercel 300 de secunde. Primul timeout este impus de PostgreSQL, deci ține și când procesul Node este blocat; al doilea acoperă o instanță ucisă între două instrucțiuni ale unei tranzacții deschise. Conexiunea nu are timeout, deliberat: pe Neon Free prima cerere după inactivitate așteaptă pornirea bazei."
       }
     },
+    "docs": {
+      "title": "Documentele din repo",
+      "back": "← Configurație",
+      "file": "{file} · {kb} KB · exact ce e în repo la versiunea instalată"
+    },
     "theme": {
       "title": "Laborator de temă",
       "intro": "Încearcă site-ul cu alt corp de literă, altă familie de fonturi sau alte colțuri — doar în acest browser, fără nicio publicare. Deschide apoi orice pagină ca să vezi rezultatul; „Revino la normal” șterge tot.",
@@ -1385,6 +1488,8 @@
     },
     "neon": {
       "title": "Baza de date (Neon)",
+      "size": "Spațiu ocupat: {used} MB din {of} MB ({percent}%).",
+      "sizeUnknown": "Spațiul ocupat nu a putut fi citit.",
       "intro": "Consumul proiectului în perioada curentă, citit din Neon. Planul gratuit dă 100 ore-CU pe lună pe proiect; când se termină, baza de date se oprește până la începutul lunii următoare.",
       "used": "{used} din 100 ore-CU folosite ({percent}%)",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",

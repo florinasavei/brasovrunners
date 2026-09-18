@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { E164_PHONE } from "./phone";
 
 /**
  * The registration form's editable fields (BR-REQ-031-01 criterion 1): full name, email,
@@ -48,13 +49,15 @@ const submissionFields = z.object({
 
   /**
    * The organizer's way of reaching somebody on race day, and somebody else if that fails.
-   * Required on the public form for that reason, and deliberately not validated against a
-   * national format: a runner from anywhere may enter, and rejecting a valid foreign number is
-   * a worse failure than storing one nobody rings.
+   * Required on the public form for that reason. Since `DECISIONS.md` §84 the form asks for
+   * the country and the number, `form-mapping.ts` composes E.164 (`+40712345678`), and this
+   * is what the row stores — deliberately not a national-format check beyond that: a runner
+   * from anywhere may enter, and rejecting a valid foreign number is a worse failure than
+   * storing one nobody rings.
    */
-  phone: z.string().trim().min(3).max(40),
+  phone: z.string().regex(E164_PHONE, "a telephone number in international form"),
   emergencyContactName: z.string().trim().min(1).max(200),
-  emergencyContactPhone: z.string().trim().min(3).max(40),
+  emergencyContactPhone: z.string().regex(E164_PHONE, "a telephone number in international form"),
 
   clubName: z.string().trim().max(200).optional(),
 

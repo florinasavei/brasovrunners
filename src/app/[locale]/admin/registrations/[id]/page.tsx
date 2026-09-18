@@ -389,7 +389,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           ))}
         {acceptances.map((acceptance, index) => (
           <Typography key={index} variant="body2">
-            {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} — {acceptance.typedName} (v{acceptance.declarationVersion})
+            {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} —{" "}
+            <Box component="span" sx={{ fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" }}>
+              {acceptance.typedName}
+            </Box>{" "}
+            (v{acceptance.declarationVersion})
             {acceptance.method === "PAPER" &&
               ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
           </Typography>

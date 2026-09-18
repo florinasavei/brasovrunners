@@ -18,6 +18,8 @@ import {
 } from "@/modules/diagnostics/configuration";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
+import { megabytes, NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
+import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
@@ -114,6 +116,7 @@ export default async function DevsPage({ params }: Props) {
   );
   const volume = await readEmailVolumeToday(db, now);
   const pictures = await countMediaAssets(db, now);
+  const databaseBytes = await readDatabaseSizeBytes(db);
 
   /** The value each configuration enum currently holds, for marking it in the list below. */
   const currentSetting: Record<string, string> = {
@@ -345,6 +348,20 @@ export default async function DevsPage({ params }: Props) {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t("neon.intro")}
         </Typography>
+        {/* Storage, from the database itself (§88): no key needed, and the other half of the plan. */}
+        <Typography
+          variant="body1"
+          sx={{ fontWeight: 600, mb: 1 }}
+          color={databaseBytes !== null && databaseBytes >= NEON_FREE_STORAGE_BYTES * 0.8 ? "error.main" : "text.primary"}
+        >
+          {databaseBytes === null
+            ? t("neon.sizeUnknown")
+            : t("neon.size", {
+                used: megabytes(databaseBytes),
+                of: Math.round(NEON_FREE_STORAGE_BYTES / (1024 * 1024)),
+                percent: Math.round((databaseBytes / NEON_FREE_STORAGE_BYTES) * 100),
+              })}
+        </Typography>
         {neon.ok ? (
           <Stack spacing={0.5}>
             <Typography
@@ -377,6 +394,16 @@ export default async function DevsPage({ params }: Props) {
         </Typography>
         <Typography variant="body2" sx={{ mt: 2 }}>
           <Link href="/devs/theme">{t("theme.link")}</Link>
+        </Typography>
+        {/* The repository's documents, readable here (§88): the runbook, the setup, the decisions. */}
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          {t("docs.title")}:{" "}
+          {REPO_DOCS.map((doc, index) => (
+            <span key={doc.name}>
+              {index > 0 ? " · " : ""}
+              <Link href={{ pathname: "/devs/docs/[name]", params: { name: doc.name } }}>{doc.name}</Link>
+            </span>
+          ))}
         </Typography>
       </Box>
 

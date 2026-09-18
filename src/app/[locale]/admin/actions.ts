@@ -124,7 +124,8 @@ function eventFieldsFrom(form: FormData) {
     stravaEventUrl: value("stravaEventUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
-    locationAddress: value("locationAddress"),
+    // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
+    locationAddress: null,
     // Closed sets since migration `0018`. An unselected dropdown posts "", which `fields.ts`
     // reads as "the club has not said" rather than as an invalid value.
     difficulty: value("difficulty") || null,

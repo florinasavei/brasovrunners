@@ -20,7 +20,10 @@ import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domai
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
+import ShareLinks from "@/modules/events/ui/ShareLinks";
 import StartList from "@/modules/events/ui/StartList";
+import { registrationState } from "@/modules/events/domain/registration-window";
+import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -122,6 +125,18 @@ export default async function EventDetailPage({ params }: Props) {
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       <RegistrationCta event={event} now={now} />
+
+      {/* The whole journey in five steps, folded — for the person deciding whether to press (§91). */}
+      {event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN" && (
+        <Box sx={{ mt: 2 }}>
+          <RegistrationSteps folded />
+        </Box>
+      )}
+
+      {/* Facebook and WhatsApp take the link; Instagram takes the picture (§90). */}
+      <Box sx={{ mt: 2 }}>
+        <ShareLinks url={eventUrl(locale, slug)} title={event.title} imageHref={`/${locale}/events/${slug}/share-image`} />
+      </Box>
 
       {event.locationAddress && (
         <Stack sx={{ mt: 3 }}>

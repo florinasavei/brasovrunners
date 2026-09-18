@@ -2,9 +2,10 @@
  * The social marks the footer shows — and the Strava mark the event page shows beside a route
  * link — as inline SVG.
  *
- * Inline rather than `@mui/icons-material`: that package is a dependency added for three glyphs,
- * which `AGENTS.md` §1.5 refuses ("prefer nothing"). Three paths cost under 2 kB, ship in the
- * HTML, and need no client code. The paths are the Simple Icons glyphs (CC0), which are the
+ * Inline rather than `@mui/icons-material`, which was refused for three glyphs and is in since
+ * `DECISIONS.md` §90 for the backoffice and the facts: its brand glyphs are deprecated and not
+ * the networks' current shapes. Three paths cost under 2 kB, ship in the HTML, and need no
+ * client code. The paths are the Simple Icons glyphs (CC0), which are the
  * shapes the networks themselves publish for this use.
  *
  * `aria-hidden`: the icon decorates a link whose accessible name is the network's name, set by

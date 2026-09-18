@@ -63,6 +63,24 @@ export type Headroom =
   | { kind: "derived"; reached: boolean }
   | { kind: "notMeasured" };
 
+/**
+ * Neon Launch, read from neon.com/pricing on 2026-09-18: no monthly fee, $0.106 per CU-hour,
+ * $0.35 per GB-month. The owner asked for "a monthly cost", so the row projects this month's
+ * pace to a full month at those rates — what the club would pay if it left Free today.
+ */
+export const NEON_LAUNCH_USD_PER_CU_HOUR = 0.106;
+export const NEON_LAUNCH_USD_PER_GB_MONTH = 0.35;
+
+export function projectedNeonLaunchUsdPerMonth(
+  input: Pick<PlatformFacts, "neonCuHoursThisMonth" | "neonHoursElapsed" | "databaseBytes">,
+): number | null {
+  if (typeof input.neonCuHoursThisMonth !== "number" || !input.neonHoursElapsed || input.neonHoursElapsed <= 0) return null;
+  const monthHours = 30 * 24;
+  const cuHoursPerMonth = (input.neonCuHoursThisMonth / input.neonHoursElapsed) * monthHours;
+  const gb = typeof input.databaseBytes === "number" ? input.databaseBytes / (1024 * 1024 * 1024) : 0;
+  return Math.round((cuHoursPerMonth * NEON_LAUNCH_USD_PER_CU_HOUR + gb * NEON_LAUNCH_USD_PER_GB_MONTH) * 100) / 100;
+}
+
 /** A temporary bump nobody reverses is the expensive failure, so each row says which it is. */
 export type BumpKind = "temporary" | "permanent";
 
@@ -122,6 +140,13 @@ export type PlatformFacts = {
   emailSentToday: number;
   /** Messages this application sends for one registration that completes normally. */
   messagesPerRegistration: number;
+  /** The database's size in bytes, read from Postgres (§88); null when it could not be read. */
+  databaseBytes?: number | null;
+  databaseStorageAllowanceBytes?: number;
+  /** This month's compute so far, from Neon (`/devs` reads it with a key); null without one. */
+  neonCuHoursThisMonth?: number | null;
+  /** How far into the month that figure is, in hours, so it can be projected to a full month. */
+  neonHoursElapsed?: number | null;
   /** Is any published event charging an entry fee? `events.cost_type = 'PAID'`. */
   hasPaidEvent: boolean;
   /**
@@ -221,10 +246,31 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       planToday: "Free",
       costToday: { kind: "free" },
       checkedOn: VENDOR_PLANS_CHECKED_ON,
-      // Storage and CU-hours live in Neon's console and this application never reads them.
-      // "Not measured" is the honest render; a green row here would be a claim.
-      headroom: { kind: "notMeasured" },
-      severity: "unknown",
+      // Storage is measured from Postgres itself since §88 (`pg_database_size` against the
+      // plan's half gigabyte); CU-hours still live in Neon's console (`/devs` reads them with
+      // a key). Unmeasured stays "not measured": a green row here would be a claim.
+      headroom:
+        typeof input.databaseBytes === "number" && input.databaseStorageAllowanceBytes
+          ? {
+              kind: "measured",
+              used: Math.round(input.databaseBytes / (1024 * 1024)),
+              of: Math.round(input.databaseStorageAllowanceBytes / (1024 * 1024)),
+              state:
+                input.databaseBytes >= input.databaseStorageAllowanceBytes
+                  ? "reached"
+                  : input.databaseBytes >= input.databaseStorageAllowanceBytes * 0.8
+                    ? "close"
+                    : "ok",
+            }
+          : { kind: "notMeasured" },
+      severity:
+        typeof input.databaseBytes === "number" && input.databaseStorageAllowanceBytes
+          ? input.databaseBytes >= input.databaseStorageAllowanceBytes
+            ? "act"
+            : input.databaseBytes >= input.databaseStorageAllowanceBytes * 0.8
+              ? "watch"
+              : "ok"
+          : "unknown",
       nextPlan: "Launch",
       nextCost: "$0.106/CU-hour",
       bump: "temporary",

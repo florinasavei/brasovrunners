@@ -22,6 +22,8 @@ import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import PhoneField from "@/modules/registrations/ui/PhoneField";
+import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { submitRegistrationAction } from "./actions";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -158,6 +160,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
       {/* Where they are in the journey, and what happens next — the same component every page
           of this flow renders, so the answer never depends on which page they are looking at. */}
       <RegistrationJourney current={submitted ? "confirm" : "details"} />
+
+      {/* The five steps and the waiting list, folded: the journey above says where they are,
+          this says the whole of it (`DECISIONS.md` §91). */}
+      {!submitted && (
+        <Box sx={{ mb: 3 }}>
+          <RegistrationSteps folded />
+        </Box>
+      )}
 
       {submitted ? (
         <Stack spacing={2}>
@@ -351,25 +361,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 autoComplete="email"
                 slotProps={{ htmlInput: { inputMode: "email" } }}
               />
-              {/*
-                A deliberately permissive pattern: a runner from anywhere may enter, and refusing
-                a valid foreign number is a worse failure than accepting one nobody rings. It
-                exists so the browser catches a typed word before the server has to.
-              */}
-              <TextField
-                {...field("phone")}
-                type="tel"
+              {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
+              <PhoneField
+                name="phone"
+                id={fieldId("phone")}
                 label={t("phone")}
+                countryLabel={t("phoneCountry")}
+                locale={locale}
                 required
-                autoComplete="tel"
-                slotProps={{
-                  htmlInput: {
-                    inputMode: "tel",
-                    pattern: "[0-9+()./\\s-]{3,40}",
-                    minLength: 3,
-                    maxLength: 40,
-                  },
-                }}
+                autoComplete="tel-national"
+                error={invalid.has("phone")}
+                helperText={invalid.has("phone") ? t("errors.phone") : t("phoneHelp")}
               />
 
               {/*
@@ -377,7 +379,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 `autoComplete="off"` on both: this is deliberately somebody *else's* name and
                 number, and a phone offering the runner's own would be accepted by reflex.
               */}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <Stack spacing={2}>
                 <TextField
                   {...field("emergencyContactName")}
                   label={t("emergencyContactName")}
@@ -385,21 +387,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   fullWidth
                   autoComplete="off"
                 />
-                <TextField
-                  {...field("emergencyContactPhone")}
-                  type="tel"
+                <PhoneField
+                  name="emergencyContactPhone"
+                  id={fieldId("emergencyContactPhone")}
                   label={t("emergencyContactPhone")}
+                  countryLabel={t("phoneCountry")}
+                  locale={locale}
                   required
-                  fullWidth
                   autoComplete="off"
-                  slotProps={{
-                    htmlInput: {
-                      inputMode: "tel",
-                      pattern: "[0-9+()./\\s-]{3,40}",
-                      minLength: 3,
-                      maxLength: 40,
-                    },
-                  }}
+                  error={invalid.has("emergencyContactPhone")}
+                  helperText={invalid.has("emergencyContactPhone") ? t("errors.phone") : undefined}
                 />
               </Stack>
 
@@ -528,14 +525,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
-                BR-REQ-039-01. Asked on every form, including for an event that publishes no
-                start list today: an organizer can switch one on months later, and a question
-                nobody put to this person cannot be answered on their behalf afterwards. The
-                label says "if the club publishes one" for exactly that reason.
+                BR-REQ-039-01, `DECISIONS.md` §85. Asked only when this event publishes a
+                start list: three boxes in two directions confused everybody ("people accept
+                all"), and a question about a list that does not exist is noise. Switching the
+                list on later means asking the people already registered — the notice, not a
+                pre-answered box.
               */}
-              <CheckboxField name="listOptOut">
-                {`${t("listOptOut")} — ${t("optionalSuffix")}`}
-              </CheckboxField>
+              {event.participantListVisibility === "NAMES" && (
+                <CheckboxField name="listOptOut">
+                  {`${t("listOptOut")} — ${t("optionalSuffix")}`}
+                </CheckboxField>
+              )}
 
               {/*
                 Pressable, always, and deliberately — and, since 2026-09-17, honest about it.

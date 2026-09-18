@@ -40,6 +40,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
+import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
@@ -461,6 +462,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             )}
           </Box>
         )}
+
+      {/* The queue as the allocator sees it, and the waiting list in its order (§92). */}
+      {canManageRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && (
+        <Box component="section">
+          <Divider sx={{ mb: 3 }} />
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
+            {t("queue.title")}
+          </Typography>
+          <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity }} now={now} />
+        </Box>
+      )}
 
       {mayFillTheQueue && (
         <Box component="section">

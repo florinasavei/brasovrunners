@@ -100,7 +100,11 @@ export const routing = defineRouting({
     "/admin/registrations/new": "/admin/registrations/new",
     "/admin/registrations/[id]": "/admin/registrations/[id]",
     "/devs/theme": "/devs/theme",
+    /** The repository's documents, rendered for the roles that read `/devs` (`DECISIONS.md` §88). */
+    "/devs/docs/[name]": "/devs/docs/[name]",
     "/admin/guide": "/admin/guide",
+    /** Every email the platform sends, rendered with sample data (`DECISIONS.md` §91). */
+    "/admin/emails": "/admin/emails",
     "/admin/checkin": "/admin/checkin",
     "/admin/checkin/[code]": "/admin/checkin/[code]",
     "/admin/legal": "/admin/legal",

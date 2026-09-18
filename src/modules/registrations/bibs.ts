@@ -30,6 +30,24 @@ type Actor = Pick<StaffUser, "id" | "role">;
  * `(event_id, bib_number)` is the guarantee; the lock is what keeps the guarantee from surfacing
  * as an error.
  */
+/**
+ * The next free race number for an event — one more than the highest ever given there, so a
+ * cancelled registration's number is never reused. Called at confirmation (`DECISIONS.md`
+ * §87), inside the transaction that already holds the event row locked for capacity: the
+ * lock is what makes "max + 1" safe, and the unique constraint on `(event_id, bib_number)`
+ * is the backstop.
+ */
+export async function nextBibNumber<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  eventId: string,
+): Promise<number> {
+  const [{ highest }] = await tx
+    .select({ highest: sql<number>`coalesce(max(${registrations.bibNumber}), 0)` })
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId));
+  return Number(highest) + 1;
+}
+
 export async function assignBibNumbers<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; eventId: string; now?: Date },

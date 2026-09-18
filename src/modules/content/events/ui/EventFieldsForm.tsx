@@ -157,17 +157,18 @@ export default async function EventFieldsForm({
         These used to sit in each language's panel and be typed twice — and the second copy was
         never a translation, it was the same answer again.
       */}
+      {/*
+        One field for the place (the owner, 2026-09-18: "meeting point and address are a bit
+        redundant"): a name, a street, or both, as one would tell a friend. The column the
+        second box wrote, `location_address`, stays for the rows that have one and is shown
+        where it exists; nothing writes it any more.
+      */}
       <TextField
         name="event.locationName"
         label={t("editor.fields.locationName")}
-        helperText={t("editor.sharedFieldHelp")}
-        defaultValue={event?.locationName ?? ""}
+        helperText={t("editor.locationHelp")}
+        defaultValue={[event?.locationName, event?.locationAddress].filter(Boolean).join(", ")}
         required
-      />
-      <TextField
-        name="event.locationAddress"
-        label={t("editor.fields.locationAddress")}
-        defaultValue={event?.locationAddress ?? ""}
       />
       {/*
         Closed sets since migration `0018`, so the organizer picks rather than types — which is

@@ -480,6 +480,21 @@ describe("BR-REQ-037-06 an Administrator erases a registration", () => {
     expect(
       await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, registration.id)),
     ).toHaveLength(0);
+    // Erased means gone (`DECISIONS.md` §88): the participant row went with its last registration.
+    expect(
+      await db.select().from(participants).where(eq(participants.id, registration.participantId)),
+    ).toHaveLength(0);
+  });
+
+  it("keeps the participant while another registration of theirs remains", async () => {
+    const first = await createInternalEvent(10);
+    const second = await createInternalEvent(10);
+    const one = await registerPublicly(first, "twice@example.ro");
+    await registerPublicly(second, "twice@example.ro");
+
+    await deleteRegistrationByStaff(db, admin, one.id, "one of two", NOW);
+
+    expect(await db.select().from(participants).where(eq(participants.id, one.participantId))).toHaveLength(1);
   });
 
   it("leaves an audit row that outlives the registration it describes", async () => {

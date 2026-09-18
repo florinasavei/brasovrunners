@@ -179,6 +179,20 @@ export async function listUpcomingEvents(db: Database, locale: Locale, now: Date
 }
 
 /**
+ * The published events that start inside `[from, to)`, soonest first — one month of them for
+ * the calendar (`DECISIONS.md` §89). Past ones included: a calendar shows the month, and last
+ * Monday's run is part of it.
+ */
+export async function listPublishedEventsBetween(db: Database, locale: Locale, from: Date, to: Date) {
+  return db
+    .select(PUBLIC_COLUMNS)
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    .where(and(publishedIn(locale), gte(events.startsAt, from), lt(events.startsAt, to)))
+    .orderBy(asc(events.startsAt));
+}
+
+/**
  * The most recently finished published event, or undefined when the club has never held one.
  *
  * Between seasons there may be nothing scheduled. Rather than showing an empty page — which

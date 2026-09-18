@@ -30,6 +30,9 @@ import {
   type ServiceRow,
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
+import { NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
+import { readNeonConsumption } from "@/modules/diagnostics/neon";
+import { projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import {
   MAILGUN_FREE_DAILY_MESSAGES,
   MESSAGES_PER_COMPLETED_REGISTRATION,
@@ -169,6 +172,7 @@ export default async function AdminTasksPage({ params }: Props) {
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.
       legalTextIsSample: /EXEMPLU|SAMPLE/i.test(privacyNotice?.title ?? ""),
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
+      appEnv: env.APP_ENV,
       staleJobNames,
       staffCount,
       publishedEventCount,
@@ -180,7 +184,13 @@ export default async function AdminTasksPage({ params }: Props) {
   const t = await getTranslations("Admin.tasks");
   const blocking = tasks.filter((task) => task.state === "blocking").length;
 
+  const databaseBytes = await readDatabaseSizeBytes(db);
+  const neon = await readNeonConsumption(env);
   const facts = {
+    databaseBytes,
+    neonCuHoursThisMonth: neon.ok ? neon.consumption.cuHours : null,
+    neonHoursElapsed: neon.ok ? (now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000 : null,
+    databaseStorageAllowanceBytes: NEON_FREE_STORAGE_BYTES,
     emailAllowance: MAILGUN_FREE_DAILY_MESSAGES,
     emailSentToday: volume.sentMessages,
     messagesPerRegistration: MESSAGES_PER_COMPLETED_REGISTRATION,
@@ -199,13 +209,21 @@ export default async function AdminTasksPage({ params }: Props) {
   const freshness = priceFreshness(oldestCheckDate(services), now);
 
   /** How close this service is to its ceiling, in that service's own words. */
+  const neonMonthly = projectedNeonLaunchUsdPerMonth(facts);
   const howClose = (row: ServiceRow) => {
     if (row.headroom.kind === "measured") {
-      return t(`services.${row.id}.closeMeasured`, {
+      const base = t(`services.${row.id}.closeMeasured`, {
         used: row.headroom.used,
         of: row.headroom.of,
         left: registrationsLeft,
       });
+      // The monthly figure the owner asked for (§88): this month's pace on the next plan.
+      if (row.id === "neon") {
+        return neon.ok && neonMonthly !== null
+          ? `${base} ${t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2) })}`
+          : `${base} ${t("services.neon.monthlyUnknown")}`;
+      }
+      return base;
     }
     if (row.headroom.kind === "derived") {
       return t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`);

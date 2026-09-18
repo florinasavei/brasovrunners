@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -606,5 +606,16 @@ export async function deleteRegistrationByStaff<T extends Record<string, unknown
   await db.transaction(async (tx) => {
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, registrationId));
     await tx.delete(registrations).where(eq(registrations.id, registrationId));
+    // Erased means gone (`DECISIONS.md` §88): when this was the person's last registration,
+    // the participant row goes too — and with it, by cascade, their action tokens and outbox
+    // rows (the address). The audit row above keeps `participant_id` as null from here, which
+    // is the point: nothing left says who. A participant with another registration stays.
+    const [remaining] = await tx
+      .select({ n: count() })
+      .from(registrations)
+      .where(eq(registrations.participantId, current.participantId));
+    if ((remaining?.n ?? 0) === 0) {
+      await tx.delete(participants).where(eq(participants.id, current.participantId));
+    }
   });
 }

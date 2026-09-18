@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -248,6 +248,7 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 2. Given an event with `event_status = CANCELLED` and a published translation, when its page is requested, then it renders with a clearly visible cancelled status.
 3. Given a cancelled or completed event, when a registration is attempted, then it is rejected.
 4. Given an event with `event_status = COMPLETED` (set by the organizer in the editor), when its page or card renders, then it says "S-a încheiat" in words and offers no registration control; when a check-in is attempted at the desk, then it is refused with a sentence and the desk shows the rows without buttons; and the maintenance job no longer touches the event (2026-09-18, `DECISIONS.md` §82).
+5. Given the listing, when it renders, then it carries a month view of the published events — the month `?month=YYYY-MM` names or the current one, in the club's time zone, Monday first, each event a link, a cancelled one struck through — as a grid from `sm` up and as an agenda of the month's days on a phone (2026-09-18, `DECISIONS.md` §89).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
@@ -543,6 +544,7 @@ registration — and it lists registrations and never changes an address.
 1. Given an event whose participant list is `NAMES`, when the list renders, then each row is the registration's display name and nothing else.
 2. Given a registration whose display name differs from its legal name, when the list renders, then the legal name appears nowhere in the markup.
 3. Given the rules of BR-REQ-039-01, when the list renders, then they are unchanged: confirmed and real registrations only, opt-outs excluded, ordered by confirmation.
+4. Given a registration that named a club, when the list renders, then the club appears beside the display name — the only thing beside it; the list is a folded section, closed, with the count in its summary; and the privacy notice that allows the list names the club as published (2026-09-18, `DECISIONS.md` §85). The opt-out box is asked only on an event whose list is switched on.
 
 **Verification:** privacy `public-surface.test.ts`
 
@@ -868,6 +870,7 @@ registration — and it lists registrations and never changes an address.
 5. Given an Administrator in an environment other than production, when they add N test registrations to an event, then N synthetic participants go through the ordinary submission and confirmation path, each on a distinct address in a reserved domain that can never receive mail.
 6. Given the same Administrator, when they remove the test registrations for that event, then those rows and the synthetic participants behind them are deleted and every real registration is left standing.
 7. Given `APP_ENV=production`, when a test registration is attempted, then it is refused in two independent places.
+8. Given an Administrator on an event with internal registration, when the event page renders, then it shows the queue as the allocator counts it — places, confirmed, held, free, waiting — and the waiting list numbered in the order it is served, with an offer's deadline where one is out (2026-09-18, `DECISIONS.md` §92).
 
 **Verification:** integration `registrations/test-kind.test.ts`
 
@@ -1214,6 +1217,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 5. Given a published article (M5), when it renders, then it contains an `Article` block with `datePublished` and `dateModified`.
 6. Given any structured data block on any page, when it is inspected, then it contains no participant name, email, registration list, or declaration content.
 7. Given the test suite, when it runs, then it parses the emitted JSON-LD and asserts the required properties are present.
+8. Given a published event page, when it renders, then its `og:image` is a 1200×630 card drawn on the server from the event's own facts (title, date and time, meeting point, distance), absolute under `APP_BASE_URL`, with `twitter:card = summary_large_image`; every other public page carries the site's card; and the event page offers the same card as a square picture to download and share links for Facebook and WhatsApp (2026-09-18, `DECISIONS.md` §90).
 
 **Verification:** integration `seo/structured-data.test.ts`; e2e `event-page.spec.ts`
 

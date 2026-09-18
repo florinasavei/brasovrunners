@@ -110,6 +110,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     }
     data.checkinCode = code;
     data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
+    data.bibNumber = registration.bibNumber ?? undefined;
   }
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];

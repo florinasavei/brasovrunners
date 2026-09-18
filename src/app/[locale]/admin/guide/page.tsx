@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { requireStaff } from "@/modules/staff-identity/session";
 
@@ -35,6 +36,10 @@ export default async function GuidePage({ params }: Props) {
         {t("guide.title")}
       </Typography>
       <Typography color="text.secondary">{t("guide.intro")}</Typography>
+      {/* What participants receive, message by message (§91). */}
+      <Typography variant="body2">
+        <Link href="/admin/emails">{t("emails.link")}</Link>
+      </Typography>
       {sections.map((section, index) => (
         <Box
           key={index}

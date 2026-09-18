@@ -18,11 +18,14 @@ import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
-import { findLatestPastEvent, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
+import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
+import { monthRange, parseMonth } from "@/modules/events/domain/calendar";
+import EventCalendar from "@/modules/events/ui/EventCalendar";
+import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ month?: string | string[] }> };
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -38,8 +41,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("title"), description: t("intro") };
 }
 
-export default async function EventsPage({ params }: Props) {
+export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const { month: monthParam } = await searchParams;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
@@ -54,6 +58,10 @@ export default async function EventsPage({ params }: Props) {
   // a broken site, so the last event that happened stands in, dated.
   const latestPast = upcoming.length === 0 ? await findLatestPastEvent(db, locale, now) : undefined;
   const events = upcoming.length > 0 ? upcoming : latestPast ? [latestPast] : [];
+  // The month view (`DECISIONS.md` §89): the month the URL names, or this one.
+  const month = parseMonth(monthParam, now, CLUB_TIME_ZONE);
+  const range = monthRange(month, CLUB_TIME_ZONE);
+  const inMonth = await listPublishedEventsBetween(db, locale, range.from, range.to);
 
   /**
    * The club's lead event, shown in full above the list.
@@ -92,6 +100,11 @@ export default async function EventsPage({ params }: Props) {
       )}
 
       {featured && <FeaturedEventHero event={featured} now={now} />}
+
+      {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
+      <Box sx={{ my: 4 }}>
+        <EventCalendar month={month} events={inMonth} now={now} />
+      </Box>
 
       {/*
         Under a hero, the rest is "other events": a heading and denser cards — no excerpt,

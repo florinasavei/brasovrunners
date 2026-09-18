@@ -107,6 +107,13 @@ export async function resolveLocaleSwitch(
     return getPathname({ locale: target, href: { pathname: parsed.route, params: { token } } });
   }
 
+  // A repository document's name is the same in either language (§88).
+  if (parsed.route === "/devs/docs/[name]") {
+    const name = parsed.params.name;
+    if (!name) return listing;
+    return getPathname({ locale: target, href: { pathname: parsed.route, params: { name } } });
+  }
+
   // The desk code is the same in either language (BR-REQ-037-08).
   if (parsed.route === "/admin/checkin/[code]") {
     const code = parsed.params.code;

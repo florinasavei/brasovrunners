@@ -101,7 +101,7 @@ const privacyNoticeRo: LegalDocumentBody = {
     {
       heading: "5. Lista publică de participanți",
       paragraphs: [
-        "Pentru un anumit eveniment, clubul poate alege să publice pe pagina evenimentului lista persoanelor care și-au confirmat înscrierea. Când face asta, se publică numele scris de tine în formular și nimic altceva: nicio adresă de e-mail, nimic despre înscrierile neconfirmate și nicio altă informație.",
+        "Pentru un anumit eveniment, clubul poate alege să publice pe pagina evenimentului lista persoanelor care și-au confirmat înscrierea. Când face asta, se publică numele scris de tine în formular și, dacă l-ai completat, clubul din care faci parte — și nimic altceva: nicio adresă de e-mail, nimic despre înscrierile neconfirmate și nicio altă informație.",
         "Publicarea nu este pornită din oficiu. Fiecare eveniment pornește fără listă publică, iar clubul o activează separat, pentru evenimentul acela, dacă decide astfel.",
         "Formularul de înscriere are o căsuță prin care ceri ca numele tău să nu apară pe această listă. O poți bifa la înscriere, iar mai târziu poți cere oricând scoaterea numelui, scriind la <CONTACT>.",
         "Temeiul legal al publicării: <TEMEI LEGAL — a se completa de club>. Cât timp rămâne lista publică: <PERIOADĂ>.",
@@ -229,7 +229,7 @@ const privacyNoticeEn: LegalDocumentBody = {
     {
       heading: "5. The public participant list",
       paragraphs: [
-        "For a particular event, the club may choose to publish on the event page the list of people who have confirmed their registration. When it does, what is published is the name you gave on the form and nothing else: no email address, nothing about registrations that were never confirmed, and no other information.",
+        "For a particular event, the club may choose to publish on the event page the list of people who have confirmed their registration. When it does, what is published is the name you gave on the form and, if you filled it in, the club you belong to — and nothing else: no email address, nothing about registrations that were never confirmed, and no other information.",
         "It is not on by default. Every event starts with no public list, and the club switches it on separately, for that event, if it decides to.",
         "The registration form has a box you tick to keep your name off that list. You can tick it when you register, and you can ask for your name to be removed at any time afterwards by writing to <CONTACT>.",
         "Legal basis for publishing: <LEGAL BASIS — to be completed by the club>. How long the list stays public: <PERIOD>.",

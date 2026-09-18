@@ -76,7 +76,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     // Here.
     const rowAgain = page.getByTestId("desk-row").filter({ hasText: suffix });
     await expect(rowAgain).toContainText(bib);
-    await rowAgain.getByRole("button", { name: "Prezent", exact: true }).click();
+    await rowAgain.getByRole("button", { name: "Marchează prezent", exact: true }).click();
     await expect(page.locator("#admin-alert")).toContainText("Marcat prezent", { timeout: 15_000 });
     await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toContainText("Prezent la");
 

@@ -1,6 +1,6 @@
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata } from "next";
-import { Inter, Nunito, Roboto } from "next/font/google";
+import { Caveat, Inter, Nunito, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -32,6 +32,16 @@ const inter = Inter({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-inter",
+});
+/**
+ * The hand the declaration is signed in (`DECISIONS.md` §86): a typed name shown as a
+ * signature. Self-hosted like the rest; loaded only on the pages whose styles name it.
+ */
+const signature = Caveat({
+  weight: ["500"],
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-signature",
 });
 const nunito = Nunito({
   weight: ["400", "500", "700"],
@@ -76,6 +86,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // BR-REQ-101-02: every absolute URL derives from APP_BASE_URL.
     metadataBase: new URL(env.APP_BASE_URL),
     title: { default: t("name"), template: `%s · ${t("name")}` },
+    // The large card on X and everywhere that reads Twitter tags; Facebook reads `og:*`, which
+    // the `opengraph-image.tsx` files write (`DECISIONS.md` §90).
+    twitter: { card: "summary_large_image" },
   };
 }
 
@@ -92,7 +105,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable}`}>
+      <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable} ${signature.variable}`}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
             <NextIntlClientProvider>

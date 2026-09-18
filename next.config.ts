@@ -87,6 +87,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfkit"],
   outputFileTracingIncludes: {
     "/api/admin/legal/**": ["./src/theme/pdf/*"],
+    // `/devs/docs/<name>` reads the repository's Markdown at runtime (`modules/diagnostics/repo-docs.ts`).
+    "/[locale]/devs/docs/**": ["./*.md", "./docs/*.md"],
   },
 
   // `next dev` otherwise appends a block to AGENTS.md and re-adds it on every run.

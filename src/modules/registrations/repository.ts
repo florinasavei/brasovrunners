@@ -273,11 +273,12 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 export async function listPublicStartList<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<Array<{ displayName: string }>> {
+): Promise<Array<{ displayName: string; clubName: string | null }>> {
   return db
-    // BR-REQ-039-02: the display name, never the legal one. The select list is the guarantee
-    // — widening it is what tests/privacy/public-surface.test.ts refuses.
-    .select({ displayName: registrations.displayName })
+    // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
+    // The select list is the guarantee — widening it is what
+    // tests/privacy/public-surface.test.ts refuses.
+    .select({ displayName: registrations.displayName, clubName: registrations.clubName })
     .from(registrations)
     .where(
       and(

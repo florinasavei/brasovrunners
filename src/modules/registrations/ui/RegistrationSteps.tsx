@@ -1,0 +1,115 @@
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
+import DrawIcon from "@mui/icons-material/Draw";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import { getTranslations } from "next-intl/server";
+import { DECLARATION_HOLD_MINUTES, WAITLIST_OFFER_HOLD_HOURS } from "../domain/hold-deadlines";
+import { EMAIL_CONFIRMATION_HOLD_HOURS } from "../repository";
+
+const STEPS = [
+  { key: "form", Icon: PersonAddIcon },
+  { key: "email", Icon: MarkEmailReadIcon },
+  { key: "declaration", Icon: DrawIcon },
+  { key: "confirmed", Icon: QrCode2Icon },
+  { key: "raceDay", Icon: ConfirmationNumberIcon },
+] as const;
+
+/**
+ * How registering works, in five steps and one aside about the waiting list — on the form
+ * and, folded, on the event page (`DECISIONS.md` §91; the owner: "it must be super clear for
+ * users what the flow is").
+ *
+ * The numbers are the lifecycle's own constants, so this can never promise a deadline the
+ * allocator does not keep. Each step has a glyph, because the same five appear in the emails
+ * and at the desk and a reader should recognise where they are.
+ */
+export default async function RegistrationSteps({ folded = false }: { folded?: boolean }) {
+  const t = await getTranslations("Registration");
+  const values = {
+    hours: EMAIL_CONFIRMATION_HOLD_HOURS,
+    minutes: DECLARATION_HOLD_MINUTES,
+    offerHours: WAITLIST_OFFER_HOLD_HOURS,
+  };
+
+  const list = (
+    <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+      {STEPS.map(({ key, Icon }, index) => (
+        <Box component="li" key={key} sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            aria-hidden="true"
+          >
+            <Icon fontSize="small" />
+          </Box>
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              {index + 1}. {t(`steps.${key}.title`)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t(`steps.${key}.body`, values)}
+            </Typography>
+          </Box>
+        </Box>
+      ))}
+      <Box component="li" sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }}>
+        <Box
+          sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "action.selected", display: "flex", alignItems: "center", justifyContent: "center" }}
+          aria-hidden="true"
+        >
+          <HourglassTopIcon fontSize="small" />
+        </Box>
+        <Box>
+          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            {t("steps.waitingList.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("steps.waitingList.body", values)}
+          </Typography>
+        </Box>
+      </Box>
+    </Stack>
+  );
+
+  if (!folded) {
+    return (
+      <Box component="section" aria-labelledby="registration-steps-title">
+        <Typography id="registration-steps-title" component="h2" variant="h2" sx={{ fontSize: "1.125rem", mb: 1.5 }}>
+          {t("steps.title")}
+        </Typography>
+        {list}
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      component="details"
+      sx={{
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1,
+        px: 2,
+        "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert", fontWeight: 600 },
+      }}
+    >
+      <Typography component="summary" variant="body1">
+        {t("steps.title")}
+      </Typography>
+      <Box sx={{ pb: 2 }}>{list}</Box>
+    </Box>
+  );
+}

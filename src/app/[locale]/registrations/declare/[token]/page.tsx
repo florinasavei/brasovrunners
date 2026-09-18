@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
@@ -52,6 +53,17 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             declaration is already signed — so both outcomes render the finished stepper. */}
         <RegistrationJourney current="done" />
         <Alert severity="success">{done === "waitlisted" ? t("declare.doneWaitlisted") : t("declare.doneConfirmed")}</Alert>
+        {/* "What is next?" — asked the first time somebody got here (§86): said in three lines. */}
+        <Typography variant="h2" sx={{ fontSize: "1.125rem", mt: 3, mb: 1 }}>
+          {t("declare.nextTitle")}
+        </Typography>
+        <Box component="ol" sx={{ m: 0, pl: 2.5, "& li": { mb: 0.75 } }}>
+          {(t.raw(done === "waitlisted" ? "declare.nextWaitlisted" : "declare.nextConfirmed") as string[]).map((line, index) => (
+            <Typography component="li" key={index}>
+              {line}
+            </Typography>
+          ))}
+        </Box>
       </Container>
     );
   }
@@ -125,7 +137,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          <LegalDocumentBody body={declaration.body} />
+          <LegalDocumentBody body={declaration.body} />
+
           {changed && (
             <Alert severity="warning" role="alert" sx={{ mb: 3 }}>
               {t("declare.changed")}
@@ -133,7 +146,8 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           )}
           <form action={signDeclarationAction}>
             <Stack spacing={2} sx={{ mt: 3 }}>
-              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="locale" value={locale} />
+
               <input type="hidden" name="token" value={token} />
               {/* The version being read, so the signature is refused against any other text
 
@@ -149,12 +163,16 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 off — a phone offering a saved name here would be filled in by reflex, and this
                 is the one field on the site where typing it is the act itself.
               */}
+              {/* The name appears in a hand as it is typed (§86): the act of signing looks like
+                  one. Presentation only — what makes it a signature is the record beneath. */}
               <TextField
                 name="typedName"
                 label={t("declare.typedName")}
                 helperText={t("declare.typedNameHelp")}
                 required
                 autoComplete="off"
+                slotProps={{ htmlInput: { maxLength: 200 } }}
+                sx={{ "& input": { fontFamily: "var(--font-signature), cursive", fontSize: "1.75rem", py: 1 } }}
               />
               <Button type="submit" variant="contained" sx={TAP_TARGET}>
                 {t("declare.action")}

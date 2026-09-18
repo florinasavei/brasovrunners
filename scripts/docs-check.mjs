@@ -275,7 +275,13 @@ const VOCABULARY_HOSTS = ["schema.org", "www.w3.org"];
  * the club could host, and never a host of the club's own: those remain the rule's whole point.
  * A provider whose address *does* vary by account or region (Mailgun) stays in configuration.
  */
-const PROVIDER_HOSTS = ["www.youtube-nocookie.com", "console.neon.tech"];
+const PROVIDER_HOSTS = [
+  "www.youtube-nocookie.com",
+  "console.neon.tech",
+  // The networks' own share addresses (`DECISIONS.md` §90): fixed by them, nothing loaded from them.
+  "www.facebook.com",
+  "wa.me",
+];
 
 async function checkHostnameLiterals() {
   const srcDir = path.join(ROOT, "src");

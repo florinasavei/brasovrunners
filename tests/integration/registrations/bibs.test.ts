@@ -5,7 +5,7 @@ import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationKind, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { assignBibNumbers, listBibs } from "@/modules/registrations/bibs";
+import { assignBibNumbers, listBibs, nextBibNumber } from "@/modules/registrations/bibs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -101,6 +101,17 @@ describe("BR-REQ-038-01 race numbers", () => {
     expect(trail[0].action).toBe("registration.bibs_assigned");
     expect(trail[0].participantId).toBeNull();
     expect(trail[0].metadataJson).toEqual({ assigned: 3, from: 1, to: 3 });
+  });
+
+  it("hands out the next number after the highest ever given, which is what confirmation uses (§87)", async () => {
+    await register("Ana");
+    await register("Ion");
+    await assignBibNumbers(db, { actor: admin, eventId });
+    expect(await nextBibNumber(db, eventId)).toBe(3);
+    // A cancelled number stays taken: the next one is still after it.
+    const cancelled = await register("Maria", { status: "CANCELLED" });
+    await db.update(registrations).set({ bibNumber: 9 }).where(eq(registrations.id, cancelled.id));
+    expect(await nextBibNumber(db, eventId)).toBe(10);
   });
 
   it("never renumbers, and a later batch continues after the first", async () => {

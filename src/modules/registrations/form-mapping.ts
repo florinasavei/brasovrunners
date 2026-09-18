@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/routing";
+import { composePhone } from "./phone";
 
 /**
  * The rendered form's field names, read into the shape `registrationSubmissionSchema` parses.
@@ -40,6 +41,17 @@ function checked(form: FormData, name: string): boolean {
   return form.get(name) === "on";
 }
 
+/**
+ * The country and the digits become one international number (`DECISIONS.md` §84). Empty
+ * stays absent, so the staff form's optional phone is optional; digits that cannot be a number
+ * pass through as typed, so the schema refuses them by the field's name.
+ */
+function phoneField(form: FormData, name: string): string | undefined {
+  const typed = text(form, name).trim();
+  if (typed === "") return undefined;
+  return composePhone(text(form, `${name}Country`) || "RO", typed) ?? typed;
+}
+
 export function readRegistrationForm(form: FormData, locale: Locale) {
   return {
     // BR-REQ-031-04 — the legal name, in two parts, and what the start list shows.
@@ -54,9 +66,9 @@ export function readRegistrationForm(form: FormData, locale: Locale) {
     nationality: text(form, "nationality"),
     city: text(form, "city"),
 
-    phone: text(form, "phone"),
+    phone: phoneField(form, "phone"),
     emergencyContactName: text(form, "emergencyContactName"),
-    emergencyContactPhone: text(form, "emergencyContactPhone"),
+    emergencyContactPhone: phoneField(form, "emergencyContactPhone"),
 
     clubName: optional(form, "clubName"),
     // BR-REQ-031-06 — a claim the club can see and correct, and that grants nothing.
