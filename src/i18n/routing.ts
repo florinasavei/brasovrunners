@@ -57,6 +57,12 @@ export const routing = defineRouting({
       ro: "/inregistrari/retrimite",
       en: "/registrations/resend",
     },
+    /**
+     * "My registrations" (BR-REQ-036-04, `DECISIONS.md` §77): the form that takes an address,
+     * and the page a `MANAGE_PROFILE` token opens — every active registration of one person.
+     */
+    "/registrations/mine": { ro: "/inscrieri/ale-mele", en: "/registrations/mine" },
+    "/registrations/mine/[token]": { ro: "/inscrieri/ale-mele/[token]", en: "/registrations/mine/[token]" },
 
     /**
      * Standing pages the club writes for itself — "About Brașov Runners", "Contact"
@@ -105,6 +111,8 @@ export const routing = defineRouting({
     "/admin/pages/[id]": "/admin/pages/[id]",
     "/admin/gallery": "/admin/gallery",
     "/admin/gallery/new": "/admin/gallery/new",
+    /** Every stored picture and where it is used (`DECISIONS.md` §73). */
+    "/admin/gallery/pictures": "/admin/gallery/pictures",
     "/admin/gallery/[id]": "/admin/gallery/[id]",
     /** The staff-only preview of a draft (BR-REQ-051-02). */
     "/preview/events/[id]": { ro: "/previzualizare/evenimente/[id]", en: "/preview/events/[id]" },

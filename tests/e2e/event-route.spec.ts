@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-011-01 criterion 8 — an organizer pastes the route link, and a runner can open it.
@@ -41,6 +41,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
 
     await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin/events/new");
+    await hydrated(page);
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
     // BR-REQ-010-01 criterion 1, on the way past: the type defaults to a group run, and the
@@ -64,10 +65,15 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     editorUrl = page.url();
     await field("event.routeUrl").fill(ROUTE_LINK);
     // Publication refuses an incomplete language (`AGENTS.md` §11.2) and an excerpt is one of
-    // the fields it counts, so the one save fills both languages as well as the route.
-    await field("translations.ro.excerpt").fill("Cursă de probă pentru traseu.");
+    // the fields it counts, so the one save fills both languages as well as the route. The
+    // short description is the editor since `DECISIONS.md` §73: click into it and type.
+    const excerpt = (locale: "ro" | "en") =>
+      page.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`);
+    await excerpt("ro").click();
+    await page.keyboard.type("Cursă de probă pentru traseu.");
     await page.getByRole("tab", { name: /English/ }).click();
-    await field("translations.en.excerpt").fill("A trial race for the route link.");
+    await excerpt("en").click();
+    await page.keyboard.type("A trial race for the route link.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 

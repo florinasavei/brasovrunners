@@ -24,7 +24,16 @@ import type { PublicEvent } from "../repository";
  * (AGENTS.md §10.6). Nothing here counts anything itself, and nothing here mutates: this is a
  * page render, not a capacity decision.
  */
-export default async function RegistrationCta({ event, now }: { event: PublicEvent; now: Date }) {
+export default async function RegistrationCta({
+  event,
+  now,
+  raceWeek = false,
+}: {
+  event: PublicEvent;
+  now: Date;
+  /** The last seven days (§78): a closed window then says where to go instead of only "closed". */
+  raceWeek?: boolean;
+}) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
 
@@ -100,7 +109,9 @@ export default async function RegistrationCta({ event, now }: { event: PublicEve
     cta.kind === "CANCELLED"
       ? t("cta.cancelled")
       : cta.kind === "CLOSED"
-        ? t("cta.closed")
+        ? raceWeek
+          ? t("cta.closedRaceWeek")
+          : t("cta.closed")
         : t("cta.opensOn", {
             // The event's own timezone, like every other time on the page: registration for a
             // Brașov race opens at a Brașov hour wherever the page is read.

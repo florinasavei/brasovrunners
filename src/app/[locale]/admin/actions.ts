@@ -165,6 +165,7 @@ function translationFieldsFrom(form: FormData, locale: Locale) {
       slug: value("slug"),
       title: value("title"),
       excerpt: value("excerpt"),
+      excerptBody: value("excerptBody"),
       body: value("body"),
       seoTitle: value("seoTitle"),
       seoDescription: value("seoDescription"),

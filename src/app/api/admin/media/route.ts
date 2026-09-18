@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { MAX_UPLOAD_BYTES } from "@/modules/media/images";
+import { listMediaAssetsForAdmin } from "@/modules/media/references";
 import { uploadBodyImage } from "@/modules/media/service";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -48,4 +49,32 @@ export async function POST(request: Request): Promise<Response> {
     }
     throw error;
   }
+}
+
+/**
+ * The pictures already stored, newest first, for the editor's "choose one already uploaded"
+ * (`DECISIONS.md` §73): the two variant addresses and the size the image node needs, and
+ * nothing about where a picture is used — that is the pictures page's question. Every staff
+ * session, like the upload above.
+ */
+export async function GET(): Promise<Response> {
+  try {
+    await requireStaff();
+  } catch (error) {
+    if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
+    throw error;
+  }
+  if (!isStorageConfigured()) return NextResponse.json({ assets: [] });
+
+  const assets = await listMediaAssetsForAdmin(getDb(), "ro");
+  return NextResponse.json({
+    assets: assets.slice(0, 300).map((asset) => ({
+      id: asset.id,
+      src: asset.webUrl,
+      thumb: asset.thumbUrl,
+      width: asset.width,
+      height: asset.height,
+      name: asset.originalFilename,
+    })),
+  });
 }

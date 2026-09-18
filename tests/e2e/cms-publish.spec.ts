@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 // One sign-in helper, in `support/`: this file kept a second copy, and the two drifted the day
 // one of them needed a longer wait than the other.
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-051-01 — editorial workflow, over HTTP.
@@ -183,6 +183,7 @@ test.describe("BR-REQ-051-01 an Editor publishes and unpublishes an event", () =
 
     // A staff preview still renders the draft, with a notice saying what it is.
     await page.goto(editorUrl);
+    await hydrated(page);
     const romanian = page.getByRole("tabpanel", { name: /Română/ });
     await romanian.getByRole("link", { name: "Previzualizare" }).click();
     // Wait for the navigation itself before reading the document: what follows inspects the
@@ -209,6 +210,7 @@ test.describe("BR-REQ-051-01 an Editor publishes and unpublishes an event", () =
     // status to change before the next: a transition carries the version it was rendered with,
     // so clicking twice against one render is exactly the stale save the guard refuses.
     await page.goto(editorUrl);
+    await hydrated(page);
     await page.getByRole("button", { name: "Trimite spre verificare" }).click();
     await expect(page.getByText("În verificare", { exact: true })).toBeVisible();
 

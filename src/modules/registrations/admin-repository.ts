@@ -272,10 +272,29 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
+  /** Mailgun's reason when a message to this registration bounced or was complained about; null otherwise. */
+  emailRejectedReason: string | null;
 };
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
 const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
+
+/**
+ * The provider's last word on this registration's mail, when that word was "no" (BR-REQ-080-04,
+ * `DECISIONS.md` §76): the reason Mailgun gave for the newest bounced or complained message —
+ * any message type, because a verification that bounced means exactly what a bounced
+ * confirmation means: this person never got the email, and somebody should call them. Null
+ * when every message went through, or none was sent yet. A short sanitized reason (§16.1),
+ * never a body.
+ */
+const emailRejectedReason = sql<string | null>`(
+  SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
+  FROM ${emailOutbox}
+  WHERE ${emailOutbox.registrationId} = ${registrations.id}
+    AND ${emailOutbox.status} IN ('BOUNCED', 'COMPLAINED')
+  ORDER BY ${emailOutbox.createdAt} DESC
+  LIMIT 1
+)`;
 
 export async function findRegistrationDetailForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -288,6 +307,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
+      emailRejectedReason,
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
@@ -343,6 +363,8 @@ export type DeskRegistration = {
   checkinCode: string | null;
   checkedInAt: Date | null;
   checkedInByName: string | null;
+  /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
+  emailRejectedReason: string | null;
 };
 
 const DESK_COLUMNS = {
@@ -357,6 +379,7 @@ const DESK_COLUMNS = {
   checkinCode: registrations.checkinCode,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
+  emailRejectedReason,
 };
 
 function deskQuery<T extends Record<string, unknown>>(db: Database<T>, locale: Locale) {

@@ -36,6 +36,14 @@ export const mediaAssets = pgTable(
       onDelete: "set null",
     }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * When the orphan sweep last saw this asset referenced — by a gallery item, an album cover,
+     * a page body or an event body, drafts included (`DECISIONS.md` §73, AGENTS.md §17). Set at
+     * upload, so a picture has seven days to land in a saved body; advanced by the sweep while
+     * a reference exists; and once nothing has referenced it for seven days, the objects and
+     * the row go. Never read by anything a visitor sees.
+     */
+    lastReferencedAt: timestamp("last_referenced_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check(

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ensureRegistrationIsOpen, FEATURED, signIn } from "./support/featured-event";
+import { FEATURED, ensureRegistrationIsOpen, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-037-07, BR-REQ-037-08 — race morning, end to end, as a volunteer would live it.
@@ -13,11 +13,19 @@ import { ensureRegistrationIsOpen, FEATURED, signIn } from "./support/featured-e
  * and race number carries the project's name.
  */
 test.describe("BR-REQ-037-08 the race-day desk", () => {
+  // One long story on one page, four server actions in a row: under the full suite's load a
+  // round trip can take longer than the five seconds an expectation waits by default.
+  test.describe.configure({ timeout: 60_000 });
+
   test("a volunteer enters a walk-in, gives a number, checks them in, and opens their QR page", async ({ page }) => {
     // An organizer opens registration on the featured event (the seed configures none).
     await signIn(page, "Dev Moderator");
     await ensureRegistrationIsOpen(page);
     await page.getByRole("button", { name: "Ieși din cont" }).click();
+    // Wait for the sign-out to land before signing in as somebody else: a `goto` fired while
+    // the sign-out POST is still in flight aborts it, and the switcher then shows the
+    // organizer's own session instead of the buttons.
+    await expect(page).not.toHaveURL(/\/admin/, { timeout: 30_000 });
 
     // The volunteer.
     await signIn(page, "Dev Contributor");
@@ -36,6 +44,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     await page.getByRole("link", { name: "Adaugă pe cineva" }).click();
     await expect(page).toHaveURL(/\/admin\/registrations\/new\?eventId=.*back=desk/);
+    await hydrated(page);
     await expect(page.getByRole("checkbox", { name: /Persoana este la masă/ })).toBeChecked();
     await page.locator('[name="firstName"]').fill("Walk-in");
     await page.locator('[name="lastName"]').fill(suffix);
@@ -45,9 +54,11 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
 
     // Back at the desk, confirmed on the spot, with a code.
     await expect(page).toHaveURL(/\/ro\/admin\/checkin\?.*eventId=/);
-    await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată");
+    await expect(page.locator("#admin-alert")).toContainText("Persoana a fost adăugată", { timeout: 15_000 });
+    await hydrated(page);
     await page.getByRole("textbox", { name: "Nume, număr sau cod" }).fill(suffix);
     await page.getByRole("button", { name: "Caută" }).click();
+    await hydrated(page);
     const row = page.getByTestId("desk-row").filter({ hasText: suffix });
     await expect(row).toHaveCount(1);
     await expect(row.getByText("Confirmată", { exact: true })).toBeVisible();
@@ -59,13 +70,14 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const bib = String((test.info().project.name === "mobile" ? 10_000 : 20_000) + (Date.now() % 9_000));
     await row.getByRole("spinbutton", { name: "Număr de concurs" }).fill(bib);
     await row.getByRole("button", { name: "Salvează" }).click();
-    await expect(page.locator("#admin-alert")).toContainText("Numărul a fost salvat");
+    await expect(page.locator("#admin-alert")).toContainText("Numărul a fost salvat", { timeout: 15_000 });
+    await hydrated(page);
 
     // Here.
     const rowAgain = page.getByTestId("desk-row").filter({ hasText: suffix });
     await expect(rowAgain).toContainText(bib);
     await rowAgain.getByRole("button", { name: "Prezent", exact: true }).click();
-    await expect(page.locator("#admin-alert")).toContainText("Marcat prezent");
+    await expect(page.locator("#admin-alert")).toContainText("Marcat prezent", { timeout: 15_000 });
     await expect(page.getByTestId("desk-row").filter({ hasText: suffix })).toContainText("Prezent la");
 
     // The QR the email links to, and the page it opens.
@@ -79,7 +91,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     await expect(scanned).toContainText(suffix);
     await expect(scanned).toContainText(FEATURED.title);
     await scanned.getByRole("button", { name: "Anulează prezența" }).click();
-    await expect(page.locator("#admin-alert")).toContainText("Prezența a fost anulată");
+    await expect(page.locator("#admin-alert")).toContainText("Prezența a fost anulată", { timeout: 15_000 });
     await expect(page.getByTestId("desk-row")).not.toContainText("Prezent la");
 
     // Criterion: the desk fits a phone — never wider than the viewport.

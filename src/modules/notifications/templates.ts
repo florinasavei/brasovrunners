@@ -141,9 +141,12 @@ const T = {
       action: "Gestionează înscrierea",
     },
     profileManageLink: {
-      subject: "Linkul tău de gestionare a profilului",
-      body: () => ["Iată linkul cu care poți edita profilul tău public de alergător."],
-      action: "Gestionează profilul",
+      subject: "Înscrierile tale la Brașov Runners",
+      body: () => [
+        "Iată linkul cu care vezi toate înscrierile tale active: starea fiecăreia, codul de acces și codul QR pentru ziua cursei, și posibilitatea de a renunța.",
+        "Linkul este valabil 14 zile și doar pentru tine.",
+      ],
+      action: "Vezi înscrierile mele",
     },
     registrationStateNotice: {
       subject: "Starea înscrierii tale",
@@ -211,9 +214,12 @@ const T = {
       action: "Manage your registration",
     },
     profileManageLink: {
-      subject: "Your profile management link",
-      body: () => ["Here is the link to edit your public runner profile."],
-      action: "Manage your profile",
+      subject: "Your registrations at Brașov Runners",
+      body: () => [
+        "Here is the link to every active registration of yours: the state of each, the access code and QR for race day, and the option to withdraw.",
+        "The link is valid for 14 days and only for you.",
+      ],
+      action: "See my registrations",
     },
     registrationStateNotice: {
       subject: "Your registration status",

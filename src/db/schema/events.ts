@@ -438,7 +438,19 @@ export const eventTranslations = pgTable(
 
     slug: text("slug").notNull(),
     title: text("title").notNull(),
+    /**
+     * The short description as plain words — what the listing card, the meta description and
+     * the JSON-LD carry, and what "complete before publishing" checks. Since `DECISIONS.md`
+     * §73 it is *derived* from `excerpt_json` on save whenever that is set: the words of the
+     * rich excerpt, without its pictures.
+     */
     excerpt: text("excerpt"),
+    /**
+     * The short description as written in the editor (§11.3): a small rich body — a sentence
+     * or two and, since §73, a picture — shown on the hero and at the top of the event page.
+     * Null for events written before it existed; `excerpt` is then the whole of it.
+     */
+    excerptJson: jsonb("excerpt_json"),
     bodyJson: jsonb("body_json"),
 
     /*

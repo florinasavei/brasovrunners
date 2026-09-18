@@ -1,6 +1,7 @@
 import type { Database } from "@/db/types";
 import { pruneExpiredRows, totalPruned } from "@/modules/jobs/retention";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
+import { sweepOrphanAssets } from "@/modules/media/references";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
 
@@ -22,7 +23,7 @@ import { fillAvailableSpots } from "./service";
 export async function runRegistrationMaintenance<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,
-): Promise<{ eventsProcessed: number; errorCount: number; prunedRows: number }> {
+): Promise<{ eventsProcessed: number; errorCount: number; prunedRows: number; orphanPicturesDeleted: number }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
   const lapsedEmailConfirmations = await repo.expireStalePendingEmailConfirmations(db, now);
@@ -79,12 +80,28 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     errorCount += 1;
   }
 
+  /**
+   * The picture sweep, after the retention sweep and caught on its own for the same reasons
+   * (AGENTS.md §17 "reference check before delete", `DECISIONS.md` §73): a stored picture
+   * nothing has referenced for a week is deleted with its objects. Storage that is not
+   * configured throws here and counts as one error, never as a failed run.
+   */
+  let orphanPicturesDeleted = 0;
+  try {
+    orphanPicturesDeleted = await sweepOrphanAssets(db, now);
+  } catch {
+    errorCount += 1;
+  }
+
   await finishJobRun(
     db,
     jobRunId,
-    { itemsProcessed: eventIds.length + lapsedEmailConfirmations + prunedRows, errorCount },
+    {
+      itemsProcessed: eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted,
+      errorCount,
+    },
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount, prunedRows };
+  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted };
 }

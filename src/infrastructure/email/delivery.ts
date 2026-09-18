@@ -42,16 +42,19 @@ export function decideDelivery(
   if (mode === "capture") return "capture";
   if (mode === "live") return "send";
 
-  let canonicalRecipient: string;
+  // By inbox, not by identity: since canonicalization version 2 a dotted Gmail spelling is
+  // its own participant, but it is still the allowlisted person's inbox, and that is what
+  // the allowlist is about (`DECISIONS.md` §74).
+  let recipientInbox: string;
   try {
-    canonicalRecipient = canonicalizeEmail(recipient).canonicalEmail;
+    recipientInbox = canonicalizeEmail(recipient).inboxEmail;
   } catch {
     return "capture";
   }
 
   return allowlist.some((entry) => {
     try {
-      return canonicalizeEmail(entry).canonicalEmail === canonicalRecipient;
+      return canonicalizeEmail(entry).inboxEmail === recipientInbox;
     } catch {
       // A malformed allowlist entry authorizes nothing. Startup validation rejects one, so
       // reaching here means configuration changed under a running process.

@@ -40,13 +40,23 @@
     "pastNotice": "Acest eveniment a avut deja loc.",
     "featured": "Evenimentul principal",
     "featuredCallToAction": "Vezi detaliile cursei",
-    "others": "Alte evenimente"
+    "others": "Alte evenimente",
+    "othersCount": "Alte evenimente ({count})",
+    "raceWeek": {
+      "today": "Azi, {when}",
+      "tomorrow": "Mâine, {when}",
+      "inDays": "În {days} zile, {when}"
+    }
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
     "date": "Data",
     "startTime": "Ora de start",
     "gatheringTime": "Ora de întâlnire",
+    "gatheringAt": "întâlnire la {time}",
+    "raceStartAt": "start la {time}",
+    "when": "Când",
+    "where": "Unde",
     "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
     "openMap": "Vezi pe hartă",
@@ -54,7 +64,7 @@
     "distance": "Distanță",
     "distanceKm": "{km} km",
     "elevation": "Diferență de nivel",
-    "elevationM": "{m} m",
+    "elevationM": "{m} m urcare",
     "difficulty": "Dificultate",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -86,6 +96,7 @@
       "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
       "opensOn": "Înscrierile se deschid pe {date}.",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
+      "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit."
     },
     "registrationState": {
@@ -148,6 +159,15 @@
       "checkin": "Ziua cursei",
       "guide": "Ghid"
     },
+    "outbox": {
+      "status": "Emailuri în așteptare: {waiting} · trimise azi: {sent} din {allowance} (mai rămân {remaining})",
+      "sendNow": "Trimite acum",
+      "nothingWaiting": "Nimic de trimis.",
+      "allowanceSpent": "Limita zilnică Mailgun este atinsă; restul pleacă mâine.",
+      "sending": "Se trimit…",
+      "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
+      "sentNow": "Emailuri trimise acum: {count}."
+    },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
       "filterAll": "Toate evenimentele",
@@ -169,6 +189,7 @@
       "expired": "Expirată",
       "declaration": "Declarație semnată",
       "outboxHistory": "Istoric email",
+      "emailRejected": "Email respins",
       "testKind": "Test",
       "enteredByStaff": "Adăugată de echipă",
       "new": "Adaugă o înscriere",
@@ -237,6 +258,8 @@
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
       "searchHelp": "Caută după nume, cu sau fără diacritice.",
       "resendShort": "Retrimite",
+      "resendQr": "Retrimite QR-ul",
+      "resendQrLong": "Trimite din nou confirmarea, cu codul QR și linkul de gestionare",
       "raceDayTitle": "Ziua cursei",
       "bibNumber": "Număr de concurs",
       "checkinCode": "Cod de ridicare",
@@ -294,6 +317,7 @@
       "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
     },
     "errors": {
+      "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
@@ -560,10 +584,10 @@
           "done": "Emailurile ajung la participanți.",
           "how": [
             "În Mailgun: Sending → Domains → „Add new domain”. Numele: {mailDomain}. Regiunea: EU. Nu folosi domeniul principal — el rămâne liber pentru poșta clubului.",
-            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking). Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat). Apoi „Verify” în Mailgun — poate dura până la o oră.",
-            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY). Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „delivered”, „permanent failure” și „temporary failure”.",
-            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_FROM_ADDRESS=noreply@{mailDomain}, EMAIL_FROM_NAME=Brașov Runners, EMAIL_REPLY_TO=o adresă pe care clubul o citește.",
-            "Probă: EMAIL_DELIVERY_MODE=allowlist și EMAIL_ALLOWLIST=adresa ta, redeploy, apoi înscrie-te la un eveniment — trebuie să primești emailul. Când merge: EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
+            "Mailgun îți arată înregistrările DNS de creat: două TXT (SPF și DKIM) și un CNAME (tracking). Adaugă-le la ROMARG → cPanel → Zone Editor, exact cum le arată Mailgun, cu numele scurt (fără domeniul repetat). Atenție la DKIM: valoarea are peste 255 de caractere și cPanel o taie — scrie-o ca două șiruri între ghilimele, pe un singur rând („k=rsa; p=…prima parte” „…restul”), altfel Mailgun o vede trunchiată. Apoi „Verify” în Mailgun — poate dura până la o oră.",
+            "Tot în Mailgun: Sending → API keys → o cheie de trimitere (MAILGUN_API_KEY). Sending → Webhooks → copiază „HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) și adaugă webhook-ul {webhookUrl} pentru „Permanent Failure” și „Spam Complaints” — cele două pe care aplicația le folosește (o adresă respinsă apare la masă și pe înscriere). „Delivered” e opțional.",
+            "În Vercel, proiectul de producție → Settings → Environment Variables (sau `vercel env add NUME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=o adresă pe care clubul o citește (dacă nu există încă, nu seta variabila deloc — goală, pornirea o refuză). Expeditorul e „Brașov Runners” <noreply@{mailDomain}> fără altă setare.",
+            "Probă pe QA, nu pe producție (producția refuză înscrierile până sunt aprobate textele legale): pe proiectul QA din Vercel pune aceleași MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (modul rămâne allowlist, EMAIL_ALLOWLIST=adresa ta), redeploy, înscrie-te pe QA — emailul vine de la noreply@{mailDomain}. Când merge: pe producție EMAIL_DELIVERY_MODE=live, redeploy. Rândul acesta devine verde."
           ]
         },
         "scheduler": {
@@ -753,7 +777,18 @@
       "redo": "Refă",
       "image": "Imagine (încarcă din telefon sau calculator)",
       "imageUploading": "Se încarcă imaginea…",
-      "imageFailed": "Imaginea nu a putut fi încărcată. Încearcă un JPEG, PNG sau WebP de până la 6 MB; dacă mediul nu are spațiu de stocare configurat, /admin/tasks spune cum."
+      "imageFailed": "Imaginea nu a putut fi încărcată. Încearcă un JPEG, PNG sau WebP de până la 6 MB; dacă mediul nu are spațiu de stocare configurat, /admin/tasks spune cum.",
+      "imageAlt": "Ce arată imaginea (text alternativ)",
+      "imageAltHelp": "O propoziție pe care un cititor de ecran o rostește în locul imaginii. Lasă gol doar dacă imaginea este decorativă.",
+      "imageCaption": "Legendă (opțional, sub imagine)",
+      "imageSize": "Lățime pe ecran lat",
+      "imageRemove": "Șterge imaginea",
+      "imageDone": "Gata",
+      "imageFromGallery": "Alege o imagine deja încărcată",
+      "imageGalleryLoading": "Se încarcă imaginile…",
+      "imageGalleryEmpty": "Nu există nicio imagine încărcată încă.",
+      "imageNoAltOne": "O imagine nu are text alternativ — apasă pe imagine ca să-l scrii.",
+      "imageNoAltMany": "{count} imagini nu au text alternativ — apasă pe fiecare ca să-l scrii."
     },
     "pages": {
       "title": "Pagini",
@@ -795,6 +830,25 @@
         "seoTitle": "Titlu SEO",
         "seoDescription": "Descriere SEO"
       }
+    },
+    "pictures": {
+      "title": "Imagini",
+      "intro": "Toate imaginile încărcate — din editorul de text și din albume — cu locul unde este folosită fiecare. O imagine nefolosită nicăieri timp de 7 zile se șterge singură; una folosită nu poate fi ștearsă de aici până nu o scoți din pagină, din eveniment sau din album.",
+      "linkFromGallery": "Imaginile din texte și unde sunt folosite →",
+      "empty": "Nu există nicio imagine încărcată.",
+      "columnPicture": "Imagine",
+      "columnName": "Fișier",
+      "columnUploaded": "Încărcată",
+      "columnUsedIn": "Folosită în",
+      "unused": "Nicăieri (se șterge automat după 7 zile)",
+      "usedInAlbum": "Album: {title}",
+      "usedInPage": "Pagină: {title}",
+      "usedInEvent": "Eveniment: {title}",
+      "untitled": "(fără titlu)",
+      "size": "{width}×{height} px, {kb} KB",
+      "delete": "Șterge",
+      "deleteConfirm": "Ștergi imaginea definitiv?",
+      "tableCaption": "Imaginile încărcate, cele mai noi primele"
     },
     "gallery": {
       "title": "Galerie foto",
@@ -850,6 +904,7 @@
       "from": "De la",
       "to": "Până la",
       "download": "Descarcă foaia (PDF)",
+      "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
       "helpNone": "Niciun număr alocat încă. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
       "helpSome": "{total} numere alocate. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
@@ -969,6 +1024,7 @@
     "back": "Înapoi la prima pagină"
   },
   "Footer": {
+    "myRegistrations": "Înscrierile mele",
     "about": {
       "summaryShort": "Despre club",
       "summaryTail": ", contact și termeni",
@@ -1106,6 +1162,28 @@
       "deadline": "Locul tău este rezervat până la {deadline}.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris."
     },
+    "mine": {
+      "title": "Înscrierile mele",
+      "intro": "Scrie adresa cu care te-ai înscris și îți trimitem un singur link cu toate înscrierile tale active — starea fiecăreia, codul de acces și codul QR, și posibilitatea de a renunța.",
+      "email": "Adresa de email",
+      "emailHelp": "Adresa folosită la înscriere.",
+      "submit": "Trimite-mi linkul",
+      "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "listTitle": "Înscrierile tale",
+      "empty": "Nu ai nicio înscriere activă în acest moment.",
+      "code": "Cod de acces",
+      "cancel": "Renunț la această înscriere",
+      "cancelledTitle": "Înscrierea a fost anulată",
+      "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",
+      "newLink": "Cere un link nou",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Așteaptă confirmarea emailului",
+        "PENDING_DECLARATION": "Așteaptă declarația",
+        "WAITLISTED": "Pe lista de așteptare",
+        "WAITLIST_OFFERED": "Loc oferit — semnează declarația",
+        "CONFIRMED": "Confirmată"
+      }
+    },
     "manage": {
       "title": "Gestionează înscrierea",
       "prompt": "Poți anula această înscriere. Locul va fi eliberat imediat.",
@@ -1124,6 +1202,7 @@
     }
   },
   "Devs": {
+    "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",
     "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",
     "environment": "Mediu",

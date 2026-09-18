@@ -14,6 +14,7 @@ import {
   promoteRegistrationByStaff,
   setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
+import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -353,3 +354,25 @@ export async function deleteRegistrationAction(form: FormData): Promise<void> {
   // that no longer exists, and a 404 is a poor way to learn a deletion worked.
   backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }
+
+/**
+ * "Send now" — drain the outbox from the list page, within the day's allowance
+ * (`DECISIONS.md` §80). Lands back on the list with the count it sent, or the refusal.
+ */
+export async function sendOutboxNowAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin/registrations" });
+  const listQuery = text(form, "listQuery");
+  const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
+
+  let sent = 0;
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    const result = await sendOutboxNow(getDb(), actor, new Date());
+    sent = result.sent;
+  } catch (error) {
+    backTo(returnTo, outcomeOf(error));
+  }
+  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}saved=outboxSent&sent=${sent}#admin-alert`);
+}
+

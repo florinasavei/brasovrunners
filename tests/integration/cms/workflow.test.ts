@@ -232,6 +232,36 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       ).toBe("VALIDATION_ERROR");
     });
 
+    /** §73: the short description is written in the editor too; its words become `excerpt`. */
+    it("derives the plain excerpt from the rich one, pictures left out", async () => {
+      const { translation } = await seedEvent();
+      const excerptBody = JSON.stringify({
+        type: "doc",
+        content: [
+          { type: "paragraph", content: [{ type: "text", text: "Zece kilometri prin Poiana.  " }, { type: "text", text: "Vino!", marks: [{ type: "bold" }] }] },
+          { type: "image", attrs: { src: "/api/media/test/3f2a1b4c-0000-4000-8000-000000000000/web.webp", alt: "Poiana", width: 800, height: 600 } },
+        ],
+      });
+      const saved = await saveEventTranslation(db, {
+        actor: author,
+        translationId: translation.id,
+        expectedVersion: translation.version,
+        fields: { ...FIELDS, excerpt: "typed and ignored", excerptBody },
+      });
+      expect(saved.excerpt).toBe("Zece kilometri prin Poiana. Vino! Poiana");
+      expect(JSON.stringify(saved.excerptJson)).toContain("web.webp");
+
+      // An empty rich excerpt leaves the typed plain text as it was.
+      const plain = await saveEventTranslation(db, {
+        actor: author,
+        translationId: translation.id,
+        expectedVersion: saved.version,
+        fields: { ...FIELDS, excerpt: "Doar text.", excerptBody: JSON.stringify({ type: "doc", content: [{ type: "paragraph" }] }) },
+      });
+      expect(plain.excerpt).toBe("Doar text.");
+      expect(plain.excerptJson).toBeNull();
+    });
+
     it("lets an Author submit their own draft for review", async () => {
       const { event } = await seedEvent();
 

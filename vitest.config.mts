@@ -19,9 +19,13 @@ export default defineConfig({
     // database. It has its own configuration and its own command — see
     // vitest.concurrency.config.mts.
     exclude: ["tests/concurrency/**", "node_modules/**", "dist/**", ".next/**"],
-    // PGlite instances are per-file and hold WebAssembly memory; serialising files keeps
-    // peak memory sane and makes failures easier to read.
-    fileParallelism: false,
+    // PGlite instances are per-file and hold WebAssembly memory, so the worker count is
+    // capped rather than left to the core count; serialising the files entirely (the setting
+    // until 2026-09-18) made the suite take five minutes on a 32-core machine, which the
+    // owner called out. Eight workers hold eight databases — a few hundred megabytes — and
+    // finish in about a minute; CI's four cores get four.
+    fileParallelism: true,
+    maxWorkers: 8,
     testTimeout: 30_000,
     /**
      * The same budget for a hook as for a test, because `beforeAll` here does strictly more

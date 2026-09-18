@@ -18,6 +18,7 @@ import {
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { hasRichTextContent, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import {
   type EventFieldsInput,
   eventFieldsSchema,
@@ -385,13 +386,19 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
-  const { body, ...columns } = fields;
+  const { body, excerptBody, ...columns } = fields;
+  // The rich excerpt, when the editor posted one, and its words as the plain `excerpt` — the
+  // listing card, the meta description and the publish check all read the plain column
+  // (`DECISIONS.md` §73). An editor that posted nothing leaves the plain text as typed.
+  const excerptJson = hasRichTextContent(excerptBody) ? excerptBody : null;
   return updateTranslationWithVersionGuard(
     db,
     input.current.id,
     input.expectedVersion,
     {
       ...columns,
+      excerpt: excerptJson ? richTextToPlainText(excerptJson).replace(/\s+/g, " ").trim().slice(0, 500) || null : columns.excerpt,
+      excerptJson,
       bodyJson: body,
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
@@ -871,6 +878,7 @@ function copiedTranslationValues(
     slug,
     title: translation.title,
     excerpt: translation.excerpt,
+    excerptJson: translation.excerptJson,
     bodyJson: translation.bodyJson,
     coverAltText: translation.coverAltText,
     seoTitle: translation.seoTitle,

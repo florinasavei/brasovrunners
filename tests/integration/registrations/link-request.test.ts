@@ -132,9 +132,9 @@ describe("BR-REQ-036-02 participant link request", () => {
   });
 
   it("treats a Gmail +tag as the same mailbox, so it cannot buy a fresh allowance", async () => {
-    // BR-REQ-032: dots and tags collapse for gmail.com. The registration is under the plain
-    // address; the request arrives tagged, and must still find it.
-    const identity = canonicalizeEmail("ana.pop@gmail.com");
+    // BR-REQ-032: the tag collapses for gmail.com (dots do not, since version 2 — §74). The
+    // registration is under the plain address; the request arrives tagged, and must find it.
+    const identity = canonicalizeEmail("anapop@gmail.com");
     const [gmailParticipant] = await db
       .insert(participants)
       .values({

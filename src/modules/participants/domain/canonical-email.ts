@@ -23,12 +23,24 @@ import { domainToASCII } from "node:url";
  * collapses well-known aliases of one inbox, nothing more.
  */
 
-export const CANONICALIZATION_VERSION = 1;
+/**
+ * Version 2 since 2026-09-18 (`DECISIONS.md` §74): Gmail *dots* are kept, so
+ * `a.savei@gmail.com` and `asavei@gmail.com` are two participants. The plus tag is still
+ * stripped and `googlemail.com` still collapses. Version 1 rows were re-canonicalized by
+ * migration `0030`, so every stored row is at this version; the column records it anyway.
+ */
+export const CANONICALIZATION_VERSION = 2;
 
 export type CanonicalEmail = {
   deliveryEmail: string;
   normalizedEmail: string;
   canonicalEmail: string;
+  /**
+   * The inbox the mail lands in — the canonical value with Gmail dots removed as well. Two
+   * identities since version 2, one inbox still; the QA delivery allowlist compares on this,
+   * because what it protects is *whose inbox* may receive mail, not who a participant is.
+   */
+  inboxEmail: string;
   canonicalizationVersion: number;
 };
 
@@ -101,12 +113,15 @@ export function canonicalizeEmail(input: string): CanonicalEmail {
 
   let canonicalLocal = normalizedLocal;
   if (isGmail) {
-    // Order matters: strip the +tag first, then dots. Doing it the other way would keep dots
-    // that appear inside the tag.
-    canonicalLocal = canonicalLocal.split("+", 1)[0].replaceAll(".", "");
+    // The +tag goes; the dots stay (version 2). Gmail delivers both spellings to one inbox,
+    // and version 1 said so — but a dotted spelling is a deliberate act few people know of,
+    // and the club needs a handful of distinct identities that all land in its own inbox to
+    // rehearse a registration end to end (`DECISIONS.md` §74). A plus tag is the trick
+    // everybody knows, and it still cannot enter a race twice.
+    canonicalLocal = canonicalLocal.split("+", 1)[0];
   }
 
-  if (canonicalLocal === "") {
+  if (canonicalLocal === "" || canonicalLocal.replaceAll(".", "") === "") {
     // e.g. "+tag@gmail.com" or ".@gmail.com" — nothing identifying remains.
     throw new InvalidEmailError("no addressable local part remains after canonicalization");
   }
@@ -117,6 +132,7 @@ export function canonicalizeEmail(input: string): CanonicalEmail {
     normalizedEmail: `${normalizedLocal}@${normalizedDomain}`,
     // Collapses googlemail to gmail, because it is one inbox.
     canonicalEmail: `${canonicalLocal}@${isGmail ? GMAIL_CANONICAL_DOMAIN : normalizedDomain}`,
+    inboxEmail: `${isGmail ? canonicalLocal.replaceAll(".", "") : canonicalLocal}@${isGmail ? GMAIL_CANONICAL_DOMAIN : normalizedDomain}`,
     canonicalizationVersion: CANONICALIZATION_VERSION,
   };
 }

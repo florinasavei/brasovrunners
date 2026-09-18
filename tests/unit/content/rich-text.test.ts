@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  countImagesWithoutAlt,
   EMPTY_DOC,
   isRichTextEmpty,
   parseRichText,
@@ -51,11 +52,22 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
     const ours = "https://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
     const local = "/api/media/local/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
 
-    it("accepts one of this site's stored pictures, as a block, with its size and alt", () => {
-      const parsed = parseRichText(doc({ type: "image", attrs: { src: ours, alt: "Startul", width: 1600, height: 1067 } }));
-      expect(parsed.content?.[0]).toEqual({ type: "image", attrs: { src: ours, alt: "Startul", width: 1600, height: 1067 } });
-      expect(parseRichText(doc({ type: "image", attrs: { src: local } })).content?.[0]).toMatchObject({ attrs: { alt: "" } });
-      expect(richTextToPlainText(parsed)).toBe("Startul");
+    it("accepts one of this site's stored pictures, as a block, with its size, alt, caption and width share", () => {
+      const parsed = parseRichText(
+        doc({ type: "image", attrs: { src: ours, alt: "Startul", caption: "Startul, 2025", width: 1600, height: 1067, widthPercent: 50 } }),
+      );
+      expect(parsed.content?.[0]).toEqual({
+        type: "image",
+        attrs: { src: ours, alt: "Startul", caption: "Startul, 2025", width: 1600, height: 1067, widthPercent: 50 },
+      });
+      // Defaults (§73): no alt, no caption, the whole column. Never the file name.
+      expect(parseRichText(doc({ type: "image", attrs: { src: local } })).content?.[0]).toMatchObject({
+        attrs: { alt: "", caption: "", widthPercent: 100 },
+      });
+      // Its words are the alt and the caption; a width share is one of four, never a free number.
+      expect(richTextToPlainText(parsed)).toBe("Startul\nStartul, 2025");
+      expect(() => parseRichText(doc({ type: "image", attrs: { src: ours, widthPercent: 60 } }))).toThrow();
+      expect(countImagesWithoutAlt(parseRichText(doc({ type: "image", attrs: { src: ours } }, { type: "image", attrs: { src: local, alt: "x" } })))).toBe(1);
     });
 
     it("refuses any other address", () => {

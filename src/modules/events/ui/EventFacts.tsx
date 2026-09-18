@@ -9,12 +9,20 @@ import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 
 /**
- * The facts a runner needs, as text.
+ * The facts of an event, in three lines: when, where, and the route in numbers.
  *
- * BR-REQ-070-03 criterion 2 requires date, start time, meeting point, cost and the
- * registration requirement to be present as text in the server HTML — not conveyed by an icon,
- * a colour, or an image. BR-REQ-041-01 criterion 2 requires them within the first screen at
- * 360px. Both are why this is a plain definition list near the top rather than a row of chips.
+ * Nine labelled rows — date, gathering time, race start, meeting point, distance, climb,
+ * difficulty, cost, registration — were a table a reader had to scan top to bottom to answer
+ * "when and where do I show up". The owner's word on it (2026-09-18): "these details should be
+ * better organised; the UX must be simple and easy." So the same facts are grouped by the
+ * question they answer, each line a row of short pieces separated by a middle dot, and the
+ * labels are the questions: *când*, *unde*, *traseu*. Still a `<dl>`, so a screen reader hears
+ * the question before the answer; the separators are hidden from it.
+ *
+ * Registration is not a fact of the event but a state of the moment, and the button beneath
+ * these lines says it (`RegistrationCta`) — except for an event with no registration at all,
+ * which has no button and deserves the one sentence "no registration needed". The compact
+ * variant on a listing card has no button either, so there the state is the last piece.
  */
 export default async function EventFacts({
   event,
@@ -27,172 +35,97 @@ export default async function EventFacts({
 }) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
+  const compact = variant === "compact";
 
   const distance = distanceInKm(event.distanceMeters);
   const state = registrationState(event, now);
-  // The link the organizer pasted, or nothing — the meeting point is then plain text.
-  const mapLink = event.mapUrl;
 
   // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
   // local time regardless of where the page is opened.
   const time = (at: Date) =>
     format.dateTime(at, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit" });
-
-  const facts: Array<{ label: string; value: ReactNode }> = [
-    {
-      label: t("date"),
-      value: format.dateTime(event.startsAt, {
-        timeZone: event.timezone,
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
-    },
-  ];
-
-  /**
-   * One time or two, each labelled for what it is.
-   *
-   * `starts_at` is when the event begins. For a race that is the gathering, and the gun time
-   * is its own column — runners need both, and a single row labelled "start" would be read as
-   * whichever one the reader was hoping for. When the club has stated only one time, only one
-   * row appears, still labelled "start time" rather than inventing a gathering.
-   */
-  if (event.raceStartsAt) {
-    facts.push({ label: t("gatheringTime"), value: time(event.startsAt) });
-    facts.push({ label: t("raceStartTime"), value: time(event.raceStartsAt) });
-  } else {
-    facts.push({ label: t("startTime"), value: time(event.startsAt) });
-  }
-
-  /**
-   * The map link is offered on the full page, never in a card.
-   *
-   * On the listing the whole card is one link (`CardLink`, for a 44px tap target), and an
-   * anchor inside an anchor is invalid HTML — the browser silently splits the outer one, which
-   * breaks the card and leaves a stray link a keyboard user lands on. The compact variant
-   * therefore shows the meeting point as text, and the map link waits for the detail page,
-   * where it is also on the address.
-   */
-  facts.push({
-    label: t("meetingPoint"),
-    value: variant === "full" && mapLink ? (
-      /*
-        A wrapping flex row rather than inline text, because the link is 44px tall by design
-        and inline text is not: after a place name it wrapped onto its own line with the
-        trailing space still attached, which read as a mistake rather than as a second thing to
-        tap. As a flex row it shares the line where there is room and drops below cleanly where
-        there is not, which on a 390px screen is most place names.
-      */
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>
-        <span>{event.locationName}</span>
-        <Link
-          href={mapLink}
-          target="_blank"
-          // The link goes to whatever map service the club already uses. `noopener` and
-          // `noreferrer` stop the opened page reaching back through `window.opener` and stop
-          // it learning which page sent the visitor.
-          rel="noopener noreferrer"
-          // A 44px target, like every other link on a phone (BR-REQ-041-01 criterion 6). Inline
-          // text is about 20px tall, which is a link you miss while holding a phone and a bag.
-          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
-        >
-          {t("openMap")}
-        </Link>
-      </Box>
-    ) : (
-      event.locationName
-    ),
+  const date = format.dateTime(event.startsAt, {
+    timeZone: event.timezone,
+    weekday: "long",
+    day: "numeric",
+    month: compact ? "short" : "long",
+    year: "numeric",
   });
 
+  // A 44px target, like every other link on a phone (BR-REQ-041-01 criterion 6). `noopener`
+  // and `noreferrer` stop the opened page reaching back through `window.opener` and stop it
+  // learning which page sent the visitor (`DECISIONS.md` §61 on the Strava mark: the mark
+  // decorates, the words are the link, and never Strava's script).
+  const outLink = (href: string, label: string, strava = false) => (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
+    >
+      {strava && <SocialIcon network="strava" size={18} />}
+      {label}
+    </Link>
+  );
+
+  /* When: the date, then the times — a race has two, each named; anything else has one. */
+  const when: ReactNode[] = [<strong key="date">{date}</strong>];
+  if (event.raceStartsAt) {
+    when.push(t("gatheringAt", { time: time(event.startsAt) }), t("raceStartAt", { time: time(event.raceStartsAt) }));
+  } else {
+    when.push(time(event.startsAt));
+  }
+
+  /* Where: the meeting point, and the map when the organizer pasted one. */
+  const where: ReactNode[] = [];
+  if (event.locationName) where.push(event.locationName);
+  if (!compact && event.mapUrl) where.push(outLink(event.mapUrl, t("openMap")));
+
+  /* The route in numbers, in the reader's own language for the two enums (migration `0018`);
+     cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2). */
+  const route: ReactNode[] = [];
   if (distance !== null) {
     // format.number applies the locale's separators: "14,5" in Romanian, "14.5" in English.
-    facts.push({
-      label: t("distance"),
-      value: t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }),
-    });
+    route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
   }
-  if (event.elevationGainMeters) {
-    facts.push({
-      label: t("elevation"),
-      value: t("elevationM", { m: format.number(event.elevationGainMeters) }),
-    });
+  if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
+  if (event.difficulty) route.push(t(`difficultyValues.${event.difficulty}`));
+  if (event.costType) route.push(t(`costValues.${event.costType}`));
+  if (!compact && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl)));
+  if (!compact && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), true));
+
+  const pieces = (items: ReactNode[]) => (
+    <Box component="span" sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>
+      {items.map((item, index) => (
+        <Fragment key={index}>
+          {index > 0 && (
+            <Box component="span" aria-hidden="true" sx={{ color: "text.disabled" }}>
+              ·
+            </Box>
+          )}
+          <span>{item}</span>
+        </Fragment>
+      ))}
+    </Box>
+  );
+
+  if (compact) {
+    // Two plain lines on a card: no labels, the state of registration as the last piece.
+    const second = [...where, ...route, t(`registrationState.${state}`)];
+    return (
+      <Box>
+        <Typography variant="body2">{pieces(when)}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {pieces(second)}
+        </Typography>
+      </Box>
+    );
   }
 
-  /**
-   * The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
-   *
-   * Beside the distance and the climb rather than beside the meeting point, because it answers
-   * "where does it go" and those two answer "how far" — the meeting point answers a different
-   * question and stays above them, where BR-REQ-041-01 criterion 2 wants it.
-   *
-   * Full variant only, for the same reason the map link is: the listing card is itself one
-   * link, and an anchor inside an anchor is invalid HTML that the browser silently splits.
-   */
-  if (variant === "full" && event.routeUrl) {
-    facts.push({
-      label: t("route"),
-      value: (
-        <Link
-          href={event.routeUrl}
-          target="_blank"
-          // Whatever service the club drew the route on. `noopener` stops the opened page
-          // reaching back through `window.opener`, `noreferrer` stops it learning where the
-          // visitor came from.
-          rel="noopener noreferrer"
-          // 44px, like every other link a thumb has to find (BR-REQ-041-01 criterion 6).
-          sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
-        >
-          {/* The Strava mark when the link is a Strava page — the mark only, never Strava's
-              embed script, which is a processor the privacy notice does not name
-              (`DECISIONS.md` §61). The words stay: the mark decorates, the text is the link. */}
-          {isStravaLink(event.routeUrl) && <SocialIcon network="strava" size={18} />}
-          {t("openRoute")}
-        </Link>
-      ),
-    });
-  }
-  // The club's Strava group event (criterion 10): where members RSVP. The mark, never the script.
-  if (variant === "full" && event.stravaEventUrl) {
-    facts.push({
-      label: t("stravaEvent"),
-      value: (
-        <Link
-          href={event.stravaEventUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
-        >
-          <SocialIcon network="strava" size={18} />
-          {t("openStravaEvent")}
-        </Link>
-      ),
-    });
-  }
-  // Both are enums now (migration `0018`), so both render in the reader's own language
-  // rather than in whichever one the organizer was typing in.
-  if (event.difficulty) {
-    facts.push({ label: t("difficulty"), value: t(`difficultyValues.${event.difficulty}`) });
-  }
-  // Only when the club has stated one. Null means unstated, not free — guessing "free" on the
-  // club's behalf is exactly the kind of invention AGENTS.md §1.2 forbids.
-  if (event.costType) facts.push({ label: t("cost"), value: t(`costValues.${event.costType}`) });
-
-  facts.push({ label: t("registration"), value: t(`registrationState.${state}`) });
-
-  /**
-   * A two-column grid rather than a stack of rows, and tighter in the card than on the page.
-   *
-   * Every fact stays present as text, which is what BR-REQ-070-03 criterion 2 requires and what
-   * the end-to-end suite asserts — this changes how much room they take, not what is said. A
-   * listing of four events was 2,750px tall on a 390px screen, and a runner deciding which
-   * Sunday to turn up for was scrolling past six repeated labels per card to find the date.
-   *
-   * The grid also fixes the alignment: as separate rows, each value started wherever its own
-   * label ended on a narrow screen, so nothing lined up.
-   */
-  const compact = variant === "compact";
+  const lines: Array<{ label: string; value: ReactNode[] }> = [{ label: t("when"), value: when }];
+  if (where.length > 0) lines.push({ label: t("where"), value: where });
+  if (route.length > 0) lines.push({ label: t("route"), value: route });
+  if (state === "NOT_APPLICABLE") lines.push({ label: t("registration"), value: [t("registrationState.NOT_APPLICABLE")] });
 
   return (
     <Box
@@ -203,27 +136,18 @@ export default async function EventFacts({
         // The label column sizes to the longest label and stops there; on a phone the pair
         // still shares one line, which is what saves the height.
         gridTemplateColumns: "auto 1fr",
-        columnGap: compact ? 1.5 : 2,
-        rowGap: compact ? 0.5 : 1,
+        columnGap: 2,
+        rowGap: 1,
         alignItems: "baseline",
       }}
     >
-      {facts.map((fact) => (
-        <Fragment key={fact.label}>
-          <Typography
-            component="dt"
-            variant={compact ? "caption" : "body2"}
-            color="text.secondary"
-            sx={{ whiteSpace: "nowrap" }}
-          >
-            {fact.label}
+      {lines.map((line) => (
+        <Fragment key={line.label}>
+          <Typography component="dt" variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+            {line.label}
           </Typography>
-          <Typography
-            component="dd"
-            variant={compact ? "body2" : "body1"}
-            sx={{ m: 0, fontWeight: 500 }}
-          >
-            {fact.value}
+          <Typography component="dd" variant="body1" sx={{ m: 0 }}>
+            {pieces(line.value)}
           </Typography>
         </Fragment>
       ))}

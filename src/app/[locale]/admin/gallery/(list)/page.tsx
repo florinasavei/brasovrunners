@@ -98,6 +98,11 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
         {t("gallery.intro")}
       </Typography>
 
+      {/* The other kind of picture: the ones in texts, and where each one is used. */}
+      <Typography variant="body2">
+        <Link href="/admin/gallery/pictures">{t("pictures.linkFromGallery")}</Link>
+      </Typography>
+
       {/* Read from the environment, never remembered: the five R2 variables are there or not. */}
       {!isStorageConfigured() && <Alert severity="warning">{t("gallery.storageUnconfigured")}</Alert>}
 

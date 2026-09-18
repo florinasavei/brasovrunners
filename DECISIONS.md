@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -4102,3 +4102,270 @@ the cost is a few hundred kilobytes per forgotten picture. The gallery stays as 
 is made to use it.
 
 Baseline `BR-V1.35-2026-09-18`.
+
+## 73. Decided — a picture has words, a caption, a size and a home; a picture nobody uses is swept; the short description is a body too (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-03 criteria 10, 11, 14; `rich-text/domain/schema.ts`
+(`caption`, `widthPercent`, `fromPlainText`), `rich-text/ui/RichTextEditor.tsx` (the picture
+panel, the stored-pictures picker, paste and drop), `rich-text/ui/RichText.tsx`
+(`<figcaption>`, the figure's width), `media/references.ts`, `/admin/gallery/pictures`,
+`event_translations.excerpt_json`, migration `0029` (expand-only).
+
+§72 shipped a picture with the file name as its alt, no caption, no way to size it, no way to
+see it again and no way to get rid of it. The owner's three asks the same afternoon: "I should
+be able to resize pictures"; "I don't see these uploaded pictures in the gallery so I can
+review and delete them — I need to know what picture and where it's used"; "in the short
+description I should be able to add pictures"; and the brief asked for alt and caption, the
+orphan sweep, and a nag rather than a block for a missing alt.
+
+**Words.** A click on a picture opens a small panel beside it: the alt text (empty until
+written — "IMG_4021" is not what a screen reader should say, so the file name is no longer
+the default), an optional caption rendered as `<figcaption>` under the picture, one of four
+widths, "remove", and "done". While any picture in the body has no alt, a dimmed sentence
+under the editor counts them; it never blocks a save, because a page with a picture that lacks
+a description is still a better page than the one the organizer gave up on.
+
+**Size.** Four shares of the text column — 100, 75, 50, 33 — rather than a drag handle or a
+free number: a drag handle is a node view and a dependency, and a free number is a layout
+tool, which §72 said a page is not. On a phone every picture is the full width whatever was
+chosen, and a picture is a block in the flow, never floated, so two pictures are never side by
+side. The editor shows the same width the page will.
+
+**Home.** `/admin/gallery/pictures` lists every stored picture — thumbnail, file, size, when
+and by whom — with every place it is used, each a link to that page, event or album, and
+offers "choose one already uploaded" from the editor's own picture control so a picture is
+stored once and used twice. A picture in use cannot be deleted from the list: the page it is on
+would show a broken image. One SQL predicate answers "is it referenced" for the list, the
+delete and the sweep — a gallery item, an album cover, a page body, an event body or excerpt,
+**drafts included** — so the three can never disagree.
+
+**Swept.** `media_assets.last_referenced_at`, set at upload and advanced by the sweep while a
+reference exists. A picture nothing has referenced for seven days, and that is at least seven
+days old, is deleted with its objects — last in the registration-maintenance run, in its own
+try/catch, row first with the reference re-checked in the same statement, then the objects,
+exactly as the gallery deletes a photo. Seven days from *last seen referenced*, not from
+upload: a picture removed from a body today can still be put back tomorrow, and a picture
+uploaded into an editor that is saved next week is not an orphan. `/devs` shows the figures;
+after a run, "to be deleted on the next run" reads zero.
+
+**The short description.** It was a plain textarea; it is the same editor now, pictures
+included, stored as `excerpt_json`. The plain `excerpt` column stays and is *derived* on save
+— the words of the rich excerpt, pictures left out, cut at 500 — because the listing card, the
+meta description, the JSON-LD and the publish check all read a string, and a card that is one
+big link cannot contain the links a body may. So the hero and the event page render the rich
+excerpt, the card shows its words, and an event written before this reads its plain text as a
+one-paragraph document. No migration of rows: `excerpt_json` is null until the editor saves
+it.
+
+**Refused.** A migration rewriting old bodies to carry the new attributes (the schema
+defaults them on read). Pasting a picture by URL (§72's rule stands: a body fetches from the
+club's store and nowhere else, and the editor now drops a pasted `<img>` outright rather than
+letting the server refuse it at save time). Deleting a referenced picture with a warning: a
+warning nobody reads is a broken page nobody meant.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 74. Decided — Gmail dots are two addresses now; the plus tag is still one (canonicalization version 2, 2026-09-18)
+
+**Status:** Decided and built. BR-REQ-032-02 criterion 1 reversed; AGENTS.md §10.4;
+`participants/domain/canonical-email.ts` (`CANONICALIZATION_VERSION = 2`); migration `0030`
+(a backfill, expand-only).
+
+The owner: "I want to allow the same Gmail account if I have for example
+`asavei.florin@gmail.com` and `a.saveiflorin@gmail.com` — not many people know about this
+hack, so we should allow it; this will help me test the app receives email." Version 1
+collapsed Gmail dots because Gmail delivers every dotted spelling to one inbox, and one inbox
+should be one runner. That is still true, and it is exactly what makes the dotted spellings
+useful: they are the only way one person gets several distinct identities that all land in the
+club's own inbox, which is how a registration is rehearsed end to end on QA — the verification
+link, the declaration, the confirmation with its QR — without asking friends for addresses.
+
+The plus tag still collapses. It is the trick everybody knows, and BR-REQ-032-02 exists so
+that one person cannot enter a full race twice from one inbox; a dotted spelling is a
+deliberate act few people know of, and the club accepts that risk for the rehearsal it buys.
+`googlemail.com` still collapses to `gmail.com`. Nothing else in §10.4 changed — except that
+the QA delivery allowlist (`EMAIL_DELIVERY_MODE=allowlist`) now compares on `inboxEmail`, the
+canonical value with the dots removed as well, because what it guards is *whose inbox* may
+receive mail, and the dotted spellings are that inbox. Otherwise the rehearsal would have
+minted the identities and captured every one of their messages.
+
+Versioned as §10.4 requires: the constant is 2, every row records it, and migration `0030`
+re-canonicalizes every version-1 row from the delivery address it stored — keeping dots can
+only separate values, never merge them, so the unique constraint cannot trip — rather than
+leaving old rows at version 1 and letting a returning runner become two people. There were no
+real participants anywhere when this ran (production refuses every registration until the
+club's legal texts exist), so the backfill cost nothing and the rule is one rule.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 75. Decided — the facts of an event are three lines, not nine rows (2026-09-18)
+
+**Status:** Decided and built. `events/ui/EventFacts.tsx`.
+
+The owner, with a screenshot of the nine-row table — date, gathering time, race start,
+meeting point, distance, climb, difficulty, cost, registration: "these details should be
+better organised. THE UX MUST BE SIMPLE AND EASY!" The rows were correct and unreadable: a
+reader scanned top to bottom to answer "when and where do I show up", which is the whole
+question.
+
+So the same facts are grouped by the question they answer, each line a row of short pieces
+separated by a middle dot, and the labels are the questions. *Când*: the date, then "întâlnire
+la 09:00 · start la 10:00" for a race and one time for anything else. *Unde*: the meeting
+point and the map link. *Traseu*: distance, climb ("180 m urcare" — a number alone said
+nothing), difficulty, cost, the route link, the Strava event. Still a `<dl>`, so a screen
+reader hears the question before the answer; the separators are hidden from it. On a listing
+card the same two lines carry no labels and end with the state of registration, because a card
+has no button to say it; on the page the button says it, and the facts mention registration
+only for an event that has none — "no registration needed" is worth one sentence.
+
+Fixed with it: the duration field refused 120 minutes ("the two nearest valid values are 116
+and 121") because `step` counts from `min`, and `min` was 1 with a step of 5. Any whole minute
+is a duration now.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 76. Decided — the desk knows who never got the email (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-037-08 criterion 8; `admin-repository.ts`
+(`emailRejectedReason`), `DeskRow.tsx`, the registration page.
+
+Mailgun already told the outbox when a message bounced (`permanent_fail`) or the recipient
+complained, and the outbox row kept the reason (§16.5); the registration's own timeline in the
+backoffice showed it, three screens away from where it matters. On race week the question is
+"who do I call", and the answer belongs on the row the organizer is already looking at.
+
+So one subselect — the newest bounced or complained message *of any type* for the registration
+— feeds a chip, "email respins", on the desk row and beside the status on the registration
+page, with Mailgun's short reason. Any type, because a verification that bounced means exactly
+what a bounced confirmation means: this person never got the email. No participant-facing
+change, and the desk still sees no address (§67): a reason is not an address.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 77. Decided — one link, all my registrations; the first use of `MANAGE_PROFILE` (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-036-04; `registrations/my-registrations.ts`,
+`/inscrieri/ale-mele` and `/inscrieri/ale-mele/[token]`, `notifications/render.ts`
+(`MANAGE_PROFILE` has a route), the footer.
+
+Participants have no accounts (§10.3) and never will in V1; a runner with entries in two
+events has two confirmation emails to keep, and the one who lost both had "send me my link
+again" per event. The brief asked for one link that lists everything: type the address, get
+one message, open a page with every active registration — the state, the code and its QR once
+confirmed, "I am here" when open, cancel.
+
+The token purpose was already there. `MANAGE_PROFILE` was reserved in §12.8 for the M4 public
+profile, is the one purpose scoped to a participant rather than a registration (the check
+constraint says so), and had no route. This is its first use; the profile, when it comes,
+shares it — the same link can grow a "your profile" section without a second purpose. The
+request side is the resend form's oracle rule, unchanged: one sentence whatever the address
+means, counted before the lookup.
+
+What a link may do: read, mark the holder present, and cancel — each on a registration that
+must be the holder's own, checked against the token's participant and never trusted from the
+form (a registration id is not a secret). Cancel consumes the token, as every manage link's
+cancel does (§12.8: single use); "I am here" does not, because arriving is not the end of a
+link's usefulness, and it never changes state past what the desk could do. The link lists
+registrations and never changes an address: §10.3 holds here as everywhere.
+
+**Refused.** A persistent "session" from the link (a cookie that keeps the page usable for a
+week): it is an account by another name. Cancelling several at once: two cancellations are two
+decisions, and the second needs a fresh link.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 78. Decided — the homepage counts down the last week, on the event's own calendar (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-011-01 criterion 12; `events/domain/race-week.ts`,
+`FeaturedEventHero.tsx`, `RegistrationCta.tsx` (`raceWeek`), `events/page.tsx`.
+
+The week of the race the homepage is opened by people who already know about it, and what
+they want is one line: when, exactly, and whether there is still a place. So within seven
+calendar days the hero says "În 3 zile, sâmbătă 07:00" — "Mâine", "Azi" — above the button,
+the free places stay as they were while registration is open, and once it has closed the
+sentence stops at "closed" no longer: "come to the desk with the QR from your email", which
+is the one thing a registered runner needs that week. Server-rendered, no script, no clock
+ticking on the page: a countdown that changes by the second is a widget, and a line that
+changes by the day is information.
+
+The days are counted on the event's own wall clock (§9.4), not the server's: Vercel's clock
+says UTC, where a Saturday 07:00 race in Brașov is still Friday 04:00, and "in 0 days" on a
+Friday evening would be a lie. `daysUntilOnWallClock` reads both instants as Brașov dates
+before subtracting, and the unit test walks the midnight where the two disagree.
+
+"Alte evenimente" folds on a phone. Under a highlighted lead event a scroll of six cards
+buries the page; a native `<details>` — open when there are four or fewer, closed past that,
+no script — keeps the phone's first screen to the one event that matters that week. On a wide
+screen the same element is forced open (`::details-content`, the marker hidden): there is
+room, and a reader there cannot tell a heading from a control.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 79. Decided — three small things reported and done: one bib per page, "resend the QR", the current tab in view (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-038-01 criterion 5, BR-REQ-037-02 criterion 1;
+`bibs-pdf.ts` (`layout`), `registrations/domain/resend.ts`, `AdminTabs.tsx`.
+
+**One bib per page.** The sheet stays two per A4 with a cut line; a second button asks for
+the same A5-sized bib centred one per page, for a printer that will not take a cut or a club
+that pins the whole page. The bib itself does not grow: an A5 number on a shirt is the size
+that reads from the finish line.
+
+**"Retrimite QR-ul".** A confirmed registration's resend was a bare manage link; it is the
+confirmation itself now — the desk code, its QR and the manage link in one message — because
+that is what "send it again" means the week of the race, for the organizer in the list and for
+the runner who asks for their link back. `REGISTRATION_MANAGE_LINK` stays in the catalogue,
+unsent. Bulk "assign bibs to selected" was asked about and refused: numbers are assigned in
+order of confirmation, and a selection is an order somebody else chose.
+
+**The current tab in view.** MUI scrolls the selected tab into view once, on mount; on a slow
+phone the fonts and the hydration land after that, and "Ziua cursei" sat off the right edge.
+The tab bar scrolls its own scroller to centre the selected tab again after hydration — the
+scroller's `scrollLeft`, never `scrollIntoView`, which also moves the *page* and yanked the
+viewport from under a tap. MUI's scroll arrows were tried on the phone and dropped: they
+re-lay the bar out after mount, and the desk's e2e story lost a click to it three times.
+
+**And the tests themselves.** The owner, the same afternoon: "tests are taking way too long
+in general." `yarn test` ran its 94 files one at a time because each opens a PGlite database
+in WebAssembly and memory was the worry; on a 32-core machine that was five minutes for a
+one-line change. Eight workers now — a few hundred megabytes, forty-six seconds — and CI's
+four cores get four. The e2e suite gained a `hydrated()` wait for the places a test clicks
+right after a navigation, because the backoffice pages carry four editors now and a click that
+lands mid-hydration is prevented by the router and never replayed.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 80. Decided — the outbox can be sent by hand, and the day's counter is the ceiling (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-080-02 criterion 5; `notifications/send-now.ts`, the
+panel on `/admin/registrations`, the `admin-send-now` throttle, `outbox.sent_by_staff` in the
+audit trail.
+
+The owner: "I want to force sending emails, not wait for the cron if needed — but I must keep
+the counter for Mailgun, because I might want to send out newsletters and stuff." Since §68 a
+request that queues a message drains the outbox after its own response, so most mail already
+leaves in seconds; what the button is for is the rest — a batch deferred by a spent cap, a
+retry waiting on its backoff, a queue filled by the desk on race morning — and the wish to
+see it go without watching a clock.
+
+**The same worker.** `processOutboxBatch`, the function the job endpoint and the after-response
+drain call, called from a Server Action with an Administrator's session instead of
+`JOB_SECRET`. One code path (§16.2): a message sent by hand is claimed, rendered, retried and
+deferred exactly as it would be at 03:00. Its own throttle, per Administrator, so a person at
+the button and the monitor never spend each other's allowance; an audit row with the counts,
+so the trail says who emptied the queue before a window.
+
+**The counter is the ceiling.** The panel shows what is waiting and what went out today
+against the free plan's hundred (`readEmailVolumeToday`, the same figures `/devs` forecasts
+from). The button runs batches only while the day's remaining allowance is above zero, sizes
+each batch to what is left, and stops at five — a hundred, the whole of a free day, in one
+press. That is the counter the owner asked to keep: a newsletter, when one exists, will have
+to fit under the same number, and the provider's own refusal on a spent cap still defers the
+rest rather than losing it (§40). When nothing is waiting, or nothing may go, there is no
+button: a sentence says which, because a disabled button cannot (`SubmitButton`'s rule).
+
+**Refused.** A "send to everybody" — the newsletter itself. That is a message type, a consent,
+an unsubscribe link and a privacy-notice paragraph, not a button; it goes on top of this
+counter when the club asks for it.
+
+Baseline `BR-V1.36-2026-09-18`.

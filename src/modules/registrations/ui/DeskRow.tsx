@@ -97,6 +97,17 @@ export default async function DeskRow({
               label={REGISTRATION_STATUS_LABEL[row.status]}
             />
             {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
+            {/* The provider said no (§76): this is who to call before race day. */}
+            {row.emailRejectedReason && (
+              <Chip
+                size="small"
+                color="error"
+                variant="outlined"
+                label={t("registrations.emailRejected")}
+                title={row.emailRejectedReason}
+                data-testid="email-rejected"
+              />
+            )}
             {row.checkedInAt && (
               <Chip
                 size="small"

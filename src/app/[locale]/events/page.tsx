@@ -5,6 +5,7 @@ import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getDb } from "@/db/client";
@@ -17,7 +18,7 @@ import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
-import { findLatestPastEvent, listUpcomingEvents } from "@/modules/events/repository";
+import { findLatestPastEvent, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 
@@ -43,7 +44,6 @@ export default async function EventsPage({ params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("Events");
-  const tEvent = await getTranslations("Event");
   const tSite = await getTranslations("Site");
   // One timestamp for the whole page, so two cards cannot disagree about whether
   // registration has closed, or about where the line between past and upcoming falls.
@@ -93,80 +93,111 @@ export default async function EventsPage({ params }: Props) {
 
       {featured && <FeaturedEventHero event={featured} now={now} />}
 
-      {/* Under a hero, the rest is "other events": a heading and denser cards — no excerpt,
-          the facts and the title are what a reader scans for the next Sunday. */}
+      {/*
+        Under a hero, the rest is "other events": a heading and denser cards — no excerpt,
+        the facts and the title are what a reader scans for the next Sunday.
+
+        On a phone the heading is a native disclosure (`DECISIONS.md` §78): open when there
+        are four or fewer, folded when there are more, so the lead event is not followed by a
+        scroll of cards. On a wide screen the same element is always open — the browser's
+        `::details-content` is told to stay visible and the marker is hidden — because a wide
+        screen has room, and a reader there cannot tell a heading from a control.
+      */}
       {featured && listed.length > 0 && (
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
-          {t("others")}
-        </Typography>
+        <Box
+          component="details"
+          open={listed.length <= 4}
+          data-testid="other-events"
+          sx={{
+            "& > summary": {
+              cursor: { xs: "pointer", sm: "default" },
+              listStyle: { xs: "revert", sm: "none" },
+              pointerEvents: { xs: "auto", sm: "none" },
+            },
+            "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } },
+          }}
+        >
+          <Typography
+            component="summary"
+            variant="h2"
+            sx={{ fontSize: "1.25rem", mb: 2, minHeight: 44, display: "flex", alignItems: "center" }}
+          >
+            {t("othersCount", { count: listed.length })}
+          </Typography>
+          <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+            {listed.map((event, index) => (
+              <EventCard key={event.id} event={event} index={index} now={now} underHero />
+            ))}
+          </Stack>
+        </Box>
       )}
 
-      {listed.length === 0 ? (
-        !featured && <Alert severity="info">{t("empty")}</Alert>
-      ) : (
-        <Stack component="ul" spacing={featured ? 1.5 : 2} sx={{ listStyle: "none", p: 0, m: 0 }}>
-          {listed.map((event, index) => (
-            /* Each card rises into place in reading order and lifts under a pointer — CSS
-               only, and none of it for a reader who asked for less motion (`theme/motion.ts`). */
-            <Card
-              key={event.id}
-              component="li"
-              variant="outlined"
-              sx={{ ...liftOnHover, ...riseIn(index) }}
-            >
-              <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
-                <CardContent>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}
-                  >
-                    <Chip size="small" label={tEvent(`type.${event.type}`)} />
-                    {/* The surface beside the type, only when the club has said. */}
-                    {event.surface && (
-                      <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />
-                    )}
-                    {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
-                    {event.eventStatus === "CANCELLED" && (
-                      <Chip size="small" color="error" label={tEvent("cancelled")} />
-                    )}
-                  </Stack>
-
-                  <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-                    {event.title}
-                  </Typography>
-
-                  {event.excerpt && !featured && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      {event.excerpt}
-                    </Typography>
-                  )}
-
-                  <EventFacts event={event} now={now} variant="compact" />
-
-                  {/*
-                    The card has always been one big link (`CardLink`), and nothing said so.
-                    On a listing where only the featured event carried buttons, the other three
-                    read as inert panels — the affordance was a hover colour, which a phone does
-                    not have and a glance does not find.
-
-                    Text plus an arrow rather than a second button: the whole card is already
-                    the tap target (BR-REQ-041-01 criterion 6), and a real button inside a link
-                    would be a control inside a control.
-                  */}
-                  <Typography
-                    aria-hidden="true"
-                    variant="body2"
-                    sx={{ mt: 2, color: "primary.main", fontWeight: 500 }}
-                  >
-                    {tEvent("seeDetails")} →
-                  </Typography>
-                </CardContent>
-              </CardLink>
-            </Card>
-          ))}
-        </Stack>
-      )}
+      {!featured &&
+        (listed.length === 0 ? (
+          <Alert severity="info">{t("empty")}</Alert>
+        ) : (
+          <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
+            {listed.map((event, index) => (
+              <EventCard key={event.id} event={event} index={index} now={now} />
+            ))}
+          </Stack>
+        ))}
     </Container>
+  );
+}
+
+/**
+ * One event on the listing. Each card rises into place in reading order and lifts under a
+ * pointer — CSS only, and none of it for a reader who asked for less motion
+ * (`theme/motion.ts`). Under a hero the card is denser: no excerpt.
+ */
+async function EventCard({
+  event,
+  index,
+  now,
+  underHero = false,
+}: {
+  event: PublicEvent;
+  index: number;
+  now: Date;
+  underHero?: boolean;
+}) {
+  const tEvent = await getTranslations("Event");
+  return (
+    <Card component="li" variant="outlined" sx={{ ...liftOnHover, ...riseIn(index) }}>
+      <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
+        <CardContent>
+          <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+            <Chip size="small" label={tEvent(`type.${event.type}`)} />
+            {/* The surface beside the type, only when the club has said. */}
+            {event.surface && <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />}
+            {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
+            {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
+          </Stack>
+
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {event.title}
+          </Typography>
+
+          {event.excerpt && !underHero && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {event.excerpt}
+            </Typography>
+          )}
+
+          <EventFacts event={event} now={now} variant="compact" />
+
+          {/*
+            The card has always been one big link (`CardLink`), and nothing said so. Text plus
+            an arrow rather than a second button: the whole card is already the tap target
+            (BR-REQ-041-01 criterion 6), and a real button inside a link would be a control
+            inside a control.
+          */}
+          <Typography aria-hidden="true" variant="body2" sx={{ mt: 2, color: "primary.main", fontWeight: 500 }}>
+            {tEvent("seeDetails")} →
+          </Typography>
+        </CardContent>
+      </CardLink>
+    </Card>
   );
 }

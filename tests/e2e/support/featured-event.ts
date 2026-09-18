@@ -37,6 +37,20 @@ export async function signIn(page: Page, identity: string) {
   await page.goto("/ro/autentificare");
   await page.getByRole("button", { name: new RegExp(identity) }).click();
   await expect(page).toHaveURL(/\/ro\/admin$/, { timeout: 30_000 });
+  await hydrated(page);
+}
+
+/**
+ * Wait for the client to have taken over the page before clicking anything that needs it.
+ *
+ * A MUI select opens only once hydrated; a `Link` clicked mid-hydration is prevented by the
+ * router and not replayed; a form submitted mid-hydration is queued by React and sometimes
+ * lost. The backoffice pages grew heavier on 2026-09-18 (four editors on an event, §73), so
+ * the window a fast test can land in grew with them. Network idle is the cheapest reliable
+ * signal that the chunks have loaded and run.
+ */
+export async function hydrated(page: Page) {
+  await page.waitForLoadState("networkidle");
 }
 
 const modeSelect = (page: Page) => page.getByRole("combobox", { name: "Modul de înscriere" });

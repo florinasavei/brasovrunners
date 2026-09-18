@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.36-2026-09-18 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.36-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -230,6 +230,8 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 9. Given an event with a video link (`events.video_url` — a YouTube link in any share shape: `watch?v=`, `youtu.be/`, `shorts/`, `embed/`, `live/`), when it is saved, then the link is refused unless an eleven-character video id can be read from it; and when the event page renders, then the film is offered behind one press — a native disclosure whose closed state fetches nothing from YouTube — and, opened, plays from `youtube-nocookie.com` from the id alone, with a line saying the player is YouTube's. Absent from the listing card and from a duplicate or a repeated edition, because a film is of one edition (2026-09-18, `DECISIONS.md` §69).
 10. Given an event with a Strava event link (`events.strava_event_url` — the club's group event page on `strava.com`, refused on any other host), when its page renders, then it is offered as its own labelled fact with the Strava mark, opening in a new tab with `rel="noopener noreferrer"`; absent from the card, and never carried onto a duplicate or a repeated edition, because a Strava group event is one occurrence's page (2026-09-18, `DECISIONS.md` §71).
 11. Given a translation with a full description — a rich-text document written in the editor of AGENTS.md §11.3, validated against the same allowlist as a standing page — when the event page (and its preview) renders, then it appears under the short description, rendered through the allowlisted renderer and nothing else; an empty document renders nothing (2026-09-18, `DECISIONS.md` §71).
+
+12. Given the featured event within seven calendar days of its start — counted on the event's own calendar, never the server's — when the homepage renders, then the hero carries a countdown line ("Mâine, sâmbătă 07:00"; "În 3 zile, …") above the registration control; while registration is open the free places show as before, and once it has closed the sentence says to come to the desk with the QR. Server-rendered, no script. On a phone, "Alte evenimente" under the hero is a native disclosure, open when there are four or fewer and folded when there are more; on a wide screen it is always open (2026-09-18, `DECISIONS.md` §78).
 
 **Verification:** integration `events/configuration.test.ts`; unit `events/zoned-time.test.ts`; e2e `event-pages.spec.ts`
 
@@ -504,6 +506,30 @@ other participant link uses — never by a password.
 
 **Verification:** integration `registrations/status-page.test.ts`; e2e `registration-status.spec.ts`
 
+#### BR-REQ-036-04 — One link, all my registrations
+
+- **Source:** BR-BUS-031, BR-BUS-036
+- **Implements:** AGENTS.md §10.3, §12.8, §15.9 (steps 1–2), §16.3
+- **Priority:** SHOULD
+- **Release:** M1 (2026-09-18, `DECISIONS.md` §77)
+
+A runner with two entries and no account has two emails to find. `/inscrieri/ale-mele` takes an
+address and sends one link, and that link lists every active registration of that address. It
+is the first use of the `MANAGE_PROFILE` token purpose — scoped to a participant, never to a
+registration — and it lists registrations and never changes an address.
+
+**Acceptance criteria**
+
+1. Given the form, when any address is submitted — known, unknown, malformed or throttled — then the response is the same sentence, the request is counted before anything is looked up, and a `PROFILE_MANAGE_LINK` message is queued only when a participant with that identity exists; the message carries no registration.
+2. Given the message, when it is rendered, then it mints a `MANAGE_PROFILE` token scoped to the participant alone (`registration_id` null), hashed at rest, single use, fourteen days, and links to `/inscrieri/ale-mele/<token>`.
+3. Given a valid link, when it is opened, then the page lists every *active* registration of that participant and nobody else's — the event (linked), the state in the reader's locale, the desk code and its QR once confirmed, "I am here" from the day before the start, and cancel — and nothing for cancelled or expired ones. A GET mutates nothing.
+4. Given "I am here" for one listed registration, when it is pressed, then that registration is checked in through the same service the desk uses, the registration must be the token holder's own (a registration id is not a secret), and the link stays valid.
+5. Given cancel for one listed registration, when it is pressed, then the registration is unregistered through the allocator (the place released, source `PARTICIPANT`), it must be the token holder's own, and the token is consumed — a second cancellation needs a fresh link, which the page says. A refused attempt (not theirs, event started) leaves the token live.
+6. Given an invalid, expired, used or registration-scoped token, when the page is opened, then it renders the same generic sentence as every other participant token surface.
+7. Given the public footer, when it renders, then it carries "Înscrierile mele" so the form is findable without an email.
+
+**Verification:** integration `registrations/my-registrations.test.ts`; integration `cms/boundary.test.ts` (the routes)
+
 #### BR-REQ-039-02 — The public list publishes the display name
 
 - **Source:** BR-BUS-039
@@ -543,7 +569,7 @@ other participant link uses — never by a password.
 
 **Acceptance criteria**
 
-1. Given `a.n.a@gmail.com` and `ana@gmail.com`, when both are canonicalized, then they produce the same canonical value.
+1. Given `a.n.a@gmail.com` and `ana@gmail.com`, when both are canonicalized, then they produce **different** canonical values (version 2, 2026-09-18, `DECISIONS.md` §74; version 1 collapsed them, and migration `0030` re-canonicalized every stored row).
 2. Given `ana+club@gmail.com` and `ana@gmail.com`, when both are canonicalized, then they produce the same canonical value.
 3. Given `ana@googlemail.com` and `ana@gmail.com`, when both are canonicalized, then they produce the same canonical value, while each participant's `normalized_email` keeps its submitted domain.
 4. Given `a.n.a@example.ro` and `ana@example.ro`, when both are canonicalized, then they produce different canonical values.
@@ -795,7 +821,7 @@ other participant link uses — never by a password.
 
 **Acceptance criteria**
 
-1. Given each registration status, when an administrator resends, then the message type matches the mapping in `SETUP.md` §21 and no other type can be selected.
+1. Given each registration status, when an administrator resends, then the message type matches the mapping in `SETUP.md` §21 and no other type can be selected; for a confirmed registration that is the confirmation itself (`REGISTRATION_CONFIRMED`, with the desk code, its QR and the manage link — "retrimite QR-ul" in the list), not a bare manage link (2026-09-18, `DECISIONS.md` §79).
 2. Given a resend, when it completes, then a new outbox row is created, marked as a manual resend with the acting administrator recorded.
 3. Given a resend, when it completes, then the registration status is unchanged and no deadline is extended.
 4. Given a cancelled or expired registration, when an administrator resends, then a `REGISTRATION_STATE_NOTICE` is queued that contains no confirmation link and no scoped token.
@@ -964,9 +990,10 @@ way through every step, and none of them is a way around the allocator.
 2. Given a registration that already has a number, when numbers are assigned again, then its number is unchanged; new numbers continue after the highest ever given for that event, and a registration confirmed earlier than the first batch but numbered later gets a later number.
 3. Given a test registration, a waitlisted, pending, cancelled or expired one, when numbers are assigned, then it receives none; a cancelled registration that had a number keeps it, so the number is never given to somebody else.
 4. Given two registrations of one event, when both would carry the same number, then the database refuses the second.
-5. Given assigned numbers, when the sheet is requested — all of them, or a range `from`/`to` for a reprint or a late batch — then the response is a PDF, Administrator only, of A4 pages with two bibs each and a dashed cut line between them; each bib carries the club's lockup, the number in the club's blue as large as the paper allows, the participant's registered name, and the event's title and date in the requested language. Only confirmed, real registrations are printed.
+5. Given assigned numbers, when the sheet is requested — all of them, or a range `from`/`to` for a reprint or a late batch — then the response is a PDF, Administrator only, of A4 pages with two bibs each and a dashed cut line between them, or, with `layout=one` ("câte unul pe pagină"), the same A5-sized bib centred one per A4 page (2026-09-18, `DECISIONS.md` §79); each bib carries the club's lockup, the number in the club's blue as large as the paper allows, the participant's registered name, and the event's title and date in the requested language. Only confirmed, real registrations are printed.
 6. Given the assignment, when it completes with at least one number given, then one audit row records who, for which event, and the range assigned — never a participant.
 7. Given one confirmed registration, when any staff role types a number for it — or clears it — then the number is a whole number from 1 to 99999, a number already worn at that event is refused with a sentence rather than a stack trace, and an audit row records the number before and after (2026-09-18, `DECISIONS.md` §67).
+8. Given a registration for which Mailgun reported `permanent_fail` or `complained` on any message (BR-REQ-080-04), when the desk row or the registration page renders, then it carries an "email respins" chip with the provider's short reason, so the organizer knows before race day who never got the email and calls them; the participant sees nothing (2026-09-18, `DECISIONS.md` §76).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`; unit `registrations/bibs-pdf.test.ts`
 
@@ -1087,12 +1114,14 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 7. Given a page address, when it is submitted, then it is lowercase letters, digits and hyphens, is not a reserved word, and is not already in use in that locale.
 8. Given published pages, when the public header renders, then each appears as a navigation entry in the order the club set, and when the sitemap is produced, then each published locale's address is listed.
 9. Given a Contributor, when they attempt to create or edit a page, then it is refused; given an Editor, then it is allowed.
-10. Given the rich-text editor — on a page or on an event's description — when a staff member presses the picture control and chooses a JPEG, PNG or WebP, then the browser shrinks it to at most 2000px, `POST /api/admin/media` stores it exactly as a gallery photo is stored (two WebP variants through the §17 adapter, one `media_assets` row naming who uploaded it), and the editor inserts an image block carrying the stored variant's address, size and an alt text; the schema refuses an image whose address is not one of this site's stored variants (a third party's image, a data URI); the page renders it as a lazy `<img>` sized by its stored dimensions; a picture is a block between paragraphs, never inline (2026-09-18, `DECISIONS.md` §72).
-10. Given the page editor, when a body is written, then headings, bold, italic, links, bulleted and numbered lists and quotations are available, each with a keyboard-reachable control carrying its own name; and when the page renders, it shows what the editor showed.
-11. Given a body posted to the server, when it contains any node, mark or attribute outside the allowlist of `AGENTS.md` §11.3 — or a link that is not http, https, mailto or a path on this site — then the save is refused, whatever produced it.
-10. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
+10. Given the rich-text editor — on a page, on an event's description or on its short description — when a staff member presses the picture control and chooses a JPEG, PNG or WebP (or pastes or drops one as a file), then the browser shrinks it to at most 2000px, `POST /api/admin/media` stores it exactly as a gallery photo is stored (two WebP variants through the §17 adapter, one `media_assets` row naming who uploaded it), and the editor inserts an image block carrying the stored variant's address and size, an empty alt and no caption; the schema refuses an image whose address is not one of this site's stored variants (a third party's image, a data URI, a pasted `<img>` from another site); the page renders it as a lazy `<img>` sized by its stored dimensions; a picture is a block between paragraphs, never inline (2026-09-18, `DECISIONS.md` §72).
+11. Given a picture in the editor, when it is clicked, then a panel beside it offers its alt text, an optional caption, one of four widths (100, 75, 50 or 33 percent of the text column on a wide screen; always the full width on a phone), removal, and the pictures already stored to choose from instead of uploading again; the page renders the caption as a `<figcaption>` and the width as the figure's; and while any picture in the body has no alt text, a dimmed sentence under the editor says how many — a sentence, never a block on saving (2026-09-18, `DECISIONS.md` §73).
+12. Given the page editor, when a body is written, then headings, bold, italic, links, bulleted and numbered lists and quotations are available, each with a keyboard-reachable control carrying its own name; and when the page renders, it shows what the editor showed.
+13. Given a body posted to the server, when it contains any node, mark or attribute outside the allowlist of `AGENTS.md` §11.3 — or a link that is not http, https, mailto or a path on this site — then the save is refused, whatever produced it.
+14. Given a stored picture referenced by no gallery item, no album cover and no body — a draft page or event counts as a reference — for more than seven days, when the registration-maintenance job runs, then its row and both objects are deleted, last in the run and in its own try/catch, and `/devs` shows how many pictures are stored, how many are used nowhere and how many the next run will take; given the pictures page (`/admin/gallery/pictures`), when an editorial role opens it, then every stored picture is listed with where it is used, each use a link to that page, event or album, and a picture in use cannot be deleted from there (2026-09-18, `DECISIONS.md` §73).
+15. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
 
-**Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; e2e `pages.spec.ts`
+**Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
 
 #### BR-REQ-054-01 — The photo gallery: albums on R2, light by construction
 
@@ -1307,8 +1336,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 2. Given a provider failure, when it occurs, then the committed registration state is unchanged and the outbox row is retried with bounded backoff up to a maximum attempt count.
 3. Given concurrent workers, when they claim work, then no message is sent twice for the same trigger.
 4. Given a permanent failure reported by the provider, when it is received, then further sends to that address for that trigger are suppressed and the failure is visible in the backoffice.
+5. Given an Administrator on `/admin/registrations`, when the outbox panel shows what is waiting and the day's count against the provider's allowance, and they press "Trimite acum", then the same worker the scheduled job runs drains the queue in batches — never past the day's remaining allowance, at most a hundred in one press, stopping when the provider defers — audited with the counts, throttled per Administrator apart from the job's own bucket; and when nothing is waiting or the allowance is spent, then a sentence says which, and there is no button (2026-09-18, `DECISIONS.md` §80).
 
-**Verification:** integration `notifications/outbox.test.ts`
+**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`
 
 #### BR-REQ-080-03 — Environment-appropriate delivery
 
