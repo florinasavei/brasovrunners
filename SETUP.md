@@ -1285,9 +1285,13 @@ domain's sending key "brasovrunners-production"), `MAILGUN_WEBHOOK_SIGNING_KEY`,
 `EMAIL_FROM_ADDRESS=noreply@mail.brasovrunners.com`, `EMAIL_REPLY_TO=contact@mail.brasovrunners.com`,
 `EMAIL_DELIVERY_MODE=live`. Verified with `yarn email:probe` pointed at the domain.
 
-**The club's reply address, until it has a mailbox.** `contact@mail.brasovrunners.com` is a
+**The club's mailbox (2026-09-18 evening): `brasovrunners@gmail.com`**, a Gmail of the club's
+(password and 2-step backup codes in the club's password store), which reads `contact@` and
+replies from it — Gmail "Send mail as" `contact@mail.brasovrunners.com` through
+`smtp.eu.mailgun.org:587`, user `postmaster@mail.brasovrunners.com`, the domain's SMTP
+credential (the one Zitadel uses; do not reset it). `contact@mail.brasovrunners.com` is a
 Mailgun **Route** (Send → Receiving → Routes): match recipient `contact@mail.brasovrunners.com`
-→ Forward to the owner's Gmail, Stop, priority 0, no "store and notify" (nothing reads incoming
+→ Forward to `brasovrunners@gmail.com, <the owner's address>`, Stop, priority 0, no "store and notify" (nothing reads incoming
 mail, and storing people's messages at a third party for nothing is not a feature). Receiving
 works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
 Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a

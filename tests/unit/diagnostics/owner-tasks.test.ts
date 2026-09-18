@@ -95,7 +95,7 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "mediaStorage")).toBe("done");
     // The queued work: developer-owned, always open, after the club's rows.
     const developer = ownerTasks(LAUNCHED).filter((task) => task.owner === "developer").map((task) => task.id);
-    expect(developer).toEqual(["scheduler", "clubMailbox", "minorsOnline", "scheduleStructured", "declarationArchiveMail", "vercelUsage", "docsSimplify"]);
+    expect(developer).toEqual(["scheduler", "minorsOnline", "scheduleStructured", "declarationArchiveMail", "vercelUsage", "docsSimplify"]);
     // The bot check is a switch the club flips (§97): open without the keys, never blocking.
     expect(stateOf({ ...LAUNCHED, botCheckConfigured: false }, "botCheck")).toBe("open");
     expect(stateOf(LAUNCHED, "botCheck")).toBe("done");

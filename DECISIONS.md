@@ -4876,10 +4876,15 @@ bite — one page, first in the read order. `CLAUDE.md` stays the long form.
 **The queue, on the board.** "Add them in the TODO section — basically all the queued work,
 so I can continue tomorrow." `/admin/tasks` now carries the Turnstile row for the club (open
 until the two keys exist) and, developer-owned and open by design, the work asked for and not
-built: the club's mailbox (a Gmail of the club's with "send as" through Mailgun today, Migadu Micro at $19/year when it wants a mailbox on the domain — Zoho Free is gone), a parent
+built: a parent
 registering a minor online, the programme as timed rows with an `.ics`, each signed
 declaration sent to a club archive mailbox too, Vercel usage in figures, the documentation
 shortened. Static rows (`BACKLOG` in `owner-tasks.ts`) with the plan as their steps; whoever
-finishes one removes it there and writes the §.
+finishes one removes it there and writes the §. The first came off the same night: the club's
+mailbox is `brasovrunners@gmail.com` (a Gmail of the club's, not a person's), reading
+`contact@mail.<domain>` through the Mailgun route and replying from it through Mailgun's SMTP
+— free, and the privacy notice already says the mailbox is at Google. Migadu Micro ($19/year,
+a mailbox on the domain with a GDPR contract) stays the upgrade if the club wants one; Zoho's
+free plan is web-only now and not worth the account.
 
 Baseline `BR-V1.38-2026-09-18`.

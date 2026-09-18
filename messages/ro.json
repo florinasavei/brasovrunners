@@ -706,18 +706,6 @@
             "Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
           ]
         },
-        "clubMailbox": {
-          "title": "Căsuța de email a clubului",
-          "todo": "Mesajele către adresa de contact ajung acum, prin Mailgun, în Gmail-ul organizatorului. Gratuit și de azi: un cont Gmail al clubului (nu unul personal) în care Mailgun trimite mesajele, cu „Send mail as” prin SMTP-ul Mailgun, ca răspunsurile să plece de la adresa clubului. Când vrei o căsuță adevărată pe domeniu, cu contract GDPR: Migadu Micro (19 $/an, Elveția, adrese nelimitate) sau Infomaniak (Elveția, ~2 €/lună). Zoho Free nu mai e o opțiune.",
-          "done": "Clubul are propria căsuță de email pe domeniul lui.",
-          "how": [
-            "Creează un cont Gmail al clubului (de ex. „<club>.contact@gmail.com”), cu parolă păstrată de club, nu de o persoană.",
-            "În Mailgun → Receiving → ruta „contact@mail.” → destinația devine acest Gmail (poate rămâne și a doua adresă, separată prin virgulă).",
-            "În Gmail → Settings → Accounts → „Send mail as” → adaugă contact@mail.<domeniu> cu SMTP smtp.eu.mailgun.org, port 587, utilizatorul „postmaster@mail.<domeniu>” și parola SMTP din Mailgun → Domain settings → SMTP credentials. Răspunsurile pleacă de la club.",
-            "În Vercel: EMAIL_REPLY_TO = contact@mail.<domeniu>. Nota de confidențialitate spune deja că e găzduit la Google.",
-            "Mai târziu, pentru o căsuță pe domeniu cu contract GDPR: Migadu Micro → adaugă domeniul, înregistrările MX/SPF/DKIM la ROMARG doar pentru domeniul principal (Mailgun rămâne pe mail.), apoi ruta Mailgun și EMAIL_REPLY_TO către noua adresă și versiunea următoare a notei fără propoziția despre Google."
-          ]
-        },
         "minorsOnline": {
           "title": "Înscrierea unui minor de către părinte, online",
           "todo": "Termenii și declarația spun deja că un părinte/tutore înscrie copilul și semnează pentru el; formularul nu are încă nimic care să o facă explicit. De construit: pe formular, când data nașterii dă sub 18 ani, o secțiune „Sunt părintele/tutorele” cu numele și actul de identitate ale părintelui; declarația completată cu „în calitate de părinte al {{participant}}”; kitul se predă părintelui.",
@@ -744,7 +732,7 @@
           "done": "Fiecare declarație semnată ajunge automat și în căsuța de arhivă a clubului.",
           "how": [
             "Variabilă DECLARATIONS_ARCHIVE_TO (căsuța clubului). Când e setată, la semnare se pune în coadă un al doilea DECLARATION_SIGNED către ea, cu același PDF atașat.",
-            "Depinde de căsuța clubului (rândul de mai sus); un Gmail personal nu e un loc de arhivă conform GDPR."
+            "Căsuța clubului există (brasovrunners@gmail.com, din 2026-09-18); DECLARATIONS_ARCHIVE_TO = ea."
           ]
         },
         "vercelUsage": {
