@@ -24,6 +24,10 @@ function csvCell(value: string): string {
 export type RegistrationCsvRow = {
   eventTitle: string;
   registeredName: string;
+  /** The two halves as registered, for the organiser who hands kits out by identity card (§95). */
+  firstName: string;
+  lastName: string;
+  idDocument: string;
   email: string;
   status: string;
   /**
@@ -48,6 +52,9 @@ export type RegistrationCsvRow = {
 const HEADER = [
   "Event",
   "Name",
+  "First name",
+  "Last name",
+  "Identity document",
   "Email",
   "Status",
   "Club member (declared)",
@@ -67,6 +74,9 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
       [
         row.eventTitle,
         row.registeredName,
+        row.firstName,
+        row.lastName,
+        row.idDocument,
         row.email,
         row.status,
         row.clubMemberDeclared ? "Yes" : "",

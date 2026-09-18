@@ -394,6 +394,15 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               {acceptance.typedName}
             </Box>{" "}
             (v{acceptance.declarationVersion})
+            {acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`}
+            {index === 0 && (
+              <>
+                {" — "}
+                <a href={`/api/admin/registrations/${registration.id}/declaration`} target="_blank" rel="noopener">
+                  {tr("registrations.declarationPdf")}
+                </a>
+              </>
+            )}
             {acceptance.method === "PAPER" &&
               ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
           </Typography>

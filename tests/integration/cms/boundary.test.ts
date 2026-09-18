@@ -94,6 +94,10 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "excerpt",
       // The short description as the editor posts it (`DECISIONS.md` §73); `excerpt` is derived.
       "excerptBody",
+      // The rules, per language (`DECISIONS.md` §96).
+      "rules",
+      // The programme, per language (`DECISIONS.md` §96).
+      "schedule",
       "seoDescription",
       "seoTitle",
       "slug",
@@ -171,6 +175,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/checkin/[code]",
       "/admin/emails",
       "/admin/events/[id]",
+      "/admin/events/[id]/bibs",
       "/admin/events/new",
       "/admin/gallery",
       "/admin/gallery/[id]",

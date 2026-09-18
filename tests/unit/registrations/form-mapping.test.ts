@@ -63,9 +63,11 @@ describe("BR-REQ-031-04 the rendered form reaches the schema", () => {
     expect(values.healthNotes).toBeUndefined();
   });
 
-  it("reads a chosen display name", () => {
-    const values = readRegistrationForm(filledForm({ displayName: "  Ana P.  " }), "ro");
+  it("reads a chosen display name only when the form offered one (`FEATURE_DISPLAY_NAME`, §95)", () => {
+    const values = readRegistrationForm(filledForm({ displayName: "  Ana P.  " }), "ro", { displayName: true });
     expect(values.displayName).toBe("Ana P.");
+    // Off by default: a value posted anyway is ignored, and the registered name is the name.
+    expect(readRegistrationForm(filledForm({ displayName: "Ana P." }), "ro", { displayName: false }).displayName).toBeUndefined();
   });
 
   it("refuses health text without its own consent, and accepts it with", () => {

@@ -20,14 +20,14 @@ import type { Database } from "@/db/types";
  * Four, from §16.3's message list, for a registration that completes normally and is
  * reminded: `VERIFY_REGISTRATION_EMAIL`, `COMPLETE_DECLARATION`, `REGISTRATION_CONFIRMED`,
  * and `EVENT_REMINDER` two days before the start (`DECISIONS.md` §81) — three since
- * 2026-09-18, and the reminder made it four.
+ * 2026-09-18, the reminder made it four, and `DECLARATION_SIGNED` (§95) five.
  *
  * An entrant who lands on the waiting list costs more (`WAITLIST_JOINED`, then
  * `WAITLIST_SPOT_OFFER`), and one who cancels costs another. So four is the *floor* for a
  * completed registration and the projection below understates a busy day rather than crying
  * wolf — which is the right direction for a number somebody uses to decide whether to upgrade.
  */
-export const MESSAGES_PER_COMPLETED_REGISTRATION = 4;
+export const MESSAGES_PER_COMPLETED_REGISTRATION = 5;
 
 /**
  * Mailgun Free: 100 messages a day (`docs/PLATFORM.md`, limit 1 of the four that bite).

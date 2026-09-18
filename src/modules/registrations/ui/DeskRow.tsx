@@ -134,6 +134,12 @@ export default async function DeskRow({
               {row.checkinCode}
             </Typography>
           )}
+          {/* The document the kit is handed out against (§95): what the volunteer compares the card to. */}
+          {row.idDocument && (
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {t("desk.idDocument")}: {row.idDocument}
+            </Typography>
+          )}
         </Box>
 
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>

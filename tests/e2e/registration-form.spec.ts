@@ -71,7 +71,8 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // behind a summary, and a field nobody sees is a field nobody fills.
     await expect(page.locator('[name="healthNotes"]')).toBeVisible();
     await expect(page.locator('[name="clubName"]')).toBeVisible();
-    await expect(page.locator('[name="displayName"]')).toBeVisible();
+    // The public display name is behind `FEATURE_DISPLAY_NAME`, off by default (§95): absent.
+    await expect(page.locator('[name="displayName"]')).toHaveCount(0);
     // BR-REQ-031-05 criterion 1: the health question keeps its own consent beside it.
     await expect(page.locator('[name="healthConsent"]')).toBeVisible();
     // BR-REQ-031-06: the club's own people say so here.
@@ -109,7 +110,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
     // Criterion 1, with every disclosure open — the widest the page can be made. They open by
     // default now, so nothing needs clicking; assert that rather than assume it.
-    for (const name of ["healthNotes", "clubName", "displayName"]) {
+    for (const name of ["healthNotes", "clubName", "preferredLocale"]) {
       await expect(page.locator(`[name="${name}"]`)).toBeVisible();
     }
     const overflow = await page.evaluate(() => ({

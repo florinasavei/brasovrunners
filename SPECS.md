@@ -81,6 +81,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 5. Given any localized page, when it renders, then the alternate-locale link points at the corresponding localized slug and not at a concatenated URL.
 6. Given the language switcher in the site header, when it is used on any page, then the visitor lands on the same page in the other language — resolved on the server, because the two locales of an event have different slugs and only the database holds the pair. When that page has no published translation in the target language, the switcher lands on that language's event listing rather than on a 404.
 7. Given the switcher, when it renders, then the current language is marked rather than offered as a link, and the visible label is the language code with the flag as decoration beside it — a flag is a country, not a language.
+8. Given the bare root, when any visitor requests it, then they land on the Romanian listing — no `Accept-Language` negotiation and no locale cookie; the chosen language lives in the address of every page (2026-09-18, `DECISIONS.md` §96).
 
 **Verification:** unit `i18n/alternate-path.test.ts`; integration `events/locale-switch.test.ts`; e2e `event-pages.spec.ts`
 
@@ -249,6 +250,7 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 3. Given a cancelled or completed event, when a registration is attempted, then it is rejected.
 4. Given an event with `event_status = COMPLETED` (set by the organizer in the editor), when its page or card renders, then it says "S-a încheiat" in words and offers no registration control; when a check-in is attempted at the desk, then it is refused with a sentence and the desk shows the rows without buttons; and the maintenance job no longer touches the event (2026-09-18, `DECISIONS.md` §82).
 5. Given the listing, when it renders, then it carries, right under the featured event, a row of type filters (`?type=`, one of the closed set) and a month view of the published events — the month `?month=YYYY-MM` names or the current one, in the club's time zone, Monday first, each event a link, a cancelled one struck through — as a grid from `sm` up and as an agenda of the month's days on a phone; the filter applies to the month and to the cards and is kept by the month links (2026-09-18, `DECISIONS.md` §89).
+6. Given an event whose translation has rules or a programme (`event_translations.rules_json`, `schedule_json`, written in the description's editor, folded), when its page or preview renders, then the programme appears under `#schedule` and the rules under `#rules` below the description, in the reader's language; an event without them shows no section, and the emails link to each only when it exists (2026-09-18, `DECISIONS.md` §96).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
@@ -370,8 +372,9 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 1. Given the registration form, when it renders, then it asks only for full name, email, and acknowledgment of the privacy notice, and offers no password field or login link.
 2. Given a completed registration, when the participant record is inspected, then it holds no password, no provider token, and no staff role.
 3. Given a submitted registration, when the response renders, then it states that an email has been sent, without revealing whether that address was already registered.
+4. Given `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` both set, when the public form renders, then it carries the Cloudflare Turnstile widget, and a submission whose token Cloudflare does not confirm — or that carries none, or when Cloudflare cannot be reached — is refused with a field error the person can act on; with either key unset nothing is shown or checked, and the honeypot and the timing check stand either way; the staff form never shows it (2026-09-18, `DECISIONS.md` §97).
 
-**Verification:** e2e `registration-submit.spec.ts`; integration `participants/identity.test.ts`
+**Verification:** e2e `registration-submit.spec.ts`; integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
 #### BR-REQ-031-02 — Privacy-notice acknowledgment is recorded
 
@@ -437,6 +440,8 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 4. Given a date of birth in the future, or earlier than 120 years before the event, when it is posted, then it is rejected.
 5. Given a registration an organizer enters for somebody who asked in person (BR-REQ-037-05), when a detail is unknown, then it may be left blank and the registration is still accepted — an organizer records what the person said on the telephone, and refusing the row would lose the registration entirely.
 6. Given any stored registration, when the legal name is read, then it is the pair of name fields, and the declaration is signed against that name and not against the display name.
+
+7. Given the public form, when it renders, then it offers the language of the emails and the declaration — Romanian or English, the page's language preselected — and the registration is kept in that language: the declaration is signed in it and it comes first in every message (2026-09-18, `DECISIONS.md` §97).
 
 **Verification:** integration `registrations/entry-details.test.ts`; e2e `registration-submit.spec.ts`
 
@@ -645,8 +650,12 @@ registration — and it lists registrations and never changes an address.
 4. Given an acceptance form submitted without the explicit checkbox or without a typed name, when it is posted, then it is rejected.
 5. Given any surface presenting the declaration, when it renders, then it does not describe the acceptance as a qualified electronic signature.
 6. Given a declaration page that rendered one version, when a newer version is approved before the form is posted, then the signature is refused, nothing is recorded, the action link is not spent, and the participant is shown the current text to read and sign again — so the stored acceptance always names the version the participant read (`DECISIONS.md` §57).
+7. Given a declaration text with merge fields (`{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`, `{{signedAt}}`), when the page renders for one registration, then the fields are filled from the registration and the event and an unfilled one shows as a dotted blank; what is signed — id and hash — is the template, and the fill-ins are recorded beside it (2026-09-18, `DECISIONS.md` §95).
+8. Given a declaration text that names `{{idDocument}}`, when the form is posted without an identity document, or with one that is not a series and a number (4–30 letters, digits, spaces, dots, dashes), then it is refused; when posted with one, then it is stored on the acceptance as typed, shown on the desk row and in the export, and printed into the declaration. Never a scan or an image. A text without the field asks for none and stores null.
+9. Given a signature — by link or on paper — when it is recorded, then a `DECLARATION_SIGNED` message is queued to the participant with the signed declaration as an attached PDF (the merged text, the typed name in the signature face, the instant, the method, the version and the hash) and a link to the same PDF from the manage token; the confirmation carries the link too; the participant's manage page offers it.
+10. Given an Administrator, when they request an event's declarations, then every signed one of its real registrations is one PDF, one per page, oldest first, and one registration's is its own PDF; any staff role may print the event's blank form on the current approved text. All three are renderings of the stored rows, never files kept elsewhere; a registration and its acceptance are deleted three years after the event's start by the retention sweep (`jobs/retention.ts`).
 
-**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6); e2e `registration-form.spec.ts`
+**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`; e2e `registration-form.spec.ts`
 
 #### BR-REQ-033-03 — Staff cannot sign for a participant
 
@@ -871,6 +880,7 @@ registration — and it lists registrations and never changes an address.
 6. Given the same Administrator, when they remove the test registrations for that event, then those rows and the synthetic participants behind them are deleted and every real registration is left standing.
 7. Given `APP_ENV=production`, when a test registration is attempted, then it is refused in two independent places.
 8. Given an Administrator on an event with internal registration, when the event page renders, then it shows the queue as the allocator counts it — places, confirmed, held, free, waiting — and the waiting list numbered in the order it is served, with an offer's deadline where one is out (2026-09-18, `DECISIONS.md` §92).
+9. Given `FEATURE_DISPLAY_NAME` unset or not `true`, when the public or the staff form renders, then no display-name field is offered and a posted value is ignored, so the list shows the registered name; the CSV export always carries the first name, the last name and the identity document beside the registered name (2026-09-18, `DECISIONS.md` §95).
 
 **Verification:** integration `registrations/test-kind.test.ts`
 
@@ -1329,8 +1339,10 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 4. Given the confirmation or the reminder, when it renders, then it opens with one bold line — the event's date, time and meeting point — followed by the map link and the Strava event link when set, carries the translation's one-line "what to bring" (`event_translations.checklist`, ≤ 300 characters) when written, the desk code with its hosted QR, and the manage link; every message ends with "Reply to this email with questions" when `EMAIL_REPLY_TO` is set; text-first, no image but the QR, well under 100 KB (2026-09-18, `DECISIONS.md` §81).
 5. Given a CONFIRMED registration to a SCHEDULED event with local registration, when the maintenance job runs within 48 hours of the start, then one `EVENT_REMINDER` is queued for it with the key `registration:<id>:reminder`, and a job that runs again queues nothing more; a WAITLISTED entry, a cancelled or completed event and an event further out get none; the registration's state is untouched (`DECISIONS.md` §81).
 6. Given an event that has started, when an Administrator presses "Trimite mulțumirile" on its page and confirms, then one `EVENT_THANKS` is queued for every registration checked in at that event — with the optional `https://` link the organizer typed — `events.thanks_sent_at` is set so the button is gone afterwards and a second press is refused, and an audit row names the event and the count, never a recipient; never automatic (`DECISIONS.md` §82).
+7. Given any message, when it renders, then it carries both languages — the registration's own first, the other under a rule, the two subjects joined by " / " — as one branded card with the action as a button and the deep links beneath: the event's page, its rules when it has them, "I can't make it any more" (the manage page's `#cancel` section, a GET that mutates nothing) on the confirmation, and the signed declaration's PDF on the confirmation and the declaration message (2026-09-18, `DECISIONS.md` §96).
+8. Given a signature, when it is recorded, then a `DECLARATION_SIGNED` message is queued with the signed declaration attached as a PDF, rendered at send time from the rows (`DECISIONS.md` §95); the Mailgun adapter posts attachments as `attachment` parts.
 
-**Verification:** unit `notifications/templates.test.ts`; integration `notifications/event-mail.test.ts`
+**Verification:** unit `notifications/templates.test.ts`, `notifications/mailgun-adapter.test.ts`; integration `notifications/event-mail.test.ts`, `registrations/signed-declaration.test.ts`
 
 #### BR-REQ-080-02 — Outbox is authoritative and idempotent
 

@@ -7,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import { env } from "@/shared/config/env";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -110,7 +111,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
             required on the public form: an organizer is writing down a telephone call, and
             a registration recorded with gaps beats one refused for them.
           */}
-          <TextField name="displayName" label={rt("displayName")} />
+          {env.FEATURE_DISPLAY_NAME && <TextField name="displayName" label={rt("displayName")} />}
           <TextField name="birthDate" type="date" label={rt("birthDate")} slotProps={{ inputLabel: { shrink: true } }} />
           <TextField name="city" label={rt("city")} />
           <PhoneField name="phone" label={rt("phone")} countryLabel={rt("phoneCountry")} locale={locale} />

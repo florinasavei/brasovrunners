@@ -29,6 +29,8 @@ export type RegistrationListRow = {
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
+  firstName: string | null;
+  lastName: string | null;
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
@@ -41,6 +43,7 @@ export type RegistrationListRow = {
   checkedInAt: Date | null;
   /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
   emailRejectedReason: string | null;
+  idDocument: string | null;
 };
 
 export type RegistrationListFilters = {
@@ -122,6 +125,18 @@ function escapeLike(term: string): string {
  * when every message went through, or none was sent yet. A short sanitized reason (§16.1),
  * never a body.
  */
+/**
+ * The identity document the latest declaration names (§95): what the desk checks the kit
+ * against, and what the export carries for the organiser who hands kits out by ID.
+ */
+const latestIdDocument = sql<string | null>`(
+  SELECT ${declarationAcceptances.idDocument}
+  FROM ${declarationAcceptances}
+  WHERE ${declarationAcceptances.registrationId} = ${registrations.id}
+  ORDER BY ${declarationAcceptances.acceptedAt} DESC
+  LIMIT 1
+)`;
+
 const emailRejectedReason = sql<string | null>`(
   SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
   FROM ${emailOutbox}
@@ -204,6 +219,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       kind: registrations.kind,
       source: registrations.source,
       registeredName: registrations.registeredName,
+      firstName: registrations.firstName,
+      lastName: registrations.lastName,
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
@@ -213,6 +230,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       bibNumber: registrations.bibNumber,
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
+      idDocument: latestIdDocument,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -316,6 +334,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     .select({
       bibNumber: registrations.bibNumber,
       checkinCode: registrations.checkinCode,
+  idDocument: latestIdDocument,
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
@@ -379,6 +398,7 @@ export type DeskRegistration = {
   checkedInByName: string | null;
   /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
   emailRejectedReason: string | null;
+  idDocument: string | null;
 };
 
 const DESK_COLUMNS = {
@@ -391,6 +411,7 @@ const DESK_COLUMNS = {
   eventStartsAt: events.startsAt,
   bibNumber: registrations.bibNumber,
   checkinCode: registrations.checkinCode,
+  idDocument: latestIdDocument,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
   emailRejectedReason,
@@ -470,6 +491,7 @@ export type DeclarationAcceptanceRow = {
   attestedByName: string | null;
   acceptedAt: Date;
   typedName: string;
+  idDocument: string | null;
   declarationVersion: number;
 };
 
@@ -481,6 +503,7 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
     .select({
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
+      idDocument: declarationAcceptances.idDocument,
       declarationVersion: declarationAcceptances.declarationVersion,
       method: declarationAcceptances.method,
       attestedByName: staffUsers.displayName,

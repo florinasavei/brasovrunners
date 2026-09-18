@@ -11,8 +11,8 @@ import { useSyncExternalStore } from "react";
  * Light or dark, from the header (`DECISIONS.md` §93).
  *
  * `useColorScheme` is MUI's own: the choice is kept in `localStorage`, applied before paint by
- * `InitColorSchemeScript` in the layout, and "system" — the device's setting — until somebody
- * presses this. The button shows the mode it would switch *to*, which is what every phone's
+ * `InitColorSchemeScript` in the layout, and light until somebody presses this — never the
+ * device's setting (the owner, 2026-09-18: "by default we are on white"). The button shows the mode it would switch *to*, which is what every phone's
  * quick-settings tile does. Until mounted the mode is unknown on the client, so the same-sized
  * button renders disabled rather than nothing, and the header does not shift.
  */
@@ -26,7 +26,7 @@ export default function ThemeModeToggle() {
     () => false,
   );
 
-  const resolved = mode === "system" ? systemMode : mode;
+  const resolved = mode === "system" ? (systemMode ?? "light") : mode;
   const dark = resolved === "dark";
 
   return (

@@ -25,8 +25,11 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import Script from "next/script";
+import { TURNSTILE_SCRIPT_URL, turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { submitRegistrationAction } from "./actions";
 import { PAGE_WIDTH } from "@/theme/brand";
+import { env } from "@/shared/config/env";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -419,6 +422,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 a start list says the name you just gave. Opening it changes what is published
                 without changing who the declaration is signed by.
               */}
+              {env.FEATURE_DISPLAY_NAME && (
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("displayNameToggle")}
@@ -436,6 +440,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </Box>
+              )}
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.race")}
@@ -550,6 +555,31 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 while any required field is empty, and a press still runs the browser's check.
                 One client island, shared with every other form here.
               */}
+              {/* The language of the emails and the declaration (§97): the page's, unless said otherwise. */}
+              <TextField
+                name="preferredLocale"
+                label={t("preferredLocale")}
+                helperText={t("preferredLocaleHelp")}
+                select
+                fullWidth
+                defaultValue={locale}
+              >
+                <MenuItem value="ro">{t("preferredLocaleOptions.ro")}</MenuItem>
+                <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>
+              </TextField>
+
+              {/* Cloudflare Turnstile, when the club switched it on (§97). */}
+              {turnstileSiteKey() && (
+                <Box id={fieldId("captcha")}>
+                  <div className="cf-turnstile" data-sitekey={turnstileSiteKey()} data-language={locale} />
+                  {invalid.has("captcha") && (
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                      {t("errors.captcha")}
+                    </Typography>
+                  )}
+                  <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
+                </Box>
+              )}
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}

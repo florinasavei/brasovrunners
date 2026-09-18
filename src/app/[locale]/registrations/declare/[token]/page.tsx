@@ -14,6 +14,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { mergeFieldsIn, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { findRegistrationById } from "@/modules/registrations/repository";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
@@ -137,7 +138,22 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             </Alert>
           )}
 
-          <LegalDocumentBody body={declaration.body} />
+          {/*
+            The text with its blanks filled for this person and this event (§95): the name they
+            registered with, the event, its date and place. The identity document stays a
+            blank until they type it below — the form is where it is asked, the text is where
+            it lands when printed. What is signed is the template, by id and hash.
+          */}
+          <LegalDocumentBody
+            body={mergeLegalBody(declaration.body, {
+              participant: registration?.registeredName,
+              event: eventDetails?.title,
+              eventDate: eventDetails
+                ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)
+                : undefined,
+              eventLocation: eventDetails?.locationName,
+            })}
+          />
 
           {changed && (
             <Alert severity="warning" role="alert" sx={{ mb: 3 }}>
@@ -165,6 +181,18 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               */}
               {/* The name appears in a hand as it is typed (§86): the act of signing looks like
                   one. Presentation only — what makes it a signature is the record beneath. */}
+              {/* The identity document the text names — asked only when it does (§95). */}
+              {mergeFieldsIn(declaration.body).has("idDocument") && (
+                <TextField
+                  name="idDocument"
+                  label={t("declare.idDocument")}
+                  helperText={t("declare.idDocumentHelp")}
+                  placeholder={t("declare.idDocumentPlaceholder")}
+                  required
+                  autoComplete="off"
+                  slotProps={{ htmlInput: { maxLength: 30, pattern: "[A-Za-z0-9][A-Za-z0-9 .\\-/]{2,28}[A-Za-z0-9]" } }}
+                />
+              )}
               <TextField
                 name="typedName"
                 label={t("declare.typedName")}

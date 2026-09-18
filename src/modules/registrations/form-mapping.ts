@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import { composePhone } from "./phone";
+import { env } from "@/shared/config/env";
 
 /**
  * The rendered form's field names, read into the shape `registrationSubmissionSchema` parses.
@@ -52,12 +53,18 @@ function phoneField(form: FormData, name: string): string | undefined {
   return composePhone(text(form, `${name}Country`) || "RO", typed) ?? typed;
 }
 
-export function readRegistrationForm(form: FormData, locale: Locale) {
+export function readRegistrationForm(
+  form: FormData,
+  locale: Locale,
+  // Whether the form offered a public display name (`FEATURE_DISPLAY_NAME`, §95); a test names it.
+  options: { displayName: boolean } = { displayName: env.FEATURE_DISPLAY_NAME },
+) {
   return {
     // BR-REQ-031-04 — the legal name, in two parts, and what the start list shows.
     firstName: text(form, "firstName"),
     lastName: text(form, "lastName"),
-    displayName: optional(form, "displayName"),
+    // Only when the form offers it (`FEATURE_DISPLAY_NAME`, §95); otherwise the registered name is the name.
+    displayName: options.displayName ? optional(form, "displayName") : undefined,
 
     email: text(form, "email"),
 
@@ -79,7 +86,9 @@ export function readRegistrationForm(form: FormData, locale: Locale) {
     healthNotes: optional(form, "healthNotes"),
     healthConsent: checked(form, "healthConsent"),
 
-    locale,
+    // The language of the emails and the declaration (§97): chosen on the form, the page's
+    // language until chosen — a runner on the Romanian site may still want English.
+    locale: form.get("preferredLocale") === "en" ? "en" : form.get("preferredLocale") === "ro" ? "ro" : locale,
     privacyAcknowledged: checked(form, "privacyAcknowledged"),
     resultsNameConsent: checked(form, "resultsNameConsent"),
     listOptOut: checked(form, "listOptOut"),

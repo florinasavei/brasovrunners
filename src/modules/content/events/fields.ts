@@ -92,6 +92,10 @@ export const translationFieldsSchema = z
      * a field error, empty allowed. Optional in the input for callers from before it existed.
      */
     body: richTextField,
+    /** The rules, the same contract as the body (§96); empty allowed. */
+    rules: richTextField,
+    /** The programme — kit pickup, briefing, start, cut-offs (§96); empty allowed. */
+    schedule: richTextField,
     seoTitle: optionalText(200),
     seoDescription: optionalText(320),
   })

@@ -344,6 +344,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             >
               {t("registrations.viewForEvent")}
             </Button>
+            {/* The declarations (§95): every signed one as the club's archive; the blank one to print. */}
+            <Button component="a" href={`/api/admin/events/${event.id}/declarations?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
+              {t("registrations.declarationsPdf")}
+            </Button>
+            <Button component="a" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
+              {t("registrations.declarationForm")}
+            </Button>
             {/* The desk for this event (BR-REQ-037-08): where race morning happens. */}
             <Button
               component="a"
@@ -412,49 +419,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             )}
           </Stack>
 
-          {/* Every bib as it will print, one picture each, drawn on request (§94). */}
+          {/* Every bib as it will print, on its own page (§94): drawn on request, not on every visit here. */}
           {bibs.length > 0 && (
-            <Box
-              component="details"
-              sx={{
-                mt: 2,
-                border: 1,
-                borderColor: "divider",
-                borderRadius: 1,
-                px: 2,
-                "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert" },
-              }}
-            >
-              <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
+            <Typography variant="body2" sx={{ mt: 2 }}>
+              <Link href={{ pathname: "/admin/events/[id]/bibs", params: { id: event.id } }}>
                 {t("bibs.preview", { count: bibs.length })}
-              </Typography>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: "none",
-                  p: 0,
-                  m: 0,
-                  mb: 2,
-                  display: "grid",
-                  gap: 2,
-                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
-                }}
-              >
-                {bibs.map((bib) => (
-                  <Box component="li" key={bib.id}>
-                    <Box
-                      component="img"
-                      src={`/api/admin/events/${event.id}/bibs/preview?registration=${bib.id}&locale=${locale}`}
-                      alt={t("bibs.previewAlt", { number: bib.bibNumber, name: bib.registeredName })}
-                      width={900}
-                      height={600}
-                      loading="lazy"
-                      sx={{ width: "100%", height: "auto", display: "block", borderRadius: 1 }}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            </Box>
+              </Link>
+            </Typography>
           )}
         </Box>
       )}

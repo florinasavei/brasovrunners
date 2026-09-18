@@ -52,6 +52,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     eventTitle: event.title,
     eventDate: format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" }),
   });
-  image.headers.set("Cache-Control", "private, no-store");
+  // A number and a name change rarely; the browser may keep the picture for an hour.
+  image.headers.set("Cache-Control", "private, max-age=3600");
   return image;
 }

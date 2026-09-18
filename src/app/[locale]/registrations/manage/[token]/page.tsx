@@ -113,11 +113,18 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
                   </Typography>
                 )}
               </Box>
+              {/* Their own signed declaration, as a PDF, from the same link (§95). */}
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <a href={`/api/registrations/declaration/${token}`} target="_blank" rel="noopener">
+                  {t("manage.declarationPdf")}
+                </a>
+              </Typography>
               <Divider sx={{ mt: 3 }} />
             </Box>
           )}
 
-          <form action={cancelRegistrationAction}>
+          {/* `#cancel` is where "I can't make it any more" in the email lands (§96). */}
+          <form action={cancelRegistrationAction} id="cancel">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="token" value={token} />
             <Typography sx={{ mb: 2 }}>{t("manage.prompt")}</Typography>

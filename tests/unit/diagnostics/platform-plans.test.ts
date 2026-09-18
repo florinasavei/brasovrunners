@@ -60,9 +60,9 @@ function messageAt(messages: (typeof ro) | (typeof en), path: string): unknown {
 }
 
 describe("BR-REQ-090-05 criterion 3 how much of today's allowance is left", () => {
-  it("does the arithmetic PLATFORM.md states in prose: 100 a day is 25 registrations", () => {
-    // Four messages each since the reminder (`DECISIONS.md` §81); three made it 33.
-    expect(registrationsLeftToday(BASE)).toBe(25);
+  it("does the arithmetic PLATFORM.md states in prose: 100 a day is 20 registrations", () => {
+    // Five messages each since the signed declaration goes out on its own (`DECISIONS.md` §95); four made it 25.
+    expect(registrationsLeftToday(BASE)).toBe(20);
   });
 
   it("counts down as the day is spent", () => {

@@ -8,7 +8,7 @@ import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbo
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
-import { buildTemplateContent, renderContent, type TemplateData } from "@/modules/notifications/templates";
+import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
@@ -40,6 +40,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     eventTitle: tRo ? "Crosul de toamnă" : "The autumn cross",
     eventLocationName: tRo ? "Stația de telecabină Tâmpa" : "Tâmpa cable-car station",
     eventStartsAtFormatted: tRo ? "duminică, 4 octombrie 2026, 09:00" : "Sunday, 4 October 2026, 09:00",
+    eventStartsAtFormattedOther: tRo ? "Sunday, 4 October 2026, 09:00" : "duminică, 4 octombrie 2026, 09:00",
     currentStatus: tRo ? "confirmată" : "confirmed",
     checkinCode: "EXAMPL",
     checkinQrUrl: `${env.APP_BASE_URL}/api/registrations/qr/EXAMPL.png`,
@@ -48,6 +49,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     eventChecklist: tRo ? "Apă, o haină de ploaie, bună dispoziție" : "Water, a rain jacket, good spirits",
     replyTo: env.EMAIL_REPLY_TO ?? undefined,
     thanksUrl: `${env.APP_BASE_URL}/#results`,
+    declarationPdfUrl: `${env.APP_BASE_URL}/api/registrations/declaration/EXAMPLE`,
+    eventUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event`,
+    eventRulesUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#rules`,
+    eventScheduleUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#schedule`,
+    manageUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
   };
   const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
 
@@ -77,8 +83,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       </Box>
 
       {types.map((messageType) => {
-        const content = buildTemplateContent(messageType, emailLocale, sample, actionUrl);
-        const { html } = renderContent(content, emailLocale);
+        // Bilingual, as it goes out (§96): the chosen language first, the other under a rule.
+        const content = renderBilingual(messageType, emailLocale, sample, actionUrl);
+        const { html } = content;
         return (
           <Box
             key={messageType}

@@ -1,5 +1,6 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { COLOR } from "@/theme/brand";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -26,6 +27,8 @@ export type TemplateContent = {
   facts?: { line: string; links: { label: string; url: string }[] };
   /** Present only when the message carries an action link. */
   action?: { label: string; url: string };
+  /** Further links after the action — the signed declaration as a PDF (§95). */
+  links?: { label: string; url: string }[];
   /** Present on the confirmation: the QR the participant shows to pick up their number. */
   image?: { url: string; alt: string; caption: string };
   closing: string;
@@ -46,7 +49,10 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
-export function renderContent(content: TemplateContent, locale: EmailLocale): { html: string; text: string } {
+export function renderContent(
+  content: TemplateContent,
+  locale: EmailLocale,
+): { html: string; text: string; htmlParts: string[]; textLines: string[] } {
   const textLines = [
     content.greeting,
     "",
@@ -56,39 +62,100 @@ export function renderContent(content: TemplateContent, locale: EmailLocale): { 
     ...content.paragraphs,
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
+    ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
     "",
     content.closing,
     SIGN_OFF[locale],
     ...(content.footer ? ["", content.footer] : []),
   ];
 
+  const paragraph = (inner: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${inner}</p>`;
   const htmlParts = [
-    `<p>${escapeHtml(content.greeting)}</p>`,
+    paragraph(escapeHtml(content.greeting)),
     // The facts first and bold: what the eye finds on a phone the morning of.
     ...(content.facts
       ? [
-          `<p><strong>${escapeHtml(content.facts.line)}</strong>${content.facts.links
-            .map((link) => `<br><a href="${link.url}">${escapeHtml(link.label)}</a>`)
-            .join("")}</p>`,
+          paragraph(
+            `<strong>${escapeHtml(content.facts.line)}</strong>${content.facts.links
+              .map((link) => `<br><a href="${link.url}" style="color:${COLOR.blueInk}">${escapeHtml(link.label)}</a>`)
+              .join("")}`,
+          ),
         ]
       : []),
-    ...content.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`),
+    ...content.paragraphs.map((text) => paragraph(escapeHtml(text))),
     // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
     // does not render is a participant at the desk with nothing to show.
     ...(content.image
       ? [
-          `<p><img src="${content.image.url}" alt="${escapeHtml(content.image.alt)}" width="240" height="240" style="display:block;width:240px;height:240px"></p>`,
-          `<p>${escapeHtml(content.image.caption)}</p>`,
+          `<p style="margin:0 0 6px"><img src="${content.image.url}" alt="${escapeHtml(content.image.alt)}" width="240" height="240" style="display:block;width:240px;height:240px"></p>`,
+          paragraph(escapeHtml(content.image.caption)),
         ]
       : []),
+    // The one action as a button (§96): a link a thumb finds, in the club's blue.
     ...(content.action
-      ? [`<p><a href="${content.action.url}">${escapeHtml(content.action.label)}</a></p>`]
+      ? [
+          `<p style="margin:20px 0"><a href="${content.action.url}" style="display:inline-block;background:${COLOR.blueInk};color:${COLOR.surface};text-decoration:none;font-weight:700;font-size:16px;padding:14px 22px;border-radius:10px">${escapeHtml(content.action.label)}</a></p>`,
+        ]
       : []),
-    `<p>${escapeHtml(content.closing)}<br>${escapeHtml(SIGN_OFF[locale])}</p>`,
-    ...(content.footer ? [`<p style="color:#666;font-size:13px">${escapeHtml(content.footer)}</p>`] : []),
+    ...(content.links && content.links.length > 0
+      ? [
+          `<ul style="margin:0 0 18px;padding:0 0 0 18px;font-size:15px;line-height:1.7">${content.links
+            .map((link) => `<li><a href="${link.url}" style="color:${COLOR.blueInk}">${escapeHtml(link.label)}</a></li>`)
+            .join("")}</ul>`,
+        ]
+      : []),
+    paragraph(`${escapeHtml(content.closing)}<br>${escapeHtml(SIGN_OFF[locale])}`),
+    ...(content.footer ? [`<p style="margin:0;color:${COLOR.inkMuted};font-size:13px">${escapeHtml(content.footer)}</p>`] : []),
   ];
 
-  return { html: htmlParts.join("\n"), text: textLines.join("\n") };
+  return { html: card([htmlParts]), text: textLines.join("\n"), htmlParts, textLines };
+}
+
+/**
+ * One card, the club's name on a blue band above it (§96), holding one language's parts — or
+ * two, one under the other with a rule between (§96: "make the email bilingual by default").
+ * Inline styles only — mail clients drop stylesheets — and a table-free layout that Gmail,
+ * Outlook and Apple Mail all keep.
+ */
+function card(blocks: string[][]): string {
+  const rule = `<hr style="border:0;border-top:1px solid ${COLOR.line};margin:24px 0">`;
+  return [
+    `<div style="max-width:600px;margin:0 auto;font-family:Roboto,Helvetica,Arial,sans-serif;color:${COLOR.ink}">`,
+    `<div style="background:${COLOR.blueInk};color:${COLOR.surface};padding:16px 24px;border-radius:12px 12px 0 0;font-weight:700;letter-spacing:3px;font-size:14px">BRA&#536;OV RUNNERS</div>`,
+    `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background:${COLOR.surface}">`,
+    ...blocks.flatMap((parts, index) => (index > 0 ? [rule, ...parts] : parts)),
+    "</div></div>",
+  ].join("\n");
+}
+
+const OTHER_LOCALE: Record<EmailLocale, EmailLocale> = { ro: "en", en: "ro" };
+
+/**
+ * Both languages in one message, the registration's own first (§96): a runner from abroad
+ * registered in English still shows the mail to a Romanian friend, and a Romanian who chose
+ * English by accident reads the top half. Two subjects joined with " / ", within what a
+ * subject line bears; the plain-text body reads the same, the second language after a rule.
+ */
+export function renderBilingual(
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+  data: TemplateData,
+  actionUrl: string | undefined,
+): { subject: string; html: string; text: string } {
+  const first = buildTemplateContent(messageType, locale, data, actionUrl);
+  // The second language repeats the words, not the picture: one QR per message is enough —
+  // and its date is its own ("Sunday 11 October", not "duminică").
+  const otherData: TemplateData = data.eventStartsAtFormattedOther
+    ? { ...data, eventStartsAtFormatted: data.eventStartsAtFormattedOther }
+    : data;
+  const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl), image: undefined };
+  const a = renderContent(first, locale);
+  const b = renderContent(second, OTHER_LOCALE[locale]);
+  return {
+    subject: `${first.subject} / ${second.subject}`,
+    html: card([a.htmlParts, b.htmlParts]),
+    text: [...a.textLines, "", "— — —", "", ...b.textLines].join("\n"),
+  };
 }
 
 /** What every template needs beyond the locale — never a rendered body, never a token. */
@@ -97,6 +164,8 @@ export type TemplateData = {
   eventTitle?: string;
   eventLocationName?: string;
   eventStartsAtFormatted?: string;
+  /** The same instant in the other language's words, for the bilingual message's second half (§96). */
+  eventStartsAtFormattedOther?: string;
   currentStatus?: string;
   /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
@@ -112,6 +181,17 @@ export type TemplateData = {
   replyTo?: string;
   /** The thank-you's optional link — results, photos (§82). Carried in the payload, not a token. */
   thanksUrl?: string;
+  /** The signed declaration as a PDF, on the confirmation (§95): the same manage token, read-only. */
+  declarationPdfUrl?: string;
+  /** When it was signed, formatted for the locale — on the declaration's own message. */
+  signedAtFormatted?: string;
+  /** The event's public page, and the manage page (§96): the deep links under the action. */
+  eventUrl?: string;
+  /** The rules on that page, when the organizer wrote some (§96). */
+  eventRulesUrl?: string;
+  /** The programme on that page, when there is one (§96). */
+  eventScheduleUrl?: string;
+  manageUrl?: string;
 };
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
@@ -142,6 +222,7 @@ const T = {
         `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Pentru a finaliza înscrierea, citește și semnează declarația pe proprie răspundere.`,
       ],
       action: "Semnează declarația",
+      links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
     },
     waitlistJoined: {
       subject: "Ești pe lista de așteptare",
@@ -166,10 +247,17 @@ const T = {
         ...(d.checkinCode
           ? [`La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
           : []),
-        "Poți gestiona sau anula înscrierea oricând, folosind linkul de mai jos.",
+        "Mai jos: înscrierea ta, „nu mai pot veni” și pagina evenimentului.",
       ],
-      action: "Gestionează înscrierea",
+      action: "Vezi înscrierea",
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+      links: (d: TemplateData) => [
+        ...(d.manageUrl ? [{ label: "Nu mai pot veni — anulez înscrierea", url: `${d.manageUrl}#cancel` }] : []),
+        ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
+        ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+        ...(d.declarationPdfUrl ? [{ label: "Declarația pe care ai semnat-o (PDF)", url: d.declarationPdfUrl }] : []),
+      ],
     },
     eventReminder: {
       subject: "Ne vedem în curând — detaliile pentru ziua cursei",
@@ -185,6 +273,11 @@ const T = {
       ],
       action: "Nu pot veni — anulez înscrierea",
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+      links: (d: TemplateData) => [
+        ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
+        ...(d.eventScheduleUrl ? [{ label: "Programul evenimentului", url: d.eventScheduleUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+      ],
     },
     eventThanks: {
       subject: "Mulțumim că ai alergat cu noi",
@@ -194,6 +287,16 @@ const T = {
         "Ne vedem la următoarea alergare.",
       ],
       action: "Rezultate și poze",
+    },
+    declarationSigned: {
+      subject: "Declarația ta semnată",
+      body: (d: TemplateData) => [
+        `Atașată găsești declarația pe proprie răspundere pe care ai semnat-o pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, la ${d.signedAtFormatted}` : ""}. Păstreaz-o: este copia ta.`,
+        "Kitul de participare se ridică personal, pe baza actului de identitate scris în declarație.",
+        "Dacă nu vezi atașamentul, același document este la linkul de mai jos.",
+      ],
+      action: "Gestionează înscrierea",
+      links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Declarația semnată (PDF)", url: d.declarationPdfUrl }] : []),
     },
     registrationCancelled: {
       subject: "Înscrierea a fost anulată",
@@ -243,6 +346,7 @@ const T = {
         `A place at ${d.eventTitle ?? "the event"} is held for you. To finish registering, read and sign the event declaration.`,
       ],
       action: "Sign the declaration",
+      links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
     },
     waitlistJoined: {
       subject: "You're on the waiting list",
@@ -269,6 +373,11 @@ const T = {
       ],
       action: "I can't come — cancel my registration",
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
+      links: (d: TemplateData) => [
+        ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
+        ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+      ],
     },
     eventThanks: {
       subject: "Thank you for running with us",
@@ -278,6 +387,16 @@ const T = {
         "See you at the next run.",
       ],
       action: "Results and photos",
+    },
+    declarationSigned: {
+      subject: "Your signed declaration",
+      body: (d: TemplateData) => [
+        `Attached is the declaration of own responsibility you signed for ${d.eventTitle ?? "the event"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}. Keep it: it is your copy.`,
+        "The race kit is collected in person, against the identity document written in the declaration.",
+        "If you cannot see the attachment, the same document is at the link below.",
+      ],
+      action: "Manage your registration",
+      links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Signed declaration (PDF)", url: d.declarationPdfUrl }] : []),
     },
     registrationConfirmed: {
       subject: "Your registration is confirmed",
@@ -289,10 +408,17 @@ const T = {
         ...(d.checkinCode
           ? [`When you pick up your race number, show the QR code below or say the code ${d.checkinCode}.`]
           : []),
-        "You can manage or cancel your registration at any time with the link below.",
+        "Below: your registration, “I can't make it any more” and the event's page.",
       ],
-      action: "Manage your registration",
+      action: "See your registration",
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
+      links: (d: TemplateData) => [
+        ...(d.manageUrl ? [{ label: "I can't make it any more — cancel my registration", url: `${d.manageUrl}#cancel` }] : []),
+        ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
+        ...(d.eventScheduleUrl ? [{ label: "The event's programme", url: d.eventScheduleUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+        ...(d.declarationPdfUrl ? [{ label: "The declaration you signed (PDF)", url: d.declarationPdfUrl }] : []),
+      ],
     },
     registrationCancelled: {
       subject: "Your registration has been cancelled",
@@ -341,6 +467,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   REGISTRATION_STATE_NOTICE: "registrationStateNotice",
   EVENT_REMINDER: "eventReminder",
   EVENT_THANKS: "eventThanks",
+  DECLARATION_SIGNED: "declarationSigned",
 };
 
 /**
@@ -365,6 +492,7 @@ export function buildTemplateContent(
     action?: string;
     facts?: (d: TemplateData) => TemplateContent["facts"];
     image?: (d: TemplateData) => TemplateContent["image"];
+    links?: (d: TemplateData) => TemplateContent["links"];
   };
 
   return {
@@ -374,6 +502,7 @@ export function buildTemplateContent(
     paragraphs: entry.body(data),
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
+    links: entry.links?.(data),
     closing: copy.closing,
     footer: data.replyTo ? copy.footer : undefined,
   };
@@ -386,15 +515,16 @@ export function buildOutgoingEmail(params: {
   messageType: EmailMessageType;
   data: TemplateData;
   actionUrl?: string;
+  attachments?: OutgoingEmail["attachments"];
 }): OutgoingEmail {
-  const content = buildTemplateContent(params.messageType, params.locale, params.data, params.actionUrl);
-  const { html, text } = renderContent(content, params.locale);
+  const { subject, html, text } = renderBilingual(params.messageType, params.locale, params.data, params.actionUrl);
   return {
     to: params.to,
-    subject: content.subject,
+    subject,
     html,
     text,
     locale: params.locale,
     idempotencyKey: params.idempotencyKey,
+    ...(params.attachments && params.attachments.length > 0 ? { attachments: params.attachments } : {}),
   };
 }

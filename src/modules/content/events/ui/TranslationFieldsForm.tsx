@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
@@ -101,6 +102,33 @@ export default async function TranslationFieldsForm({
             accessibleSuffix={translation.locale.toUpperCase()}
             labels={richTextEditorLabels(rt)}
           />
+          {/* The rules (§96): what the declaration says they read on this page; linked from every
+              email. Folded, and the editor mounts on opening — six editors at once made the page slow. */}
+          <LazyRichTextEditor
+            name={name("rules")}
+            label={t("editor.fields.rules")}
+            summary={t("editor.fields.rules")}
+            emptyHint={t("editor.rulesEmpty")}
+            initialBody={translation.rulesJson}
+            accessibleSuffix={translation.locale.toUpperCase()}
+            labels={richTextEditorLabels(rt)}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+            {t("editor.rulesHelp")}
+          </Typography>
+          {/* The programme (§96): kit pickup, briefing, start, cut-offs — folded like the rules. */}
+          <LazyRichTextEditor
+            name={name("schedule")}
+            label={t("editor.fields.schedule")}
+            summary={t("editor.fields.schedule")}
+            emptyHint={t("editor.rulesEmpty")}
+            initialBody={translation.scheduleJson}
+            accessibleSuffix={translation.locale.toUpperCase()}
+            labels={richTextEditorLabels(rt)}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+            {t("editor.scheduleHelp")}
+          </Typography>
           {/* "What to bring": one line on the confirmation and the reminder (§81). */}
           <TextField
             name={name("checklist")}

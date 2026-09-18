@@ -77,6 +77,8 @@
       "whatsapp": "WhatsApp",
       "instagram": "Picture for Instagram"
     },
+    "rules": "Event rules",
+    "schedule": "Event programme",
     "openMap": "Open the map",
     "address": "Address",
     "distance": "Distance",
@@ -294,6 +296,10 @@
       "openDesk": "Open at the desk",
       "notCheckedIn": "Not marked as here.",
       "checkedIn": "Here: {time} · {who}",
+      "idDocument": "Identity document",
+      "declarationPdf": "Signed declaration (PDF)",
+      "declarationsPdf": "Signed declarations (PDF)",
+      "declarationForm": "Paper declaration form (PDF)",
       "declarationPaper": "on paper, recorded by {who}",
       "emailVouched": "address vouched for by {who}"
     },
@@ -388,7 +394,9 @@
         "difficulty": "Difficulty",
         "costType": "Cost",
         "checklist": "What to bring (one line, in the emails)",
-        "body": "Full description"
+        "body": "Full description",
+        "rules": "Event rules",
+        "schedule": "Event programme"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
       "contentHelp": "The same event, in two languages. Only the words change here; the time, the place, the difficulty and the cost are in Settings above and are shared by both.",
@@ -403,6 +411,9 @@
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
       "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
+      "rulesEmpty": "(none yet — press to write)",
+      "scheduleHelp": "Optional. The programme by the hour: kit pickup (where, when), the briefing, the start, the cut-offs, the awards. Shown on the event page under “Programme”; the emails point there.",
+      "rulesHelp": "Optional. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
       "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email and the reminder.",
       "type": "Event type",
       "surface": "Surface",
@@ -572,6 +583,9 @@
       "backToList": "Back to legal documents",
       "noTranslations": "This version has no text yet.",
       "newTitle": "New version",
+      "newFromTemplateIntro": "Prefilled with the platform's text: complete, with the club's four facts left in angle brackets <LIKE THIS>. Fill them in, read it all, save the draft, then approve it.",
+      "templatesIntro": "Or start from the platform's text:",
+      "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{idDocument}}' (the identity document typed at signing), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
       "newVersion": "New version",
       "saveDraft": "Save draft",
@@ -951,7 +965,7 @@
     },
     "thanks": {
       "title": "After the race",
-      "help": "A thank-you email to everyone marked present at the desk — once per event, sent by you, never automatically. You can add a link to the results or the photos.",
+      "help": "A thank-you email to everyone marked present at the desk — once per event, sent by you, never automatically. You can add a link to the results or the photos. The message concerns only the event the person attended and promotes nothing else — it is not a commercial communication (Law 506/2004).",
       "url": "Link (optional)",
       "urlHelp": "The results, the photos — an address starting with https://.",
       "send": "Send the thank-you",
@@ -968,6 +982,8 @@
       "to": "To",
       "download": "Download the sheet (PDF)",
       "preview": "See the bibs ({count})",
+      "previewTitle": "Race numbers — {event} ({count})",
+      "backToEvent": "← Back to the event",
       "previewAlt": "Number {number} — {name}",
       "downloadOnePerPage": "One per page",
       "page": "Page {n} of {total}",
@@ -1009,6 +1025,7 @@
       "backToDesk": "← Back to the desk",
       "scannedTitle": "Scanned participant",
       "confirmHere": "Confirm on paper",
+      "idDocument": "Identity document",
       "rowHelp": "On each row: type the race number (if not assigned already) → Save; when the person has arrived → Present. Somebody whose email never arrived signs the declaration on paper → Confirm on paper.",
       "givePlace": "Give a place",
       "bibField": "Race number",
@@ -1049,7 +1066,8 @@
         "PROFILE_MANAGE_LINK": "My registrations",
         "REGISTRATION_STATE_NOTICE": "Registration status",
         "EVENT_REMINDER": "Reminder 48 hours before",
-        "EVENT_THANKS": "Thank you after the race"
+        "EVENT_THANKS": "Thank you after the race",
+        "DECLARATION_SIGNED": "Signed declaration (PDF attached)"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1063,7 +1081,8 @@
         "PROFILE_MANAGE_LINK": "On request, when somebody wants to see all their registrations.",
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
         "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once.",
-        "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came."
+        "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
+        "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it."
       }
     },
     "guide": {
@@ -1120,6 +1139,20 @@
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab."
           ]
+        },
+        {
+          "title": "Declarations of own responsibility and personal data (GDPR)",
+          "who": "Role: Administrator. Read once, before the first event with registrations.",
+          "steps": [
+            "The declaration's text is a legal document under “Legal documents”. Start from the platform's text (the “Declaration” link under “New version”): it is the club's declaration with its blanks as tokens — {{participant}}, {{idDocument}}, {{event}}, {{eventDate}}, {{eventLocation}}, {{signedAt}} — filled in automatically for each person and event. One approved text serves every event.",
+            "When signing, the participant reads the text filled in with their name and the event, types the series and number of their identity document (no photo or scan of an ID is ever uploaded) and writes their name as the signature. Recorded: the name, the document, the text's version, its fingerprint (SHA-256), the moment and the method. That is a simple electronic signature (eIDAS and Law 214/2024).",
+            "Right after signing, the participant receives the signed declaration by email as an attached PDF (“Your signed declaration”), plus a link to it from their registration page. At the desk, the kit is handed out against the identity document written in the declaration — it shows on the “Race day” row and in the CSV.",
+            "Whoever cannot sign from the email signs on paper: on the event page, “Paper declaration form (PDF)” prints the form with the event filled in. At the desk, “Confirm on paper” records the signature under the volunteer's name; the club keeps the signed original.",
+            "Where the declarations live: in the database (Neon, Frankfurt), as records — not as files. The PDF is generated from them on request, any time, identically. After the event, from the event page: “Signed declarations (PDF)” — all in one file, one per page (200 declarations ≈ 2 MB, a few seconds) — and the CSV export. Keep them in the club's own archive, with restricted access (they carry names and identity documents).",
+            "How long they are kept: registrations and declarations 3 years from the event (the general limitation period), then deleted automatically; earlier on request, with “Erase” on the registration page. Sent emails 90 days, spent links 30 days. The privacy notice says exactly this.",
+            "The privacy notice and the terms: start from the platform's text too — they are complete (GDPR art. 13, Law 190/2018, the processors, the periods, the rights, the ANSPDCP); you only fill in the legal name, the registered address, the registration number and the contact email, read, save the draft and approve. Without approved texts nobody can register.",
+            "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document."
+          ]
         }
       ]
     }
@@ -1161,6 +1194,7 @@
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
       "phone": "Type only the digits of the number, without the country code (that is chosen on the left).",
+      "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again."
     },
@@ -1182,8 +1216,11 @@
       "MALE": "Male",
       "UNSPECIFIED": "Prefer not to say"
     },
-    "nationality": "Nationality",
+    "nationality": "Citizenship",
     "city": "City",
+    "preferredLocale": "The language for your emails and the declaration",
+    "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
+    "preferredLocaleOptions": { "ro": "Romanian", "en": "English" },
     "phone": "Phone",
     "phoneCountry": "Country",
     "phoneHelp": "The number without the country code — for example 0712 345 678.",
@@ -1207,7 +1244,7 @@
       "email": "Email address",
       "birthDate": "Date of birth",
       "sex": "Sex",
-      "nationality": "Nationality",
+      "nationality": "Citizenship",
       "city": "City",
       "phone": "Phone",
       "phoneCountry": "Country",
@@ -1217,7 +1254,8 @@
       "clubName": "Club or team",
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
-      "privacyAcknowledged": "Privacy notice"
+      "privacyAcknowledged": "Privacy notice",
+      "captcha": "The anti-bot check"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -1278,6 +1316,9 @@
       "doneTitle": "Your declaration is signed",
       "event": "For the event: {event}",
       "deadline": "Your place is held until {deadline}.",
+      "idDocument": "Identity document (series and number)",
+      "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it.",
+      "idDocumentPlaceholder": "BV 123456",
       "typedNameHelp": "Type the full name you registered with. It appears as a signature.",
       "nextTitle": "What happens next",
       "nextConfirmed": [
@@ -1321,6 +1362,7 @@
       "done": "Your registration has been cancelled.",
       "eventStarted": "This event has already started; the registration can no longer be cancelled.",
       "doneTitle": "Registration cancelled",
+      "declarationPdf": "The declaration you signed (PDF)",
       "raceDayTitle": "On race day",
       "codeIntro": "Show this code at the number pickup desk. It is in your confirmation email too.",
       "qrAlt": "Your QR code {code}",
@@ -1493,6 +1535,13 @@
       "reset": "Back to normal",
       "back": "← Back to configuration",
       "link": "Theme lab →"
+    },
+    "vercel": {
+      "title": "Hosting (Vercel)",
+      "deployment": "Current deployment: {env} · region {region} · commit {commit} on {branch}.",
+      "id": "Deployment id: {id}",
+      "notOnVercel": "Not running on Vercel (local or test).",
+      "usageLink": "Open Vercel → Usage."
     },
     "neon": {
       "title": "Database (Neon)",

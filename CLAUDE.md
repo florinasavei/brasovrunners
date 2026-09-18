@@ -55,6 +55,7 @@ process. Concurrency tests must not use it; see `docs/DEVELOPMENT.md`.
 
 ## Read order
 
+0. [`docs/VIBECODING.md`](./docs/VIBECODING.md) — one page: the loop, where things live, the rules that bite.
 1. This file.
 2. `WEEKEND.md` — the pilot this replaced, kept for its reasoning, not its scope table.
 3. `AGENTS.md` §1.5 (priority order) and the one §10 subsection for the rule you are touching.
@@ -68,7 +69,7 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 | Rule | Where it lives |
 | --- | --- |
 | No overbooking, ever, under real concurrent load — not merely under a single-connection test. `tests/concurrency/capacity.test.ts` is what the locked capacity transaction is checked against; the pilot's `CHECK (capacity IS NULL)` guard is gone now that it passes. | `AGENTS.md` §10.6, BR-REQ-034-01, BR-REQ-034-02 |
-| No registration without an approved declaration and privacy notice, and never invented legal text in production. Everywhere else carries clearly marked *sample* text — complete in structure, every club-specific fact a visible `<PLACEHOLDER>`, with a not-approved banner in its own rendered body. Production is refused hard, and the refusal has a test. | `AGENTS.md` §10.8, §29; BR-REQ-053-01; `DECISIONS.md` §29 |
+| No registration without an approved declaration and privacy notice, and no legal text in effect that the club did not approve. The platform ships complete texts as templates (`legal-documents/templates/`), with the club's four facts as visible `<PLACEHOLDER>`s; everywhere but production the seed wraps them in a not-approved banner, and production is refused a seed — the club approves them in `/admin/legal` ("start from the platform's text"). The refusal has a test. | `AGENTS.md` §10.8, §29; BR-REQ-053-01; `DECISIONS.md` §29, §95 |
 | Publication is one state per event: both languages go live together, and PUBLISHED requires a complete translation in every locale. A locale with no translation is a 404, never the other language's text. | `AGENTS.md` §11.2, BR-REQ-040-02, `DECISIONS.md` §28 |
 | A test registration behaves exactly like a real one in the queue — `kind` appears in no condition in the allocator or the capacity formula — is omitted from every count the club is given, and cannot exist in production. | `AGENTS.md` §12.6, BR-REQ-037-04, `DECISIONS.md` §30 |
 | A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, confirmed and not opted out, and never switched on before the approved privacy notice describes it. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
@@ -312,7 +313,11 @@ Then, the same evening (§89–§92): a month view on the listing; Open Graph ca
 event, a square one for Instagram, share links; icons (`@mui/icons-material`, pinned, one file
 per glyph); the flow in five steps; every email on `/admin/emails`; the events list's ⋮ menu;
 one place field; the Neon row in dollars a month; the queue panel with the waiting list in order;
-a dark scheme (§93); race numbers drawn at random with a picture of every bib (§94).
+a dark scheme (§93); race numbers drawn at random with a picture of every bib (§94); the club's
+declaration with tokens, the identity document at signing, the signed PDF emailed back and
+archived per event, three-year retention, complete legal templates, `FEATURE_DISPLAY_NAME` (§95);
+bilingual branded emails with deep links, event rules under `#rules`, Romanian at the root (§96);
+Turnstile behind two keys, the runner's language on the form, the texts cut to a third (§97).
 
 **The email people keep, the reminder, and after the race** (`DECISIONS.md` §81–§83).
 The confirmation and the reminder open with a bold facts line (date, time, meeting point),
@@ -389,7 +394,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
 | Storage | Cloudflare R2 behind the four-method adapter in `AGENTS.md` §17; one bucket, per-environment prefixes; public reads on the `r2.dev` address | live: bucket `brasovrunners-media` created 2026-09-18, variables on both Vercel projects (`SETUP.md` §32) |
-| Spam | Honeypot + timing check on registration submission, built. Cloudflare Turnstile only if that fails — it is a processor the unapproved privacy notice must name | built (honeypot + timing); Turnstile not built |
+| Spam | Honeypot + timing check on registration submission, built. Cloudflare Turnstile behind `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (`DECISIONS.md` §97); the privacy notice names it | built; Turnstile on when the keys are set |
 
 **Before installing anything:** verify the current API against the library's documentation
 (Context7 or the official docs site). Next 16, MUI 9, next-intl 4 and Drizzle 0.45 are newer

@@ -23,6 +23,7 @@ import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
+import MuiLink from "@mui/material/Link";
 import { Link } from "@/i18n/navigation";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
@@ -123,6 +124,8 @@ export default async function DevsPage({ params }: Props) {
     APP_ENV: env.APP_ENV,
     EMAIL_DELIVERY_MODE: env.EMAIL_DELIVERY_MODE,
     STAFF_AUTH_MODE: env.STAFF_AUTH_MODE ?? "disabled",
+    FEATURE_DISPLAY_NAME: env.FEATURE_DISPLAY_NAME ? "true" : "false",
+    TURNSTILE: env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY ? "on" : "off",
   };
 
   const severity = (status: string) =>
@@ -389,8 +392,38 @@ export default async function DevsPage({ params }: Props) {
             {neon.reason === "unconfigured" ? t("neon.unavailable") : t("neon.failed", { reason: neon.reason })}
           </Alert>
         )}
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          {t("neon.vercel")}
+        {/*
+          Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"). Vercel
+          publishes no usage figure to a Hobby project's own code, so this is what the platform
+          injects about the running deployment, and the one link to the usage dashboard.
+        */}
+        <Typography variant="h3" sx={{ fontSize: "1rem", mt: 3, mb: 1 }}>
+          {t("vercel.title")}
+        </Typography>
+        {process.env.VERCEL ? (
+          <Stack spacing={0.25} sx={{ mb: 1 }}>
+            <Typography variant="body2">
+              {t("vercel.deployment", {
+                env: process.env.VERCEL_ENV ?? "?",
+                region: process.env.VERCEL_REGION ?? "?",
+                commit: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7) || "?",
+                branch: process.env.VERCEL_GIT_COMMIT_REF ?? "?",
+              })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("vercel.id", { id: process.env.VERCEL_DEPLOYMENT_ID ?? "?" })}
+            </Typography>
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t("vercel.notOnVercel")}
+          </Typography>
+        )}
+        <Typography variant="body2" color="text.secondary">
+          {t("neon.vercel")}{" "}
+          <MuiLink href="https://vercel.com/dashboard/usage" target="_blank" rel="noopener noreferrer">
+            {t("vercel.usageLink")}
+          </MuiLink>
         </Typography>
         <Typography variant="body2" sx={{ mt: 2 }}>
           <Link href="/devs/theme">{t("theme.link")}</Link>

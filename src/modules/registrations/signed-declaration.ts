@@ -1,0 +1,224 @@
+import { and, desc, eq } from "drizzle-orm";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
+import { legalDocuments, legalDocumentTranslations } from "@/db/schema/legal-documents";
+import { registrations } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
+import type { Database } from "@/db/types";
+import type { Locale } from "@/i18n/routing";
+import { findEventNotificationDetails } from "@/modules/events/repository";
+import { mergeLegalBody, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
+
+/**
+ * A signed declaration, reassembled from what was recorded (`DECISIONS.md` §95): the exact
+ * version by id and hash, the fill-ins beside it, the event, the signature. Rendered on
+ * request for the runner (from their own link), for the organizer (one registration, or every
+ * one of an event), and never stored as a file — the rows are the record; the PDF is a view
+ * of them, reproducible for as long as they exist.
+ */
+export type SignedDeclaration = {
+  registrationId: string;
+  registeredName: string;
+  acceptedAt: Date;
+  typedName: string;
+  idDocument: string | null;
+  method: "EMAIL_LINK" | "PAPER";
+  attestedByName: string | null;
+  version: number;
+  contentSha256: string;
+  locale: Locale;
+  title: string;
+  /** The template, unmerged. */
+  body: unknown;
+};
+
+/** The latest acceptance of a registration, with the text it was signed against. */
+export async function findSignedDeclaration<T extends Record<string, unknown>>(
+  db: Database<T>,
+  registrationId: string,
+): Promise<SignedDeclaration | undefined> {
+  const [row] = await signedDeclarationQuery(db).where(eq(declarationAcceptances.registrationId, registrationId)).orderBy(desc(declarationAcceptances.acceptedAt)).limit(1);
+  return row;
+}
+
+function signedDeclarationQuery<T extends Record<string, unknown>>(db: Database<T>) {
+  return db
+    .select({
+      registrationId: declarationAcceptances.registrationId,
+      registeredName: registrations.registeredName,
+      acceptedAt: declarationAcceptances.acceptedAt,
+      typedName: declarationAcceptances.typedName,
+      idDocument: declarationAcceptances.idDocument,
+      method: declarationAcceptances.method,
+      attestedByName: staffUsers.displayName,
+      version: declarationAcceptances.declarationVersion,
+      contentSha256: declarationAcceptances.contentSha256,
+      locale: declarationAcceptances.locale,
+      title: legalDocumentTranslations.title,
+      body: legalDocumentTranslations.bodyJson,
+    })
+    .from(declarationAcceptances)
+    .innerJoin(registrations, eq(registrations.id, declarationAcceptances.registrationId))
+    .innerJoin(legalDocuments, eq(legalDocuments.id, declarationAcceptances.legalDocumentId))
+    .innerJoin(
+      legalDocumentTranslations,
+      and(
+        eq(legalDocumentTranslations.legalDocumentId, legalDocuments.id),
+        eq(legalDocumentTranslations.locale, declarationAcceptances.locale),
+      ),
+    )
+    .leftJoin(staffUsers, eq(staffUsers.id, declarationAcceptances.attestedByStaffUserId))
+    .$dynamic();
+}
+
+/**
+ * Every signed declaration of one event, oldest first — the bundle the club archives. One
+ * query for the lot (two hundred runners is two hundred pages, not two hundred round trips):
+ * every acceptance of the event's real registrations, then the latest per registration.
+ */
+export async function listSignedDeclarations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<SignedDeclaration[]> {
+  const rows = await signedDeclarationQuery(db)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL")))
+    .orderBy(desc(declarationAcceptances.acceptedAt));
+  const latest = new Map<string, SignedDeclaration>();
+  for (const row of rows) if (!latest.has(row.registrationId)) latest.set(row.registrationId, row);
+  return [...latest.values()].sort((a, b) => a.acceptedAt.getTime() - b.acceptedAt.getTime());
+}
+
+export type DeclarationLabels = DeclarationPdfInput["labels"] & {
+  /** "Signed electronically from the link sent by email, on {when}" / "Signed on paper, recorded by {who} on {when}". */
+  signedByLink: (when: string) => string;
+  signedOnPaper: (who: string, when: string) => string;
+  attesterRemoved: string;
+};
+
+function dateFormatter(locale: Locale, timeZone: string, withTime: boolean) {
+  return new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+    dateStyle: "long",
+    ...(withTime ? { timeStyle: "short" } : {}),
+    timeZone,
+  });
+}
+
+/** The event's facts as the declaration's fill-ins, formatted for its locale. */
+export async function eventMergeValues<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  locale: Locale,
+): Promise<{ values: MergeValues; title: string; timezone: string } | undefined> {
+  const event = await findEventNotificationDetails(db, eventId, locale);
+  if (!event) return undefined;
+  return {
+    values: {
+      event: event.title,
+      eventDate: dateFormatter(locale, event.timezone, false).format(event.startsAt),
+      eventLocation: event.locationName,
+    },
+    title: event.title,
+    timezone: event.timezone,
+  };
+}
+
+/** One signed declaration as an entry of the PDF — the fill-ins merged, the signature set. */
+export async function signedDeclarationEntry<T extends Record<string, unknown>>(
+  db: Database<T>,
+  signed: SignedDeclaration,
+  eventId: string,
+  labels: DeclarationLabels,
+): Promise<DeclarationEntry | undefined> {
+  return signedEntry(signed, await eventMergeValues(db, eventId, signed.locale), labels);
+}
+
+function signedEntry(
+  signed: SignedDeclaration,
+  event: Awaited<ReturnType<typeof eventMergeValues>>,
+  labels: DeclarationLabels,
+): DeclarationEntry | undefined {
+  if (!event) return undefined;
+  const when = dateFormatter(signed.locale, event.timezone, true).format(signed.acceptedAt);
+  return {
+    title: signed.title,
+    body: mergeLegalBody(signed.body, {
+      ...event.values,
+      participant: signed.typedName,
+      idDocument: signed.idDocument,
+      signedAt: when,
+    }),
+    eventTitle: event.title,
+    version: signed.version,
+    contentSha256: signed.contentSha256,
+    signature: {
+      typedName: signed.typedName,
+      idDocument: signed.idDocument,
+      signedAt: when,
+      method:
+        signed.method === "PAPER"
+          ? labels.signedOnPaper(signed.attestedByName ?? labels.attesterRemoved, when)
+          : labels.signedByLink(when),
+    },
+  };
+}
+
+/** One signed declaration as a PDF — the runner's copy, the organizer's record. */
+export async function renderSignedDeclarationPdf<T extends Record<string, unknown>>(
+  db: Database<T>,
+  signed: SignedDeclaration,
+  eventId: string,
+  labels: DeclarationLabels,
+  now: Date,
+): Promise<Buffer | undefined> {
+  const entry = await signedDeclarationEntry(db, signed, eventId, labels);
+  if (!entry) return undefined;
+  return renderDeclarationPdf({ entries: [entry], locale: signed.locale, generatedAt: now, labels });
+}
+
+/** Every signed declaration of an event in one PDF, oldest first — what the club archives. */
+export async function renderEventDeclarationsPdf<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  locale: Locale,
+  labels: DeclarationLabels,
+  now: Date,
+): Promise<Buffer> {
+  const entries: DeclarationEntry[] = [];
+  const facts = new Map<Locale, Awaited<ReturnType<typeof eventMergeValues>>>();
+  for (const signed of await listSignedDeclarations(db, eventId)) {
+    if (!facts.has(signed.locale)) facts.set(signed.locale, await eventMergeValues(db, eventId, signed.locale));
+    const entry = signedEntry(signed, facts.get(signed.locale), labels);
+    if (entry) entries.push(entry);
+  }
+  return renderDeclarationPdf({ entries, locale, generatedAt: now, labels });
+}
+
+/** The blank form for one event, on the current approved declaration — for the desk. */
+export async function renderBlankDeclarationPdf<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  locale: Locale,
+  labels: DeclarationPdfInput["labels"],
+  now: Date,
+): Promise<Buffer | undefined> {
+  const [document, event] = await Promise.all([
+    findCurrentApprovedDocument(db, "EVENT_DECLARATION", locale, now),
+    eventMergeValues(db, eventId, locale),
+  ]);
+  if (!document || !event) return undefined;
+  return renderDeclarationPdf({
+    entries: [
+      {
+        title: document.title,
+        body: mergeLegalBody(document.body, event.values),
+        eventTitle: event.title,
+        version: document.version,
+        contentSha256: document.contentSha256,
+      },
+    ],
+    locale,
+    generatedAt: now,
+    labels,
+  });
+}

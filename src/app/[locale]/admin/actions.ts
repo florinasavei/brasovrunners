@@ -170,6 +170,8 @@ function translationFieldsFrom(form: FormData, locale: Locale) {
       excerptBody: value("excerptBody"),
       checklist: value("checklist"),
       body: value("body"),
+      rules: value("rules"),
+      schedule: value("schedule"),
       seoTitle: value("seoTitle"),
       seoDescription: value("seoDescription"),
     },

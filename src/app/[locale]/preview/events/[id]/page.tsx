@@ -112,6 +112,8 @@ export default async function PreviewEventPage({ params }: Props) {
     excerpt: translation.excerpt,
     excerptJson: translation.excerptJson,
     bodyJson: translation.bodyJson,
+    rulesJson: translation.rulesJson,
+    scheduleJson: translation.scheduleJson,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
@@ -142,6 +144,22 @@ export default async function PreviewEventPage({ params }: Props) {
       {!isRichTextEmpty(readRichText(preview.bodyJson)) && (
         <Box sx={{ mt: 3 }}>
           <RichText body={preview.bodyJson} />
+        </Box>
+      )}
+      {!isRichTextEmpty(readRichText(preview.scheduleJson)) && (
+        <Box component="section" id="schedule" sx={{ mt: 4 }}>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("editor.fields.schedule")}
+          </Typography>
+          <RichText body={preview.scheduleJson} />
+        </Box>
+      )}
+      {!isRichTextEmpty(readRichText(preview.rulesJson)) && (
+        <Box component="section" id="rules" sx={{ mt: 4 }}>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("editor.fields.rules")}
+          </Typography>
+          <RichText body={preview.rulesJson} />
         </Box>
       )}
 

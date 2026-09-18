@@ -107,8 +107,10 @@ export default async function LocaleLayout({ children, params }: Props) {
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
     <html lang={locale} suppressHydrationWarning>
       <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable} ${signature.variable}`}>
-        {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light (§93). */}
-        <InitColorSchemeScript attribute="data" defaultMode="system" />
+        {/* Sets data-light / data-dark on <html> before paint, so a dark page never flashes light
+            (§93). Light unless the visitor pressed the switch — the owner: "by default we are on
+            white, ignore browser settings; dark is enabled only by the button". */}
+        <InitColorSchemeScript attribute="data" defaultMode="light" />
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
             <NextIntlClientProvider>

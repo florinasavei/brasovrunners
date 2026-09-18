@@ -205,7 +205,9 @@ Never invent:
 - provider-specific environment variables already defined by a library;
 - GitHub permission names;
 - vendor quotas/pricing;
-- legal wording or legal effect;
+- legal effect — and legal wording *presented as approved*: the platform ships complete
+  texts as templates the club approves in `/admin/legal` (`DECISIONS.md` §95), with the
+  club's own facts left as visible placeholders; only approval gives a text effect;
 - traffic, registration, or conversion numbers;
 - database fields without a requirement;
 - commands absent from `package.json`.
@@ -1006,7 +1008,8 @@ answered 404 where `STAFF_AUTH_MODE=disabled`; signing in lands back in the back
 - format with selected locale/event timezone;
 - store distance/elevation in meters;
 - declaration/legal versions have localized content/version/effective date;
-- AI may format approved text but not invent substance.
+- AI may draft the platform's templates (`legal-documents/templates/`, `DECISIONS.md` §95)
+  and format approved text; it never marks a text approved, and never fills in a club fact.
 
 ---
 

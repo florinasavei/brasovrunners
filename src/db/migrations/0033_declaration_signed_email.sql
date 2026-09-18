@@ -1,0 +1,1 @@
+ALTER TYPE "public"."email_message_type" ADD VALUE 'DECLARATION_SIGNED';

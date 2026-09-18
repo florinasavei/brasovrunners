@@ -166,9 +166,18 @@ export const staffRegistrationSubmissionSchema = submissionFields
 
 export type RegistrationSubmissionInput = z.infer<typeof registrationSubmissionSchema>;
 
+/**
+ * "CI seria BV nr. 123456", as people write it: letters, digits, spaces, dots and dashes,
+ * between four and thirty characters. A passport number for a runner from abroad fits the
+ * same shape. Not parsed into series and number — the declaration prints it as one thing.
+ */
+export const ID_DOCUMENT = /^[A-Za-z0-9][A-Za-z0-9 .\-\/]{2,28}[A-Za-z0-9]$/;
+
 export const declarationSigningSchema = z.object({
   accepted: z.literal(true),
   typedName: z.string().trim().min(1).max(200),
+  /** Required when the declaration's text names it (`mergeFieldsIn`); the service decides. */
+  idDocument: z.string().trim().regex(ID_DOCUMENT, "an identity document is a series and a number").optional(),
   /**
    * The version the page rendered, by id and content hash (BR-REQ-033-02 criterion 6). The
    * service compares both with the version that is current at signing time and refuses a

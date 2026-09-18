@@ -692,8 +692,27 @@ Related requirement: `BR-REQ-053-01`.
 | Prepares the migration or seed | Developer |
 | Verifies the result in QA and production | Administrator |
 
-An AI agent may format approved text and prepare the migration. It must never write,
-paraphrase, translate, or "improve" the substance of legal wording.
+An AI agent may draft the platform's templates (`src/modules/legal-documents/templates/`,
+`DECISIONS.md` §95), format approved text and prepare the migration. It never marks a text
+approved and never fills in a club fact; the club reads and approves.
+
+### The short path: start from the platform's text (2026-09-18)
+
+`/admin/legal` → "Versiune nouă" → the link for the document under "or start from the
+platform's text". The draft is prefilled with the complete text in both languages; fill the
+four facts in angle brackets (legal name, registered address, registration number, contact
+email), read it, save, open the PDF, approve. The declaration's text carries tokens —
+`{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`,
+`{{signedAt}}` — that are filled per person and per event; leave them as they are.
+
+### After a race: the declarations and the export
+
+On the event page: "Declarațiile semnate (PDF)" — every signed declaration, one per page — and
+"Export CSV" on the registrations list (first name, last name, identity document among the
+columns). Keep both in the club's own archive with restricted access; they carry names and
+identity documents. The platform keeps the rows three years from the event and then removes
+them; the PDF can be regenerated at any time until then. Each participant already holds their
+own copy, sent by email at signing.
 
 ### Sample versions, and why the first approved one is not version 1
 

@@ -176,6 +176,26 @@ export default async function EventDetailPage({ params }: Props) {
         </Box>
       )}
 
+      {/* The programme (§96), under `#schedule`: kit pickup, briefing, start, cut-offs. */}
+      {!isRichTextEmpty(readRichText(event.scheduleJson)) && (
+        <Box component="section" id="schedule" sx={{ mt: 4 }}>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("schedule")}
+          </Typography>
+          <RichText body={event.scheduleJson} />
+        </Box>
+      )}
+
+      {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
+      {!isRichTextEmpty(readRichText(event.rulesJson)) && (
+        <Box component="section" id="rules" sx={{ mt: 4 }}>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("rules")}
+          </Typography>
+          <RichText body={event.rulesJson} />
+        </Box>
+      )}
+
       {/* Last year's film, when the club has one, loaded only when opened (criterion 9). */}
       <EventVideo videoUrl={event.videoUrl} />
 

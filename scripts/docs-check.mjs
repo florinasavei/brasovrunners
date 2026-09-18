@@ -134,7 +134,7 @@ async function checkBaseline(docs) {
   // HTML comment marker, in every root document and the two consolidated docs.
   if (distinct.length === 1) {
     const current = distinct[0];
-    const visibleTargets = [...docs, ...(await readOptional(["docs/PRACTICES.md", "docs/RUNBOOKS.md", "docs/DEVELOPMENT.md", "CLAUDE.md", "WEEKEND.md"]))];
+    const visibleTargets = [...docs, ...(await readOptional(["docs/PRACTICES.md", "docs/RUNBOOKS.md", "docs/DEVELOPMENT.md", "docs/VIBECODING.md", "CLAUDE.md", "WEEKEND.md"]))];
     for (const [name, text] of visibleTargets) {
       const withoutMarker = text.replace(/<!--\s*PROJECT_BASELINE:[^>]*-->/g, "");
       if (!withoutMarker.includes(current)) {
@@ -281,6 +281,10 @@ const PROVIDER_HOSTS = [
   // The networks' own share addresses (`DECISIONS.md` §90): fixed by them, nothing loaded from them.
   "www.facebook.com",
   "wa.me",
+  // The hosting dashboard's usage page, linked from /devs (§95): the one place the figure lives.
+  "vercel.com",
+  // Cloudflare Turnstile's widget and its verification endpoint (§97): fixed, Cloudflare's own.
+  "challenges.cloudflare.com",
 ];
 
 async function checkHostnameLiterals() {
@@ -289,6 +293,8 @@ async function checkHostnameLiterals() {
   const files = await collectFiles(srcDir);
   const hostPattern = /https?:\/\/(?!localhost|127\.0\.0\.1)([a-z0-9.-]+\.[a-z]{2,})/gi;
   for (const file of files) {
+    // A font's licence text (SIL OFL, Apache) names its authors' sites; it is not application code.
+    if (/-LICENSE\.txt$/.test(file)) continue;
     const text = await readFile(file, "utf8").catch(() => "");
     for (const match of matchAll(text, hostPattern)) {
       if (VOCABULARY_HOSTS.includes(match[1].toLowerCase())) continue;

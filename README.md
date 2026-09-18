@@ -95,6 +95,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit, and adds the `git gone` alias |
 | [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
+| [`docs/VIBECODING.md`](./docs/VIBECODING.md) | The one page before asking an AI to change anything: the loop, where things live, adding a field end to end, the rules that bite |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/brand/README.md`](./docs/brand/README.md) | The club's logo, kit photograph and display typeface: what each file is, which of the two blues is authoritative, and why the kit font cannot set a Romanian word |
 | [`docs/PLATFORM.md`](./docs/PLATFORM.md) | Every account the platform runs on: plan, what it holds, who can recover it, and **what its limits stop the club from doing**. Operational fact, not authority; no secret and no hostname |

@@ -83,6 +83,7 @@ export async function resolveLocaleSwitch(
   // The staff routes carry an id rather than a slug, and an id is the same in both languages.
   if (
     parsed.route === "/admin/events/[id]" ||
+    parsed.route === "/admin/events/[id]/bibs" ||
     parsed.route === "/preview/events/[id]" ||
     parsed.route === "/admin/registrations/[id]" ||
     parsed.route === "/admin/legal/[id]" ||

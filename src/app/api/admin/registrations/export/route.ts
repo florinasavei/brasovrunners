@@ -61,6 +61,9 @@ export async function GET(request: Request): Promise<Response> {
     rows.map((row) => ({
       eventTitle: row.eventTitle ?? row.eventId,
       registeredName: row.registeredName,
+      firstName: row.firstName ?? "",
+      lastName: row.lastName ?? "",
+      idDocument: row.idDocument ?? "",
       email: row.participantEmail,
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,

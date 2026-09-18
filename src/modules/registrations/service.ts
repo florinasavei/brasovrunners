@@ -12,6 +12,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { pickBibNumber } from "./bibs";
+import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -669,6 +670,13 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       );
     }
 
+    // The identity document, when the declaration's own text names it (§95): the club hands
+    // out kits against it, so a signature without one is not the declaration the club wrote.
+    const asksForIdDocument = mergeFieldsIn(document.body).has("idDocument");
+    if (asksForIdDocument && !parsed.data.idDocument) {
+      throw new DomainError("VALIDATION_ERROR", "idDocument: the declaration names an identity document");
+    }
+
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,
@@ -676,6 +684,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       contentSha256: document.contentSha256,
       locale: current.locale,
       typedName: parsed.data.typedName,
+      idDocument: asksForIdDocument ? parsed.data.idDocument : null,
       acceptedAt: now,
     });
 
@@ -703,6 +712,18 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
       payload: {},
       idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
+      now,
+    });
+    // Their copy of what they signed, as a PDF attached (§95): its own message, so the
+    // confirmation stays what it is and the declaration is found by its subject.
+    await enqueueEmail(tx, {
+      participantId: confirmed.participantId,
+      registrationId: confirmed.id,
+      messageType: "DECLARATION_SIGNED",
+      locale: confirmed.locale,
+      recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
+      payload: {},
+      idempotencyKey: `registration:${confirmed.id}:declaration-signed:${now.toISOString()}`,
       now,
     });
 
@@ -780,6 +801,17 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
     payload: {},
     idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
+    now,
+  });
+  // The copy of the paper declaration's record, by email, as after an electronic signature (§95).
+  await enqueueEmail(tx, {
+    participantId: confirmed.participantId,
+    registrationId: confirmed.id,
+    messageType: "DECLARATION_SIGNED",
+    locale: confirmed.locale,
+    recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
+    payload: {},
+    idempotencyKey: `registration:${confirmed.id}:declaration-signed:${now.toISOString()}`,
     now,
   });
   return confirmed;

@@ -118,7 +118,25 @@ export const envSchema = z
     R2_BUCKET: z.string().min(1).optional(),
     R2_PUBLIC_BASE_URL: z.url().optional(),
 
+    /**
+     * Cloudflare Turnstile on the public registration form (`DECISIONS.md` §97). Both or
+     * neither: with both set the widget shows and the server verifies; with neither the
+     * honeypot and the timing check stand alone, as before.
+     */
+    TURNSTILE_SITE_KEY: z.string().min(1).optional(),
+    TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
+    /**
+     * Whether the registration form offers "appear publicly under another name" (§95, the
+     * club's organiser: kits are handed out against an identity card, so a nickname on the
+     * list only invites "somebody else took it"). Off unless set to `true`; the column and
+     * the list's fallback to the registered name stay either way.
+     */
+    FEATURE_DISPLAY_NAME: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     EMAIL_DELIVERY_MODE: z.enum(EMAIL_DELIVERY_MODES).default("capture"),
     EMAIL_ALLOWLIST: allowlist,
     MAILGUN_API_KEY: z.string().min(1).optional(),

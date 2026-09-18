@@ -11,9 +11,13 @@ export const routing = defineRouting({
    * and a session cookie and send an English-configured browser to `/en` — which is how the
    * owner, on an English machine, kept landing on the English site. The club is Romanian, the
    * default locale is `ro` (BR-REQ-040-01), and the switcher is one tap away for everyone else.
-   * The locale cookie stays: switching to English still sticks for the session.
+   * No locale cookie either, since 2026-09-18 ("the default language must be Romanian"): a
+   * visitor who once switched to English still landed on `/en` from the root on their next
+   * visit, and the owner read that as the site defaulting to English. Every page carries its
+   * locale in the address, so English survives navigation; only the bare root is always Romanian.
    */
   localeDetection: false,
+  localeCookie: false,
 
   /**
    * Localized pathnames, per AGENTS.md §9.2. The key is the internal route — the folder under
@@ -94,6 +98,8 @@ export const routing = defineRouting({
     "/devs": "/devs",
     "/admin/events/new": "/admin/events/new",
     "/admin/events/[id]": "/admin/events/[id]",
+    /** Every bib of the event as a picture (`DECISIONS.md` §94). */
+    "/admin/events/[id]/bibs": "/admin/events/[id]/bibs",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
     "/admin/tasks": "/admin/tasks",

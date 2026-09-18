@@ -77,6 +77,8 @@
       "whatsapp": "WhatsApp",
       "instagram": "Poză pentru Instagram"
     },
+    "rules": "Regulamentul evenimentului",
+    "schedule": "Programul evenimentului",
     "openMap": "Vezi pe hartă",
     "address": "Adresă",
     "distance": "Distanță",
@@ -294,6 +296,10 @@
       "openDesk": "Deschide la masă",
       "notCheckedIn": "Nu a fost marcat prezent.",
       "checkedIn": "Prezent: {time} · {who}",
+      "idDocument": "Act de identitate",
+      "declarationPdf": "Declarația semnată (PDF)",
+      "declarationsPdf": "Declarațiile semnate (PDF)",
+      "declarationForm": "Formular declarație pe hârtie (PDF)",
       "declarationPaper": "pe hârtie, înregistrată de {who}",
       "emailVouched": "adresă garantată de {who}"
     },
@@ -388,7 +394,9 @@
         "difficulty": "Dificultate",
         "costType": "Cost",
         "checklist": "Ce să aduci (o linie, în emailuri)",
-        "body": "Descriere completă"
+        "body": "Descriere completă",
+        "rules": "Regulamentul evenimentului",
+        "schedule": "Programul evenimentului"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
@@ -403,6 +411,9 @@
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
+      "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
+      "scheduleHelp": "Opțional. Programul pe ore: ridicarea kiturilor (unde, când), briefingul, startul, limitele de timp, festivitatea. Apare pe pagina evenimentului la „Program”; emailurile trimit acolo.",
+      "rulesHelp": "Opțional. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
       "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare și în reminder.",
       "type": "Tip eveniment",
       "surface": "Suprafață",
@@ -572,6 +583,9 @@
       "backToList": "Înapoi la documentele legale",
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
+      "newFromTemplateIntro": "Precompletat cu textul platformei: complet, cu cele patru date ale clubului lăsate între paranteze unghiulare <AȘA>. Completează-le, citește tot, salvează ciorna, apoi aprob-o.",
+      "templatesIntro": "Sau pornește de la textul platformei:",
+      "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{idDocument}}' (actul de identitate tastat la semnare), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
       "newVersion": "Versiune nouă",
       "saveDraft": "Salvează ciorna",
@@ -951,7 +965,7 @@
     },
     "thanks": {
       "title": "După cursă",
-      "help": "Un email de mulțumire pentru toți cei marcați prezenți la masă — o singură dată pe eveniment, trimis de tine, niciodată automat. Poți pune un link către rezultate sau poze.",
+      "help": "Un email de mulțumire pentru toți cei marcați prezenți la masă — o singură dată pe eveniment, trimis de tine, niciodată automat. Poți pune un link către rezultate sau poze. Mesajul privește doar evenimentul la care persoana a participat și nu promovează nimic altceva — nu este comunicare comercială (Legea nr. 506/2004).",
       "url": "Link (opțional)",
       "urlHelp": "Rezultatele, pozele — o adresă care începe cu https://.",
       "send": "Trimite mulțumirile",
@@ -968,6 +982,8 @@
       "to": "Până la",
       "download": "Descarcă foaia (PDF)",
       "preview": "Vezi numerele ({count})",
+      "previewTitle": "Numerele de concurs — {event} ({count})",
+      "backToEvent": "← Înapoi la eveniment",
       "previewAlt": "Numărul {number} — {name}",
       "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
@@ -1009,6 +1025,7 @@
       "backToDesk": "← Înapoi la masă",
       "scannedTitle": "Participant scanat",
       "confirmHere": "Confirmă pe hârtie",
+      "idDocument": "Act de identitate",
       "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu l-ai alocat deja) → Salvează; când persoana a ajuns → Prezent. Cine nu a confirmat emailul semnează declarația pe hârtie → Confirmă pe hârtie.",
       "givePlace": "Dă-i un loc",
       "bibField": "Număr de concurs",
@@ -1049,7 +1066,8 @@
         "PROFILE_MANAGE_LINK": "Înscrierile mele",
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
         "EVENT_REMINDER": "Reminder cu 48 de ore înainte",
-        "EVENT_THANKS": "Mulțumim după cursă"
+        "EVENT_THANKS": "Mulțumim după cursă",
+        "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1063,7 +1081,8 @@
         "PROFILE_MANAGE_LINK": "La cerere, când cineva vrea să-și vadă toate înscrierile.",
         "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
         "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată.",
-        "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți."
+        "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
+        "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el."
       }
     },
     "guide": {
@@ -1120,6 +1139,20 @@
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă."
           ]
+        },
+        {
+          "title": "Declarațiile pe proprie răspundere și datele personale (GDPR)",
+          "who": "Rol: Administrator. De citit o dată, înainte de primul eveniment cu înscrieri.",
+          "steps": [
+            "Textul declarației este un document legal din „Documente legale”. Pornește de la textul platformei (linkul „Declarație” de sub „Versiune nouă”): e declarația clubului, cu blancurile ca tokeni — {{participant}}, {{idDocument}}, {{event}}, {{eventDate}}, {{eventLocation}}, {{signedAt}} — completate automat pentru fiecare persoană și eveniment. Un singur text aprobat servește toate evenimentele.",
+            "La semnare, participantul citește textul completat cu numele lui și evenimentul, tastează seria și numărul actului de identitate (nu încărcăm nicio poză/scan de buletin) și își scrie numele ca semnătură. Se înregistrează: numele, actul, versiunea textului, amprenta lui (SHA-256), momentul și metoda. Asta e semnătură electronică simplă (eIDAS și Legea 214/2024).",
+            "Imediat după semnare, participantul primește pe email declarația semnată ca PDF atașat („Declarația ta semnată”), plus linkul către ea din pagina înscrierii. La masă, kitul se dă pe baza actului de identitate scris în declarație — apare pe rândul din „Ziua cursei” și în CSV.",
+            "Cine nu poate semna din email semnează pe hârtie: pe pagina evenimentului, „Formular declarație pe hârtie (PDF)” tipărește formularul cu evenimentul completat. La masă, „Confirmă pe hârtie” înregistrează semnătura sub numele voluntarului; hârtia originală se păstrează de club.",
+            "Unde stau declarațiile: în baza de date (Neon, Frankfurt), ca înregistrări — nu ca fișiere. PDF-ul se generează la cerere din ele, oricând, identic. După eveniment, de pe pagina evenimentului: „Declarațiile semnate (PDF)” — toate într-un singur fișier, câte una pe pagină (200 de declarații ≈ 2 MB, câteva secunde) — și exportul CSV. Păstrează-le în arhiva clubului, cu acces restrâns (conțin nume și acte de identitate).",
+            "Cât se păstrează: înscrierile și declarațiile 3 ani de la eveniment (termenul general de prescripție), apoi se șterg automat; la cerere, mai devreme, din „Ștergere” pe pagina înscrierii. Emailurile trimise 90 de zile, linkurile consumate 30 de zile. Exact așa scrie și în nota de confidențialitate.",
+            "Nota de confidențialitate și termenii: pornește tot de la textul platformei — sunt complete (GDPR art. 13, Legea 190/2018, procesatorii, perioadele, drepturile, ANSPDCP); completezi doar denumirea juridică, sediul, CUI-ul și emailul de contact, citești, salvezi ciorna și aprobi. Fără text aprobat nu se poate face nicio înscriere.",
+            "Numele afișat public (porecla) este oprit implicit (FEATURE_DISPLAY_NAME): pe listă și în export apar numele reale, iar kitul se ridică pe bază de act de identitate."
+          ]
         }
       ]
     }
@@ -1161,6 +1194,7 @@
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
       "phone": "Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
+      "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
     },
@@ -1182,8 +1216,11 @@
       "MALE": "Masculin",
       "UNSPECIFIED": "Prefer să nu spun"
     },
-    "nationality": "Naționalitate",
+    "nationality": "Cetățenie",
     "city": "Oraș",
+    "preferredLocale": "Limba în care vrei emailurile și declarația",
+    "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
+    "preferredLocaleOptions": { "ro": "Română", "en": "Engleză" },
     "phone": "Telefon",
     "phoneCountry": "Țara",
     "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
@@ -1207,7 +1244,7 @@
       "email": "Adresă de email",
       "birthDate": "Data nașterii",
       "sex": "Sex",
-      "nationality": "Naționalitate",
+      "nationality": "Cetățenie",
       "city": "Oraș",
       "phone": "Telefon",
       "phoneCountry": "Țara",
@@ -1217,7 +1254,8 @@
       "clubName": "Club sau echipă",
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
-      "privacyAcknowledged": "Nota de confidențialitate"
+      "privacyAcknowledged": "Nota de confidențialitate",
+      "captcha": "Verificarea anti-bot"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1279,6 +1317,9 @@
       "event": "Pentru evenimentul: {event}",
       "deadline": "Locul tău este rezervat până la {deadline}.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
+      "idDocument": "Act de identitate (seria și numărul)",
+      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui.",
+      "idDocumentPlaceholder": "BV 123456",
       "nextTitle": "Ce urmează",
       "nextConfirmed": [
         "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
@@ -1321,6 +1362,7 @@
       "done": "Înscrierea a fost anulată.",
       "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată.",
       "doneTitle": "Înscriere anulată",
+      "declarationPdf": "Declarația pe care ai semnat-o (PDF)",
       "raceDayTitle": "În ziua cursei",
       "codeIntro": "Arată acest cod la masa de ridicare a numerelor. Îl ai și în emailul de confirmare.",
       "qrAlt": "Codul tău QR {code}",
@@ -1493,6 +1535,13 @@
       "reset": "Revino la normal",
       "back": "← Înapoi la configurație",
       "link": "Laborator de temă →"
+    },
+    "vercel": {
+      "title": "Găzduire (Vercel)",
+      "deployment": "Deploy-ul curent: {env} · regiunea {region} · commit {commit} pe {branch}.",
+      "id": "Id deploy: {id}",
+      "notOnVercel": "Nu rulează pe Vercel (local sau test).",
+      "usageLink": "Deschide Vercel → Usage."
     },
     "neon": {
       "title": "Baza de date (Neon)",

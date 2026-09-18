@@ -458,6 +458,18 @@ export const eventTranslations = pgTable(
     excerptJson: jsonb("excerpt_json"),
     bodyJson: jsonb("body_json"),
     /**
+     * The event's rules, per language, in the same editor as the description (§96): what the
+     * declaration says the participant has read "on the event's page", shown there under
+     * `#rules` and linked from every email. Null when the organizer wrote none.
+     */
+    rulesJson: jsonb("rules_json"),
+    /**
+     * The programme, per language (§96): kit pickup hours, the briefing, the start, the
+     * cut-offs, the awards — what a trail race publishes and a runner reads the night before.
+     * Same editor; shown under `#schedule`; linked from the emails.
+     */
+    scheduleJson: jsonb("schedule_json"),
+    /**
      * "What to bring", one line, per language (`DECISIONS.md` §81): it goes on the
      * confirmation and the reminder — the two emails a participant keeps. Editorial, so it
      * lives on the translation; plain text, at most 300 characters, because an email is read

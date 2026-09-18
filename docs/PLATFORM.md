@@ -92,9 +92,10 @@ not taken, so the club can see it is not locked in.
 ### The four that will actually bite this club
 
 **1. Mailgun's 100 emails/day is the binding constraint on registration day.** This application
-sends **four emails per completed registration** — verify the address, sign the declaration,
-confirmed, and the reminder two days before (`DECISIONS.md` §81) — and a waitlisted entrant
-costs two more. So the free plan supports roughly **25 registrations per day**, and a race that
+sends **five emails per completed registration** — verify the address, sign the declaration,
+confirmed, the signed declaration as a PDF (`DECISIONS.md` §95), and the reminder two days
+before (§81) — and a waitlisted entrant costs two more. So the free plan supports roughly
+**20 registrations per day**, and a race that
 opens entries to a hundred people exceeds it before lunch. Basic at $15/mo removes the daily limit and includes 10,000/month. **Budget one month of
 Basic per race, not a permanent subscription.**
 
@@ -358,7 +359,7 @@ absorb load that a limit should have refused is paying for abuse.
 
 ### When the daily allowance runs out — decided, and it is not a bounce
 
-This will happen: four messages per completed registration against 100 a day is 25
+This will happen: five messages per completed registration against 100 a day is 20
 registrations, and a race opening entries to a hundred people crosses it before lunch (limit 1).
 What happens then is now a decision rather than an accident.
 

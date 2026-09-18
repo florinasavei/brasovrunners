@@ -4672,6 +4672,8 @@ primary lifts to a lighter blue of the same hue, the paper is a warm grey rather
 and every text-on-surface pair is asserted at AA in `brand.test.ts` exactly as the light ones
 are. The header shows the white lockup after dark, swapped by CSS on the same attribute so it
 changes with the scheme and never after it. `brand.ts` remains the only file with a hex in it.
+Amended the same evening (§95): light by default, never the device's setting — dark is what
+the switch chooses.
 
 Baseline `BR-V1.38-2026-09-18`.
 
@@ -4699,5 +4701,176 @@ card allows, the name — in a folded grid on the event page, Administrator only
 sheet, since a bib carries a name. Roboto Regular and Bold, the PDF's own files, are embedded
 in every picture `next/og` draws (§90's cards included), because Satori's fallback has one
 weight and a race number that is not bold is not a race number.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 95. Decided — the club's declaration, as the paper one reads: tokens, the identity document, a copy by email, the archive, and the texts the club approves (2026-09-18)
+
+**Status:** Decided and built, amending §29 and AGENTS.md §1.2 on legal text.
+`legal-documents/domain/merge-fields.ts`, `legal-documents/templates/*`,
+`registrations/declaration-pdf.ts`, `registrations/signed-declaration.ts`, migration `0032`
+(`id_document`) and `0033` (`DECLARATION_SIGNED`), `jobs/retention.ts`, `FEATURE_DISPLAY_NAME`;
+BR-REQ-033-02 criteria 7–10, BR-REQ-037-04, BR-REQ-053-01.
+
+**What the club handed over.** The declaration it used this year: "Subsemnatul/a …, posesor al
+CI seria … nr. …, declar că particip pe proprie răspundere la concursul …, care va avea loc în
+data de …, în locația …", the bullets, the photographs, the minors, GDPR, "DREPT PENTRU CARE
+SEMNEZ, Semnătura, Data". "Exactly this is what we must do too." And, the same evening: it
+must be reusable across events, so the blanks must be tokens; the identity document is needed
+because kits are handed out against it, but no scan is ever kept; the signed declaration must go
+back to the participant by email, as its own message; the club needs somewhere to keep them;
+everything must comply with Romanian law; and the platform's legal texts should be written out,
+GDPR-compliant, rather than left as outlines.
+
+**Tokens.** A version approved in `/admin/legal` is one fixed text whose hash a signature binds
+to (§57). The blanks are six named fields inside it — `{{participant}}`, `{{idDocument}}`,
+`{{event}}`, `{{eventDate}}`, `{{eventLocation}}`, `{{signedAt}}` — filled in when the text is
+shown to one person for one event, when it is printed, and never in what is signed: the template
+is signed, the fill-ins are recorded beside it, and neither drifts from the other. A field with
+no value renders as the paper form's dotted blank, which is what the blank form for the desk
+shows. Six and no more; the organiser's legal name is the text's own words.
+
+**The identity document.** Asked at signing only when the text names it (`mergeFieldsIn`), as
+the series and number typed — "BV 123456", or a passport — validated for shape and nothing
+else, stored on the acceptance (`id_document`), shown on the desk row and in the export beside
+the two halves of the name, printed into the declaration. Never a scan, never a photograph:
+the club's own words, "we can't save ID documents as scans, so even if we require it, it's just
+in that declaration." Null for a paper acceptance, where the paper has it.
+
+**The copy.** Signing enqueues `DECLARATION_SIGNED`, its own message with the PDF attached —
+the participant's copy, found by its subject — and the confirmation carries a link to the same
+PDF from the same manage token, read without spending it. The adapter learned attachments
+(Mailgun takes repeated `attachment` parts); the PDF is rendered at send time from the rows,
+never stored in the outbox. A paper signature at the desk sends the same message, saying so.
+Five messages per completed registration now, and PLATFORM.md's arithmetic says twenty a day.
+
+**Where they live.** In the database, as rows: the acceptance, the version, the fill-ins. The
+PDF — the lockup, the title centred, the merged text, the typed name in Caveat, the date, the
+method, the version and the hash — is a rendering, reproducible for as long as the rows exist,
+and never a file on R2, whose reads are public. The club's archive is `Declarațiile semnate
+(PDF)` on the event page: every signed declaration of the event in one file, one per page,
+oldest first — two hundred runners are about two megabytes and a few seconds, in one query —
+downloaded after the race and kept wherever the club keeps its papers, with restricted access.
+Not sent to a club mailbox by attachment, because the club has no mailbox yet.
+
+**Retention, made true.** §45 left how long a registration is kept to the club. The privacy
+notice now says three years from the event — Codul civil art. 2517, the general limitation
+period, within which the declaration is the evidence — so the sweep enforces it: the
+registrations of events that started more than three years ago go, with their declarations,
+and then every participant left with none. Erase by hand does the same sooner.
+
+**The texts.** §29 kept every club fact a placeholder and AGENTS.md §1.2 forbade inventing
+legal wording; the owner asked for the opposite — "just invent all those documents, we must be
+GDPR compliant." The line drawn: the platform ships **complete texts** (`templates/`) — a
+privacy notice written from the schema and satisfying GDPR art. 13 item by item, with the
+processors, the periods, the rights and the ANSPDCP; terms for a free platform; the declaration
+above — and the club **approves** them in `/admin/legal` after filling exactly four facts (its
+legal name, address, registration number, contact address), which stay `<LIKE THIS>` because
+nobody here knows them. "Start from the platform's text" prefills the draft. The seed wraps the
+same texts in the not-approved banner everywhere but production, as before, and production is
+still refused a seed. What gives a text effect is the club's approval, not its authorship; the
+banner still says "not legal advice".
+
+**The display name.** The organiser's other complaint: "kits are handed out against the ID
+card, I do not want nicknames on our list." `FEATURE_DISPLAY_NAME`, off unless `true`, hides
+the field on both forms and ignores a posted value; the list falls back to the registered name
+as it always did; the export carries first name, last name and the identity document.
+
+**Also.** Dark is chosen only by the switch, never by the device (§93 amended: "by default we
+are on white"). Pictures were already compressed (two WebP variants, no original); there are
+no uploaded documents — the PDFs are generated, and pdfkit deflates them.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 96. Decided — the emails as the runner keeps them: bilingual, branded, with the deep links; the rules on the event page; Romanian at the root; the short texts (2026-09-18)
+
+**Status:** Decided and built. `notifications/templates.ts` (`renderBilingual`, `card`),
+`notifications/render.ts`, `event_translations.rules_json` (migration `0034`), `i18n/routing.ts`
+(`localeCookie: false`), `/devs`; BR-REQ-080-01 criteria 7–8, BR-REQ-020-01 criterion 6,
+BR-REQ-040-01 criterion 8.
+
+**The mail.** The owner, reading the confirmation from QA: "we need better email, with deep
+links (including 'I can't make it any more'); links to the event and the event rules; make it
+bilingual by default." Every message is now one card — the club's name on a blue band, the
+one action as a button in the club's blue, the deep links as a list beneath it — and carries
+both languages, the registration's own first and the other under a rule, with the two subjects
+joined by " / ": a runner from abroad registered in English still shows the mail to a Romanian
+friend, and a Romanian who chose English by accident reads the top half. Inline styles only,
+no table layout, still text-first and under 100 KB. The links: *Vezi înscrierea* (the
+button), *Nu mai pot veni — anulez înscrierea* (the manage page's `#cancel` section; the GET
+still mutates nothing, the cancel is the form there), *Pagina evenimentului*, *Regulamentul
+evenimentului* when the page has rules, *Declarația semnată (PDF)* (§95). The reminder and
+the declaration request carry the same page and rules links. Five messages per completed
+registration stay five.
+
+**The rules, and the programme.** "Also on the event page I need to show the rules" and,
+later, "I need to organize race pick-up and stuff like the event schedule — treat this like a
+UTMB trail race." `rules_json` and `schedule_json` per language, written in the same editor
+as the description, shown under `#rules` and `#schedule` on the event page and in the preview
+— kit pickup hours, the briefing, the start, the cut-offs, the awards; the declaration's own
+words — "I have read the rules on the event's page" — point somewhere now, and so do the
+emails. Empty stays absent. Both editors are folded and mount on opening
+(`LazyRichTextEditor`): six Tiptap instances at once made the editor slow to wake on a phone,
+and a save that never opened the fold posts the stored text back unchanged. Each half of a
+bilingual message formats the date in its own language ("Sunday 11 October", not
+"duminică"); the meeting point stays in the club's words. The bib pictures moved to their own
+page (`/admin/events/<id>/bibs`) for the same reason: drawn on request, not on every visit
+to the editor.
+
+**Romanian at the root.** "The default language must be Romanian." `localeDetection` was
+already off (§ the switcher); the locale cookie still sent a visitor who had once chosen
+English back to `/en` from the bare root, which the owner read as the site defaulting to
+English. `localeCookie: false`: every page carries its locale in its address, so English
+survives navigation, and the root is Romanian for everybody, every time. The privacy notice
+names no locale cookie any more.
+
+**Also.** `/devs` shows the running Vercel deployment (environment, region, commit, branch,
+deployment id) and links to the usage dashboard — Vercel publishes no usage figure to a
+Hobby project's own code, so the link is the honest most. The nationality field is labelled
+*Cetățenie* / *Citizenship*, which is what it asks. And the legal texts of §95 were cut to a
+third at the owner's word — "short, but match the legal stuff" — by a second pass that kept
+every GDPR art. 13 item and every citation and dropped the explanations: a runner reads them
+on a phone, and a document nobody reads protects nobody.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 97. Decided — a captcha the club can switch on, the language a runner asks for, the texts cut to a third, and the page for whoever codes next (2026-09-18)
+
+**Status:** Decided and built. `registrations/turnstile.ts` (`TURNSTILE_SITE_KEY`,
+`TURNSTILE_SECRET_KEY`), the form's `preferredLocale`, `legal-documents/templates/*`,
+`docs/VIBECODING.md`; BR-REQ-031-01 criterion 4, BR-REQ-031-04 criterion 7.
+
+**The captcha.** §19.4 built a honeypot and a timing check and said Turnstile only if those
+fail. The owner: "I need a captcha when people register — I need to be safe from bots." So
+Cloudflare Turnstile, behind two keys and off without them: with both set the public form
+shows the widget and the server refuses a submission whose token Cloudflare does not confirm
+(a network failure is a failure — a bot's token is not waved through on a bad day), and the
+refusal is a field error a person reads and retries. The honeypot and the timing check stay
+in front either way; the staff form has no widget. It is the one script the public site
+loads from anybody else, and the visitor's address goes to Cloudflare with the challenge,
+which the privacy notice says, in the sentence that only applies when the keys are set.
+
+**The language.** "Users should be able to set a preferred language, so they may receive
+the declaration in English." The registration's language was the page's; now the form asks
+— "the language for your emails and the declaration", the page's language preselected — and
+that is the language the declaration is signed in and the one that comes first in every
+(bilingual, §96) email. The switcher in the header stays for the site itself.
+
+**The texts, short.** §95 shipped complete texts at four thousand words; the owner: "the
+terms and the GDPR notice should be short, but match the legal stuff." A second pass cut
+them to a third — the notice to about 1,300 words a language in eleven sections, the terms
+to under 900 in ten — and two audits checked afterwards, item by item, that every GDPR
+art. 13 point and every citation survived, and that nothing said contradicts the code. What
+went: explanations of why a rule exists, the same point said twice, the sections that belong
+to the other document. What changed on the way, because the audits caught it: Legea 214/2024
+replaced 455/2001 in October 2024 and is what the signature cites now (§86 cited the old
+law); the public list and the photographs rest on legitimate interest with the right to
+object, not consent; the identity document's series and number and the health note leave the
+rows seven days after the event (the sweep does it), the audit log after three years; a minor
+is registered by a parent, who signs for them — the declaration says so in its first line.
+
+**The page for whoever codes next.** "This entire app must be more vibecoder friendly."
+`docs/VIBECODING.md`: the loop, where things live, adding a field end to end, the rules that
+bite — one page, first in the read order. `CLAUDE.md` stays the long form.
 
 Baseline `BR-V1.38-2026-09-18`.
