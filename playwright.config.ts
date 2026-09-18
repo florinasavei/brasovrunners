@@ -11,7 +11,15 @@ import { defineConfig, devices } from "@playwright/test";
  * viewport as well as desktop, so both projects below are mandatory rather than a nicety —
  * the phone is the design target (BR-BUS-041).
  */
-const PORT = Number(process.env.E2E_PORT ?? 47830);
+/**
+ * Below 32768 on purpose. The port was 47830, which sits inside Linux's ephemeral range
+ * (32768–60999): on 2026-09-18 a CI run failed with `EADDRINUSE :::47830` before a single test
+ * ran, because some outgoing connection in the same job — the database client, a package
+ * fetch — had been handed 47830 as its local port, and `next start` could not bind it. A
+ * port under the range cannot be handed out that way. Windows's range starts at 49152, which
+ * is why it never happened on a laptop.
+ */
+const PORT = Number(process.env.E2E_PORT ?? 4783);
 const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
