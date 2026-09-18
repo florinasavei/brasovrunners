@@ -108,6 +108,9 @@ export default async function TranslationFieldsForm({
               linkCancel: rt("linkCancel"),
               undo: rt("undo"),
               redo: rt("redo"),
+              image: rt("image"),
+              imageUploading: rt("imageUploading"),
+              imageFailed: rt("imageFailed"),
             }}
           />
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>

@@ -39,7 +39,8 @@
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
     "pastNotice": "Acest eveniment a avut deja loc.",
     "featured": "Evenimentul principal",
-    "featuredCallToAction": "Vezi detaliile cursei"
+    "featuredCallToAction": "Vezi detaliile cursei",
+    "others": "Alte evenimente"
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
@@ -749,7 +750,10 @@
       "linkRemove": "Șterge legătura",
       "linkCancel": "Renunță",
       "undo": "Anulează",
-      "redo": "Refă"
+      "redo": "Refă",
+      "image": "Imagine (încarcă din telefon sau calculator)",
+      "imageUploading": "Se încarcă imaginea…",
+      "imageFailed": "Imaginea nu a putut fi încărcată. Încearcă un JPEG, PNG sau WebP de până la 6 MB; dacă mediul nu are spațiu de stocare configurat, /admin/tasks spune cum."
     },
     "pages": {
       "title": "Pagini",

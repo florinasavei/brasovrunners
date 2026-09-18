@@ -39,7 +39,8 @@
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
     "pastNotice": "This event has already taken place.",
     "featured": "Featured event",
-    "featuredCallToAction": "See the race details"
+    "featuredCallToAction": "See the race details",
+    "others": "Other events"
   },
   "Event": {
     "backToEvents": "Back to events",
@@ -749,7 +750,10 @@
       "linkRemove": "Remove link",
       "linkCancel": "Cancel",
       "undo": "Undo",
-      "redo": "Redo"
+      "redo": "Redo",
+      "image": "Picture (upload from your phone or computer)",
+      "imageUploading": "Uploading the picture…",
+      "imageFailed": "The picture could not be uploaded. Try a JPEG, PNG or WebP up to 6 MB; if this environment has no storage configured, /admin/tasks says how."
     },
     "pages": {
       "title": "Pages",

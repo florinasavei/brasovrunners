@@ -6,9 +6,11 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import Typography from "@mui/material/Typography";
+import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import { EMPTY_DOC, readRichText } from "../domain/schema";
 
 /**
@@ -71,11 +73,16 @@ export default function RichTextEditor({
     linkCancel: string;
     undo: string;
     redo: string;
+    image: string;
+    imageUploading: string;
+    imageFailed: string;
   };
 }) {
   const initialDoc = readRichText(initialBody);
   const [value, setValue] = useState(() => JSON.stringify(initialDoc));
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
+  const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     // Next renders this component's tree on the server first; Tiptap needs a DOM. Without this,
@@ -102,6 +109,21 @@ export default function RichTextEditor({
           protocols: ["http", "https", "mailto"],
         },
       }),
+      /**
+       * Pictures between paragraphs (§72): a block, never inline, with the stored variant's
+       * size carried so the page reserves the space. The address comes from the upload route
+       * alone — there is no "paste a URL" path, because the server refuses any other.
+       */
+      Image.configure({ inline: false, allowBase64: false }).extend({
+        addAttributes() {
+          return {
+            src: { default: null },
+            alt: { default: "" },
+            width: { default: null },
+            height: { default: null },
+          };
+        },
+      }),
     ],
     content: initialDoc.content?.length ? initialDoc : EMPTY_DOC,
     onUpdate: ({ editor: current }) => setValue(JSON.stringify(current.getJSON())),
@@ -116,6 +138,30 @@ export default function RichTextEditor({
       },
     },
   });
+
+  /**
+   * Shrink in the browser, post to `/api/admin/media`, insert the answer as an image node.
+   * One file at a time; a failure is a sentence under the toolbar, never a lost body.
+   */
+  const insertImage = async (file: File) => {
+    setImageState("uploading");
+    try {
+      const body = new FormData();
+      body.append("file", await shrinkImageInBrowser(file), file.name.replace(/\.[^.]+$/, "") + ".webp");
+      body.append("originalFilename", file.name);
+      const response = await fetch("/api/admin/media", { method: "POST", body });
+      if (!response.ok) throw new Error(String(response.status));
+      const uploaded = (await response.json()) as { src: string; width: number; height: number };
+      editor
+        ?.chain()
+        .focus()
+        .setImage({ src: uploaded.src, alt: file.name.replace(/\.[^.]+$/, ""), width: uploaded.width, height: uploaded.height } as never)
+        .run();
+      setImageState("idle");
+    } catch {
+      setImageState("failed");
+    }
+  };
 
   const applyLink = () => {
     const href = (linkDraft ?? "").trim();
@@ -199,6 +245,23 @@ export default function RichTextEditor({
             }
           />
           <Control
+            label={imageState === "uploading" ? labels.imageUploading : labels.image}
+            text="🖼"
+            active={false}
+            onClick={() => fileInputRef.current?.click()}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) void insertImage(file);
+            }}
+          />
+          <Control
             label={labels.undo}
             text="↶"
             active={false}
@@ -211,6 +274,12 @@ export default function RichTextEditor({
             onClick={() => editor?.chain().focus().redo().run()}
           />
         </Stack>
+
+        {imageState !== "idle" && (
+          <Typography variant="body2" color={imageState === "failed" ? "error" : "text.secondary"} sx={{ px: 1, py: 0.5 }}>
+            {imageState === "failed" ? labels.imageFailed : labels.imageUploading}
+          </Typography>
+        )}
 
         {linkDraft !== null && (
           <Stack

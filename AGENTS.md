@@ -1388,7 +1388,9 @@ Canonical body is JSON produced by allowlisted schema. Required nodes/marks:
 - link;
 - bullet/ordered list/list item;
 - blockquote;
-- media-library image reference if implemented.
+- image — a block, never inline, whose `src` is one of this site's own stored variants
+  (`/api/admin/media` answers it; the schema refuses any other address), with `alt`, `width`
+  and `height` (built 2026-09-18, `DECISIONS.md` §72).
 
 Rules:
 

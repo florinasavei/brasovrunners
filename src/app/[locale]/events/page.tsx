@@ -93,10 +93,18 @@ export default async function EventsPage({ params }: Props) {
 
       {featured && <FeaturedEventHero event={featured} now={now} />}
 
+      {/* Under a hero, the rest is "other events": a heading and denser cards — no excerpt,
+          the facts and the title are what a reader scans for the next Sunday. */}
+      {featured && listed.length > 0 && (
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
+          {t("others")}
+        </Typography>
+      )}
+
       {listed.length === 0 ? (
         !featured && <Alert severity="info">{t("empty")}</Alert>
       ) : (
-        <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
+        <Stack component="ul" spacing={featured ? 1.5 : 2} sx={{ listStyle: "none", p: 0, m: 0 }}>
           {listed.map((event, index) => (
             /* Each card rises into place in reading order and lifts under a pointer — CSS
                only, and none of it for a reader who asked for less motion (`theme/motion.ts`). */
@@ -128,7 +136,7 @@ export default async function EventsPage({ params }: Props) {
                     {event.title}
                   </Typography>
 
-                  {event.excerpt && (
+                  {event.excerpt && !featured && (
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                       {event.excerpt}
                     </Typography>
