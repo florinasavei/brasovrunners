@@ -92,6 +92,9 @@ export default function RichTextEditor({
     imageNoAltOne: string;
     imageNoAltMany: string;
     imageFromGallery: string;
+    /** The two words on the buttons themselves; the long labels are their accessible names. */
+    imageShort: string;
+    imageFromGalleryShort: string;
     imageGalleryLoading: string;
     imageGalleryEmpty: string;
     imageGalleryClose: string;
@@ -344,9 +347,11 @@ export default function RichTextEditor({
               )
             }
           />
+          {/* Words, not glyphs: the picture emoji rendered as a broken box on the owner's
+              machine (2026-09-18), and two of them side by side read as two broken boxes. */}
           <Control
             label={imageState === "uploading" ? labels.imageUploading : labels.image}
-            text="🖼"
+            text={labels.imageShort}
             active={false}
             onClick={() => fileInputRef.current?.click()}
           />
@@ -363,7 +368,7 @@ export default function RichTextEditor({
           />
           <Control
             label={labels.imageFromGallery}
-            text="🖼…"
+            text={labels.imageFromGalleryShort}
             active={gallery !== null}
             onClick={() => void openGallery()}
           />

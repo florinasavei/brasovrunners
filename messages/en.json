@@ -795,6 +795,8 @@
       "imageRemove": "Remove the picture",
       "imageDone": "Done",
       "imageFromGallery": "Choose a picture already uploaded",
+      "imageShort": "Picture",
+      "imageFromGalleryShort": "From gallery",
       "imageGalleryLoading": "Loading the pictures…",
       "imageGalleryEmpty": "No picture has been uploaded yet.",
       "imageNoAltOne": "One picture has no alt text — click the picture to write it.",

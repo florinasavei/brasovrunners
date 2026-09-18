@@ -795,6 +795,8 @@
       "imageRemove": "Șterge imaginea",
       "imageDone": "Gata",
       "imageFromGallery": "Alege o imagine deja încărcată",
+      "imageShort": "Imagine",
+      "imageFromGalleryShort": "Din galerie",
       "imageGalleryLoading": "Se încarcă imaginile…",
       "imageGalleryEmpty": "Nu există nicio imagine încărcată încă.",
       "imageNoAltOne": "O imagine nu are text alternativ — apasă pe imagine ca să-l scrii.",
