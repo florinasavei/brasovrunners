@@ -7,19 +7,17 @@
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
 
-## Current mode: M1 complete in code, QA deployed
+## Current mode: production is live, the club is finishing its accounts
 
 M1 — event pages, the full registration lifecycle, staff sign-in, legal document versioning,
-transactional email and a registrations backoffice — exists and is tested. **QA now runs on a
-real host**: a Neon project in Frankfurt and a Vercel project on its provider-assigned
-hostname, serving the seeded events with a reachable database, and the participant journey can
-now be walked there end to end because every environment but production carries clearly marked
-sample legal text (`DECISIONS.md` §29). What is left is still not application code: DNS for the
-club's `.com`, bought on 2026-09-16 — a `.ro` follows a year later, both alive at once
-(`DECISIONS.md` §55) — a Mailgun sending domain verified on it, a production Zitadel application,
-and the club's *approved* privacy notice and declaration text. Both halves of the production
-topology exist. See "What is deployed" below and `DECISIONS.md` §26–§30 and §55 for what
-changed to get here.
+transactional email, a registrations backoffice, and since 2026-09-18 the race-day desk, a
+photo gallery on R2, recurring events and a rich-text event description — exists and is
+tested. **Production serves the club's `.com`** (first deployment 2026-09-17, `BR-V1.34`;
+`BR-V1.35` released 2026-09-18) and **QA serves its `qa.` subdomain**, each on its own
+Neon project in Frankfurt, each with staff sign-in through Zitadel; every environment but
+production carries clearly marked sample legal text (`DECISIONS.md` §29), so the participant
+journey can be walked on QA end to end. What is left is not application code — it is the list
+under "Still owed" below, and it is also `/admin/tasks`, which reads it from the system.
 
 [`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced — Romanian event pages
 only, no registration, no email, no login — and is now a historical scope document rather than
@@ -264,7 +262,7 @@ busiest day every message queued after the cap was thrown away (`DECISIONS.md` �
 shows the volume against the allowance before a window opens, and explains every configuration
 enum rather than only reporting its value (§41).
 
-**947 unit and integration tests, 132 end-to-end runs (66 per viewport project), and five
+**1004 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
@@ -272,25 +270,46 @@ single-connection database.
 
 **A photo gallery, on R2.** Albums with photos shrunk in the browser and re-encoded on the
 server to two WebP variants (no original, no EXIF), stored through the §17 adapter —
-`STORAGE_MODE` derives `local`/`fake`/`r2`/`unconfigured` from the five `R2_*` variables
-(`SETUP.md` §32 is the bucket procedure). Public `/galerie`; "Galerie" in the nav while an
-album is published (BR-REQ-054-01, `DECISIONS.md` §66).
+`STORAGE_MODE` derives `local`/`fake`/`r2`/`unconfigured` from the five `R2_*` variables.
+The bucket exists since 2026-09-18 and both deployed environments have the variables
+(`SETUP.md` §32). Public `/galerie`; "Galerie" in the nav while an album is published
+(BR-REQ-054-01, `DECISIONS.md` §66).
 
-Not built: the rest of the CMS — articles, a media library for other content, captions and the
-Tiptap image node (M5) — and what M2–M4 name (multi-distance races, one bib per race across
-distances, results, runner profiles). Per-event race numbers and the printed sheet, recurring
-events and the gallery are M1 since 2026-09-17 (`DECISIONS.md` §64–§66).
+**The race-day desk** (`/admin/checkin`, "Ziua cursei"; `DECISIONS.md` §67). Every staff role,
+on a phone: scan a runner's QR or type a name, a number or the code; mark them here; confirm a
+pending registration on a paper declaration the participant signed (recorded under the
+volunteer's name); give a waiting-list entry a free place; type a number; enter a walk-in with
+the fast track. Nothing at the desk places anybody past capacity. Every confirmation mints
+`registrations.checkin_code`; the confirmation email carries the code and a hosted QR;
+participants can say "I am here" from their own link from the day before. `/admin/guide`
+explains the platform per role, volunteers first; `SETUP.md` §34 is the volunteer-account
+procedure.
 
-**What is deployed.** QA, plus a production Vercel project and a production Neon project that
-are configured and have never served a request — `main` is sixty commits behind `qa`, so the
-first production deployment *is* the `qa → main` release PR (`docs/RUNBOOKS.md` § The first
-production deployment). None of what remains is application code. A Neon project in
-Frankfurt holds the migrated schema and the seeded events; a Vercel project tracking `qa`
-serves them on its provider-assigned hostname, with `/api/health` reporting the database
-reachable. Its exact hostname lives in `SETUP.md` §26 and nowhere else, and `APP_BASE_URL` is
-the only thing that knows it. **Staff sign-in works there**: a Zitadel tenant exists, QA runs
-`STAFF_AUTH_MODE=provider`, and an organizer signs in with a real account gated by the
-`staff_users` allowlist. Email is still `capture`, so nothing transmits.
+**The event editor asks for what organizers think in** (`DECISIONS.md` §64, §70, §71): a date
+and a 24-hour time; a duration in minutes rather than an end; a gun time only on a race; a full
+description per language in the §11.3 rich-text editor; a Strava event link and a YouTube film;
+recurrence — cadence, days of the week, weeks — on the creation form, with the events list
+publishing a whole series at once.
+
+**The database gets to sleep** (`DECISIONS.md` §68). A request that queues an email drains the
+outbox after its own response; the external monitors run every fifteen minutes by day and
+hourly at night, Romania time, because Neon's free month is 100 CU-hours and a five-minute
+pinger spends 180. `/devs` shows the month's figure with `NEON_API_KEY` (`SETUP.md` §33).
+
+Not built: the rest of the CMS — articles, the media library for other content, captions and
+the Tiptap **image node** (the owner's next ask: "soon I can add pictures" — it goes on top of
+the gallery's storage, per §11.3) — and what M2–M4 name (multi-distance races, one bib per race
+across distances, results, runner profiles). A custom domain for the bucket
+(`media.<domain>`) is optional and undone.
+
+**What is deployed.** Production on the club's `.com` and QA on its `qa.` subdomain,
+each a Vercel project (`fra1`) over its own Neon project (Frankfurt), sharing nothing.
+Production tracks `main` and QA tracks `qa`; a release is the `qa → main` PR, whose merge
+fires the gated migration workflow and whose build waits for that migration
+(`docs/RUNBOOKS.md` § Deploy a release). The hostnames live in `SETUP.md` §26 and nowhere
+else; `APP_BASE_URL` is the only thing that knows them. **Staff sign-in works on QA** through
+the QA Zitadel application; production has no Zitadel application yet and runs
+`STAFF_AUTH_MODE=disabled`. Email is still `capture` everywhere, so nothing transmits.
 
 Two settings that are not obvious and cost an afternoon between them: the Zitadel application
 needs **"Include user's profile info in the ID Token"** enabled, or the ID token carries no
@@ -298,15 +317,24 @@ needs **"Include user's profile info in the ID Token"** enabled, or the ID token
 and the first Administrator is a `staff_users` row inserted by hand, because the screen that
 invites people is itself behind the sign-in it would be granting.
 
-**Still owed, all of it account creation or a decision rather than code.** The DNS records for
-the club's `.com`, bought on 2026-09-16 (`yarn domain:bind` prints them); a Mailgun sending domain
-verified on it; a production Zitadel application and the two production monitors on the pinger;
-the `qa → main` release PR that is the first production deployment; and the club's *approved*
-privacy notice, terms and declaration text, which replace the sample versions through a migration
-(`docs/RUNBOOKS.md` § Legal document version) and without which production correctly refuses
-every registration. The production Vercel and Neon projects exist, track `main`, run in
-Frankfurt, and share nothing with QA — not a database, not a secret. `SETUP.md` §25–§26 and §30
-and `docs/RUNBOOKS.md` are the procedures; §30 is the checklist, walked on 2026-09-16.
+**Still owed, all of it account creation or a decision rather than code** (as of 2026-09-18;
+`/admin/tasks` shows the same list with the steps, read from the system):
+
+1. **cron-job.org monitors** for production — four jobs, day/night, and QA hourly (`SETUP.md`
+   §26). Until then production expires holds only when a request happens to evaluate them, and
+   `/api/health` reads `degraded`.
+2. **Mailgun sending domain** on the club's `.com`: DNS records at ROMARG, verification, then
+   `EMAIL_DELIVERY_MODE=live` on production. Until then no participant receives an email.
+3. **Production Zitadel application** and the first `staff_users` row (`SETUP.md` §25, §30),
+   then `STAFF_AUTH_MODE=provider` on production. Until then nobody can sign in to production.
+4. **The club's approved legal texts** — privacy notice, terms, declaration — written and
+   approved in `/admin/legal` on production. Until then production correctly refuses every
+   registration.
+5. **Volunteer accounts** for race day (`SETUP.md` §34) and a rehearsal on QA.
+6. Optional: `NEON_API_KEY` + `NEON_PROJECT_ID` on both Vercel projects (`SETUP.md` §33); a
+   custom domain for the R2 bucket; the retention and support decisions of `SETUP.md` §30.
+
+Open pull requests are listed on GitHub; the convention below says who merges them.
 
 ## Stack and providers, as decided
 
@@ -315,12 +343,12 @@ and `docs/RUNBOOKS.md` are the procedures; §30 is the checklist, walked on 2026
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | QA project live, migrated and seeded; production project created 2026-09-16, never migrated — the first migration is the gated workflow run after the release PR |
-| Hosting | Vercel Hobby, function region `fra1`; one project per environment | both projects exist; QA tracks `qa` and is deployed, production tracks `main` and has never deployed. QA's functions sat in `iad1` until 2026-09-16 — `SETUP.md` §26 |
-| Jobs | No in-process interval — serverless has no process for one. An external HTTP pinger POSTs both endpoints every five minutes with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | live in QA since `BR-V1.18`. It had never run before that: `QA_APP_BASE_URL` and `QA_JOB_SECRET` did not exist, so every run logged "qa is not configured; skipping" and exited green. Actions alone measured ~2-hour gaps, not five minutes — `SETUP.md` §26 has the numbers and the pinger setup |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated (schema `0028` on QA, `0027` on production after `BR-V1.35`); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |
+| Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
+| Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | QA monitors live since `BR-V1.18` (to be moved to hourly); production monitors not yet created — `SETUP.md` §26 has the schedules |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
-| Storage | Documented: R2 behind the four-method adapter in `AGENTS.md` §17. Direction: `public/` until a non-developer uploads | deferred |
+| Storage | Cloudflare R2 behind the four-method adapter in `AGENTS.md` §17; one bucket, per-environment prefixes; public reads on the `r2.dev` address | live: bucket `brasovrunners-media` created 2026-09-18, variables on both Vercel projects (`SETUP.md` §32) |
 | Spam | Honeypot + timing check on registration submission, built. Cloudflare Turnstile only if that fails — it is a processor the unapproved privacy notice must name | built (honeypot + timing); Turnstile not built |
 
 **Before installing anything:** verify the current API against the library's documentation
@@ -333,9 +361,12 @@ than any training data can be trusted on. Pin exact versions in `package.json`.
   change.** Prefer nothing over a dependency, the platform over a library, and what is already
   installed over something new. Server Components by default; a client island has to earn it.
   The header and the landing page are what every visitor pays for. `AGENTS.md` §1.5.
-- **Do not commit or push.** Stage changes and hand back a suggested message; the owner
-  commits. Creating a branch when asked is fine.
-- Branch from `qa`, PR into `qa`. `main` is production. `SETUP.md` § Contributing.
+- **Commit on a feature branch, push it, open the PR into `qa`; never push to `qa` or `main`.**
+  The owner merges pull requests and said so on 2026-09-17 ("commit and push for me and create
+  PRs"); before that the rule was to stage and hand back a message. A release is the `qa →
+  main` PR the owner merges; approving the production migration run and redeploying after it
+  are authorised ("approve / deploy prod for me").
+- Branch from `qa` with `--no-track`, PR into `qa`. `main` is production. `SETUP.md` § Contributing.
 - Windows development machine, Linux CI. Anything with paths or line endings: test both.
 - Tests are named by the `BR-REQ-*` they cover, or by the `AGENTS.md` section for cross-cutting
   mechanisms (jobs, health). `WEEKEND.md` records the six that mattered for the original pilot.

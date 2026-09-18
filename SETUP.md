@@ -1495,8 +1495,9 @@ finished when it is on production, not when its last pull request merges.
 
 ## 30. Production readiness checklist
 
-Walked on 2026-09-16 (`DECISIONS.md` §55). A ticked row names its evidence; an unticked one
-names who owes it. Walk it again before the release PR, and tick nothing from memory.
+Walked on 2026-09-16 (`DECISIONS.md` §55) and again on 2026-09-18, after the first two
+production releases. A ticked row names its evidence; an unticked one names who owes it. Tick
+nothing from memory.
 
 Repository/delivery:
 
@@ -1504,11 +1505,14 @@ Repository/delivery:
       strict on both branches.
 - [x] `main` protected — same rule, and it accepts releases from `qa` only.
 - [x] CI required — `docs-check` (`yarn check`) on both branches.
-- [ ] Release PR process rehearsed — once, `qa → main` PR #7, before M1 existed. The next one is
-      the first production deployment (`docs/RUNBOOKS.md` § The first production deployment).
+- [x] Release PR process rehearsed — `qa → main` #45 (2026-09-17, the first production
+      deployment) and #47 (2026-09-18): merge, the gated migration run approved, the build
+      that waited for it. One lesson from #47: the build times out after twenty minutes if the
+      migration is not approved by then, and is redeployed by hand once it is
+      (`docs/RUNBOOKS.md` § Deploy a release).
 - [ ] AI reviewer read-only permissions verified — not re-verified this walk.
 
-Application (true by test; `yarn check` runs 737 tests, `yarn test:e2e` 90, `yarn test:concurrency` 5):
+Application (true by test; `yarn check` runs 1004 tests, `yarn test:e2e` 140, `yarn test:concurrency` 5):
 
 - [x] Romanian/English flows — end-to-end, both viewports.
 - [x] MUI SSR/hydration/accessibility — end-to-end.
@@ -1528,16 +1532,19 @@ Providers:
 
 - [x] Separate QA/production Vercel projects — both exist, `fra1`, separate variables, separate
       secrets, separate Git production branches (2026-09-16).
-- [x] Separate QA/production Neon projects — both exist in `aws-eu-central-1`; production never
-      migrated yet (§25).
-- [ ] R2 resources — deferred (`AGENTS.md` §17); nothing uploads yet.
+- [x] Separate QA/production Neon projects — both exist in `aws-eu-central-1`, both migrated
+      by the gated workflow (§25). **Free plan, 100 CU-hours a month each**: the monitors must
+      run at the §26 cadences or the compute is suspended mid-month (`DECISIONS.md` §68).
+- [x] R2 resources — bucket `brasovrunners-media`, one account token, the five variables on
+      both Vercel projects (§32, 2026-09-18).
 - [ ] Mailgun production domain verified — needs the club's DNS. The account exists (2026-09-05),
       sandbox only.
 - [x] QA email restricted — `allowlist`, and `live` is refused outside production at startup
       (`tests/integration/notifications/modes.test.ts`).
 - [ ] Webhook/job secrets configured — QA: both. Production: `JOB_SECRET` set;
-      `MAILGUN_WEBHOOK_SIGNING_KEY` waits for the sending domain; the `PRODUCTION_*` repository
-      secrets and the two pinger monitors on deployment day (§26).
+      `MAILGUN_WEBHOOK_SIGNING_KEY` waits for the sending domain; **the production monitors on
+      cron-job.org are not created yet** (four jobs, day/night, §26 — the owner, tonight), and
+      the QA pair is still at five minutes and must move to hourly.
 - [x] Production config rejects unsafe resources/modes — the development switcher
       (`tests/unit/config/env.test.ts`), live delivery anywhere else
       (`notifications/modes.test.ts`), test registrations, twice
@@ -1552,8 +1559,12 @@ Operations/privacy:
       the club's decision.
 - [ ] Participant/profile/photo support process — the club.
 - [ ] Backups and restore test — Neon's own restore, not rehearsed (§25).
-- [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; failure alerting from the pinger
-      to a real inbox is not confirmed.
+- [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; `/devs` shows the database's
+      CU-hours once `NEON_API_KEY` is set (§33); failure alerting from the pinger to a real
+      inbox is not confirmed.
+- [ ] Production staff sign-in — no production Zitadel application yet, `STAFF_AUTH_MODE=disabled`
+      there; §25 and the Zitadel runbook, then the first `staff_users` row by hand.
+- [ ] Volunteer accounts for race day — §34; and a rehearsal on QA with test registrations.
 - [ ] Ownership/recovery/handover documented — §2 and §31 exist; the repository, Vercel, Neon,
       Mailgun and Zitadel accounts are the maintainer's personal ones (BR-BUS-101).
 - [x] Domain renewal date and owner recorded — the `.com` at ROMARG, registered 2026-09-16 for
