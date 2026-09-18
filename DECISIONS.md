@@ -4655,3 +4655,49 @@ it move. Administrator only, because it names people. Reads through `countOccupi
 `computeOccupied`, so the panel and the public "free places" cannot disagree.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 93. Decided — a dark scheme, chosen by the visitor or by the device (2026-09-18)
+
+**Status:** Decided and built. `theme/brand.ts` (`COLOR_DARK`), `theme/theme.ts`
+(`colorSchemes`), `layout.tsx` (`InitColorSchemeScript`), `shared/ui/ThemeModeToggle.tsx`,
+the header's lockup.
+
+"I need a dark theme switcher as well." MUI's own mechanism, nothing added: two colour
+schemes on the one theme, selected by `data-light` / `data-dark` on `<html>`, a script in the
+body that sets the attribute before the first paint from what the visitor chose (kept in
+`localStorage` under MUI's key) or, until they choose, from the device's setting; a button in
+the header beside the language that flips it, showing the mode it would switch *to*. The dark
+palette is the brand after dark, not an inversion: pure blue on near-black is 2.4:1, so the
+primary lifts to a lighter blue of the same hue, the paper is a warm grey rather than black,
+and every text-on-surface pair is asserted at AA in `brand.test.ts` exactly as the light ones
+are. The header shows the white lockup after dark, swapped by CSS on the same attribute so it
+changes with the scheme and never after it. `brand.ts` remains the only file with a hex in it.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 94. Decided — race numbers are drawn at random, and every bib can be seen before it is printed (2026-09-18)
+
+**Status:** Decided and built, reversing the order half of §65 and §87. `bibs.ts`
+(`pickBibNumber`), `bib-image.tsx`, `/api/admin/events/<id>/bibs/preview`, the event page;
+BR-REQ-038-01 criteria 1, 2 and 9.
+
+"The bibs must be generated randomly." They were the next number after the highest ever
+given — sequential, which tells everybody who registered first and hands the club's own
+runners the low numbers. Now a registration draws, the moment it is confirmed, a number at
+random from those never worn at the event: three digits while they last, four once most of
+the three-digit ones are gone, so a number stays readable on a shirt; a cancelled number is
+still taken, because reuse is how two people end up wearing 17. Drawn from the free set, not
+"draw until unused", which is slow exactly when the range is nearly full. Under the same lock
+as before; the unique constraint remains the backstop. The batch button numbers, at random,
+whatever was confirmed before §87. The audit row lists the numbers given rather than a range,
+because there is no range.
+
+"I should be able to preview and see bibs for each participant — a pretty bib, with our logo,
+participant name, race." Each numbered, real, confirmed registration is drawn as a picture on
+request — the lockup, the race and its date, the number in the club's blue as large as the
+card allows, the name — in a folded grid on the event page, Administrator only like the
+sheet, since a bib carries a name. Roboto Regular and Bold, the PDF's own files, are embedded
+in every picture `next/og` draws (§90's cards included), because Satori's fallback has one
+weight and a race number that is not bold is not a race number.
+
+Baseline `BR-V1.38-2026-09-18`.

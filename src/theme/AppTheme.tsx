@@ -40,7 +40,9 @@ export default function AppTheme({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ThemeProvider theme={active}>
+    // "system" until the visitor chooses; the choice lives in localStorage under MUI's own key
+    // and the script in the layout applies it before the first paint (§93).
+    <ThemeProvider theme={active} defaultMode="system">
       <CssBaseline />
       {/* Every rem on the site — MUI's own type scale included — follows the root size. */}
       {preview && preview.scale !== 100 && <GlobalStyles styles={{ html: { fontSize: `${preview.scale}%` } }} />}

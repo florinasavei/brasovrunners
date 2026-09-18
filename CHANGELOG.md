@@ -21,6 +21,8 @@ The evening's test on QA, and what it found.
 - **Shareable events.** An Open Graph card drawn from the event's facts on every event page, the site's card everywhere else, a square picture to post on Instagram, and Facebook / WhatsApp share links. **Icons** on the admin tabs, the facts and the flow (`@mui/icons-material`, pinned). §90.
 - **The flow in five steps** on the form and the event page; **every email on `/admin/emails`**; the events list's **⋮ menu**; **one place field** ("Meeting point link"); the Neon row says a **monthly cost**. §91.
 - **The queue panel** on the event page: places, holds, free, and the waiting list numbered in the order it is served. §92.
+- **A dark scheme**, switched in the header or by the device; the white lockup after dark. §93.
+- **Race numbers are drawn at random** (never reused) and **every bib can be previewed** as a picture on the event page — logo, race, number, name. The event type **filter** on the listing, and the calendar right under the featured event. §94, §89.
 - **Fixes.** The editor's picture buttons are words, not an emoji that rendered as a box. The repository documents' reads are statically traceable, so the deploy does not carry the whole project.
 
 ## BR-V1.37-2026-09-18

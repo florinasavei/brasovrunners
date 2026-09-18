@@ -411,6 +411,51 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               </form>
             )}
           </Stack>
+
+          {/* Every bib as it will print, one picture each, drawn on request (§94). */}
+          {bibs.length > 0 && (
+            <Box
+              component="details"
+              sx={{
+                mt: 2,
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 1,
+                px: 2,
+                "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert" },
+              }}
+            >
+              <Typography component="summary" variant="body2" sx={{ fontWeight: 600 }}>
+                {t("bibs.preview", { count: bibs.length })}
+              </Typography>
+              <Box
+                component="ul"
+                sx={{
+                  listStyle: "none",
+                  p: 0,
+                  m: 0,
+                  mb: 2,
+                  display: "grid",
+                  gap: 2,
+                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
+                }}
+              >
+                {bibs.map((bib) => (
+                  <Box component="li" key={bib.id}>
+                    <Box
+                      component="img"
+                      src={`/api/admin/events/${event.id}/bibs/preview?registration=${bib.id}&locale=${locale}`}
+                      alt={t("bibs.previewAlt", { number: bib.bibNumber, name: bib.registeredName })}
+                      width={900}
+                      height={600}
+                      loading="lazy"
+                      sx={{ width: "100%", height: "auto", display: "block", borderRadius: 1 }}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
         </Box>
       )}
 

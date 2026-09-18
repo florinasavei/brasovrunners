@@ -311,7 +311,8 @@ size is on `/admin/tasks` and `/devs`; the repository's `.md` files render at `/
 Then, the same evening (§89–§92): a month view on the listing; Open Graph cards drawn from the
 event, a square one for Instagram, share links; icons (`@mui/icons-material`, pinned, one file
 per glyph); the flow in five steps; every email on `/admin/emails`; the events list's ⋮ menu;
-one place field; the Neon row in dollars a month; the queue panel with the waiting list in order.
+one place field; the Neon row in dollars a month; the queue panel with the waiting list in order;
+a dark scheme (§93); race numbers drawn at random with a picture of every bib (§94).
 
 **The email people keep, the reminder, and after the race** (`DECISIONS.md` §81–§83).
 The confirmation and the reminder open with a bold facts line (date, time, meeting point),

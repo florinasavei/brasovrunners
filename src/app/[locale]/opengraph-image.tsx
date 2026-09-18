@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { env } from "@/shared/config/env";
 import { COLOR } from "@/theme/brand";
+import { brandFonts } from "@/theme/pdf/fonts";
 
 /**
  * The site's own share picture (`DECISIONS.md` §90), for every page without one of its own:
@@ -29,18 +30,18 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
           justifyContent: "space-between",
           padding: 64,
           background: `linear-gradient(135deg, ${COLOR.blueInk} 0%, ${COLOR.blue} 100%)`,
-          color: "#ffffff",
-          fontFamily: "Noto Sans, sans-serif",
+          color: COLOR.surface,
+          fontFamily: "Roboto, sans-serif",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <div style={{ width: 14, height: 44, background: COLOR.orange, borderRadius: 4 }} />
           <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: 6, textTransform: "uppercase" }}>{site("name")}</div>
         </div>
-        <div style={{ display: "flex", fontSize: 64, fontWeight: 800, lineHeight: 1.15 }}>{events("intro")}</div>
+        <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1.15 }}>{events("intro")}</div>
         <div style={{ display: "flex", fontSize: 26, fontWeight: 600, opacity: 0.9 }}>{host}</div>
       </div>
     ),
-    size,
+    { ...size, fonts: await brandFonts() },
   );
 }

@@ -20,12 +20,17 @@ import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
 import { monthRange, parseMonth } from "@/modules/events/domain/calendar";
+import { EVENT_TYPES } from "@/modules/events/domain/event-type";
+import { getPathname } from "@/i18n/navigation";
 import EventCalendar from "@/modules/events/ui/EventCalendar";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 
-type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ month?: string | string[] }> };
+type Props = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ month?: string | string[]; type?: string | string[] }>;
+};
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -43,11 +48,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam } = await searchParams;
+  const { month: monthParam, type: typeParam } = await searchParams;
+  // The type filter (§89): one of the closed set, or everything.
+  const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
+  const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
+  const query: Record<string, string> = type ? { type } : {};
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
   const t = await getTranslations("Events");
+  const tEvent = await getTranslations("Event");
   const tSite = await getTranslations("Site");
   // One timestamp for the whole page, so two cards cannot disagree about whether
   // registration has closed, or about where the line between past and upcoming falls.
@@ -61,7 +71,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // The month view (`DECISIONS.md` §89): the month the URL names, or this one.
   const month = parseMonth(monthParam, now, CLUB_TIME_ZONE);
   const range = monthRange(month, CLUB_TIME_ZONE);
-  const inMonth = await listPublishedEventsBetween(db, locale, range.from, range.to);
+  const inMonth = (await listPublishedEventsBetween(db, locale, range.from, range.to)).filter(
+    (event) => !type || event.type === type,
+  );
 
   /**
    * The club's lead event, shown in full above the list.
@@ -72,7 +84,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
    * emphasis.
    */
   const featured = upcoming.length > 0 && upcoming[0].featured ? upcoming[0] : undefined;
-  const listed = featured ? events.filter((event) => event.id !== featured.id) : events;
+  const listed = (featured ? events.filter((event) => event.id !== featured.id) : events).filter(
+    (event) => !type || event.type === type,
+  );
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
@@ -101,9 +115,30 @@ export default async function EventsPage({ params, searchParams }: Props) {
 
       {featured && <FeaturedEventHero event={featured} now={now} />}
 
+      {/* What kind: one chip per type, a link each, kept by the month links (§89). */}
+      <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", gap: 1, mt: 4 }}>
+        {[undefined, ...EVENT_TYPES].map((candidate) => {
+          const active = candidate === type;
+          return (
+            <Chip
+              key={candidate ?? "all"}
+              component="a"
+              // A string href: a component reference cannot cross into MUI's client component.
+              href={getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } })}
+              clickable
+              color={active ? "primary" : "default"}
+              variant={active ? "filled" : "outlined"}
+              label={candidate ? tEvent(`type.${candidate}`) : t("filter.all")}
+              // 44px tall (BR-REQ-041-01 criterion 6): a filter is a tap target like any other link.
+              sx={{ height: 44, borderRadius: 22, px: 0.5, fontSize: "0.9375rem" }}
+            />
+          );
+        })}
+      </Stack>
+
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
-      <Box sx={{ my: 4 }}>
-        <EventCalendar month={month} events={inMonth} now={now} />
+      <Box sx={{ mt: 2, mb: 4 }}>
+        <EventCalendar month={month} events={inMonth} now={now} query={query} />
       </Box>
 
       {/*

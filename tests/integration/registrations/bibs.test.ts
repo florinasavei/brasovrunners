@@ -5,7 +5,7 @@ import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationKind, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { assignBibNumbers, listBibs, nextBibNumber } from "@/modules/registrations/bibs";
+import { assignBibNumbers, BIB_RANGE, listBibs, pickBibNumber } from "@/modules/registrations/bibs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -76,7 +76,7 @@ describe("BR-REQ-038-01 race numbers", () => {
   const numbered = () =>
     db.select({ name: registrations.registeredName, bib: registrations.bibNumber }).from(registrations).orderBy(asc(registrations.bibNumber), asc(registrations.registeredName));
 
-  it("numbers confirmed registrations in order of confirmation, and only those", async () => {
+  it("numbers confirmed registrations at random, and only those", async () => {
     await register("Cel de-al treilea", { confirmedAt: new Date("2026-09-03T10:00:00Z") });
     await register("Prima", { confirmedAt: new Date("2026-09-01T10:00:00Z") });
     await register("A doua", { confirmedAt: new Date("2026-09-02T10:00:00Z") });
@@ -87,11 +87,13 @@ describe("BR-REQ-038-01 race numbers", () => {
     expect(result).toEqual({ assigned: 3, total: 3 });
 
     const rows = await numbered();
-    expect(rows.filter((row) => row.bib !== null).map((row) => `${row.bib} ${row.name}`)).toEqual([
-      "1 Prima",
-      "2 A doua",
-      "3 Cel de-al treilea",
-    ]);
+    const given = rows.filter((row) => row.bib !== null);
+    expect(given.map((row) => row.name).sort()).toEqual(["A doua", "Cel de-al treilea", "Prima"]);
+    // Three distinct numbers, three digits at most (§94).
+    const numbers = given.map((row) => row.bib as number);
+    expect(new Set(numbers).size).toBe(3);
+    for (const n of numbers) expect(n).toBeGreaterThanOrEqual(1);
+    for (const n of numbers) expect(n).toBeLessThanOrEqual(BIB_RANGE.threeDigits);
     expect(rows.find((row) => row.name === "În așteptare")?.bib).toBeNull();
     expect(rows.find((row) => row.name === "De probă")?.bib).toBeNull();
 
@@ -100,18 +102,28 @@ describe("BR-REQ-038-01 race numbers", () => {
     expect(trail).toHaveLength(1);
     expect(trail[0].action).toBe("registration.bibs_assigned");
     expect(trail[0].participantId).toBeNull();
-    expect(trail[0].metadataJson).toEqual({ assigned: 3, from: 1, to: 3 });
+    expect(trail[0].metadataJson).toEqual({ assigned: 3, numbers: [...numbers].sort((x, y) => x - y) });
   });
 
-  it("hands out the next number after the highest ever given, which is what confirmation uses (§87)", async () => {
+  it("draws a number never worn at the event, which is what confirmation uses (§87, §94)", async () => {
     await register("Ana");
     await register("Ion");
     await assignBibNumbers(db, { actor: admin, eventId });
-    expect(await nextBibNumber(db, eventId)).toBe(3);
-    // A cancelled number stays taken: the next one is still after it.
+    const worn = new Set((await listBibs(db, eventId)).map((row) => row.bibNumber));
+    // A cancelled number stays taken.
     const cancelled = await register("Maria", { status: "CANCELLED" });
     await db.update(registrations).set({ bibNumber: 9 }).where(eq(registrations.id, cancelled.id));
-    expect(await nextBibNumber(db, eventId)).toBe(10);
+    worn.add(9);
+    for (let i = 0; i < 50; i += 1) {
+      const n = await pickBibNumber(db, eventId);
+      expect(worn.has(n)).toBe(false);
+      expect(n).toBeGreaterThanOrEqual(1);
+      expect(n).toBeLessThanOrEqual(BIB_RANGE.threeDigits);
+    }
+    // A shared `taken` set never draws the same number twice inside one batch.
+    const taken = new Set<number>();
+    const batch = await Promise.all([1, 2, 3, 4, 5].map(() => pickBibNumber(db, eventId, taken)));
+    expect(new Set(batch).size).toBe(5);
   });
 
   it("never renumbers, and a later batch continues after the first", async () => {
@@ -123,16 +135,14 @@ describe("BR-REQ-038-01 race numbers", () => {
     // disturbs the numbers already printed. Order among the new ones is still by confirmation.
     await register("Târzie", { confirmedAt: new Date("2026-09-20T10:00:00Z") });
     await register("Timpurie dar întârziată", { confirmedAt: new Date("2026-08-01T10:00:00Z") });
+    const before = new Map((await numbered()).map((row) => [row.name, row.bib]));
     const second = await assignBibNumbers(db, { actor: admin, eventId });
     expect(second).toEqual({ assigned: 2, total: 4 });
 
     const rows = await numbered();
-    expect(rows.map((row) => `${row.bib} ${row.name}`)).toEqual([
-      "1 Prima",
-      "2 A doua",
-      "3 Timpurie dar întârziată",
-      "4 Târzie",
-    ]);
+    expect(rows.find((row) => row.name === "Prima")?.bib).toBe(before.get("Prima"));
+    expect(rows.find((row) => row.name === "A doua")?.bib).toBe(before.get("A doua"));
+    expect(new Set(rows.map((row) => row.bib)).size).toBe(4);
 
     // Nothing to do is not an error, and writes no audit row.
     expect(await assignBibNumbers(db, { actor: admin, eventId })).toEqual({ assigned: 0, total: 4 });
@@ -145,18 +155,24 @@ describe("BR-REQ-038-01 race numbers", () => {
     await assignBibNumbers(db, { actor: admin, eventId });
     await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, cancelled.id));
 
-    expect((await listBibs(db, eventId)).map((row) => `${row.bibNumber} ${row.registeredName}`)).toEqual(["2 Rămâne"]);
-    // The number stays with the row: nobody else can be given 1.
-    await register("Nou");
+    const cancelledNumber = (await db.select().from(registrations).where(eq(registrations.id, cancelled.id)))[0].bibNumber;
+    expect((await listBibs(db, eventId)).map((row) => row.registeredName)).toEqual(["Rămâne"]);
+    // The number stays with the row: nobody else can be given it.
+    for (let i = 0; i < 20; i += 1) await register(`Nou ${i}`);
     await assignBibNumbers(db, { actor: admin, eventId });
-    expect((await listBibs(db, eventId)).map((row) => row.bibNumber)).toEqual([2, 3]);
+    const sheet = await listBibs(db, eventId);
+    expect(sheet).toHaveLength(21);
+    expect(sheet.map((row) => row.bibNumber)).not.toContain(cancelledNumber);
   });
 
   it("lists a range, for a reprint or the late batch", async () => {
     for (const name of ["a", "b", "c", "d", "e"]) await register(name);
     await assignBibNumbers(db, { actor: admin, eventId });
-    expect((await listBibs(db, eventId, { from: 2, to: 4 })).map((row) => row.bibNumber)).toEqual([2, 3, 4]);
-    expect((await listBibs(db, eventId, { from: 5 })).map((row) => row.bibNumber)).toEqual([5]);
+    const all = (await listBibs(db, eventId)).map((row) => row.bibNumber);
+    expect(all).toEqual([...all].sort((x, y) => x - y));
+    const [lowest, second] = all;
+    expect((await listBibs(db, eventId, { from: lowest, to: second })).map((row) => row.bibNumber)).toEqual([lowest, second]);
+    expect((await listBibs(db, eventId, { from: all[4] })).map((row) => row.bibNumber)).toEqual([all[4]]);
   });
 
   it("is the Administrator's, and the database refuses a duplicate number at one event", async () => {
@@ -165,9 +181,10 @@ describe("BR-REQ-038-01 race numbers", () => {
     expect(isDomainError(refused) && refused.code).toBe("FORBIDDEN");
 
     await assignBibNumbers(db, { actor: admin, eventId });
+    const [{ bibNumber: worn }] = await listBibs(db, eventId);
     const second = await register("y");
     await expectViolation(
-      db.update(registrations).set({ bibNumber: 1 }).where(eq(registrations.id, second.id)),
+      db.update(registrations).set({ bibNumber: worn }).where(eq(registrations.id, second.id)),
       { code: SQLSTATE.UNIQUE_VIOLATION, constraint: "registrations_event_bib_number_unique" },
     );
   });

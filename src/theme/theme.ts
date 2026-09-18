@@ -1,5 +1,5 @@
 import { createTheme } from "@mui/material/styles";
-import { COLOR, FONT } from "./brand";
+import { COLOR, COLOR_DARK, FONT } from "./brand";
 import { KEYFRAMES } from "./motion";
 
 /**
@@ -21,22 +21,37 @@ export type ThemeOptions = { display: string; body: string; radius: number };
 export const DEFAULT_THEME_OPTIONS: ThemeOptions = { display: FONT.display, body: FONT.body, radius: 10 };
 
 export const buildTheme = (options: ThemeOptions) => createTheme({
-  // CSS variables avoid the server/client flicker MUI documents for the App Router.
-  cssVariables: true,
+  // CSS variables avoid the server/client flicker MUI documents for the App Router. The
+  // scheme is chosen by `data-light` / `data-dark` on <html>, which `InitColorSchemeScript`
+  // sets before paint from what the visitor chose or what their device says (§93).
+  cssVariables: { colorSchemeSelector: "data" },
   modularCssLayers: true,
-  palette: {
-    primary: {
-      main: COLOR.blue,
-      // Hover and pressed states. Not a contrast fix: the club's blue is 8.22:1 on the page
-      // background and passes AA as text on its own — `tests/unit/theme/brand.test.ts` asserts
-      // that rather than assuming it.
-      dark: COLOR.blueInk,
-      contrastText: COLOR.paper,
+  colorSchemes: {
+    light: {
+      palette: {
+        primary: {
+          main: COLOR.blue,
+          // Hover and pressed states. Not a contrast fix: the club's blue is 8.22:1 on the page
+          // background and passes AA as text on its own — `tests/unit/theme/brand.test.ts`
+          // asserts that rather than assuming it.
+          dark: COLOR.blueInk,
+          contrastText: COLOR.paper,
+        },
+        secondary: { main: COLOR.orange, contrastText: COLOR.ink },
+        background: { default: COLOR.paper, paper: COLOR.surface },
+        text: { primary: COLOR.ink, secondary: COLOR.inkMuted },
+        divider: COLOR.line,
+      },
     },
-    secondary: { main: COLOR.orange, contrastText: COLOR.ink },
-    background: { default: COLOR.paper, paper: COLOR.surface },
-    text: { primary: COLOR.ink, secondary: COLOR.inkMuted },
-    divider: COLOR.line,
+    dark: {
+      palette: {
+        primary: { main: COLOR_DARK.blue, dark: COLOR_DARK.blueInk, contrastText: COLOR_DARK.paper },
+        secondary: { main: COLOR.orange, contrastText: COLOR.ink },
+        background: { default: COLOR_DARK.paper, paper: COLOR_DARK.surface },
+        text: { primary: COLOR_DARK.ink, secondary: COLOR_DARK.inkMuted },
+        divider: COLOR_DARK.line,
+      },
+    },
   },
   typography: {
     // Provided by next/font in the locale layout; latin-ext covers ș, ț, ă, â, î.

@@ -105,7 +105,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
               srcDoc={html}
               sandbox=""
               title={t(`emails.types.${messageType}`)}
-              sx={{ width: "100%", height: 620, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "#fff", mb: 2 }}
+              sx={{ width: "100%", height: 620, border: 1, borderColor: "divider", borderRadius: 1, mb: 2 }}
             />
           </Box>
         );

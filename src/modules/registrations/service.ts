@@ -11,7 +11,7 @@ import type { Database, Transaction } from "@/db/types";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
-import { nextBibNumber } from "./bibs";
+import { pickBibNumber } from "./bibs";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -689,7 +689,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
         checkinCode: current.checkinCode ?? newCheckinCode(),
         // The race number, at the moment the place is certain (§87): under the event lock
         // held above. A test registration wears none, as in the batch assignment.
-        bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await nextBibNumber(tx, current.eventId) : null),
+        bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await pickBibNumber(tx, current.eventId) : null),
       },
       now,
     });
@@ -766,7 +766,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       confirmedAt: now,
       holdExpiresAt: null,
       checkinCode: current.checkinCode ?? newCheckinCode(),
-      bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await nextBibNumber(tx, current.eventId) : null),
+      bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await pickBibNumber(tx, current.eventId) : null),
     },
     now,
   });

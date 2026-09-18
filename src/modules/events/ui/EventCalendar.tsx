@@ -26,10 +26,13 @@ export default async function EventCalendar({
   month,
   events,
   now,
+  query = {},
 }: {
   month: YearMonth;
   events: PublicEvent[];
   now: Date;
+  /** Other query parameters the month links keep — the type filter (§89). */
+  query?: Record<string, string>;
 }) {
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
@@ -92,7 +95,7 @@ export default async function EventCalendar({
   const monthLink = (target: YearMonth, label: string, icon: ReactNode) => (
     <IconButton
       component="a"
-      href={getPathname({ locale, href: { pathname: "/events", query: { month: monthParam(target) } } })}
+      href={getPathname({ locale, href: { pathname: "/events", query: { ...query, month: monthParam(target) } } })}
       aria-label={label}
       sx={{ minHeight: 44, minWidth: 44 }}
     >
@@ -113,7 +116,7 @@ export default async function EventCalendar({
         </Typography>
         <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
           {monthLink(previous, t("calendar.previous"), <ChevronLeftIcon />)}
-          <Link href={{ pathname: "/events" }} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+          <Link href={{ pathname: "/events", query }} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
             {t("calendar.today")}
           </Link>
           {monthLink(next, t("calendar.next"), <ChevronRightIcon />)}

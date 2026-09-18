@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   if (!known || !event) return new Response("Not found", { status: 404 });
   const shape: ShareShape = new URL(request.url).searchParams.get("shape") === "og" ? "og" : "square";
   const t = await getTranslations({ locale: known, namespace: "Event" });
-  const image = eventShareImage(event, known, shape, {
+  const image = await eventShareImage(event, known, shape, {
     type: t(`type.${event.type}`),
     cancelled: t("cancelled"),
     distanceKm: (km) => t("distanceKm", { km }),

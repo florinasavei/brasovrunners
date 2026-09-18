@@ -19,6 +19,8 @@
       "title": "Site de test ({environment}) — acesta nu este site-ul real al clubului.",
       "body": "Tot ce vezi aici sunt date de probă, pentru încercarea site-ului, și pot fi șterse oricând. Te rugăm să nu îl folosești pentru a te înscrie la un eveniment real. Site-ul oficial al clubului urmează, la adresa lui proprie."
     },
+    "themeDark": "Temă întunecată",
+    "themeLight": "Temă luminoasă",
     "skipToContent": "Sari la conținut",
     "nav": {
       "label": "Navigare principală",
@@ -42,6 +44,10 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Alte evenimente ({count})",
+    "filter": {
+      "label": "Tipul evenimentului",
+      "all": "Toate"
+    },
     "calendar": {
       "previous": "Luna anterioară",
       "next": "Luna următoare",
@@ -336,7 +342,7 @@
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
-      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește un număr liber, ales la întâmplare. Numerele deja date rămân."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -961,10 +967,12 @@
       "from": "De la",
       "to": "Până la",
       "download": "Descarcă foaia (PDF)",
+      "preview": "Vezi numerele ({count})",
+      "previewAlt": "Numărul {number} — {name}",
       "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
-      "helpNone": "Niciun număr alocat încă. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
-      "helpSome": "{total} numere alocate. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
+      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
+      "helpSome": "{total} numere date. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",

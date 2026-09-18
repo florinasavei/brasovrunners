@@ -20,7 +20,7 @@ import type { BibRow } from "./bibs";
  */
 
 export type BibSheetInput = {
-  rows: readonly BibRow[];
+  rows: readonly Pick<BibRow, "bibNumber" | "registeredName">[];
   eventTitle: string;
   /** Already formatted in the event's zone and the sheet's language. */
   eventDate: string;
@@ -77,7 +77,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     doc.on("error", reject);
   });
 
-  const drawBib = (row: BibRow, top: number) => {
+  const drawBib = (row: Pick<BibRow, "bibNumber" | "registeredName">, top: number) => {
     const left = MARGIN;
     // The bib's edge, thin, so the cut is guided on all four sides.
     doc.rect(left, top, BIB.width, BIB.height).lineWidth(0.75).strokeColor(COLOR.line).stroke();

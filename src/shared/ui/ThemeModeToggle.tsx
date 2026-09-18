@@ -1,0 +1,44 @@
+"use client";
+
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import IconButton from "@mui/material/IconButton";
+import { useColorScheme } from "@mui/material/styles";
+import { useTranslations } from "next-intl";
+import { useSyncExternalStore } from "react";
+
+/**
+ * Light or dark, from the header (`DECISIONS.md` §93).
+ *
+ * `useColorScheme` is MUI's own: the choice is kept in `localStorage`, applied before paint by
+ * `InitColorSchemeScript` in the layout, and "system" — the device's setting — until somebody
+ * presses this. The button shows the mode it would switch *to*, which is what every phone's
+ * quick-settings tile does. Until mounted the mode is unknown on the client, so the same-sized
+ * button renders disabled rather than nothing, and the header does not shift.
+ */
+export default function ThemeModeToggle() {
+  const t = useTranslations("Site");
+  const { mode, systemMode, setMode } = useColorScheme();
+  // "Mounted" without an effect: the server snapshot is false, the client's is true.
+  const mounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+
+  const resolved = mode === "system" ? systemMode : mode;
+  const dark = resolved === "dark";
+
+  return (
+    <IconButton
+      aria-label={mounted ? (dark ? t("themeLight") : t("themeDark")) : t("themeDark")}
+      title={mounted ? (dark ? t("themeLight") : t("themeDark")) : undefined}
+      disabled={!mounted}
+      onClick={() => setMode(dark ? "light" : "dark")}
+      size="small"
+      sx={{ minHeight: 44, minWidth: 44, color: "text.secondary" }}
+    >
+      {mounted && dark ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+    </IconButton>
+  );
+}

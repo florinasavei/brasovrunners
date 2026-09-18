@@ -20,7 +20,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   const event = known ? await findPublishedEventBySlug(getDb(), known, slug) : undefined;
   if (!known || !event) return new Response("Not found", { status: 404 });
   const t = await getTranslations({ locale: known, namespace: "Event" });
-  return eventShareImage(event, known, "og", {
+  return await eventShareImage(event, known, "og", {
     type: t(`type.${event.type}`),
     cancelled: t("cancelled"),
     distanceKm: (km) => t("distanceKm", { km }),

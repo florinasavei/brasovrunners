@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { COLOR } from "@/theme/brand";
+import { brandFonts } from "@/theme/pdf/fonts";
 import { env } from "@/shared/config/env";
 import { distanceInKm } from "./domain/event-type";
 import type { PublicEvent } from "./repository";
@@ -29,12 +30,12 @@ export type ShareImageEvent = Pick<
   "title" | "type" | "startsAt" | "raceStartsAt" | "timezone" | "locationName" | "distanceMeters" | "elevationGainMeters" | "eventStatus"
 >;
 
-export function eventShareImage(
+export async function eventShareImage(
   event: ShareImageEvent,
   locale: "ro" | "en",
   shape: ShareShape,
   labels: { type: string; cancelled: string; distanceKm: (km: string) => string; elevationM: (m: string) => string },
-): ImageResponse {
+): Promise<ImageResponse> {
   const { width, height } = SHARE_SHAPES[shape];
   const square = shape === "square";
   const intl = locale === "ro" ? "ro-RO" : "en-GB";
@@ -70,8 +71,8 @@ export function eventShareImage(
           justifyContent: "space-between",
           padding: square ? 72 : 64,
           background: `linear-gradient(135deg, ${COLOR.blueInk} 0%, ${COLOR.blue} 100%)`,
-          color: "#ffffff",
-          fontFamily: "Noto Sans, sans-serif",
+          color: COLOR.surface,
+          fontFamily: "Roboto, sans-serif",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -86,7 +87,8 @@ export function eventShareImage(
               display: "flex",
               padding: "10px 22px",
               borderRadius: 999,
-              background: event.eventStatus === "CANCELLED" ? "#b3261e" : "rgba(255,255,255,0.18)",
+              background: event.eventStatus === "CANCELLED" ? COLOR.orange : "rgba(255,255,255,0.18)",
+              color: event.eventStatus === "CANCELLED" ? COLOR.ink : COLOR.surface,
               fontSize: square ? 30 : 26,
               fontWeight: 600,
               textTransform: "uppercase",
@@ -98,7 +100,7 @@ export function eventShareImage(
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: square ? 28 : 20 }}>
-          <div style={{ display: "flex", fontSize: titleSize, fontWeight: 800, lineHeight: 1.1, textWrap: "balance" }}>{event.title}</div>
+          <div style={{ display: "flex", fontSize: titleSize, fontWeight: 700, lineHeight: 1.1, textWrap: "balance" }}>{event.title}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: square ? 38 : 34, opacity: 0.95 }}>
             <div style={{ display: "flex" }}>
               {date} · {time}
@@ -120,6 +122,6 @@ export function eventShareImage(
         </div>
       </div>
     ),
-    { width, height },
+    { width, height, fonts: await brandFonts() },
   );
 }

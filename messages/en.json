@@ -19,6 +19,8 @@
       "title": "Test site ({environment}) — this is not the club's real website.",
       "body": "Everything here is sample data for trying the site out, and it may be deleted at any time. Please do not use it to register for a real event. The club's official website is coming soon, at its own address."
     },
+    "themeDark": "Dark theme",
+    "themeLight": "Light theme",
     "skipToContent": "Skip to content",
     "nav": {
       "label": "Main navigation",
@@ -42,6 +44,10 @@
     "featuredCallToAction": "See the race details",
     "others": "Other events",
     "othersCount": "Other events ({count})",
+    "filter": {
+      "label": "Event type",
+      "all": "All"
+    },
     "calendar": {
       "previous": "Previous month",
       "next": "Next month",
@@ -336,7 +342,7 @@
       "repeatTitle": "Create the editions?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
       "bibsTitle": "Assign the race numbers?",
-      "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay."
+      "bibsBody": "Every confirmed registration without a number gets a free one, drawn at random. Numbers already given stay."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -961,10 +967,12 @@
       "from": "From",
       "to": "To",
       "download": "Download the sheet (PDF)",
+      "preview": "See the bibs ({count})",
+      "previewAlt": "Number {number} — {name}",
       "downloadOnePerPage": "One per page",
       "page": "Page {n} of {total}",
-      "helpNone": "No number assigned yet. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event.",
-      "helpSome": "{total} numbers assigned. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event."
+      "helpNone": "No number yet. Every registration draws a random number the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event.",
+      "helpSome": "{total} numbers given. Every registration draws a random number the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event."
     },
     "desk": {
       "title": "Number pickup desk",
