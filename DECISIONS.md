@@ -4930,7 +4930,10 @@ knowing the shapes GitHub does not scan for: Neon (`npg_`, `napi_`), Turnstile, 
 `JOB_SECRET`, a connection string with a password that is not the local one. No allowlist
 file, deliberately: a false positive is escaped by writing the example differently. The
 Zitadel issuer hostname and client ids stay in `docs/RUNBOOKS.md`; both are in every
-sign-in redirect a browser makes and secure nothing on their own.
+sign-in redirect a browser makes and secure nothing on their own. Dependabot's first alert
+(esbuild ≤ 0.24, pulled by `@esbuild-kit/core-utils` under `drizzle-kit` to bundle
+`drizzle.config.ts`) is dismissed as *not used* with the reason on the alert: the advisory is
+about esbuild's development server, which nothing here runs.
 
 **The CI race — understood, not fought.** `/admin/tasks` streams behind `loading.tsx`.
 React 19.2 reveals a streamed Suspense boundary on the next animation frame rather than in
