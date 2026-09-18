@@ -74,6 +74,14 @@ export function addWallClockInterval(
   return result;
 }
 
+/** ISO weekday of the instant on the wall clock in `timeZone`: 1 = Monday … 7 = Sunday. */
+export function wallClockWeekday(date: Date, timeZone: string): number {
+  const wall = toWallTimeInput(date, timeZone);
+  const [year, month, day] = wall.split(/[-T:]/).map(Number);
+  const sunday0 = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return sunday0 === 0 ? 7 : sunday0;
+}
+
 /** The value an `<input type="datetime-local">` shows: `YYYY-MM-DDTHH:mm`, no zone. */
 export function toWallTimeInput(date: Date | null, timeZone: string): string {
   if (!date) return "";

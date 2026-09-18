@@ -38,6 +38,8 @@ const PUBLIC_COLUMNS = {
   routeUrl: events.routeUrl,
   // A YouTube link, embedded from its id (BR-REQ-011-01 criterion 9).
   videoUrl: events.videoUrl,
+  // The club's Strava group event for this occurrence (criterion 10).
+  stravaEventUrl: events.stravaEventUrl,
   featured: events.featured,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
@@ -57,6 +59,8 @@ const PUBLIC_COLUMNS = {
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,
+  // The description, as a rich-text document (§11.3), rendered by `RichText`.
+  bodyJson: eventTranslations.bodyJson,
   seoTitle: eventTranslations.seoTitle,
   seoDescription: eventTranslations.seoDescription,
   // When the event was first published — one date for both languages now that publication is

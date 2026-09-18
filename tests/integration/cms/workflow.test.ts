@@ -202,6 +202,36 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       ).toBe("FORBIDDEN");
     });
 
+    /** §71: the description proper is a validated rich-text document, like a page's body. */
+    it("saves the description as a validated document, and refuses one outside the allowlist", async () => {
+      const { translation } = await seedEvent();
+      const body = JSON.stringify({
+        type: "doc",
+        content: [
+          { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Programul zilei" }] },
+          { type: "paragraph", content: [{ type: "text", text: "07:00 ridicarea numerelor, 09:00 start." }] },
+        ],
+      });
+      const saved = await saveEventTranslation(db, {
+        actor: author,
+        translationId: translation.id,
+        expectedVersion: translation.version,
+        fields: { ...FIELDS, body },
+      });
+      expect(JSON.stringify(saved.bodyJson)).toContain("Programul zilei");
+
+      expect(
+        await codeOf(
+          saveEventTranslation(db, {
+            actor: author,
+            translationId: translation.id,
+            expectedVersion: saved.version,
+            fields: { ...FIELDS, body: JSON.stringify({ type: "doc", content: [{ type: "image", attrs: { src: "x" } }] }) },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+    });
+
     it("lets an Author submit their own draft for review", async () => {
       const { event } = await seedEvent();
 
@@ -665,6 +695,74 @@ describe("BR-REQ-051-01 editorial workflow", () => {
           }),
         ),
       ).toBe("VALIDATION_ERROR");
+    });
+
+    /** `DECISIONS.md` §71: a duration in minutes is what the form asks for; the end is derived. */
+    it("derives the end from a duration, refuses a nonsense one, and takes the duration over an end", async () => {
+      const { event } = await seedEvent();
+
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, durationMinutes: "90" },
+      });
+      expect(saved.endsAt?.toISOString()).toBe("2026-10-11T07:30:00.000Z");
+
+      const both = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: saved.version,
+        fields: { ...EVENT_FIELDS, durationMinutes: "30", endsAtWallTime: "2026-10-11T12:00" },
+      });
+      expect(both.endsAt?.toISOString()).toBe("2026-10-11T06:30:00.000Z");
+
+      for (const durationMinutes of ["0", "-5", "1.5", "99999"]) {
+        expect(
+          await codeOf(
+            saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: both.version, fields: { ...EVENT_FIELDS, durationMinutes } }),
+          ),
+        ).toBe("VALIDATION_ERROR");
+      }
+    });
+
+    /** §71: the gun time is a race's; on any other type it is ignored, not refused. */
+    it("keeps a race start on a race only", async () => {
+      const { event } = await seedEvent();
+      const run = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, type: "GROUP_RUN", raceStartsAtWallTime: "2026-10-11T10:00" },
+      });
+      expect(run.raceStartsAt).toBeNull();
+    });
+
+    /** BR-REQ-011-01 criterion 10: the club's Strava group event, a Strava page or nothing. */
+    it("saves a Strava event link, refuses one on another host, and clears it", async () => {
+      const { event } = await seedEvent();
+      const link = "https://www.strava.com/clubs/1147727/group_events/3393211004834858860";
+      const saved = await saveEventFields(db, {
+        actor: editor,
+        eventId: event.id,
+        expectedVersion: event.version,
+        fields: { ...EVENT_FIELDS, stravaEventUrl: link },
+      });
+      expect(saved.stravaEventUrl).toBe(link);
+
+      expect(
+        await codeOf(
+          saveEventFields(db, {
+            actor: editor,
+            eventId: event.id,
+            expectedVersion: saved.version,
+            fields: { ...EVENT_FIELDS, stravaEventUrl: "https://example.test/not-strava" },
+          }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+
+      const cleared = await saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: saved.version, fields: EVENT_FIELDS });
+      expect(cleared.stravaEventUrl).toBeNull();
     });
 
     it("interprets the times in the timezone the same save sets", async () => {

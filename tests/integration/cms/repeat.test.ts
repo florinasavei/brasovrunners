@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
@@ -94,6 +94,44 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     expect(third.capacity).toBe(30);
     expect(third.featured).toBe(false);
     expect(third.participantListVisibility).toBe("HIDDEN");
+  });
+
+  /**
+   * "Every Monday and Wednesday" (criterion 7, 2026-09-18). The series covers `count` weeks
+   * counted from the source's own week, each chosen day at the source's wall time, never the
+   * source itself and never a day before it — so a Sunday source with Monday and Wednesday
+   * ticked contributes nothing from its own week, and three weeks are the two that follow.
+   */
+  it("repeats on chosen weekdays, for a number of weeks, skipping days on or before the source", async () => {
+    const source = await seedRun(); // Sunday 2026-10-11, 08:00
+    const result = await repeatEvent(db, {
+      actor: editor,
+      eventId: source.id,
+      cadence: "WEEKLY",
+      count: 3,
+      weekdays: [1, 3],
+      publish: false,
+    });
+    expect(result.created).toBe(4);
+
+    const copies = await copiesOf(source.id);
+    expect(copies.map((copy) => toWallTimeInput(copy.startsAt, "Europe/Bucharest"))).toEqual([
+      "2026-10-12T08:00", // Monday of the week after the source's
+      "2026-10-14T08:00", // Wednesday
+      "2026-10-19T08:00",
+      "2026-10-21T08:00",
+    ]);
+    const [ro] = await db.select().from(eventTranslations).where(and(eq(eventTranslations.eventId, copies[1].id), eq(eventTranslations.locale, "ro")));
+    expect(ro.slug).toBe("alergare-de-duminica-2026-10-14");
+
+    // A Sunday run "every Sunday" for one week is the source alone: nothing to make.
+    await expect(
+      repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count: 1, weekdays: [7], publish: false }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    // Every day for a year is more than one press may make.
+    await expect(
+      repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count: 52, weekdays: [1, 2, 3, 4, 5, 6, 7], publish: false }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
   });
 
   it("gives every occurrence a slug carrying its date, in both languages", async () => {

@@ -111,7 +111,9 @@
       "open": "Vezi filmul evenimentului",
       "title": "Filmul evenimentului (YouTube)",
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi."
-    }
+    },
+    "stravaEvent": "Pe Strava",
+    "openStravaEvent": "Evenimentul pe Strava"
   },
   "Admin": {
     "title": "Administrare",
@@ -267,7 +269,11 @@
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul în locul ștergerii.",
       "deleteBlockedShort": "{count} înscrieri",
-      "eventsRepeated": "{created} ediții create."
+      "eventsRepeated": "{created} ediții create.",
+      "bulkTitle": "Publică sau arhivează evenimentele bifate",
+      "bulkHelp": "Bifează evenimentele din listă. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — așa publici o serie întreagă deodată; „Arhivează” le scoate de pe site.",
+      "bulkPublishAction": "Publică cele bifate",
+      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate)."
     },
     "confirm": {
       "cancel": "Renunță",
@@ -326,7 +332,8 @@
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
-        "costType": "Cost"
+        "costType": "Cost",
+        "body": "Descriere completă"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
@@ -388,6 +395,7 @@
       "repeatHelp": "Creează următoarele ediții ale acestui eveniment, la interval fix, cu aceleași detalii și cu ora păstrată în fusul evenimentului. Fiecare copie primește o adresă cu data ei (de exemplu „alergare-de-duminica-2026-10-04”). Copiile sunt ciorne, dacă nu bifezi publicarea.",
       "repeatCadence": "Interval",
       "repeatCadences": {
+        "NONE": "Nu se repetă",
         "WEEKLY": "Săptămânal",
         "FORTNIGHTLY": "La două săptămâni",
         "MONTHLY": "Lunar"
@@ -396,7 +404,27 @@
       "repeatPublish": "Publică edițiile create (evenimentul acesta este publicat, deci și copiile sunt complete).",
       "repeat": "Creează edițiile",
       "videoUrl": "Link video (YouTube)",
-      "videoUrlHelp": "Un link YouTube — filmul de anul trecut, de exemplu. Apare pe pagina evenimentului, într-un player care se încarcă doar când vizitatorul apasă. Lasă gol dacă nu există."
+      "videoUrlHelp": "Un link YouTube — filmul de anul trecut, de exemplu. Apare pe pagina evenimentului, într-un player care se încarcă doar când vizitatorul apasă. Lasă gol dacă nu există.",
+      "timeOfDay": "Ora (24h)",
+      "repeatWeeks": "Câte săptămâni / ediții",
+      "repeatWeekdays": "În zilele (opțional):",
+      "repeatWeekdaysHelp": "Bifează zilele în care are loc — de exemplu luni și miercuri — și „câte săptămâni” de mai sus înseamnă săptămâni, socotite din săptămâna evenimentului; se creează doar zilele de după el. Nimic bifat: ziua evenimentului, la intervalul ales.",
+      "repeatOnCreateHelp": "Opțional. Se creează și edițiile următoare, ca ciorne, cu aceleași detalii și adrese cu data fiecăreia. Le publici pe toate deodată din lista de evenimente, cu „Publică cele bifate”.",
+      "weekdays": {
+        "1": "Lu",
+        "2": "Ma",
+        "3": "Mi",
+        "4": "Jo",
+        "5": "Vi",
+        "6": "Sâ",
+        "7": "Du"
+      },
+      "createdWithSeries": "Evenimentul și {created} ediții au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
+      "durationMinutes": "Durata (minute)",
+      "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
+      "stravaEventUrl": "Link către evenimentul Strava",
+      "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
+      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",

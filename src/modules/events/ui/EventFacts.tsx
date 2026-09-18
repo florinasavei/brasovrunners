@@ -153,6 +153,23 @@ export default async function EventFacts({
       ),
     });
   }
+  // The club's Strava group event (criterion 10): where members RSVP. The mark, never the script.
+  if (variant === "full" && event.stravaEventUrl) {
+    facts.push({
+      label: t("stravaEvent"),
+      value: (
+        <Link
+          href={event.stravaEventUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
+        >
+          <SocialIcon network="strava" size={18} />
+          {t("openStravaEvent")}
+        </Link>
+      ),
+    });
+  }
   // Both are enums now (migration `0018`), so both render in the reader's own language
   // rather than in whichever one the organizer was typing in.
   if (event.difficulty) {

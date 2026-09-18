@@ -140,7 +140,9 @@ test.describe("BR-REQ-050-02 an Editor creates an event without a developer", ()
 
     // The names are namespaced now: the editor is one form carrying the event row and both
     // languages, so `event.*` and `translations.<locale>.*` say which half each field belongs to.
-    await field("event.startsAtWallTime").fill("2027-05-01T09:00");
+    // A date and a 24-hour time, two fields (`DECISIONS.md` §70).
+    await field("event.startsAtDate").fill("2027-05-01");
+    await field("event.startsAtTime").fill("09:00");
     // The meeting point is asked once, in Settings: it is the same place whichever language the
     // page is read in (`DECISIONS.md` §36).
     await field("event.locationName").fill("Parcul Tractorul");

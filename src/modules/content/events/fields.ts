@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { isYoutubeLink } from "@/modules/events/domain/video";
+import { isStravaLink } from "@/modules/events/domain/event-type";
+import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 
 /**
@@ -11,10 +13,8 @@ import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type"
  * receives whatever the browser sends, and "the form does not render that input" is not a rule
  * the server can rely on.
  *
- * Two things are deliberately absent:
+ * One thing is deliberately absent:
  *
- *   - the body. AGENTS.md §11.3 makes the canonical body validated Tiptap JSON, and no editor
- *     for it exists yet; event bodies stay plain fields until articles arrive with M5 proper.
  *   - legal text. §11.1 puts the privacy notice, the terms and the declaration outside the
  *     CMS entirely. There is no screen for them here in any form. `declarationDocumentId`
  *     below *selects* an approved version; it cannot write a word of one.
@@ -57,6 +57,25 @@ export const translationFieldsSchema = z
     }),
     title: z.string().trim().min(1).max(200),
     excerpt: optionalText(500),
+    /**
+     * The description proper, written in the rich-text editor (AGENTS.md §11.3; `DECISIONS.md`
+     * §71: "all descriptions should be WYSIWYG"). The same contract as a standing page's body:
+     * a JSON string from `RichTextEditor`, parsed against the allowlist here so a bad body is
+     * a field error, empty allowed. Optional in the input for callers from before it existed.
+     */
+    body: z
+      .string()
+      .max(200_000)
+      .optional()
+      .transform((value, ctx) => {
+        if (!value || value.trim() === "") return EMPTY_DOC;
+        try {
+          return parseRichText(JSON.parse(value));
+        } catch {
+          ctx.addIssue({ code: "custom", message: "the description is not a valid document" });
+          return z.NEVER;
+        }
+      }),
     seoTitle: optionalText(200),
     seoDescription: optionalText(320),
   })
@@ -154,7 +173,21 @@ export const eventFieldsSchema = z
     eventStatus: z.enum(["SCHEDULED", "CANCELLED", "COMPLETED"]),
     timezone,
     startsAtWallTime: z.string().trim().min(1),
-    endsAtWallTime: z.string().trim(),
+    /**
+     * Either an end on the wall clock (the old field, still accepted) or a duration in minutes
+     * (`DECISIONS.md` §71: "instead of an end date I should just have a duration"). A week is
+     * the ceiling; a typo's extra digit is refused, a multi-day camp is not.
+     */
+    endsAtWallTime: z.string().trim().optional().default(""),
+    durationMinutes: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => (value ? value : null))
+      .refine((value) => value === null || (/^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 7 * 24 * 60), {
+        message: "a duration is a whole number of minutes, up to a week",
+      })
+      .transform((value) => (value === null ? null : Number(value))),
     raceStartsAtWallTime: z.string().trim(),
 
     /**
@@ -179,6 +212,16 @@ export const eventFieldsSchema = z
     routeUrl: httpsUrl("a route link must start with https://"),
     // A film of the event (criterion 9): a YouTube link, or nothing. Checked for a video id
     // here so the page never meets a link it cannot embed.
+    // The club's Strava group event for this occurrence (criterion 10): a Strava page, or nothing.
+    stravaEventUrl: z
+      .string()
+      .trim()
+      .max(2000)
+      .optional()
+      .transform((value) => (value ? value : null))
+      .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isStravaLink(value)), {
+        message: "a Strava event link must be an https page on strava.com",
+      }),
     // Optional in the input as well as in the value — a caller from before the field existed
     // (a script, a duplicate) sends nothing and means "no film".
     videoUrl: z
