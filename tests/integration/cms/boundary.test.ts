@@ -198,6 +198,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/registrations/confirm/[token]",
       "/registrations/declare/[token]",
       "/registrations/manage/[token]",
+      "/registrations/mine",
+      "/registrations/mine/[token]",
       "/registrations/resend",
       "/sign-in",
     ]);

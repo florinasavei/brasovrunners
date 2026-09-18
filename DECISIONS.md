@@ -4223,3 +4223,53 @@ and 121") because `step` counts from `min`, and `min` was 1 with a step of 5. An
 is a duration now.
 
 Baseline `BR-V1.36-2026-09-18`.
+
+## 76. Decided — the desk knows who never got the email (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-037-08 criterion 8; `admin-repository.ts`
+(`emailRejectedReason`), `DeskRow.tsx`, the registration page.
+
+Mailgun already told the outbox when a message bounced (`permanent_fail`) or the recipient
+complained, and the outbox row kept the reason (§16.5); the registration's own timeline in the
+backoffice showed it, three screens away from where it matters. On race week the question is
+"who do I call", and the answer belongs on the row the organizer is already looking at.
+
+So one subselect — the newest bounced or complained message *of any type* for the registration
+— feeds a chip, "email respins", on the desk row and beside the status on the registration
+page, with Mailgun's short reason. Any type, because a verification that bounced means exactly
+what a bounced confirmation means: this person never got the email. No participant-facing
+change, and the desk still sees no address (§67): a reason is not an address.
+
+Baseline `BR-V1.36-2026-09-18`.
+
+## 77. Decided — one link, all my registrations; the first use of `MANAGE_PROFILE` (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-036-04; `registrations/my-registrations.ts`,
+`/inscrieri/ale-mele` and `/inscrieri/ale-mele/[token]`, `notifications/render.ts`
+(`MANAGE_PROFILE` has a route), the footer.
+
+Participants have no accounts (§10.3) and never will in V1; a runner with entries in two
+events has two confirmation emails to keep, and the one who lost both had "send me my link
+again" per event. The brief asked for one link that lists everything: type the address, get
+one message, open a page with every active registration — the state, the code and its QR once
+confirmed, "I am here" when open, cancel.
+
+The token purpose was already there. `MANAGE_PROFILE` was reserved in §12.8 for the M4 public
+profile, is the one purpose scoped to a participant rather than a registration (the check
+constraint says so), and had no route. This is its first use; the profile, when it comes,
+shares it — the same link can grow a "your profile" section without a second purpose. The
+request side is the resend form's oracle rule, unchanged: one sentence whatever the address
+means, counted before the lookup.
+
+What a link may do: read, mark the holder present, and cancel — each on a registration that
+must be the holder's own, checked against the token's participant and never trusted from the
+form (a registration id is not a secret). Cancel consumes the token, as every manage link's
+cancel does (§12.8: single use); "I am here" does not, because arriving is not the end of a
+link's usefulness, and it never changes state past what the desk could do. The link lists
+registrations and never changes an address: §10.3 holds here as everywhere.
+
+**Refused.** A persistent "session" from the link (a cookie that keeps the page usable for a
+week): it is an account by another name. Cancelling several at once: two cancellations are two
+decisions, and the second needs a fresh link.
+
+Baseline `BR-V1.36-2026-09-18`.

@@ -29,17 +29,23 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   WAITLIST_SPOT_OFFER: "WAITLIST_OFFER",
   REGISTRATION_CONFIRMED: "MANAGE_REGISTRATION",
   REGISTRATION_MANAGE_LINK: "MANAGE_REGISTRATION",
+  // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
+  PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
 };
 
 const ROUTE_BY_PURPOSE: Record<
   EmailActionTokenPurpose,
-  "/registrations/confirm/[token]" | "/registrations/declare/[token]" | "/registrations/manage/[token]" | null
+  | "/registrations/confirm/[token]"
+  | "/registrations/declare/[token]"
+  | "/registrations/manage/[token]"
+  | "/registrations/mine/[token]"
 > = {
   VERIFY_REGISTRATION_EMAIL: "/registrations/confirm/[token]",
   COMPLETE_DECLARATION: "/registrations/declare/[token]",
   WAITLIST_OFFER: "/registrations/declare/[token]",
   MANAGE_REGISTRATION: "/registrations/manage/[token]",
-  MANAGE_PROFILE: null, // no public-profile route yet (M4)
+  // "My registrations" (BR-REQ-036-04, `DECISIONS.md` §77); the M4 profile will share the purpose.
+  MANAGE_PROFILE: "/registrations/mine/[token]",
 };
 
 /** A sensible default when the triggering registration has no deadline of its own to borrow. */
@@ -88,10 +94,10 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
-  const route = purpose ? ROUTE_BY_PURPOSE[purpose] : null;
 
   let actionUrl: string | undefined;
-  if (purpose && route && row.participantId) {
+  if (purpose && row.participantId) {
+    const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
     // Borrow the registration's own hold deadline so the token dies exactly when the hold
     // does — but only while that deadline is still ahead of `now`. A hold can lapse between

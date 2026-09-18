@@ -1005,6 +1005,7 @@
     "back": "Înapoi la prima pagină"
   },
   "Footer": {
+    "myRegistrations": "Înscrierile mele",
     "about": {
       "summaryShort": "Despre club",
       "summaryTail": ", contact și termeni",
@@ -1141,6 +1142,28 @@
       "event": "Pentru evenimentul: {event}",
       "deadline": "Locul tău este rezervat până la {deadline}.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris."
+    },
+    "mine": {
+      "title": "Înscrierile mele",
+      "intro": "Scrie adresa cu care te-ai înscris și îți trimitem un singur link cu toate înscrierile tale active — starea fiecăreia, codul de acces și codul QR, și posibilitatea de a renunța.",
+      "email": "Adresa de email",
+      "emailHelp": "Adresa folosită la înscriere.",
+      "submit": "Trimite-mi linkul",
+      "sent": "Dacă există înscrieri pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
+      "listTitle": "Înscrierile tale",
+      "empty": "Nu ai nicio înscriere activă în acest moment.",
+      "code": "Cod de acces",
+      "cancel": "Renunț la această înscriere",
+      "cancelledTitle": "Înscrierea a fost anulată",
+      "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",
+      "newLink": "Cere un link nou",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Așteaptă confirmarea emailului",
+        "PENDING_DECLARATION": "Așteaptă declarația",
+        "WAITLISTED": "Pe lista de așteptare",
+        "WAITLIST_OFFERED": "Loc oferit — semnează declarația",
+        "CONFIRMED": "Confirmată"
+      }
     },
     "manage": {
       "title": "Gestionează înscrierea",

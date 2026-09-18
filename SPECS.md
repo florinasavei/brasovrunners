@@ -504,6 +504,30 @@ other participant link uses — never by a password.
 
 **Verification:** integration `registrations/status-page.test.ts`; e2e `registration-status.spec.ts`
 
+#### BR-REQ-036-04 — One link, all my registrations
+
+- **Source:** BR-BUS-031, BR-BUS-036
+- **Implements:** AGENTS.md §10.3, §12.8, §15.9 (steps 1–2), §16.3
+- **Priority:** SHOULD
+- **Release:** M1 (2026-09-18, `DECISIONS.md` §77)
+
+A runner with two entries and no account has two emails to find. `/inscrieri/ale-mele` takes an
+address and sends one link, and that link lists every active registration of that address. It
+is the first use of the `MANAGE_PROFILE` token purpose — scoped to a participant, never to a
+registration — and it lists registrations and never changes an address.
+
+**Acceptance criteria**
+
+1. Given the form, when any address is submitted — known, unknown, malformed or throttled — then the response is the same sentence, the request is counted before anything is looked up, and a `PROFILE_MANAGE_LINK` message is queued only when a participant with that identity exists; the message carries no registration.
+2. Given the message, when it is rendered, then it mints a `MANAGE_PROFILE` token scoped to the participant alone (`registration_id` null), hashed at rest, single use, fourteen days, and links to `/inscrieri/ale-mele/<token>`.
+3. Given a valid link, when it is opened, then the page lists every *active* registration of that participant and nobody else's — the event (linked), the state in the reader's locale, the desk code and its QR once confirmed, "I am here" from the day before the start, and cancel — and nothing for cancelled or expired ones. A GET mutates nothing.
+4. Given "I am here" for one listed registration, when it is pressed, then that registration is checked in through the same service the desk uses, the registration must be the token holder's own (a registration id is not a secret), and the link stays valid.
+5. Given cancel for one listed registration, when it is pressed, then the registration is unregistered through the allocator (the place released, source `PARTICIPANT`), it must be the token holder's own, and the token is consumed — a second cancellation needs a fresh link, which the page says. A refused attempt (not theirs, event started) leaves the token live.
+6. Given an invalid, expired, used or registration-scoped token, when the page is opened, then it renders the same generic sentence as every other participant token surface.
+7. Given the public footer, when it renders, then it carries "Înscrierile mele" so the form is findable without an email.
+
+**Verification:** integration `registrations/my-registrations.test.ts`; integration `cms/boundary.test.ts` (the routes)
+
 #### BR-REQ-039-02 — The public list publishes the display name
 
 - **Source:** BR-BUS-039
@@ -967,6 +991,7 @@ way through every step, and none of them is a way around the allocator.
 5. Given assigned numbers, when the sheet is requested — all of them, or a range `from`/`to` for a reprint or a late batch — then the response is a PDF, Administrator only, of A4 pages with two bibs each and a dashed cut line between them; each bib carries the club's lockup, the number in the club's blue as large as the paper allows, the participant's registered name, and the event's title and date in the requested language. Only confirmed, real registrations are printed.
 6. Given the assignment, when it completes with at least one number given, then one audit row records who, for which event, and the range assigned — never a participant.
 7. Given one confirmed registration, when any staff role types a number for it — or clears it — then the number is a whole number from 1 to 99999, a number already worn at that event is refused with a sentence rather than a stack trace, and an audit row records the number before and after (2026-09-18, `DECISIONS.md` §67).
+8. Given a registration for which Mailgun reported `permanent_fail` or `complained` on any message (BR-REQ-080-04), when the desk row or the registration page renders, then it carries an "email respins" chip with the provider's short reason, so the organizer knows before race day who never got the email and calls them; the participant sees nothing (2026-09-18, `DECISIONS.md` §76).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`; unit `registrations/bibs-pdf.test.ts`
 

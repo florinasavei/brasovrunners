@@ -2430,6 +2430,11 @@ Resend never changes state or marks declaration accepted.
 
 ### 15.9 Profile management
 
+Steps 1–2 are built as "my registrations" (BR-REQ-036-04, `DECISIONS.md` §77): the
+`MANAGE_PROFILE` token lists a participant's active registrations at
+`/inscrieri/ale-mele/<token>` and offers "I am here" and cancel on each; the M4 profile will
+share the purpose. Steps 3–8 remain M4.
+
 1. participant requests link with generic response;
 2. if verified participant exists, create manage-profile token/outbox;
 3. token exchanges to short-lived profile-scoped action session;

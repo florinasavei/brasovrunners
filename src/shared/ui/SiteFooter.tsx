@@ -110,6 +110,8 @@ export default async function SiteFooter() {
             <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
               <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
               <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
+              {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
+              <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
             </Stack>
             <Typography variant="body2" color="text.secondary">
               {footer("about.description")}

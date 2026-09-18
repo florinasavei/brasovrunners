@@ -1005,6 +1005,7 @@
     "back": "Back to the home page"
   },
   "Footer": {
+    "myRegistrations": "My registrations",
     "about": {
       "summaryShort": "About the club",
       "summaryTail": ", contact and legal",
@@ -1141,6 +1142,28 @@
       "event": "For the event: {event}",
       "deadline": "Your place is held until {deadline}.",
       "typedNameHelp": "Type the full name you registered with."
+    },
+    "mine": {
+      "title": "My registrations",
+      "intro": "Type the address you registered with and we send one link to every active registration of yours — the state of each, the access code and QR, and the option to withdraw.",
+      "email": "Email address",
+      "emailHelp": "The address used when registering.",
+      "submit": "Send me the link",
+      "sent": "If that address has registrations, we have just sent the link there. Check the spam folder too.",
+      "listTitle": "Your registrations",
+      "empty": "You have no active registration at the moment.",
+      "code": "Access code",
+      "cancel": "Withdraw from this registration",
+      "cancelledTitle": "Registration cancelled",
+      "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",
+      "newLink": "Ask for a new link",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Awaiting email confirmation",
+        "PENDING_DECLARATION": "Awaiting the declaration",
+        "WAITLISTED": "On the waiting list",
+        "WAITLIST_OFFERED": "Place offered — sign the declaration",
+        "CONFIRMED": "Confirmed"
+      }
     },
     "manage": {
       "title": "Manage your registration",

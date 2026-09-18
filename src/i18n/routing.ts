@@ -57,6 +57,12 @@ export const routing = defineRouting({
       ro: "/inregistrari/retrimite",
       en: "/registrations/resend",
     },
+    /**
+     * "My registrations" (BR-REQ-036-04, `DECISIONS.md` §77): the form that takes an address,
+     * and the page a `MANAGE_PROFILE` token opens — every active registration of one person.
+     */
+    "/registrations/mine": { ro: "/inscrieri/ale-mele", en: "/registrations/mine" },
+    "/registrations/mine/[token]": { ro: "/inscrieri/ale-mele/[token]", en: "/registrations/mine/[token]" },
 
     /**
      * Standing pages the club writes for itself — "About Brașov Runners", "Contact"
