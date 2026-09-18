@@ -1056,8 +1056,9 @@ way through every step, and none of them is a way around the allocator.
 5. Given an event that has any registration against it, when deletion is attempted, then it is refused with a reason and nothing is removed; archiving is the supported answer.
 6. Given an Author, when they attempt to create, duplicate or delete an event, then it is refused at the server.
 7. Given an event, when it is repeated — weekly, every two weeks or monthly, up to 52 times — then each occurrence is a copy with the same wall-clock time in the event's own zone (a Sunday 08:00 run stays 08:00 across a clock change), every other time moved by the same interval, a page address carrying its date in each language, no featured flag and no start list; the copies are drafts unless the source is published and publishing was asked for by a role that may publish, in which case they go live as they are made; a series whose addresses already exist is refused whole (`DECISIONS.md` §64).
+8. Given any time an organizer enters — the start, the race start, the end, the registration window — when the editor renders, then it is a date field and a separate time field on a 24-hour clock (`HH:MM`, refused otherwise by the browser and again by the service), whatever clock or date order the organizer's browser locale would have shown in a combined picker; a date with no time is midnight, and no date is no value (2026-09-18, `DECISIONS.md` §70).
 
-**Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`; e2e `cms-publish.spec.ts`
+**Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`
 
 #### BR-REQ-050-03 — The club writes its own standing pages
 

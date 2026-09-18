@@ -396,7 +396,8 @@
       "repeatPublish": "Publish the editions as they are created (this event is published, so the copies are complete too).",
       "repeat": "Create the editions",
       "videoUrl": "Video link (YouTube)",
-      "videoUrlHelp": "A YouTube link — last year's film, for instance. Shown on the event page in a player that loads only when the visitor presses it. Leave empty if there is none."
+      "videoUrlHelp": "A YouTube link — last year's film, for instance. Shown on the event page in a player that loads only when the visitor presses it. Leave empty if there is none.",
+      "timeOfDay": "Time (24h)"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",

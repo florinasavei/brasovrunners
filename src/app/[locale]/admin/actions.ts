@@ -92,6 +92,19 @@ function editorPath(locale: Locale, eventId: string): string {
  */
 function eventFieldsFrom(form: FormData) {
   const value = (field: string) => text(form, `event.${field}`);
+  /**
+   * A date field and a 24-hour time field, joined into the wall-clock string the service has
+   * always read (`WallTimeField`, `DECISIONS.md` §70). A date with no time is midnight; no
+   * date is no value, whatever the time field says. The single `<field>WallTime` name is still
+   * accepted for anything that posts the old shape.
+   */
+  const wallTime = (field: string) => {
+    const single = value(`${field}WallTime`);
+    if (single) return single;
+    const date = value(`${field}Date`);
+    if (!date) return "";
+    return `${date}T${value(`${field}Time`) || "00:00"}`;
+  };
 
   return {
     type: value("type"),
@@ -99,9 +112,9 @@ function eventFieldsFrom(form: FormData) {
     surface: value("surface") || null,
     eventStatus: value("eventStatus"),
     timezone: value("timezone"),
-    startsAtWallTime: value("startsAtWallTime"),
-    endsAtWallTime: value("endsAtWallTime"),
-    raceStartsAtWallTime: value("raceStartsAtWallTime"),
+    startsAtWallTime: wallTime("startsAt"),
+    endsAtWallTime: wallTime("endsAt"),
+    raceStartsAtWallTime: wallTime("raceStartsAt"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     locationAddress: value("locationAddress"),
@@ -116,8 +129,8 @@ function eventFieldsFrom(form: FormData) {
     featured: form.get("event.featured") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
-    registrationOpensAtWallTime: value("registrationOpensAtWallTime"),
-    registrationClosesAtWallTime: value("registrationClosesAtWallTime"),
+    registrationOpensAtWallTime: wallTime("registrationOpensAt"),
+    registrationClosesAtWallTime: wallTime("registrationClosesAt"),
     declarationDocumentId: value("declarationDocumentId"),
     // A checkbox, so an absent value is HIDDEN — the safe half of a disclosure switch.
     participantListVisibility:

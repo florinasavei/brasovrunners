@@ -6,7 +6,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
-import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import WallTimeField from "./WallTimeField";
 import {
   EVENT_STATUS_LABEL,
   REGISTRATION_MODE_LABEL,
@@ -111,30 +111,31 @@ export default async function EventFieldsForm({
         required
       />
 
-      <TextField
-        name="event.startsAtWallTime"
-        type="datetime-local"
+      {/* A date and a 24-hour time each, whatever clock the browser speaks (§70). */}
+      <WallTimeField
+        name="event.startsAt"
         label={t("editor.startsAt")}
+        timeLabel={t("editor.timeOfDay")}
         helperText={t("editor.startsAtHelp", { timezone: zone })}
-        defaultValue={toWallTimeInput(event?.startsAt ?? null, zone)}
-        slotProps={{ inputLabel: { shrink: true } }}
+        value={event?.startsAt ?? null}
+        zone={zone}
         required
       />
-      <TextField
-        name="event.raceStartsAtWallTime"
-        type="datetime-local"
+      <WallTimeField
+        name="event.raceStartsAt"
         label={t("editor.raceStartsAt")}
+        timeLabel={t("editor.timeOfDay")}
         helperText={t("editor.raceStartsAtHelp")}
-        defaultValue={toWallTimeInput(event?.raceStartsAt ?? null, zone)}
-        slotProps={{ inputLabel: { shrink: true } }}
+        value={event?.raceStartsAt ?? null}
+        zone={zone}
       />
-      <TextField
-        name="event.endsAtWallTime"
-        type="datetime-local"
+      <WallTimeField
+        name="event.endsAt"
         label={t("editor.endsAt")}
+        timeLabel={t("editor.timeOfDay")}
         helperText={t("editor.endsAtHelp")}
-        defaultValue={toWallTimeInput(event?.endsAt ?? null, zone)}
-        slotProps={{ inputLabel: { shrink: true } }}
+        value={event?.endsAt ?? null}
+        zone={zone}
       />
 
       {/*
@@ -284,22 +285,20 @@ export default async function EventFieldsForm({
         inputMode="numeric"
       />
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
-          name="event.registrationOpensAtWallTime"
-          type="datetime-local"
+      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+        <WallTimeField
+          name="event.registrationOpensAt"
           label={t("editor.registrationOpensAt")}
-          defaultValue={toWallTimeInput(event?.registrationOpensAt ?? null, zone)}
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ flex: 1 }}
+          timeLabel={t("editor.timeOfDay")}
+          value={event?.registrationOpensAt ?? null}
+          zone={zone}
         />
-        <TextField
-          name="event.registrationClosesAtWallTime"
-          type="datetime-local"
+        <WallTimeField
+          name="event.registrationClosesAt"
           label={t("editor.registrationClosesAt")}
-          defaultValue={toWallTimeInput(event?.registrationClosesAt ?? null, zone)}
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ flex: 1 }}
+          timeLabel={t("editor.timeOfDay")}
+          value={event?.registrationClosesAt ?? null}
+          zone={zone}
         />
       </Stack>
       <Typography variant="body2" color="text.secondary">

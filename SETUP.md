@@ -1608,6 +1608,15 @@ even on the free plan. Nothing is charged inside the allowance.
 Production and QA share one bucket with a per-environment prefix (`qa/`, `production/`) until
 a second bucket is worth a second token; the adapter takes the prefix from configuration.
 
+**Done 2026-09-18.** Account on the owner's Gmail (free plan, card on file), bucket
+`brasovrunners-media`, location Eastern Europe (EEUR), Standard class, public development URL
+enabled, one *account* API token `brasovrunners-site` (Object Read & Write, that bucket only,
+no expiry). The account id, the S3 endpoint, the public URL and the token's two keys are in
+`.env.local` as a commented block and in the password manager — the repository is public, so
+they appear in no committed file. The five variables are set on both Vercel projects. Not done:
+a custom domain for the bucket (`media.brasovrunners.com` would be the name) — optional, and
+only worth it once the `r2.dev` address in the gallery's image URLs bothers somebody.
+
 ## 33. Let `/devs` read the database's consumption from Neon
 
 Two minutes, optional, read-only (BR-REQ-090-07). The Free plan's 100 CU-hours a month per

@@ -4012,4 +4012,23 @@ the privacy notice describes as "loaded when you press" — the same line §61 d
 where the mark is shown and the script is not. A duplicate or a repeated edition does not carry
 the link: a film is of one edition.
 
+## 70. Decided — a time is typed on a 24-hour clock, in its own field, because the browser's combined picker speaks the browser's language and not the club's (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-02 criterion 8; `content/events/ui/WallTimeField.tsx`,
+joined back into the wall-clock string in `admin/actions.ts`. The owner's words, over a
+screenshot of "06:30 PM" and a month-first calendar: "time pickers should be 24h, not AM and PM."
+
+`<input type="datetime-local">` renders the clock and the date order of the *browser's* locale.
+An English-language Chrome — which is what the owner and most Romanian laptops run — offers
+AM/PM and MM/DD/YYYY, and no attribute on the input changes that: `lang` is ignored by Blink and
+WebKit for this control. The choices were to tell every organizer to change their browser
+language, to add a picker library (`@mui/x-date-pickers` and a date library, a client island of
+some hundred kilobytes on the editor), or to stop asking one control to do two jobs. The last is
+what was built: the date keeps the native picker, whose calendar is unambiguous whatever order it
+prints the digits in, and the time is a text field that accepts `HH:MM` on a 24-hour clock and
+nothing else — which is how every start time in Brașov is written, said and printed on a bib. The
+two fields post separately and the action joins them into the `<field>WallTime` string the
+service has read since `0011`, so nothing below the form changed and the old single field is
+still accepted. A date with no time is midnight; no date is no value.
+
 Baseline `BR-V1.35-2026-09-18`.

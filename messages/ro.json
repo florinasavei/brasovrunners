@@ -396,7 +396,8 @@
       "repeatPublish": "Publică edițiile create (evenimentul acesta este publicat, deci și copiile sunt complete).",
       "repeat": "Creează edițiile",
       "videoUrl": "Link video (YouTube)",
-      "videoUrlHelp": "Un link YouTube — filmul de anul trecut, de exemplu. Apare pe pagina evenimentului, într-un player care se încarcă doar când vizitatorul apasă. Lasă gol dacă nu există."
+      "videoUrlHelp": "Un link YouTube — filmul de anul trecut, de exemplu. Apare pe pagina evenimentului, într-un player care se încarcă doar când vizitatorul apasă. Lasă gol dacă nu există.",
+      "timeOfDay": "Ora (24h)"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",

@@ -47,7 +47,9 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     // surface is chosen here so the public page can be checked for both labels below.
     await page.getByRole("combobox", { name: "Suprafață" }).click();
     await page.getByRole("option", { name: "Trail" }).click();
-    await field("event.startsAtWallTime").fill("2027-05-01T09:00");
+    // A date and a 24-hour time, two fields (`DECISIONS.md` §70).
+    await field("event.startsAtDate").fill("2027-05-01");
+    await field("event.startsAtTime").fill("09:00");
     await field("event.locationName").fill("Parcul Tractorul");
     await field("translations.ro.title").fill(`Cursa cu traseu ${suffix}`);
     await field("translations.ro.slug").fill(slug);
