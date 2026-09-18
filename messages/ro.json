@@ -111,7 +111,9 @@
       "open": "Vezi filmul evenimentului",
       "title": "Filmul evenimentului (YouTube)",
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi."
-    }
+    },
+    "stravaEvent": "Pe Strava",
+    "openStravaEvent": "Evenimentul pe Strava"
   },
   "Admin": {
     "title": "Administrare",
@@ -330,7 +332,8 @@
         "seoTitle": "Titlu pentru motoarele de căutare",
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
-        "costType": "Cost"
+        "costType": "Cost",
+        "body": "Descriere completă"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
@@ -416,7 +419,12 @@
         "6": "Sâ",
         "7": "Du"
       },
-      "createdWithSeries": "Evenimentul și {created} ediții au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată."
+      "createdWithSeries": "Evenimentul și {created} ediții au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
+      "durationMinutes": "Durata (minute)",
+      "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
+      "stravaEventUrl": "Link către evenimentul Strava",
+      "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
+      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",

@@ -4047,4 +4047,33 @@ two fields post separately and the action joins them into the `<field>WallTime` 
 service has read since `0011`, so nothing below the form changed and the old single field is
 still accepted. A date with no time is midnight; no date is no value.
 
+## 71. Decided — a duration, not an end; a gun time for races only; the description is the editor; a Strava event link (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-050-02 criterion 9, BR-REQ-011-01 criteria 10 and 11;
+migration `0028` (expand-only, `strava_event_url`); `EventFieldsForm`, `OnlyForType`,
+`TranslationFieldsForm`, `translationFieldsSchema.body`. The owner's words, four messages in a
+row: "event start date and race start date are kind of redundant — event start should be the
+driver; race is only for races"; "instead of event end date I should just have a duration";
+"all descriptions should be WYSIWYG and soon I can add pictures"; "an optional Strava event link".
+
+- **Duration.** Nobody thinks "it ends at 10:30"; they think "it takes ninety minutes". The
+  form asks for minutes and the service derives `ends_at` from the start — an instant plus a
+  duration, which is right across a clock change where a wall-clock end would not be. The old
+  `endsAtWallTime` is still accepted underneath, so nothing that posted it breaks; a duration
+  wins when both arrive.
+- **Race start only for a race.** The field follows the type select (a client island watching
+  MUI's hidden input — the select is MUI's and the form is one save, so a server round-trip was
+  the worse option) and the service ignores a gun time on anything that is not a race, rather
+  than refusing it: a form that hid the field cannot be blamed for what it still posted.
+- **The description is the editor.** `event_translations.body_json` existed from the pilot with
+  no editor writing it; `RichTextEditor` and the §11.3 allowlist existed for standing pages. The
+  two met: each language has a "full description" in the same editor, validated as `body` on the
+  way in and rendered by the same server renderer under the short description. The race-day
+  schedule the owner asked for is a list in it, not a new structure. Pictures follow when the
+  image node lands on top of the gallery's storage (§66) — the contract in §11.3 already names it.
+- **A Strava event link.** The club's group events live on Strava, where members RSVP; the
+  event page now offers that page as a fact with the mark, like the route. A Strava page only
+  (`isStravaLink`), and one occurrence's — never carried onto a duplicate or a repeat, because
+  next week's occurrence has its own address.
+
 Baseline `BR-V1.35-2026-09-18`.

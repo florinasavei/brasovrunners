@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import MuiLink from "@mui/material/Link";
@@ -14,6 +15,8 @@ import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
 import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
+import RichText from "@/modules/content/rich-text/ui/RichText";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
@@ -87,6 +90,7 @@ export default async function PreviewEventPage({ params }: Props) {
     mapUrl: event.mapUrl,
     routeUrl: event.routeUrl,
     videoUrl: event.videoUrl,
+    stravaEventUrl: event.stravaEventUrl,
     featured: event.featured,
     distanceMeters: event.distanceMeters,
     elevationGainMeters: event.elevationGainMeters,
@@ -105,6 +109,7 @@ export default async function PreviewEventPage({ params }: Props) {
     slug: translation.slug,
     title: translation.title,
     excerpt: translation.excerpt,
+    bodyJson: translation.bodyJson,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
@@ -134,6 +139,13 @@ export default async function PreviewEventPage({ params }: Props) {
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} />
+
+      {/* The description proper, as the public page shows it (§71). */}
+      {!isRichTextEmpty(readRichText(preview.bodyJson)) && (
+        <Box sx={{ mt: 3 }}>
+          <RichText body={preview.bodyJson} />
+        </Box>
+      )}
 
       {preview.locationAddress && (
         <Stack sx={{ mt: 3 }}>

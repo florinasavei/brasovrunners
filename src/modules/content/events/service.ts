@@ -178,8 +178,13 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   };
 
   const startsAt = required(fields.startsAtWallTime, "startsAt");
-  const endsAt = optional(fields.endsAtWallTime, "endsAt");
-  const raceStartsAt = optional(fields.raceStartsAtWallTime, "raceStartsAt");
+  // A duration wins over an end time when both arrive: it is what the form asks for now.
+  const endsAt =
+    fields.durationMinutes != null
+      ? new Date(startsAt.getTime() + fields.durationMinutes * 60_000)
+      : optional(fields.endsAtWallTime, "endsAt");
+  // A gun time is a race's (§71): on any other type the field is hidden and its value ignored.
+  const raceStartsAt = fields.type === "RACE" ? optional(fields.raceStartsAtWallTime, "raceStartsAt") : null;
   const registrationOpensAt = optional(fields.registrationOpensAtWallTime, "registrationOpensAt");
   const registrationClosesAt = optional(fields.registrationClosesAtWallTime, "registrationClosesAt");
 
@@ -272,6 +277,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     mapUrl: fields.mapUrl,
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
+    stravaEventUrl: fields.stravaEventUrl,
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     difficulty: fields.difficulty,
@@ -379,12 +385,14 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
+  const { body, ...columns } = fields;
   return updateTranslationWithVersionGuard(
     db,
     input.current.id,
     input.expectedVersion,
     {
-      ...fields,
+      ...columns,
+      bodyJson: body,
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -822,8 +830,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
-    // Not carried: a film is of one edition, and last year's would be wrong on next year's.
+    // Not carried: a film is of one edition, and last year's would be wrong on next year's;
+    // a Strava group event is one occurrence's page.
     videoUrl: null,
+    stravaEventUrl: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
     difficulty: source.difficulty,

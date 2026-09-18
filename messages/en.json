@@ -111,7 +111,9 @@
       "open": "Watch the event film",
       "title": "Event film (YouTube)",
       "notice": "The player is YouTube's and loads only when you open it."
-    }
+    },
+    "stravaEvent": "On Strava",
+    "openStravaEvent": "The event on Strava"
   },
   "Admin": {
     "title": "Backoffice",
@@ -330,7 +332,8 @@
         "seoTitle": "Search engine title",
         "seoDescription": "Search engine description",
         "difficulty": "Difficulty",
-        "costType": "Cost"
+        "costType": "Cost",
+        "body": "Full description"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
       "contentHelp": "The same event, in two languages. Only the words change here; the time, the place, the difficulty and the cost are in Settings above and are shared by both.",
@@ -416,7 +419,12 @@
         "6": "Sa",
         "7": "Su"
       },
-      "createdWithSeries": "The event and {created} editions were created, as drafts. Tick them in the events list and publish them together."
+      "createdWithSeries": "The event and {created} editions were created, as drafts. Tick them in the events list and publish them together.",
+      "durationMinutes": "Duration (minutes)",
+      "durationMinutesHelp": "How long it lasts, in minutes — 90, say. The end is worked out from it. Leave empty if none was announced.",
+      "stravaEventUrl": "Strava event link",
+      "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
+      "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page under the short description."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",

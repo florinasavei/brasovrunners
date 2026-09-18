@@ -6,6 +6,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
+import OnlyForType from "./OnlyForType";
 import WallTimeField from "./WallTimeField";
 import {
   EVENT_STATUS_LABEL,
@@ -121,21 +122,32 @@ export default async function EventFieldsForm({
         zone={zone}
         required
       />
-      <WallTimeField
-        name="event.raceStartsAt"
-        label={t("editor.raceStartsAt")}
-        timeLabel={t("editor.timeOfDay")}
-        helperText={t("editor.raceStartsAtHelp")}
-        value={event?.raceStartsAt ?? null}
-        zone={zone}
-      />
-      <WallTimeField
-        name="event.endsAt"
-        label={t("editor.endsAt")}
-        timeLabel={t("editor.timeOfDay")}
-        helperText={t("editor.endsAtHelp")}
-        value={event?.endsAt ?? null}
-        zone={zone}
+      {/* Only a race has a gun time apart from the meeting time (§71); the field follows the
+          type select and is empty — and ignored — for anything else. */}
+      <OnlyForType type="RACE" selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
+        <WallTimeField
+          name="event.raceStartsAt"
+          label={t("editor.raceStartsAt")}
+          timeLabel={t("editor.timeOfDay")}
+          helperText={t("editor.raceStartsAtHelp")}
+          value={event?.raceStartsAt ?? null}
+          zone={zone}
+        />
+      </OnlyForType>
+      {/* How long, not when it ends: the end is derived (§71). */}
+      <TextField
+        name="event.durationMinutes"
+        type="number"
+        label={t("editor.durationMinutes")}
+        helperText={t("editor.durationMinutesHelp")}
+        defaultValue={
+          event?.endsAt && event.startsAt
+            ? Math.round((event.endsAt.getTime() - event.startsAt.getTime()) / 60_000)
+            : ""
+        }
+        slotProps={{ htmlInput: { min: 1, max: 7 * 24 * 60, step: 5 } }}
+        inputMode="numeric"
+        sx={{ width: 220 }}
       />
 
       {/*
@@ -217,6 +229,16 @@ export default async function EventFieldsForm({
         label={t("editor.routeUrl")}
         helperText={t("editor.routeUrlHelp")}
         defaultValue={event?.routeUrl ?? ""}
+        inputMode="url"
+      />
+
+      {/* The club's Strava group event for this occurrence (criterion 10). */}
+      <TextField
+        name="event.stravaEventUrl"
+        type="url"
+        label={t("editor.stravaEventUrl")}
+        helperText={t("editor.stravaEventUrlHelp")}
+        defaultValue={event?.stravaEventUrl ?? ""}
         inputMode="url"
       />
 

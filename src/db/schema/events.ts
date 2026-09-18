@@ -208,6 +208,13 @@ export const events = pgTable(
      */
     videoUrl: text("video_url"),
 
+    /**
+     * The club's Strava group event for this occurrence (BR-REQ-011-01 criterion 10): the
+     * page where members RSVP on Strava. One occurrence's link, so it is never carried onto a
+     * duplicate or a repeat. Checked to be a Strava page at the form (`isStravaLink`).
+     */
+    stravaEventUrl: text("strava_event_url"),
+
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
 
@@ -338,6 +345,10 @@ export const events = pgTable(
     check(
       "events_video_url_is_https",
       sql`${t.videoUrl} IS NULL OR ${t.videoUrl} LIKE 'https://%'`,
+    ),
+    check(
+      "events_strava_event_url_is_https",
+      sql`${t.stravaEventUrl} IS NULL OR ${t.stravaEventUrl} LIKE 'https://%'`,
     ),
 
     check(

@@ -118,7 +118,9 @@ function eventFieldsFrom(form: FormData) {
     timezone: value("timezone"),
     startsAtWallTime: wallTime("startsAt"),
     endsAtWallTime: wallTime("endsAt"),
+    durationMinutes: value("durationMinutes"),
     raceStartsAtWallTime: wallTime("raceStartsAt"),
+    stravaEventUrl: value("stravaEventUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     locationAddress: value("locationAddress"),
@@ -163,6 +165,7 @@ function translationFieldsFrom(form: FormData, locale: Locale) {
       slug: value("slug"),
       title: value("title"),
       excerpt: value("excerpt"),
+      body: value("body"),
       seoTitle: value("seoTitle"),
       seoDescription: value("seoDescription"),
     },
