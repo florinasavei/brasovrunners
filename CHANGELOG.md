@@ -8,7 +8,40 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.37-2026-09-18
+
+After the race, and the email people keep.
+
+- **Email that people will actually read.** The confirmation and the reminder open with one bold line — date, time, meeting point — then the map and the Strava event links, then "what to bring" (a new one-line field per language on the event, `checklist`), the QR and the manage link. Every email ends "Răspunde la acest email pentru întrebări" when the club has a reply address. Text-first, no image but the QR. BR-REQ-080-01 criterion 4; `DECISIONS.md` §81.
+- **The reminder.** `EVENT_REMINDER`, 48 hours before the start, to every confirmed participant, once per registration, from the maintenance job — with "can't come? cancel here". Resendable by hand while confirmed and ahead ("Trimite reminderul"). The free-day forecast counts four messages per registration now. BR-REQ-080-01 criterion 5, BR-REQ-037-02; `DECISIONS.md` §81. Migration `0031` (expand-only).
+- **After the race.** `COMPLETED` means over: the page says "S-a încheiat" and hides registration, the desk refuses check-in with a sentence, the maintenance job leaves the event alone. **The thank-you** (`EVENT_THANKS`): sent by an Administrator from the event page, once per event, to everyone checked in, with an optional link — behind a confirmation, audited with the event and the count, never automatic. BR-REQ-020-01 criterion 4, BR-REQ-080-01 criterion 6; `DECISIONS.md` §82.
+- **Organizer's numbers.** The registrations list filters to bounced emails and shows the chip; the CSV export gains `Checked in` and `Email bounced`; the events list shows confirmed · here beside an event within a day of its start. `/devs`'s Neon sentence carries the two-minute steps. `DECISIONS.md` §83.
+- **Accounts.** Both Vercel projects carry a project-scoped Neon key, so `/devs` shows the database's month on QA and production; QA sends from the club's verified `mail.` domain (allowlist mode) instead of the sandbox.
+
+## BR-V1.36-2026-09-18
+
+Race week: pictures finished, the facts made readable, and what the desk and the runner still needed.
+
+- **Pictures, finished.** Click a picture in the editor and a small panel beside it takes its **alt text** (empty until written — never the file name), an optional **caption** (a `<figcaption>` on the page), one of four **widths** (100/75/50/33 % of the text column on a wide screen; always the full width on a phone — a picture is a block, never two side by side), "remove", and **"choose one already uploaded"**. A picture can also be pasted or dropped as a file; a pasted `<img>` from another site is dropped. A dimmed sentence under the editor counts the pictures without alt text; it never blocks a save. **`/admin/gallery/pictures`** lists every stored picture with where it is used — each use a link to its page, event or album — and deletes one that is used nowhere. **The orphan sweep**: a picture referenced by no gallery item, cover or body (drafts count) for more than seven days is deleted with its objects, last in the registration-maintenance run, in its own try/catch; `/devs` shows the figures. **The short description is the editor too**, pictures included (`event_translations.excerpt_json`; the plain `excerpt` is derived on save for the card, the meta description and the JSON-LD). Migration `0029` (expand-only). BR-REQ-050-03 criteria 10, 11, 14; `DECISIONS.md` §73.
+- **Gmail dots are two addresses** (canonicalization **version 2**): `a.savei@gmail.com` and `asavei@gmail.com` are two participants now, so the club can rehearse a registration end to end from its own inbox; the plus tag still collapses, `googlemail` still folds into `gmail`. Migration `0030` re-canonicalizes every stored row. BR-REQ-032-02; `AGENTS.md` §10.4; `DECISIONS.md` §74.
+- **The facts of an event are three lines**: *Când* (the date, "întâlnire la 09:00 · start la 10:00"), *Unde* (the meeting point and the map), *Traseu* (distance, climb, difficulty, cost, the route, the Strava event) — instead of nine labelled rows. A listing card shows the same two lines without labels and ends with the state of registration. `DECISIONS.md` §75.
+- **The desk knows who never got the email.** A registration whose message Mailgun bounced or the recipient complained about carries an "email respins" chip — the reason with it — on the desk row and on the registration page, so the organizer knows who to call before race day. BR-REQ-037-08 criterion 8; `DECISIONS.md` §76.
+- **One link, all my registrations.** `/inscrieri/ale-mele` ("Înscrierile mele", in the footer): type the address, get one message with one link, open every active registration of yours — the event, the state, the desk code and its QR once confirmed, "I am here" from the day before, cancel. The same oracle rule as "send me my link again"; the first use of the `MANAGE_PROFILE` token purpose, scoped to the participant, single use on cancel. No account, still. BR-REQ-036-04; `DECISIONS.md` §77.
+- **Race week on the homepage.** Within seven days of the featured event the hero counts down — "În 3 zile, sâmbătă 07:00", "Mâine", "Azi" — on the event's own calendar; the free places stay while registration is open, and once it has closed the sentence says to come to the desk with the QR. Server-rendered, no script. "Alte evenimente" folds on a phone when there are more than four. BR-REQ-011-01 criterion 12; `DECISIONS.md` §78.
+- **Small things reported.** The bib sheet has "câte unul pe pagină" beside the two-per-page sheet; the registrations list resends the **confirmation with the QR** for a confirmed row ("Retrimite QR-ul"), and so does "send me my link again"; the backoffice tab bar keeps the current tab in view on a phone. `DECISIONS.md` §79.
+- **Send the emails now.** `/admin/registrations` shows the outbox — what is waiting, what went out today against Mailgun's hundred — and "Trimite acum" runs the same worker the monitor runs, within the day's remaining allowance, audited and throttled. No button when nothing is waiting or the allowance is spent; a sentence instead. BR-REQ-080-02 criterion 5; `DECISIONS.md` §80.
+- **Mailgun, the procedure with the values.** `SETUP.md` §35: the EU domain `mail.<club domain>`, the records ROMARG needs (with the 255-character DKIM gotcha cPanel has), the webhook events the application acts on (Permanent Failure and Spam Complaints — `/admin/tasks` said otherwise and is corrected), the rehearsal on QA, the production variables.
+- **The monitors exist.** Six cron-job.org jobs created by the owner on 2026-09-18 — production every fifteen minutes by day and hourly at night, per endpoint; QA hourly — and `/api/health` answers `ok` on both environments; `/admin/tasks` reads it from the system. `SETUP.md` §26, §30.
+- **Tests, faster.** `yarn test` runs its files on eight workers instead of one at a time: five minutes became forty-six seconds; the pre-commit `yarn check` with it. `DECISIONS.md` §79.
+- **Fixes.** The duration field refused 120 minutes (`step` counted from `min: 1`); any whole minute is a duration now. The stale toolbar in the editor: bold and the rest now light up on a selection change, not only on a keystroke.
+
 ## BR-V1.35-2026-09-18
+
+Evening of 2026-09-18, accounts rather than code (`SETUP.md` §26, §30): the six cron-job.org
+jobs exist and both environments' `/api/health` read `ok` for the first time; the club's
+sending domain is verified on Mailgun and **production email is live**, with a `contact@`
+address that forwards to the owner and Zitadel's own invitations going out from the same
+domain; the R2 bucket exists.
 
 Race day, the way a real race works — and the one figure that would have taken the site down.
 

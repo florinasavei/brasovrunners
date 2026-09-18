@@ -9,6 +9,14 @@ import type { RegistrationStatus } from "@/db/schema/registrations";
  * `WAITLISTED` has no resend: nothing is waiting on the participant to act — they are simply
  * queued — so there is no link to hand them again.
  */
+/**
+ * The reminder may be resent by hand while the registration is confirmed and the event is
+ * still ahead (`DECISIONS.md` §81): after the start there is nothing to remind anybody of.
+ */
+export function canResendReminder(status: RegistrationStatus, eventStartsAt: Date, now: Date): boolean {
+  return status === "CONFIRMED" && eventStartsAt.getTime() > now.getTime();
+}
+
 export function deriveAllowedResendMessageType(status: RegistrationStatus): EmailMessageType | null {
   switch (status) {
     case "PENDING_EMAIL_CONFIRMATION":
@@ -18,7 +26,10 @@ export function deriveAllowedResendMessageType(status: RegistrationStatus): Emai
     case "WAITLIST_OFFERED":
       return "WAITLIST_SPOT_OFFER";
     case "CONFIRMED":
-      return "REGISTRATION_MANAGE_LINK";
+      // The confirmation itself, not a bare manage link: it carries the manage link *and* the
+      // desk code with its QR, which is what "send it again" means the week of the race
+      // (`DECISIONS.md` §79). REGISTRATION_MANAGE_LINK stays in the catalogue, unsent.
+      return "REGISTRATION_CONFIRMED";
     case "CANCELLED":
     case "EXPIRED":
       return "REGISTRATION_STATE_NOTICE";

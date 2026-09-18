@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -867,7 +867,8 @@ PENDING_EMAIL_CONFIRMATION -> verify-email message
 PENDING_DECLARATION        -> complete-declaration message
 WAITLISTED                 -> waiting-list status/manage message
 WAITLIST_OFFERED           -> current claim-place offer
-CONFIRMED                  -> confirmation/manage-unregister message
+CONFIRMED                  -> the confirmation again (REGISTRATION_CONFIRMED: code, QR, manage link)
+CONFIRMED, event ahead     -> EVENT_REMINDER, by name ("Trimite reminderul")
 CANCELLED or EXPIRED       -> REGISTRATION_STATE_NOTICE, with an eligible restart link
 ```
 
@@ -1117,8 +1118,8 @@ whichever wins: the mailbox provider owns the apex MX, SPF and DKIM, and Mailgun
 subdomain. Planned mailboxes `admin@brasovrunners.com`, `amalia@brasovrunners.com`, `dani@brasovrunners.com`, and a
 public `contact@brasovrunners.com` that all three read — a shared mailbox or, failing that on the
 plan chosen, a group. Application mail stays separate, on a subdomain: the planned name is
-`mail.brasovrunners.com`, **not configured, no DNS values exist for it yet — none are to be
-invented here**. The provider is Mailgun, whose adapter is built and whose account exists; the
+`mail.brasovrunners.com`, **not configured yet — §35 is the procedure, with every value that
+can be known before Mailgun generates the DKIM key**. The provider is Mailgun, whose adapter is built and whose account exists; the
 owner also named Brevo as a candidate, which would be a new adapter and webhook rather than
 configuration (`DECISIONS.md` §56). Until a sending domain is verified, production email stays
 `capture`.
@@ -1269,6 +1270,42 @@ at noon. The site is allowed to be slower at night — the first request after a
 pays Neon's cold start — because nobody in Brașov is registering at 03:00 and a warm database
 then costs the same CU-hours it costs at noon: about 50 a month this way, against 65 at
 fifteen minutes around the clock and 180 at five.
+
+**Mailgun, done 2026-09-18.** Sending domain `mail.brasovrunners.com` — a subdomain, so the
+apex stays free for mailboxes later (`docs/RUNBOOKS.md` § Step 2 — Email) — EU region, shared
+IP, self-managed DKIM 2048. The records at ROMARG (Zone Editor, TTL 30): TXT `mail` =
+`v=spf1 include:mailgun.org ~all`; TXT `mta._domainkey.mail` = the DKIM key, **entered as two
+TXT strings** because cPanel silently truncates one string at 255 characters and Mailgun then
+reads a key that ends early (split at exactly 255, "+ Add TXT string to record"); MX `mail` ×2
+= `mxa.eu.mailgun.org`, `mxb.eu.mailgun.org`, priority 10; CNAME `email.mail` =
+`eu.mailgun.org`; TXT `_dmarc.mail` = Mailgun's `p=none` record (reporting only). The API
+base for an EU domain is `https://api.eu.mailgun.net/v3` — the US one answers 404 for it.
+Production variables: `MAILGUN_DOMAIN`, `MAILGUN_API_BASE_URL`, `MAILGUN_API_KEY` (the
+domain's sending key "brasovrunners-production"), `MAILGUN_WEBHOOK_SIGNING_KEY`,
+`EMAIL_FROM_ADDRESS=noreply@mail.brasovrunners.com`, `EMAIL_REPLY_TO=contact@mail.brasovrunners.com`,
+`EMAIL_DELIVERY_MODE=live`. Verified with `yarn email:probe` pointed at the domain.
+
+**The club's reply address, until it has a mailbox.** `contact@mail.brasovrunners.com` is a
+Mailgun **Route** (Send → Receiving → Routes): match recipient `contact@mail.brasovrunners.com`
+→ Forward to the owner's Gmail, Stop, priority 0, no "store and notify" (nothing reads incoming
+mail, and storing people's messages at a third party for nothing is not a feature). Receiving
+works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
+Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
+copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
+is right, because every email the site sends carries `Reply-To: contact@…`. When the club gets Google or Microsoft
+mailboxes, those take the **apex** (`@brasovrunners.com`) and this subdomain is untouched; only
+the two reply-to values move — `EMAIL_REPLY_TO` here and the Zitadel SMTP provider's.
+
+**Zitadel sends its own mail through the same domain.** Its invitations, password resets and
+codes went out from Zitadel's default sender; now from the club's. Zitadel console → Default
+Settings → **SMTP Provider** → Mailgun: host `smtp.eu.mailgun.org`, port 587, STARTTLS, user
+`postmaster@mail.brasovrunners.com`, password = the domain's SMTP credential (Domain settings →
+SMTP Credentials → reset; it is in `.env.local` and the password manager), sender
+`noreply@mail.brasovrunners.com` "Brașov Runners", reply-to `contact@mail.brasovrunners.com`.
+Test, save, **Activate**; the old sandbox provider is **deactivated**, not deleted (deleting
+asks for the sender name typed exactly as it was saved, and the comma-below `ș` is not the
+cedilla `ş` — a deactivated provider is harmless either way). The EU host, not
+`smtp.mailgun.org`: the domain lives in the EU region.
 
 **Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
 month and *suspends the compute* when they are spent, until the next month; the compute sleeps
@@ -1537,14 +1574,18 @@ Providers:
       run at the §26 cadences or the compute is suspended mid-month (`DECISIONS.md` §68).
 - [x] R2 resources — bucket `brasovrunners-media`, one account token, the five variables on
       both Vercel projects (§32, 2026-09-18).
-- [ ] Mailgun production domain verified — needs the club's DNS. The account exists (2026-09-05),
-      sandbox only.
+- [x] Mailgun production domain verified — `mail.brasovrunners.com`, EU region, DKIM 2048,
+      all five records valid on 2026-09-18 (§26 has the records and the one trap: cPanel cuts
+      a TXT value at 255 characters, so the DKIM key is entered as two strings). Production
+      sends live since the same evening; one probe reached the owner's inbox.
 - [x] QA email restricted — `allowlist`, and `live` is refused outside production at startup
       (`tests/integration/notifications/modes.test.ts`).
-- [ ] Webhook/job secrets configured — QA: both. Production: `JOB_SECRET` set;
-      `MAILGUN_WEBHOOK_SIGNING_KEY` waits for the sending domain; **the production monitors on
-      cron-job.org are not created yet** (four jobs, day/night, §26 — the owner, tonight), and
-      the QA pair is still at five minutes and must move to hourly.
+- [x] Webhook/job secrets configured — both environments: `JOB_SECRET`, and the six
+      cron-job.org jobs of §26 (four production, day/night; two QA, hourly) created 2026-09-18
+      with `/api/health` reading `ok` on both. Production: `MAILGUN_WEBHOOK_SIGNING_KEY` set,
+      the domain-level webhook "brasovrunners production" on delivered / permanent failure /
+      temporary failure / spam complaints; a second webhook "brasovrunners qa" points at QA.
+      QA still sends from the sandbox until its own sending key is made (optional).
 - [x] Production config rejects unsafe resources/modes — the development switcher
       (`tests/unit/config/env.test.ts`), live delivery anywhere else
       (`notifications/modes.test.ts`), test registrations, twice
@@ -1562,8 +1603,9 @@ Operations/privacy:
 - [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; `/devs` shows the database's
       CU-hours once `NEON_API_KEY` is set (§33); failure alerting from the pinger to a real
       inbox is not confirmed.
-- [ ] Production staff sign-in — no production Zitadel application yet, `STAFF_AUTH_MODE=disabled`
-      there; §25 and the Zitadel runbook, then the first `staff_users` row by hand.
+- [x] Production staff sign-in — the "Brasov Runners Production" Zitadel application
+      (2026-09-17), `STAFF_AUTH_MODE=provider`, the owner's SUPERADMIN row; verified by the owner
+      signing in on 2026-09-18.
 - [ ] Volunteer accounts for race day — §34; and a rehearsal on QA with test registrations.
 - [ ] Ownership/recovery/handover documented — §2 and §31 exist; the repository, Vercel, Neon,
       Mailgun and Zitadel accounts are the maintainer's personal ones (BR-BUS-101).
@@ -1664,3 +1706,87 @@ the accounts after the race from the same screen.
 Final operational rule:
 
 > No direct production fixes, no participant password system, no state-changing email GET links, no raw tokens in storage or logs, no live email in QA, no external CMS, no unreviewed declaration wording, and no AI reviewer with repository write access.
+
+## 35. Put the Mailgun sending domain on the club's `.com`
+
+Twenty minutes across three consoles, once (BR-REQ-080-03; `/admin/tasks` → "Email către
+participanți reali" shows the same steps with the values filled in). **Where it stands
+(2026-09-18, evening):** the domain `mail.<club domain>` exists in Mailgun's **EU region**
+(`unverified` until DKIM resolves); at ROMARG the SPF TXT, the tracking CNAME and the two MX
+are published and Mailgun reads them as valid; the DKIM TXT was published **truncated to 255
+characters** (step 2 says why and how); the production sending key `brasovrunners-production`
+(id `44ec4598-451361b4`) exists and is on the production Vercel project as `MAILGUN_API_KEY`,
+beside `MAILGUN_DOMAIN`, `MAILGUN_API_BASE_URL` and `EMAIL_FROM_ADDRESS` the owner set. Left:
+the DKIM fix, Verify, the webhook, `EMAIL_DELIVERY_MODE=live`.
+
+**Decisions baked in.** The subdomain, so the apex MX stays free for the club's own mailbox
+provider (§26). The **EU region** (`https://api.eu.mailgun.net/v3`): the account works in
+both regions, a domain lives in one and cannot move, and a Romanian club's participant
+addresses belong in Frankfurt like its database does — the privacy notice names the processor
+and its region. The sender is `"Brașov Runners" <noreply@mail.<club domain>>` with no variable
+set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox exists — an
+*empty* value is refused at startup.
+
+1. **Mailgun → Sending → Domains → Add new domain.** Name `mail.<club domain>`; region
+   **EU**; DKIM key length 2048; leave "Use this domain for inbound" off. Mailgun then shows
+   the records below with its own values — the DKIM one is generated here and exists nowhere
+   else.
+2. **ROMARG → cPanel → Zone Editor**, TTL 300, short names (cPanel appends the domain).
+   Mailgun's values for this EU domain, read back through its API on 2026-09-18:
+
+   ```text
+   TXT    mail                  v=spf1 include:mailgun.org ~all
+   TXT    mta._domainkey.mail   k=rsa; p=<401 characters — see below>
+   CNAME  email.mail            eu.mailgun.org
+   MX 10  mail                  mxa.eu.mailgun.org      (optional: only receiving)
+   MX 10  mail                  mxb.eu.mailgun.org
+   TXT    _dmarc.mail           v=DMARC1; p=quarantine; adkim=s; aspf=s   (ours, not Mailgun's)
+   ```
+
+   **The DKIM value is longer than one DNS string.** A TXT string holds 255 characters; a
+   2048-bit key is 401. cPanel's Zone Editor saved the first 255 and dropped the rest (found
+   with `nslookup -type=TXT mta._domainkey.mail.<club domain> ns1.romarg.com`: the published
+   value is a prefix of Mailgun's). Enter it as **two quoted strings on one line**, split
+   anywhere: `"k=rsa; p=MIIB…first 200…" "…the remaining 201…"` — resolvers concatenate them
+   and Mailgun reads the whole key. Nothing on the apex: SPF and DKIM for the apex belong to
+   the mailbox provider when one is chosen (§26).
+3. **Mailgun → the domain → DNS Records → Verify DNS settings.** Green within minutes at
+   TTL 300; up to an hour if ROMARG caches. `curl -u api:<any key of the account>
+   https://api.eu.mailgun.net/v4/domains/mail.<club domain>` shows each record's `valid`
+   flag without waiting for the console. Until it is green, sending answers 400 and the
+   outbox retries — nothing is lost.
+4. **Mailgun → Sending → Domain settings → Sending API keys → Create** for this domain →
+   `MAILGUN_API_KEY`. A domain-scoped key, not the account's private key.
+5. **Mailgun → Sending → Webhooks** (domain `mail.<club domain>`): copy the **HTTP webhook
+   signing key** → `MAILGUN_WEBHOOK_SIGNING_KEY`; add `https://<production host>/api/webhooks/mailgun`
+   for **Permanent Failure** and **Spam Complaints** — the two events the application acts on
+   (`BOUNCED`/`COMPLAINED` on the outbox row, "email respins" at the desk and on the
+   registration, `DECISIONS.md` §76). "Delivered" is optional and harmless; "Temporary
+   Failure" is ignored by the route.
+6. **Rehearse on QA first** — production refuses every registration until the club's legal
+   texts are approved (§30), so a registration there cannot be walked yet. On the QA Vercel
+   project set `MAILGUN_DOMAIN=mail.<club domain>`, `MAILGUN_API_KEY` (step 4),
+   `MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3`, keep `EMAIL_DELIVERY_MODE=allowlist`
+   and `EMAIL_ALLOWLIST=<your address>`, redeploy, register on QA with a dotted spelling of your
+   Gmail (`DECISIONS.md` §74 — each spelling is a new participant, all land in one inbox): the
+   verification, the declaration link and the confirmation with its QR arrive from
+   `noreply@mail.<club domain>`. `/devs` on QA shows the email check "limited (allowlist)" and
+   the webhook "configured".
+7. **Production**, from a scratch directory linked to the production project (§33's trick):
+
+   ```text
+   npx vercel env add MAILGUN_DOMAIN production               mail.<club domain>
+   npx vercel env add MAILGUN_API_KEY production              <step 4>
+   npx vercel env add MAILGUN_API_BASE_URL production         https://api.eu.mailgun.net/v3
+   npx vercel env add MAILGUN_WEBHOOK_SIGNING_KEY production  <step 5>
+   npx vercel env add EMAIL_REPLY_TO production               <a club mailbox, only if it exists>
+   npx vercel env rm  EMAIL_DELIVERY_MODE production && npx vercel env add EMAIL_DELIVERY_MODE production   live
+   ```
+
+   Redeploy. `/devs` → "E-mail" reads `live`; `/api/health` unchanged (delivery is not a job).
+8. **Watch the first day.** `/admin/registrations` shows the outbox counter — sent today
+   against the free plan's hundred — and "Trimite acum" (`DECISIONS.md` §80). A spent
+   allowance defers the rest to the reset, never drops it (`DECISIONS.md` §40).
+
+Sandbox afterwards: leave it; QA can keep the club domain in allowlist mode (step 6), which
+frees it from the sandbox's five-recipient limit.

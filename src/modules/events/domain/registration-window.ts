@@ -25,12 +25,14 @@ export type RegistrationState =
   | "NOT_YET_OPEN"
   | "OPEN"
   | "CLOSED"
-  | "EVENT_CANCELLED";
+  | "EVENT_CANCELLED"
+  | "EVENT_COMPLETED";
 
 export function registrationState(event: RegistrationWindowInput, now: Date): RegistrationState {
   // A cancelled or completed event never accepts registration, whatever the window says
   // (AGENTS.md §10.1, BR-REQ-020-01 criterion 3). Checked first so a cancelled event does not
   // advertise an open window.
+  if (event.eventStatus === "COMPLETED") return "EVENT_COMPLETED";
   if (event.eventStatus !== "SCHEDULED") return "EVENT_CANCELLED";
 
   if (event.registrationMode === "NONE") return "NOT_APPLICABLE";

@@ -427,12 +427,17 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
-      or(
-        and(
-          inArray(registrations.status, ["PENDING_DECLARATION", "WAITLIST_OFFERED"]),
-          lte(registrations.holdExpiresAt, now),
+      and(
+        // A completed event is over: the job leaves it alone (§82). Cancelled ones still
+        // expire their holds, so nobody is left holding a place on a race that will not run.
+        sql`${events.eventStatus} <> 'COMPLETED'`,
+        or(
+          and(
+            inArray(registrations.status, ["PENDING_DECLARATION", "WAITLIST_OFFERED"]),
+            lte(registrations.holdExpiresAt, now),
+          ),
+          and(eq(registrations.status, "WAITLISTED"), lte(events.startsAt, now)),
         ),
-        and(eq(registrations.status, "WAITLISTED"), lte(events.startsAt, now)),
       ),
     );
   return rows.map((row) => row.eventId);

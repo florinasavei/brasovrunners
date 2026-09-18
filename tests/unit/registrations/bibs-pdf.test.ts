@@ -5,8 +5,9 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 /**
  * BR-REQ-038-01 — the printable sheet: two bibs per A4 page, the club's font and logo embedded.
  */
-const sheet = (count: number) =>
+const sheet = (count: number, layout?: "two" | "one") =>
   renderBibSheet({
+    layout,
     rows: Array.from({ length: count }, (_, i) => ({ bibNumber: i + 1, registeredName: `Alergător Ștefan ${i + 1}` })),
     eventTitle: "Crosul aniversar Brașov Runners",
     eventDate: "11 octombrie 2026",
@@ -22,6 +23,11 @@ describe("BR-REQ-038-01 the bib sheet", () => {
     expect(text.match(/\/Type \/Page\b/g)?.length).toBe(3);
     expect(text).toMatch(/Roboto/);
     expect(text).toMatch(/\/Subtype \/Image/);
+  });
+
+  it("prints one bib per page when asked, the same A5 size, so five bibs are five pages", async () => {
+    const pdf = await sheet(5, "one");
+    expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(5);
   });
 
   it("is still a file when there is nothing to print", async () => {

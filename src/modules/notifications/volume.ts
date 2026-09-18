@@ -17,15 +17,17 @@ import type { Database } from "@/db/types";
  */
 
 /**
- * Three, from §16.3's message list, for a registration that completes normally:
- * `VERIFY_REGISTRATION_EMAIL`, `COMPLETE_DECLARATION`, `REGISTRATION_CONFIRMED`.
+ * Four, from §16.3's message list, for a registration that completes normally and is
+ * reminded: `VERIFY_REGISTRATION_EMAIL`, `COMPLETE_DECLARATION`, `REGISTRATION_CONFIRMED`,
+ * and `EVENT_REMINDER` two days before the start (`DECISIONS.md` §81) — three since
+ * 2026-09-18, and the reminder made it four.
  *
  * An entrant who lands on the waiting list costs more (`WAITLIST_JOINED`, then
- * `WAITLIST_SPOT_OFFER`), and one who cancels costs another. So three is the *floor* for a
+ * `WAITLIST_SPOT_OFFER`), and one who cancels costs another. So four is the *floor* for a
  * completed registration and the projection below understates a busy day rather than crying
  * wolf — which is the right direction for a number somebody uses to decide whether to upgrade.
  */
-export const MESSAGES_PER_COMPLETED_REGISTRATION = 3;
+export const MESSAGES_PER_COMPLETED_REGISTRATION = 4;
 
 /**
  * Mailgun Free: 100 messages a day (`docs/PLATFORM.md`, limit 1 of the four that bite).
@@ -54,6 +56,8 @@ export type EmailVolumeToday = {
   projectedMessages: number;
   /** Outbox rows created today, whatever their status. What has actually been asked for. */
   queuedMessages: number;
+  /** Rows not yet delivered — pending or mid-flight — whatever day they were queued. */
+  waitingMessages: number;
   /** Outbox rows actually transmitted today. What the allowance has actually paid for. */
   sentMessages: number;
   allowance: number;
@@ -96,6 +100,11 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     .from(emailOutbox)
     .where(and(gte(emailOutbox.sentAt, since), sql`${emailOutbox.sentAt} IS NOT NULL`));
 
+  const [waiting] = await db
+    .select({ value: count() })
+    .from(emailOutbox)
+    .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
+
   const realRegistrations = registrationCounts?.real ?? 0;
   const testRegistrations = registrationCounts?.test ?? 0;
   const sentMessages = sent?.value ?? 0;
@@ -106,6 +115,7 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     projectedMessages:
       (realRegistrations + testRegistrations) * MESSAGES_PER_COMPLETED_REGISTRATION,
     queuedMessages: queued?.value ?? 0,
+    waitingMessages: waiting?.value ?? 0,
     sentMessages,
     allowance: MAILGUN_FREE_DAILY_MESSAGES,
     remaining: Math.max(0, MAILGUN_FREE_DAILY_MESSAGES - sentMessages),

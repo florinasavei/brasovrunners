@@ -2,7 +2,7 @@ import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter"
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * The ten message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
+ * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
  *
  * Ordinary transactional copy, not legal text — the restraint AGENTS.md §1.2 and
  * DECISIONS.md §27 apply to the privacy notice, terms and declaration does not extend to "your
@@ -18,11 +18,19 @@ export type TemplateContent = {
   subject: string;
   greeting: string;
   paragraphs: string[];
+  /**
+   * The facts a participant keeps (`DECISIONS.md` §81): one bold line — date, time, meeting
+   * point — and the links that go with it (the map, the Strava event). On the confirmation
+   * and the reminder; text-first, so the plain-text body reads the same.
+   */
+  facts?: { line: string; links: { label: string; url: string }[] };
   /** Present only when the message carries an action link. */
   action?: { label: string; url: string };
   /** Present on the confirmation: the QR the participant shows to pick up their number. */
   image?: { url: string; alt: string; caption: string };
   closing: string;
+  /** "Reply to this email with questions" — on every message when the club has a reply address. */
+  footer?: string;
 };
 
 const SIGN_OFF: Record<EmailLocale, string> = {
@@ -42,16 +50,28 @@ export function renderContent(content: TemplateContent, locale: EmailLocale): { 
   const textLines = [
     content.greeting,
     "",
+    ...(content.facts
+      ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
+      : []),
     ...content.paragraphs,
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     "",
     content.closing,
     SIGN_OFF[locale],
+    ...(content.footer ? ["", content.footer] : []),
   ];
 
   const htmlParts = [
     `<p>${escapeHtml(content.greeting)}</p>`,
+    // The facts first and bold: what the eye finds on a phone the morning of.
+    ...(content.facts
+      ? [
+          `<p><strong>${escapeHtml(content.facts.line)}</strong>${content.facts.links
+            .map((link) => `<br><a href="${link.url}">${escapeHtml(link.label)}</a>`)
+            .join("")}</p>`,
+        ]
+      : []),
     ...content.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`),
     // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
     // does not render is a participant at the desk with nothing to show.
@@ -65,6 +85,7 @@ export function renderContent(content: TemplateContent, locale: EmailLocale): { 
       ? [`<p><a href="${content.action.url}">${escapeHtml(content.action.label)}</a></p>`]
       : []),
     `<p>${escapeHtml(content.closing)}<br>${escapeHtml(SIGN_OFF[locale])}</p>`,
+    ...(content.footer ? [`<p style="color:#666;font-size:13px">${escapeHtml(content.footer)}</p>`] : []),
   ];
 
   return { html: htmlParts.join("\n"), text: textLines.join("\n") };
@@ -77,10 +98,30 @@ export type TemplateData = {
   eventLocationName?: string;
   eventStartsAtFormatted?: string;
   currentStatus?: string;
-  /** The desk code and the address of its QR image, on the confirmation only (BR-REQ-037-08). */
+  /** The desk code and the address of its QR image, on the confirmation and the reminder (BR-REQ-037-08). */
   checkinCode?: string;
   checkinQrUrl?: string;
+  /** The event's map link and Strava event link, when set (§81). */
+  eventMapUrl?: string;
+  eventStravaEventUrl?: string;
+  /** "What to bring", the translation's one line (§81). */
+  eventChecklist?: string;
+  /** Set when the club has a reply address: the footer says to use it. */
+  replyTo?: string;
+  /** The thank-you's optional link — results, photos (§82). Carried in the payload, not a token. */
+  thanksUrl?: string;
 };
+
+/** The bold line and its links, shared by the confirmation and the reminder. */
+function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
+  const line = [d.eventStartsAtFormatted, d.eventLocationName].filter(Boolean).join(" · ");
+  if (!line) return undefined;
+  const links = [
+    ...(d.eventMapUrl ? [{ label: labels.map, url: d.eventMapUrl }] : []),
+    ...(d.eventStravaEventUrl ? [{ label: labels.strava, url: d.eventStravaEventUrl }] : []),
+  ];
+  return { line, links };
+}
 
 const T = {
   ro: {
@@ -115,8 +156,10 @@ const T = {
     },
     registrationConfirmed: {
       subject: "Înscrierea este confirmată",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm${d.eventLocationName ? ` la ${d.eventLocationName}` : ""}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+        `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm!`,
+        ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
           : []),
@@ -124,6 +167,29 @@ const T = {
       ],
       action: "Gestionează înscrierea",
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+    },
+    eventReminder: {
+      subject: "Ne vedem în curând — detaliile pentru ziua cursei",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `${d.eventTitle ?? "Evenimentul"} este peste două zile. Iată ce ai nevoie.`,
+        ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
+        ...(d.checkinCode
+          ? [`La masă arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
+          : []),
+        "Nu poți veni? Anulează înscrierea cu linkul de mai jos — locul tău merge la cineva de pe lista de așteptare.",
+      ],
+      action: "Nu pot veni — anulez înscrierea",
+      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+    },
+    eventThanks: {
+      subject: "Mulțumim că ai alergat cu noi",
+      body: (d: TemplateData) => [
+        `Mulțumim că ai fost la ${d.eventTitle ?? "eveniment"}. Ne-a bucurat să te vedem la start.`,
+        ...(d.thanksUrl ? ["Rezultatele și pozele sunt la linkul de mai jos."] : []),
+        "Ne vedem la următoarea alergare.",
+      ],
+      action: "Rezultate și poze",
     },
     registrationCancelled: {
       subject: "Înscrierea a fost anulată",
@@ -141,9 +207,12 @@ const T = {
       action: "Gestionează înscrierea",
     },
     profileManageLink: {
-      subject: "Linkul tău de gestionare a profilului",
-      body: () => ["Iată linkul cu care poți edita profilul tău public de alergător."],
-      action: "Gestionează profilul",
+      subject: "Înscrierile tale la Brașov Runners",
+      body: () => [
+        "Iată linkul cu care vezi toate înscrierile tale active: starea fiecăreia, codul de acces și codul QR pentru ziua cursei, și posibilitatea de a renunța.",
+        "Linkul este valabil 14 zile și doar pentru tine.",
+      ],
+      action: "Vezi înscrierile mele",
     },
     registrationStateNotice: {
       subject: "Starea înscrierii tale",
@@ -152,6 +221,7 @@ const T = {
       ],
     },
     closing: "Alergare plăcută,",
+    footer: "Răspunde la acest email pentru întrebări.",
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
@@ -183,14 +253,37 @@ const T = {
       ],
       action: "Confirm the place",
     },
+    eventReminder: {
+      subject: "See you soon — the details for race day",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `${d.eventTitle ?? "The event"} is two days away. Here is what you need.`,
+        ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
+        ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
+        "Can't come? Cancel with the link below — your place goes to somebody on the waiting list.",
+      ],
+      action: "I can't come — cancel my registration",
+      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
+    },
+    eventThanks: {
+      subject: "Thank you for running with us",
+      body: (d: TemplateData) => [
+        `Thank you for being at ${d.eventTitle ?? "the event"}. It was good to see you at the start.`,
+        ...(d.thanksUrl ? ["The results and the photos are at the link below."] : []),
+        "See you at the next run.",
+      ],
+      action: "Results and photos",
+    },
     registrationConfirmed: {
       subject: "Your registration is confirmed",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Your registration for ${d.eventTitle ?? "the event"} is confirmed. See you${d.eventLocationName ? ` at ${d.eventLocationName}` : ""}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.`,
+        `Your registration for ${d.eventTitle ?? "the event"} is confirmed. See you there!`,
+        ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`When you pick up your race number, show the QR code below or say the code ${d.checkinCode}.`]
           : []),
-        "You can manage or cancel your registration at any time using the link below.",
+        "You can manage or cancel your registration at any time with the link below.",
       ],
       action: "Manage your registration",
       image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
@@ -211,9 +304,12 @@ const T = {
       action: "Manage your registration",
     },
     profileManageLink: {
-      subject: "Your profile management link",
-      body: () => ["Here is the link to edit your public runner profile."],
-      action: "Manage your profile",
+      subject: "Your registrations at Brașov Runners",
+      body: () => [
+        "Here is the link to every active registration of yours: the state of each, the access code and QR for race day, and the option to withdraw.",
+        "The link is valid for 14 days and only for you.",
+      ],
+      action: "See my registrations",
     },
     registrationStateNotice: {
       subject: "Your registration status",
@@ -222,6 +318,7 @@ const T = {
       ],
     },
     closing: "Happy running,",
+    footer: "Reply to this email with questions.",
   },
 } as const;
 
@@ -236,6 +333,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   REGISTRATION_MANAGE_LINK: "registrationManageLink",
   PROFILE_MANAGE_LINK: "profileManageLink",
   REGISTRATION_STATE_NOTICE: "registrationStateNotice",
+  EVENT_REMINDER: "eventReminder",
+  EVENT_THANKS: "eventThanks",
 };
 
 /**
@@ -258,16 +357,19 @@ export function buildTemplateContent(
     subject: string;
     body: (d: TemplateData) => string[];
     action?: string;
+    facts?: (d: TemplateData) => TemplateContent["facts"];
     image?: (d: TemplateData) => TemplateContent["image"];
   };
 
   return {
     subject: entry.subject,
     greeting: copy.hi(data.participantName),
+    facts: entry.facts?.(data),
     paragraphs: entry.body(data),
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
     closing: copy.closing,
+    footer: data.replyTo ? copy.footer : undefined,
   };
 }
 

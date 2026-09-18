@@ -14,6 +14,7 @@ import { routing } from "@/i18n/routing";
 import {
   countDesk,
   findRegistrationByCheckinCode,
+  isEventCompleted,
   listDeskRegistrations,
   listEventsAcceptingRegistrations,
   listEventsForDesk,
@@ -70,6 +71,9 @@ export default async function DeskPage({ params, searchParams }: Props) {
   const byCode = isCheckinCode(code) ? await findRegistrationByCheckinCode(db, code, locale) : undefined;
   const rows = byCode ? [byCode] : eventId ? await listDeskRegistrations(db, { eventId, query: q, locale }) : [];
   const counts = eventId ? await countDesk(db, eventId) : null;
+  // The race is over (§82): the rows still read, the buttons are gone, and the service refuses
+  // a check-in anyway.
+  const closed = eventId ? await isEventCompleted(db, eventId) : false;
 
   const codeHrefTemplate = getPathname({
     locale,
@@ -185,6 +189,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
         </Stack>
       )}
 
+      {closed && <Alert severity="info">{t("desk.closed")}</Alert>}
       {byCode && <Alert severity="info">{t("desk.foundByCode")}</Alert>}
       {rows.length === 0 && eventId ? (
         <Typography color="text.secondary">
@@ -201,6 +206,7 @@ export default async function DeskPage({ params, searchParams }: Props) {
               eventId={eventId}
               q={q}
               showEvent={Boolean(byCode)}
+              readOnly={closed}
             />
           ))}
         </Stack>

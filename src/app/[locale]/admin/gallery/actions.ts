@@ -13,6 +13,7 @@ import {
   setCover,
   transitionAlbum,
 } from "@/modules/content/gallery/service";
+import { deleteMediaAsset } from "@/modules/media/references";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -153,3 +154,21 @@ export async function deleteAlbumAction(form: FormData): Promise<void> {
   }
   redirect(`${getPathname({ locale, href: "/admin/gallery" })}?saved=deleted#admin-alert`);
 }
+
+/**
+ * Delete a stored picture from the pictures page (`DECISIONS.md` §73). Refused while it is
+ * used anywhere — the page says where — so nothing published can lose its picture.
+ */
+export async function deletePictureAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/gallery/pictures" });
+  try {
+    const actor = await requireStaff();
+    await deleteMediaAsset(getDb(), { actor, assetId: text(form, "assetId") });
+  } catch (error) {
+    const outcome = outcomeOf(error);
+    backTo(path, outcome.error === "VALIDATION_ERROR" ? { error: "PICTURE_IN_USE" } : outcome);
+  }
+  backTo(path, { saved: "deleted" });
+}
+

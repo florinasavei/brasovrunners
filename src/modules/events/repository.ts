@@ -59,6 +59,8 @@ const PUBLIC_COLUMNS = {
   slug: eventTranslations.slug,
   title: eventTranslations.title,
   excerpt: eventTranslations.excerpt,
+  // The short description as written (§73) — null for events from before it; `excerpt` then.
+  excerptJson: eventTranslations.excerptJson,
   // The description, as a rich-text document (§11.3), rendered by `RichText`.
   bodyJson: eventTranslations.bodyJson,
   seoTitle: eventTranslations.seoTitle,
@@ -219,7 +221,12 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
     .select({
       locale: eventTranslations.locale,
       title: eventTranslations.title,
+      // "What to bring", the translation's line (§81); the map and the Strava event are the
+      // event's own.
+      checklist: eventTranslations.checklist,
       locationName: events.locationName,
+      mapUrl: events.mapUrl,
+      stravaEventUrl: events.stravaEventUrl,
       startsAt: events.startsAt,
       timezone: events.timezone,
     })

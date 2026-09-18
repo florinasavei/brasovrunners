@@ -4,6 +4,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
+import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
+import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
 import { Link } from "@/i18n/navigation";
 import type { EditableTranslation } from "../repository";
 
@@ -79,39 +81,33 @@ export default async function TranslationFieldsForm({
             disabled={slugLocked}
             required={!slugLocked}
           />
-          <TextField
-            name={name("excerpt")}
+          {/* The short description in the same editor (§73): a sentence or two, and a picture
+              when the organizer wants one on the hero. Its words become the plain `excerpt`. */}
+          <RichTextEditor
+            name={name("excerptBody")}
             label={t("editor.fields.excerpt")}
-            helperText={t("editor.excerptHelp")}
-            defaultValue={translation.excerpt ?? ""}
-            multiline
-            minRows={2}
+            initialBody={translation.excerptJson ?? fromPlainText(translation.excerpt)}
+            accessibleSuffix={translation.locale.toUpperCase()}
+            labels={richTextEditorLabels(rt)}
           />
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+            {t("editor.excerptHelp")}
+          </Typography>
           {/* The description proper, in the same editor a standing page uses (§11.3, §71). */}
           <RichTextEditor
             name={name("body")}
             label={t("editor.fields.body")}
             initialBody={translation.bodyJson}
             accessibleSuffix={translation.locale.toUpperCase()}
-            labels={{
-              bold: rt("bold"),
-              italic: rt("italic"),
-              heading2: rt("heading2"),
-              heading3: rt("heading3"),
-              bulletList: rt("bulletList"),
-              orderedList: rt("orderedList"),
-              quote: rt("quote"),
-              link: rt("link"),
-              linkUrl: rt("linkUrl"),
-              linkApply: rt("linkApply"),
-              linkRemove: rt("linkRemove"),
-              linkCancel: rt("linkCancel"),
-              undo: rt("undo"),
-              redo: rt("redo"),
-              image: rt("image"),
-              imageUploading: rt("imageUploading"),
-              imageFailed: rt("imageFailed"),
-            }}
+            labels={richTextEditorLabels(rt)}
+          />
+          {/* "What to bring": one line on the confirmation and the reminder (§81). */}
+          <TextField
+            name={name("checklist")}
+            label={t("editor.fields.checklist")}
+            helperText={t("editor.checklistHelp")}
+            defaultValue={translation.checklist ?? ""}
+            slotProps={{ htmlInput: { maxLength: 300 } }}
           />
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
             {t("editor.bodyHelp")}

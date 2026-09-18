@@ -38,9 +38,20 @@ function renderBlock(block: RichTextBlock): ReactNode {
   switch (block.type) {
     case "image":
       // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
-      // address was validated to be one of this site's own variants (§72).
+      // address was validated to be one of this site's own variants (§72). The figure takes
+      // the chosen share of the column on a wide screen and the whole width on a phone (§73)
+      // — a block in the flow, never floated, so two pictures are never side by side.
       return (
-        <Box component="figure" sx={{ m: 0, my: 2 }}>
+        <Box
+          component="figure"
+          sx={{
+            m: 0,
+            my: 2,
+            mx: "auto",
+            width: { xs: "100%", sm: `${block.attrs.widthPercent}%` },
+            maxWidth: "100%",
+          }}
+        >
           <Box
             component="img"
             src={block.attrs.src}
@@ -48,8 +59,13 @@ function renderBlock(block: RichTextBlock): ReactNode {
             width={block.attrs.width ?? undefined}
             height={block.attrs.height ?? undefined}
             loading="lazy"
-            sx={{ display: "block", maxWidth: "100%", height: "auto", borderRadius: 1 }}
+            sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1 }}
           />
+          {block.attrs.caption !== "" && (
+            <Typography component="figcaption" variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: "center" }}>
+              {block.attrs.caption}
+            </Typography>
+          )}
         </Box>
       );
     case "paragraph":

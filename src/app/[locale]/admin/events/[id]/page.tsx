@@ -8,7 +8,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -28,6 +28,7 @@ import {
   canDeleteEvent,
   canEditEventFields,
   canEditTranslation,
+  canManageRegistrations,
   canManageTestRegistrations,
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
@@ -44,6 +45,7 @@ import {
   addTestRegistrationsAction,
   deleteEventAction,
   assignBibNumbersAction,
+  sendEventThanksAction,
   duplicateEventAction,
   repeatEventAction,
   removeTestRegistrationsAction,
@@ -110,6 +112,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   const declarations = await listApprovedVersions(db, "EVENT_DECLARATION", locale);
   const t = await getTranslations("Admin");
+  const format = await getFormatter();
+  const now = new Date();
   // The language endonyms are shared with the public switcher: "Română" is what a Romanian
   // speaker looks for in either interface, and two catalogues of the same two words would drift.
   const tSite = await getTranslations("Site");
@@ -395,8 +399,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     slotProps={{ htmlInput: { min: 1 } }}
                     sx={{ width: 100 }}
                   />
+                  {/* Two submit buttons, one form: the second names the layout it asks for. */}
                   <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
                     {t("bibs.download")}
+                  </Button>
+                  <Button type="submit" name="layout" value="one" variant="text" size="small" sx={{ minHeight: 44 }}>
+                    {t("bibs.downloadOnePerPage")}
                   </Button>
                 </Stack>
               </form>
@@ -404,6 +412,55 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Stack>
         </Box>
       )}
+
+      {/*
+        After the race (§82): the thank-you to everyone who was checked in, once, by hand, with
+        an optional link to the results or the photos. Offered once the event has started;
+        gone once it was sent — the date says when.
+      */}
+      {canManageRegistrations(staffUser.role) &&
+        event.registrationMode === "INTERNAL" &&
+        event.startsAt.getTime() <= now.getTime() && (
+          <Box component="section">
+            <Divider sx={{ mb: 3 }} />
+            <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+              {t("thanks.title")}
+            </Typography>
+            {event.thanksSentAt ? (
+              <Typography variant="body2" color="text.secondary">
+                {t("thanks.sentOn", { date: format.dateTime(event.thanksSentAt, { dateStyle: "long", timeStyle: "short" }) })}
+              </Typography>
+            ) : (
+              <form action={sendEventThanksAction}>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="eventId" value={event.id} />
+                <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("thanks.help")}
+                  </Typography>
+                  <TextField
+                    name="url"
+                    type="url"
+                    label={t("thanks.url")}
+                    helperText={t("thanks.urlHelp")}
+                    size="small"
+                    slotProps={{ htmlInput: { pattern: "https://.*", maxLength: 2048 } }}
+                  />
+                  <Box>
+                    <ConfirmSubmitButton
+                      label={t("thanks.send")}
+                      title={t("thanks.confirmTitle")}
+                      body={t("thanks.confirmBody")}
+                      confirmLabel={t("thanks.send")}
+                      cancelLabel={t("confirm.cancel")}
+                      variant="contained"
+                    />
+                  </Box>
+                </Stack>
+              </form>
+            )}
+          </Box>
+        )}
 
       {mayFillTheQueue && (
         <Box component="section">

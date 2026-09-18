@@ -38,6 +38,9 @@ export type RegistrationListRow = {
   confirmedAt: Date | null;
   /** The race number, once assigned (BR-REQ-038-01). */
   bibNumber: number | null;
+  checkedInAt: Date | null;
+  /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
+  emailRejectedReason: string | null;
 };
 
 export type RegistrationListFilters = {
@@ -47,6 +50,8 @@ export type RegistrationListFilters = {
   clubMemberDeclared?: boolean;
   /** A name, or part of one (BR-REQ-041-01 criterion 7). */
   search?: string;
+  /** Only the rows whose email the provider refused (§83): who to call. */
+  emailBounced?: boolean;
 };
 
 /**
@@ -109,6 +114,23 @@ function escapeLike(term: string): string {
 }
 
 /** Every filter the list and its count must agree on, in one place so they cannot drift apart. */
+/**
+ * The provider's last word on this registration's mail, when that word was "no" (BR-REQ-080-04,
+ * `DECISIONS.md` §76): the reason Mailgun gave for the newest bounced or complained message —
+ * any message type, because a verification that bounced means exactly what a bounced
+ * confirmation means: this person never got the email, and somebody should call them. Null
+ * when every message went through, or none was sent yet. A short sanitized reason (§16.1),
+ * never a body.
+ */
+const emailRejectedReason = sql<string | null>`(
+  SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
+  FROM ${emailOutbox}
+  WHERE ${emailOutbox.registrationId} = ${registrations.id}
+    AND ${emailOutbox.status} IN ('BOUNCED', 'COMPLAINED')
+  ORDER BY ${emailOutbox.createdAt} DESC
+  LIMIT 1
+)`;
+
 function registrationConditions(filters: RegistrationListFilters): SQL[] {
   const search = filters.search?.trim();
 
@@ -120,6 +142,7 @@ function registrationConditions(filters: RegistrationListFilters): SQL[] {
     // filter, because `false` here means "did not tick a box" as often as it means "not a
     // member", and a screen that presented it as the second would be inventing an answer.
     filters.clubMemberDeclared ? eq(registrations.clubMemberDeclared, true) : undefined,
+    filters.emailBounced ? sql`${emailRejectedReason} IS NOT NULL` : undefined,
     /*
       Name only, and deliberately not the email address. An organizer at a desk is holding a
       person who just said their name out loud; matching addresses as well would turn this box
@@ -188,6 +211,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
+      checkedInAt: registrations.checkedInAt,
+      emailRejectedReason,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -272,10 +297,16 @@ export type RegistrationDetail = {
   checkedInByName: string | null;
   /** Who vouched for the address at the desk, when nobody clicked a link. */
   emailConfirmedByName: string | null;
+  /** Mailgun's reason when a message to this registration bounced or was complained about; null otherwise. */
+  emailRejectedReason: string | null;
+  /** For "send the reminder": only while the event is ahead (§81). */
+  eventStartsAt: Date;
 };
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
 const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
+
+
 
 export async function findRegistrationDetailForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -288,6 +319,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
+      emailRejectedReason,
+      eventStartsAt: events.startsAt,
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
@@ -310,6 +343,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .leftJoin(
       eventTranslations,
       and(
@@ -343,6 +377,8 @@ export type DeskRegistration = {
   checkinCode: string | null;
   checkedInAt: Date | null;
   checkedInByName: string | null;
+  /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
+  emailRejectedReason: string | null;
 };
 
 const DESK_COLUMNS = {
@@ -357,6 +393,7 @@ const DESK_COLUMNS = {
   checkinCode: registrations.checkinCode,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
+  emailRejectedReason,
 };
 
 function deskQuery<T extends Record<string, unknown>>(db: Database<T>, locale: Locale) {
@@ -521,6 +558,12 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
     )
     .where(and(eq(events.registrationMode, "INTERNAL"), eq(events.eventStatus, "SCHEDULED")))
     .orderBy(asc(events.startsAt));
+}
+
+/** Whether the chosen event is over (§82): the desk then shows the rows and no buttons. */
+export async function isEventCompleted<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<boolean> {
+  const [row] = await db.select({ eventStatus: events.eventStatus }).from(events).where(eq(events.id, eventId)).limit(1);
+  return row?.eventStatus === "COMPLETED";
 }
 
 /**

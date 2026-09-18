@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -242,6 +242,16 @@ node --import tsx -e "import('./src/shared/config/env').then(({envSchema}) => co
 `AUTH_SECRET` is Auth.js's own session secret, not Zitadel's. It is generated per environment and
 shared with nothing.
 
+### Zitadel's own emails
+
+Invitations, password resets and verification codes are sent by Zitadel, not by the site, and
+from whatever SMTP provider is active on the instance. Since 2026-09-18 that is the club's
+Mailgun domain (`SETUP.md` §26 has the values), so a colleague invited from Zitadel gets a mail
+from `noreply@mail.<domain>` with the club's reply address. If a new colleague reports "no
+invitation arrived": Default Settings → SMTP Provider → the Mailgun provider must be the
+**active** one, and Mailgun → Reporting → Logs shows the attempt. Deactivate rather than delete
+an old provider; the delete confirmation wants the sender name character for character.
+
 ### The first administrator
 
 **Insert the first `staff_users` row by hand.** The screen that invites people sits behind the
@@ -393,10 +403,12 @@ do.
 
 ### Step 2 — Email
 
-- [ ] Add the sending domain in Mailgun and create the SPF, DKIM, and tracking records.
-- [ ] Wait for verification. Allow up to 48 hours, though it is usually much faster.
-- [ ] Point the Mailgun webhook at the production host and confirm signature verification
-      still passes.
+- [x] Add the sending domain in Mailgun and create the SPF, DKIM, and tracking records —
+      done 2026-09-18, `mail.<domain>` (`SETUP.md` §26 has the records and the 255-character
+      trap).
+- [x] Wait for verification — minutes, once the DKIM record was whole.
+- [x] Point the Mailgun webhook at the production host — four events, domain-level; the
+      signing key is on the production project. A second webhook points at QA.
 - [ ] Confirm the production sender name and address match what the club approved
       (`BUSINESS.md` §9).
 - [ ] **If the club also wants mailboxes on the domain** — the provider is not chosen yet: a

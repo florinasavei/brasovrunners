@@ -40,13 +40,23 @@
     "pastNotice": "This event has already taken place.",
     "featured": "Featured event",
     "featuredCallToAction": "See the race details",
-    "others": "Other events"
+    "others": "Other events",
+    "othersCount": "Other events ({count})",
+    "raceWeek": {
+      "today": "Today, {when}",
+      "tomorrow": "Tomorrow, {when}",
+      "inDays": "In {days} days, {when}"
+    }
   },
   "Event": {
     "backToEvents": "Back to events",
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
+    "gatheringAt": "gather at {time}",
+    "raceStartAt": "start at {time}",
+    "when": "When",
+    "where": "Where",
     "raceStartTime": "Race start",
     "meetingPoint": "Meeting point",
     "openMap": "Open the map",
@@ -54,11 +64,13 @@
     "distance": "Distance",
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
-    "elevationM": "{m} m",
+    "elevationM": "{m} m climb",
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",
     "cancelled": "Cancelled",
+    "completed": "Finished",
+    "completedNotice": "This event has finished. Thank you to everyone who came.",
     "cancelledNotice": "This event has been cancelled.",
     "type": {
       "GROUP_RUN": "Group run",
@@ -86,7 +98,9 @@
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
       "opensOn": "Registration opens on {date}.",
       "closed": "Registration has closed for this event.",
-      "cancelled": "The event has been cancelled, so registration has stopped."
+      "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
+      "cancelled": "The event has been cancelled, so registration has stopped.",
+      "completed": "The event has finished."
     },
     "registrationState": {
       "NOT_APPLICABLE": "No registration needed",
@@ -94,7 +108,8 @@
       "NOT_YET_OPEN": "Registration has not opened yet",
       "OPEN": "Registration is open",
       "CLOSED": "Registration has closed",
-      "EVENT_CANCELLED": "The event has been cancelled"
+      "EVENT_CANCELLED": "The event has been cancelled",
+      "EVENT_COMPLETED": "The event has finished"
     },
     "difficultyValues": {
       "EASY": "Easy",
@@ -148,6 +163,15 @@
       "checkin": "Race day",
       "guide": "Guide"
     },
+    "outbox": {
+      "status": "Emails waiting: {waiting} · sent today: {sent} of {allowance} ({remaining} left)",
+      "sendNow": "Send now",
+      "nothingWaiting": "Nothing to send.",
+      "allowanceSpent": "The daily Mailgun allowance is spent; the rest goes out tomorrow.",
+      "sending": "Sending…",
+      "sendNowLong": "Send the queued emails now, without waiting for the monitor; stops at the daily allowance",
+      "sentNow": "Emails sent just now: {count}."
+    },
     "registrations": {
       "empty": "There are no registrations.",
       "filterAll": "All events",
@@ -169,6 +193,7 @@
       "expired": "Expired",
       "declaration": "Declaration signed",
       "outboxHistory": "Email history",
+      "emailRejected": "Email rejected",
       "testKind": "Test",
       "enteredByStaff": "Entered by staff",
       "new": "Add a registration",
@@ -219,6 +244,8 @@
       "registrationDeleted": "The registration was permanently deleted.",
       "rowActions": "Actions",
       "clubMemberLabel": "Brașov Runners members",
+      "bouncedLabel": "Email",
+      "bouncedOnly": "Email bounced only",
       "clubMemberOnly": "Only those who declared membership",
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
@@ -237,6 +264,9 @@
       "registrationsCancelled": "{cancelled} registrations cancelled. {failed} could not be cancelled.",
       "searchHelp": "Search by name, with or without Romanian diacritics.",
       "resendShort": "Resend",
+      "resendQr": "Resend the QR",
+      "sendReminder": "Send the reminder",
+      "resendQrLong": "Send the confirmation again, with the QR code and the manage link",
       "raceDayTitle": "Race day",
       "bibNumber": "Race number",
       "checkinCode": "Pickup code",
@@ -260,6 +290,7 @@
       "columnTitle": "Event",
       "columnStatus": "Status",
       "columnDate": "Date",
+      "deskCounts": "{confirmed} confirmed · {checkedIn} here",
       "columnEntries": "Registrations",
       "tableCaption": "The club's events, with their status, date and number of registrations",
       "selectEvent": "Select \"{title}\"",
@@ -294,6 +325,7 @@
       "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay."
     },
     "errors": {
+      "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
       "NOTHING_SELECTED": "You did not tick any registration.",
       "UNAUTHENTICATED": "Your session has ended. Sign in again.",
       "FORBIDDEN": "Your role does not allow this.",
@@ -334,6 +366,7 @@
         "seoDescription": "Search engine description",
         "difficulty": "Difficulty",
         "costType": "Cost",
+        "checklist": "What to bring (one line, in the emails)",
         "body": "Full description"
       },
       "sharedFieldHelp": "The same in both languages. Filled in once.",
@@ -349,6 +382,7 @@
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
       "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
+      "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email and the reminder.",
       "type": "Event type",
       "surface": "Surface",
       "eventStatus": "Event status",
@@ -560,10 +594,10 @@
           "done": "Email reaches participants.",
           "how": [
             "In Mailgun: Sending → Domains → “Add new domain”. Name: {mailDomain}. Region: EU. Not the main domain — that stays free for the club's own mailboxes.",
-            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking). Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain). Then “Verify” in Mailgun — up to an hour.",
-            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY). Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “delivered”, “permanent failure” and “temporary failure”.",
-            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_FROM_ADDRESS=noreply@{mailDomain}, EMAIL_FROM_NAME=Brașov Runners, EMAIL_REPLY_TO=a mailbox the club reads.",
-            "Trial: EMAIL_DELIVERY_MODE=allowlist and EMAIL_ALLOWLIST=your address, redeploy, then register for an event — the email must arrive. When it does: EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
+            "Mailgun shows the DNS records to create: two TXT (SPF and DKIM) and one CNAME (tracking). Add them at ROMARG → cPanel → Zone Editor exactly as Mailgun shows them, with the short name (no repeated domain). Mind the DKIM one: the value is over 255 characters and cPanel cuts it — enter it as two quoted strings on one line (“k=rsa; p=…first part” “…the rest”), or Mailgun sees it truncated. Then “Verify” in Mailgun — up to an hour.",
+            "Still in Mailgun: Sending → API keys → a sending key (MAILGUN_API_KEY). Sending → Webhooks → copy the “HTTP webhook signing key” (MAILGUN_WEBHOOK_SIGNING_KEY) and add the webhook {webhookUrl} for “Permanent Failure” and “Spam Complaints” — the two the application acts on (a rejected address shows at the desk and on the registration). “Delivered” is optional.",
+            "In Vercel, the production project → Settings → Environment Variables (or `vercel env add NAME production`): MAILGUN_DOMAIN={mailDomain}, MAILGUN_API_KEY, MAILGUN_WEBHOOK_SIGNING_KEY, MAILGUN_API_BASE_URL=https://api.eu.mailgun.net/v3, EMAIL_REPLY_TO=a mailbox the club reads (if none exists yet, leave the variable unset — an empty one is refused at startup). The sender is “Brașov Runners” <noreply@{mailDomain}> with no further setting.",
+            "Rehearse on QA, not on production (production refuses registrations until the legal texts are approved): on the QA Vercel project set the same MAILGUN_DOMAIN, MAILGUN_API_KEY, MAILGUN_API_BASE_URL (the mode stays allowlist, EMAIL_ALLOWLIST=your address), redeploy, register on QA — the email comes from noreply@{mailDomain}. When it does: on production EMAIL_DELIVERY_MODE=live, redeploy. This row turns green."
           ]
         },
         "scheduler": {
@@ -753,7 +787,18 @@
       "redo": "Redo",
       "image": "Picture (upload from your phone or computer)",
       "imageUploading": "Uploading the picture…",
-      "imageFailed": "The picture could not be uploaded. Try a JPEG, PNG or WebP up to 6 MB; if this environment has no storage configured, /admin/tasks says how."
+      "imageFailed": "The picture could not be uploaded. Try a JPEG, PNG or WebP up to 6 MB; if this environment has no storage configured, /admin/tasks says how.",
+      "imageAlt": "What the picture shows (alt text)",
+      "imageAltHelp": "A sentence a screen reader says instead of the picture. Leave it empty only when the picture is decorative.",
+      "imageCaption": "Caption (optional, under the picture)",
+      "imageSize": "Width on a wide screen",
+      "imageRemove": "Remove the picture",
+      "imageDone": "Done",
+      "imageFromGallery": "Choose a picture already uploaded",
+      "imageGalleryLoading": "Loading the pictures…",
+      "imageGalleryEmpty": "No picture has been uploaded yet.",
+      "imageNoAltOne": "One picture has no alt text — click the picture to write it.",
+      "imageNoAltMany": "{count} pictures have no alt text — click each one to write it."
     },
     "pages": {
       "title": "Pages",
@@ -795,6 +840,25 @@
         "seoTitle": "SEO title",
         "seoDescription": "SEO description"
       }
+    },
+    "pictures": {
+      "title": "Pictures",
+      "intro": "Every picture uploaded — from the text editor and from albums — with where each one is used. A picture used nowhere for 7 days deletes itself; one in use cannot be deleted here until you take it out of the page, the event or the album.",
+      "linkFromGallery": "Pictures in texts, and where they are used →",
+      "empty": "No picture has been uploaded.",
+      "columnPicture": "Picture",
+      "columnName": "File",
+      "columnUploaded": "Uploaded",
+      "columnUsedIn": "Used in",
+      "unused": "Nowhere (deleted automatically after 7 days)",
+      "usedInAlbum": "Album: {title}",
+      "usedInPage": "Page: {title}",
+      "usedInEvent": "Event: {title}",
+      "untitled": "(untitled)",
+      "size": "{width}×{height} px, {kb} KB",
+      "delete": "Delete",
+      "deleteConfirm": "Delete the picture for good?",
+      "tableCaption": "Uploaded pictures, newest first"
     },
     "gallery": {
       "title": "Photo gallery",
@@ -843,13 +907,25 @@
         "description": "Description"
       }
     },
+    "thanks": {
+      "title": "After the race",
+      "help": "A thank-you email to everyone marked present at the desk — once per event, sent by you, never automatically. You can add a link to the results or the photos.",
+      "url": "Link (optional)",
+      "urlHelp": "The results, the photos — an address starting with https://.",
+      "send": "Send the thank-you",
+      "confirmTitle": "Send the thank-you?",
+      "confirmBody": "One email to everyone marked present. It can be sent once per event.",
+      "sentOn": "The thank-you was sent on {date}."
+    },
     "bibs": {
       "title": "Race numbers",
       "assign": "Assign numbers",
       "assigned": "{assigned} numbers assigned ({total} in total).",
+      "thanksSent": "The thank-you went out: {recipients} emails.",
       "from": "From",
       "to": "To",
       "download": "Download the sheet (PDF)",
+      "downloadOnePerPage": "One per page",
       "page": "Page {n} of {total}",
       "helpNone": "No number assigned yet. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event.",
       "helpSome": "{total} numbers assigned. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event."
@@ -881,6 +957,7 @@
         "withoutBib": "No number: {n}",
         "pending": "Unconfirmed: {n}"
       },
+      "closed": "The event has finished. The desk is closed: the list still reads, but nobody is checked in any more.",
       "walkIn": "Add somebody",
       "foundByCode": "Found by code.",
       "unknownCode": "No participant has this code. Check the letters, or search by name.",
@@ -969,6 +1046,7 @@
     "back": "Back to the home page"
   },
   "Footer": {
+    "myRegistrations": "My registrations",
     "about": {
       "summaryShort": "About the club",
       "summaryTail": ", contact and legal",
@@ -1106,6 +1184,28 @@
       "deadline": "Your place is held until {deadline}.",
       "typedNameHelp": "Type the full name you registered with."
     },
+    "mine": {
+      "title": "My registrations",
+      "intro": "Type the address you registered with and we send one link to every active registration of yours — the state of each, the access code and QR, and the option to withdraw.",
+      "email": "Email address",
+      "emailHelp": "The address used when registering.",
+      "submit": "Send me the link",
+      "sent": "If that address has registrations, we have just sent the link there. Check the spam folder too.",
+      "listTitle": "Your registrations",
+      "empty": "You have no active registration at the moment.",
+      "code": "Access code",
+      "cancel": "Withdraw from this registration",
+      "cancelledTitle": "Registration cancelled",
+      "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",
+      "newLink": "Ask for a new link",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Awaiting email confirmation",
+        "PENDING_DECLARATION": "Awaiting the declaration",
+        "WAITLISTED": "On the waiting list",
+        "WAITLIST_OFFERED": "Place offered — sign the declaration",
+        "CONFIRMED": "Confirmed"
+      }
+    },
     "manage": {
       "title": "Manage your registration",
       "prompt": "You can cancel this registration. The place will be released immediately.",
@@ -1124,6 +1224,7 @@
     }
   },
   "Devs": {
+    "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",
     "intro": "What is configured here and what is missing. Variable names and whether they have a value — never the value.",
     "environment": "Environment",
@@ -1286,7 +1387,7 @@
       "used": "{used} of 100 CU-hours used ({percent}%)",
       "awake": "Compute awake: {hours} h of {elapsed} h elapsed",
       "period": "Period ends {date}",
-      "unavailable": "Not configured: set NEON_API_KEY and NEON_PROJECT_ID (SETUP.md §33) to see consumption here.",
+      "unavailable": "Not configured. Two minutes: (1) Neon → avatar → Account settings → API keys → Create API key, or `npx neonctl api-keys create --name devs --project-id <id>`; (2) the project id is in the console address (console.neon.tech/app/projects/<id>) or `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`, then redeploy. The figure appears here.",
       "failed": "Neon did not answer: {reason}",
       "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
     }

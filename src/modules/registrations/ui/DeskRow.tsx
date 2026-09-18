@@ -38,6 +38,7 @@ export default async function DeskRow({
   eventId,
   q,
   showEvent = false,
+  readOnly = false,
 }: {
   row: DeskRegistration;
   locale: Locale;
@@ -46,6 +47,8 @@ export default async function DeskRow({
   q?: string;
   /** On the scanned-code page, where nothing else names the event. */
   showEvent?: boolean;
+  /** A completed event (§82): the row reads, and offers no button. */
+  readOnly?: boolean;
 }) {
   const t = await getTranslations("Admin");
   const format = await getFormatter();
@@ -97,6 +100,17 @@ export default async function DeskRow({
               label={REGISTRATION_STATUS_LABEL[row.status]}
             />
             {row.kind === "TEST" && <Chip size="small" color="warning" label={t("registrations.testKind")} />}
+            {/* The provider said no (§76): this is who to call before race day. */}
+            {row.emailRejectedReason && (
+              <Chip
+                size="small"
+                color="error"
+                variant="outlined"
+                label={t("registrations.emailRejected")}
+                title={row.emailRejectedReason}
+                data-testid="email-rejected"
+              />
+            )}
             {row.checkedInAt && (
               <Chip
                 size="small"
@@ -123,7 +137,7 @@ export default async function DeskRow({
         </Box>
 
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-          {canConfirm && (
+          {!readOnly && canConfirm && (
             <form action={confirmRegistrationNowAction}>
               {hidden}
               <Button type="submit" variant="contained" color="warning" size="small" sx={{ minHeight: 44 }}>
@@ -131,7 +145,7 @@ export default async function DeskRow({
               </Button>
             </form>
           )}
-          {row.status === "WAITLISTED" && (
+          {!readOnly && row.status === "WAITLISTED" && (
             <form action={promoteRegistrationAction}>
               {hidden}
               <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
@@ -139,7 +153,7 @@ export default async function DeskRow({
               </Button>
             </form>
           )}
-          {row.status === "CONFIRMED" && (
+          {!readOnly && row.status === "CONFIRMED" && (
             <>
               <form action={setBibNumberAction}>
                 {hidden}

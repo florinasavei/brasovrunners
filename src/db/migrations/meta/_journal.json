@@ -204,6 +204,27 @@
       "when": 1789719153168,
       "tag": "0028_event_strava_event_url",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1789728902424,
+      "tag": "0029_media_sweep_and_rich_excerpt",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1789729859073,
+      "tag": "0030_participants_canonical_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1789737962925,
+      "tag": "0031_reminders_thanks_checklist",
+      "breakpoints": true
     }
   ]
 }

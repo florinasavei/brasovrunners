@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1105,7 +1105,8 @@ type CanonicalEmail = {
   deliveryEmail: string;
   normalizedEmail: string;
   canonicalEmail: string;
-  canonicalizationVersion: 1;
+  inboxEmail: string; // canonical with Gmail dots removed — the delivery allowlist's key, nothing else's
+  canonicalizationVersion: 2;
 };
 
 function canonicalizeEmail(input: string): CanonicalEmail {
@@ -1122,14 +1123,14 @@ function canonicalizeEmail(input: string): CanonicalEmail {
   let canonicalLocal = normalizedLocal;
 
   if (isGmail) {
-    canonicalLocal = canonicalLocal.split("+", 1)[0].replaceAll(".", "");
+    canonicalLocal = canonicalLocal.split("+", 1)[0]; // the tag goes; the dots stay (v2)
   }
 
   return {
     deliveryEmail: trimmed,
     normalizedEmail: `${normalizedLocal}@${normalizedDomain}`,
     canonicalEmail: `${canonicalLocal}@${canonicalDomain}`,
-    canonicalizationVersion: 1
+    canonicalizationVersion: 2
   };
 }
 ```
@@ -1140,7 +1141,9 @@ Rules:
 - exactly one mailbox, no display-name input;
 - preserve verified delivery spelling separately;
 - lowercase all addresses for comparison by explicit product choice;
-- remove Gmail dots/plus tag only for the exact domains `gmail.com` and `googlemail.com`;
+- remove the Gmail plus tag only for the exact domains `gmail.com` and `googlemail.com`;
+  **keep Gmail dots** since version 2 (2026-09-18, `DECISIONS.md` §74 — version 1 removed
+  them; migration `0030` re-canonicalized every stored row);
 - collapse `googlemail.com` to `gmail.com` in the canonical value only; `normalizedEmail`
   and `deliveryEmail` keep the submitted domain;
 - never remove dots/plus for custom domains;
@@ -1389,8 +1392,12 @@ Canonical body is JSON produced by allowlisted schema. Required nodes/marks:
 - bullet/ordered list/list item;
 - blockquote;
 - image — a block, never inline, whose `src` is one of this site's own stored variants
-  (`/api/admin/media` answers it; the schema refuses any other address), with `alt`, `width`
-  and `height` (built 2026-09-18, `DECISIONS.md` §72).
+  (`/api/admin/media` answers it; the schema refuses any other address), with `alt` (empty
+  until written — never the file name), `caption` (rendered as `<figcaption>`), `width` and
+  `height` (the variant's) and `widthPercent` (100, 75, 50 or 33 — the share of the text
+  column on a wide screen; always the full width on a phone). Built 2026-09-18,
+  `DECISIONS.md` §72, §73. An event's short description is a body of this schema too
+  (`event_translations.excerpt_json`), its words derived into the plain `excerpt` on save.
 
 Rules:
 
@@ -2419,9 +2426,15 @@ Rejoin:
 8. audit;
 9. commit.
 
-Resend never changes state or marks declaration accepted.
+Resend never changes state or marks declaration accepted. `EVENT_REMINDER` may be resent by
+hand while the registration is CONFIRMED and the event has not started (§81).
 
 ### 15.9 Profile management
+
+Steps 1–2 are built as "my registrations" (BR-REQ-036-04, `DECISIONS.md` §77): the
+`MANAGE_PROFILE` token lists a participant's active registrations at
+`/inscrieri/ale-mele/<token>` and offers "I am here" and cancel on each; the M4 profile will
+share the purpose. Steps 3–8 remain M4.
 
 1. participant requests link with generic response;
 2. if verified participant exists, create manage-profile token/outbox;
@@ -2616,7 +2629,18 @@ WAITLIST_OFFER_EXPIRED
 REGISTRATION_MANAGE_LINK
 PROFILE_MANAGE_LINK
 REGISTRATION_STATE_NOTICE
+EVENT_REMINDER
+EVENT_THANKS
 ```
+
+`EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
+event 48 hours before its start, once per registration (`registration:<id>:reminder`), with
+the facts line, the QR and the manage link; never to a waiting-list entry, never for a
+cancelled or completed event (`DECISIONS.md` §81). `EVENT_THANKS` is sent by an organizer,
+once per event, to everyone checked in, with an optional link; never automatically, audited
+with the event and the count (§82). Every message carries the facts line where it has an
+event — date, time, meeting point in bold, then the map and the Strava event — and the
+footer "reply to this email with questions" when `EMAIL_REPLY_TO` is set.
 
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary
@@ -2668,6 +2692,16 @@ Rules:
 - reference check before delete;
 - orphan cleanup;
 - public profile participant upload deferred.
+
+Both built 2026-09-18 (`modules/media/references.ts`, `DECISIONS.md` §73): one SQL predicate
+says whether a `media_assets` row is referenced — a gallery item, an album cover, a page body,
+an event body or excerpt, **drafts included** — and it is the same predicate for the sweep,
+the pictures page (`/admin/gallery/pictures`, every picture and where it is used) and the
+manual delete, which is refused while anything references the picture. The sweep rides last
+on the registration-maintenance job, in its own try/catch: it advances
+`media_assets.last_referenced_at` while a reference exists and deletes — row first, with the
+reference re-checked in the same statement, then the two objects — whatever nothing has
+referenced for seven days and is at least seven days old. `/devs` reports the figures.
 
 Built for the gallery (BR-REQ-054-01, `DECISIONS.md` §66): `modules/media/storage.ts` is the
 adapter — `put`, `delete`, `publicUrl`; metadata is the row's — over R2's S3 API, a local
@@ -2909,7 +2943,7 @@ Avoid large snapshot suites.
 
 Cover:
 
-- email canonicalization: case, whitespace, Gmail dots, Gmail plus, non-Gmail preservation;
+- email canonicalization: case, whitespace, Gmail dots kept (v2), Gmail plus, non-Gmail preservation;
 - event/registration windows;
 - state transition matrix;
 - free-place calculation;
@@ -2930,7 +2964,7 @@ Real disposable PostgreSQL/migrations:
 
 - unique participant canonical email;
 - unique event/participant registration;
-- duplicate dotted/tagged Gmail reuses identity;
+- duplicate plus-tagged Gmail reuses identity; a dotted spelling is its own (v2);
 - concurrent capacity confirmation never overbooks;
 - an older active waitlist is never bypassed by a later email confirmation;
 - public direct-availability respects queued demand;
@@ -2960,7 +2994,7 @@ Core journeys:
 5. Confirm via POST.
 6. Sign declaration and become Confirmed.
 7. Confirmation email contains management link.
-8. Dotted/tagged Gmail attempt does not create duplicate.
+8. Plus-tagged Gmail attempt does not create duplicate (a dotted spelling does, by design since v2).
 9. Unregister via explicit confirmation and release place.
 10. Full event joins Waitlisted.
 11. Cancellation creates Waiting-list offer.

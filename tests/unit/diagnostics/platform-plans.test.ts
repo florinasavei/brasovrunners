@@ -60,12 +60,13 @@ function messageAt(messages: (typeof ro) | (typeof en), path: string): unknown {
 }
 
 describe("BR-REQ-090-05 criterion 3 how much of today's allowance is left", () => {
-  it("does the arithmetic PLATFORM.md states in prose: 100 a day is about 33 registrations", () => {
-    expect(registrationsLeftToday(BASE)).toBe(33);
+  it("does the arithmetic PLATFORM.md states in prose: 100 a day is 25 registrations", () => {
+    // Four messages each since the reminder (`DECISIONS.md` §81); three made it 33.
+    expect(registrationsLeftToday(BASE)).toBe(25);
   });
 
   it("counts down as the day is spent", () => {
-    expect(registrationsLeftToday({ ...BASE, emailSentToday: 90 })).toBe(3);
+    expect(registrationsLeftToday({ ...BASE, emailSentToday: 90 })).toBe(2);
     expect(registrationsLeftToday({ ...BASE, emailSentToday: 99 })).toBe(0);
   });
 

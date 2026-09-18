@@ -35,7 +35,8 @@ import {
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
-import { bulkCancelRegistrationsAction } from "../actions";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { bulkCancelRegistrationsAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 
 type Props = {
@@ -84,7 +85,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canManageRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, q, saved, error, cancelled, failed } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent } = current;
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -99,10 +100,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     // One-way: it narrows to the people who ticked the box and never to the ones who did not
     // (`admin-repository.ts` says why).
     clubMemberDeclared: clubMember === "1" || undefined,
+    emailBounced: bounced === "1" || undefined,
     search: q || undefined,
   };
 
   const db = getDb();
+  const volume = await readEmailVolumeToday(db, new Date());
   const [rows, total, events] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
@@ -123,6 +126,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     eventId,
     status,
     clubMember,
+    bounced,
     q,
     sort: current.sort,
     dir: current.dir,
@@ -130,7 +134,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
-  const hasFilters = Boolean(eventId || status || clubMember || q);
+  const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -213,7 +217,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             })}
           </Alert>
         )}
-        {saved && saved !== "registrationsCancelled" && <Alert severity="success">{t("saved")}</Alert>}
+        {saved === "outboxSent" && (
+          <Alert severity="success">{t("outbox.sentNow", { count: Number(sent ?? "0") })}</Alert>
+        )}
+        {saved && saved !== "registrationsCancelled" && saved !== "outboxSent" && (
+          <Alert severity="success">{t("saved")}</Alert>
+        )}
       </Box>
 
       <Stack
@@ -248,6 +257,46 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {t("registrations.export")}
           </Button>
         </Stack>
+      </Stack>
+
+      {/*
+        The outbox, and the day's Mailgun counter (`DECISIONS.md` §80): what is waiting, what
+        went out today against the free day's hundred, and "send now" for whoever does not want
+        to wait for the monitor. The counter is the ceiling the button respects, and the number
+        a newsletter would have to fit under.
+      */}
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1.5}
+        sx={{ alignItems: { sm: "center" }, border: 1, borderColor: "divider", borderRadius: 1, px: 2, py: 1.5 }}
+        data-testid="outbox-panel"
+      >
+        <Typography variant="body2" sx={{ flex: 1 }}>
+          {t("outbox.status", {
+            waiting: volume.waitingMessages,
+            sent: volume.sentMessages,
+            allowance: volume.allowance,
+            remaining: volume.remaining,
+          })}
+        </Typography>
+        {/* The button only when there is something to send and room to send it: a disabled
+            button cannot say why (`SubmitButton`'s own rule), a sentence can. */}
+        {volume.waitingMessages > 0 && volume.remaining > 0 ? (
+          <Box component="form" action={sendOutboxNowAction}>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="listQuery" value={listQueryString} />
+            <SubmitButton
+              label={t("outbox.sendNow")}
+              pendingLabel={t("outbox.sending")}
+              ariaLabel={t("outbox.sendNowLong")}
+              variant="contained"
+            />
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {volume.waitingMessages === 0 ? t("outbox.nothingWaiting") : t("outbox.allowanceSpent")}
+          </Typography>
+        )}
       </Stack>
 
       {/*
@@ -293,6 +342,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
             <MenuItem value="1">{t("registrations.clubMemberOnly")}</MenuItem>
+          </TextField>
+          {/* Who never got the email (§76, §83): the rows to call. */}
+          <TextField
+            select
+            name="bounced"
+            label={t("registrations.bouncedLabel")}
+            defaultValue={bounced === "1" ? "1" : ""}
+            sx={{ minWidth: 220 }}
+          >
+            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
+            <MenuItem value="1">{t("registrations.bouncedOnly")}</MenuItem>
           </TextField>
           <TextField
             select
@@ -377,9 +437,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="registrationId" value={row.id} />
                 <SubmitButton
-                  label={t("registrations.resendShort")}
-                  pendingLabel={t("registrations.resendShort")}
-                  ariaLabel={t("registrations.resend")}
+                  label={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
+                  pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
+                  ariaLabel={row.status === "CONFIRMED" ? t("registrations.resendQrLong") : t("registrations.resend")}
                   variant="outlined"
                 />
               </Box>

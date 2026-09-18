@@ -42,6 +42,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     slug: "crosul-aniversar",
     title: "Crosul aniversar",
     excerpt: "",
+    checklist: "",
     seoTitle: "",
     seoDescription: "",
   };
@@ -88,7 +89,11 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     expect(Object.keys(parsed).sort()).toEqual([
       // The description proper, validated Tiptap JSON since 2026-09-18 (`DECISIONS.md` §71).
       "body",
+      // "What to bring", one line per language (`DECISIONS.md` §81).
+      "checklist",
       "excerpt",
+      // The short description as the editor posts it (`DECISIONS.md` §73); `excerpt` is derived.
+      "excerptBody",
       "seoDescription",
       "seoTitle",
       "slug",
@@ -169,6 +174,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/gallery",
       "/admin/gallery/[id]",
       "/admin/gallery/new",
+      "/admin/gallery/pictures",
       "/admin/guide",
       "/admin/legal",
       "/admin/legal/[id]",
@@ -195,6 +201,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/registrations/confirm/[token]",
       "/registrations/declare/[token]",
       "/registrations/manage/[token]",
+      "/registrations/mine",
+      "/registrations/mine/[token]",
       "/registrations/resend",
       "/sign-in",
     ]);

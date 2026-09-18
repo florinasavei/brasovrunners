@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
@@ -61,6 +61,25 @@ export async function countRegistrationsByEvent<T extends Record<string, unknown
     .groupBy(registrations.eventId);
 
   return new Map(rows.map((row) => [row.eventId, row.total]));
+}
+
+/**
+ * Confirmed and checked-in per event — the two numbers the desk shows (`countDesk`), for the
+ * events list on race day (`DECISIONS.md` §83): an organizer watching from the office sees
+ * how many are here without opening the desk.
+ */
+export async function countConfirmedAndCheckedInByEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+): Promise<Map<string, { confirmed: number; checkedIn: number }>> {
+  const rows = await db
+    .select({
+      eventId: registrations.eventId,
+      confirmed: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED')`.mapWith(Number),
+      checkedIn: sql<number>`count(*) FILTER (WHERE ${registrations.checkedInAt} IS NOT NULL)`.mapWith(Number),
+    })
+    .from(registrations)
+    .groupBy(registrations.eventId);
+  return new Map(rows.map((row) => [row.eventId, { confirmed: row.confirmed, checkedIn: row.checkedIn }]));
 }
 
 export async function findEventForEditing<T extends Record<string, unknown>>(

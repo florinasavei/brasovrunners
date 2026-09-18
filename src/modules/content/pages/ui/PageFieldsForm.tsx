@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
+import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 
 export type EditablePageTranslation = {
   locale: string;
@@ -91,25 +92,7 @@ export default async function PageFieldsForm({
                 label={t("fields.body")}
                 initialBody={translation?.bodyJson}
                 accessibleSuffix={t(`language.${locale}`)}
-                labels={{
-                  bold: rt("bold"),
-                  italic: rt("italic"),
-                  heading2: rt("heading2"),
-                  heading3: rt("heading3"),
-                  bulletList: rt("bulletList"),
-                  orderedList: rt("orderedList"),
-                  quote: rt("quote"),
-                  link: rt("link"),
-                  linkUrl: rt("linkUrl"),
-                  linkApply: rt("linkApply"),
-                  linkRemove: rt("linkRemove"),
-                  linkCancel: rt("linkCancel"),
-                  undo: rt("undo"),
-                  redo: rt("redo"),
-                  image: rt("image"),
-                  imageUploading: rt("imageUploading"),
-                  imageFailed: rt("imageFailed"),
-                }}
+                labels={richTextEditorLabels(rt)}
               />
               <TextField
                 name={name("seoTitle")}

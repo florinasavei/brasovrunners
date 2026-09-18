@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.35-2026-09-18`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.37-2026-09-18`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -178,7 +178,14 @@ schema (`AGENTS.md` §11.3) validated on the server, a server renderer that can 
 allowlist names, and one client island for the writing. Headings, bold, italic, links, lists and
 quotations — and nothing else, because everything else in StarterKit is switched off in the editor
 *and* refused by the schema. Bodies written before it are read through the same module, so no
-migration ran. Images wait on a media library, which waits on R2 (`DECISIONS.md` §58).
+migration ran. **Pictures are in the text** (`DECISIONS.md` §72, §73): the picture control
+shrinks in the browser, stores on R2 like a gallery photo, and inserts a block whose address
+the schema accepts and no other; a click on the picture opens a panel for its alt text (empty
+until written, never the file name), a caption, one of four widths, and "choose one already
+uploaded". `/admin/gallery/pictures` lists every stored picture with where it is used; the
+orphan sweep (`media/references.ts`, on the maintenance job) deletes what nothing has
+referenced for seven days, drafts counting as references. An event's short description is the
+same editor (`excerpt_json`; the plain `excerpt` is derived on save).
 
 **Legal documents.** `legal_documents`/`legal_document_translations` (§12.5), immutable once
 approved or referenced. The backoffice **writes** them and never **rewrites** them
@@ -262,7 +269,7 @@ busiest day every message queued after the cap was thrown away (`DECISIONS.md` �
 shows the volume against the allowance before a window opens, and explains every configuration
 enum rather than only reporting its value (§41).
 
-**1004 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
+**1033 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
 concurrency tests.** `yarn test` needs no database — PGlite runs real
 PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
@@ -296,10 +303,30 @@ outbox after its own response; the external monitors run every fifteen minutes b
 hourly at night, Romania time, because Neon's free month is 100 CU-hours and a five-minute
 pinger spends 180. `/devs` shows the month's figure with `NEON_API_KEY` (`SETUP.md` §33).
 
-Not built: the rest of the CMS — articles, the media library for other content, captions and
-the Tiptap **image node** (the owner's next ask: "soon I can add pictures" — it goes on top of
-the gallery's storage, per §11.3) — and what M2–M4 name (multi-distance races, one bib per race
-across distances, results, runner profiles). A custom domain for the bucket
+**The email people keep, the reminder, and after the race** (`DECISIONS.md` §81–§83).
+The confirmation and the reminder open with a bold facts line (date, time, meeting point),
+the map and Strava links, the organizer's one-line "what to bring" (`checklist`, per
+language), the QR and the manage link; every email ends "reply to this email with questions".
+`EVENT_REMINDER` goes from the maintenance job 48 hours before the start, once per confirmed
+registration (`registration:<id>:reminder`). `COMPLETED` means over: "S-a încheiat", no
+registration control, the desk closed, the job hands off. `EVENT_THANKS` is sent by an
+Administrator from the event page, once, to everyone checked in, with an optional link —
+never automatic. The registrations list filters to bounced emails; the export carries
+`Checked in` and `Email bounced`; the events list shows confirmed · here on race day.
+
+**Race week, for the runner and the desk** (`DECISIONS.md` §76–§79). Within seven days of
+the featured event the homepage counts down on the event's own calendar and, once
+registration has closed, says to come to the desk with the QR; "Alte evenimente" folds on a
+phone. `/inscrieri/ale-mele` ("Înscrierile mele", in the footer): one address, one link, every
+active registration — code and QR, "I am here", cancel — on the `MANAGE_PROFILE` token, its
+first use; the same oracle rule as "send me my link again". The desk row and the registration
+page carry "email respins" with Mailgun's reason when a message bounced. A confirmed row's
+resend is the confirmation itself, QR included; the bib sheet prints one per page on request.
+**Gmail dots are two addresses** since canonicalization version 2 (`DECISIONS.md` §74): the
+club rehearses from its own inbox; the plus tag still collapses.
+
+Not built: the rest of the CMS — articles and what M2–M4 name (multi-distance races, one bib
+per race across distances, results, runner profiles). A custom domain for the bucket
 (`media.<domain>`) is optional and undone.
 
 **What is deployed.** Production on the club's `.com` and QA on its `qa.` subdomain,
@@ -307,9 +334,10 @@ each a Vercel project (`fra1`) over its own Neon project (Frankfurt), sharing no
 Production tracks `main` and QA tracks `qa`; a release is the `qa → main` PR, whose merge
 fires the gated migration workflow and whose build waits for that migration
 (`docs/RUNBOOKS.md` § Deploy a release). The hostnames live in `SETUP.md` §26 and nowhere
-else; `APP_BASE_URL` is the only thing that knows them. **Staff sign-in works on QA** through
-the QA Zitadel application; production has no Zitadel application yet and runs
-`STAFF_AUTH_MODE=disabled`. Email is still `capture` everywhere, so nothing transmits.
+else; `APP_BASE_URL` is the only thing that knows them. **Staff sign-in works on both**: each
+has its own Zitadel application on the one tenant (`STAFF_AUTH_MODE=provider`), and the owner
+is SUPERADMIN on production. Production email is **live** since 2026-09-18; QA stays
+`allowlist`.
 
 Two settings that are not obvious and cost an afternoon between them: the Zitadel application
 needs **"Include user's profile info in the ID Token"** enabled, or the ID token carries no
@@ -320,19 +348,20 @@ invites people is itself behind the sign-in it would be granting.
 **Still owed, all of it account creation or a decision rather than code** (as of 2026-09-18;
 `/admin/tasks` shows the same list with the steps, read from the system):
 
-1. **cron-job.org monitors** for production — four jobs, day/night, and QA hourly (`SETUP.md`
-   §26). Until then production expires holds only when a request happens to evaluate them, and
-   `/api/health` reads `degraded`.
-2. **Mailgun sending domain** on the club's `.com`: DNS records at ROMARG, verification, then
-   `EMAIL_DELIVERY_MODE=live` on production. Until then no participant receives an email.
-3. **Production Zitadel application** and the first `staff_users` row (`SETUP.md` §25, §30),
-   then `STAFF_AUTH_MODE=provider` on production. Until then nobody can sign in to production.
+1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.
+2. ~~Mailgun sending domain~~ — done 2026-09-18 evening: `mail.` subdomain verified,
+   production sends live, webhook signed; `contact@mail.<domain>` forwards to the owner until
+   the club has a mailbox; Zitadel's own mail goes through the same domain. QA still uses the
+   sandbox (its own sending key is optional). Procedure: `SETUP.md` §35.
+3. ~~Production Zitadel application~~ — done 2026-09-17: application, `STAFF_AUTH_MODE=provider`,
+   the owner's SUPERADMIN row. Sign in at `/admin` on the production host.
 4. **The club's approved legal texts** — privacy notice, terms, declaration — written and
    approved in `/admin/legal` on production. Until then production correctly refuses every
    registration.
 5. **Volunteer accounts** for race day (`SETUP.md` §34) and a rehearsal on QA.
-6. Optional: `NEON_API_KEY` + `NEON_PROJECT_ID` on both Vercel projects (`SETUP.md` §33); a
-   custom domain for the R2 bucket; the retention and support decisions of `SETUP.md` §30.
+6. ~~Neon keys~~ — done 2026-09-18 evening: a project-scoped key on each Vercel project,
+   `/devs` shows the database's month on both. Still optional: a custom domain for the R2
+   bucket; the retention and support decisions of `SETUP.md` §30.
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 
@@ -345,7 +374,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated (schema `0028` on QA, `0027` on production after `BR-V1.35`); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
-| Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | QA monitors live since `BR-V1.18` (to be moved to hourly); production monitors not yet created — `SETUP.md` §26 has the schedules |
+| Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |
 | Email | Mailgun. Sandbox first (5 authorized recipients, dev only), then the club domain. A `*.vercel.app` domain cannot be verified — its DNS is not ours. Templates, the outbox jobs and the webhook are built; the adapter throws rather than sending live | built; delivery to real people needs the domain |
 | Storage | Cloudflare R2 behind the four-method adapter in `AGENTS.md` §17; one bucket, per-environment prefixes; public reads on the `r2.dev` address | live: bucket `brasovrunners-media` created 2026-09-18, variables on both Vercel projects (`SETUP.md` §32) |

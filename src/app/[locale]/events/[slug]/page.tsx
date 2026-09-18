@@ -18,6 +18,7 @@ import EventVideo from "@/modules/events/ui/EventVideo";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import StartList from "@/modules/events/ui/StartList";
 import { env } from "@/shared/config/env";
@@ -98,6 +99,12 @@ export default async function EventDetailPage({ params }: Props) {
           {t("cancelledNotice")}
         </Alert>
       )}
+      {/* The race is over (§82): said in words, and registration hides itself below. */}
+      {event.eventStatus === "COMPLETED" && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {t("completedNotice")}
+        </Alert>
+      )}
 
       {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61). */}
       <Typography variant="overline" color="text.secondary">
@@ -108,11 +115,7 @@ export default async function EventDetailPage({ params }: Props) {
         {event.title}
       </Typography>
 
-      {event.excerpt && (
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          {event.excerpt}
-        </Typography>
-      )}
+      <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={event} now={now} />

@@ -5,6 +5,7 @@ import type {
   RegistrationKind,
   RegistrationSource,
 } from "@/db/schema/registrations";
+import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { registrationState } from "@/modules/events/domain/registration-window";
@@ -862,6 +863,16 @@ export async function checkIn<T extends Record<string, unknown>>(
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   if (current.status !== "CONFIRMED") {
     throw new DomainError("CONFLICT", `only a confirmed registration can check in; this one is ${current.status}`);
+  }
+  // The race is over (§82): nobody arrives at a completed event, and a check-in after the
+  // organizer closed it would count somebody who was never there.
+  const [event] = await db
+    .select({ eventStatus: events.eventStatus })
+    .from(events)
+    .where(eq(events.id, current.eventId))
+    .limit(1);
+  if (event?.eventStatus === "COMPLETED") {
+    throw new DomainError("VALIDATION_ERROR", "the event is completed; the desk is closed");
   }
   if (current.checkedInAt) return current;
   const [updated] = await db

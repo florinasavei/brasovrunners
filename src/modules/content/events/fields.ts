@@ -50,6 +50,24 @@ const optionalEnum = <const T extends readonly [string, ...string[]]>(values: T)
     .nullable()
     .transform((value) => (value === "" ? null : value));
 
+/**
+ * A JSON string from `RichTextEditor`, parsed against the allowlist so a bad body is a field
+ * error; empty allowed. Optional in the input for callers from before it existed.
+ */
+const richTextField = z
+  .string()
+  .max(200_000)
+  .optional()
+  .transform((value, ctx) => {
+    if (!value || value.trim() === "") return EMPTY_DOC;
+    try {
+      return parseRichText(JSON.parse(value));
+    } catch {
+      ctx.addIssue({ code: "custom", message: "the text is not a valid document" });
+      return z.NEVER;
+    }
+  });
+
 export const translationFieldsSchema = z
   .object({
     slug: z.string().trim().min(1).max(120).regex(SLUG, {
@@ -58,24 +76,22 @@ export const translationFieldsSchema = z
     title: z.string().trim().min(1).max(200),
     excerpt: optionalText(500),
     /**
+     * The short description as the editor posts it (`DECISIONS.md` §73): a small rich body,
+     * pictures allowed. When present, the plain `excerpt` is derived from it on save.
+     */
+    excerptBody: richTextField,
+    /**
+     * "What to bring", one line for the confirmation and the reminder (§81). Optional in the
+     * input for callers from before it existed; absent means "leave it as it is".
+     */
+    checklist: optionalText(300).optional(),
+    /**
      * The description proper, written in the rich-text editor (AGENTS.md §11.3; `DECISIONS.md`
      * §71: "all descriptions should be WYSIWYG"). The same contract as a standing page's body:
      * a JSON string from `RichTextEditor`, parsed against the allowlist here so a bad body is
      * a field error, empty allowed. Optional in the input for callers from before it existed.
      */
-    body: z
-      .string()
-      .max(200_000)
-      .optional()
-      .transform((value, ctx) => {
-        if (!value || value.trim() === "") return EMPTY_DOC;
-        try {
-          return parseRichText(JSON.parse(value));
-        } catch {
-          ctx.addIssue({ code: "custom", message: "the description is not a valid document" });
-          return z.NEVER;
-        }
-      }),
+    body: richTextField,
     seoTitle: optionalText(200),
     seoDescription: optionalText(320),
   })

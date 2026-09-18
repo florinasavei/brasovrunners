@@ -43,14 +43,19 @@ export type AuditAction =
   | "registration.promoted_by_staff"
   /** The participant is here (BR-REQ-037-08); by staff, or by themselves. */
   | "registration.checked_in"
-  | "registration.checkin_undone";
+  | "registration.checkin_undone"
+  /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
+  | "outbox.sent_by_staff"
+  /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
+  | "event.thanks_sent";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
   participantId?: string | null;
   action: AuditAction;
-  // `event` for the one action that is about a whole event's registrations at once.
-  entityType: "registration" | "event";
+  // `event` for the one action that is about a whole event's registrations at once;
+  // `email_outbox` for the one that is about the queue itself.
+  entityType: "registration" | "event" | "email_outbox";
   entityId: string;
   /**
    * The shape of the change, never a copy of what it was about. §12.12: no email body, no raw

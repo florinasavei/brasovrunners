@@ -17,6 +17,7 @@ import {
   worstStatus,
 } from "@/modules/diagnostics/configuration";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
@@ -112,6 +113,7 @@ export default async function DevsPage({ params }: Props) {
     ),
   );
   const volume = await readEmailVolumeToday(db, now);
+  const pictures = await countMediaAssets(db, now);
 
   /** The value each configuration enum currently holds, for marking it in the list below. */
   const currentSetting: Record<string, string> = {
@@ -284,7 +286,7 @@ export default async function DevsPage({ params }: Props) {
 
       {/*
         The arithmetic of `docs/PLATFORM.md` limit 1, done here so nobody has to do it by hand
-        on the morning it matters: three messages per completed registration against a daily
+        on the morning it matters: four messages per completed registration (the reminder since §81) against a daily
         allowance of a hundred. Test registrations are counted, and counted separately — §12.6
         keeps them out of every count the *club* is given, and this is an operator's forecast
         of what will reach the provider, which a synthetic participant consumes just the same.
@@ -470,6 +472,16 @@ export default async function DevsPage({ params }: Props) {
                 : ""}
             </Typography>
           ))}
+          {/* The orphan sweep's own figure (`DECISIONS.md` §73): what it left. "Sweepable" is
+              what the next run takes, and after a run it reads zero. */}
+          <Typography variant="body2" color={pictures.sweepable > 0 ? "warning.main" : "text.primary"}>
+            {t("pictures", {
+              total: pictures.total,
+              unreferenced: pictures.unreferenced,
+              sweepable: pictures.sweepable,
+              days: ORPHAN_ASSET_DAYS,
+            })}
+          </Typography>
         </Stack>
       </Box>
     </Stack>
