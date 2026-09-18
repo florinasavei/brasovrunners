@@ -33,7 +33,12 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
-import { bulkArchiveEventsAction, deleteEventAction, duplicateEventAction } from "../actions";
+import {
+  bulkArchiveEventsAction,
+  bulkPublishEventsAction,
+  deleteEventAction,
+  duplicateEventAction,
+} from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -76,7 +81,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
 
   const staffUser = await requireStaff();
   const current = await searchParams;
-  const { error, saved, archived, failed, created } = current;
+  const { error, saved, archived, failed, created, published } = current;
 
   const t = await getTranslations("Admin");
   const format = await getFormatter();
@@ -200,7 +205,12 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         {saved === "eventsRepeated" && (
           <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
         )}
-        {saved && saved !== "eventsArchived" && saved !== "eventsRepeated" && (
+        {saved === "eventsPublished" && (
+          <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
+            {t("events.eventsPublished", { published: published ?? "0", failed: failed ?? "0" })}
+          </Alert>
+        )}
+        {saved && saved !== "eventsArchived" && saved !== "eventsRepeated" && saved !== "eventsPublished" && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -393,21 +403,26 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           }}
         >
           <Typography component="summary" variant="body2">
-            {t("events.bulkArchiveTitle")}
+            {t("events.bulkTitle")}
           </Typography>
           <Box component="form" id={BULK_FORM} action={bulkArchiveEventsAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <Stack spacing={1.5} sx={{ pb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                {t("events.bulkArchiveHelp")}
+                {t("events.bulkHelp")}
               </Typography>
-              <Box>
+              <Stack direction="row" spacing={1.5} sx={{ flexWrap: "wrap", gap: 1 }}>
+                {/* The same selection, two verbs: a series made as drafts is published here
+                    (BR-REQ-050-02 criterion 7), a season that is over is archived here. */}
+                <Button type="submit" formAction={bulkPublishEventsAction} variant="contained" sx={{ minHeight: 44 }}>
+                  {t("events.bulkPublishAction")}
+                </Button>
                 <SubmitButton
                   label={t("events.bulkArchiveAction")}
                   pendingLabel={t("events.bulkArchivePending")}
-                  variant="contained"
+                  variant="outlined"
                 />
-              </Box>
+              </Stack>
             </Stack>
           </Box>
         </Box>

@@ -15,6 +15,7 @@ import EventFieldsForm from "@/modules/content/events/ui/EventFieldsForm";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { createEventAction } from "../../actions";
 
 type Props = {
@@ -100,6 +101,19 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               </Stack>
             </Box>
           ))}
+
+          {/* Recurrence, where the owner looked for it first (BR-REQ-050-02 criterion 7). The
+              copies are drafts like the event itself; the list publishes them together. */}
+          <Box>
+            <Divider sx={{ mb: 2 }} />
+            <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
+              {t("editor.repeatSection")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t("editor.repeatOnCreateHelp")}
+            </Typography>
+            <RepeatFields prefix="repeat." withNone />
+          </Box>
 
           <Box>
             <Button type="submit" variant="contained">

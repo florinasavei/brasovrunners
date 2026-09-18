@@ -267,7 +267,11 @@
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event instead.",
       "deleteBlockedShort": "{count} registrations",
-      "eventsRepeated": "{created} editions created."
+      "eventsRepeated": "{created} editions created.",
+      "bulkTitle": "Publish or archive the ticked events",
+      "bulkHelp": "Tick events in the list. “Publish” sends them through review and publishes the ones complete in both languages — that is how a whole series goes live at once; “Archive” takes them off the site.",
+      "bulkPublishAction": "Publish the ticked ones",
+      "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile)."
     },
     "confirm": {
       "cancel": "Never mind",
@@ -388,6 +392,7 @@
       "repeatHelp": "Create the next editions of this event at a fixed interval, with the same details and the time kept in the event's own zone. Each copy gets an address with its date (for example “sunday-run-2026-10-04”). Copies are drafts unless you tick publish.",
       "repeatCadence": "Interval",
       "repeatCadences": {
+        "NONE": "Does not repeat",
         "WEEKLY": "Weekly",
         "FORTNIGHTLY": "Every two weeks",
         "MONTHLY": "Monthly"
@@ -397,7 +402,21 @@
       "repeat": "Create the editions",
       "videoUrl": "Video link (YouTube)",
       "videoUrlHelp": "A YouTube link — last year's film, for instance. Shown on the event page in a player that loads only when the visitor presses it. Leave empty if there is none.",
-      "timeOfDay": "Time (24h)"
+      "timeOfDay": "Time (24h)",
+      "repeatWeeks": "How many weeks / editions",
+      "repeatWeekdays": "On these days (optional):",
+      "repeatWeekdaysHelp": "Tick the days it happens on — Monday and Wednesday, say — and “how many weeks” above means weeks, counted from the event's own week; only days after it are made. Nothing ticked: the event's own day, at the chosen interval.",
+      "repeatOnCreateHelp": "Optional. The following editions are created too, as drafts, with the same details and an address carrying each date. Publish them all at once from the events list with “Publish the ticked ones”.",
+      "weekdays": {
+        "1": "Mo",
+        "2": "Tu",
+        "3": "We",
+        "4": "Th",
+        "5": "Fr",
+        "6": "Sa",
+        "7": "Su"
+      },
+      "createdWithSeries": "The event and {created} editions were created, as drafts. Tick them in the events list and publish them together."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",

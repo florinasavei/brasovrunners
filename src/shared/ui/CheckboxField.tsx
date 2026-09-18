@@ -30,12 +30,15 @@ import { CHECKBOX_TAP_TARGET } from "./tap-target";
 export default function CheckboxField({
   name,
   id,
+  value,
   required,
   defaultChecked,
   children,
 }: {
   name: string;
   id?: string;
+  /** For a group posting one name with several values (the weekdays); "on" otherwise. */
+  value?: string;
   required?: boolean;
   defaultChecked?: boolean;
   /** The label, which may contain a link. */
@@ -47,6 +50,7 @@ export default function CheckboxField({
         <Checkbox
           id={id}
           name={name}
+          value={value}
           required={required}
           defaultChecked={defaultChecked}
           sx={CHECKBOX_TAP_TARGET}

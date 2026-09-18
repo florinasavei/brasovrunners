@@ -3754,6 +3754,22 @@ Three cadences and a ceiling of 52, because a weekly run for a year is the large
 club holds; a fourth cadence is one line in `REPEAT_CADENCES` and a label. Baseline
 `BR-V1.34-2026-09-17`.
 
+**Addendum, 2026-09-18 — days of the week, and recurrence at creation.** "On the event
+creation page I see no recurrence; we should have events that are every Monday and every
+Wednesday." Two things were true: the repeat form lived only on an existing event's page,
+where nobody creating one would look, and it knew one day a week. Now `repeatEvent` takes
+`weekdays` (ISO 1–7): with them, `count` is a number of weeks from the source's own week, and
+every chosen day *after* the source, at the source's wall time, is an occurrence — the source is
+never duplicated and a series never runs backwards, so a Sunday event ticked "Monday and
+Wednesday" starts the Monday after. The same fields sit on the creation form, "does not repeat"
+by default; a series made there is drafts, because the event is. Which raised the real problem:
+fifty-two drafts published one page at a time is not a workflow. So the events list gained
+"publish the ticked ones" beside "archive the ticked ones" — each event walks DRAFT → IN_REVIEW
+→ PUBLISHED through `transitionEvent`, so the role check and both-languages-complete check
+hold on every one, and a copy that cannot be published is counted and skipped. A rule engine
+("second Tuesday of the month") was refused again: two cadences, seven boxes and a number cover
+what the club runs.
+
 ## 65. Decided — race numbers arrive in M1: per event, as a batch, printed two to a page (2026-09-17)
 
 **Status:** Decided and built. BR-REQ-038-01; migration `0024`; `modules/registrations/bibs.ts`

@@ -15,7 +15,11 @@ import {
   type RepeatCadence,
   saveEventAndTranslations,
   transitionEvent,
+  type Weekday,
+  WEEKDAYS,
 } from "@/modules/content/events/service";
+import { eq } from "drizzle-orm";
+import { events } from "@/db/schema/events";
 import {
   addTestRegistrations,
   removeTestRegistrations,
@@ -60,7 +64,7 @@ function text(form: FormData, name: string): string {
 }
 
 /** Where the browser goes next, with either a success flag or an error code. */
-function backTo(path: string, outcome: { error?: string; saved?: string }): never {
+function backTo(path: string, outcome: Record<string, string | undefined>): never {
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
@@ -244,6 +248,59 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
 }
 
 /**
+ * Publish the ticked events (BR-REQ-050-02 criterion 7): a recurring series is made as drafts,
+ * and publishing fifty-two Mondays one page at a time is not a workflow. Each event walks the
+ * ordinary transitions — DRAFT → IN_REVIEW → PUBLISHED, or the second alone — through
+ * `transitionEvent`, so the role check and the both-languages-complete check hold on every
+ * one, and a failure (an incomplete copy, a stale version) is counted and skipped rather than
+ * stopping the rest. The same form and the same selection as archiving.
+ */
+export async function bulkPublishEventsAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin" });
+
+  const selected = form
+    .getAll("eventRef")
+    .filter((value): value is string => typeof value === "string" && value.includes(":"));
+  if (selected.length === 0) backTo(listPath, { error: "NOTHING_SELECTED" });
+
+  let published = 0;
+  let failed = 0;
+  try {
+    const actor = await requireStaff();
+    const db = getDb();
+
+    for (const reference of selected) {
+      const separator = reference.lastIndexOf(":");
+      const eventId = reference.slice(0, separator);
+      let expectedVersion = Number(reference.slice(separator + 1));
+      try {
+        const [current] = await db.select({ status: events.editorialStatus }).from(events).where(eq(events.id, eventId)).limit(1);
+        if (!current) throw new DomainError("NOT_FOUND", "no such event");
+        if (current.status === "PUBLISHED") continue;
+        if (current.status === "DRAFT" || current.status === "ARCHIVED") {
+          const reviewed = await transitionEvent(db, { actor, eventId, expectedVersion, to: current.status === "ARCHIVED" ? "DRAFT" : "IN_REVIEW" });
+          expectedVersion = reviewed.version;
+          if (current.status === "ARCHIVED") {
+            const again = await transitionEvent(db, { actor, eventId, expectedVersion, to: "IN_REVIEW" });
+            expectedVersion = again.version;
+          }
+        }
+        await transitionEvent(db, { actor, eventId, expectedVersion, to: "PUBLISHED" });
+        published += 1;
+      } catch (error) {
+        if (!isDomainError(error)) throw error;
+        failed += 1;
+      }
+    }
+  } catch (error) {
+    backTo(listPath, outcomeOf(error));
+  }
+
+  redirect(`${listPath}?saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
+}
+
+/**
  * The editor's one save (BR-REQ-051-01).
  *
  * One form, one button, one transaction: the event row and every language the actor may edit,
@@ -286,7 +343,8 @@ export async function createEventAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
 
   let createdId: string | undefined;
-  let outcome: { error?: string; saved?: string } | undefined;
+  let repeated = 0;
+  let outcome: { error?: string; saved?: string; created?: string } | undefined;
   try {
     const actor = await requireStaff();
     const created = await createEvent(getDb(), {
@@ -308,14 +366,38 @@ export async function createEventAction(form: FormData): Promise<void> {
       },
     });
     createdId = created.id;
+
+    // Recurrence, asked for on the creation form (`DECISIONS.md` §64): the same series the
+    // event page offers, made right away, as drafts — a new event is a draft, and copies of a
+    // draft are drafts. The list's "publish the ticked ones" takes the whole series live.
+    const cadence = text(form, "repeat.cadence");
+    if (cadence && cadence !== "NONE") {
+      if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
+        throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");
+      }
+      const result = await repeatEvent(getDb(), {
+        actor,
+        eventId: created.id,
+        cadence: cadence as RepeatCadence,
+        count: Number(text(form, "repeat.count")),
+        weekdays: weekdaysFrom(form),
+        publish: false,
+      });
+      repeated = result.created;
+    }
   } catch (error) {
     outcome = outcomeOf(error);
   }
 
   // A failed create goes back to the form it came from; a successful one opens the new event,
-  // which is where every field the short form did not ask for is filled in.
-  if (outcome) backTo(getPathname({ locale, href: "/admin/events/new" }), outcome);
-  backTo(editorPath(locale, createdId as string), { saved: "created" });
+  // which is where every field the short form did not ask for is filled in. A create that
+  // succeeded but whose series did not opens the event too, with the series' own error.
+  if (outcome && !createdId) backTo(getPathname({ locale, href: "/admin/events/new" }), outcome);
+  if (outcome) backTo(editorPath(locale, createdId as string), outcome);
+  backTo(editorPath(locale, createdId as string), {
+    saved: "created",
+    created: repeated > 0 ? String(repeated) : undefined,
+  });
 }
 
 export async function duplicateEventAction(form: FormData): Promise<void> {
@@ -341,6 +423,14 @@ export async function duplicateEventAction(form: FormData): Promise<void> {
  * Lands on the events list rather than on one of the copies — there may be fifty — with the
  * count in the outcome so the alert can say what was made.
  */
+/** The ticked days of the week, ISO numbered, from the repeat fields (`RepeatFields`). */
+function weekdaysFrom(form: FormData): Weekday[] {
+  return form
+    .getAll("weekday")
+    .map((value) => Number(value))
+    .filter((value): value is Weekday => (WEEKDAYS as readonly number[]).includes(value));
+}
+
 export async function repeatEventAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
@@ -357,6 +447,7 @@ export async function repeatEventAction(form: FormData): Promise<void> {
       eventId,
       cadence: cadence as RepeatCadence,
       count: Number(text(form, "count")),
+      weekdays: weekdaysFrom(form),
       publish: form.get("publish") === "on",
     });
     outcome = { saved: "eventsRepeated", created: String(result.created) };
