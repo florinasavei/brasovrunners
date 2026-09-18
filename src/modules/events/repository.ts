@@ -36,6 +36,8 @@ const PUBLIC_COLUMNS = {
   mapUrl: events.mapUrl,
   // The course, when the club has drawn one somewhere (BR-REQ-011-01 criterion 8).
   routeUrl: events.routeUrl,
+  // A YouTube link, embedded from its id (BR-REQ-011-01 criterion 9).
+  videoUrl: events.videoUrl,
   featured: events.featured,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,

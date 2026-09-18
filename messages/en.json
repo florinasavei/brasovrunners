@@ -23,6 +23,7 @@
     "nav": {
       "label": "Main navigation",
       "events": "Events",
+      "gallery": "Gallery",
       "more": "Menu"
     }
   },
@@ -105,7 +106,12 @@
     },
     "seeDetails": "See details",
     "route": "Route",
-    "openRoute": "View the route"
+    "openRoute": "View the route",
+    "video": {
+      "open": "Watch the event film",
+      "title": "Event film (YouTube)",
+      "notice": "The player is YouTube's and loads only when you open it."
+    }
   },
   "Admin": {
     "title": "Backoffice",
@@ -134,7 +140,10 @@
       "legal": "Legal documents",
       "devs": "Configuration",
       "tasks": "To do",
-      "pages": "Pages"
+      "pages": "Pages",
+      "gallery": "Gallery",
+      "checkin": "Race day",
+      "guide": "Guide"
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -187,7 +196,12 @@
           "created_by_staff": "Registration entered by staff",
           "name_corrected": "Name corrected",
           "cancelled_by_staff": "Cancelled by staff",
-          "resend_rate_limited": "Resend rate-limited"
+          "resend_rate_limited": "Resend rate-limited",
+          "bib_set": "Race number changed",
+          "confirmed_by_staff": "Confirmed at the desk (address vouched for, declaration on paper)",
+          "promoted_by_staff": "Given a place ahead of the waiting list",
+          "checked_in": "Marked as here",
+          "checkin_undone": "Check-in undone"
         }
       },
       "locale": {
@@ -219,13 +233,24 @@
       "bulkCancelPending": "Cancelling…",
       "registrationsCancelled": "{cancelled} registrations cancelled. {failed} could not be cancelled.",
       "searchHelp": "Search by name, with or without Romanian diacritics.",
-      "resendShort": "Resend"
+      "resendShort": "Resend",
+      "raceDayTitle": "Race day",
+      "bibNumber": "Race number",
+      "checkinCode": "Pickup code",
+      "checkinCodeHelp": "The code from the confirmation email; the QR below encodes it. Used at the number pickup desk.",
+      "qrAlt": "QR code {code}",
+      "openDesk": "Open at the desk",
+      "notCheckedIn": "Not marked as here.",
+      "checkedIn": "Here: {time} · {who}",
+      "declarationPaper": "on paper, recorded by {who}",
+      "emailVouched": "address vouched for by {who}"
     },
     "events": {
       "empty": "There is no event in the database.",
       "featured": "Featured",
       "preview": "Preview",
       "edit": "Edit",
+      "editNamed": "Edit {title}",
       "moreActions": "More actions",
       "new": "New event",
       "registrations": "Registrations",
@@ -369,7 +394,9 @@
       },
       "repeatCount": "How many editions",
       "repeatPublish": "Publish the editions as they are created (this event is published, so the copies are complete too).",
-      "repeat": "Create the editions"
+      "repeat": "Create the editions",
+      "videoUrl": "Video link (YouTube)",
+      "videoUrlHelp": "A YouTube link — last year's film, for instance. Shown on the event page in a player that loads only when the visitor presses it. Leave empty if there is none."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -512,12 +539,14 @@
         },
         "scheduler": {
           "title": "Production monitors on cron-job.org",
-          "todo": "One monitor for each of the two scheduled jobs (email-outbox and registration-maintenance), every five minutes, with this environment’s JOB_SECRET — SETUP.md §26. Without them email does not go out and held places do not expire. Missing or late",
+          "todo": "Monitors for the two scheduled jobs (email-outbox and registration-maintenance), with this environment’s JOB_SECRET — SETUP.md §26: every 15 minutes by day (07–23, Romania time) and hourly at night. Email goes out right after each registration anyway; the monitors expire held places and retry what failed. Missing or late",
           "done": "Both jobs are running on time.",
           "how": [
-            "On cron-job.org (free account): “Create cronjob”, twice.",
-            "First: URL {outboxUrl}; second: URL {maintenanceUrl}. Both: Schedule “every 5 minutes”, Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
-            "Turn on email notification on failure, so a dead monitor tells you. Within five minutes this row turns green; /devs shows each job with its last run."
+            "On cron-job.org (free account): Settings → Time zone = Europe/Bucharest. Then “Create cronjob”, four times for production: two per address (one for the day, one for the night).",
+            "The addresses: {outboxUrl} and {maintenanceUrl}. On all of them: Request method POST, and under Headers: Authorization = Bearer followed by this environment's JOB_SECRET (the value in Vercel → Settings → Environment Variables; it is not shown here).",
+            "Day: Execution schedule → Custom → every day, hours 7–22, minutes 0, 15, 30, 45. Night: Custom → every day, hours 23, 0, 1, 2, 3, 4, 5, 6, minute 0. Not every 5 minutes: the Neon database would never sleep and the 100 free CU-hours a month would run out mid-month, with the site down until the next month.",
+            "Turn on email notification on failure, so a dead monitor tells you. This row turns green on the first run; /devs shows each job with its last run, and the database's consumption. At night the site answers its first request more slowly — that is intended.",
+            "On QA: one pair only, every 60 minutes day and night (or paused when not testing): QA spends its own project's 100 CU-hours too."
           ]
         },
         "inviteStaff": {
@@ -528,6 +557,18 @@
             "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
             "The person creates a Zitadel account with exactly that address and verifies the email — or you create it for them in the Zitadel console → Users. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
+          ]
+        },
+        "mediaStorage": {
+          "title": "Photo storage (Cloudflare R2)",
+          "todo": "The gallery needs somewhere to put photos. Until it is configured, albums can be created but cannot receive photos. Free at the club's size; Cloudflare still asks for a card on the account to enable R2.",
+          "done": "Photos have somewhere to live.",
+          "how": [
+            "A Cloudflare account (free) on the club's address. The domain does not move there.",
+            "Left menu → R2 Object Storage → enable R2 (this is where the card is asked for; nothing is charged under 10 GB).",
+            "Create bucket → name “brasovrunners-media”, location “European Union”. Then, in the bucket's settings, enable “Public access” through the r2.dev subdomain (or a custom domain) and copy the public address — that is R2_PUBLIC_BASE_URL.",
+            "R2 → “Manage R2 API Tokens” → Create API token → name “brasovrunners-site”, permission “Object Read & Write”, this bucket only. Copy the Access Key ID, the Secret Access Key and the S3 endpoint (shown once).",
+            "In Vercel → the production project (and QA) → Settings → Environment Variables: R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET=brasovrunners-media, R2_PUBLIC_BASE_URL. Redeploy. This row turns green and the album page gets its upload button."
           ]
         },
         "publishEvents": {
@@ -641,7 +682,7 @@
         },
         "scheduler": {
           "name": "cron-job.org + GitHub (the automatic jobs)",
-          "freeGives": "Both free: cron-job.org calls the two jobs every five minutes, and GitHub Actions is the safety net when the first does not.",
+          "freeGives": "Both free: cron-job.org calls the two jobs every 15 minutes (email goes out right after each registration regardless), and GitHub Actions is the safety net when the first does not.",
           "ceiling": "Here the limit is not money but rhythm: without the cron-job.org monitors the jobs only run from the safety net, roughly every two hours.",
           "whenCrossed": "Email waits in the queue, and places held for somebody are released later than they should be. Nothing breaks and nobody loses their place — but the confirmation arrives late, and on registration day that feels like a broken site.",
           "closeYes": "An automatic job has not run for too long.",
@@ -723,6 +764,53 @@
         "seoDescription": "SEO description"
       }
     },
+    "gallery": {
+      "title": "Photo gallery",
+      "create": "New album",
+      "createHelp": "The album's details first, then the photos — uploaded on the album's page, straight from a phone.",
+      "intro": "The club's albums. Photos are shrunk on the phone before they are sent and kept in two sizes only, with no location data. An album is on the site once it is published and has at least one photo.",
+      "empty": "No album yet.",
+      "backToList": "← All albums",
+      "readOnly": "Your role can see the albums but not change them.",
+      "noPhotosYet": "The album has no photo. Upload at least one so it can be published.",
+      "photos": "Photos ({count})",
+      "upload": "Upload photos",
+      "uploadHelp": "Pick one or more photos (JPEG, PNG or WebP). They are shrunk on the device before sending; the first becomes the cover.",
+      "uploading": "Uploading {done} of {total}…",
+      "uploaded": "{total} photos uploaded.",
+      "uploadFailed": "Could not upload: {names}",
+      "setCover": "Cover",
+      "removePhoto": "Remove",
+      "removePhotoTitle": "Remove the photo?",
+      "removePhotoBody": "The photo leaves the album and the storage. This cannot be undone.",
+      "delete": "Delete the album",
+      "deleteTitle": "Delete the album?",
+      "deleteBody": "The album, both translations and every photo in it are removed for good, from storage too. To take it off the site only, use “Archive”.",
+      "viewPublic": "View the public album →",
+      "photoAlt": "Photo {n}: {title}",
+      "columnTitle": "Title",
+      "columnTakenOn": "Date",
+      "columnStatus": "Status",
+      "columnPhotos": "Photos",
+      "tableCaption": "The gallery's albums",
+      "storageUnconfigured": "Photo storage is not configured for this environment: the R2 variables are missing. The steps are on the “To do” page, under “Photo storage”.",
+      "takenOnHelp": "The day the photos were taken. Albums are ordered by it.",
+      "eventHelp": "Optional. The album page will link to the event.",
+      "noEvent": "No event",
+      "slugHelp": "Lowercase letters, digits and hyphens. Becomes the album's address.",
+      "slugLocked": "The address is fixed after publication, so shared links keep working.",
+      "language": {
+        "ro": "Romanian",
+        "en": "English"
+      },
+      "fields": {
+        "takenOn": "Date of the photos",
+        "event": "Event",
+        "title": "Title",
+        "slug": "Address (slug)",
+        "description": "Description"
+      }
+    },
     "bibs": {
       "title": "Race numbers",
       "assign": "Assign numbers",
@@ -733,6 +821,115 @@
       "page": "Page {n} of {total}",
       "helpNone": "No number assigned yet. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event.",
       "helpSome": "{total} numbers assigned. Assigning gives every confirmed registration without one the next number, in order of confirmation; a number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event."
+    },
+    "desk": {
+      "title": "Number pickup desk",
+      "howTitle": "How race day works, step by step",
+      "how": [
+        "Before the race (organizer): on the event page, under “Race numbers”, press “Assign numbers”, then “Download the sheet (PDF)” and print it. Print the approved declaration too (Legal documents → PDF), a few copies, for anyone who signs on the spot.",
+        "Volunteers: invite them from “Staff” with the Contributor role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
+        "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's page opens. Or search by name or by race number.",
+        "Press “Here” and hand over the number from the sheet. No number? Type it in the box and press “Save”.",
+        "No email arrived, or they cannot find the QR: search by name. If it says “pending”, give them the paper declaration to sign, press “Confirm here”, then “Here”.",
+        "Never registered at all: “Add somebody” — name and email; the “is at the desk” tick is already set. They sign the paper declaration, then “Here”. If the event is full they join the waiting list; “Give a place” only works once one is free.",
+        "Made a mistake? “Undo” takes it back. Every press stays in the registration's history, with your name on it.",
+        "At the end, the figures on this page are the race's figures: how many confirmed, how many here. Whoever did not come stays without “here”."
+      ],
+      "noEvents": "No event with local registration in this period.",
+      "event": "Event",
+      "search": "Name, number or code",
+      "find": "Search",
+      "scan": "Scan",
+      "scanHint": "Hold the QR code in the frame. It opens by itself once read.",
+      "scanUnreadable": "What was read is not a participant code.",
+      "searchHelp": "Type part of a name, the race number, or the code from the email. Leave it empty for everybody at the chosen event.",
+      "counts": {
+        "confirmed": "Confirmed: {n}",
+        "checkedIn": "Here: {n}",
+        "withoutBib": "No number: {n}",
+        "pending": "Unconfirmed: {n}"
+      },
+      "walkIn": "Add somebody",
+      "foundByCode": "Found by code.",
+      "unknownCode": "No participant has this code. Check the letters, or search by name.",
+      "nobody": "Nobody matches.",
+      "backToDesk": "← Back to the desk",
+      "scannedTitle": "Scanned participant",
+      "confirmHere": "Confirm here",
+      "givePlace": "Give a place",
+      "bibField": "Race number",
+      "saveBib": "Save",
+      "checkIn": "Here",
+      "undoCheckIn": "Undo",
+      "checkedInAt": "Here since {time} · {who}",
+      "bySelf": "themselves",
+      "fastTrack": "This person is at the desk: I vouch for the address, and the declaration is signed on paper now.",
+      "fastTrackHelp": "The registration is confirmed on the spot, with no verification email and no declaration link. The participant still signs the declaration — on the printed copy — and you record that under your name. If the event is full, they join the waiting list like anyone else.",
+      "saved": {
+        "registrationCreated": "Added — the person is listed below, in the state they landed in.",
+        "registrationConfirmed": "Confirmed. You can give the number and mark them here.",
+        "registrationWaitlisted": "The event is full: this person is on the waiting list. If a place frees up, press “Give a place”.",
+        "bibSet": "Number saved.",
+        "checkedIn": "Marked as here.",
+        "checkinUndone": "Check-in undone."
+      }
+    },
+    "guide": {
+      "title": "How to use the platform",
+      "intro": "Who does what, step by step. Each section says which role it needs; yours is shown at the top next to your name. If a button is missing, you do not have the role for it — ask a superadministrator.",
+      "sections": [
+        {
+          "title": "Volunteer at the number pickup desk",
+          "who": "Role: Contributor (or any role). On a phone.",
+          "steps": [
+            "Open the site and press “Sign in” (at the bottom, or at /admin). Use the account the organizer gave you.",
+            "Press “Race day” in the top bar. Pick today's event from the list.",
+            "The participant shows the QR code from their email. Press “Scan” (Android) or open the phone's Camera app, point it at the code and tap the link that appears — the person's page opens.",
+            "Check the name, press “Here” and hand over the race number from the sheet (the number is shown large, left of the name).",
+            "No QR, or they cannot find the email: type part of the name in the search box and press “Search”. Same page, same buttons.",
+            "It says “pending” or “unconfirmed”: give them the paper declaration, they sign it, you press “Confirm here”, then “Here”.",
+            "No number: type it in the box and press “Save”. A number already given to somebody else is refused.",
+            "Never registered: press “Add somebody”, fill in name and email, “Add registration”. They sign the paper declaration, then “Here”. If the event is full they join the waiting list — “Give a place” only works once somebody withdrew.",
+            "Pressed the wrong thing: “Undo”. Everything you press stays in the history with your name — nothing is lost.",
+            "What you cannot do from here (and that is fine): cancel or erase registrations, see email addresses, export lists. For those, call an administrator."
+          ]
+        },
+        {
+          "title": "Participant — what it looks like from their side",
+          "who": "No account. Everything by email.",
+          "steps": [
+            "They register from the event page and get a verification email; they press the link (and have 30 minutes for the next step).",
+            "They read and sign the declaration online, typing their name. The registration becomes “confirmed” and they get the confirmation email with the QR code.",
+            "The same email has a “Manage your registration” link: from there they can withdraw, see their code and, from the day before the start, press “I have arrived”.",
+            "Event full: they join the waiting list and get an email when a place frees up, with 30 minutes to sign the declaration.",
+            "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot."
+          ]
+        },
+        {
+          "title": "Organizer — events and numbers",
+          "who": "Role: Moderator or above.",
+          "steps": [
+            "“Events” → “New event” (or “Duplicate” last year's / “Repeat” for weekly series). Fill in the settings — type, date, place, distance, route, video link — and the texts in Romanian and English.",
+            "Registrations: in Settings choose “Local registration”, set the capacity and the window, pick the approved declaration.",
+            "Publishing: “Submit for review” → “Publish”. Both languages go live together; an incomplete language blocks publishing.",
+            "Race numbers (Administrator): on the event page, “Assign numbers” gives numbers in confirmation order; “Download the sheet (PDF)” — two per A4, with the logo. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
+            "On race day: “Number pickup desk” from the event page, or “Race day” in the bar. The “Confirmed / Here” figures are the race's figures.",
+            "Afterwards: “Archive” the event. Photos go in “Gallery” (new album, upload from the phone, publish)."
+          ]
+        },
+        {
+          "title": "Administrator — registrations, legal texts, staff",
+          "who": "Role: Administrator or Superadministrator.",
+          "steps": [
+            "“Registrations”: the full list, filters, name search, CSV export, each registration's page with its history. From there: correct a name, cancel (the place is released), erase on request, resend the email.",
+            "“Legal documents”: privacy notice, terms, declaration. New version → save the draft → PDF to review → “Approve”. An approved text never changes; a correction is the next version.",
+            "“Staff” (Superadministrator): add people by email and role. The person must also exist in Zitadel (the sign-in console) to be able to log in.",
+            "Volunteer accounts: create the user in Zitadel (email + password), then add them in “Staff” with the Contributor role. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
+            "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
+            "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab."
+          ]
+        }
+      ]
     }
   },
   "NotFound": {
@@ -741,7 +938,8 @@
   },
   "Footer": {
     "about": {
-      "summary": "About the club, contact and legal",
+      "summaryShort": "About the club",
+      "summaryTail": ", contact and legal",
       "socialLabel": "The club on social media",
       "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races.",
       "facebook": "Facebook",
@@ -882,7 +1080,15 @@
       "action": "Cancel registration",
       "done": "Your registration has been cancelled.",
       "eventStarted": "This event has already started; the registration can no longer be cancelled.",
-      "doneTitle": "Registration cancelled"
+      "doneTitle": "Registration cancelled",
+      "raceDayTitle": "On race day",
+      "codeIntro": "Show this code at the number pickup desk. It is in your confirmation email too.",
+      "qrAlt": "Your QR code {code}",
+      "selfCheckIn": "I have arrived — mark me as here",
+      "selfCheckInHelp": "You can do this from the day before the start. You still pick up your number at the desk.",
+      "selfCheckInDone": "You are marked as here. Pick up your number at the desk.",
+      "selfCheckInClosed": "Check-in opens on {date}.",
+      "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out."
     }
   },
   "Devs": {
@@ -1029,6 +1235,28 @@
         "title": "statement_timeout 10s and idle_in_transaction_session_timeout 30s",
         "body": "Enforced by this application rather than by Neon: db/client.ts sets both on the pool. The risk was never the connection count (max: 10 is per warm instance, and PgBouncer accepts far more) but one unbounded query holding a Vercel function for 300 seconds. The first timeout is enforced by PostgreSQL, so it holds even when the Node process is frozen; the second covers an instance killed between two statements of an open transaction. There is no connection timeout, deliberately: on Neon Free the first request after an idle period waits for the database to wake."
       }
+    },
+    "theme": {
+      "title": "Theme lab",
+      "intro": "Try the site with bigger type, another typeface or other corners — in this browser only, with nothing published. Then open any page to see it; “Back to normal” clears everything.",
+      "scale": "Text size",
+      "display": "Heading font",
+      "body": "Body font",
+      "radius": "Corners (px)",
+      "apply": "Apply in this browser",
+      "reset": "Back to normal",
+      "back": "← Back to configuration",
+      "link": "Theme lab →"
+    },
+    "neon": {
+      "title": "Database (Neon)",
+      "intro": "This project's consumption in the current period, read from Neon. The Free plan gives 100 CU-hours a month per project; when they run out the database stops until the next month begins.",
+      "used": "{used} of 100 CU-hours used ({percent}%)",
+      "awake": "Compute awake: {hours} h of {elapsed} h elapsed",
+      "period": "Period ends {date}",
+      "unavailable": "Not configured: set NEON_API_KEY and NEON_PROJECT_ID (SETUP.md §33) to see consumption here.",
+      "failed": "Neon did not answer: {reason}",
+      "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
     }
   },
   "Error": {
@@ -1037,5 +1265,13 @@
     "retry": "Try again",
     "home": "Back to the first page",
     "reference": "If it keeps happening, tell us this code:"
+  },
+  "Gallery": {
+    "title": "Gallery",
+    "intro": "Photos from the club's runs, races and meetups.",
+    "empty": "No published albums yet.",
+    "backToGallery": "← All albums",
+    "photoCount": "{count} photos",
+    "photoAlt": "Photo {n} of {total}: {title}"
   }
 }

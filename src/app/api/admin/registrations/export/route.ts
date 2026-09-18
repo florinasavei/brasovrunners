@@ -64,6 +64,7 @@ export async function GET(request: Request): Promise<Response> {
       clubMemberDeclared: row.clubMemberDeclared,
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
+      bibNumber: row.bibNumber,
     })),
   );
 

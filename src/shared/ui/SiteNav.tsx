@@ -10,7 +10,12 @@ import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent
 import { Link } from "@/i18n/navigation";
 import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
-const SECTIONS = [{ segment: "events", href: "/events" }] as const;
+const SECTIONS = [
+  { segment: "events", href: "/events" },
+  // Offered only when a published album exists (`showGallery`): a section with nothing
+  // behind it is a signpost to an empty room.
+  { segment: "gallery", href: "/gallery" },
+] as const;
 
 export type NavPage = { slug: string; title: string };
 
@@ -69,13 +74,19 @@ type Item = { key: string; href: Href; label: string; current: boolean };
  * arrive as a prop from `SiteHeader` — a Server Component that can read them — rather than as a
  * constant somebody has to remember to edit (BR-REQ-050-03).
  */
-export default function SiteNav({ pages = [] }: { pages?: readonly NavPage[] }) {
+export default function SiteNav({
+  pages = [],
+  showGallery = false,
+}: {
+  pages?: readonly NavPage[];
+  showGallery?: boolean;
+}) {
   const t = useTranslations("Site.nav");
   const segments = useSelectedLayoutSegments();
   const selected = segments[0];
 
   const items: Item[] = [
-    ...SECTIONS.map((section) => ({
+    ...SECTIONS.filter((section) => section.segment !== "gallery" || showGallery).map((section) => ({
       key: section.segment,
       href: section.href as Href,
       label: t(section.segment),

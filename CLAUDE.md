@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.34-2026-09-17`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.35-2026-09-18`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -74,7 +74,7 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 | Publication is one state per event: both languages go live together, and PUBLISHED requires a complete translation in every locale. A locale with no translation is a 404, never the other language's text. | `AGENTS.md` §11.2, BR-REQ-040-02, `DECISIONS.md` §28 |
 | A test registration behaves exactly like a real one in the queue — `kind` appears in no condition in the allocator or the capacity formula — is omitted from every count the club is given, and cannot exist in production. | `AGENTS.md` §12.6, BR-REQ-037-04, `DECISIONS.md` §30 |
 | A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, confirmed and not opted out, and never switched on before the approved privacy notice describes it. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
-| Staff may enter, rename, cancel and erase a registration, and nothing else. No verified-email edit, no participant merge, and no staff-signed declaration. Erasing releases the place through the allocator and leaves an audit row that names who and why but never who was erased. | `AGENTS.md` §15.11, BR-REQ-037-03, BR-REQ-037-05, BR-REQ-037-06 |
+| Staff may enter, rename, cancel and erase a registration, and — at the race-day desk — confirm one on a paper declaration the *participant* signed, give a waiting-list entry a free place, set a number by hand and check people in. Nothing else: no verified-email edit, no participant merge, no staff-signed declaration (a paper acceptance names the staff member who *recorded* it), and no desk verb that bypasses the allocator or an approved declaration. Every staff role works the desk and sees a name, a state and a number there, never an address; the list, the export, cancel and erase stay Administrator-only. Erasing releases the place through the allocator and leaves an audit row that names who and why but never who was erased. | `AGENTS.md` §15.11, BR-REQ-037-03, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-037-07, BR-REQ-037-08, `DECISIONS.md` §67 |
 | Participants never get passwords or accounts. Staff-only auth. | `AGENTS.md` §10.3, §13 |
 | Email action links: token hashed at rest, single use, GET never mutates. | `AGENTS.md` §12.8, BR-REQ-036-02 |
 | Every absolute URL derives from `APP_BASE_URL`. No hostname literal in `src/`, and the club's domain appears in no file except `SETUP.md` §26 — `docs:check` fails otherwise. | `AGENTS.md` §8, BR-REQ-101-02 |
@@ -270,10 +270,16 @@ PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a see
 `yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
 single-connection database.
 
-Not built: the rest of the CMS — articles, galleries, the media library on R2 and the Tiptap
-body contract (M5) — and what M2–M4 name (multi-distance races, one bib per race across
-distances, results, runner profiles). Per-event race numbers and the printed sheet, and
-recurring events, are M1 since 2026-09-17 (`DECISIONS.md` §64, §65).
+**A photo gallery, on R2.** Albums with photos shrunk in the browser and re-encoded on the
+server to two WebP variants (no original, no EXIF), stored through the §17 adapter —
+`STORAGE_MODE` derives `local`/`fake`/`r2`/`unconfigured` from the five `R2_*` variables
+(`SETUP.md` §32 is the bucket procedure). Public `/galerie`; "Galerie" in the nav while an
+album is published (BR-REQ-054-01, `DECISIONS.md` §66).
+
+Not built: the rest of the CMS — articles, a media library for other content, captions and the
+Tiptap image node (M5) — and what M2–M4 name (multi-distance races, one bib per race across
+distances, results, runner profiles). Per-event race numbers and the printed sheet, recurring
+events and the gallery are M1 since 2026-09-17 (`DECISIONS.md` §64–§66).
 
 **What is deployed.** QA, plus a production Vercel project and a production Neon project that
 are configured and have never served a request — `main` is sixty commits behind `qa`, so the

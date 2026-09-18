@@ -9,6 +9,7 @@ import * as eventsSchema from "./schema/events";
 import * as jobRunsSchema from "./schema/job-runs";
 import * as legalDocumentsSchema from "./schema/legal-documents";
 import * as pagesSchema from "./schema/pages";
+import * as gallerySchema from "./schema/gallery";
 import * as participantsSchema from "./schema/participants";
 import * as rateLimitSchema from "./schema/rate-limit";
 import * as registrationsSchema from "./schema/registrations";
@@ -22,6 +23,7 @@ export const schema = {
   ...staffUsersSchema,
   ...legalDocumentsSchema,
   ...pagesSchema,
+  ...gallerySchema,
   ...registrationsSchema,
   ...declarationAcceptancesSchema,
   ...jobRunsSchema,

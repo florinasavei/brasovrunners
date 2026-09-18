@@ -1,6 +1,6 @@
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Inter, Nunito, Roboto } from "next/font/google";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -20,6 +20,24 @@ const roboto = Roboto({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-roboto",
+});
+
+/**
+ * Two more faces for the theme lab (`theme/preview.ts`, BR-REQ-090-06), self-hosted like
+ * Roboto. Declaring a variable costs nothing at load: a browser fetches a font file only when
+ * a rendered style names it, and nothing does until a preview says so.
+ */
+const inter = Inter({
+  weight: ["400", "500", "700"],
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-inter",
+});
+const nunito = Nunito({
+  weight: ["400", "500", "700"],
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-nunito",
 });
 
 /**
@@ -74,7 +92,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     // suppressHydrationWarning: MUI's CSS-variable theme initialises on the client.
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${roboto.variable} ${facon.variable}`}>
+      <body className={`${roboto.variable} ${facon.variable} ${inter.variable} ${nunito.variable}`}>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <AppTheme>
             <NextIntlClientProvider>
@@ -90,9 +108,14 @@ export default async function LocaleLayout({ children, params }: Props) {
                   tab through the lockup, the sections and the language switcher on
                   every single page before reaching what they came for.
 
-                  Visually hidden until focused: the standard pattern, and it must not
-                  be `display: none`, which would take it out of the tab order and
-                  defeat the whole point.
+                  Visually hidden until focused *from the keyboard*: the standard pattern,
+                  and it must not be `display: none`, which would take it out of the tab
+                  order and defeat the whole point. `:focus-visible`, not `:focus`, since
+                  2026-09-18: a tap that happened to land focus on it (the back gesture on a
+                  phone, a tap on the page edge) made a "Skip to content" box pop out of the
+                  corner of a site whose visitors have no idea what it is for, and pressing
+                  it on a short page moved nothing. Keyboard users still get it; nobody else
+                  ever sees it.
                 */}
                 <Box
                   component="a"
@@ -105,7 +128,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                     // function in `sx` cannot cross into a Client Component. Above MUI's
                     // tooltip layer (1500), which is the highest thing this site renders.
                     zIndex: 1600,
-                    "&:focus": {
+                    "&:focus-visible": {
                       left: 8,
                       top: 8,
                       px: 2,

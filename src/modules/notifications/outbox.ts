@@ -8,6 +8,7 @@ import type { Database, Transaction } from "@/db/types";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
+import { drainOutboxAfterResponse } from "./drain";
 import {
   MAX_SEND_ATTEMPTS,
   nextAllowanceResetAt,
@@ -128,6 +129,9 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
     .onConflictDoNothing({ target: emailOutbox.idempotencyKey })
     .returning();
 
+  // A new row is work; send it once this request's response is out (`drain.ts`, §68). The
+  // transaction commits before the response does, so the drain sees the row.
+  if (row) drainOutboxAfterResponse();
   return row ?? null;
 }
 

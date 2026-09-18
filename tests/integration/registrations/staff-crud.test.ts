@@ -289,10 +289,15 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
     expect(code).toBe("VALIDATION_ERROR");
   });
 
-  it("is refused to an Editor", async () => {
+  /**
+   * Since `DECISIONS.md` §67 the entry form is a desk verb: a walk-in on race morning is
+   * typed in by whoever is at the table, and that is a volunteer — the lowest role. What a
+   * Contributor still cannot do is anything past the desk: cancel, erase, rename, resend.
+   */
+  it("is open to a Contributor at the desk, who still cannot cancel", async () => {
     const event = await createInternalEvent(10);
 
-    const code = await codeOf(
+    const created = await codeOf(
       createRegistrationByStaff(
         db,
         editor,
@@ -308,8 +313,10 @@ describe("BR-REQ-037-05 a registration entered by staff", () => {
         NOW,
       ),
     );
+    expect(created).toBe("no error");
 
-    expect(code).toBe("FORBIDDEN");
+    const [row] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(await codeOf(cancelRegistrationByStaff(db, editor, row.id, "no", NOW))).toBe("FORBIDDEN");
   });
 
   it("writes an audit row naming the organizer", async () => {

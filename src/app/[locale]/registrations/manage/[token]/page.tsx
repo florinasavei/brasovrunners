@@ -7,13 +7,18 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
+import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import Stack from "@mui/material/Stack";
+import { getFormatter } from "next-intl/server";
+import { readRaceDayContext } from "@/modules/registrations/token-actions";
+import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
-import { cancelRegistrationAction } from "./actions";
+import { cancelRegistrationAction, selfCheckInAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ done?: string; invalid?: string; started?: string }>;
+  searchParams: Promise<{ done?: string; invalid?: string; started?: string; here?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -29,8 +34,9 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { done, invalid, started } = await searchParams;
+  const { done, invalid, started, here } = await searchParams;
   const t = await getTranslations("Registrations");
+  const format = await getFormatter();
 
   if (done) {
     return (
@@ -45,8 +51,11 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
     );
   }
 
-  const context =
-    invalid || started ? { ok: false as const } : await readRegistrationTokenContext(token, "MANAGE_REGISTRATION");
+  // One token read for the page — it is throttled per presented token, so a second read here
+  // would charge the participant twice. It also carries race day (BR-REQ-037-08): the code,
+  // its QR, and "I am here", shown only once confirmed.
+  const context = invalid || started ? { ok: false as const } : await readRaceDayContext(token, new Date());
+  const confirmed = context.ok && context.registration.status === "CONFIRMED" ? context : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
@@ -59,14 +68,64 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
       ) : !context.ok ? (
         <Alert severity="warning">{t("invalidOrExpired")}</Alert>
       ) : (
-        <form action={cancelRegistrationAction}>
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="token" value={token} />
-          <Typography sx={{ mb: 2 }}>{t("manage.prompt")}</Typography>
-          <Button type="submit" variant="outlined" color="error" sx={TAP_TARGET}>
-            {t("manage.action")}
-          </Button>
-        </form>
+        <Stack spacing={3}>
+          {confirmed?.registration.checkinCode && (
+            <Box component="section">
+              <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+                {t("manage.raceDayTitle")}
+              </Typography>
+              <Typography sx={{ mb: 2 }}>{t("manage.codeIntro")}</Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { xs: "flex-start", sm: "center" } }}>
+                <Box
+                  component="img"
+                  src={`${env.APP_BASE_URL}/api/registrations/qr/${confirmed.registration.checkinCode}.png`}
+                  alt={t("manage.qrAlt", { code: confirmed.registration.checkinCode })}
+                  width={200}
+                  height={200}
+                  sx={{ width: 200, height: 200, border: 1, borderColor: "divider", borderRadius: 1 }}
+                />
+                <Typography sx={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1.5rem", letterSpacing: 2 }}>
+                  {confirmed.registration.checkinCode}
+                </Typography>
+              </Stack>
+
+              <Box sx={{ mt: 2 }}>
+                {here === "1" || confirmed.registration.checkedInAt ? (
+                  <Alert severity="success">{t("manage.selfCheckInDone")}</Alert>
+                ) : here === "0" ? (
+                  <Alert severity="warning">{t("manage.selfCheckInFailed")}</Alert>
+                ) : confirmed.selfCheckinOpen ? (
+                  <form action={selfCheckInAction}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="token" value={token} />
+                    <Button type="submit" variant="contained" sx={TAP_TARGET}>
+                      {t("manage.selfCheckIn")}
+                    </Button>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {t("manage.selfCheckInHelp")}
+                    </Typography>
+                  </form>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    {t("manage.selfCheckInClosed", {
+                      date: format.dateTime(confirmed.selfCheckinOpensAt, { dateStyle: "long" }),
+                    })}
+                  </Typography>
+                )}
+              </Box>
+              <Divider sx={{ mt: 3 }} />
+            </Box>
+          )}
+
+          <form action={cancelRegistrationAction}>
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="token" value={token} />
+            <Typography sx={{ mb: 2 }}>{t("manage.prompt")}</Typography>
+            <Button type="submit" variant="outlined" color="error" sx={TAP_TARGET}>
+              {t("manage.action")}
+            </Button>
+          </form>
+        </Stack>
       )}
     </Container>
   );

@@ -290,6 +290,33 @@ export const registrations = pgTable(
     expiryReason: registrationExpiryReason("expiry_reason"),
     cancellationSource: registrationCancellationSource("cancellation_source"),
 
+    /**
+     * Race day (BR-REQ-037-08, `DECISIONS.md` §67).
+     *
+     * `checkin_code` identifies a registration to staff at the desk: it is what the QR in the
+     * confirmation email encodes, and what the participant shows to pick up their number. An
+     * identifier, not a credential — the page it opens is behind staff sign-in, and it confers
+     * nothing on the person holding it — so it is stored as it is, unlike an action token.
+     * Minted when a registration is confirmed; unique across every event.
+     *
+     * `checked_in_at` is the fact; `checked_in_by_staff_user_id` says who — null when the
+     * participant checked themselves in from their own link.
+     *
+     * `email_confirmed_by_staff_user_id` records that a member of staff, not a click on a link,
+     * vouched for the address (BR-REQ-037-07): a fast-track entry at the desk, where the person
+     * is standing in front of them. The participant's own `email_verified_at` is deliberately
+     * *not* set by that — a staff attestation is a different fact from a delivered click.
+     */
+    checkinCode: text("checkin_code").unique(),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    checkedInByStaffUserId: uuid("checked_in_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
+    emailConfirmedByStaffUserId: uuid("email_confirmed_by_staff_user_id").references(
+      () => staffUsers.id,
+      { onDelete: "set null" },
+    ),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

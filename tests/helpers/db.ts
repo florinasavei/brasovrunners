@@ -8,6 +8,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { jobRuns } from "@/db/schema/job-runs";
 import { legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-documents";
+import { galleryAlbums, galleryAlbumTranslations, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pages, pageTranslations } from "@/db/schema/pages";
 import { participants } from "@/db/schema/participants";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
@@ -73,6 +74,11 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(declarationAcceptances);
   await db.delete(emailActionTokens);
   await db.delete(emailOutbox);
+  // The gallery: items, then albums (which the cover references), then the assets.
+  await db.delete(galleryItems);
+  await db.delete(galleryAlbumTranslations);
+  await db.delete(galleryAlbums);
+  await db.delete(mediaAssets);
   await db.delete(eventTranslations);
   // `registrations` references `events`, and `events.declaration_document_id` references
   // `legal_documents`, so registrations must go before events, and events before legal

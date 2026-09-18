@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -360,7 +360,21 @@ Repeated unregistration requests are safe and show the current state rather than
 The backoffice also gives an event's confirmed participants their **race numbers**, as a batch
 in order of confirmation — a number once given never changes — and prints them as a sheet, two
 per A4 page with the club's logo, the number and the name, all of them or a range. Test
-registrations get no number and are never printed.
+registrations get no number and are never printed. One number can also be typed by hand, or
+cleared.
+
+**Race day has a desk** (2026-09-18). Every confirmed participant receives, in the confirmation
+email, a code and its QR; at the pickup table a volunteer — any staff role, on a phone — scans
+it or types a name, sees the runner's name, state and number, hands over the number and marks
+them *here*. The process leaves room for everything that goes wrong at a table: no email
+arrived, the QR is on a dead phone, the person never registered. A volunteer can confirm a
+pending registration on the spot — the address vouched for by the volunteer, the declaration
+signed by the participant on a printed copy of the approved text and recorded under the
+volunteer's name — enter a walk-in, give a number by hand, undo a mistake. What a volunteer
+cannot do is see an address, cancel, erase or export: those stay with the administrator. And
+nothing at the desk places anybody past the event's capacity: a walk-in at a full event joins
+the waiting list, and a place is given only when one is free. Participants can also say "I am
+here" from their own link from the day before the start.
 
 The backoffice shows, for each registration:
 
@@ -528,6 +542,10 @@ It supports only:
   together like an event, and their address stops changing once published, so a link already
   shared keeps working. Deliberately plain: a title and text, no photo galleries and no layout
   choices, because the club needs to say things rather than design them;
+- **photo albums** — from a run, a race, a meetup: a title and a date, the photos uploaded from a
+  phone and shrunk on it before they leave, kept in two sizes with no location data, published
+  in both languages together. Light by construction, on the club's own bucket, never on the
+  hosting provider's disk;
 - articles and announcements;
 - event titles, descriptions, locations, images, and SEO text;
 - selected static content such as About and homepage introduction;

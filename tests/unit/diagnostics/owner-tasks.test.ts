@@ -21,6 +21,7 @@ const LAUNCHED: OwnerTaskInputs = {
   staffCount: 3,
   publishedEventCount: 4,
   roDomainBound: true,
+  storageConfigured: true,
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -82,6 +83,13 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "roDomain")).toBe("done");
   });
 
+  it("keeps the photo bucket open, never blocking, until the R2 variables exist", () => {
+    // Read from `STORAGE_MODE`: a deployed environment without the five variables cannot take
+    // a photo, and a checklist somebody ticks would not know that.
+    expect(stateOf({ ...LAUNCHED, storageConfigured: false }, "mediaStorage")).toBe("open");
+    expect(stateOf(LAUNCHED, "mediaStorage")).toBe("done");
+  });
+
   it("leaves every task but the scheduler to the club", () => {
     const clubOwned = ownerTasks(LAUNCHED).filter((task) => task.owner === "club");
     expect(clubOwned.map((task) => task.id)).toEqual([
@@ -89,6 +97,7 @@ describe("owner tasks", () => {
       "liveEmail",
       "inviteStaff",
       "publishEvents",
+      "mediaStorage",
       "roDomain",
     ]);
   });

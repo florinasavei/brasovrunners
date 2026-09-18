@@ -14,6 +14,7 @@ import { routing } from "@/i18n/routing";
 import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventVideo from "@/modules/events/ui/EventVideo";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import StartList from "@/modules/events/ui/StartList";
 import { env } from "@/shared/config/env";
@@ -146,6 +147,9 @@ export default async function EventDetailPage({ params }: Props) {
           </Typography>
         </Stack>
       )}
+
+      {/* Last year's film, when the club has one, loaded only when opened (criterion 9). */}
+      <EventVideo videoUrl={event.videoUrl} />
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
       <StartList event={event} />
