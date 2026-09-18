@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -3843,4 +3843,160 @@ an object is a broken image somebody does. `sharp`'s check of the bytes stands w
 client claimed, SVG refused outright (§17: a document that can carry script needs its own
 sanitizer before it may be served).
 
-Baseline `BR-V1.34-2026-09-17`.
+## 67. Decided — the race-day desk: the address is vouched for, the declaration is signed on paper, every step has a way through, and no step has a way around the allocator (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01 criterion 7;
+migration `0026` (expand-only); `registrations/{service,admin-service,admin-repository,
+checkin-code,token-actions}.ts`, `registrations/ui/{DeskRow,QrScanButton}.tsx`;
+`/admin/checkin`, `/admin/checkin/<code>`, `/admin/guide`, `/api/registrations/qr/<code>.png`.
+The owner's words: "skip email registration and verification and just add people; generate bibs
+manually; see and change the registration status; sign on behalf of participants and basically
+bypass any step; a check-in status — they can check in or I can; a QR code sent via email that
+they present to pick up the bib; volunteers at pickup must use the app to scan; the process must
+leave room for errors — no email, no QR — and volunteers can bypass any step and just give people
+their bib."
+
+### What was asked, and the one word that was refused
+
+Everything on that list is built except "sign on behalf of participants", and the refusal is a
+matter of wording, not of function. §33 decided that consent cannot be relayed: a declaration
+somebody else signed protects nobody, and the club's own liability rests on the participant
+having agreed. That still holds. What a race desk actually does is different from relaying: the
+participant is standing there, reads a printed copy of the *approved* declaration, and signs it
+with a pen. The system's job is to record that this happened, under the id of the person who
+watched it. So `declaration_acceptances` gained `method` (`EMAIL_LINK` | `PAPER`) and
+`attested_by_staff_user_id`, with a check that the two agree, and a paper row carries the same
+version and hash an email-link row does. Every reader downstream — the count on the legal page,
+the timeline, the export — treats the two identically. The signer is the participant in both;
+the evidence differs.
+
+The address is handled the same way. "Skip verification" does not mean the row lies about it:
+`email_confirmed_at` is set and `email_confirmed_by_staff_user_id` says who vouched, while the
+participant's own `email_verified_at` stays null. A vouched-for address is a fact about a
+person at a table; a verified one is a fact about a mailbox. The confirmation email — with the
+QR — goes to the address anyway, so a mistyped one shows up as a bounce rather than a lie.
+
+### What "bypass any step" may not bypass
+
+The allocator. A fast-tracked walk-in at a full event lands on the waiting list exactly as an
+online entry would, and "give a place" is refused with a sentence while `occupied >= capacity`
+under the event lock. The alternative — a desk that can put a two-hundred-and-first runner into
+two hundred places — would make BR-REQ-034-01 a rule about the website rather than about the
+race, and the race is what the rule is for. The desk also cannot confirm anybody without an
+approved declaration in their locale: a paper copy of a text that was never approved is a paper
+copy of nothing.
+
+The public registration window *is* bypassed by the fast track, deliberately: it exists for the
+public, and on race morning it has closed. A cancelled event and a non-local registration mode
+still refuse, because those are facts about the event, not about the window.
+
+### Who works the desk
+
+Every staff role, including the lowest. A volunteer handing out numbers is a CONTRIBUTOR — a
+role that until now could do nothing but draft — and the desk is their whole backoffice: a
+tab, a search box, a scan button, one row per runner with one or two buttons. The row shows a
+name, a state, a number and a check-in state; it never shows an address, and it cannot cancel,
+erase, rename, resend, list or export, which stay Administrator-only. That boundary is the same
+one §38 drew between DEV and ADMIN — personal data — moved one notch: a name said out loud at a
+table is not the participant list. `createRegistrationByStaff` moved to the desk side of it
+too, because the walk-in on race morning is entered by whoever is at the table. The rules table
+in `CLAUDE.md` says so now.
+
+### The code and the QR
+
+`registrations.checkin_code` is ten characters from an alphabet without 0/O/1/I, so it can be
+read out over a counter as well as scanned, unique across every event, minted at confirmation
+and stored in clear. It is an identifier, not a credential — holding it opens a page that is
+behind staff sign-in and confers nothing — so it is not hashed like an action token (§12.8),
+and a participant who scans their own QR sees the sign-in page. The QR encodes the address of
+`/admin/checkin/<code>` and is served as a hosted PNG the confirmation email links to, never a
+data URI: enough mail clients strip inline images that a runner would arrive with a blank
+square. Scanning inside the app uses the browser's own `BarcodeDetector` where it exists
+(Android Chrome); everywhere else the phone's camera app opens the same link, because the QR
+*is* a link — no scanning library, no bundle.
+
+### What was considered and refused
+
+- **A separate "volunteer" role.** Five roles nest; a sixth that is "CONTRIBUTOR plus the desk"
+  would either sit below CONTRIBUTOR (then CONTRIBUTOR could not work the desk, which is
+  backwards) or beside it (then the hierarchy stops being one). `canWorkTheDesk` is a
+  capability of every role instead.
+- **Staff check-in without a code — a checkbox on the list.** Built too, on the desk's search
+  and on the registration page; the code is what makes the *scan* path a three-second
+  interaction, not the only path.
+- **A scanning library.** `jsQR` is 40 kB and would serve iOS Safari, which has no
+  `BarcodeDetector`. The camera app serves iOS Safari already, with zero bytes.
+- **Self check-in at any time.** From twenty-four hours before the start only. "I am here" a
+  week early is not information, and the manage token is read rather than spent for it, so the
+  same link still cancels.
+
+## 68. Decided — the outbox drains itself after the request that filled it, and the scheduler runs every fifteen minutes, because five minutes exhausts Neon's free month (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-090-07; `notifications/drain.ts`, called from
+`enqueueEmail`; `JOB_STALENESS_THRESHOLDS_MS` 35 minutes; `SETUP.md` §26 rewritten, §33 added;
+`/devs` shows the figure. The owner's words: "make sure my website does not crash; I must prevent
+the app from failing; I need to know load and status on Vercel and Neon."
+
+### The arithmetic
+
+Neon's Free plan: 100 CU-hours a month per project, the compute suspended when they are spent
+until the next month, scale-to-zero after five idle minutes and not configurable. A monitor
+every five minutes never lets it idle: 0.25 CU × 24 h × 30 d = 180 CU-hours. QA had used 74 by
+18 September, on course to be suspended around the 22nd — the QA site down for nine days, and
+production would have followed the moment its monitors were set up. Vercel is not the
+constraint: 20 minutes of the Hobby plan's 4 CPU-hours, 19k of a million invocations.
+
+### Why not simply ping less often
+
+Because the five-minute cadence was chosen for a reason: a verification link that arrives in
+five minutes is bearable and one that arrives in fifteen is a registration abandoned. The cadence
+was doing two jobs — sending mail promptly and expiring holds — and only the second tolerates
+fifteen minutes. So the first job moved: `enqueueEmail` now schedules one drain of the outbox
+with Next's `after()`, run once the response has gone out. The verification link is in the inbox
+in seconds, whatever the scheduler is doing. This is not the in-process interval §16.2 forbids
+(serverless has no process for one to live in); it is one shot, per request, for that request's
+own message, and a failure leaves the row PENDING for the scheduler. Concurrent drains are safe
+because `claimOutboxBatch` already used `FOR UPDATE SKIP LOCKED` for two schedulers.
+
+With that, fifteen minutes is the cadence for what remains — expiring holds, promoting a queue
+on an idle event, retrying a failed send — and a hold that expires up to fifteen minutes late
+releases a place fifteen minutes late to the *right* person (§16.2's promptness-versus-
+correctness line). The compute is awake about 37% of the time: ~65 CU-hours a month plus real
+traffic. QA runs hourly.
+
+### Seeing it
+
+`/devs` reads the project's row from Neon's API when `NEON_API_KEY` and `NEON_PROJECT_ID` are
+set — CU-hours against 100, hours awake against hours elapsed, the period's end, red past 80% —
+with a five-second timeout and a sentence when Neon does not answer. Vercel's usage has no
+comparable single figure worth a key; the page says where it is and that it is under 1%.
+
+### Refused
+
+- **Upgrading Neon to Launch ($19/month, 300 CU-hours).** It would have hidden the cause. The
+  club may still choose it later for the restore window (six hours on Free); the task page says
+  what it buys.
+- **Disabling scale-to-zero.** Not available on Free, and the wrong direction: the point is to
+  let the compute sleep.
+- **A one-shot in-process timer after enqueue.** `after()` is the platform's own hook for
+  work after the response and extends the function's life on Vercel; a `setTimeout` in a
+  function that has already returned is a coin toss.
+
+## 69. Decided — a film on the event page is a YouTube link behind one press, and the page fetches nothing from YouTube until it is pressed (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-011-01 criterion 9; migration `0027` (expand-only);
+`events/domain/video.ts`, `events/ui/EventVideo.tsx`. The owner's words: "I must be able to
+embed YouTube videos on the event page — I have a pretty cool one from last year's event."
+
+The link is stored as pasted and refused unless an eleven-character id can be read from it, in
+any of the share shapes YouTube produces. The page renders a native `<details>` whose closed
+state is a line of text: the iframe inside is `loading="lazy"`, which a closed disclosure keeps
+out of the viewport, so no request, no cookie and no script until the visitor opens it. Open, it
+plays from `youtube-nocookie.com`, built from the id alone. A thumbnail facade was refused
+because the thumbnail is itself a request to Google on load, which is the thing being avoided;
+a client island was refused because `<details>` does it with none. The embed is a third party
+the privacy notice describes as "loaded when you press" — the same line §61 drew for Strava,
+where the mark is shown and the script is not. A duplicate or a repeated edition does not carry
+the link: a film is of one edition.
+
+Baseline `BR-V1.35-2026-09-18`.

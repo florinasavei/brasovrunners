@@ -12,7 +12,15 @@ import { KEYFRAMES } from "./motion";
  * The primary is the club's own blue, taken from their logo file. The secondary is still a
  * placeholder awaiting owner approval (AGENTS.md §29).
  */
-export const theme = createTheme({
+/**
+ * What the theme lab may vary (`theme/preview.ts`, BR-REQ-090-06): the two font roles and the
+ * corner radius. Everything else — colour, spacing, the header — is the brand and stays.
+ */
+export type ThemeOptions = { display: string; body: string; radius: number };
+
+export const DEFAULT_THEME_OPTIONS: ThemeOptions = { display: FONT.display, body: FONT.body, radius: 10 };
+
+export const buildTheme = (options: ThemeOptions) => createTheme({
   // CSS variables avoid the server/client flicker MUI documents for the App Router.
   cssVariables: true,
   modularCssLayers: true,
@@ -32,13 +40,13 @@ export const theme = createTheme({
   },
   typography: {
     // Provided by next/font in the locale layout; latin-ext covers ș, ț, ă, â, î.
-    fontFamily: `${FONT.body}, ${FONT.fallback}`,
+    fontFamily: `${options.body}, ${FONT.fallback}`,
     // Headings take the display role, so an arriving club typeface changes these and leaves
     // body text alone. Both resolve to Roboto until one arrives — see brand.ts.
-    h1: { fontFamily: `${FONT.display}, ${FONT.fallback}`, fontSize: "2rem", fontWeight: 500 },
-    h2: { fontFamily: `${FONT.display}, ${FONT.fallback}`, fontSize: "1.5rem", fontWeight: 500 },
+    h1: { fontFamily: `${options.display}, ${FONT.fallback}`, fontSize: "2rem", fontWeight: 500 },
+    h2: { fontFamily: `${options.display}, ${FONT.fallback}`, fontSize: "1.5rem", fontWeight: 500 },
   },
-  shape: { borderRadius: 10 },
+  shape: { borderRadius: options.radius },
   components: {
     MuiCssBaseline: {
       styleOverrides: (theme) => ({
@@ -84,3 +92,5 @@ export const theme = createTheme({
     },
   },
 });
+
+export const theme = buildTheme(DEFAULT_THEME_OPTIONS);

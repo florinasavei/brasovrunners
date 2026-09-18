@@ -106,5 +106,12 @@ export async function resolveLocaleSwitch(
     return getPathname({ locale: target, href: { pathname: parsed.route, params: { token } } });
   }
 
+  // The desk code is the same in either language (BR-REQ-037-08).
+  if (parsed.route === "/admin/checkin/[code]") {
+    const code = parsed.params.code;
+    if (!code) return listing;
+    return getPathname({ locale: target, href: { pathname: parsed.route, params: { code } } });
+  }
+
   return getPathname({ locale: target, href: parsed.route });
 }

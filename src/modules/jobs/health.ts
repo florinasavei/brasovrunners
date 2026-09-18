@@ -9,8 +9,10 @@ import type { Database } from "@/db/types";
  * headroom so one slow run does not flip the check before the next one has even had a chance.
  */
 export const JOB_STALENESS_THRESHOLDS_MS: Record<string, number> = {
-  "registration-maintenance": 15 * 60_000,
-  "email-outbox": 15 * 60_000,
+  // A fifteen-minute pinger since `DECISIONS.md` §68 (the outbox drains itself after the
+  // request that filled it, so the pinger is a backstop): twice the cadence, plus a run.
+  "registration-maintenance": 35 * 60_000,
+  "email-outbox": 35 * 60_000,
 };
 
 export type JobHealth = { jobName: string; status: "ok" | "stale" | "never_run"; lastFinishedAt: string | null };

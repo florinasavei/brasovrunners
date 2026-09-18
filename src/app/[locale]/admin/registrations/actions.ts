@@ -6,11 +6,15 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import {
   cancelRegistrationByStaff,
+  checkInByStaff,
+  confirmRegistrationByStaff,
   correctRegisteredName,
   createRegistrationByStaff,
   deleteRegistrationByStaff,
+  promoteRegistrationByStaff,
+  setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -41,7 +45,7 @@ function detailPath(locale: Locale, registrationId: string): string {
   });
 }
 
-function backTo(path: string, outcome: { error?: string; saved?: string }): never {
+function backTo(path: string, outcome: Record<string, string | undefined>): never {
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
@@ -54,6 +58,109 @@ function backTo(path: string, outcome: { error?: string; saved?: string }): neve
 function outcomeOf(error: unknown): { error: string } {
   if (isDomainError(error)) return { error: error.code };
   throw error;
+}
+
+/**
+ * Where a desk verb sends the browser back (BR-REQ-037-08): the row it acted on, wherever that
+ * row was shown — the desk's search, the page one scanned code opens, or the registration's
+ * own page. Rebuilt from `getPathname` and a handful of fields, never taken from the form as a
+ * path: a redirect target typed into a form is an open redirect.
+ */
+function returnTo(
+  form: FormData,
+  locale: Locale,
+  registrationId: string,
+): { path: string; params: Record<string, string | undefined> } {
+  const back = text(form, "back");
+  if (back === "desk") {
+    return {
+      path: getPathname({ locale, href: "/admin/checkin" }),
+      params: { eventId: text(form, "eventId") || undefined, q: text(form, "q") || undefined },
+    };
+  }
+  if (back === "code" && text(form, "code")) {
+    return {
+      path: getPathname({ locale, href: { pathname: "/admin/checkin/[code]", params: { code: text(form, "code") } } }),
+      params: {},
+    };
+  }
+  return { path: detailPath(locale, registrationId), params: {} };
+}
+
+/** `backTo`, for a desk verb: the page's own query first, then the outcome. */
+function backToDesk(form: FormData, locale: Locale, registrationId: string, outcome: Record<string, string | undefined>): never {
+  const target = returnTo(form, locale, registrationId);
+  backTo(target.path, { ...target.params, ...outcome });
+}
+
+/**
+ * The desk verbs (BR-REQ-037-07, BR-REQ-037-08). Every staff role, because the desk is where a
+ * volunteer works — the service asserts `canWorkTheDesk` again for anything that is not this
+ * action. Each redirects with the outcome so the desk reads a sentence, not a stack trace.
+ */
+export async function confirmRegistrationNowAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    const result = await confirmRegistrationByStaff(getDb(), actor, registrationId, new Date());
+    outcome = { saved: result.status === "CONFIRMED" ? "registrationConfirmed" : "registrationWaitlisted" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backToDesk(form, locale, registrationId, outcome);
+}
+
+export async function promoteRegistrationAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await promoteRegistrationByStaff(getDb(), actor, registrationId, new Date());
+    outcome = { saved: "registrationConfirmed" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backToDesk(form, locale, registrationId, outcome);
+}
+
+export async function setBibNumberAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const raw = text(form, "bibNumber").trim();
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    // An empty field clears the number; anything else must be a whole number, which the
+    // service checks — `Number("")` would be 0 and a lie.
+    const bibNumber = raw === "" ? null : Number(raw);
+    await setBibNumberByStaff(getDb(), actor, registrationId, bibNumber, new Date());
+    outcome = { saved: "bibSet" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backToDesk(form, locale, registrationId, outcome);
+}
+
+export async function checkInAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const direction = text(form, "direction") === "undo" ? "undo" : "in";
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await checkInByStaff(getDb(), actor, registrationId, direction, new Date());
+    outcome = { saved: direction === "in" ? "checkedIn" : "checkinUndone" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backToDesk(form, locale, registrationId, outcome);
 }
 
 /** An unanswered field on the staff form is absent, not empty (BR-REQ-031-04 criterion 5). */
@@ -70,7 +177,9 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
 
   let outcome: { error?: string; saved?: string };
   try {
-    const actor = await requireStaffRole("ADMIN");
+    // Every role: a walk-in on race morning is entered by the volunteer at the table
+    // (BR-REQ-037-07). The service asserts the same.
+    const actor = await requireStaff();
     await createRegistrationByStaff(
       getDb(),
       actor,
@@ -106,6 +215,7 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
         locale: toLocale(form.get("participantLocale")),
         listOptOut: form.get("listOptOut") === "on",
         relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
+        fastTrack: form.get("fastTrack") === "on",
       },
       new Date(),
     );
@@ -115,9 +225,18 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
   }
 
   // A failure goes back to the form, which still has the event preselected; a success goes to
-  // the list, where the new row is visible with the status it actually landed in.
+  // where the new row is visible with the status it actually landed in — the desk, when the
+  // form was opened from there, otherwise the list.
+  const fromDesk = text(form, "back") === "desk";
   if (outcome.error) {
-    backTo(`${getPathname({ locale, href: "/admin/registrations/new" })}?eventId=${eventId}`, outcome);
+    backTo(getPathname({ locale, href: "/admin/registrations/new" }), {
+      ...outcome,
+      eventId,
+      back: fromDesk ? "desk" : undefined,
+    });
+  }
+  if (fromDesk) {
+    backTo(getPathname({ locale, href: "/admin/checkin" }), { ...outcome, eventId });
   }
   backTo(getPathname({ locale, href: "/admin/registrations" }), outcome);
 }

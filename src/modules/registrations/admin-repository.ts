@@ -9,7 +9,10 @@ import {
   type RegistrationStatus,
   registrations,
 } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import type { Locale } from "@/i18n/routing";
+import { alias } from "drizzle-orm/pg-core";
 
 /**
  * Read queries for the Administrator-only backoffice (AGENTS.md §15.8, §15.10; BR-REQ-060-01,
@@ -261,7 +264,18 @@ export type RegistrationDetail = {
   cancellationSource: string | null;
   expiredAt: Date | null;
   expiryReason: string | null;
+  /** Race day (BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01). */
+  bibNumber: number | null;
+  checkinCode: string | null;
+  checkedInAt: Date | null;
+  /** Null when the participant checked themselves in, or the staff row is gone. */
+  checkedInByName: string | null;
+  /** Who vouched for the address at the desk, when nobody clicked a link. */
+  emailConfirmedByName: string | null;
 };
+
+const checkedInBy = alias(staffUsers, "checked_in_by");
+const emailConfirmedBy = alias(staffUsers, "email_confirmed_by");
 
 export async function findRegistrationDetailForAdmin<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -269,6 +283,11 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
 ): Promise<RegistrationDetail | undefined> {
   const [row] = await db
     .select({
+      bibNumber: registrations.bibNumber,
+      checkinCode: registrations.checkinCode,
+      checkedInAt: registrations.checkedInAt,
+      checkedInByName: checkedInBy.displayName,
+      emailConfirmedByName: emailConfirmedBy.displayName,
       id: registrations.id,
       status: registrations.status,
       kind: registrations.kind,
@@ -298,13 +317,120 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
         eq(eventTranslations.locale, registrations.locale),
       ),
     )
+    .leftJoin(checkedInBy, eq(checkedInBy.id, registrations.checkedInByStaffUserId))
+    .leftJoin(emailConfirmedBy, eq(emailConfirmedBy.id, registrations.emailConfirmedByStaffUserId))
     .where(eq(registrations.id, id))
     .limit(1);
 
   return row;
 }
 
+/**
+ * What the desk sees (BR-REQ-037-08): one registration as a volunteer needs it to hand over a
+ * number — name, status, number, check-in state — and nothing more. No address, no details.
+ * Open to every staff role, which is why the selection is this narrow.
+ */
+export type DeskRegistration = {
+  id: string;
+  status: RegistrationStatus;
+  kind: RegistrationKind;
+  registeredName: string;
+  eventId: string;
+  eventTitle: string | null;
+  eventStartsAt: Date;
+  bibNumber: number | null;
+  /** Null until confirmed. */
+  checkinCode: string | null;
+  checkedInAt: Date | null;
+  checkedInByName: string | null;
+};
+
+const DESK_COLUMNS = {
+  id: registrations.id,
+  status: registrations.status,
+  kind: registrations.kind,
+  registeredName: registrations.registeredName,
+  eventId: registrations.eventId,
+  eventTitle: eventTranslations.title,
+  eventStartsAt: events.startsAt,
+  bibNumber: registrations.bibNumber,
+  checkinCode: registrations.checkinCode,
+  checkedInAt: registrations.checkedInAt,
+  checkedInByName: checkedInBy.displayName,
+};
+
+function deskQuery<T extends Record<string, unknown>>(db: Database<T>, locale: Locale) {
+  return db
+    .select(DESK_COLUMNS)
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .leftJoin(
+      eventTranslations,
+      and(eq(eventTranslations.eventId, registrations.eventId), eq(eventTranslations.locale, locale)),
+    )
+    .leftJoin(checkedInBy, eq(checkedInBy.id, registrations.checkedInByStaffUserId));
+}
+
+/** The QR, scanned or typed: one registration, from any event. */
+export async function findRegistrationByCheckinCode<T extends Record<string, unknown>>(
+  db: Database<T>,
+  code: string,
+  locale: Locale,
+): Promise<DeskRegistration | undefined> {
+  const [row] = await deskQuery(db, locale).where(eq(registrations.checkinCode, code)).limit(1);
+  return row;
+}
+
+/**
+ * The desk's search within one event: a name fragment or a race number. Everything that is
+ * not over — a pending registration is shown so it can be confirmed on the spot, which is
+ * what "no email arrived" comes down to at a desk — and never a cancelled or expired one.
+ * Capped, because a desk reads a screenful and a race has at most a few hundred entries.
+ */
+export async function listDeskRegistrations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { eventId: string; query: string; locale: Locale },
+): Promise<DeskRegistration[]> {
+  const q = input.query.trim();
+  const conditions: SQL[] = [
+    eq(registrations.eventId, input.eventId),
+    sql`${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')`,
+  ];
+  if (/^\d{1,5}$/.test(q)) {
+    conditions.push(eq(registrations.bibNumber, Number(q)));
+  } else if (q !== "") {
+    // The same diacritics-blind contains-match as the list: the desk types what it hears.
+    conditions.push(
+      sql`${foldedName(registrations.registeredName)} LIKE ${`%${escapeLike(foldTerm(q))}%`} ESCAPE '\\'`,
+    );
+  }
+  return deskQuery(db, input.locale)
+    .where(and(...conditions))
+    .orderBy(asc(registrations.registeredName), asc(registrations.id))
+    .limit(200);
+}
+
+/** The numbers the organizer watches during pickup. */
+export async function countDesk<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<{ confirmed: number; checkedIn: number; withoutBib: number; pending: number }> {
+  const [row] = await db
+    .select({
+      confirmed: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED')`.mapWith(Number),
+      checkedIn: sql<number>`count(*) FILTER (WHERE ${registrations.checkedInAt} IS NOT NULL)`.mapWith(Number),
+      withoutBib: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED' AND ${registrations.bibNumber} IS NULL)`.mapWith(Number),
+      pending: sql<number>`count(*) FILTER (WHERE ${registrations.status} NOT IN ('CONFIRMED', 'CANCELLED', 'EXPIRED'))`.mapWith(Number),
+    })
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId));
+  return row ?? { confirmed: 0, checkedIn: 0, withoutBib: 0, pending: 0 };
+}
+
 export type DeclarationAcceptanceRow = {
+  /** `PAPER` carries the name of the staff member who recorded it (BR-REQ-037-07). */
+  method: "EMAIL_LINK" | "PAPER";
+  attestedByName: string | null;
   acceptedAt: Date;
   typedName: string;
   declarationVersion: number;
@@ -319,8 +445,11 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
       declarationVersion: declarationAcceptances.declarationVersion,
+      method: declarationAcceptances.method,
+      attestedByName: staffUsers.displayName,
     })
     .from(declarationAcceptances)
+    .leftJoin(staffUsers, eq(staffUsers.id, declarationAcceptances.attestedByStaffUserId))
     .where(eq(declarationAcceptances.registrationId, registrationId))
     .orderBy(desc(declarationAcceptances.acceptedAt));
 }
@@ -390,6 +519,40 @@ export async function listEventsAcceptingRegistrations<T extends Record<string, 
       eventTranslations,
       and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)),
     )
-    .where(eq(events.registrationMode, "INTERNAL"))
+    .where(and(eq(events.registrationMode, "INTERNAL"), eq(events.eventStatus, "SCHEDULED")))
+    .orderBy(asc(events.startsAt));
+}
+
+/**
+ * The events a desk can be working (BR-REQ-037-08): local registration, not cancelled, and
+ * happening between yesterday and a month from now — the ones somebody could be picking up a
+ * number for. The most recent past one first, because on race morning that is today's.
+ */
+export async function listEventsForDesk<T extends Record<string, unknown>>(
+  db: Database<T>,
+  locale: Locale,
+  now: Date,
+): Promise<Array<{ id: string; title: string | null; startsAt: Date; timezone: string }>> {
+  const from = new Date(now.getTime() - 2 * 24 * 60 * 60_000);
+  const to = new Date(now.getTime() + 31 * 24 * 60 * 60_000);
+  return db
+    .select({
+      id: events.id,
+      title: eventTranslations.title,
+      startsAt: events.startsAt,
+      timezone: events.timezone,
+    })
+    .from(events)
+    .leftJoin(
+      eventTranslations,
+      and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)),
+    )
+    .where(
+      and(
+        eq(events.registrationMode, "INTERNAL"),
+        eq(events.eventStatus, "SCHEDULED"),
+        sql`${events.startsAt} BETWEEN ${from} AND ${to}`,
+      ),
+    )
     .orderBy(asc(events.startsAt));
 }

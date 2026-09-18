@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1213,7 +1213,10 @@ Background jobs:
 - do not rely on an in-memory interval for correctness;
 - invoke the endpoints from two layers: an in-process interval inside the persistent
   application as the primary trigger, and an external scheduler as a watchdog;
-- run maintenance about every five minutes and the outbox every one to five minutes;
+- run both every fifteen minutes in a deployed environment (five until 2026-09-18 — see the
+  Neon arithmetic below); the outbox is also drained by the request that filled it
+  (`AGENTS.md` §16.2, `DECISIONS.md` §68), so the cadence sets how late an *expiry* message
+  can be, never how late a verification link is;
 - scheduler credentials are limited to the job endpoint and are separate per environment;
 - record every run in `job_runs` so a stalled scheduler is visible in the health check.
 
@@ -1252,10 +1255,20 @@ still runs when the pinger's own account lapses. Any service that can POST on a 
 header will do; the club needs no paid plan for it. Per environment, two monitors:
 
 ```text
-POST <APP_BASE_URL>/api/internal/jobs/email-outbox               every 5 minutes
-POST <APP_BASE_URL>/api/internal/jobs/registration-maintenance   every 5 minutes
+POST <APP_BASE_URL>/api/internal/jobs/email-outbox               every 15 minutes (production)
+POST <APP_BASE_URL>/api/internal/jobs/registration-maintenance   every 15 minutes (production)
+                                                                 every 60 minutes (QA)
 Header: Authorization: Bearer <that environment's JOB_SECRET>
 ```
+
+**Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
+month and *suspends the compute* when they are spent, until the next month; the compute sleeps
+after five idle minutes and cannot be told not to. A monitor every five minutes means it never
+sleeps: 0.25 CU × 24 h = 6 CU-hours a day, 180 a month, exhausted around the 17th. QA measured
+exactly that — 74 CU-hours by 18 September. At fifteen minutes the compute is awake for about
+five and a half minutes per ping, some 37% of the time, ~65 CU-hours a month plus real traffic;
+hourly on QA is ~17. `/devs` shows the figure when `NEON_API_KEY` and `NEON_PROJECT_ID` are
+set (§33). The health thresholds are thirty-five minutes, so fifteen reads `ok`.
 
 Checklist:
 
@@ -1585,6 +1598,39 @@ even on the free plan. Nothing is charged inside the allowance.
 
 Production and QA share one bucket with a per-environment prefix (`qa/`, `production/`) until
 a second bucket is worth a second token; the adapter takes the prefix from configuration.
+
+## 33. Let `/devs` read the database's consumption from Neon
+
+Two minutes, optional, read-only (BR-REQ-090-07). The Free plan's 100 CU-hours a month per
+project is the one limit whose exhaustion takes the site down (§26 has the arithmetic), and the
+figure lives in Neon's console, which no organizer opens. With these two variables `/devs` shows
+it: CU-hours used against 100, hours awake against hours elapsed, and when the period ends.
+
+1. Neon console → your avatar → **Account settings** → **API keys** → **Create API key**, name
+   `brasovrunners-devs-readonly`. Copy it once. (Neon API keys are account-wide; this one is only
+   ever used to read one project's row, and `/devs` shows a number, never the key.)
+2. The project id is in the project's URL in the console (`console.neon.tech/app/projects/<id>`),
+   or `npx neonctl projects list`.
+3. `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`
+   with the production project's values; the same for QA with QA's project id. Redeploy.
+4. `/devs` → "Database (Neon)" shows the figures; red past 80%. Nothing else reads the key.
+
+## 34. Volunteer accounts for race day
+
+Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Contributor**.
+Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
+
+1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk
+   account such as `voluntar@<club domain>`), a name, an initial password; untick "email
+   verification required" if the address is the club's. Repeat per volunteer.
+2. Site → **Echipa** (`/admin/staff`, Superadministrator) → add the same email with the role
+   **Colaborator**. The name typed here is what the audit trail shows on every check-in.
+3. Hand them the guide: **Ghid** in the backoffice bar, first section — and have them open
+   **Ziua cursei** on their phone once, the day before, so sign-in is already done.
+
+One account per volunteer is the honest audit trail; one shared "Voluntar masă" account is
+acceptable when there is no time, and the trail then says "Voluntar masă". Remove or downgrade
+the accounts after the race from the same screen.
 
 Final operational rule:
 

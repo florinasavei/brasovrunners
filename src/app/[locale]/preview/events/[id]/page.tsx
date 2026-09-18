@@ -86,6 +86,7 @@ export default async function PreviewEventPage({ params }: Props) {
     timezone: event.timezone,
     mapUrl: event.mapUrl,
     routeUrl: event.routeUrl,
+    videoUrl: event.videoUrl,
     featured: event.featured,
     distanceMeters: event.distanceMeters,
     elevationGainMeters: event.elevationGainMeters,

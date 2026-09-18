@@ -70,6 +70,10 @@ export const envSchema = z
     // Verifies job-endpoint callers (AGENTS.md §16.2) — a scheduler, not a staff session.
     JOB_SECRET: z.string().min(1).optional(),
 
+    // Read-only, for `/devs` to show the database's CU-hours against the plan (SETUP.md §33).
+    NEON_API_KEY: z.string().min(1).optional(),
+    NEON_PROJECT_ID: z.string().min(1).optional(),
+
     /**
      * The club's real site, for the "this is not the real site" banner to link to (§7.5).
      *

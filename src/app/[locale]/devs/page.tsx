@@ -18,7 +18,9 @@ import {
 } from "@/modules/diagnostics/configuration";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
+import { Link } from "@/i18n/navigation";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -69,6 +71,7 @@ export default async function DevsPage({ params }: Props) {
   const t = await getTranslations("Devs");
   const format = await getFormatter();
   const now = new Date();
+  const neon = await readNeonConsumption(env);
 
   /**
    * The whole of the secret handling on this page: presence, computed here, values discarded.
@@ -94,6 +97,7 @@ export default async function DevsPage({ params }: Props) {
       AUTH_ZITADEL_ISSUER: Boolean(env.AUTH_ZITADEL_ISSUER),
       JOB_SECRET: Boolean(env.JOB_SECRET),
       DATABASE_URL: Boolean(env.DATABASE_URL),
+      NEON_API_KEY: Boolean(env.NEON_API_KEY),
     },
   };
 
@@ -324,6 +328,54 @@ export default async function DevsPage({ params }: Props) {
             {t("sentMessages")}: <strong>{volume.sentMessages}</strong> / {volume.allowance}
           </Typography>
         </Stack>
+      </Box>
+
+      <Divider />
+
+      {/*
+        The database's month, from Neon itself (BR-REQ-090-07): the one figure whose exhaustion
+        takes the site down, and the pinger cadence is what drives it (`DECISIONS.md` §68).
+      */}
+      <Box component="section">
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+          {t("neon.title")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("neon.intro")}
+        </Typography>
+        {neon.ok ? (
+          <Stack spacing={0.5}>
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 600 }}
+              color={neon.consumption.cuHours >= NEON_FREE_CU_HOURS * 0.8 ? "error.main" : "text.primary"}
+            >
+              {t("neon.used", {
+                used: neon.consumption.cuHours.toFixed(1),
+                percent: Math.round((neon.consumption.cuHours / NEON_FREE_CU_HOURS) * 100),
+              })}
+            </Typography>
+            <Typography variant="body2">
+              {t("neon.awake", {
+                hours: Math.round(neon.consumption.activeHours),
+                elapsed: Math.round((now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000),
+              })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("neon.period", { date: format.dateTime(neon.consumption.periodEnd, { dateStyle: "long" }) })}
+            </Typography>
+          </Stack>
+        ) : (
+          <Alert severity={neon.reason === "unconfigured" ? "info" : "warning"}>
+            {neon.reason === "unconfigured" ? t("neon.unavailable") : t("neon.failed", { reason: neon.reason })}
+          </Alert>
+        )}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          {t("neon.vercel")}
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          <Link href="/devs/theme">{t("theme.link")}</Link>
+        </Typography>
       </Box>
 
       <Divider />

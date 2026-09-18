@@ -268,6 +268,15 @@ async function collectFiles(dir, acc = []) {
  */
 const VOCABULARY_HOSTS = ["schema.org", "www.w3.org"];
 
+/**
+ * The second exception, added 2026-09-18: a third party's own fixed address that the
+ * application embeds or calls, named in DECISIONS.md, which no configuration could sensibly
+ * vary — YouTube's no-cookie player host (§69) and Neon's API (§68). Not a CDN, not anything
+ * the club could host, and never a host of the club's own: those remain the rule's whole point.
+ * A provider whose address *does* vary by account or region (Mailgun) stays in configuration.
+ */
+const PROVIDER_HOSTS = ["www.youtube-nocookie.com", "console.neon.tech"];
+
 async function checkHostnameLiterals() {
   const srcDir = path.join(ROOT, "src");
   if (!existsSync(srcDir)) return;
@@ -277,6 +286,7 @@ async function checkHostnameLiterals() {
     const text = await readFile(file, "utf8").catch(() => "");
     for (const match of matchAll(text, hostPattern)) {
       if (VOCABULARY_HOSTS.includes(match[1].toLowerCase())) continue;
+      if (PROVIDER_HOSTS.includes(match[1].toLowerCase())) continue;
       fail(
         `${repoPath(file)}: hostname literal ${match[0]} — derive absolute URLs from APP_BASE_URL.`,
       );

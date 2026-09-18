@@ -184,6 +184,22 @@ export function canManageRegistrations(role: StaffRole): boolean {
 }
 
 /**
+ * The race-day desk (BR-REQ-037-07, BR-REQ-037-08; `DECISIONS.md` §67): every staff session.
+ *
+ * A volunteer handing out numbers is the lowest role there is — CONTRIBUTOR — and the desk is
+ * open to them because a desk sees one runner at a time: the person standing in front of it,
+ * by name, with a number and a check-in state. It never sees an address, the export, or the
+ * cancel and erase verbs, which stay behind `canManageRegistrations`. What the desk *can* do
+ * is everything that gets that one runner their number when the normal path failed — no
+ * email arrived, no QR to show, never registered at all: enter them, confirm them on a paper
+ * declaration, give them a number by hand, check them in. Each of those is audited under the
+ * volunteer's own id.
+ */
+export function canWorkTheDesk(role: StaffRole): boolean {
+  return atLeast(role, "CONTRIBUTOR");
+}
+
+/**
  * Filling an event's queue with synthetic registrations reaches `registrations` and
  * `participants`, so it sits on the same side of the line as reading them. The environment is
  * the other half of the gate: never in production, refused twice.
@@ -234,6 +250,8 @@ export function canManageStaff(role: StaffRole): boolean {
  * Each entry names the capability the page behind it actually asserts, so the two cannot drift:
  *
  *     events         everyone with a staff session — the backoffice's front door
+ *     checkin        canWorkTheDesk           `admin/checkin/page.tsx` — every role, on purpose
+ *     guide          every staff session      `admin/guide/page.tsx`
  *     registrations  canManageRegistrations   `admin/registrations/page.tsx`
  *     pages          isEditorial              `admin/pages/page.tsx`
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
@@ -246,6 +264,8 @@ export function canManageStaff(role: StaffRole): boolean {
  */
 export const ADMIN_SECTIONS = [
   "events",
+  "checkin",
+  "guide",
   "pages",
   "gallery",
   "registrations",
@@ -259,6 +279,8 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
   return [
     "events" as const,
+    // The desk: a volunteer's whole backoffice (BR-REQ-037-08), and the guide that explains it.
+    ...(canWorkTheDesk(role) ? (["checkin", "guide"] as const) : []),
     // Standing pages are editorial control of what the club says about itself, so the same
     // roles that configure an event write them (BR-REQ-050-03).
     ...(isEditorial(role) ? (["pages", "gallery"] as const) : []),

@@ -219,6 +219,16 @@ export default async function EventFieldsForm({
         inputMode="url"
       />
 
+      {/* A film of the event — a YouTube link, embedded on the page (criterion 9). */}
+      <TextField
+        name="event.videoUrl"
+        type="url"
+        label={t("editor.videoUrl")}
+        helperText={t("editor.videoUrlHelp")}
+        defaultValue={event?.videoUrl ?? ""}
+        inputMode="url"
+      />
+
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
           name="event.distanceMeters"

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.34-2026-09-17 -->
+<!-- PROJECT_BASELINE: BR-V1.35-2026-09-18 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -227,6 +227,7 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 7b. Given the editor, when it renders, then the distance, the climb, the difficulty and the route link are all settable on it; and given an event with any of them stated, when its page and its listing card render, then the distance, the climb and the difficulty appear as text on both, and the route link on the page alone (criterion 8).
 8. Given an event with a route link (`events.route_url` — a Strava route or activity, or any other https link), when its page renders, then the route is offered as its own labelled fact, separate from the meeting point and its map link, opening in a new tab with `rel="noopener noreferrer"` and a tap target of at least 44 pixels; and when the link's host is `strava.com`, the Strava mark is shown beside the words — the mark only, never Strava's embed script, which is a third-party processor the privacy notice does not name (`DECISIONS.md` §61). `events.route_url` must be https at the form and again at the database; it is a link and never an uploaded file, since media storage is deferred (`AGENTS.md` §17). It is absent from the listing card, where the whole card is already one link. An event with no route link says nothing about a route, and duplicating an event carries it (`DECISIONS.md` §49).
 8. Given two events, when both are marked as the featured event, then the database refuses the second; and when one is featured, the landing page leads with it, above the ordinary listing, ordered featured → race → soonest.
+9. Given an event with a video link (`events.video_url` — a YouTube link in any share shape: `watch?v=`, `youtu.be/`, `shorts/`, `embed/`, `live/`), when it is saved, then the link is refused unless an eleven-character video id can be read from it; and when the event page renders, then the film is offered behind one press — a native disclosure whose closed state fetches nothing from YouTube — and, opened, plays from `youtube-nocookie.com` from the id alone, with a line saying the player is YouTube's. Absent from the listing card and from a duplicate or a repeated edition, because a film is of one edition (2026-09-18, `DECISIONS.md` §69).
 
 **Verification:** integration `events/configuration.test.ts`; unit `events/zoned-time.test.ts`; e2e `event-pages.spec.ts`
 
@@ -883,6 +884,53 @@ other participant link uses — never by a password.
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 
+#### BR-REQ-037-07 — The desk confirms: address vouched for, declaration on paper
+
+- **Source:** BR-BUS-037, BR-BUS-033
+- **Implements:** AGENTS.md §15.11, §10.8, §12.6
+- **Priority:** MUST
+- **Release:** M1 — 2026-09-18, `DECISIONS.md` §67, which amends §33's "consent cannot be
+  relayed": it still cannot, and this is not a relay. The participant signs a printed copy of the
+  approved declaration; staff record that they did.
+- **Status:** built.
+
+A race morning has people at a table whose email never arrived, whose QR is on a phone that died,
+or who never registered at all. Every one of them is standing in front of a member of staff — the
+one situation in which "verify the address" is answered by looking up. The desk therefore has a
+way through every step, and none of them is a way around the allocator.
+
+**Acceptance criteria**
+
+1. Given a registration in `PENDING_EMAIL_CONFIRMATION`, `PENDING_DECLARATION` or `WAITLIST_OFFERED`, when a member of staff confirms it at the desk, then it goes through the ordinary allocator under the event's capacity lock: to `CONFIRMED` when a place is free, to `WAITLISTED` when the event is full, and the outcome is stated as a sentence. Nothing at the desk can place anybody past capacity.
+2. Given the address was never clicked, when the desk confirms, then `registrations.email_confirmed_at` is set and `email_confirmed_by_staff_user_id` names who vouched for it; the participant's own `email_verified_at` is deliberately left unset, because an attestation is a different fact from a delivered click.
+3. Given the declaration, when the desk confirms, then a `declaration_acceptances` row is written with `method = PAPER`, `attested_by_staff_user_id` set, the registered name as the typed name, and the current approved version's id and hash — the same row shape the email path writes, so every reader downstream treats it identically; the database refuses a `PAPER` row with no attester and an `EMAIL_LINK` row with one. Without an approved declaration in the participant's locale the confirmation is refused, exactly as the email path is.
+4. Given a registration entered by staff with the fast track ticked, when it is created, then no verification email is queued, the registration is confirmed as in criteria 1–3 in the same request, and the public registration window is not consulted — the desk decides — while a cancelled event and a non-local registration mode still refuse it.
+5. Given a waiting-list registration, when the desk gives it a place, then it is refused with a sentence while `occupied >= capacity` under the lock, and otherwise confirmed on paper as in criterion 3; the audit row says the queue was jumped and by whom.
+6. Given any of the above, when it completes, then an `audit_logs` row names the actor and the transition and never the participant; and given a confirmation, then the `REGISTRATION_CONFIRMED` email is queued as for any confirmation.
+7. Given every staff role, including Contributor, when a desk verb (enter, confirm, give a place, set a number, check in) is attempted, then it is allowed; and given any role below Administrator, when cancel, erase, rename, resend, the list or the export is attempted, then it is refused as before (BR-REQ-060-01).
+
+**Verification:** integration `registrations/race-day.test.ts`, `registrations/staff-crud.test.ts`
+
+#### BR-REQ-037-08 — Race day: the desk code, its QR, check-in
+
+- **Source:** BR-BUS-037, BR-BUS-036
+- **Implements:** AGENTS.md §15.11, §16.3, §12.6, §8
+- **Priority:** MUST
+- **Release:** M1 — 2026-09-18, `DECISIONS.md` §67.
+- **Status:** built.
+
+**Acceptance criteria**
+
+1. Given a registration reaching `CONFIRMED` by any path, when it is confirmed, then `registrations.checkin_code` is set: ten characters from an alphabet without 0/O/1/I, unique across every event, stored in clear — an identifier that confers nothing, not a credential; a confirmed registration from before codes existed receives one the first time it is needed.
+2. Given the `REGISTRATION_CONFIRMED` message, when it renders, then it carries the code as text in both bodies and, in the HTML body, a hosted PNG of the QR at `/api/registrations/qr/<code>.png` — never a data URI. The QR encodes the address of `/admin/checkin/<code>`, so a phone's camera opens the desk page for that runner. The route answers 404 for a code nobody has and for anything that is not a code; no other message type carries a code.
+3. Given `/admin/checkin` and `/admin/checkin/<code>`, when requested with any staff session, then they render; when requested without one, then sign-in — a participant scanning their own code sees the sign-in page and nothing else. The desk shows for each runner the registered name, the state, the number and the check-in state, and never an email address or any other detail.
+4. Given the desk, when a code is scanned (the browser's own `BarcodeDetector`, where it exists) or typed, then the one registration it names is shown from any event; when a name fragment or a race number is typed, then the chosen event's registrations that are not cancelled or expired are listed, pending ones included, matched with the same diacritics-blind search as the list; and the event's counts — confirmed, checked in, without a number, not yet confirmed — are on the page.
+5. Given a confirmed registration, when staff mark it here, then `checked_in_at` and `checked_in_by_staff_user_id` are set, idempotently; undoing clears both; anything not confirmed is refused; each writes an audit row. Given the participant's own manage link from twenty-four hours before the start, when they press "I am here", then `checked_in_at` is set with no staff id, the token is read and not spent, and the same page shows their code and QR.
+6. Given a walk-in on the desk, when "add somebody" is used, then the staff entry form opens with the fast track ticked and returns to the desk with the outcome (BR-REQ-037-07 criterion 4).
+7. Given the whole of race day, when a volunteer opens the desk, then the steps — before, at the table, after, and what to do when each thing goes wrong — are on the page itself, and the guide at `/admin/guide` says the same for every role.
+
+**Verification:** integration `registrations/race-day.test.ts`; unit `registrations/checkin-code.test.ts`, `notifications/templates.test.ts`; e2e `race-day.spec.ts`
+
 #### BR-REQ-071-01 — Participant export
 
 - **Source:** BR-BUS-071, BR-BUS-070
@@ -916,8 +964,9 @@ other participant link uses — never by a password.
 4. Given two registrations of one event, when both would carry the same number, then the database refuses the second.
 5. Given assigned numbers, when the sheet is requested — all of them, or a range `from`/`to` for a reprint or a late batch — then the response is a PDF, Administrator only, of A4 pages with two bibs each and a dashed cut line between them; each bib carries the club's lockup, the number in the club's blue as large as the paper allows, the participant's registered name, and the event's title and date in the requested language. Only confirmed, real registrations are printed.
 6. Given the assignment, when it completes with at least one number given, then one audit row records who, for which event, and the range assigned — never a participant.
+7. Given one confirmed registration, when any staff role types a number for it — or clears it — then the number is a whole number from 1 to 99999, a number already worn at that event is refused with a sentence rather than a stack trace, and an audit row records the number before and after (2026-09-18, `DECISIONS.md` §67).
 
-**Verification:** integration `registrations/bibs.test.ts`; unit `registrations/bibs-pdf.test.ts`
+**Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`; unit `registrations/bibs-pdf.test.ts`
 
 ### 4.8 Public runner profiles
 
@@ -1383,6 +1432,38 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 6. Given each upgrade the page recommends, when it renders, then it names what triggers it, what it costs, and whether it is meant to be reversed — and at least one is marked as not reversible.
 7. Given an Author or an Editor, when `/admin/tasks` is requested, then the response is 404.
 
+#### BR-REQ-090-06 — The theme lab: the site with other type, in one browser
+
+- **Source:** BR-BUS-090
+- **Implements:** AGENTS.md §3.2, §9.2
+- **Priority:** COULD
+- **Release:** M1 — 2026-09-18.
+- **Status:** built. `/devs/theme`, DEV and above.
+
+**Acceptance criteria**
+
+1. Given `/devs/theme`, when a DEV or above applies a text size (90–150% of the browser default), a heading face, a body face (Roboto, Inter, Nunito, the system face, Georgia) or a corner radius, then every page of the site renders with it in that browser and in no other, and "back to normal" removes it; below DEV the page is 404.
+2. Given the preview, when any page renders on the server, then it is unchanged and exactly as cacheable as before: the setting is a cookie the browser alone reads, applied at the theme boundary after hydration, and a value naming anything outside the allowlist is ignored.
+3. Given the lab's faces, when no preview is set, then no visitor downloads a font file for them.
+
+**Verification:** unit `theme/preview.test.ts`
+
+#### BR-REQ-090-07 — The database's month, on `/devs`
+
+- **Source:** BR-BUS-090, BR-BUS-101
+- **Implements:** AGENTS.md §9.2, §16.2
+- **Priority:** SHOULD
+- **Release:** M1 — 2026-09-18, `DECISIONS.md` §68.
+- **Status:** built.
+
+**Acceptance criteria**
+
+1. Given `NEON_API_KEY` and `NEON_PROJECT_ID`, when `/devs` renders, then it shows this project's CU-hours used in the current period against the Free plan's 100, the hours the compute was awake against the hours elapsed, and the period's end — read from Neon with a five-second timeout, and a sentence rather than an error when Neon does not answer; when they are not set, it says how to set them and shows the rest of the page.
+2. Given eighty percent of the allowance used, when the figure renders, then it is shown as a warning.
+3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence is fifteen minutes in a deployed environment, the health thresholds allow it, and the compute sleeps between runs.
+
+**Verification:** unit `diagnostics/neon.test.ts`; integration `jobs/health.test.ts`
+
 **Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`
 
 #### BR-REQ-100-01 — AI reviewer permission boundary
@@ -1507,7 +1588,7 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 | BR-BUS-034 | BR-REQ-034-01, BR-REQ-034-02, BR-REQ-034-03, BR-REQ-052-02, BR-REQ-090-03 |
 | BR-BUS-035 | BR-REQ-035-01, BR-REQ-035-02, BR-REQ-035-03, BR-REQ-035-04, BR-REQ-035-05, BR-REQ-034-03, BR-REQ-090-03 |
 | BR-BUS-036 | BR-REQ-036-01, BR-REQ-036-02 |
-| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-038-01, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
+| BR-BUS-037 | BR-REQ-037-01, BR-REQ-037-02, BR-REQ-037-03, BR-REQ-037-04, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01, BR-REQ-033-03, BR-REQ-033-04, BR-REQ-035-05 |
 | BR-BUS-038 | BR-REQ-038-01, BR-REQ-038-02, BR-REQ-038-03 |
 | BR-BUS-039 | BR-REQ-039-01 |
 | BR-BUS-040 | BR-REQ-040-01, BR-REQ-040-02, BR-REQ-040-03, BR-REQ-040-04 |

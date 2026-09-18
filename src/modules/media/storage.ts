@@ -69,8 +69,15 @@ const localStorage: Storage = {
   },
 };
 
-/** One Map per process: the test suites and the end-to-end server each get their own. */
-const fakeObjects = new Map<string, { body: Buffer; contentType: string }>();
+/**
+ * One Map per process: the test suites and the end-to-end server each get their own. On
+ * `globalThis`, not in module scope, because a production build gives each route its own
+ * instance of this module — the album's delete action and `/api/media` would otherwise hold
+ * two Maps, and a deleted photo would still be served (the CI failure of 2026-09-17).
+ */
+const fakeObjects: Map<string, { body: Buffer; contentType: string }> = ((
+  globalThis as { __brFakeMedia?: Map<string, { body: Buffer; contentType: string }> }
+).__brFakeMedia ??= new Map());
 
 const fakeStorage: Storage = {
   async put(key, body, contentType) {

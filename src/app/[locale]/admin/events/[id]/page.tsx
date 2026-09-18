@@ -335,6 +335,16 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             >
               {t("registrations.viewForEvent")}
             </Button>
+            {/* The desk for this event (BR-REQ-037-08): where race morning happens. */}
+            <Button
+              component="a"
+              href={`${getPathname({ locale, href: "/admin/checkin" })}?eventId=${event.id}`}
+              variant="text"
+              size="small"
+              sx={{ minHeight: 44 }}
+            >
+              {t("desk.title")}
+            </Button>
           </Stack>
 
           {/*

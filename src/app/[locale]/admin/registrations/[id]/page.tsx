@@ -25,7 +25,16 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import { cancelRegistrationAction, correctRegisteredNameAction, deleteRegistrationAction } from "../actions";
+import { env } from "@/shared/config/env";
+import {
+  cancelRegistrationAction,
+  checkInAction,
+  confirmRegistrationNowAction,
+  correctRegisteredNameAction,
+  deleteRegistrationAction,
+  promoteRegistrationAction,
+  setBibNumberAction,
+} from "../actions";
 import { resendRegistrationEmailAction } from "./actions";
 
 type Props = {
@@ -63,6 +72,17 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // lapses on its own and holds no place, so there is nothing to release and no form to show.
   const canCancel = canTransition(registration.status, "CANCELLED");
   const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short" }) : null);
+  // The desk verbs (BR-REQ-037-07, -08), here too, so an Administrator at a laptop has them.
+  const canConfirmNow =
+    registration.status === "PENDING_EMAIL_CONFIRMATION" ||
+    registration.status === "PENDING_DECLARATION" ||
+    registration.status === "WAITLIST_OFFERED";
+  const deskHidden = (
+    <>
+      <input type="hidden" name="uiLocale" value={locale} />
+      <input type="hidden" name="registrationId" value={registration.id} />
+    </>
+  );
 
   return (
     <Stack spacing={3}>
@@ -106,6 +126,116 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           {tr("registrations.resend")}
         </Button>
       </form>
+
+      <Divider />
+
+      {/*
+        Race day (BR-REQ-037-07, BR-REQ-037-08). The same verbs the desk offers, on the full
+        page: confirm on a paper declaration, give a waiting-list entry a free place, type a
+        number, mark them here. The code and its QR are shown so a runner who lost the email
+        can be given it again from a screen.
+      */}
+      <Box component="section">
+        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+          {tr("registrations.raceDayTitle")}
+        </Typography>
+        <Stack spacing={2}>
+          {canConfirmNow && (
+            <form action={confirmRegistrationNowAction}>
+              {deskHidden}
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
+                <Button type="submit" variant="contained" color="warning" sx={{ minHeight: 44 }}>
+                  {tr("desk.confirmHere")}
+                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  {tr("desk.fastTrackHelp")}
+                </Typography>
+              </Stack>
+            </form>
+          )}
+          {registration.status === "WAITLISTED" && (
+            <form action={promoteRegistrationAction}>
+              {deskHidden}
+              <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                {tr("desk.givePlace")}
+              </Button>
+            </form>
+          )}
+          {registration.status === "CONFIRMED" && (
+            <>
+              <form action={setBibNumberAction}>
+                {deskHidden}
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                  <TextField
+                    name="bibNumber"
+                    type="number"
+                    label={tr("registrations.bibNumber")}
+                    size="small"
+                    defaultValue={registration.bibNumber ?? ""}
+                    slotProps={{ htmlInput: { min: 1, max: 99999 } }}
+                    sx={{ width: 140 }}
+                  />
+                  <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                    {tr("desk.saveBib")}
+                  </Button>
+                </Stack>
+              </form>
+              <form action={checkInAction}>
+                {deskHidden}
+                <input type="hidden" name="direction" value={registration.checkedInAt ? "undo" : "in"} />
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
+                  <Button
+                    type="submit"
+                    variant={registration.checkedInAt ? "outlined" : "contained"}
+                    color={registration.checkedInAt ? "inherit" : "success"}
+                    sx={{ minHeight: 44 }}
+                  >
+                    {registration.checkedInAt ? tr("desk.undoCheckIn") : tr("desk.checkIn")}
+                  </Button>
+                  <Typography variant="body2" color="text.secondary">
+                    {registration.checkedInAt
+                      ? tr("registrations.checkedIn", {
+                          time: dt(registration.checkedInAt) ?? "",
+                          who: registration.checkedInByName ?? tr("desk.bySelf"),
+                        })
+                      : tr("registrations.notCheckedIn")}
+                  </Typography>
+                </Stack>
+              </form>
+              {registration.checkinCode && (
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-start" } }}>
+                  {/* Hosted, not inlined — the same image the email links to, so what the
+                      screen shows is what the phone shows. */}
+                  <Box
+                    component="img"
+                    src={`${env.APP_BASE_URL}/api/registrations/qr/${registration.checkinCode}.png`}
+                    alt={tr("registrations.qrAlt", { code: registration.checkinCode })}
+                    width={160}
+                    height={160}
+                    sx={{ width: 160, height: 160, border: 1, borderColor: "divider", borderRadius: 1 }}
+                  />
+                  <Box>
+                    <Typography variant="body2">
+                      {tr("registrations.checkinCode")}:{" "}
+                      <Box component="span" sx={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1.1rem" }}>
+                        {registration.checkinCode}
+                      </Box>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      {tr("registrations.checkinCodeHelp")}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                      <Link href={{ pathname: "/admin/checkin/[code]", params: { code: registration.checkinCode } }}>
+                        {tr("registrations.openDesk")}
+                      </Link>
+                    </Typography>
+                  </Box>
+                </Stack>
+              )}
+            </>
+          )}
+        </Stack>
+      </Box>
 
       <Divider />
 
@@ -215,7 +345,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         </Typography>
         {[
           [tr("registrations.submitted"), dt(registration.submittedAt)],
-          [tr("registrations.emailConfirmed"), dt(registration.emailConfirmedAt)],
+          [
+            tr("registrations.emailConfirmed"),
+            registration.emailConfirmedAt
+              ? `${dt(registration.emailConfirmedAt)}${registration.emailConfirmedByName ? ` (${tr("registrations.emailVouched", { who: registration.emailConfirmedByName })})` : ""}`
+              : null,
+          ],
           [tr("registrations.waitlisted"), dt(registration.waitlistedAt)],
           [tr("registrations.offerCreated"), dt(registration.offerCreatedAt)],
           [tr("registrations.holdExpires"), dt(registration.holdExpiresAt)],
@@ -232,6 +367,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
         {acceptances.map((acceptance, index) => (
           <Typography key={index} variant="body2">
             {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} — {acceptance.typedName} (v{acceptance.declarationVersion})
+            {acceptance.method === "PAPER" &&
+              ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
           </Typography>
         ))}
       </Stack>

@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.34-2026-09-17`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -265,9 +265,15 @@ somebody has to look.
 ### 5. Neon Free scales to zero
 
 The first request after an idle period pays a cold start, which colleagues testing QA will feel
-as a slow first page. Storage and compute allowances on the free plan are **not recorded here
-because they have not been checked** — confirm them before production rather than discovering
-them on a race morning.
+as a slow first page. **The allowance, checked 2026-09-18:** 100 CU-hours a month per project;
+when they are spent the compute is *suspended until the next month* — the site is down, the data
+is kept. Scale-to-zero after five idle minutes, not configurable on Free. The arithmetic that
+matters: a job monitor every five minutes never lets the compute sleep, 0.25 CU × 24 h = 6
+CU-hours a day, 180 a month — QA had spent 74 by the 18th. So the monitors run every fifteen
+minutes in production and hourly in QA, the outbox drains itself after the request that filled
+it (`DECISIONS.md` §68), and `/devs` shows the month's figure when `NEON_API_KEY` is set
+(`SETUP.md` §33). Vercel, for the record, is nowhere near a limit: 20 minutes of 4 CPU-hours,
+19k of a million invocations, 4 of 360 GB-hours of memory in the thirty days to 2026-09-18.
 
 The cold start is also the reason the pool sets no connection timeout: see the next section.
 

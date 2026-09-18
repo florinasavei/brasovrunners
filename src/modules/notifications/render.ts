@@ -7,6 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { findEventNotificationDetails } from "@/modules/events/repository";
+import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { env } from "@/shared/config/env";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
@@ -74,6 +75,17 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       : undefined,
     currentStatus: registration?.status,
   };
+  // The desk code on the confirmation (BR-REQ-037-08). A confirmed registration made before
+  // codes existed gets one here, so a resent confirmation carries it too.
+  if (row.messageType === "REGISTRATION_CONFIRMED" && registration?.status === "CONFIRMED") {
+    let code = registration.checkinCode;
+    if (!code) {
+      code = newCheckinCode();
+      await db.update(registrations).set({ checkinCode: code }).where(eq(registrations.id, registration.id));
+    }
+    data.checkinCode = code;
+    data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
+  }
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
   const route = purpose ? ROUTE_BY_PURPOSE[purpose] : null;
