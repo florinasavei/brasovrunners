@@ -1461,7 +1461,7 @@
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
-      "phone": "Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
+      "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."

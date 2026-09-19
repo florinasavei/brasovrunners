@@ -1461,7 +1461,7 @@
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
-      "phone": "Type only the digits of the number, without the country code (that is chosen on the left).",
+      "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again."

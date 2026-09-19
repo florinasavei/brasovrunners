@@ -6303,3 +6303,36 @@ steps; `BUSINESS.md` BR-BUS-080, `AGENTS.md` §16.3, `SETUP.md` §37;
 `tests/integration/auth/role-boundaries.test.ts`. BR-REQ-060-01 criterion 11.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 142. Decided — a rejected registration form comes back filled in, from an encrypted cookie (2026-09-19)
+
+**Context.** The owner, on the QA form: "the fields are cleared after submit! super
+annoying! also I can't see that the phone was not valid…". §47's rejection is a redirect
+back to the form with the field *names* in the address — never the values (§14.5: a URL is
+logged by every proxy between here and the phone) — so the person arrived at a summary that
+named the field and a form with nothing in it, and the phone's message read like an
+instruction rather than a verdict.
+
+**Decision.** On a rejection the action keeps what was posted in a cookie for ten minutes:
+AES-256-GCM under a key derived from the deployment's secret (`AUTH_SECRET`, or
+`JOB_SECRET` where there is no sign-in), `httpOnly`, `sameSite=lax`, on the form's own path.
+The page reads it once, only when the address says `error=`, and prefills every box — text,
+the MUI selects (whose choice lives in React state, which is why the DOM could not be
+refilled after the fact), the ticks, both halves of each phone. Left out: the bot fields,
+the address of the form, and the privacy consent, which is re-read every time. Health notes
+ride in it, which is why it is encrypted and short rather than plain and long; a draft past
+the cookie's size (~3.8 KB) is dropped, not truncated, and the person retypes as before. A
+submission that goes through clears it. The phone's message now opens with "the number is
+not valid".
+
+*Rejected:* the values in the URL (§14.5); a client-side form with `useActionState` (the
+whole 700-line Server Component would become a client one to keep four selects); a
+`sessionStorage` island (cannot refill a MUI select either); a server-side store keyed by a
+cookie (a table for a ten-minute draft).
+
+**Consequences.** `registrations/form-draft.ts` (new), the register action and page,
+`ui/PhoneField.tsx` (`draft`), one sentence in both catalogues;
+`tests/unit/registrations/form-draft.test.ts`, `tests/e2e/registration-form.spec.ts`.
+BR-REQ-041-01 criterion 10 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

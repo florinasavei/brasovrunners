@@ -19,6 +19,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
+import { readFormDraft } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
@@ -149,11 +150,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * only in a summary at the top. MUI derives `aria-describedby` from `helperText`, so the
    * message is announced with the field instead of having to be hunted for.
    */
+  // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
+  const draft = error ? await readFormDraft() : null;
+  const typed = (name: string, fallback?: string) => draft?.[name] ?? fallback;
   const field = (name: string, help?: string) => ({
     id: fieldId(name),
     name,
     error: invalid.has(name),
     helperText: invalid.has(name) ? t("errors.field") : help,
+    defaultValue: typed(name),
   });
 
   // What they are signing up for, on the form itself (§102): the date, the place, and the
@@ -364,7 +369,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   select
                   required
                   fullWidth
-                  defaultValue="UNSPECIFIED"
+                  defaultValue={typed("sex", "UNSPECIFIED")}
                 >
                   <MenuItem value="FEMALE">{t("sexOptions.FEMALE")}</MenuItem>
                   <MenuItem value="MALE">{t("sexOptions.MALE")}</MenuItem>
@@ -377,7 +382,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   select
                   required
                   fullWidth
-                  defaultValue="RO"
+                  defaultValue={typed("nationality", "RO")}
                 >
                   {countries.map((country) => (
                     <MenuItem key={country.code} value={country.code}>
@@ -409,6 +414,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
                 name="phone"
+                draft={draft ? { country: draft.phoneCountry, national: draft.phone } : undefined}
                 id={fieldId("phone")}
                 label={t("phone")}
                 countryLabel={t("phoneCountry")}
@@ -434,6 +440,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
                 <PhoneField
                   name="emergencyContactPhone"
+                  draft={draft ? { country: draft.emergencyContactPhoneCountry, national: draft.emergencyContactPhone } : undefined}
                   id={fieldId("emergencyContactPhone")}
                   label={t("emergencyContactPhone")}
                   countryLabel={t("phoneCountry")}
@@ -498,7 +505,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     It is a claim and it grants nothing; `DECISIONS.md` §48 says why it is not
                     checked against `staff_users`.
                   */}
-                  <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared">
+                  <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={typed("clubMemberDeclared") === "on"}>
                     {t("clubMemberDeclared")}
                   </CheckboxField>
 
@@ -506,7 +513,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {...field("tshirtSize")}
                     label={t("tshirtSize")}
                     select
-                    defaultValue="NONE"
+                    defaultValue={typed("tshirtSize", "NONE")}
                   >
                     <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
                     {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
@@ -592,7 +599,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     autoComplete="off"
                     slotProps={{ htmlInput: { maxLength: 2000 } }}
                   />
-                  <CheckboxField id={fieldId("healthConsent")} name="healthConsent">
+                  <CheckboxField id={fieldId("healthConsent")} name="healthConsent" defaultChecked={typed("healthConsent") === "on"}>
                     {`${t("healthConsent")} — ${t("optionalSuffix")}`}
                   </CheckboxField>
                 </Stack>
@@ -617,7 +624,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
                 {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
               </CheckboxField>
-              <CheckboxField name="resultsNameConsent">
+              <CheckboxField name="resultsNameConsent" defaultChecked={typed("resultsNameConsent") === "on"}>
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
@@ -628,7 +635,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 pre-answered box.
               */}
               {event.participantListVisibility === "NAMES" && (
-                <CheckboxField name="listOptOut">
+                <CheckboxField name="listOptOut" defaultChecked={typed("listOptOut") === "on"}>
                   {`${t("listOptOut")} — ${t("optionalSuffix")}`}
                 </CheckboxField>
               )}
@@ -653,7 +660,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 helperText={t("preferredLocaleHelp")}
                 select
                 fullWidth
-                defaultValue={locale}
+                defaultValue={typed("preferredLocale", locale)}
               >
                 <MenuItem value="ro">{t("preferredLocaleOptions.ro")}</MenuItem>
                 <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>

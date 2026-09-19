@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **A rejected registration form comes back filled in** — every box, select and tick as typed, from an encrypted ten-minute cookie, never the address; the phone's message says the number is not valid. §142.
 - **"Add" on Echipa emails the invitation itself** — who added them, as what, the sign-in link — through the club's own outbox, key or no key; the Zitadel key still creates the account and adds the password link. "Resend" sends it again. Migration `0045`. §141.
 - **Sharing is buttons** — the phone's own share sheet first, then Facebook, WhatsApp and "Instagram" (the square picture); "add to calendar" on its own row. §140.
 - **"Adaugă în calendarul tău"** is a small boxed region under the month: three buttons, an "i" with the refresh note, the address folded. §139.
