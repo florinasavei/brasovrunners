@@ -36,6 +36,7 @@ import { inviteZitadelUser, resendZitadelInvite } from "@/modules/staff-identity
 import {
   changeStaffRole,
   inviteStaffUser,
+  resendStaffInvitation,
   revokeStaffUser,
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
@@ -668,8 +669,10 @@ export async function resendStaffInviteAction(form: FormData): Promise<void> {
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
   try {
-    await requireStaffRole("ADMIN");
-    const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(text(form, "email")) : ({ kind: "unconfigured" } as const);
+    const actor = await requireStaffRole("ADMIN");
+    // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
+    const member = await resendStaffInvitation(getDb(), actor, text(form, "email"));
+    const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
     outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
   } catch (error) {
     outcome = outcomeOf(error);

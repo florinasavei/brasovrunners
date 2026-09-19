@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { DEV_IDENTITIES, ensureDevStaffUser } from "@/modules/staff-identity/dev-switcher";
@@ -9,8 +10,10 @@ import {
   changeStaffRole,
   inviteStaffUser,
   listStaff,
+  resendStaffInvitation,
   revokeStaffUser,
 } from "@/modules/staff-identity/service";
+import { renderOutboxMessage } from "@/modules/notifications/render";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -122,6 +125,35 @@ describe("BR-REQ-060-01 staff administration is the Administrator's alone", () =
       expect(invited.zitadelSubject).toBeNull();
       expect(invited.firstSignedInAt).toBeNull();
       expect(Object.keys(invited)).not.toContain("password");
+    });
+
+    // BR-REQ-060-01 criterion 8 (`DECISIONS.md` §141): the invitation is an email the platform
+    // itself queues with the row — who, as what, by whom — and can send again until they sign in.
+    it("queues the invitation email with the row, sends it again on request, and not once they have signed in", async () => {
+      const invited = await inviteStaffUser(db, admin, { email: "ana@dev.test", displayName: "Ana", role: "MODERATOR", preferredLocale: "en" });
+      const queued = await db.select().from(emailOutbox).where(eq(emailOutbox.recipientEmail, "ana@dev.test"));
+      expect(queued).toHaveLength(1);
+      expect(queued[0].messageType).toBe("STAFF_INVITATION");
+      expect(queued[0].locale).toBe("en");
+      expect(queued[0].participantId).toBeNull();
+      expect(queued[0].requestedByStaffUserId).toBe(admin.id);
+      expect(queued[0].payloadJson).toEqual({ displayName: "Ana", role: "Organizator", inviterName: admin.displayName });
+
+      // The message itself: the inviter, the role, the address, the sign-in page as the action; no token.
+      const rendered = await renderOutboxMessage(queued[0], db, new Date());
+      expect(rendered.subject).toContain("Brașov Runners");
+      expect(rendered.text).toContain(admin.displayName);
+      expect(rendered.text).toContain("Organizator");
+      expect(rendered.text).toContain("ana@dev.test");
+      expect(rendered.text).toMatch(/\/en\/sign-in/);
+      expect(rendered.text).not.toMatch(/token/i);
+
+      await resendStaffInvitation(db, admin, "ANA@dev.test", new Date(Date.now() + 1000));
+      expect(await db.select().from(emailOutbox).where(eq(emailOutbox.recipientEmail, "ana@dev.test"))).toHaveLength(2);
+
+      await db.update(staffUsers).set({ zitadelSubject: "sub-ana", firstSignedInAt: new Date() }).where(eq(staffUsers.id, invited.id));
+      expect(await codeOf(resendStaffInvitation(db, admin, "ana@dev.test"))).toBe("CONFLICT");
+      expect(await codeOf(resendStaffInvitation(db, editor, "ana@dev.test"))).toBe("FORBIDDEN");
     });
 
     it("refuses a second invitation for the same address, however it is capitalized", async () => {

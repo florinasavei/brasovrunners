@@ -615,12 +615,12 @@
       "role": "Rol",
       "preferredLocale": "Limbă preferată",
       "invite": "Adaugă",
-      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă — deocamdată nu se trimite niciun email și niciun cod, pentru că cheia de invitații Zitadel nu e pusă (To do → „Invită echipa”, SETUP.md §37; cinci minute, o dată). Până atunci persoana are nevoie și de un cont Zitadel cu exact această adresă (și-l face din pagina de autentificare, sau i-l faci tu în consola Zitadel → Users), apoi se autentifică la /admin. Accesul începe la prima autentificare.",
-      "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația cu linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
-      "inviteSent": "Adăugat, iar invitația e pe drum către căsuța lui de email.",
-      "inviteExists": "Adăugat. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
-      "inviteManual": "Pe listă. Nu s-a trimis nicio invitație, pentru că cheia de invitații Zitadel nu e pusă (To do → „Invită echipa”, SETUP.md §37). Până atunci: creează-i contul în consola Zitadel (Users → New) cu exact această adresă, sau lasă-l să și-l facă din pagina de autentificare.",
-      "inviteFailed": "Adăugat pe listă, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Creează-l în consola Zitadel (Users → New) cu exact această adresă.",
+      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare și-l face singur din pagina de autentificare, cu exact această adresă; cu cheia Zitadel pusă (To do → „Invită echipa”, SETUP.md §37) i-l creăm noi și primește și linkul pentru parolă. Accesul începe la prima autentificare.",
+      "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația — cine l-a adăugat, cu ce rol, linkul de autentificare — și linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
+      "inviteSent": "Adăugat. Invitația e pe drum către căsuța lui de email, cu linkul pentru alegerea parolei.",
+      "inviteExists": "Adăugat, invitația e pe drum. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
+      "inviteManual": "Adăugat. Invitația e pe drum către căsuța lui de email: își face contul din pagina de autentificare, cu exact această adresă. (Cu cheia Zitadel pusă — To do → „Invită echipa” — i-am crea contul noi.)",
+      "inviteFailed": "Adăugat și invitația e pe drum, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Își poate face contul din pagina de autentificare, cu exact această adresă.",
       "resendInvite": "Retrimite invitația",
       "resendInvitePending": "Se trimite…",
       "pending": "Nu s-a autentificat încă",
@@ -818,7 +818,7 @@
           "done": "Echipa are conturi.",
           "how": [
             "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
-            "Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), „Adaugă” îi creează și contul Zitadel și îi trimite pe email invitația — linkul pentru alegerea parolei. Fără ea, persoana își face cont în Zitadel cu exact aceeași adresă, sau i-l creezi tu din consola Zitadel → Users. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
+            "„Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de autentificare. Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel și primește și linkul pentru alegerea parolei. Fără ea, persoana își face contul din pagina de autentificare, cu exact aceeași adresă. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
         },

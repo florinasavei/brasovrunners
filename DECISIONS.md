@@ -6271,3 +6271,35 @@ none that takes a picture).
 keys added and two reworded in both catalogues. BR-REQ-052-02 criterion 8 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 141. Decided — the platform emails the staff invitation itself; Zitadel's key is a bonus (2026-09-19)
+
+**Context.** The owner, testing Echipa on QA: "my top priority is to invite users to the
+platform, which did not work". It did what §123 says without the key: added the row and
+said to create the account by hand. The key (`SETUP.md` §37) is a Zitadel-console step only
+he can do, and until he does, "Add" sent nothing — the one thing he expected it to do.
+
+**Decision.** A sixteenth message type, `STAFF_INVITATION`, queued in the transaction that
+inserts the staff row and sent through the club's own outbox like every other message: to
+the address, in the colleague's language, saying who added them (the actor's name), as what
+(the role's label) and where to sign in — the sign-in page as the action, no token, because
+the sign-in page is what asserts who they are. The Zitadel account is still created by the
+action when the key is set (§123), and Zitadel still sends its password link then; without
+the key the person creates the account at the sign-in page with that address, as the email
+says. "Resend the invitation" queues the message again (a new key; a resend is a new
+trigger, §12.11) and Zitadel's code where configured; refused once they have signed in.
+The page's sentences say what happened in each case, and the To-do row's steps lead with the
+email.
+
+*Rejected:* waiting for the key (the row without a word to the person is what "did not
+work"); sending through Zitadel's SMTP (that is Zitadel's message about a password, not the
+club's about the team); a token in the invitation (nothing to act on — the allowlist row is
+the grant).
+
+**Consequences.** `email-outbox.ts` (enum), migration `0045`, `templates.ts`, `render.ts`,
+`staff-identity/service.ts` (`inviteStaffUser` in a transaction, `resendStaffInvitation`),
+the two actions, the preview's sample, six sentences in both catalogues, the task row's
+steps; `BUSINESS.md` BR-BUS-080, `AGENTS.md` §16.3, `SETUP.md` §37;
+`tests/integration/auth/role-boundaries.test.ts`. BR-REQ-060-01 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.

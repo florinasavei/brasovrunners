@@ -128,6 +128,17 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       payloadActionUrl = url;
     }
   }
+  // The staff invitation (§141): everything it says is in the payload — there is no
+  // participant and no token; the action is the sign-in page, which asserts who they are.
+  if (row.messageType === "STAFF_INVITATION") {
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; role?: unknown; inviterName?: unknown };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    data.staffRole = typeof payload.role === "string" ? payload.role : undefined;
+    data.inviterName = typeof payload.inviterName === "string" ? payload.inviterName : undefined;
+    data.staffEmail = row.recipientEmail;
+    data.signInUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
+    payloadActionUrl = data.signInUrl;
+  }
   // The desk code on the confirmation and the reminder (BR-REQ-037-08). A confirmed
   // registration made before codes existed gets one here, so a resent confirmation carries it too.
   if (

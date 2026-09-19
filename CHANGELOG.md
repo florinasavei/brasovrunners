@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **"Add" on Echipa emails the invitation itself** — who added them, as what, the sign-in link — through the club's own outbox, key or no key; the Zitadel key still creates the account and adds the password link. "Resend" sends it again. Migration `0045`. §141.
 - **Sharing is buttons** — the phone's own share sheet first, then Facebook, WhatsApp and "Instagram" (the square picture); "add to calendar" on its own row. §140.
 - **"Adaugă în calendarul tău"** is a small boxed region under the month: three buttons, an "i" with the refresh note, the address folded. §139.
 - **A series card says "Săptămânal"** instead of "8 date", and shows every coming date. §138.

@@ -2662,6 +2662,10 @@ PROFILE_MANAGE_LINK
 REGISTRATION_STATE_NOTICE
 EVENT_REMINDER
 EVENT_THANKS
+DECLARATION_SIGNED
+DECLARATION_ARCHIVE
+BIB_ASSIGNED
+STAFF_INVITATION
 ```
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
@@ -2676,6 +2680,12 @@ footer "reply to this email with questions" when `EMAIL_REPLY_TO` is set.
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary
 public event registration page. It carries no scoped token and creates none.
+
+`STAFF_INVITATION` is the one message with no participant: queued in the transaction that
+adds a colleague on Echipa (`staff:<id>:invitation:<time>`), to the staff address, in the
+colleague's language — who added them, as what, the sign-in page as the action. No token:
+the sign-in page asserts who they are. Sent again from the row until they first sign in
+(`DECISIONS.md` §141).
 
 Complete Romanian/English HTML and text templates. Locale/timezone-aware dates and localized URLs. No fragile sentence fragments.
 

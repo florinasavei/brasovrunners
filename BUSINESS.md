@@ -729,7 +729,11 @@ Messages include:
 - waiting-list offer expired;
 - secure registration-management link;
 - secure public-profile management link;
-- current registration status notice for a cancelled or expired registration.
+- current registration status notice for a cancelled or expired registration;
+- the reminder before the event and the thank-you after it;
+- the signed declaration to the participant, and the club's archive copy;
+- a race number given by hand;
+- a staff invitation: who added the colleague, as what, and where to sign in (`DECISIONS.md` §141).
 
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
 

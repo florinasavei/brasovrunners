@@ -615,12 +615,12 @@
       "role": "Role",
       "preferredLocale": "Preferred language",
       "invite": "Add",
-      "inviteHelp": "This adds the address to the list of who is staff — for now no email or code is sent, because the Zitadel invitation key is not set (To do → \"Invite the team\", SETUP.md §37; five minutes, once). Until then the person also needs a Zitadel account with exactly this address (they create one at the sign-in page, or you do in the Zitadel console → Users), then signs in at /admin. Access begins at that first sign-in.",
-      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation with the link to choose a password. Then they sign in at /admin.",
-      "inviteSent": "Added, and the invitation is on its way to their mailbox.",
-      "inviteExists": "Added. They already have a sign-in account with this address — they can sign in at /admin right away.",
-      "inviteManual": "On the list. No invitation was sent, because the Zitadel invitation key is not set (To do → \"Invite the team\", SETUP.md §37). Until then: create their account in the Zitadel console (Users → New) with exactly this address, or let them create it at the sign-in page.",
-      "inviteFailed": "Added to the list, but the sign-in provider refused to create the account ({reason}). Create it in the Zitadel console (Users → New) with exactly this address.",
+      "inviteHelp": "This adds the address to the list of who is staff and emails them the invitation: who added them, as what, and the sign-in link. They create their sign-in account at the sign-in page with exactly this address; with the Zitadel key set (To do → \"Invite the team\", SETUP.md §37) we create it for them and they also get the password link. Access begins at their first sign-in.",
+      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation — who added them, as what, the sign-in link — and the link to choose a password. Then they sign in at /admin.",
+      "inviteSent": "Added. The invitation is on its way to their mailbox, with the link to choose a password.",
+      "inviteExists": "Added, the invitation is on its way. They already have a sign-in account with this address — they can sign in at /admin right away.",
+      "inviteManual": "Added. The invitation is on its way to their mailbox: they create their account at the sign-in page with exactly this address. (With the Zitadel key set — To do → \"Invite the team\" — we would create it for them.)",
+      "inviteFailed": "Added and the invitation is on its way, but the sign-in provider refused to create the account ({reason}). They can create it at the sign-in page with exactly this address.",
       "resendInvite": "Resend the invitation",
       "resendInvitePending": "Sending…",
       "pending": "Has not signed in yet",
@@ -818,7 +818,7 @@
           "done": "The team has accounts.",
           "how": [
             "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
-            "With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), “Add” also creates their Zitadel account and emails them the invitation — the link to choose a password. Without it, the person creates a Zitadel account with exactly that address, or you create it in the Zitadel console → Users. Zitadel only proves who they are; the list here decides whether they are staff.",
+            "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
         },

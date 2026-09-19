@@ -1179,8 +1179,10 @@ nobody redoes them (`/admin/tasks` reads the same facts from the deployment):
 
 ## 37. Let "Add" on Echipa create the sign-in account and send the invitation
 
-Five minutes in the Zitadel console, once (`DECISIONS.md` §123). Without this, adding a
-colleague only allowlists them and the page says to create their account by hand.
+Five minutes in the Zitadel console, once (`DECISIONS.md` §123). The platform emails the
+invitation itself either way — who added them, as what, the sign-in link (§141); without
+this key the colleague creates their own account at the sign-in page with that address, with
+it "Add" creates the account too and Zitadel sends the password link.
 
 1. Zitadel console → **Users → Service Accounts → New**: user name `brasovrunners-invites`,
    name "Brașov Runners — invitații", access token type **Bearer**. Create.
@@ -1192,7 +1194,8 @@ colleague only allowlists them and the page says to create their account by hand
    `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
    both.
 5. Check: Echipa → add yourself with a second address → the alert says the invitation is on
-   its way, and the mail arrives from `noreply@mail.<club domain>` (Zitadel's SMTP, §35). A
-   colleague who never signed in has "Resend the invitation" on their row.
+   its way with the password link, and two mails arrive: the club's (through Mailgun) and
+   Zitadel's from `noreply@mail.<club domain>` (Zitadel's SMTP, §35). A colleague who never
+   signed in has "Resend the invitation" on their row.
 
 Locally the development switcher is the provider, so nothing is sent and the alert says so.
