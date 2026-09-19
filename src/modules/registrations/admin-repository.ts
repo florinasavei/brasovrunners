@@ -49,6 +49,24 @@ export type RegistrationListRow = {
   /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
   emailRejectedReason: string | null;
   idDocument: string | null;
+  /**
+   * The rest of what the journey column reads (`domain/journey.ts`, §145): the participant's
+   * own click, a staff attestation, the hold or the offer, the latest declaration acceptance,
+   * and how the row ended. All on the row or on the participant already joined — the
+   * acceptance is one index probe, like `idDocument` above, never a query per row.
+   * `cycleStartedAt` is `privacy_acknowledged_at`, the one column a restart always rewrites:
+   * the derivation reads nothing older than it as this cycle's.
+   */
+  cycleStartedAt: Date;
+  emailVerifiedAt: Date | null;
+  emailConfirmedAt: Date | null;
+  waitlistedAt: Date | null;
+  offerCreatedAt: Date | null;
+  holdExpiresAt: Date | null;
+  declarationAcceptedAt: Date | null;
+  cancelledAt: Date | null;
+  expiredAt: Date | null;
+  expiryReason: string | null;
 };
 
 export type RegistrationListFilters = {
@@ -141,6 +159,19 @@ const latestIdDocument = sql<string | null>`(
   ORDER BY ${declarationAcceptances.acceptedAt} DESC
   LIMIT 1
 )`;
+
+/**
+ * When the latest declaration was accepted — online, or on paper at the desk — for the
+ * journey's fourth step (§145). Same probe as `latestIdDocument`, on the same index;
+ * `mapWith` the column, because a raw subquery comes back from the driver as text.
+ */
+const latestDeclarationAcceptedAt = sql<Date | null>`(
+  SELECT ${declarationAcceptances.acceptedAt}
+  FROM ${declarationAcceptances}
+  WHERE ${declarationAcceptances.registrationId} = ${registrations.id}
+  ORDER BY ${declarationAcceptances.acceptedAt} DESC
+  LIMIT 1
+)`.mapWith(declarationAcceptances.acceptedAt);
 
 const emailRejectedReason = sql<string | null>`(
   SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
@@ -239,6 +270,16 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
       idDocument: latestIdDocument,
+      cycleStartedAt: registrations.privacyAcknowledgedAt,
+      emailVerifiedAt: participants.emailVerifiedAt,
+      emailConfirmedAt: registrations.emailConfirmedAt,
+      waitlistedAt: registrations.waitlistedAt,
+      offerCreatedAt: registrations.offerCreatedAt,
+      holdExpiresAt: registrations.holdExpiresAt,
+      declarationAcceptedAt: latestDeclarationAcceptedAt,
+      cancelledAt: registrations.cancelledAt,
+      expiredAt: registrations.expiredAt,
+      expiryReason: registrations.expiryReason,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -332,6 +373,12 @@ export type RegistrationDetail = {
   emailRejectedReason: string | null;
   /** For "send the reminder": only while the event is ahead (§81). */
   eventStartsAt: Date;
+  /** When the current cycle began (`privacy_acknowledged_at`, rewritten on a restart); §145. */
+  cycleStartedAt: Date;
+  /** The participant's own click (any event); staff vouching is `emailConfirmedAt`. */
+  emailVerifiedAt: Date | null;
+  /** The latest declaration acceptance, online or on paper; the journey's fourth step (§145). */
+  declarationAcceptedAt: Date | null;
 };
 
 const checkedInBy = alias(staffUsers, "checked_in_by");
@@ -375,6 +422,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       cancellationSource: registrations.cancellationSource,
       expiredAt: registrations.expiredAt,
       expiryReason: registrations.expiryReason,
+      cycleStartedAt: registrations.privacyAcknowledgedAt,
+      emailVerifiedAt: participants.emailVerifiedAt,
+      declarationAcceptedAt: latestDeclarationAcceptedAt,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))

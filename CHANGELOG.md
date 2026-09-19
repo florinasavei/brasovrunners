@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **Each registration's journey, as steps** — Înscriere trimisă, Email confirmat, Loc rezervat, Declarație semnată, Loc confirmat, Prezență marcată — under the name on its page, with the hold's deadline, the waiting list, the number and "a ridicat nr. 42"; and as an "Etapă" column on the list: the count and the last step done ("3/6 · Loc rezervat"). A cancelled or expired row keeps the steps it reached and says how it ended; a registration made again on the same row shows only this time's steps. §145.
 - **A Facebook event link on the event**, beside the Strava one: a box in the editor, a labelled fact with the Facebook mark on the page. Migration `0046`. §144.
 - **"Vreau să apar pe lista de participanți"** — the list is opted into, like the other consents; no tick, no listing. The platform's privacy notice and terms say so. §143.
 - **A rejected registration form comes back filled in** — every box, select and tick as typed, from an encrypted ten-minute cookie, never the address; the phone's message says the number is not valid. §142.

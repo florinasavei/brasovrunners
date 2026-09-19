@@ -877,8 +877,9 @@ registration — and it lists registrations and never changes an address.
 2. Given the backoffice, when it renders, then it offers no verified-email edit and no participant merge.
 3. Given any administrative state change, when it completes, then an audit row records actor, action, entity, and time.
 4. Given a cancellation by an administrator, when it commits, then the released place is offered to the front of the waiting list, exactly as a participant's own cancellation is.
+5. Given a registration, when the backoffice shows it — on its own page and as the "Etapă" column of the list — then its journey is derived from the row as six ordered steps (submitted, email confirmed, place reserved, declaration signed, place confirmed, present), with the step the person is at marked current, a waiting-list entry waiting at the reservation step, a signed declaration recognised whether it was signed online or on paper, the race number on the confirmation and on the check-in, a cancelled or expired row keeping the steps it reached and naming how it ended, and a registration restarted on the same row showing only the steps of its current cycle; the list's cell names the last step done, never the one awaited, and reads the acceptance with one probe per row, never a query per row (added 2026-09-19, `DECISIONS.md` §145).
 
-**Verification:** integration `registrations/staff-crud.test.ts`
+**Verification:** integration `registrations/staff-crud.test.ts`; unit `registrations/journey.test.ts`; integration `registrations/admin-list.test.ts`
 
 #### BR-REQ-037-04 — The queue can be exercised without reaching anyone
 

@@ -317,11 +317,12 @@
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
       "columnStatus": "Status",
+      "columnJourney": "Step",
       "columnEvent": "Event",
       "columnEmail": "Email",
       "columnSubmitted": "Submitted",
       "openNamed": "Open the registration for {name}",
-      "tableCaption": "Registrations, with status, event and date submitted",
+      "tableCaption": "Registrations, with status, step, event and date submitted",
       "emptyFiltered": "No registration matches these filters. Clear them to see all of them.",
       "selectRow": "Select the registration for {name}",
       "bulkCancelTitle": "Cancel the ticked registrations",
@@ -347,7 +348,20 @@
       "declarationsPdf": "Signed declarations (PDF)",
       "declarationForm": "Paper declaration form (PDF)",
       "declarationPaper": "on paper, recorded by {who}",
-      "emailVouched": "address vouched for by {who}"
+      "emailVouched": "address vouched for by {who}",
+      "journey": {
+        "title": "The registration's journey",
+        "held": "until {until}",
+        "offered": "place offered, until {until}",
+        "waitlisted": "on the waiting list",
+        "bib": "no. {number}",
+        "pickedUp": "picked up no. {number}",
+        "cancelledAt": "Cancelled on {date}",
+        "expiredAt": "Expired on {date}",
+        "progress": "{done} of {total} steps",
+        "next": "next: {step}",
+        "complete": "Every step done"
+      }
     },
     "events": {
       "empty": "There is no event in the database.",

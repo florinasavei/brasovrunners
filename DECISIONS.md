@@ -6381,3 +6381,71 @@ duplicate or a repeated edition because it is one occurrence's page. Migration `
 `tests/integration/cms/workflow.test.ts`. BR-REQ-011-01 criterion 10 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 145. Decided — the backoffice shows each registration's journey (2026-09-19)
+
+**Context.** The owner: "I wanna see as a workflow what step each participant is in, if he
+signed the declaration, if he checked in and picked up his bib" — and, on the order, "there
+should be a 'place reserved' first, then declaration signed and then 'place confirmed'". The
+registration's page had a status chip and a timeline of timestamps (§33); the list had the
+chip. Neither said, in one glance, how far a person had come, and whether the declaration
+was signed had to be read off the acceptance rows at the bottom of the page.
+
+**Decision.** Six steps, in the lifecycle's order (AGENTS.md §10.5): Înscriere trimisă,
+Email confirmat, Loc rezervat, Declarație semnată, Loc confirmat, Prezență marcată — each a
+fact about the registration, never about the person, so no word has to agree with whose name
+it stands under. One pure derivation, `domain/journey.ts`, reads them off the row — status
+first, timestamps only to date a step; a terminal row is read from its timestamps, an
+expired one from its reason. **A restart reuses the row and clears nothing** (the schema's
+"timestamps are historical facts"), so an old `confirmed_at`, offer or check-in outlives a
+later cancellation: the derivation therefore takes `privacy_acknowledged_at` — the one
+column every restart rewrites, and the insert sets — as the start of the current cycle, and
+reads anything dated before it as absent. Confirmed once, cancelled, back on the waiting
+list and cancelled again is "2/6", not "5/6" with a bib; a direct hold this time is not
+dated with the offer of the cycle before. The participant's own email verification is one
+click per person, months before a later registration, so that step is dated at this
+submission and never earlier — the list is a chronology. A terminal row is read as a
+ladder, each rung needing the one below it: a stale hold deadline that outlives a restart
+inside one participation window cannot lift a waiting-list cancellation to "3/6".
+The reservation is the hold ("până la <deadline>", dated at the email step, whose
+transaction places it), the offer ("loc oferit, până la …"), or where a waiting-list entry
+waits ("pe lista de așteptare", nothing after it moves). The declaration is the latest
+acceptance, online or on paper — the method does not matter. The confirmation carries the
+number ("nr. 42"); the desk step says "a ridicat nr. 42", because there is no separate
+pickup event: the number is handed over where the person is marked present
+(BR-REQ-037-08), so the check-in is the pickup. A cancelled or expired row keeps the steps
+it reached, strikes the rest, and ends with "Anulată la …" / "Expirată la …".
+`ui/StaffJourney.tsx` renders it — a hand-rolled `<ol>` with `aria-current="step"`, as
+the participant's own journey is, no client island — in full under the name on the
+registration's page, and as "3/6 · Loc rezervat" in a new "Etapă" column of the list: the
+count and **the last step that is done**, which is always true, where the step being waited
+on ("Declarație semnată" on a row waiting for exactly that, "Prezență marcată" on every
+confirmed row on race morning) would read as its opposite; "urmează: …" and how the row
+ended are in the hover title, and the status chip beside it says Anulată already. The list
+row carries what the derivation needs — the cycle's start, the participant's own
+verification, the hold and offer columns, and the latest acceptance's date through the same
+one-probe subquery `idDocument` uses — never a query per row. The six step names are names
+for the lifecycle's states, like the status chip's, so they live in `staff-labels.ts` in
+Romanian, once (§35: "enums and stuff should not be in 2 languages"); the sentences around
+them — the deadline, the number, "urmează", "Anulată la" — are chrome and stay in both
+catalogues. Test registrations show the same journey: the backoffice is where they are
+looked at.
+
+*Rejected:* MUI's `Stepper` (a client island for six words); a "declaration signed" column
+on the registration (the acceptance table is the record, and a copy would drift); a status
+→ step lookup with no timestamps (the dates are what the owner reads next); sorting on the
+column (the status beside it is ordered already); clearing the cycle's timestamps on a
+restart (it would change the schema's documented rule for one reader, and a cycle marker
+already exists); reading a terminal row by its latest-dated marker (a hold has no date of
+its own, only a deadline).
+
+**Consequences.** `registrations/domain/journey.ts` (new), `ui/StaffJourney.tsx` (new),
+`staff-labels.ts` (`JOURNEY_STEP_LABEL`), `admin-repository.ts` (the list row and the
+detail carry `cycleStartedAt`, `emailVerifiedAt`, `declarationAcceptedAt` and the hold,
+offer and ending columns), the registration page and the list page, one column header and
+one caption and a `journey` block of sentences in both catalogues;
+`tests/unit/registrations/journey.test.ts`,
+`tests/integration/registrations/admin-list.test.ts` (a restart driven through the
+service), `tests/unit/i18n/messages.test.ts`. BR-REQ-037-03 criterion 5.
+
+Baseline `BR-V1.38-2026-09-18`.

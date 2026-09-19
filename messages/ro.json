@@ -317,11 +317,12 @@
       "clubMemberChip": "Membru (declarat)",
       "columnName": "Nume",
       "columnStatus": "Stare",
+      "columnJourney": "Etapă",
       "columnEvent": "Eveniment",
       "columnEmail": "E-mail",
       "columnSubmitted": "Trimisă",
       "openNamed": "Deschide înscrierea lui {name}",
-      "tableCaption": "Înscrieri, cu stare, eveniment și data trimiterii",
+      "tableCaption": "Înscrieri, cu stare, etapă, eveniment și data trimiterii",
       "emptyFiltered": "Nicio înscriere nu corespunde filtrelor. Șterge filtrele ca să le vezi pe toate.",
       "selectRow": "Selectează înscrierea lui {name}",
       "bulkCancelTitle": "Anulează înscrierile bifate",
@@ -347,7 +348,20 @@
       "declarationsPdf": "Declarațiile semnate (PDF)",
       "declarationForm": "Formular declarație pe hârtie (PDF)",
       "declarationPaper": "pe hârtie, înregistrată de {who}",
-      "emailVouched": "adresă garantată de {who}"
+      "emailVouched": "adresă garantată de {who}",
+      "journey": {
+        "title": "Parcursul înscrierii",
+        "held": "până la {until}",
+        "offered": "loc oferit, până la {until}",
+        "waitlisted": "pe lista de așteptare",
+        "bib": "nr. {number}",
+        "pickedUp": "a ridicat nr. {number}",
+        "cancelledAt": "Anulată la {date}",
+        "expiredAt": "Expirată la {date}",
+        "progress": "{done} din {total} pași",
+        "next": "urmează: {step}",
+        "complete": "Toți pașii parcurși"
+      }
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
