@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
@@ -154,11 +155,45 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     helperText: invalid.has(name) ? t("errors.field") : help,
   });
 
+  // What they are signing up for, on the form itself (§102): the date, the place, and the
+  // event's page, its rules and the two legal texts as links — the owner: "show the race date,
+  // details and TOS on the sign-up form as links". Formatted in the event's own zone.
+  const whenLabel = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone: event.timezone,
+  }).format(event.startsAt);
+  const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
+  const factLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight, marginRight: 16 } as const;
+
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title", { event: event.title })}
       </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+          {whenLabel}
+          {event.locationName ? ` · ${event.locationName}` : ""}
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+          <Link href={{ pathname: "/events/[slug]", params: { slug } }} style={factLink}>
+            {t("facts.details")}
+          </Link>
+          {hasRules && (
+            <Link href={{ pathname: "/events/[slug]", params: { slug }, hash: "rules" }} style={factLink}>
+              {t("facts.rules")}
+            </Link>
+          )}
+          <Link href="/legal/terms" style={factLink}>
+            {t("facts.terms")}
+          </Link>
+          <Link href="/legal/privacy" style={factLink}>
+            {t("facts.privacy")}
+          </Link>
+        </Box>
+      </Box>
 
       {/* Where they are in the journey, and what happens next — the same component every page
           of this flow renders, so the answer never depends on which page they are looking at. */}

@@ -13,6 +13,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 The evening's test on QA, and what it found.
 
 - **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.
+- **The form says what it is for**: the event's date, time and meeting point under the title, and the event's page, its rules, the terms and the privacy notice as links; the terms' §7 now states when a name appears on the public list and in results, and the photographs rule. §102.
 - **Vercel's month on `/devs`** — deployments, today's out of 100, build minutes out of 6,000 — from a read token; bandwidth and invocations stay on the dashboard, which Vercel's API does not expose, and the page says so. §101.
 - **The Mailgun plan is a setting.** `/admin/emails` says which plan the account is on (Free, Basic, Foundation, Scale, or typed ceilings) with an audit row; every "how much can we still send" figure and the cost table follow it, over the day or the month as the plan counts. Reverses the "constant, not configuration" stance of `BR-V1.19`. §100.
 - **The club is told when email stops.** `/api/health` carries an `email` block (deferred by the allowance, overdue, failed) and answers 503 for anything but `ok`; a third cron-job.org monitor with "notify on failure" is the notification; `/admin/tasks` and `/devs` show the same in red. §98.

@@ -374,7 +374,9 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 3. Given a submitted registration, when the response renders, then it states that an email has been sent, without revealing whether that address was already registered.
 4. Given `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` both set, when the public form renders, then it carries the Cloudflare Turnstile widget, and a submission whose token Cloudflare does not confirm — or that carries none, or when Cloudflare cannot be reached — is refused with a field error the person can act on; with either key unset nothing is shown or checked, and the honeypot and the timing check stand either way; the staff form never shows it (2026-09-18, `DECISIONS.md` §97).
 
-**Verification:** e2e `registration-submit.spec.ts`; integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
+5. Given the registration form, when it renders, then under its title it states the event's date and time in the event's zone and its meeting point, and offers as links, each a 44 px target: the event's page, its rules when the organizer wrote any, the terms and the privacy notice — so what is being signed up for and under which terms is on the form itself (`DECISIONS.md` §102).
+
+**Verification:** e2e `registration-submit.spec.ts`, `registration-form.spec.ts` (5); integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
 #### BR-REQ-031-02 — Privacy-notice acknowledgment is recorded
 

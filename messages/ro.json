@@ -1423,7 +1423,13 @@
       "race": "Membru Brașov Runners, club și tricou — opțional",
       "health": "Informații medicale — opțional"
     },
-    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners"
+    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners",
+    "facts": {
+      "details": "Detaliile evenimentului",
+      "rules": "Regulamentul",
+      "terms": "Termeni și condiții",
+      "privacy": "Confidențialitate"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

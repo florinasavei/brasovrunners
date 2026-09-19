@@ -5073,3 +5073,28 @@ times is exactly who reads this page.
 `tests/unit/diagnostics/vercel.test.ts`. BR-REQ-090-07 criterion 4.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 102. Decided — the form names what it is for, and the terms name the list, the results and the photographs (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "make sure to show the race date, details and TOS on the
+sign-up form as links; on the TOS & GDPR also note your public name appearance, race photos
+and race results." The form's title carried the event's name and nothing else; the terms
+were linked from the footer only; and while the privacy notice's §4 already covered the
+public list, the results and the photographs in full, the terms' §7 covered copyright and
+photographs and said nothing about a name.
+
+**Decision.** Under the form's title: the event's date and time in the event's own zone, the
+meeting point, and four links with 44 px targets — the event's page, its rules (only when the
+organizer wrote any), the terms and the privacy notice. Nothing else moves; the consents stay
+where they were. The terms' §7 is now "Your name, the results, the photographs": a name is on
+the public list only when the club switches the list on for that event and the person did not
+opt out, and in results only with the separate consent; both withdrawable from the
+registration's page without losing the registration; the copyright and photograph paragraphs
+follow unchanged. The privacy notice is untouched — it said this already (§4, since §95).
+The templates are not yet approved anywhere, so the change reaches the club's texts the day
+it approves them; a club that already approved would take it as the next version.
+
+**Consequences.** `events/[slug]/register/page.tsx`; `Registration.facts.*`;
+`legal-documents/templates/terms.ts` §7 in both languages. BR-REQ-031-01 criterion 5.
+
+Baseline `BR-V1.38-2026-09-18`.

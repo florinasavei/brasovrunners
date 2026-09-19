@@ -139,6 +139,14 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
       .boundingBox();
     expect(consentBox?.height ?? 0).toBeGreaterThanOrEqual(44);
     expect(consentBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+
+    // BR-REQ-031-01 criterion 5 (`DECISIONS.md` §102): what is being signed up for, on the
+    // form — the event's page, the terms and the privacy notice as links, each a tap target.
+    for (const name of ["Detaliile evenimentului", "Termeni și condiții", "Confidențialitate"]) {
+      const link = page.locator("#main").getByRole("link", { name, exact: true }).first();
+      await expect(link).toBeVisible();
+      expect((await link.boundingBox())?.height ?? 0, name).toBeGreaterThanOrEqual(44);
+    }
   });
 });
 
