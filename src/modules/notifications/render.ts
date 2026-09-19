@@ -6,6 +6,7 @@ import { registrations } from "@/db/schema/registrations";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
+import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { env } from "@/shared/config/env";
@@ -109,6 +110,15 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
   }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
+  // The programme's rows in the reminder (§117), each half of the bilingual mail in its own words.
+  if (row.messageType === "EVENT_REMINDER" && eventDetails) {
+    const items = readScheduleItems(eventDetails.scheduleItems);
+    if (items.length > 0) {
+      const other = locale === "ro" ? "en" : "ro";
+      data.eventProgramme = programmeLines(localizedSchedule(items, locale), eventDetails.timezone, locale);
+      data.eventProgrammeOther = programmeLines(localizedSchedule(items, other), eventDetails.timezone, other);
+    }
+  }
   // The thank-you's optional link (§82) rides in the payload; it is the action, and not a token.
   let payloadActionUrl: string | undefined;
   if (row.messageType === "EVENT_THANKS") {
@@ -166,9 +176,13 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
 
   // The signed declaration itself, rendered now from the rows and never stored as a file
-  // (§95): a copy the participant keeps, in the language they signed in.
+  // (§95): a copy the participant keeps, in the language they signed in — on the confirmation
+  // since §126, on the club's archive copy, and on the older message type for a resend.
   let attachments: OutgoingEmail["attachments"];
-  if ((row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") && registration) {
+  if (
+    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") &&
+    registration
+  ) {
     const signed = await findSignedDeclaration(db, registration.id);
     if (signed) {
       const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, declarationWords(signed.locale, now), now);

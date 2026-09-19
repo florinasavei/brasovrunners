@@ -34,6 +34,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { buildInfo, formatLastUpdated, formatVersion } from "@/shared/config/build-info";
 import { CONFIGURATION_ENUMS } from "@/shared/config/env-enums";
 import { env } from "@/shared/config/env";
+import { capturedEmails } from "@/infrastructure/email/sender";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -138,15 +139,55 @@ export default async function DevsPage({ params }: Props) {
     status === "blocked" ? "error" : status === "limited" ? "warning" : "success";
 
   return (
-    <Stack spacing={4} sx={{ py: { xs: 3, sm: 5 }, px: { xs: 2, sm: 3 }, maxWidth: 900, mx: "auto" }}>
+    <Stack spacing={4} sx={{ maxWidth: 900 }}>
       <Box>
-        <Typography variant="h1" sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }}>
+        {/* Under the backoffice's own title and tabs (§119): a section heading, like the others. */}
+        <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {t("intro")}
         </Typography>
       </Box>
+
+      {/* Locally nothing is sent: the messages land here, with their links, so the participant
+          journey can be clicked through (§124). Never off local or test — a captured message
+          carries a live token. */}
+      {(env.APP_ENV === "local" || env.APP_ENV === "test") && (
+        <Box component="section">
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("captured.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("captured.intro")}
+          </Typography>
+          {capturedEmails().length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              {t("captured.empty")}
+            </Typography>
+          ) : (
+            <Stack spacing={1.5}>
+              {capturedEmails().map((message) => (
+                <Box key={message.providerMessageId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {message.subject}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                    {message.to} · {format.dateTime(message.capturedAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" })}
+                  </Typography>
+                  <Stack spacing={0.25}>
+                    {[...new Set(message.text.match(/https?:\/\/\S+/g) ?? [])].map((link) => (
+                      <MuiLink key={link} href={link} sx={{ fontSize: "0.8125rem", wordBreak: "break-all", display: "inline-flex", minHeight: 32, alignItems: "center" }}>
+                        {link}
+                      </MuiLink>
+                    ))}
+                  </Stack>
+                </Box>
+              ))}
+            </Stack>
+          )}
+        </Box>
+      )}
 
       {/* Which deployment, and which build. The commonest confusion is not "what is wrong" but
           "which of these two identical-looking systems am I even looking at". */}
@@ -570,7 +611,7 @@ export default async function DevsPage({ params }: Props) {
               {job.lastFinishedAt
                 ? ` · ${format.dateTime(new Date(job.lastFinishedAt), {
                     dateStyle: "medium",
-                    timeStyle: "short",
+                    timeStyle: "short", hourCycle: "h23",
                   })}`
                 : ""}
             </Typography>

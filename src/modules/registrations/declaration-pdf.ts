@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { plainInline } from "@/modules/legal-documents/domain/inline";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
@@ -155,7 +156,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
         .font("body")
         .fontSize(10.5)
         .fillColor(COLOR.ink)
-        .text(paragraph, bullet ? MARGIN.left + 14 : MARGIN.left, doc.y, { width: bullet ? TEXT_WIDTH - 14 : TEXT_WIDTH, lineGap: 2, align: "justify" });
+        .text(plainInline(paragraph), bullet ? MARGIN.left + 14 : MARGIN.left, doc.y, { width: bullet ? TEXT_WIDTH - 14 : TEXT_WIDTH, lineGap: 2, align: "justify" });
       doc.x = MARGIN.left;
       doc.moveDown(bullet ? 0.3 : 0.6);
     }

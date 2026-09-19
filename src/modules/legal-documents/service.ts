@@ -10,7 +10,9 @@ import {
   type LegalDocumentTranslationInput,
 } from "./domain/content-hash";
 import { isEmptyBody } from "./domain/body-text";
-import { findLatestVersion, listVersionsForBackoffice } from "./repository";
+import { findCurrentApprovedDocument, findLatestVersion, listVersionsForBackoffice } from "./repository";
+import { LEGAL_TEMPLATES } from "./templates/catalogue";
+import { type ClubFacts, fillClubFacts, remainingPlaceholders } from "./templates/club-facts";
 
 /**
  * Writing legal documents from the backoffice (BR-REQ-053-02, `DECISIONS.md` §46).
@@ -315,4 +317,60 @@ export async function deleteDraftVersion<T extends Record<string, unknown>>(
   if (!deleted) {
     throw new DomainError("CONFLICT", "this version was approved while it was being deleted");
   }
+}
+
+/**
+ * The platform's three texts, with the club's facts written in, created and approved in one act
+ * (`DECISIONS.md` §132): what "New version → start from the platform's text → read → save →
+ * approve, three times" did, as one press by the person who takes responsibility for them.
+ *
+ * The same rules as the long way, because it is the long way: a Superadministrator's act
+ * (`assertMayEdit`), a version number derived and never chosen, the hash computed from what is
+ * stored, `effective_at` the moment of approval, the approver on the row. Two refusals of its
+ * own: a text whose facts are not all known is not approved — a `<PLACEHOLDER>` on a privacy
+ * notice is not a notice — and a document that already has an approved version is left alone,
+ * because the club's words in force are never replaced by a button (§46, §53).
+ */
+export type PlatformApproval = {
+  /** The keys approved by this call. */
+  approved: LegalDocumentKey[];
+  /** The keys that already had an approved version and were left as they are. */
+  alreadyApproved: LegalDocumentKey[];
+};
+
+export async function approvePlatformTemplates<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  facts: ClubFacts,
+  now: Date,
+): Promise<PlatformApproval> {
+  assertMayEdit(actor);
+
+  const keys: LegalDocumentKey[] = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"];
+  const result: PlatformApproval = { approved: [], alreadyApproved: [] };
+
+  for (const key of keys) {
+    const inForce = await findCurrentApprovedDocument(db, key, "ro", now);
+    if (inForce) {
+      result.alreadyApproved.push(key);
+      continue;
+    }
+    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({
+      locale,
+      title: LEGAL_TEMPLATES[key][locale].title,
+      body: fillClubFacts(LEGAL_TEMPLATES[key][locale].body, facts),
+    }));
+    const blanks = [...new Set(translations.flatMap((translation) => remainingPlaceholders(translation.body)))];
+    if (blanks.length > 0) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        `the club's facts are not all set — ${key} still reads ${blanks.join(", ")}; set CLUB_LEGAL_NAME, CLUB_REGISTRATION_NUMBER, CLUB_REGISTERED_ADDRESS and EMAIL_REPLY_TO`,
+      );
+    }
+    const versionId = await createDraftVersion(db, actor, { key, translations }, now);
+    await approveVersion(db, actor, versionId, now);
+    result.approved.push(key);
+  }
+
+  return result;
 }

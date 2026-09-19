@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { findTranslationForPreview } from "@/modules/content/events/repository";
 import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventProgramme from "@/modules/events/ui/EventProgramme";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventExcerpt from "@/modules/events/ui/EventExcerpt";
@@ -117,6 +118,9 @@ export default async function PreviewEventPage({ params }: Props) {
     bodyJson: translation.bodyJson,
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
+    scheduleItems: event.scheduleItems,
+    coHostName: event.coHostName,
+    coHostUrl: event.coHostUrl,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
@@ -149,14 +153,7 @@ export default async function PreviewEventPage({ params }: Props) {
           <RichText body={preview.bodyJson} />
         </Box>
       )}
-      {!isRichTextEmpty(readRichText(preview.scheduleJson)) && (
-        <Box component="section" id="schedule" sx={{ mt: 4 }}>
-          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("editor.fields.schedule")}
-          </Typography>
-          <RichText body={preview.scheduleJson} />
-        </Box>
-      )}
+      <EventProgramme scheduleItems={preview.scheduleItems} scheduleJson={preview.scheduleJson} timeZone={preview.timezone} heading={t("editor.fields.schedule")} />
       {!isRichTextEmpty(readRichText(preview.rulesJson)) && (
         <Box component="section" id="rules" sx={{ mt: 4 }}>
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>

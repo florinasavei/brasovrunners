@@ -19,7 +19,9 @@ import { listStaff } from "@/modules/staff-identity/service";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { changeStaffRoleAction, inviteStaffAction, revokeStaffAction } from "../actions";
+import { changeStaffRoleAction, inviteStaffAction, resendStaffInviteAction, revokeStaffAction } from "../actions";
+import { isZitadelInviteConfigured } from "@/modules/staff-identity/zitadel-users";
+import { env } from "@/shared/config/env";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -54,7 +56,9 @@ export default async function StaffPage({ params, searchParams }: Props) {
   if (!canManageStaff(actor.role)) notFound();
 
   const current = await searchParams;
-  const { error, saved } = current;
+  const { error, saved, invite, reason } = current;
+  // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
+  const invitesSend = env.STAFF_AUTH_MODE === "provider" && isZitadelInviteConfigured();
 
   const t = await getTranslations("Admin");
   const staff = await listStaff(getDb(), actor);
@@ -115,7 +119,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
-        {saved && <Alert severity="success">{t("saved")}</Alert>}
+        {saved === "invited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
+        {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
+        {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
+        {(saved === "invited" || saved === "reinvited") && invite === "failed" && (
+          <Alert severity="warning">{t("staff.inviteFailed", { reason: reason ?? "" })}</Alert>
+        )}
+        {saved === "reinvited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
+        {saved === "reinvited" && invite === "unconfigured" && <Alert severity="info">{t("staff.inviteManual")}</Alert>}
+        {saved && saved !== "invited" && saved !== "reinvited" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
       <Box component="section">
@@ -158,7 +170,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
         </form>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          {t("staff.inviteHelp")}
+          {invitesSend ? t("staff.inviteHelpSends") : t("staff.inviteHelp")}
         </Typography>
       </Box>
 
@@ -216,6 +228,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </Box>
+
+              {/* The invitation again, while they have not signed in (§123). */}
+              {invitesSend && !member.firstSignedInAt && (
+                <Box component="form" action={resendStaffInviteAction}>
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="email" value={member.email} />
+                  <SubmitButton label={t("staff.resendInvite")} pendingLabel={t("staff.resendInvitePending")} variant="outlined" />
+                </Box>
+              )}
 
               <Box component="form" action={revokeStaffAction}>
                 <input type="hidden" name="uiLocale" value={locale} />

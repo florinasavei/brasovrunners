@@ -1,5 +1,5 @@
 import type { Env } from "@/shared/config/env";
-import { type CaptureAdapter, createCaptureAdapter } from "./capture-adapter";
+import { type CaptureAdapter, type CapturedEmail, createCaptureAdapter } from "./capture-adapter";
 import { createEmailSender, type EmailSender } from "./delivery";
 import { createMailgunAdapter } from "./mailgun-adapter";
 
@@ -34,6 +34,21 @@ export function formatSenderIdentity(config: {
   return `"${name}" <${address}>`;
 }
 
+/**
+ * One capture for the process, not one per drain: what a request captured is what `/devs`
+ * shows a minute later (§124; the owner, testing locally: "why did I not receive the
+ * email?" — locally nothing is sent). Bounded, in memory, per instance; on the platforms
+ * that transmit it holds only what the allowlist kept back and is never shown.
+ */
+const sharedCapture = createCaptureAdapter();
+const CAPTURE_KEEP = 50;
+
+/** The most recent captured messages, newest first — for the local viewer only. */
+export function capturedEmails(): readonly CapturedEmail[] {
+  const all = sharedCapture.messages;
+  return [...all.slice(Math.max(0, all.length - CAPTURE_KEEP))].reverse();
+}
+
 export function createEmailSenderForEnvironment(
   config: Pick<
     Env,
@@ -48,7 +63,7 @@ export function createEmailSenderForEnvironment(
     | "EMAIL_REPLY_TO"
   >,
 ): { sender: EmailSender; capture: CaptureAdapter } {
-  const capture = createCaptureAdapter();
+  const capture = sharedCapture;
 
   const sender = createEmailSender({
     appEnv: config.APP_ENV,

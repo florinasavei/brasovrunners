@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { localizedSchedule, readScheduleItems } from "@/modules/events/domain/schedule";
 import { buildCalendar } from "@/modules/events/ical";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { env } from "@/shared/config/env";
@@ -21,16 +22,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const url = `${env.APP_BASE_URL}${getPathname({ locale: known, href: { pathname: "/events/[slug]", params: { slug } } })}`;
   const body = buildCalendar({
-    events: [{ ...event, url }],
+    events: [{ ...event, url, programme: localizedSchedule(readScheduleItems(event.scheduleItems), known) }],
     baseUrl: env.APP_BASE_URL,
     name: event.title,
-    labels: { programme: t("schedule") },
+    labels: { programme: t("schedule"), locale: known },
   });
   return new Response(body, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `attachment; filename="${slug}.ics"`,
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "no-cache",
     },
   });
 }

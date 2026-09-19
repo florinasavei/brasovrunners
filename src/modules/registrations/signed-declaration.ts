@@ -112,7 +112,7 @@ export type DeclarationLabels = DeclarationPdfInput["labels"] & {
 function dateFormatter(locale: Locale, timeZone: string, withTime: boolean) {
   return new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
     dateStyle: "long",
-    ...(withTime ? { timeStyle: "short" } : {}),
+    ...(withTime ? { timeStyle: "short", hourCycle: "h23" } : {}),
     timeZone,
   });
 }

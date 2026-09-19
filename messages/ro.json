@@ -36,7 +36,7 @@
   },
   "Events": {
     "title": "Evenimente",
-    "intro": "Alergări, ture pe munte și antrenamente organizate de club.",
+    "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
     "pastNotice": "Acest eveniment a avut deja loc.",
@@ -53,9 +53,18 @@
       "next": "Luna următoare",
       "today": "Azi",
       "empty": "Nimic programat în luna asta.",
-      "subscribe": "Toate evenimentele clubului, în calendarul tău (Google, Apple, Outlook) — se actualizează singur:",
-      "subscribeLink": "Abonează-te",
-      "downloadLink": "sau descarcă .ics"
+      "previousYear": "Anul anterior",
+      "nextYear": "Anul următor",
+      "viewMonth": "Lună",
+      "viewYear": "An",
+      "pickMonth": "Luna",
+      "pickYear": "Anul",
+      "yearEmpty": "Nimic programat în acest an.",
+      "subscribe": "Toate evenimentele clubului în calendarul tău, actualizat singur — abonează-te cu:",
+      "subscribeGoogle": "Google Calendar",
+      "subscribeApple": "Apple / Outlook / telefon",
+      "downloadLink": "descarcă .ics",
+      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare."
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -102,8 +111,11 @@
       "RACE": "Concurs",
       "HIKE": "Drumeție",
       "COFFEE": "Cafea",
-      "MEETUP": "Întâlnire"
+      "GEAR_TEST": "Testare echipament",
+      "MEETUP": "Alt eveniment",
+      "EXTERNAL": "Eveniment extern"
     },
+    "coHost": "Împreună cu",
     "surface": {
       "ASPHALT": "Asfalt",
       "TRAIL": "Trail",
@@ -147,6 +159,20 @@
       "PAID": "Cu taxă"
     },
     "seeDetails": "Vezi detaliile",
+    "series": {
+      "weekly": "În fiecare {days}",
+      "fortnightly": "O dată la două săptămâni, {days}",
+      "monthly": "Lunar, pe {day}",
+      "cancelledMark": "Anulată",
+      "movedMark": "Nu în locul obișnuit: {place}",
+      "retimedMark": "Nu la ora obișnuită: {time}",
+      "atTime": "{sentence}, la {time}",
+      "dates": "{count} date, până pe {last}",
+      "count": "{count} date",
+      "nextLabel": "Următoarea",
+      "allDates": "Toate datele",
+      "moreInCalendar": "încă {count} în calendar"
+    },
     "route": "Traseu",
     "openRoute": "Vezi traseul",
     "video": {
@@ -157,7 +183,7 @@
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
     "calendar": {
-      "feedName": "Brașov Runners — evenimente"
+      "feedName": "🏃 BVR"
     }
   },
   "Admin": {
@@ -328,6 +354,9 @@
       "columnTitle": "Evenimentul",
       "columnStatus": "Stare",
       "columnDate": "Data",
+      "seriesDates": "Datele acestei serii",
+      "seriesEdit": "Editează următoarea dată",
+      "seriesDeleteNote": "O serie se șterge din bara de deasupra listei: bifeaz-o, apoi „Șterge cele bifate”.",
       "deskCounts": "{confirmed} confirmate · {checkedIn} prezente",
       "columnEntries": "Înscrieri",
       "tableCaption": "Evenimentele clubului, cu starea, data și numărul de înscrieri",
@@ -340,9 +369,12 @@
       "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul în locul ștergerii.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeated": "{created} ediții create.",
-      "bulkTitle": "Publică sau arhivează evenimentele bifate",
-      "bulkHelp": "Bifează evenimentele din listă. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — așa publici o serie întreagă deodată; „Arhivează” le scoate de pe site.",
+      "bulkSelectAll": "Toate",
+      "bulkSelected": "Bifate: {count}",
+      "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
+      "bulkDeleteAction": "Șterge cele bifate",
+      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși; arhivează-le pe acelea.",
       "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate)."
     },
     "confirm": {
@@ -351,6 +383,8 @@
       "duplicateBody": "Se creează o copie, ca ciornă, cu adrese proprii. Nu devine evenimentul principal și nu este publicată.",
       "deleteTitle": "Ștergi evenimentul?",
       "deleteBody": "Ștergerea este definitivă. Se poate șterge doar un eveniment la care nu s-a înscris nimeni; pentru unul care a avut loc, arhivează-l.",
+      "bulkDeleteTitle": "Ștergi evenimentele bifate?",
+      "bulkDeleteBody": "Ștergerea este definitivă. Fiecare eveniment bifat la care nu s-a înscris nimeni este eliminat, în ambele limbi; cele cu înscriși rămân și sunt numărate.",
       "archiveTitle": "Arhivezi evenimentul?",
       "archiveBody": "Evenimentul dispare de pe site, în ambele limbi. Îl poți readuce mai târziu, trecându-l din nou prin verificare și publicare.",
       "removeTestTitle": "Ștergi înscrierile de test?",
@@ -424,10 +458,24 @@
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
-      "scheduleHelp": "Opțional. Programul pe ore: ridicarea kiturilor (unde, când), briefingul, startul, limitele de timp, festivitatea. Apare pe pagina evenimentului la „Program”; emailurile trimit acolo.",
+      "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
+      "programmeSection": "Program",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat.",
+      "programmeRows": {
+        "date": "Data",
+        "time": "Ora",
+        "endTime": "Până la",
+        "ro": "Ce (română)",
+        "en": "Ce (engleză)",
+        "place": "Unde",
+        "add": "Adaugă un rând",
+        "remove": "Șterge rândul",
+        "empty": "Niciun rând încă."
+      },
       "rulesHelp": "Opțional. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
       "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare și în reminder.",
       "type": "Tip eveniment",
+      "typeHelp": "La o alergare de grup se vine pur și simplu: fără înscriere, fără participanți, fără program. O cursă le are pe toate; o drumeție, o cafea, o testare de echipament și un alt eveniment pot avea înscriere; un eveniment extern e al altcuiva — înscrierea e pe pagina lor.",
       "surface": "Suprafață",
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",
@@ -471,7 +519,33 @@
       "routeUrl": "Link către traseu",
       "routeUrlHelp": "Unde poate fi văzut traseul — un traseu sau o activitate Strava, sau orice alt link https://. Lasă gol dacă nu există unul.",
       "repeatSection": "Repetă evenimentul",
-      "repeatHelp": "Creează următoarele ediții ale acestui eveniment, la interval fix, cu aceleași detalii și cu ora păstrată în fusul evenimentului. Fiecare copie primește o adresă cu data ei (de exemplu „alergare-de-duminica-2026-10-04”). Copiile sunt ciorne, dacă nu bifezi publicarea.",
+      "repeatHelp": "Fă din acest eveniment o serie: aceleași detalii, la interval fix, cu ora păstrată în fusul orar al evenimentului, până la o dată sau la nesfârșit. Următoarele opt săptămâni se creează acum, iar platforma creează singură săptămânile care urmează — fiecare dată e un eveniment al ei: o anulezi sau o muți fără să atingi restul. Fiecare dată primește o adresă cu ziua ei („alergare-de-duminica-2026-10-04”). Datele sunt ciorne, dacă nu bifezi publicarea.",
+      "repeatUntil": "Până la (opțional)",
+      "repeatUntilHelp": "Lasă gol pentru o serie fără sfârșit.",
+      "repeatRuleTitle": "Evenimentul se repetă",
+      "repeatRuleForever": "{sentence} — la nesfârșit. Următoarele opt săptămâni sunt create mereu; datele sunt în listă.",
+      "repeatRuleUntil": "{sentence} — până la {until}. Datele sunt în listă.",
+      "repeatRuleEnded": "{sentence} — s-a încheiat pe {until}.",
+      "repeatStop": "Oprește seria",
+      "repeatStopHelp": "Nu se mai creează date noi; cele existente rămân (bifează-le în listă ca să le ștergi).",
+      "repeatStopped": "Seria e oprită: nu se mai creează date noi.",
+      "savedSeries": "Salvat — și pe încă {applied} date ale seriei.",
+      "scope": {
+        "title": "Salvează pentru:",
+        "this": "Doar această dată",
+        "following": "Această dată și următoarele",
+        "all": "Toate datele seriei",
+        "help": "Ca în Google Calendar: doar ce ai schimbat aici ajunge și pe celelalte date — o oră nouă, la aceeași oră în ziua fiecăreia; o dată mutată sau anulată separat rămâne așa dacă nu schimbi chiar locul sau starea. Adresa paginii fiecărei date nu se schimbă."
+      },
+      "repeatOfNote": "Ce schimbi aici — o anulare, alt loc, altă oră — privește doar această dată, dacă nu alegi altfel la Salvează.",
+      "series": {
+        "kicker": "Seria „{title}”",
+        "editing": "Editezi data de {date}",
+        "position": "Data {position} din {count} ale seriei. Apasă o altă dată ca s-o deschizi.",
+        "previous": "← Data dinainte: {date}",
+        "next": "Data următoare: {date} →"
+      },
+      "repeatOfLink": "Deschide seria",
       "repeatCadence": "Interval",
       "repeatCadences": {
         "NONE": "Nu se repetă",
@@ -487,7 +561,7 @@
       "timeOfDay": "Ora (24h)",
       "repeatWeeks": "Câte săptămâni / ediții",
       "repeatWeekdays": "În zilele (opțional):",
-      "repeatWeekdaysHelp": "Bifează zilele în care are loc — de exemplu luni și miercuri — și „câte săptămâni” de mai sus înseamnă săptămâni, socotite din săptămâna evenimentului; se creează doar zilele de după el. Nimic bifat: ziua evenimentului, la intervalul ales.",
+      "repeatWeekdaysHelp": "Ziua acestui eveniment este mereu în serie; bifează și celelalte — de exemplu miercuri, pentru o tură de duminică. Se creează doar zilele de după acest eveniment. Nimic bifat: doar ziua evenimentului, la intervalul ales.",
       "repeatOnCreateHelp": "Opțional. Se creează și edițiile următoare, ca ciorne, cu aceleași detalii și adrese cu data fiecăreia. Le publici pe toate deodată din lista de evenimente, cu „Publică cele bifate”.",
       "weekdays": {
         "1": "Lu",
@@ -501,6 +575,9 @@
       "createdWithSeries": "Evenimentul și {created} ediții au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
       "durationMinutes": "Durata (minute)",
       "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
+      "coHostName": "Co-organizator (altă organizație)",
+      "coHostUrl": "Pagina co-organizatorului",
+      "coHostHelp": "Opțional. Când evenimentul e organizat împreună cu altă organizație — un ONG, un magazin, un brand — numele ei aici și pagina, dacă are una. Apare ca „Împreună cu …” lângă numele clubului și e trecută ca al doilea organizator pentru Google.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
       "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă.",
@@ -526,7 +603,14 @@
       "role": "Rol",
       "preferredLocale": "Limbă preferată",
       "invite": "Adaugă",
-      "inviteHelp": "Nu se trimite niciun email: platforma nu are încă domeniul de expediere. Persoana capătă acces la prima autentificare cu această adresă.",
+      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă — nu se trimite niciun email și niciun cod. Persoana are nevoie și de un cont Zitadel cu exact această adresă (și-l face din pagina de autentificare, sau i-l faci tu în consola Zitadel → Users), apoi se autentifică la /admin. Accesul începe la prima autentificare.",
+      "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația cu linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
+      "inviteSent": "Adăugat, iar invitația e pe drum către căsuța lui de email.",
+      "inviteExists": "Adăugat. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
+      "inviteManual": "Adăugat pe listă. Nu s-a trimis nicio invitație: creează-i contul în consola Zitadel (Users → New) cu exact această adresă, sau lasă-l să și-l facă din pagina de autentificare.",
+      "inviteFailed": "Adăugat pe listă, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Creează-l în consola Zitadel (Users → New) cu exact această adresă.",
+      "resendInvite": "Retrimite invitația",
+      "resendInvitePending": "Se trimite…",
       "pending": "Nu s-a autentificat încă",
       "you": "Tu",
       "changeRole": "Schimbă rolul",
@@ -574,7 +658,12 @@
     },
     "legal": {
       "title": "Documente legale",
-      "intro": "Nota de confidențialitate, termenii și declarația pe care o semnează participanții. O versiune se scrie ca ciornă, se aprobă și de atunci rămâne fixă; o modificare este versiunea următoare.",
+      "intro": "Cele trei texte pe care le acceptă participantul. O versiune aprobată nu se mai schimbă (oamenii au semnat exact acel text); o corectură e o versiune nouă.",
+      "whatIs": {
+        "PRIVACY_NOTICE": "GDPR: ce date luăm de la participanți, de ce și cât le ținem. Se bifează la înscriere.",
+        "TERMS": "Regulile site-ului și ale înscrierii (nu regulamentul cursei — acela e pe pagina evenimentului). Se bifează la înscriere.",
+        "EVENT_DECLARATION": "Declarația pe proprie răspundere: sănătate, riscuri, actul de identitate. Se semnează când se confirmă locul."
+      },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă, alege documentul, lipește textul aprobat în ambele limbi, salvează ciorna, citește-o, aprob-o.",
       "document": "Document",
@@ -607,7 +696,7 @@
       "backToList": "Înapoi la documentele legale",
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
-      "newFromTemplateIntro": "Precompletat cu textul platformei: complet, cu cele patru date ale clubului lăsate între paranteze unghiulare <AȘA>. Completează-le, citește tot, salvează ciorna, apoi aprob-o.",
+      "newFromTemplateIntro": "Precompletat cu textul platformei, cu denumirea clubului și adresa de contact deja scrise. Mai rămân de completat, între paranteze unghiulare, în ambele limbi: {blanks}. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
       "templatesIntro": "Sau pornește de la textul platformei:",
       "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{idDocument}}' (actul de identitate tastat la semnare), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
@@ -615,7 +704,7 @@
       "saveDraft": "Salvează ciorna",
       "titleField": "Titlu",
       "bodyField": "Text",
-      "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
+      "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune. Un link: [cuvintele](https://…). O poză, pe un rând al ei: ![ce arată](https://…) — copiază adresa din Galerie → Poze.",
       "keyLocked": "Documentul nu se schimbă după creare.",
       "editorWarning": "Acesta este textul juridic al clubului. Scrie sau lipește doar formulări aprobate de club — nu inventa conținut juridic.",
       "approveTitle": "Aprobă versiunea",
@@ -633,7 +722,24 @@
       "deleteBody": "Ciorna și textul ei în ambele limbi dispar definitiv. Nimeni nu a văzut-o: o ciornă nu apare public și nimeni nu a semnat-o.",
       "deleteBlockedApproved": "Aprobată — nu se poate șterge. Ce a publicat clubul rămâne în evidență.",
       "deleteBlockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
-      "legalVersionDeleted": "Ciorna a fost ștearsă."
+      "legalVersionDeleted": "Ciorna a fost ștearsă.",
+      "newFromTemplateComplete": "Precompletat cu textul platformei și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
+      "platformApproved": "Gata: {count} texte aprobate, cu datele clubului. Înscrierile sunt deschise; declarația se alege pe fiecare eveniment, la Înscrieri (dacă nu e deja).",
+      "platform": {
+        "title": "Într-un pas: aprobă textele platformei cu datele clubului",
+        "intro": "Lipsesc aprobate: {keys}. Butonul de mai jos creează și aprobă, pe numele tău, versiunea 1 a fiecăruia, din textul platformei, cu datele de mai jos scrise în el. Un text deja aprobat nu este atins.",
+        "facts": {
+          "legalName": "Denumirea juridică",
+          "registrationNumber": "CIF",
+          "registeredAddress": "Sediul",
+          "contactEmail": "Email de contact"
+        },
+        "missing": "nesetat",
+        "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
+        "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
+        "button": "Aprobă cele trei texte acum",
+        "pending": "Se aprobă…"
+      }
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -663,11 +769,10 @@
           "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierea refuză pe toată lumea. Procedura: docs/RUNBOOKS.md § Legal document version.",
           "done": "Textele aprobate de club sunt publicate.",
           "how": [
-            "Deschide /admin/legal și apasă „Versiune nouă”. Alege tipul: nota de confidențialitate, termenii sau declarația.",
-            "Lipește textul în română și în engleză, pe secțiuni: un titlu și paragrafele lui. Salvează ciorna.",
-            "Descarcă PDF-ul de pe pagina versiunii și dă-l cui trebuie să-l citească. O ciornă se poate rescrie oricât timp nu e aprobată.",
-            "Când e bun: bifează „am citit” și apasă „Aprobă”. Din acel moment textul e fix — o corectură înseamnă versiunea următoare, tot de aici.",
-            "Repetă pentru toate trei. Nota de confidențialitate aprobată este cea care deblochează înscrierile; declarația aprobată se alege apoi pe fiecare eveniment, la Înscriere."
+            "Calea scurtă (§132): /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → „Aprobă cele trei texte acum”. Gata: nota, termenii și declarația sunt în vigoare, cu datele clubului scrise în ele.",
+            "Dacă vrei să citești mai întâi: sub casetă, „pornește de la textul platformei” → deschide fiecare, citește, apoi apasă butonul din casetă.",
+            "Calea lungă, pentru o modificare: „Versiune nouă” → text → salvează ciorna → PDF → „Aprobă”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
+            "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
           ]
         },
         "liveEmail": {
@@ -701,7 +806,7 @@
           "done": "Echipa are conturi.",
           "how": [
             "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
-            "Persoana își face cont în Zitadel cu exact aceeași adresă și își verifică emailul — sau i-l creezi tu din consola Zitadel → Users. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
+            "Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), „Adaugă” îi creează și contul Zitadel și îi trimite pe email invitația — linkul pentru alegerea parolei. Fără ea, persoana își face cont în Zitadel cu exact aceeași adresă, sau i-l creezi tu din consola Zitadel → Users. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
         },
@@ -729,23 +834,13 @@
         },
         "botCheck": {
           "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
-          "todo": "Formularul de înscriere are deja un câmp-capcană și o verificare a timpului de completare, care opresc roboții simpli. Turnstile — captcha-ul Cloudflare, gratuit, de obicei fără niciun puzzle — oprește și restul. Este oprit până când există cele două chei; nimic nu se schimbă între timp.",
+          "todo": "Făcut pe 19 septembrie 2026: widgetul „brasovrunners-site” există și ambele chei sunt pe ambele proiecte Vercel — rândul devine verde la următoarea publicare. Formularul de înscriere are deja un câmp-capcană și o verificare a timpului de completare, care opresc roboții simpli; Turnstile — captcha-ul Cloudflare, gratuit, de obicei fără niciun puzzle — oprește și restul.",
           "done": "Formularul de înscriere are verificarea anti-bot pornită.",
           "how": [
-            "Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
-            "Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
-            "În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
-            "Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
-          ]
-        },
-        "scheduleStructured": {
-          "title": "Programul evenimentului ca date (ore), nu doar text",
-          "todo": "Programul e text liber pe limbă (secțiunea „Program” a paginii). Calendarul (.ics, abonament, Google Calendar) există din §107 și duce programul ca text. Rămâne: rânduri structurate — ora, ce se întâmplă, unde — care s-ar arăta la fel pe pagină, în emailuri și ca intrări separate în calendar.",
-          "done": "Programul are rânduri cu ore și se poate adăuga în calendarul telefonului.",
-          "how": [
-            "Schema: o tabelă event_schedule_items (event_id, starts_at, ends_at?, etichetă pe limbă, loc) — sau JSON structurat pe eveniment.",
-            "Editorul: rânduri „oră + text + loc”, în ordine; pagina le arată ca listă cu ore; reminderul le trimite.",
-            "Calendarul: din rândurile acestea, câte un VEVENT pe rând în .ics-ul evenimentului (fișierul și abonamentul există deja: modules/events/ical.ts)."
+            "✓ Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
+            "✓ Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
+            "✓ În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
+            "✓ Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
           ]
         },
         "declarationArchiveMail": {
@@ -766,16 +861,6 @@
             "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
             "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
             "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
-          ]
-        },
-        "docsSimplify": {
-          "title": "Documentația scurtată (SETUP, RUNBOOKS, CLAUDE)",
-          "todo": "CLAUDE.md e acum o hartă: un rând pe lucru, cu secțiunea din DECISIONS care spune de ce (§109). Rămâne SETUP.md: 1.800 de rânduri în care procedurile încă valabile (numerotate, cu valori) stau lângă istoria fiecărui cont deschis — de mutat istoria în CHANGELOG/DECISIONS și de păstrat doar ce mai e de făcut.",
-          "done": "Fiecare document din repo e scurt și spune o dată ce e de făcut.",
-          "how": [
-            "SETUP.md: fiecare secțiune numerotată rămâne doar dacă e o procedură încă valabilă, cu valorile la vedere; „făcut la data X” se mută într-o linie de CHANGELOG sau în DECISIONS.",
-            "docs/RUNBOOKS.md: același principiu — o intrare pe situație, pașii, nimic despre cum s-a ajuns aici.",
-            "docs:check rămâne verde; README-ul (indexul) se actualizează."
           ]
         },
         "roDomain": {
@@ -1338,7 +1423,7 @@
       "summaryShort": "Despre club",
       "summaryTail": ", contact și termeni",
       "socialLabel": "Clubul pe rețelele sociale",
-      "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale.",
+      "description": "Brașov Runners este un mic club de alergare din Brașov: alergări sociale și antrenamente, evenimente comunitare și concursuri locale. Toate evenimentele clubului sunt gratuite.",
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
@@ -1586,6 +1671,11 @@
     }
   },
   "Devs": {
+    "captured": {
+      "title": "Emailuri capturate pe această mașină",
+      "intro": "Local nu pleacă nimic: fiecare mesaj pe care platforma l-ar fi trimis ajunge aici, cel mai nou primul, cu linkurile lui — apasă-le ca să parcurgi drumul participantului.",
+      "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino."
+    },
     "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",
     "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",

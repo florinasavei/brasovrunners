@@ -10,14 +10,14 @@ import {
   createEvent,
   deleteEvent,
   duplicateEvent,
-  REPEAT_CADENCES,
   repeatEvent,
-  type RepeatCadence,
   saveEventAndTranslations,
+  SERIES_EDIT_SCOPES,
+  type SeriesEditScope,
+  stopRepeat,
   transitionEvent,
-  type Weekday,
-  WEEKDAYS,
 } from "@/modules/content/events/service";
+import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import {
@@ -29,9 +29,10 @@ import {
   type DevIdentityKey,
   ensureDevStaffUser,
 } from "@/modules/staff-identity/dev-switcher";
-import type { EditorialStatus, StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canDeleteEvent, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
+import { inviteZitadelUser, resendZitadelInvite } from "@/modules/staff-identity/zitadel-users";
 import {
   changeStaffRole,
   inviteStaffUser,
@@ -111,6 +112,18 @@ function eventFieldsFrom(form: FormData) {
     return `${date}T${value(`${field}Time`) || "00:00"}`;
   };
 
+  /**
+   * The programme's rows (§117), posted as `event.schedule[i].<box>` by `ScheduleRowsEditor`;
+   * gathered by index in the order the boxes came, blanks included — the service drops those.
+   */
+  const scheduleRows: Array<Record<string, string>> = [];
+  for (const [key, entry] of form.entries()) {
+    const match = /^event\.schedule\[(\d+)\]\.(date|time|endTime|ro|en|place)$/.exec(key);
+    if (!match || typeof entry !== "string") continue;
+    const index = Number(match[1]);
+    scheduleRows[index] = { ...(scheduleRows[index] ?? {}), [match[2]]: entry };
+  }
+
   return {
     type: value("type"),
     // Optional, like difficulty below: "" from the unselected dropdown means "none".
@@ -121,7 +134,10 @@ function eventFieldsFrom(form: FormData) {
     endsAtWallTime: wallTime("endsAt"),
     durationMinutes: value("durationMinutes"),
     raceStartsAtWallTime: wallTime("raceStartsAt"),
+    scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
+    coHostName: value("coHostName"),
+    coHostUrl: value("coHostUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
@@ -180,6 +196,23 @@ function translationFieldsFrom(form: FormData, locale: Locale) {
   };
 }
 
+/**
+ * The ticked rows of the events list: `id:version` each, and a series row ticks all its dates
+ * as one value joined by commas (`DECISIONS.md` §113). The version travels with the tick so a
+ * bulk verb still meets the version guard (§11.5).
+ */
+function selectedEventRefs(form: FormData): Array<{ eventId: string; expectedVersion: number }> {
+  return form
+    .getAll("eventRef")
+    .filter((value): value is string => typeof value === "string")
+    .flatMap((value) => value.split(","))
+    .filter((reference) => reference.includes(":"))
+    .map((reference) => {
+      const separator = reference.lastIndexOf(":");
+      return { eventId: reference.slice(0, separator), expectedVersion: Number(reference.slice(separator + 1)) };
+    });
+}
+
 /** Publication is per event now, so this moves the event and not one of its languages. */
 export async function transitionEventAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
@@ -224,9 +257,7 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin" });
 
-  const selected = form
-    .getAll("eventRef")
-    .filter((value): value is string => typeof value === "string" && value.includes(":"));
+  const selected = selectedEventRefs(form);
 
   if (selected.length === 0) {
     backTo(listPath, { error: "NOTHING_SELECTED" });
@@ -238,11 +269,7 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     const db = getDb();
 
-    for (const reference of selected) {
-      const separator = reference.lastIndexOf(":");
-      const eventId = reference.slice(0, separator);
-      const expectedVersion = Number(reference.slice(separator + 1));
-
+    for (const { eventId, expectedVersion } of selected) {
       try {
         await transitionEvent(db, { actor, eventId, expectedVersion, to: "ARCHIVED" });
         archived += 1;
@@ -270,9 +297,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin" });
 
-  const selected = form
-    .getAll("eventRef")
-    .filter((value): value is string => typeof value === "string" && value.includes(":"));
+  const selected = selectedEventRefs(form);
   if (selected.length === 0) backTo(listPath, { error: "NOTHING_SELECTED" });
 
   let published = 0;
@@ -281,10 +306,8 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     const db = getDb();
 
-    for (const reference of selected) {
-      const separator = reference.lastIndexOf(":");
-      const eventId = reference.slice(0, separator);
-      let expectedVersion = Number(reference.slice(separator + 1));
+    for (const { eventId, expectedVersion: loadedVersion } of selected) {
+      let expectedVersion = loadedVersion;
       try {
         const [current] = await db.select({ status: events.editorialStatus }).from(events).where(eq(events.id, eventId)).limit(1);
         if (!current) throw new DomainError("NOT_FOUND", "no such event");
@@ -312,6 +335,42 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
 }
 
 /**
+ * Delete the ticked events (`DECISIONS.md` §114): the whole of a test series, the drafts of a
+ * season that never happened. Administrator only, refused whole for anybody else; then each
+ * event through `deleteEvent`, which refuses one with a registration against it — counted and
+ * skipped, never forced, because archiving is the answer for an event that happened.
+ */
+export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin" });
+
+  const selected = selectedEventRefs(form);
+  if (selected.length === 0) backTo(listPath, { error: "NOTHING_SELECTED" });
+
+  let deleted = 0;
+  let failed = 0;
+  try {
+    const actor = await requireStaff();
+    if (!canDeleteEvent(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not delete events`);
+    const db = getDb();
+
+    for (const { eventId } of selected) {
+      try {
+        await deleteEvent(db, { actor, eventId });
+        deleted += 1;
+      } catch (error) {
+        if (!isDomainError(error)) throw error;
+        failed += 1;
+      }
+    }
+  } catch (error) {
+    backTo(listPath, outcomeOf(error));
+  }
+
+  redirect(`${listPath}?saved=eventsDeleted&deleted=${deleted}&failed=${failed}#admin-alert`);
+}
+
+/**
  * The editor's one save (BR-REQ-051-01).
  *
  * One form, one button, one transaction: the event row and every language the actor may edit,
@@ -327,12 +386,14 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string };
+  let outcome: { error?: string; saved?: string; applied?: string };
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
+    // Which dates of the series (§130): the radio on a date of a series; absent elsewhere.
+    const scope = text(form, "scope");
 
-    await saveEventAndTranslations(getDb(), {
+    const { appliedTo } = await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
       fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -341,8 +402,9 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
         .map((contentLocale) => translationFieldsFrom(form, contentLocale))
         .filter((entry) => entry !== undefined),
       acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
+      scope: SERIES_EDIT_SCOPES.includes(scope as SeriesEditScope) ? (scope as SeriesEditScope) : "this",
     });
-    outcome = { saved: "event" };
+    outcome = appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" };
   } catch (error) {
     outcome = outcomeOf(error);
   }
@@ -389,10 +451,7 @@ export async function createEventAction(form: FormData): Promise<void> {
       const result = await repeatEvent(getDb(), {
         actor,
         eventId: created.id,
-        cadence: cadence as RepeatCadence,
-        count: Number(text(form, "repeat.count")),
-        weekdays: weekdaysFrom(form),
-        publish: false,
+        rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null, publish: false },
       });
       repeated = result.created;
     }
@@ -428,12 +487,6 @@ export async function duplicateEventAction(form: FormData): Promise<void> {
   backTo(editorPath(locale, copyId as string), { saved: "duplicated" });
 }
 
-/**
- * The weekly run, made once: N further occurrences of this event, a cadence apart.
- *
- * Lands on the events list rather than on one of the copies — there may be fifty — with the
- * count in the outcome so the alert can say what was made.
- */
 /** The ticked days of the week, ISO numbered, from the repeat fields (`RepeatFields`). */
 function weekdaysFrom(form: FormData): Weekday[] {
   return form
@@ -456,17 +509,30 @@ export async function repeatEventAction(form: FormData): Promise<void> {
     const result = await repeatEvent(getDb(), {
       actor,
       eventId,
-      cadence: cadence as RepeatCadence,
-      count: Number(text(form, "count")),
-      weekdays: weekdaysFrom(form),
-      publish: form.get("publish") === "on",
+      rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "until") || null, publish: form.get("publish") === "on" },
     });
     outcome = { saved: "eventsRepeated", created: String(result.created) };
   } catch (error) {
     outcome = outcomeOf(error);
   }
 
-  backTo(outcome.error ? editorPath(locale, eventId) : getPathname({ locale, href: "/admin" }), outcome);
+  // Back to the source: it now says how it repeats, and the list has the dates.
+  backTo(editorPath(locale, eventId), outcome);
+}
+
+/** The series ends here: no further dates are made; the ones that exist stay (§122). */
+export async function stopRepeatAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await stopRepeat(getDb(), { actor, eventId });
+    outcome = { saved: "repeatStopped" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backTo(editorPath(locale, eventId), outcome);
 }
 
 /**
@@ -569,22 +635,43 @@ export async function inviteStaffAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
 
-  let outcome: { error?: string; saved?: string };
+  let outcome: Record<string, string | undefined>;
   try {
     // The coarse gate first, so a non-Administrator never reaches the service; the service
     // asserts it again for callers that are not this action.
     const actor = await requireStaffRole("ADMIN");
-    await inviteStaffUser(getDb(), actor, {
+    const member = await inviteStaffUser(getDb(), actor, {
       email: text(form, "email"),
       displayName: text(form, "displayName"),
       role: text(form, "role") as StaffRole,
       preferredLocale: toLocale(form.get("preferredLocale")),
     });
-    outcome = { saved: "invited" };
+    // The allowlist row exists; now the account and its invitation, where Zitadel is the
+    // provider and a key is set (§123). Locally the switcher is the provider: nothing to send.
+    const invite =
+      env.STAFF_AUTH_MODE === "provider"
+        ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
+        : ({ kind: "unconfigured" } as const);
+    outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
   } catch (error) {
     outcome = outcomeOf(error);
   }
 
+  backTo(path, outcome);
+}
+
+/** The invitation again, for somebody whose first one is lost (§123). */
+export async function resendStaffInviteAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/staff" });
+  let outcome: Record<string, string | undefined>;
+  try {
+    await requireStaffRole("ADMIN");
+    const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(text(form, "email")) : ({ kind: "unconfigured" } as const);
+    outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
   backTo(path, outcome);
 }
 

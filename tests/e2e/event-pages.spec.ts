@@ -37,6 +37,10 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
 
   test("gives every event link a tap target of at least 44 by 44 pixels", async ({ page }) => {
     await page.goto("/ro/evenimente");
+    // "Other events" folds on a phone once other specs have published a fifth event
+    // (`DECISIONS.md` §78); a link in a closed fold measures 0×0 and is not a tap target yet.
+    // Open every fold, so the links are measured as a reader would see them.
+    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
 
     // Criterion 6. The whole card is the link, so this should pass comfortably — the test
     // exists to catch a future redesign that shrinks it to a text link.

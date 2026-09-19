@@ -70,6 +70,26 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     expect(block.startDate).toBe("2026-01-15T08:00:00+02:00");
   });
 
+  it("names the co-host as a second organizer after the club, with its page (§121)", () => {
+    const block = parsed(sportsEventJsonLd(baseEvent({ coHostName: "Asociația X", coHostUrl: "https://example.org/x" }), URL, "Brașov Runners"));
+    expect(block.organizer).toEqual([
+      { "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" },
+      { "@type": "Organization", name: "Asociația X", url: "https://example.org/x" },
+    ]);
+  });
+
+  it("says a club event is free, with a zero offer at its own page, unless it is marked PAID (§121)", () => {
+    const free = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
+    expect(free.isAccessibleForFree).toBe(true);
+    expect(free.offers).toMatchObject({ "@type": "Offer", price: "0", priceCurrency: "RON", url: URL, availability: "https://schema.org/InStock" });
+    expect(free.offers.validFrom).toBe("2026-09-01T13:00:00+03:00");
+    const unstated = parsed(sportsEventJsonLd(baseEvent({ costType: null }), URL, "Brașov Runners"));
+    expect(unstated.isAccessibleForFree).toBe(true);
+    const paid = parsed(sportsEventJsonLd(baseEvent({ costType: "PAID" }), URL, "Brașov Runners"));
+    expect(paid.isAccessibleForFree).toBeUndefined();
+    expect(paid.offers).toBeUndefined();
+  });
+
   it("references the club @id as organizer", () => {
     const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(block.organizer["@id"]).toBe(clubId());

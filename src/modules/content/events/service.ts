@@ -1,11 +1,24 @@
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, gt, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
-import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import {
+  horizonEnd,
+  occurrencesBetween,
+  readRepeatRule,
+  type RepeatCadence,
+  type RepeatRule,
+  repeatRuleSchema,
+  untilEnd,
+  WEEKDAYS,
+  type Weekday,
+} from "@/modules/events/domain/repeat";
+import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
+import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
@@ -159,6 +172,8 @@ type ResolvedTimes = {
   raceStartsAt: Date | null;
   registrationOpensAt: Date | null;
   registrationClosesAt: Date | null;
+  /** The programme's rows with their instants, soonest first; empty for none (§117). */
+  scheduleItems: ScheduleItem[];
 };
 
 function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
@@ -189,6 +204,29 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   const registrationOpensAt = optional(fields.registrationOpensAtWallTime, "registrationOpensAt");
   const registrationClosesAt = optional(fields.registrationClosesAtWallTime, "registrationClosesAt");
 
+  /**
+   * The programme's rows (§117). A row left blank in every box is the editor's spare line and
+   * is dropped; anything else must say when, and what in both languages — the page shows the
+   * rows in either language, so a label in one is a row missing from the other. The end, when
+   * given, is a time on the same day, at or after the start.
+   */
+  const scheduleItems = fields.scheduleRows
+    .map((row, index) => {
+      const blank = !row.date && !row.time && !row.endTime && !row.ro && !row.en && !row.place;
+      if (blank) return null;
+      const name = `schedule[${index + 1}]`;
+      if (!row.date || !row.time) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`);
+      const startsAt = required(`${row.date}T${row.time}`, name);
+      const endsAt = row.endTime ? required(`${row.date}T${row.endTime}`, `${name}.end`) : null;
+      if (endsAt && endsAt.getTime() < startsAt.getTime()) {
+        throw new DomainError("VALIDATION_ERROR", `${name}: the end cannot be before the start`);
+      }
+      if (!row.ro || !row.en) throw new DomainError("VALIDATION_ERROR", `${name}: the label is needed in both languages`);
+      return { startsAt: startsAt.toISOString(), endsAt: endsAt ? endsAt.toISOString() : null, label: { ro: row.ro, en: row.en }, place: row.place || null };
+    })
+    .filter((item): item is ScheduleItem => item !== null)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
   if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
     throw new DomainError("VALIDATION_ERROR", "endsAt: the event cannot end before it begins");
   }
@@ -215,7 +253,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
     );
   }
 
-  return { startsAt, endsAt, raceStartsAt, registrationOpensAt, registrationClosesAt };
+  return { startsAt, endsAt, raceStartsAt, registrationOpensAt, registrationClosesAt, scheduleItems };
 }
 
 /**
@@ -275,10 +313,13 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     startsAt: times.startsAt,
     endsAt: times.endsAt,
     raceStartsAt: times.raceStartsAt,
+    scheduleItems: times.scheduleItems.length > 0 ? times.scheduleItems : null,
     mapUrl: fields.mapUrl,
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
     stravaEventUrl: fields.stravaEventUrl,
+    coHostName: fields.coHostName,
+    coHostUrl: fields.coHostName ? fields.coHostUrl : null,
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     difficulty: fields.difficulty,
@@ -296,6 +337,30 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     participantListVisibility: fields.participantListVisibility,
     externalProvider: fields.externalProvider,
     externalRegistrationUrl: fields.externalRegistrationUrl,
+  };
+}
+
+/**
+ * A group run takes no registrations (`DECISIONS.md` §111): whatever the form posted for the
+ * block it does not show — the fields stay in the document, hidden, so a run that was once a
+ * race still posts INTERNAL — the row is written as an event one simply turns up to. The same
+ * shape as the gun time on anything but a race (§71): ignored, not refused, because the
+ * organizer cannot see the field a refusal would name.
+ */
+function normalizeForType<T extends EventFieldsInput>(fields: T): T {
+  if (takesRegistrations(fields.type)) return fields;
+  return {
+    ...fields,
+    // No programme rows on a turn-up type either (§111, §117).
+    scheduleRows: [],
+    registrationMode: "NONE",
+    capacity: null,
+    declarationDocumentId: null,
+    registrationOpensAtWallTime: "",
+    registrationClosesAtWallTime: "",
+    participantListVisibility: "HIDDEN",
+    externalProvider: null,
+    externalRegistrationUrl: null,
   };
 }
 
@@ -358,6 +423,8 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     expectedVersion: number;
     fields: unknown;
     acknowledgeLiveEdit?: boolean;
+    /** The type the event has after this save — the form's, when the settings are saved too. */
+    eventType: EditableEvent["type"];
     now: Date;
   },
 ): Promise<EditableTranslation> {
@@ -403,7 +470,9 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
       excerptJson,
       bodyJson: body,
       rulesJson: hasRichTextContent(rules) ? rules : null,
-      scheduleJson: hasRichTextContent(schedule) ? schedule : null,
+      // A group run has no programme (§111): the editor hides the field, and this is what
+      // holds when the type changed in the same save or the hidden field still posted text.
+      scheduleJson: hasProgramme(input.eventType) && hasRichTextContent(schedule) ? schedule : null,
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -429,6 +498,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
     expectedVersion: input.expectedVersion,
     fields: input.fields,
     acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+    eventType: record.event.type,
     now,
   });
 }
@@ -575,7 +645,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
-  const fields = parseOrThrow(eventFieldsSchema, input.fields);
+  const fields = normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
   assertCoherentRegistrationBlock(fields);
   const times = resolveTimes(fields);
 
@@ -624,8 +694,177 @@ export type SaveEventAndTranslationsInput = {
   /** One entry per language the actor may edit; a read-only language posts nothing. */
   translations: ReadonlyArray<{ translationId: string; expectedVersion: number; fields: unknown }>;
   acknowledgeLiveEdit?: boolean;
+  /** Which dates of the series this save reaches (§130); "this" — the default — is the one event. */
+  scope?: SeriesEditScope;
   now?: Date;
 };
+
+/** As Google Calendar asks: this date, this and the following ones, or every date of the series. */
+export const SERIES_EDIT_SCOPES = ["this", "following", "all"] as const;
+export type SeriesEditScope = (typeof SERIES_EDIT_SCOPES)[number];
+
+/** The row's columns a series edit carries to its other dates — every one an organizer sets, minus the ones below. */
+const SERIES_COLUMNS = [
+  "type",
+  "surface",
+  "eventStatus",
+  "timezone",
+  "mapUrl",
+  "routeUrl",
+  "coHostName",
+  "coHostUrl",
+  "locationName",
+  "locationAddress",
+  "difficulty",
+  "costType",
+  "distanceMeters",
+  "elevationGainMeters",
+  "registrationMode",
+  "capacity",
+  "confirmationOpensDaysBefore",
+  "confirmationDeadlineDaysBefore",
+  "declarationDocumentId",
+  "participantListVisibility",
+  "externalProvider",
+  "externalRegistrationUrl",
+] as const;
+/** The instants: carried at the same wall-clock time on each date's own day. */
+const SERIES_TIME_COLUMNS = ["startsAt", "endsAt", "raceStartsAt", "registrationOpensAt", "registrationClosesAt"] as const;
+/** A translation's words; never the slug, which is a public address carrying its own date. */
+const SERIES_TRANSLATION_COLUMNS = [
+  "title",
+  "excerpt",
+  "excerptJson",
+  "bodyJson",
+  "rulesJson",
+  "scheduleJson",
+  "checklist",
+  "coverAltText",
+  "seoTitle",
+  "seoDescription",
+] as const;
+
+/** Equal as stored: dates by their instant, JSON by its text, null by null. */
+const sameValue = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+/** The calendar day of an instant on the wall clock of `zone`, as a UTC midnight, for counting days between two. */
+function wallDay(date: Date, zone: string): number {
+  const wall = toWallTimeInput(date, zone);
+  return Date.UTC(Number(wall.slice(0, 4)), Number(wall.slice(5, 7)) - 1, Number(wall.slice(8, 10)));
+}
+
+/**
+ * The series edit (`DECISIONS.md` §130): what this save *changed* on one date, applied to the
+ * other dates of its series — the following ones or all of them — the way Google Calendar's
+ * "this and following events" does. Only the difference travels: a date moved to another place
+ * on its own keeps that place unless the place is what was edited; a cancelled date stays
+ * cancelled unless the status is what was edited. An instant lands at the same wall-clock time
+ * on each date's own day (the run moved to 18:50 is at 18:50 every Wednesday), the programme's
+ * rows shifted by the same days as when the date was made; the featured flag, the rule, the
+ * publication state, a film and a Strava event are one date's own and never travel; a slug is
+ * a public address and never changes. Capacity is checked against each date's own places
+ * taken, and one date too full refuses the whole save, naming its day. Every touched row takes
+ * a new version, in the caller's transaction.
+ */
+async function applyToSeries<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  input: {
+    actor: Actor;
+    scope: SeriesEditScope;
+    before: EditableEvent;
+    after: EditableEvent;
+    translationsBefore: readonly EditableTranslation[];
+    translationsAfter: readonly EditableTranslation[];
+    now: Date;
+  },
+): Promise<number> {
+  const { before, after, now } = input;
+  const sourceId = before.repeatOf ?? (before.repeatRule ? before.id : null);
+  if (!sourceId) return 0;
+  if (!canEditEventFields(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit a series`);
+  }
+
+  const rowChanges: Partial<Record<(typeof SERIES_COLUMNS)[number], unknown>> = {};
+  for (const column of SERIES_COLUMNS) {
+    if (!sameValue(before[column], after[column])) rowChanges[column] = after[column];
+  }
+  const timeChanges = SERIES_TIME_COLUMNS.filter((column) => !sameValue(before[column], after[column]));
+  const scheduleChanged = !sameValue(before.scheduleItems, after.scheduleItems);
+  const translationChanges = input.translationsAfter.flatMap((saved) => {
+    const was = input.translationsBefore.find((row) => row.id === saved.id);
+    if (!was) return [];
+    const changes: Partial<Record<(typeof SERIES_TRANSLATION_COLUMNS)[number], unknown>> = {};
+    for (const column of SERIES_TRANSLATION_COLUMNS) {
+      if (!sameValue(was[column], saved[column])) changes[column] = saved[column];
+    }
+    return Object.keys(changes).length > 0 ? [{ locale: saved.locale, changes }] : [];
+  });
+  if (Object.keys(rowChanges).length === 0 && timeChanges.length === 0 && !scheduleChanged && translationChanges.length === 0) {
+    return 0;
+  }
+
+  // The series is the source and every date made from it; "following" is by the day this
+  // date had before the save, so moving it does not change which dates follow.
+  const members = await tx
+    .select()
+    .from(events)
+    .where(
+      and(
+        or(eq(events.id, sourceId), eq(events.repeatOf, sourceId)),
+        ne(events.id, before.id),
+        input.scope === "following" ? gt(events.startsAt, before.startsAt) : undefined,
+      ),
+    );
+
+  const zone = after.timezone;
+  let applied = 0;
+  for (const member of members) {
+    const days = Math.round((wallDay(member.startsAt, zone) - wallDay(before.startsAt, zone)) / 86_400_000);
+    const shift = (date: Date | null) => (date ? addWallClockInterval(date, zone, { days }) : null);
+    const changes: Partial<typeof events.$inferInsert> = { ...(rowChanges as Partial<typeof events.$inferInsert>) };
+    for (const column of timeChanges) {
+      if (column === "startsAt") changes.startsAt = addWallClockInterval(after.startsAt, zone, { days });
+      else changes[column] = shift(after[column]);
+    }
+    if (scheduleChanged) {
+      changes.scheduleItems = after.scheduleItems ? shiftScheduleItems(readScheduleItems(after.scheduleItems), zone, { days }) : null;
+    }
+
+    if (typeof changes.capacity === "number") {
+      const occupied = computeOccupied(await countOccupied(tx, member.id, now));
+      if (changes.capacity < occupied) {
+        throw new DomainError(
+          "VALIDATION_ERROR",
+          `capacity: ${occupied} places are already taken on ${toWallTimeInput(member.startsAt, zone).slice(0, 10)}; capacity cannot be lowered below that`,
+        );
+      }
+    }
+
+    let touched = false;
+    if (Object.keys(changes).length > 0) {
+      await tx
+        .update(events)
+        .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
+        .where(eq(events.id, member.id));
+      touched = true;
+    }
+    if (translationChanges.length > 0) {
+      const memberTranslations = await listTranslationsForEvent(tx, member.id);
+      for (const { locale, changes: words } of translationChanges) {
+        const target = memberTranslations.find((row) => row.locale === locale);
+        if (!target) continue;
+        await tx
+          .update(eventTranslations)
+          .set({ ...(words as Partial<typeof eventTranslations.$inferInsert>), version: sql`${eventTranslations.version} + 1`, updatedAt: now })
+          .where(eq(eventTranslations.id, target.id));
+        touched = true;
+      }
+    }
+    if (touched) applied += 1;
+  }
+  return applied;
+}
 
 /**
  * The editor's single save: the event row and every language, in one transaction
@@ -646,7 +885,7 @@ export type SaveEventAndTranslationsInput = {
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: SaveEventAndTranslationsInput,
-): Promise<void> {
+): Promise<{ appliedTo: number }> {
   const now = input.now ?? new Date();
 
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
@@ -657,7 +896,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // Parsed and checked before the transaction opens, so a malformed form never holds a row lock
   // while the organizer's browser is told what is wrong with it.
   const parsedEventFields =
-    input.fields === undefined ? undefined : parseOrThrow(eventFieldsSchema, input.fields);
+    input.fields === undefined ? undefined : normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
   if (parsedEventFields) {
     if (!canEditEventFields(input.actor.role)) {
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
@@ -666,7 +905,9 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
 
-  await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
+    let savedEvent: EditableEvent = current;
+    const savedTranslations: EditableTranslation[] = [];
     if (parsedEventFields && times) {
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -685,7 +926,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
 
       if (parsedEventFields.featured) await clearFeaturedExcept(tx, input.eventId, now);
 
-      await updateEventWithVersionGuard(
+      savedEvent = await updateEventWithVersionGuard(
         tx,
         input.eventId,
         input.expectedVersion as number,
@@ -698,16 +939,36 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       const existing = existingTranslations.find((row) => row.id === submitted.translationId);
       if (!existing) throw new DomainError("NOT_FOUND", "no such event translation");
 
-      await applyTranslationSave(tx, {
-        actor: input.actor,
-        event: current,
-        current: existing,
-        expectedVersion: submitted.expectedVersion,
-        fields: submitted.fields,
-        acknowledgeLiveEdit: input.acknowledgeLiveEdit,
-        now,
-      });
+      savedTranslations.push(
+        await applyTranslationSave(tx, {
+          actor: input.actor,
+          event: current,
+          current: existing,
+          expectedVersion: submitted.expectedVersion,
+          fields: submitted.fields,
+          acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+          eventType: parsedEventFields?.type ?? current.type,
+          now,
+        }),
+      );
     }
+
+    // The other dates of the series, when asked (§130) — after this one, so what travels is
+    // exactly what was written, and inside the transaction, so a refused date undoes it all.
+    const scope = input.scope ?? "this";
+    const appliedTo =
+      scope === "this"
+        ? 0
+        : await applyToSeries(tx, {
+            actor: input.actor,
+            scope,
+            before: current,
+            after: savedEvent,
+            translationsBefore: existingTranslations,
+            translationsAfter: savedTranslations,
+            now,
+          });
+    return { appliedTo };
   });
 }
 
@@ -734,7 +995,7 @@ export async function createEvent<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not create an event`);
   }
 
-  const parsed = parseOrThrow(newEventSchema, input.fields);
+  const parsed = normalizeForType(parseOrThrow(newEventSchema, input.fields));
   assertCoherentRegistrationBlock(parsed);
   const times = resolveTimes(parsed);
 
@@ -838,13 +1099,21 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     startsAt: source.startsAt,
     endsAt: source.endsAt,
     raceStartsAt: source.raceStartsAt,
+    // The programme's rows travel with a copy at the source's dates; a repeat shifts them.
+    scheduleItems: source.scheduleItems,
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
     // Not carried: a film is of one edition, and last year's would be wrong on next year's;
-    // a Strava group event is one occurrence's page.
+    // a Strava group event is one occurrence's page. The co-host is: a series held with a
+    // partner is held with them every time.
     videoUrl: null,
     stravaEventUrl: null,
+    coHostName: source.coHostName,
+    coHostUrl: source.coHostUrl,
+    // Never the rule: a copy is one date, and only the source repeats (§122).
+    repeatRule: null,
+    repeatOf: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
     difficulty: source.difficulty,
@@ -898,62 +1167,27 @@ function copiedTranslationValues(
   };
 }
 
-/** How often a repeated event recurs. Three cadences, because three is what the club runs. */
-export const REPEAT_CADENCES = ["WEEKLY", "FORTNIGHTLY", "MONTHLY"] as const;
-export type RepeatCadence = (typeof REPEAT_CADENCES)[number];
-
-const CADENCE_INTERVAL: Record<RepeatCadence, { days?: number; months?: number }> = {
-  WEEKLY: { days: 7 },
-  FORTNIGHTLY: { days: 14 },
-  MONTHLY: { months: 1 },
-};
-
-/** At most a year of weekly copies in one go; a longer series is a second press. */
-export const REPEAT_MAX_COUNT = 52;
-/** Two a week for a year, with weekdays; a bigger series is a second press. */
-export const REPEAT_MAX_OCCURRENCES = 104;
-/** ISO weekdays, 1 = Monday … 7 = Sunday. */
-export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
-export type Weekday = (typeof WEEKDAYS)[number];
-
 export type RepeatEventInput = {
   actor: Actor;
   eventId: string;
-  cadence: RepeatCadence;
-  /**
-   * How many further occurrences to create after the source — or, with `weekdays`, how many
-   * weeks (fortnights) the series covers, the source's own week included.
-   */
-  count: number;
-  /**
-   * "Every Monday and Wednesday" (2026-09-18, `DECISIONS.md` §64): the days of the week the
-   * event happens on, ISO numbered. With WEEKLY or FORTNIGHTLY only; MONTHLY ignores it. The
-   * source's own day need not be in the set — a Sunday run "every Monday and Wednesday" starts
-   * the Monday after. Empty or absent means the source's own weekday, as before.
-   */
-  weekdays?: readonly Weekday[];
-  /** Publish the copies as they are made. Only honoured when the source is itself published. */
-  publish: boolean;
+  /** How it recurs, until when (null: for ever), and whether the occurrences go live as they are made. */
+  rule: { cadence: RepeatCadence; weekdays?: readonly Weekday[]; until: string | null; publish: boolean };
   now?: Date;
 };
 
 /**
- * The same event again, every week, fortnight or month — the weekly run, made once.
+ * The same event again, every week, fortnight or month — a standing series (`DECISIONS.md`
+ * §64, §122): "every Monday and Wednesday, until 20 December, or for ever".
  *
- * Each copy is the source shifted on the wall clock in its own zone (`addWallClockInterval`),
- * and everything that has a time moves with it — the end, the gun time, the registration
- * window — so the relationships the organizer set hold on every occurrence. The slug carries
- * the date (`alergare-de-duminica-2026-10-04`) rather than a `-2`, `-3` suffix: a URL that
- * says which Sunday it is, in both languages, and never collides with next year's series.
+ * The rule is written on the source, and the next eight weeks of occurrences are created at
+ * once; from then on the maintenance job creates each week as it comes into the horizon
+ * (`materializeStandingRepeats`). Each occurrence is the source shifted on the wall clock in
+ * its own zone (`addWallClockInterval`), everything with a time moving with it, the slug
+ * carrying the date (`alergare-de-duminica-2026-10-04`), and names the source in `repeat_of`.
  *
- * Copies are drafts unless `publish` is asked for **and** the source is published: a published
- * source is one whose both languages are complete (`transitionEvent` asserted that), so its
- * copies can go live without re-checking; a draft source cannot be, and the flag is ignored
- * rather than refused so a form with the box ticked still does something useful. Publishing
- * copies needs the role that publishes (`AGENTS.md` §10.2), like any other publication.
- *
- * One transaction: all the occurrences or none, so a collision on the ninth slug does not
- * leave eight events behind for somebody to find later.
+ * Occurrences are drafts unless `publish` is asked for **and** the source is published: a
+ * published source has both languages complete (`transitionEvent` asserted that), so its copies
+ * can go live without re-checking. Asking to publish needs the role that publishes.
  */
 export async function repeatEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -964,116 +1198,164 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not repeat an event`);
   }
-  if (!Number.isInteger(input.count) || input.count < 1 || input.count > REPEAT_MAX_COUNT) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `count: repeat an event between 1 and ${REPEAT_MAX_COUNT} times in one go`,
-    );
-  }
 
   const [source] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!source) throw new DomainError("NOT_FOUND", "no such event");
-  const sourceTranslations = await listTranslationsForEvent(db, input.eventId);
+  if (source.repeatOf) {
+    throw new DomainError("VALIDATION_ERROR", "this date is part of a series already; the series repeats from its first event");
+  }
 
-  const publish = input.publish && source.editorialStatus === "PUBLISHED";
+  if ((input.rule.weekdays ?? []).some((day) => !WEEKDAYS.includes(day))) {
+    throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)");
+  }
+  // The event's own day is always in the series (§128): a Sunday run with "Wednesday" ticked
+  // runs on Sundays and Wednesdays — the source is the first date, not a one-off before them.
+  const ownWeekday = wallClockWeekday(source.startsAt, source.timezone) as Weekday;
+  const weekdays =
+    input.rule.cadence === "MONTHLY" || (input.rule.weekdays ?? []).length === 0
+      ? []
+      : [...new Set([...(input.rule.weekdays ?? []), ownWeekday])].sort((a, b) => a - b);
+  const publish = input.rule.publish && source.editorialStatus === "PUBLISHED";
   if (publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
-
-  const interval = CADENCE_INTERVAL[input.cadence];
-  const weekdays = input.cadence === "MONTHLY" ? [] : [...new Set(input.weekdays ?? [])].sort();
-  if (weekdays.some((day) => !WEEKDAYS.includes(day))) {
-    throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)");
+  const rule = repeatRuleSchema.safeParse({ cadence: input.rule.cadence, weekdays, until: input.rule.until, publish });
+  if (!rule.success) throw new DomainError("VALIDATION_ERROR", "until: a date, or nothing for a series without an end");
+  const end = untilEnd(rule.data, source.timezone);
+  if (end && end.getTime() <= source.startsAt.getTime()) {
+    throw new DomainError("VALIDATION_ERROR", "until: the end must be after this event");
   }
 
-  /**
-   * How far each occurrence sits from the source, on the calendar. Without weekdays: one
-   * interval per occurrence, as before. With them: for each week the series covers, each
-   * chosen day at its offset from the source's own day — skipping anything on or before the
-   * source, so the source is never duplicated and a series never runs backwards.
-   */
-  const sourceWeekday = wallClockWeekday(source.startsAt, source.timezone);
-  const steps: Array<{ days?: number; months?: number }> =
-    weekdays.length === 0
-      ? Array.from({ length: input.count }, (_, index) => ({
-          days: (interval.days ?? 0) * (index + 1),
-          months: (interval.months ?? 0) * (index + 1),
-        }))
-      : Array.from({ length: input.count }, (_, week) =>
-          weekdays.map((day) => ({ days: day - sourceWeekday + (interval.days ?? 7) * week })),
-        )
-          .flat()
-          .filter((step) => (step.days ?? 0) > 0);
-  if (steps.length === 0) {
-    throw new DomainError("VALIDATION_ERROR", "the chosen days give no occurrence after this event");
-  }
-  if (steps.length > REPEAT_MAX_OCCURRENCES) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `that is ${steps.length} occurrences; at most ${REPEAT_MAX_OCCURRENCES} in one go`,
-    );
-  }
-  const shift = (date: Date | null, step: { days?: number; months?: number }) =>
-    date === null ? null : addWallClockInterval(date, source.timezone, step);
+  await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));
+  const created = await materializeSeries(db, { ...source, repeatRule: rule.data }, rule.data, input.actor, now);
+  return { created, published: publish };
+}
 
-  // The slugs, all of them, checked before anything is written: the date suffix is what
-  // makes them distinct, and a series already made once collides on every one of them.
-  const occurrences = steps.map((step) => {
-    const startsAt = shift(source.startsAt, step) as Date;
-    const dateSuffix = startsAt.toISOString().slice(0, 10);
-    return {
-      step,
-      startsAt,
-      slugs: new Map(
-        sourceTranslations.map((translation) => [
-          translation.id,
-          `${translation.slug.replace(/-\d{4}-\d{2}-\d{2}$/, "")}-${dateSuffix}`,
-        ]),
-      ),
-    };
-  });
+/**
+ * The occurrences a source's rule still owes inside the horizon — from the latest one that
+ * exists (or the source itself) up to `horizonEnd` — created in one transaction. Idempotent:
+ * every occurrence is a whole number of periods from the source, and a date whose address
+ * already exists is skipped, never duplicated. Two indexed reads and usually no write, which
+ * is what lets the job run it every quarter hour.
+ */
+async function materializeSeries<T extends Record<string, unknown>>(
+  db: Database<T>,
+  source: EventRow,
+  rule: RepeatRule,
+  actor: Actor | null,
+  now: Date,
+): Promise<number> {
+  const [latest] = await db
+    .select({ startsAt: sql<Date | null>`max(${events.startsAt})` })
+    .from(events)
+    .where(eq(events.repeatOf, source.id));
+  const after = latest?.startsAt ? new Date(Math.max(new Date(latest.startsAt).getTime(), source.startsAt.getTime())) : source.startsAt;
+  const before = horizonEnd(rule, source.timezone, now);
+  const dates = occurrencesBetween(source, rule, after, before);
+  if (dates.length === 0) return 0;
+
+  const sourceTranslations = await listTranslationsForEvent(db, source.id);
+  const publish = rule.publish && source.editorialStatus === "PUBLISHED";
+
+  // The slugs, all of them, checked before anything is written; a taken address means that
+  // date exists — made by hand, or by a series stopped and started again — and is skipped.
+  const occurrences = dates.map((startsAt) => ({
+    startsAt,
+    step: { days: Math.round((startsAt.getTime() - source.startsAt.getTime()) / 86_400_000) },
+    slugs: new Map(
+      sourceTranslations.map((translation) => [
+        translation.id,
+        `${translation.slug.replace(/-\d{4}-\d{2}-\d{2}$/, "")}-${startsAt.toISOString().slice(0, 10)}`,
+      ]),
+    ),
+  }));
+  const taken = new Set<string>();
   for (const translation of sourceTranslations) {
     const wanted = occurrences.map((occurrence) => occurrence.slugs.get(translation.id) as string);
-    const taken = await findTakenSlugs(db, translation.locale, wanted);
-    const collision = wanted.find((slug) => taken.has(slug));
-    if (collision) {
-      throw new DomainError(
-        "CONFLICT",
-        `an event already has the address "${collision}" in ${translation.locale}; this series exists`,
-      );
-    }
+    for (const slug of await findTakenSlugs(db, translation.locale, wanted)) taken.add(`${translation.locale}:${slug}`);
   }
+  const fresh = occurrences.filter(
+    (occurrence) => !sourceTranslations.some((translation) => taken.has(`${translation.locale}:${occurrence.slugs.get(translation.id)}`)),
+  );
+  if (fresh.length === 0) return 0;
+
+  // The shift is on the wall clock: the same interval the start moved by, applied to every
+  // other time the source carries (§64), so an occurrence four weeks on keeps its 08:00 across
+  // the clock change even though the instants differ by 27 days and 23 hours.
+  const shift = (date: Date | null, occurrence: (typeof fresh)[number]) => {
+    if (date === null) return null;
+    const wallDays = occurrence.step.days;
+    return addWallClockInterval(date, source.timezone, { days: wallDays });
+  };
+  const by = actor?.id ?? source.createdByStaffUserId;
 
   await db.transaction(async (tx) => {
-    for (const occurrence of occurrences) {
+    for (const occurrence of fresh) {
       const [copy] = await tx
         .insert(events)
         .values({
-          ...copiedEventValues(source, input.actor, now),
+          ...copiedEventValues(source, { id: by ?? source.updatedByStaffUserId ?? "", role: "MODERATOR" }, now),
+          createdByStaffUserId: by,
+          updatedByStaffUserId: by,
+          repeatOf: source.id,
           startsAt: occurrence.startsAt,
-          endsAt: shift(source.endsAt, occurrence.step),
-          raceStartsAt: shift(source.raceStartsAt, occurrence.step),
-          registrationOpensAt: shift(source.registrationOpensAt, occurrence.step),
-          registrationClosesAt: shift(source.registrationClosesAt, occurrence.step),
+          endsAt: shift(source.endsAt, occurrence),
+          raceStartsAt: shift(source.raceStartsAt, occurrence),
+          scheduleItems: source.scheduleItems
+            ? shiftScheduleItems(readScheduleItems(source.scheduleItems), source.timezone, { days: occurrence.step.days })
+            : null,
+          registrationOpensAt: shift(source.registrationOpensAt, occurrence),
+          registrationClosesAt: shift(source.registrationClosesAt, occurrence),
           ...(publish ? { editorialStatus: "PUBLISHED" as const, publishedAt: now } : {}),
         })
         .returning();
 
       await tx.insert(eventTranslations).values(
-        sourceTranslations.map((translation) =>
-          copiedTranslationValues(
-            translation,
-            copy.id,
-            occurrence.slugs.get(translation.id) as string,
-            input.actor,
-            now,
-          ),
-        ),
+        sourceTranslations.map((translation) => ({
+          ...copiedTranslationValues(translation, copy.id, occurrence.slugs.get(translation.id) as string, { id: by ?? "", role: "MODERATOR" }, now),
+          authorStaffUserId: by,
+        })),
       );
     }
   });
 
-  return { created: occurrences.length, published: publish };
+  return fresh.length;
+}
+
+/**
+ * Every standing series, brought up to the horizon (§122). Run by the maintenance job: one
+ * indexed read for the sources with a rule, then `materializeSeries` per source — which on
+ * most runs reads twice and writes nothing. A source whose rule is past its end keeps the rule
+ * (the editor shows it as ended) and creates nothing.
+ */
+export async function materializeStandingRepeats<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<{ sources: number; created: number }> {
+  const sources = await db.select().from(events).where(sql`${events.repeatRule} IS NOT NULL`);
+  let created = 0;
+  for (const source of sources) {
+    const rule = readRepeatRule(source.repeatRule);
+    if (!rule) continue;
+    created += await materializeSeries(db, source, rule, null, now);
+  }
+  return { sources: sources.length, created };
+}
+
+/** Stop a series: no further occurrences are made; the ones that exist stay (the bulk verbs remove them). */
+export async function stopRepeat<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; eventId: string; now?: Date },
+): Promise<void> {
+  if (!canCreateEvent(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
+  }
+  const [source] = await db.select({ id: events.id }).from(events).where(eq(events.id, input.eventId)).limit(1);
+  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  await db
+    .update(events)
+    .set({ repeatRule: null, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
+    .where(eq(events.id, input.eventId));
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */

@@ -302,6 +302,20 @@
       "when": 1789793010235,
       "tag": "0042_registration_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1789803664383,
+      "tag": "0043_event_schedule_items",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1789807382003,
+      "tag": "0044_event_types_cohost_repeat",
+      "breakpoints": true
     }
   ]
 }

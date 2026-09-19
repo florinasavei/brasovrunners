@@ -22,8 +22,35 @@ describe("the calendar file", () => {
     expect(icalUtc(event.startsAt)).toBe("20261011T060000Z");
     expect(icalText("a, b; c\\ d\nnew")).toBe("a\\, b\\; c\\\\ d\\nnew");
     const folded = icalFold("X".repeat(150));
-    for (const line of folded.split("\r\n")) expect(line.length).toBeLessThanOrEqual(71);
-    expect(folded.split("\r\n")[1].startsWith(" ")).toBe(true);
+    for (const line of folded.split("\r\n")) expect(line.length).toBeLessThanOrEqual(75);
+    expect(folded.split("\r\n")).toEqual([`X`.repeat(75), ` ${"X".repeat(74)}`, ` X`]);
+  });
+
+  it("folds by octets and never splits a character — emoji in a title (§129)", () => {
+    // 73 ASCII octets, then a four-octet runner: the runner goes whole to the next line.
+    const folded = icalFold(`${"a".repeat(73)}🏃 și`);
+    const lines = folded.split("\r\n");
+    expect(lines).toEqual([`${"a".repeat(73)}`, " 🏃 și"]);
+    for (const line of lines) expect(Buffer.byteLength(line, "utf8")).toBeLessThanOrEqual(75);
+    expect(folded.replace(/\r\n /g, "")).toBe(`${"a".repeat(73)}🏃 și`);
+    // No lone surrogate anywhere, whatever the boundary.
+    for (let n = 60; n < 80; n += 1) {
+      expect(icalFold(`${"a".repeat(n)}🏃🏃🏃`)).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
+    }
+  });
+
+  it("makes the map link the place and keeps the meeting point's name in the description (§129)", () => {
+    const mapUrl = "https://maps.app.goo.gl/abc123";
+    const ics = buildCalendar({ events: [{ ...event, mapUrl }], baseUrl: "https://example.test", name: "🏃 BVR", labels: { programme: "Program" } });
+    const unfolded = ics.replace(/\r\n /g, "");
+    expect(unfolded).toContain("X-WR-CALNAME:🏃 BVR");
+    expect(unfolded).toContain("REFRESH-INTERVAL;VALUE=DURATION:PT1H");
+    expect(unfolded).toContain(`LOCATION:${mapUrl}`);
+    expect(unfolded).not.toContain("LOCATION:Parcul");
+    expect(unfolded).toContain("DESCRIPTION:📍 Parcul Tractorul\\, intrarea principală\\n\\nCursa clubului.");
+    const url = new URL(googleCalendarUrl({ ...event, mapUrl }));
+    expect(url.searchParams.get("location")).toBe(mapUrl);
+    expect(url.searchParams.get("details")).toContain("📍 Parcul Tractorul, intrarea principală");
   });
 
   it("is a VCALENDAR with one VEVENT per event, the programme in the description and the page as URL", () => {
@@ -51,6 +78,28 @@ describe("the calendar file", () => {
     const ics = buildCalendar({ events: [{ ...event, endsAt: null, locationName: null }], baseUrl: "https://example.test", name: "x", labels: { programme: "Program" } });
     expect(ics).toContain("DTEND:20261011T060000Z");
     expect(ics).not.toContain("LOCATION:");
+  });
+
+  it("adds one VEVENT per programme row, at the row's time and place, under the event's UID (§117)", () => {
+    const programme = [
+      { startsAt: new Date("2026-10-10T13:00:00.000Z"), endsAt: new Date("2026-10-10T16:00:00.000Z"), label: "Kit pickup", place: "Start tent" },
+      { startsAt: new Date("2026-10-11T05:30:00.000Z"), endsAt: null, label: "Briefing", place: null },
+    ];
+    const ics = buildCalendar({
+      events: [{ ...event, programme, timezone: "Europe/Bucharest" }],
+      baseUrl: "https://example.test",
+      name: "x",
+      labels: { programme: "Programme", locale: "en" },
+    });
+    const unfolded = ics.replace(/\r\n /g, "");
+    expect(unfolded.match(/BEGIN:VEVENT/g)).toHaveLength(3);
+    expect(unfolded).toContain("UID:11111111-1111-1111-1111-111111111111-1@example.test");
+    expect(unfolded).toContain("DTSTART:20261010T130000Z\r\nDTEND:20261010T160000Z\r\nSUMMARY:Crosul aniversar\\; ediția a 3-a\\, Brașov — Kit pickup");
+    expect(unfolded).toContain("LOCATION:Start tent");
+    // The briefing has no place of its own, so it is at the event's.
+    expect(unfolded).toContain("SUMMARY:Crosul aniversar\\; ediția a 3-a\\, Brașov — Briefing\r\nDESCRIPTION:https://example.test/ro/evenimente/crosul-aniversar\r\nURL:https://example.test/ro/evenimente/crosul-aniversar\r\nLOCATION:Parcul Tractorul\\, intrarea principală");
+    // The event's own description lists the rows before the text, with the day since they span two.
+    expect(unfolded).toContain("Programme:\\nSat 10 Oct 16:00–19:00 — Kit pickup (Start tent)\\nSun 11 Oct 08:30 — Briefing\\n07:00 ridicarea numerelor\\, 09:00 start");
   });
 
   it("builds Google's add-event address and the webcal scheme", () => {

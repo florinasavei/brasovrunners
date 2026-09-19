@@ -49,7 +49,7 @@ export default async function EmailPlanPanel({ locale, plan, volume }: Props) {
       {plan.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
           {t("emails.plan.updatedAt", {
-            when: new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Bucharest" }).format(plan.updatedAt),
+            when: new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "medium", timeStyle: "short", hourCycle: "h23", timeZone: "Europe/Bucharest" }).format(plan.updatedAt),
             note: plan.note || "—",
           })}
         </Typography>

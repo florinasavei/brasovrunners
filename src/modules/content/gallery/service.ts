@@ -229,6 +229,7 @@ export async function addPhoto<T extends Record<string, unknown>>(
         byteSize: processed.web.byteLength,
         createdByStaffUserId: input.actor.id,
         createdAt: now,
+        lastReferencedAt: now,
       })
       .returning();
 

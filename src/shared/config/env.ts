@@ -66,6 +66,13 @@ export const envSchema = z
     AUTH_ZITADEL_ID: z.string().min(1).optional(),
     AUTH_ZITADEL_SECRET: z.string().min(1).optional(),
     AUTH_ZITADEL_ISSUER: z.url().optional(),
+    /**
+     * A Zitadel service user's personal access token with `user.write` on the organization
+     * (`SETUP.md` §37): with it, adding a colleague on Echipa creates their Zitadel account and
+     * Zitadel emails the invitation (`DECISIONS.md` §123). Without it the row is still added
+     * and the page says to create the account in the console.
+     */
+    ZITADEL_MANAGEMENT_PAT: z.string().min(1).optional(),
 
     // Verifies job-endpoint callers (AGENTS.md §16.2) — a scheduler, not a staff session.
     JOB_SECRET: z.string().min(1).optional(),
@@ -174,6 +181,15 @@ export const envSchema = z
      * Setting this to a mailbox the club actually reads is the whole of "people can reply".
      */
     EMAIL_REPLY_TO: z.email().optional(),
+    /**
+     * The club's legal identity, written into the legal templates before the club reads them
+     * (`DECISIONS.md` §132). Environment and not source, for the reason the club's domain is
+     * kept out of `src/` (§8): the repository is public, and a registered seat is somebody's
+     * address. The values live on the Vercel projects and in `.env.local`.
+     */
+    CLUB_LEGAL_NAME: z.string().trim().min(1).max(200).optional(),
+    CLUB_REGISTRATION_NUMBER: z.string().trim().min(1).max(60).optional(),
+    CLUB_REGISTERED_ADDRESS: z.string().trim().min(1).max(300).optional(),
     /**
      * The club's archive mailbox for signed declarations (`DECISIONS.md` §99). Set, every
      * signature — electronic or on paper at the desk — also queues `DECLARATION_ARCHIVE` to

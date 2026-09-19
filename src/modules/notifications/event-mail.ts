@@ -113,6 +113,10 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
         eq(events.registrationMode, "INTERNAL"),
         gt(events.startsAt, now),
         lte(events.startsAt, horizon),
+        // Not to somebody confirmed in the last day (§126): the confirmation they just got
+        // carries the same facts, the QR and the number; a second copy is the mail people
+        // learn to ignore. Never confirmed on the row (older rows) counts as long ago.
+        sql`(${registrations.confirmedAt} IS NULL OR ${registrations.confirmedAt} < ${new Date(now.getTime() - 24 * 60 * 60_000)})`,
       ),
     );
   if (rows.length === 0) return 0;

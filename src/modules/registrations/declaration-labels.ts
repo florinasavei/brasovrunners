@@ -46,7 +46,7 @@ export function declarationWords(locale: Locale, now: Date): DeclarationLabels {
   const words = WORDS[locale];
   const generated = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
     dateStyle: "long",
-    timeStyle: "short",
+    timeStyle: "short", hourCycle: "h23",
     timeZone: "Europe/Bucharest",
   }).format(now);
   return {

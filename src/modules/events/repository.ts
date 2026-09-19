@@ -40,6 +40,9 @@ const PUBLIC_COLUMNS = {
   videoUrl: events.videoUrl,
   // The club's Strava group event for this occurrence (criterion 10).
   stravaEventUrl: events.stravaEventUrl,
+  // The other organization the event is held with, when there is one (§121).
+  coHostName: events.coHostName,
+  coHostUrl: events.coHostUrl,
   featured: events.featured,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
@@ -67,6 +70,8 @@ const PUBLIC_COLUMNS = {
   bodyJson: eventTranslations.bodyJson,
   rulesJson: eventTranslations.rulesJson,
   scheduleJson: eventTranslations.scheduleJson,
+  // The programme's rows (§117), the event's own; read through `readScheduleItems`.
+  scheduleItems: events.scheduleItems,
   /** When the event row last changed — the calendar feed's `DTSTAMP` (§107). */
   updatedAt: events.updatedAt,
   seoTitle: eventTranslations.seoTitle,
@@ -244,7 +249,9 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       slug: eventTranslations.slug,
       // Whether the page has rules to link to (§96).
       hasRules: sql<boolean>`${eventTranslations.rulesJson} IS NOT NULL`,
-      hasSchedule: sql<boolean>`${eventTranslations.scheduleJson} IS NOT NULL`,
+      hasSchedule: sql<boolean>`${eventTranslations.scheduleJson} IS NOT NULL OR ${events.scheduleItems} IS NOT NULL`,
+      // The rows themselves, for the reminder (§117).
+      scheduleItems: events.scheduleItems,
       // "What to bring", the translation's line (§81); the map and the Strava event are the
       // event's own.
       checklist: eventTranslations.checklist,

@@ -4,27 +4,32 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { REPEAT_CADENCES, REPEAT_MAX_COUNT, WEEKDAYS } from "../service";
+import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
 
 /**
- * How an event repeats (BR-REQ-050-02 criterion 7): the cadence, the days of the week, how
- * many weeks. On the creation form with a "does not repeat" default — the owner looked for
- * recurrence there first ("every Monday and every Wednesday") — and on the event page, where
- * the same fields make a further series from an existing event.
+ * How an event repeats (BR-REQ-050-02 criterion 7, §122): the cadence, the days of the week,
+ * and until when — a date, or nothing for a series without an end, which the maintenance job
+ * keeps eight weeks ahead. On the creation form with a "does not repeat" default — the owner
+ * looked for recurrence there first ("every Monday and every Wednesday") — and on the event
+ * page, where the same fields make a standing series from an existing event.
  *
  * `prefix` namespaces the fields (`repeat.cadence` on the creation form, bare on the event
  * page, which posts its own form). The weekday boxes post `weekday=1..7`, ISO numbered; none
- * ticked means the event's own day, as before.
+ * ticked means the event's own day, as before. The event's own day is always in the series
+ * (§128): on the event page, where it is known, its box is ticked and locked and a hidden
+ * input posts it (a disabled input posts nothing); on the creation form the date is not
+ * typed yet, and the service adds the day itself.
  */
 export default async function RepeatFields({
   prefix = "",
   withNone = false,
-  defaultCount = 4,
+  ownWeekday,
 }: {
   prefix?: string;
   /** Offer "does not repeat" as the default, for the creation form. */
   withNone?: boolean;
-  defaultCount?: number;
+  /** The event's own ISO weekday, when the event exists: ticked and locked. */
+  ownWeekday?: number;
 }) {
   const t = await getTranslations("Admin");
   const name = (field: string) => `${prefix}${field}`;
@@ -49,22 +54,29 @@ export default async function RepeatFields({
           ))}
         </TextField>
         <TextField
-          name={name("count")}
-          type="number"
-          label={t("editor.repeatWeeks")}
-          defaultValue={defaultCount}
+          name={name("until")}
+          type="date"
+          label={t("editor.repeatUntil")}
+          helperText={t("editor.repeatUntilHelp")}
           size="small"
-          slotProps={{ htmlInput: { min: 1, max: REPEAT_MAX_COUNT } }}
-          sx={{ width: 160 }}
+          slotProps={{ inputLabel: { shrink: true } }}
+          sx={{ width: 220 }}
         />
       </Stack>
       <Box>
         <Typography variant="body2" sx={{ mb: 0.5 }}>
           {t("editor.repeatWeekdays")}
         </Typography>
+        {ownWeekday !== undefined && <input type="hidden" name="weekday" value={String(ownWeekday)} />}
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 1 }}>
           {WEEKDAYS.map((day) => (
-            <CheckboxField key={day} name="weekday" value={String(day)}>
+            <CheckboxField
+              key={day}
+              name="weekday"
+              value={String(day)}
+              defaultChecked={day === ownWeekday}
+              disabled={day === ownWeekday}
+            >
               {t(`editor.weekdays.${day}`)}
             </CheckboxField>
           ))}

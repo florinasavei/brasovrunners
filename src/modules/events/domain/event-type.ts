@@ -9,9 +9,13 @@
  * Two lists rather than the one seven-value `EVENT_KINDS` this file used to hold: what an event
  * *is* and what it is *run on* are separate questions, and one chip could not answer both
  * (`DECISIONS.md` §61). A hike and a coffee are their own types because the club holds both
- * regularly; a special meetup — a shoe-testing evening — is `MEETUP` with the theme in the title.
+ * regularly; `GEAR_TEST` is the shoe-testing evening (§121), and `MEETUP` — the value keeps its
+ * name — is labelled "special event": the one-off the club does with a partner or for an
+ * occasion (the owner: "meetup is a bit vague, and I need a special event type"); `EXTERNAL`
+ * is somebody else's event the club goes to together — another city's race, say — where the
+ * organizer's own page takes the entries (`registration_mode = EXTERNAL`).
  */
-export const EVENT_TYPES = ["GROUP_RUN", "RACE", "HIKE", "COFFEE", "MEETUP"] as const;
+export const EVENT_TYPES = ["GROUP_RUN", "RACE", "HIKE", "COFFEE", "GEAR_TEST", "MEETUP", "EXTERNAL"] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
 
@@ -51,4 +55,26 @@ export function isStravaLink(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * The types that are simply turned up to — no registration, no participants, no programme.
+ *
+ * The owner, 2026-09-19: "group runs don't have registrations or participants, and they don't
+ * have an event schedule; races are the most complex ones" (`DECISIONS.md` §111). The editor
+ * offers neither block for one of these, a save through it writes `registration_mode = NONE`
+ * and no programme whatever the form posted, and the public page says "no registration
+ * needed". One list, so the day a hike needs a bus and a capacity it leaves this list and
+ * nothing else changes. A hike, a coffee and a meetup keep both until the club says otherwise.
+ */
+const TURN_UP_TYPES: readonly EventType[] = ["GROUP_RUN"];
+
+/** Whether the editor offers the registration block — capacity, the window, the declaration, the list. */
+export function takesRegistrations(type: EventType): boolean {
+  return !TURN_UP_TYPES.includes(type);
+}
+
+/** Whether the editor offers a programme — the timed rows and the text under `#schedule`. */
+export function hasProgramme(type: EventType): boolean {
+  return !TURN_UP_TYPES.includes(type);
 }

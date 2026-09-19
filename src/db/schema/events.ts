@@ -13,6 +13,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
@@ -29,10 +30,13 @@ import { staffUsers } from "./staff-users";
  * both. Migration `0023` split it (`DECISIONS.md` §61): this enum answers what the event is,
  * `event_surface` below answers what you run on, and the pace or the session shape is the
  * title's job. HIKE and COFFEE are the two things this club does on foot and at a table that are
- * not runs, by the owner's word on 2026-09-17; MEETUP is what is left — a shoe-testing evening
- * is a MEETUP whose title says so. A sixth value is a migration, not free text.
+ * not runs, by the owner's word on 2026-09-17. MEETUP was "what is left"; since §121 its label
+ * is **special event** — the value keeps its name because Postgres does not rename enum values
+ * — and GEAR_TEST (migration `0044`) is the shoe-testing evening that used to hide in it;
+ * EXTERNAL (the same migration) is somebody else's event the club goes to together. An eighth
+ * value is a migration, not free text.
  */
-export const eventType = pgEnum("event_type", ["GROUP_RUN", "RACE", "HIKE", "COFFEE", "MEETUP"]);
+export const eventType = pgEnum("event_type", ["GROUP_RUN", "RACE", "HIKE", "COFFEE", "MEETUP", "GEAR_TEST", "EXTERNAL"]);
 
 /**
  * What the event is run on. Nullable, because a meetup is run on nothing.
@@ -220,6 +224,38 @@ export const events = pgTable(
      */
     stravaEventUrl: text("strava_event_url"),
 
+    /**
+     * The other organization an event is held with (`DECISIONS.md` §121; the owner: "a co-host
+     * race — this year we had a featured co-host event with another ONG"): its name, and its
+     * page. Shown beside the club's name on the page and named as a second organizer in the
+     * structured data. Null when the club hosts alone, which is the rule.
+     */
+    coHostName: text("co_host_name"),
+    coHostUrl: text("co_host_url"),
+
+    /**
+     * A standing recurrence (`DECISIONS.md` §122): on the *source* event, how it repeats —
+     * `{ cadence, weekdays, until }`, `until` a date or null for "indefinitely" — and the
+     * maintenance job keeps the coming weeks' occurrences created from it. Each occurrence is
+     * its own row (a date can be cancelled or moved on its own), and names its source in
+     * `repeat_of`, which is what the job counts from. Null on an event that does not repeat and
+     * on every occurrence; a partial index finds the sources without reading the table.
+     */
+    repeatRule: jsonb("repeat_rule"),
+    repeatOf: uuid("repeat_of").references((): AnyPgColumn => events.id, { onDelete: "set null" }),
+
+    /**
+     * The programme as data (`DECISIONS.md` §117): the timed rows — when, what, where — that
+     * the page shows as a list, the reminder repeats and the calendar carries as one entry
+     * each. `[{ startsAt, endsAt, label: { ro, en }, place }]`, instants as ISO strings, read
+     * through `events/domain/schedule.ts` so a row nobody wrote this way is dropped, never
+     * rendered. On the event rather than the translation: the time and the place are the same
+     * fact in either language (§36), only the label is a translation, and it carries both.
+     * Null is "no programme", like `schedule_json` on the translation, which stays as the
+     * prose beneath the rows.
+     */
+    scheduleItems: jsonb("schedule_items"),
+
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
 
@@ -365,6 +401,10 @@ export const events = pgTable(
       "events_strava_event_url_is_https",
       sql`${t.stravaEventUrl} IS NULL OR ${t.stravaEventUrl} LIKE 'https://%'`,
     ),
+    check(
+      "events_co_host_url_is_https",
+      sql`${t.coHostUrl} IS NULL OR ${t.coHostUrl} LIKE 'https://%'`,
+    ),
 
     check(
       "events_non_negative_measurements",
@@ -431,6 +471,10 @@ export const events = pgTable(
     index("events_editorial_status_starts_at_idx").on(t.editorialStatus, t.startsAt),
     index("events_type_starts_at_idx").on(t.type, t.startsAt),
     index("events_registration_mode_starts_at_idx").on(t.registrationMode, t.startsAt),
+    // The standing series (§122): the few sources with a rule, and each source's occurrences
+    // by date — the two reads the job makes every quarter hour, both off an index.
+    index("events_repeat_rule_idx").on(t.id).where(sql`${t.repeatRule} IS NOT NULL`),
+    index("events_repeat_of_starts_at_idx").on(t.repeatOf, t.startsAt),
   ],
 );
 

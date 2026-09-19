@@ -89,12 +89,12 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
                 <Chip
                   size="small"
                   color="warning"
-                  label={t("queue.offered", { until: format.dateTime(row.holdExpiresAt, { dateStyle: "short", timeStyle: "short" }) })}
+                  label={t("queue.offered", { until: format.dateTime(row.holdExpiresAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" }) })}
                 />
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   {row.waitlistedAt
-                    ? t("queue.since", { when: format.dateTime(row.waitlistedAt, { dateStyle: "short", timeStyle: "short" }) })
+                    ? t("queue.since", { when: format.dateTime(row.waitlistedAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" }) })
                     : ""}
                 </Typography>
               )}

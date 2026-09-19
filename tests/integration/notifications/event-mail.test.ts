@@ -91,7 +91,9 @@ describe("§81 the reminder and §82 after the race", () => {
         resultsNameConsent: false,
         listOptOut: false,
         resultsConsentVersion: 1,
-        confirmedAt: status === "CONFIRMED" ? NOW : null,
+        // Confirmed two days before "now": a confirmation from the last day carries the same
+        // facts as the reminder, and gets none (§126).
+        confirmedAt: status === "CONFIRMED" ? new Date(NOW.getTime() - 2 * 24 * 60 * 60_000) : null,
         ...extra,
       })
       .returning();

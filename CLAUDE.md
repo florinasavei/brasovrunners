@@ -21,7 +21,7 @@ under "Still owed" below, and it is also `/admin/tasks`, which reads it from the
 
 [`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced — Romanian event pages
 only, no registration, no email, no login — and is now a historical scope document rather than
-the current one. `SETUP.md` §29 is the original ten-pull-request M1 plan; most of it now exists.
+the current one. The original ten-pull-request M1 plan is a table in `DECISIONS.md` §118; it exists.
 
 ## Commands that exist right now
 
@@ -50,7 +50,7 @@ yarn release      versioned archive and share copies under dist/
 Full list with explanations: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md). Do not write a
 command into a document until it is in `package.json`.
 
-**Toolchain:** Node `22.14.0` (`.nvmrc`), Yarn 4.18.0 via Corepack, TypeScript 5.9.3 — not 7,
+**Toolchain:** Node 22 (`.nvmrc` says the major, `22`; §125), Yarn 4.18.0 via Corepack, TypeScript 5.9.3 — not 7,
 which `typescript-eslint` refuses. Tests need no database: PGlite runs real PostgreSQL in
 process. Concurrency tests must not use it; see `docs/DEVELOPMENT.md`.
 
@@ -109,7 +109,11 @@ sections and in `CHANGELOG.md`.
 
 - Event pages in both languages, JSON-LD, sitemap, robots; the site root is the listing; an
   unpublished locale is a 404, never the other language (BR-REQ-040-02, §28). Rich-text
-  description, rules (`#rules`) and programme (`#schedule`) per language (§71, §96).
+  description, rules (`#rules`) and programme (`#schedule`) per language (§71, §96); the
+  programme's **timed rows** on the event — a list on the page, repeated in the reminder, one
+  calendar entry each (§117). A repeated event is **one line** on the listing and in the
+  backoffice (§113); glyphs on type, surface, difficulty and cost (§112); the calendar picks
+  a month or a year (§116); a group run takes no registration and has no programme (§111).
 - The listing: featured event, type filters, a month view (grid from `sm`, agenda on a phone)
   (§89); Open Graph cards drawn from the event, a square one for Instagram, share links (§90);
   **events as a calendar** — `.ics` per event, Google Calendar's add link, and a `webcal://`
@@ -208,19 +212,18 @@ sections and in `CHANGELOG.md`.
   `idle_in_transaction_session_timeout` (`docs/PLATFORM.md` § Connections are not the ceiling). The repository is public: `yarn secrets:check` in `yarn check`, GitHub
   secret scanning and push protection on (§98).
 
-Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); the
-structured programme rows (the calendar carries the programme as text, §107); a custom domain
-for the bucket. `SETUP.md` is long because it is the record of every account the club opened;
-the procedures still valid are the numbered sections, and `docs/VIBECODING.md` is the short
-way in.
+Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); a
+custom domain for the bucket. `SETUP.md` is the numbered procedures with their values, and the
+build plan it carried is two tables pointing at the code (§118); `docs/VIBECODING.md` is the
+short way in.
 
 **Two settings that cost an afternoon between them:** the Zitadel application needs
 **"Include user's profile info in the ID Token"**, or every sign-in is refused by the allowlist
 that cannot see an address; and the first Administrator is a `staff_users` row inserted by
 hand, because the screen that invites people is behind the sign-in it would grant.
 
-**Still owed, all of it account creation or a decision rather than code** (as of 2026-09-19;
-`/admin/tasks` shows the same list with the steps, read from the system):
+**Still owed, all of it account creation or a decision rather than code** (as of 2026-09-19
+evening; `/admin/tasks` shows the same list with the steps, read from the system):
 
 1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.
 2. ~~Mailgun sending domain~~ — done 2026-09-18 evening: `mail.` subdomain verified,
@@ -236,15 +239,18 @@ hand, because the screen that invites people is behind the sign-in it would gran
 6. ~~Neon keys~~ — done 2026-09-18 evening: a project-scoped key on each Vercel project,
    `/devs` shows the database's month on both. Still optional: a custom domain for the R2
    bucket; the retention and support decisions of `SETUP.md` §30.
-7. **The anti-bot check** (Cloudflare Turnstile, `DECISIONS.md` §97): a widget in the club's
-   Cloudflare account, then `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` on both Vercel
-   projects. Off until then; `/admin/tasks` shows the row with the steps.
+7. ~~The anti-bot check~~ — done 2026-09-19: the widget `brasovrunners-site`, both keys on
+   both Vercel projects, the box shows on the QA form (`SETUP.md` §36). The row turns green
+   on each project's next deployment.
 8. **The three legal texts** approved on production from the platform's templates
    (`/admin/legal` → New version → "start from the platform's text", four facts to fill) —
    the same item as 4, with the texts now written.
-9. **The health monitor** on cron-job.org — `GET /api/health` every 30 minutes, "notify on
-   failure" — on both environments, so the club is emailed when email stops
-   (`DECISIONS.md` §98, `SETUP.md` §26; the fifth step of the "Monitors" row on `/admin/tasks`).
+9. ~~The health monitor~~ — done 2026-09-19: `GET /api/health` every 30 minutes with failure
+   notifications on production and QA (`SETUP.md` §36). Release #58 is live; production is on
+   schema `0042`.
+10. **The invitation key** — a Zitadel service user with Org User Manager and its token as
+    `ZITADEL_MANAGEMENT_PAT` on both Vercel projects (`SETUP.md` §37), so "Add" on Echipa
+    sends the invitation itself (§123).
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 
@@ -252,10 +258,10 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 
 | Layer | Decision | Status |
 | --- | --- | --- |
-| App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
+| App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated (schema `0028` on QA, `0027` on production after `BR-V1.35`); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated (schema `0042` on both after release #58, 2026-09-19; `0043` comes with the next release); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
 | Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |

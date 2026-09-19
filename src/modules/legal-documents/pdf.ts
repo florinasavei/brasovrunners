@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { plainInline } from "./domain/inline";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import { COLOR } from "@/theme/brand";
@@ -152,7 +153,7 @@ export async function renderLegalDocumentPdf(input: LegalPdfInput): Promise<Buff
       doc.moveDown(0.4);
     }
     for (const paragraph of section.paragraphs) {
-      doc.font("body").fontSize(10.5).fillColor(INK).text(paragraph, { width: TEXT_WIDTH, lineGap: 2.5 });
+      doc.font("body").fontSize(10.5).fillColor(INK).text(plainInline(paragraph), { width: TEXT_WIDTH, lineGap: 2.5 });
       doc.moveDown(0.6);
     }
     doc.moveDown(0.4);

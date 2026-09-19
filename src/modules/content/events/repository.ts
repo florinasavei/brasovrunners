@@ -1,7 +1,8 @@
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
+import type { Locale } from "@/i18n/routing";
 
 /**
  * Backoffice reads (BR-REQ-050-01, BR-REQ-051-01, BR-REQ-051-02).
@@ -175,4 +176,38 @@ export async function findTranslationForPreview<T extends Record<string, unknown
     .where(and(eq(events.id, eventId), eq(eventTranslations.locale, locale)))
     .limit(1);
   return row;
+}
+
+/**
+ * Every date of a series — the source and each date made from it — soonest first, with what
+ * the editor's header needs to say which one is open and mark the ones unlike the others
+ * (§131). Two indexed reads' worth for a series of any length; archived dates included, so
+ * the count is the series' own.
+ */
+export async function listSeriesDates<T extends Record<string, unknown>>(db: Database<T>, sourceId: string) {
+  return db
+    .select({
+      id: events.id,
+      startsAt: events.startsAt,
+      timezone: events.timezone,
+      locationName: events.locationName,
+      eventStatus: events.eventStatus,
+      editorialStatus: events.editorialStatus,
+    })
+    .from(events)
+    .where(or(eq(events.id, sourceId), eq(events.repeatOf, sourceId)))
+    .orderBy(asc(events.startsAt));
+}
+
+/** The title of an event in one language — for the note on a series' date (§122); the other language if that one is missing. */
+export async function findEventTitle<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  locale: Locale,
+): Promise<string | null> {
+  const rows = await db
+    .select({ locale: eventTranslations.locale, title: eventTranslations.title })
+    .from(eventTranslations)
+    .where(eq(eventTranslations.eventId, eventId));
+  return rows.find((row) => row.locale === locale)?.title ?? rows[0]?.title ?? null;
 }

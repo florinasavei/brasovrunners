@@ -52,6 +52,19 @@ test.describe("legal documents: a Superadministrator can create the first versio
     await page.goto("/ro/admin/legal");
     await expect(page.getByRole("link", { name: "Versiune nouă" })).toHaveCount(0);
   });
+
+  /**
+   * BR-REQ-053-02 criterion 10 (DECISIONS.md §132) — the one-press box exists for a database
+   * with no approved text, which is production alone; every other environment carries the
+   * approved samples, so here the box must be absent rather than offering to replace them.
+   * The act itself is covered by tests/integration/legal/platform-approve.test.ts.
+   */
+  test("does not offer the one-press approval while every text is in force", async ({ page }) => {
+    await signIn(page, "Dev Superadministrator");
+    await page.goto("/ro/admin/legal");
+    await expect(page.getByRole("link", { name: "Versiune nouă" })).toBeVisible();
+    await expect(page.getByTestId("platform-approve")).toHaveCount(0);
+  });
 });
 
 test.describe("legal documents: the next version starts from the current one", () => {

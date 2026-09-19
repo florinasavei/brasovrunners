@@ -33,6 +33,7 @@ export default function CheckboxField({
   value,
   required,
   defaultChecked,
+  disabled,
   children,
 }: {
   name: string;
@@ -41,6 +42,8 @@ export default function CheckboxField({
   value?: string;
   required?: boolean;
   defaultChecked?: boolean;
+  /** Shown but not changeable — and not posted: a disabled input leaves the form, so the caller carries the value. */
+  disabled?: boolean;
   /** The label, which may contain a link. */
   children: ReactNode;
 }) {
@@ -53,6 +56,7 @@ export default function CheckboxField({
           value={value}
           required={required}
           defaultChecked={defaultChecked}
+          disabled={disabled}
           sx={CHECKBOX_TAP_TARGET}
         />
       }
