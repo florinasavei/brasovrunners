@@ -498,16 +498,19 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   items={[
                     {
                       kind: "link",
+                      icon: "preview",
                       label: t("events.preview"),
                       href: getPathname({ locale, href: { pathname: "/preview/events/[id]", params: { id: event.id } } }),
                     },
                     {
                       kind: "link",
+                      icon: "registrations",
                       label: t("events.registrationsLink", { count: entries }),
                       href: `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`,
                     },
                     {
                       kind: "submit",
+                      icon: "duplicate",
                       label: t("editor.duplicate"),
                       formId: `duplicate-${event.id}`,
                       confirm: {
@@ -528,6 +531,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                         : [
                             {
                               kind: "submit" as const,
+                              icon: "delete" as const,
                               label: t("editor.delete"),
                               formId: `delete-${event.id}`,
                               color: "error" as const,

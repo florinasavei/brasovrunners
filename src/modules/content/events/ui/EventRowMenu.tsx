@@ -1,6 +1,10 @@
 "use client";
 
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DeleteIcon from "@mui/icons-material/Delete";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -8,16 +12,28 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 
+/** The glyph before a verb (the owner: "these should also have icons"), by name — the menu is a client island and makes the element. */
+export type EventRowMenuIcon = "preview" | "registrations" | "duplicate" | "delete";
+
+const ICONS: Record<EventRowMenuIcon, typeof MoreVertIcon> = {
+  preview: VisibilityIcon,
+  registrations: HowToRegIcon,
+  duplicate: ContentCopyIcon,
+  delete: DeleteIcon,
+};
+
 export type EventRowMenuItem =
-  | { kind: "link"; label: string; href: string }
+  | { kind: "link"; label: string; href: string; icon?: EventRowMenuIcon }
   | {
       kind: "submit";
       label: string;
+      icon?: EventRowMenuIcon;
       /** The id of a form already in the page whose Server Action this item submits. */
       formId: string;
       confirm: { title: string; body: string; confirmLabel: string };
@@ -52,6 +68,15 @@ export default function EventRowMenu({
 }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [pending, setPending] = useState<Extract<EventRowMenuItem, { kind: "submit" }> | null>(null);
+  const glyph = (name: EventRowMenuIcon | undefined) => {
+    if (!name) return null;
+    const Icon = ICONS[name];
+    return (
+      <ListItemIcon sx={{ color: "inherit", minWidth: 32 }}>
+        <Icon fontSize="small" />
+      </ListItemIcon>
+    );
+  };
   const open = Boolean(anchor);
 
   return (
@@ -72,6 +97,7 @@ export default function EventRowMenu({
           if (item.kind === "link") {
             return (
               <MenuItem key={index} component="a" href={item.href} onClick={() => setAnchor(null)}>
+                {glyph(item.icon)}
                 <ListItemText>{item.label}</ListItemText>
               </MenuItem>
             );
@@ -92,6 +118,7 @@ export default function EventRowMenu({
               }}
               sx={item.color === "error" ? { color: "error.main" } : undefined}
             >
+              {glyph(item.icon)}
               <ListItemText>{item.label}</ListItemText>
             </MenuItem>
           );
