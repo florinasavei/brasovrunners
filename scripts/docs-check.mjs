@@ -293,6 +293,8 @@ const PROVIDER_HOSTS = [
   "www.instagram.com",
   // Google Calendar's "add this event" address, one tap from the event page (§107).
   "calendar.google.com",
+  // YouTube's thumbnail host, shown inside the editor only for a film an organizer placed (§110).
+  "i.ytimg.com",
   // Cloudflare Turnstile's widget and its verification endpoint (§97): fixed, Cloudflare's own.
   "challenges.cloudflare.com",
 ];

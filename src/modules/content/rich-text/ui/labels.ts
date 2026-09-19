@@ -42,5 +42,12 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageGalleryLoading: rt("imageGalleryLoading"),
     imageGalleryEmpty: rt("imageGalleryEmpty"),
     imageGalleryClose: rt("linkCancel"),
+    youtube: rt("youtube"),
+    youtubeShort: rt("youtubeShort"),
+    youtubeUrl: rt("youtubeUrl"),
+    youtubeApply: rt("youtubeApply"),
+    youtubeInvalid: rt("youtubeInvalid"),
+    youtubeCaption: rt("youtubeCaption"),
+    youtubeRemove: rt("youtubeRemove"),
   };
 }

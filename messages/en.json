@@ -943,7 +943,14 @@
       "imageGalleryLoading": "Loading the pictures…",
       "imageGalleryEmpty": "No picture has been uploaded yet.",
       "imageNoAltOne": "One picture has no alt text — click the picture to write it.",
-      "imageNoAltMany": "{count} pictures have no alt text — click each one to write it."
+      "imageNoAltMany": "{count} pictures have no alt text — click each one to write it.",
+      "youtube": "Add a YouTube film",
+      "youtubeShort": "YouTube",
+      "youtubeUrl": "The film's address (YouTube)",
+      "youtubeApply": "Add the film",
+      "youtubeInvalid": "Not a YouTube address. Copy the link from the browser bar or from “Share” (youtube.com/watch?v=… or youtu.be/…).",
+      "youtubeCaption": "Caption (under the film)",
+      "youtubeRemove": "Remove the film"
     },
     "pages": {
       "title": "Pages",
@@ -1258,6 +1265,7 @@
           "steps": [
             "“Events” → pick the event → the Romanian tab and the English tab: the title, the short description, the description, the rules, the programme and the SEO fields. One save writes both languages.",
             "A published event: what you save is on the site at once — tick “I know I am changing a published page”. The page's address does not change after publication.",
+            "A YouTube film: in the editor, the “YouTube” button → paste the film's address → “Add the film”. Click the film to give it a caption. On the page it appears closed, “Watch the film”; it loads only when the reader presses.",
             "“Pages”: the site's standing pages. Create a draft, write in the editor (headings, lists, links, pictures), submit it for review; an Organizer publishes it.",
             "Not yours, and not needed: the event's settings (date, places, registration), publishing, the gallery, the registrations. If a text depends on a wrong setting, tell the Organizer.",
             "Both languages count: an event cannot be published without complete text in Romanian and in English, and the English page keeps its old text until you correct that too."

@@ -5332,3 +5332,37 @@ is the record of every account the club opened; the row on `/admin/tasks` narrow
 **Consequences.** `CLAUDE.md` (429 → ~290 lines); the `docsSimplify` row's text; nothing else.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 110. Decided — a YouTube film in the editor: the id and a caption, shown behind one press (2026-09-19)
+
+**Context.** The owner: "in the WYSIWYG editor add the option to add YouTube videos." An
+event already had one film (§69): a `videoUrl` column, shown as a closed `<details>` so the
+page fetches nothing from Google until pressed, and the privacy notice describes YouTube as
+"loaded when you press". The editor's allowlist (§11.3) has "no raw HTML node, scripts,
+iframes, arbitrary embeds" — a rule worth keeping while adding the one embed the club wants.
+
+**Decision.** A `youtube` block in the schema: `videoId` (eleven characters, the regex) and
+`caption`, strict — never an address, never markup, never another host. The editor's control
+opens a field for the film's address; `youtubeVideoId` (the same parser the event uses)
+turns `watch?v=`, `youtu.be/`, `shorts/`, `embed/` and `live/` addresses into the id and
+refuses anything else under the field; the address itself is kept nowhere. In the editor the
+block is the film's own thumbnail with a play mark — a request to YouTube's image host in the
+backoffice, by the organizer who placed the film, not on a reader's page. The renderer emits
+the same closed disclosure `EventVideo` does, the `youtube-nocookie.com` embed lazy inside it,
+the caption as the summary and beneath it. A click on the block opens a panel: caption, or
+remove. The plain text of a body counts the caption as its words; a body holding only a film
+is not empty.
+
+*Rejected:* Tiptap's own YouTube extension (it stores the address and renders an iframe in
+the editor — the rule says no iframe reaches a page from a document, and the parser here
+already existed); a thumbnail-first "click to load" on the public page (the same request to
+Google the disclosure avoids); any other video host (one host, one parser, one privacy
+sentence).
+
+**Consequences.** `rich-text/domain/schema.ts` (`youtubeNode`, the plain-text walker,
+`hasRichTextContent`), `ui/RichTextVideo.tsx`, `ui/RichText.tsx`, `ui/RichTextEditor.tsx`
+(the node, the control, the panel), `ui/labels.ts`, the catalogue, `i.ytimg.com` in the
+provider hosts; `AGENTS.md` §11.3; `tests/unit/content/rich-text.test.ts`,
+`tests/e2e/pages.spec.ts`. BR-REQ-050-03 criterion 16.
+
+Baseline `BR-V1.38-2026-09-18`.

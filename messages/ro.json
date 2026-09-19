@@ -943,7 +943,14 @@
       "imageGalleryLoading": "Se încarcă imaginile…",
       "imageGalleryEmpty": "Nu există nicio imagine încărcată încă.",
       "imageNoAltOne": "O imagine nu are text alternativ — apasă pe imagine ca să-l scrii.",
-      "imageNoAltMany": "{count} imagini nu au text alternativ — apasă pe fiecare ca să-l scrii."
+      "imageNoAltMany": "{count} imagini nu au text alternativ — apasă pe fiecare ca să-l scrii.",
+      "youtube": "Adaugă un film de pe YouTube",
+      "youtubeShort": "YouTube",
+      "youtubeUrl": "Adresa filmului (YouTube)",
+      "youtubeApply": "Adaugă filmul",
+      "youtubeInvalid": "Nu e o adresă de YouTube. Copiază linkul din bara browserului sau din „Distribuie” (youtube.com/watch?v=… sau youtu.be/…).",
+      "youtubeCaption": "Legendă (sub film)",
+      "youtubeRemove": "Scoate filmul"
     },
     "pages": {
       "title": "Pagini",
@@ -1258,6 +1265,7 @@
           "steps": [
             "„Evenimente” → alege evenimentul → tab-ul Română și tab-ul English: titlul, descrierea scurtă, descrierea, regulamentul, programul și câmpurile SEO. O singură salvare scrie ambele limbi.",
             "Un eveniment publicat: ce salvezi apare imediat pe site — bifează „Știu că modific o pagină publicată”. Adresa paginii nu se mai schimbă după publicare.",
+            "Un film de pe YouTube: în editor, butonul „YouTube” → lipești adresa filmului → „Adaugă filmul”. Apasă pe film ca să-i pui o legendă. Pe pagină apare închis, „Vezi filmul”; se încarcă doar când cititorul apasă.",
             "„Pagini”: paginile fixe ale site-ului. Creezi o ciornă, scrii în editor (titluri, liste, linkuri, imagini), o trimiți spre verificare; un Organizator o publică.",
             "Nu ai și nu îți trebuie: setările evenimentului (data, locurile, înscrierile), publicarea, galeria, înscrierile. Dacă un text depinde de o setare greșită, spune Organizatorului.",
             "Ambele limbi contează: un eveniment nu poate fi publicat fără text complet în română și în engleză, iar pagina în engleză rămâne cu textul vechi până o corectezi și pe ea."

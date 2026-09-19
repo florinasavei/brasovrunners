@@ -13,6 +13,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 The evening's test on QA, and what it found.
 
 - **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.
+- **YouTube films in the editor.** A "YouTube" control on every rich-text field takes the film's address, keeps only its id, and the page shows it behind one press on the no-cookie host — like the event's own film. §110.
 - **`CLAUDE.md` is a map.** "What exists right now" — three hundred lines of prose — is now a page of pointers, one `DECISIONS.md` section per thing, checked against the old text for lost facts. `SETUP.md` keeps its numbered procedures; the shortening of its history is still owed (`/admin/tasks`). §109.
 - **A parent registers a minor online.** Under eighteen the form requires the parent or legal guardian's name; the declaration opens with it ("părinte/tutore legal al minorului …"), the desk and the export show it; an adult's stray entry is dropped. `{{declarant}}` and `{{guardian}}` join the merge fields. §108.
 - **Events in your calendar.** "Google Calendar" and "Add to calendar (.ics)" beside the share links on every event; the listing offers the club's whole calendar as a subscription (`webcal://`) that Google, Apple and Outlook refresh by themselves; the programme rides in the description. §107.

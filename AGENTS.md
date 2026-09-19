@@ -1418,6 +1418,11 @@ Canonical body is JSON produced by allowlisted schema. Required nodes/marks:
   column on a wide screen; always the full width on a phone). Built 2026-09-18,
   `DECISIONS.md` §72, §73. An event's short description is a body of this schema too
   (`event_translations.excerpt_json`), its words derived into the plain `excerpt` on save.
+- youtube — a block holding an eleven-character video id and a `caption`, nothing else: never
+  an address, never an iframe. The renderer builds the `youtube-nocookie.com` embed from the
+  id behind a closed `<details>`, as the event's own film (§69), so a reader's page fetches
+  nothing from Google until pressed; the editor turns a pasted YouTube address into the id
+  and keeps the address nowhere. Built 2026-09-19, `DECISIONS.md` §110.
 
 Rules:
 

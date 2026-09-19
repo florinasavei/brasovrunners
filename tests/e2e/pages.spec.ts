@@ -67,6 +67,18 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await writeBody(page, "ro", "Cine suntem", "Un club de alergare din Brașov.");
     await writeBody(page, "en", "Who we are", "A running club in Brașov.");
 
+    // A YouTube film in the Romanian body (§110): an address that is not YouTube's is refused
+    // under the field; a real one becomes a block, and the page shows it behind one press.
+    const roEditor = page.locator('[data-rich-text="translations.ro.body"]');
+    await roEditor.getByRole("button", { name: "Adaugă un film de pe YouTube" }).click();
+    const address = roEditor.getByLabel("Adresa filmului (YouTube)");
+    await address.fill("https://example.com/watch?v=dQw4w9WgXcQ");
+    await roEditor.getByRole("button", { name: "Adaugă filmul" }).click();
+    await expect(roEditor.getByText(/Nu e o adresă de YouTube/)).toBeVisible();
+    await address.fill("https://youtu.be/dQw4w9WgXcQ");
+    await roEditor.getByRole("button", { name: "Adaugă filmul" }).click();
+    await expect(roEditor.locator('[data-youtube="dQw4w9WgXcQ"]')).toBeVisible();
+
     await page.getByRole("button", { name: "Pagină nouă" }).click();
     await expect(page).toHaveURL(/\/admin\/pages\/[0-9a-f-]{36}/);
     editorUrl = page.url();
@@ -87,6 +99,10 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     // beneath it is text — the editor's output rendered through the §11.3 allowlist.
     await expect(page.getByRole("heading", { name: "Cine suntem" })).toBeVisible();
     await expect(page.getByText("Un club de alergare din Brașov.")).toBeVisible();
+    // The film: a closed disclosure — nothing fetched from YouTube until pressed (§69, §110).
+    const film = page.locator("details", { has: page.locator('iframe[src*="youtube-nocookie.com/embed/dQw4w9WgXcQ"]') });
+    await expect(film).toHaveCount(1);
+    await expect(film).not.toHaveAttribute("open", "");
 
     expect((await page.goto(`/en/pages/${englishSlug}`))?.status()).toBe(200);
     await expect(page.getByRole("heading", { name: "Who we are" })).toBeVisible();
