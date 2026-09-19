@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **A series keeps its first event's day.** Ticking Wednesday on a Sunday run makes Sundays and Wednesdays, not a Sunday followed by Wednesdays; the editor shows the event's own day ticked and locked. §128.
 - **Links and pictures in legal texts**: `[the words](https://…)` and `![what it shows](https://…)` in a paragraph render on the page; the PDFs write the words and the address. §127.
 - **Fewer emails.** The signed declaration's PDF rides on the confirmation instead of a message of its own, and the 48-hour reminder skips anyone confirmed in the last day. Four messages on the common path, three on the eve. §126.
 - **`.nvmrc` says `22`**, the major, which is what Vercel runs; no more warning about a pinned patch. §125.

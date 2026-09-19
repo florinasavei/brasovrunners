@@ -18,7 +18,7 @@ import {
   type Weekday,
 } from "@/modules/events/domain/repeat";
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
-import { addWallClockInterval, fromWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
@@ -1015,10 +1015,16 @@ export async function repeatEvent<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "this date is part of a series already; the series repeats from its first event");
   }
 
-  const weekdays = input.rule.cadence === "MONTHLY" ? [] : [...new Set(input.rule.weekdays ?? [])].sort((a, b) => a - b);
-  if (weekdays.some((day) => !WEEKDAYS.includes(day))) {
+  if ((input.rule.weekdays ?? []).some((day) => !WEEKDAYS.includes(day))) {
     throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)");
   }
+  // The event's own day is always in the series (§128): a Sunday run with "Wednesday" ticked
+  // runs on Sundays and Wednesdays — the source is the first date, not a one-off before them.
+  const ownWeekday = wallClockWeekday(source.startsAt, source.timezone) as Weekday;
+  const weekdays =
+    input.rule.cadence === "MONTHLY" || (input.rule.weekdays ?? []).length === 0
+      ? []
+      : [...new Set([...(input.rule.weekdays ?? []), ownWeekday])].sort((a, b) => a - b);
   const publish = input.rule.publish && source.editorialStatus === "PUBLISHED";
   if (publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);

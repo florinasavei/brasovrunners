@@ -109,15 +109,19 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
    * source's wall time, never the source itself and never a day before it — so a Sunday source
    * with Monday and Wednesday ticked contributes nothing from its own week.
    */
-  it("repeats on chosen weekdays until a date, skipping days on or before the source", async () => {
+  it("repeats on chosen weekdays and the event's own day until a date, skipping days on or before the source (§128)", async () => {
     const source = await seedRun(); // Sunday 2026-10-11, 08:00
     const result = await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("2026-10-24", [1, 3]), now: NOW });
-    expect(result.created).toBe(4);
+    expect(result.created).toBe(5);
 
+    // The Sunday is in the rule although only Monday and Wednesday were ticked: the source
+    // is the first date of the series, not a one-off before it.
+    expect((await db.select().from(events).where(eq(events.id, source.id)))[0].repeatRule).toEqual({ cadence: "WEEKLY", weekdays: [1, 3, 7], until: "2026-10-24", publish: false });
     const copies = await copiesOf(source.id);
     expect(copies.map((copy) => toWallTimeInput(copy.startsAt, "Europe/Bucharest"))).toEqual([
       "2026-10-12T08:00", // Monday of the week after the source's
       "2026-10-14T08:00", // Wednesday
+      "2026-10-18T08:00", // Sunday — the source's own day, a week on
       "2026-10-19T08:00",
       "2026-10-21T08:00",
     ]);

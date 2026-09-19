@@ -5914,3 +5914,30 @@ and so are the pages it should point at).
 `tests/unit/legal/inline.test.ts`. BR-REQ-053-01 criterion 9.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 128. Decided — the event's own day is always in its series (2026-09-19)
+
+**Context.** The owner made a Sunday run repeat and ticked Wednesday: nine dates — the
+Sunday, then only Wednesdays — and the card read "În fiecare miercuri și duminică", which
+is what the sentence infers from a Sunday followed by Wednesdays (§113). "These next
+occurrences are strange." §122's form took the ticked days as the whole rule, and the
+event's own day, unticked, made the source a one-off before a series of other days.
+
+**Decision.** A series always contains the event it starts from, on that event's weekday:
+the ticked days are *added* to it. `repeatEvent` unions the source's wall-clock weekday into
+the rule when any day is ticked (none ticked still means the event's own day at the chosen
+interval; monthly has no weekdays), so the stored rule says every day the series runs on. On
+the event page, where the date is known, `RepeatFields` shows that day ticked and locked and
+posts it from a hidden input (a disabled box posts nothing); on the creation form the date
+is not typed yet, and the service adds the day. The help text says so.
+
+*Rejected:* moving the event to the first ticked day, as Google Calendar does (a source may
+carry registrations, and its date is a fact the club published); refusing a rule without
+the event's day (a second click for what the club always means); leaving it as it was with
+a better sentence (the sentence was right about the dates and the dates were wrong).
+
+**Consequences.** `content/events/service.ts` (`repeatEvent`), `RepeatFields`
+(`ownWeekday`), `CheckboxField` (`disabled`), the event editor, the catalogues;
+`tests/integration/cms/repeat.test.ts`. BR-REQ-050-02 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.
