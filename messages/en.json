@@ -1640,6 +1640,11 @@
     }
   },
   "Devs": {
+    "captured": {
+      "title": "Emails captured on this machine",
+      "intro": "Locally nothing leaves the machine: every message the platform would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
+      "empty": "Nothing captured yet. Register for an event and come back."
+    },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",
     "intro": "What is configured here and what is missing. Variable names and whether they have a value — never the value.",

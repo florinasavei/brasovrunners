@@ -1640,6 +1640,11 @@
     }
   },
   "Devs": {
+    "captured": {
+      "title": "Emailuri capturate pe această mașină",
+      "intro": "Local nu pleacă nimic: fiecare mesaj pe care platforma l-ar fi trimis ajunge aici, cel mai nou primul, cu linkurile lui — apasă-le ca să parcurgi drumul participantului.",
+      "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino."
+    },
     "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",
     "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",

@@ -47,6 +47,8 @@ describe("BR-REQ-080-03 environment-appropriate delivery", () => {
 
   beforeEach(async () => {
     await resetTables(db);
+    // One capture for the process since §124: what a test captured is cleared for the next.
+    createEmailSenderForEnvironment(envSchema.parse({ APP_ENV: "test", EMAIL_DELIVERY_MODE: "capture" })).capture.clear();
     const identity = canonicalizeEmail("ana@example.ro");
     const [participant] = await db
       .insert(participants)

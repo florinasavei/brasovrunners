@@ -1495,6 +1495,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 5. Given an Author or an Editor, when `/devs` is requested, then the response is 404, the same answer a route that does not exist gives.
 6. Given the route, when a crawler requests it, then it is disallowed in `robots.txt`, carries `noindex`, and is served with a private, no-store cache policy.
 7. Given `/devs` and its pages, when a staff member who may see them opens one, then it carries the backoffice's own chrome — the title, who is signed in, sign out and the section tabs — the same as every `/admin` page, from one shared component (2026-09-19, `DECISIONS.md` §119).
+8. Given `APP_ENV` is `local` or `test`, when `/devs` renders, then it lists the messages the platform captured instead of sending — the last fifty, newest first, each with its subject, recipient, time and the links in its text as links; on any other environment the section is absent (2026-09-19, `DECISIONS.md` §124).
 
 **Verification:** unit `diagnostics/configuration.test.ts`; unit `seo/private-paths.test.ts`
 

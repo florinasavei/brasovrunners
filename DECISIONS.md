@@ -5826,3 +5826,22 @@ catalogues, the "Invite the team" row, `SETUP.md` §37; `tests/unit/staff/zitade
 BR-REQ-060-01 criterion 10.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 124. Decided — the messages a local machine would have sent are shown on `/devs`, with their links (2026-09-19)
+
+**Context.** The owner, testing locally: "why did I not receive the email?" Locally nothing
+is sent — `EMAIL_DELIVERY_MODE=capture` keeps every message in memory (§37) — and the memory
+was the drain's own, gone with the request; there was no way to click the verification link
+without reading the database.
+
+**Decision.** One capture adapter for the process (`sender.ts#sharedCapture`), the last fifty
+messages kept, and a section on `/devs` — on `local` and `test` only — listing them newest
+first with the links found in their text, each clickable: the participant's journey can be
+walked on a laptop. Never on QA or production, where a captured message is one the allowlist
+held back and carries a live token.
+
+**Consequences.** `infrastructure/email/sender.ts` (`sharedCapture`, `capturedEmails`),
+`devs/page.tsx`, the catalogue; `tests/integration/notifications/modes.test.ts` clears the
+shared capture between tests. BR-REQ-090-04 criterion 8.
+
+Baseline `BR-V1.38-2026-09-18`.
