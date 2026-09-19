@@ -141,6 +141,7 @@
       "placesRemaining": "{count, plural, one {# place left} other {# places left}}",
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
       "opensOn": "Registration opens on {date}.",
+      "opensOnShort": "Registration opens on {date}",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
@@ -190,7 +191,19 @@
     "stravaEvent": "On Strava",
     "openStravaEvent": "The event on Strava",
     "openFacebookEvent": "The event on Facebook",
+    "interest": {
+      "heading": "Tell me when registration opens",
+      "email": "Your email address",
+      "submit": "Tell me",
+      "submitting": "Sending…",
+      "note": "We send you one email when registration opens; the address is deleted afterwards.",
+      "privacy": "Details in the privacy notice.",
+      "done": "We will email you when registration opens.",
+      "invalid": "That email address does not look valid. Check it and try again.",
+      "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend."
+    },
     "calendar": {
+      "registrationOpens": "Registration from {date}",
       "feedName": "🏃 BVR"
     }
   },
@@ -513,6 +526,7 @@
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
       "capacity": "Capacity",
       "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
+      "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, 24 h each.",
       "registrationOpensAt": "Registration opens",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
@@ -553,6 +567,8 @@
       "repeatStopHelp": "No further dates are made; the ones that exist stay (tick them in the list to delete them).",
       "repeatStopped": "The series is stopped: no further dates will be made.",
       "savedSeries": "Saved — and on {applied} more dates of the series.",
+      "savedSeriesOffered": "Saved — and on {applied} more dates of the series; places offered to the waiting list: {offered}.",
+      "savedOffered": "Saved — places offered to the waiting list: {offered}.",
       "scope": {
         "title": "Save for:",
         "this": "This date only",
@@ -676,7 +692,13 @@
       "test": "test",
       "offered": "offer until {until}",
       "since": "since {when}",
-      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (as 30-minute holds), the rest queue here, in order. Cancel a confirmed one or let a hold lapse (the maintenance job runs every 15 minutes) and the first in line gets the offer; its email shows in the Outbox on that registration."
+      "interestTitle": "Addresses waiting for the opening notice: {count}",
+      "interestHelp": "Left at \"Tell me\" on the event's page. Each gets one email on the job's first run after registration opens and is deleted with it. If somebody writes that they no longer want the message, type their address here: it leaves the list. The addresses themselves are not shown.",
+      "interestEmail": "Address to withdraw",
+      "interestRemove": "Remove from the list",
+      "interestRemoved": "The address was removed from the notification list.",
+      "interestNotFound": "That address was not on this event's list. Check whether they wrote from another one.",
+      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (as 30-minute holds), the rest queue here, in order. Cancel a confirmed one, let a hold lapse (the maintenance job runs every 15 minutes) or raise the number of places and the first in line gets the offer; its email shows in the Outbox on that registration."
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -1281,7 +1303,9 @@
         "EVENT_THANKS": "Thank you after the race",
         "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
         "DECLARATION_ARCHIVE": "The club's archive copy (PDF attached)",
-        "BIB_ASSIGNED": "A race number given by hand"
+        "BIB_ASSIGNED": "A race number given by hand",
+        "STAFF_INVITATION": "The team invitation",
+        "REGISTRATION_OPENED": "Registration is open"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1298,7 +1322,9 @@
         "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
         "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it.",
         "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link.",
-        "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link."
+        "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link.",
+        "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
+        "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form."
       },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",

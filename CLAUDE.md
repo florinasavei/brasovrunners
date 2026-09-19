@@ -160,7 +160,7 @@ sections and in `CHANGELOG.md`.
 
 **Email**
 
-- Sixteen message types (`email_outbox.email_message_type`), bilingual by default, one branded
+- Seventeen message types (`email_outbox.email_message_type`), bilingual by default, one branded
   card, the action as a button, deep links — event, programme, rules, "I can't make it any
   more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
   at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`

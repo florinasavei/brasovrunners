@@ -10,7 +10,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import { distanceInKm, isStravaLink, takesRegistrations } from "../domain/event-type";
-import { registrationState } from "../domain/registration-window";
+import { registrationState, upcomingRegistrationOpening } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
 
@@ -148,8 +148,17 @@ export default async function EventFacts({
   const mentionsRegistration = takesRegistrations(event.type);
 
   if (compact) {
-    // Two plain lines on a card: no labels, the state of registration as the last piece.
-    const second = [...where, ...route, ...(mentionsRegistration ? [t(`registrationState.${state}`)] : [])];
+    // Two plain lines on a card: no labels, the state of registration as the last piece —
+    // and, while the window is ahead, the date it opens rather than "not yet" (§146) — read
+    // through the one helper the feed reads it through, never a formula of this file's own.
+    const opensAt = upcomingRegistrationOpening(event, now);
+    const registrationPiece =
+      opensAt
+        ? t("cta.opensOnShort", {
+            date: format.dateTime(opensAt, { timeZone: event.timezone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+          })
+        : t(`registrationState.${state}`);
+    const second = [...where, ...route, ...(mentionsRegistration ? [registrationPiece] : [])];
     return (
       <Box>
         <Typography variant="body2">

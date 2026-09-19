@@ -6449,3 +6449,207 @@ one caption and a `journey` block of sentences in both catalogues;
 service), `tests/unit/i18n/messages.test.ts`. BR-REQ-037-03 criterion 5.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 146. Decided — the opening date shown big, and "Anunță-mă când se deschid înscrierile" (2026-09-19)
+
+**Context.** The owner: "I need 'registrations open at (date)' because first I advertise the
+event, then I need to let them know when registrations are opened." The event page said
+"Înscrierile se deschid pe 4 octombrie 2026, 18:00" in one quiet sentence
+(`RegistrationCta`); the cards said "Înscrierile nu s-au deschis încă" with no date; the
+calendar feed said nothing; and there was no way for the people the advertisement reached to
+be told when the moment came, short of checking the page. He chose both halves: the date,
+everywhere the event shows, and an address box that sends one message when the window
+opens — on the maintenance job's first run after it, which the pinger drives every fifteen
+minutes by day and hourly at night (§68); no page and no request stands at the opening
+instant, and every text that describes the message says so rather than promising the minute.
+
+**Decision.** *The date.* While `registrationState` is `NOT_YET_OPEN`, `RegistrationCta`
+renders the existing sentence at the countdown's size and in the club's blue — it is the
+one thing a visitor wants before the window, and it stands exactly where the button will —
+on the hero and the event page alike, since the hero already renders the component. The
+compact facts on the listing and series cards replace the state word with
+"Înscrierile se deschid pe 4 oct., 18:00" (`cta.opensOnShort`, short month, the event's
+zone). The calendar feed and the per-event `.ics` write "Înscrieri din 4 octombrie 2026
+la 18:00" above the programme, from a new `registrationOpensAt` on `CalendarEvent` that the
+routes set through `upcomingRegistrationOpening` — the public row's own column would also
+name an opening long past, so the caller decides and the pure module writes. The card
+reads the same helper; the sentence on the page is `registrationCta`'s own `opensAt`.
+
+*The box.* Under the sentence on the event page, only while the window is ahead **and an
+approved privacy notice exists for the locale** — the registration form's own gate
+(BR-REQ-053-01) and the participant list's (§32): an address is personal data taken under
+consent, and the notice is what describes it, so the page reads
+`findCurrentApprovedDocument` once before rendering the box and `registerInterest` refuses
+(CONFLICT, the plain page) whoever posts past it. On production today, with no approved
+texts, there is no box. `RegistrationInterestForm`, a Server Component around a Server
+Action (`events/[slug]/actions.ts`) — one email field, "Anunță-mă", the line "Îți trimitem
+un singur email când se deschid înscrierile; adresa se șterge după aceea." and the link
+"Detalii în nota de confidențialitate." to `/legal/privacy`. It is a public form, so it
+takes the registration form's defences unchanged: the honeypot and the rendering time as
+hidden fields, `looksLikeSpam` (now exported from `service.ts`) with the same silent answer,
+and Turnstile through the same `verifyTurnstile` when the keys are set. One field is
+retyped in under three seconds, so the `invalid` redirect carries the original rendering
+time back as `?since=` (`parseInterestSince`: a timestamp, never a value, ignored when
+unparseable or ahead of the clock) and the corrected form is timed from the render it
+corrects, not from the redirect. `registerInterest`
+canonicalizes the address with the versioned canonicalizer (AGENTS.md §10.4) and inserts
+into **`registration_interests`** — event, delivery address, canonical address and its
+version, the page's locale — `ON CONFLICT DO NOTHING` on `(event_id, canonical_email)`;
+migration `0047`, expand only. The action redirects to `?interest=1#registration-interest`
+whether the row was new, already there or a bot's, and the page says "Te anunțăm pe email
+când se deschid înscrierile." — the resend-oracle rule, BR-REQ-031-01 criterion 3; a
+malformed address is the one fixable error (`interest=invalid`), a failed widget the other
+(`interest=captcha`); never a value in the URL (§14.5). Once the window is no longer ahead
+the service answers CONFLICT and the action lands on the plain page, where the button now
+is. No rate-limit bucket: the limit is keyed on the identity, and the identity's second
+submission is already a no-op.
+
+*The message.* `REGISTRATION_OPENED`, the seventeenth type — "Înscrierile la <event> s-au
+deschis" / "Registration for <event> is open", the facts line, one paragraph, one paragraph
+saying why they got it and that the address is gone, "Înscrie-te" as the action, the event's
+page and its rules beneath. No participant and no token, like `STAFF_INVITATION`: the
+renderer loads the event by the `eventId` in the payload, so a renamed event renders right,
+and the action is the ordinary registration page, which asks everything itself. The greeting
+names nobody ("Salut,"). Previewed on `/admin/emails` with the other sixteen; the two labels
+that page reads (`types`, `when`) were also missing for `STAFF_INVITATION` and are added.
+
+*The job.* `queueRegistrationOpenedMessages`, a step of the registration maintenance after
+the participation confirmations (§104), in its own try/catch: one read joins the events that
+have interest rows; per event `registrationState` decides — `NOT_YET_OPEN` waits; `OPEN` on a
+published event queues one message per row (`interest:<id>:opened`, participant and
+registration null, `{ eventId }`) and deletes the rows in the same transaction; `OPEN` on an
+unpublished event waits for the page to come back; anything else — cancelled, completed,
+started, closed before it opened, moved to another form or to none — deletes the rows with
+no message. So an address exists until the message that is its purpose is queued, and not a
+minute longer; the outbox row keeps `recipient_email` like every other message, under the
+outbox's own ninety days. There is no `notified_at`: a row that has been notified does not
+exist.
+
+*The notice.* One paragraph in section 5 of the platform's privacy-notice template, both
+languages: the purpose, the one message "shortly after" the opening, the address kept on
+the notification list only until it is sent and deleted from that list with it — the
+message itself keeps the address like every other message, which the paragraph above
+already says — consent (art. 6(1)(a) GDPR), withdrawal by writing to the club before it
+goes. The terms need nothing — nothing is entered.
+
+*Withdrawal.* The notice's promise has a verb in the backoffice, or the club could keep it
+only from the database console: on the event's page, under the queue and only while the
+window is ahead, "Adrese care așteaptă anunțul deschiderii: N" (`countInterests`, the count
+and never an address) and one small form, the address typed and "Șterge din listă" —
+`withdrawInterestAction`, Administrator like the queue, `withdrawInterest` deleting by the
+canonical identity so the address as the person wrote it finds the row as they typed it.
+The answer says whether a row went: the person asking is staff.
+
+*Rejected:* a second count or a second formula for the date (the sentence is
+`registrationCta`'s own `opensAt`, read through one helper); a client island for the box
+(a form and a redirect need no script; `SubmitButton` is the one shared island); the
+address in a cookie or the URL on a rejection (one field, retyped); a participant row for an
+address that registered nothing; keeping the row with a `notified_at` (a list of who was
+told is a list the club never asked for, and the notice promises deletion); a rate-limit
+scope (see above); Google Calendar's `details` (a one-tap link, not a subscription — the
+feed is where the date matters); a request-time trigger at the opening instant (nothing
+runs then; the job's cadence is the promise, and the texts say so); skipping the timing
+check on the corrected render (a flag a bot could post — the original time is carried
+instead); a list of the waiting addresses in the backoffice (a count and a withdrawal are
+what the notice needs).
+
+**Consequences.** `db/schema/registration-interests.ts` (new), `db/schema/email-outbox.ts`,
+migration `0047_registration_interests`; `registrations/interest.ts` (new: `registerInterest`,
+`countInterests`, `withdrawInterest`, `queueRegistrationOpenedMessages`), `interest-box.ts`
+(new), `ui/RegistrationInterestForm.tsx` (new), `service.ts` (`looksLikeSpam` exported),
+`maintenance.ts` (the step, `interestsNotified`); `app/[locale]/events/[slug]/actions.ts`
+(new) and `page.tsx`; `app/[locale]/admin/actions.ts` (`withdrawInterestAction`) and
+`admin/events/[id]/page.tsx`; `events/domain/registration-window.ts`
+(`upcomingRegistrationOpening`), `events/ical.ts` (`CalendarLabels`, `registrationOpensAt`),
+both `calendar.ics` routes, `ui/RegistrationCta.tsx`, `ui/EventFacts.tsx`;
+`notifications/templates.ts`, `render.ts`; `legal-documents/templates/privacy-notice.ts`;
+twenty-one keys in both catalogues (eleven under `Event`, four under `Admin.emails` — two of
+them the `STAFF_INVITATION` labels that were missing — six under `Admin.queue`);
+`tests/integration/registrations/interest.test.ts` (new), `tests/unit/events/ical.test.ts`,
+`tests/unit/events/registration-window.test.ts`, `tests/helpers/db.ts`. BR-REQ-011-01
+criterion 13, BR-REQ-080-01 criterion 9; AGENTS.md §16.3; BUSINESS.md BR-BUS-080; CLAUDE.md's
+count.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 147. Decided — more places go to the waiting list at once (2026-09-19)
+
+**Context.** The owner: "we have 200 spots but first I give 100, then I have a waiting
+list and give 100 more." The editor already refused a number below the places taken
+(BR-REQ-034-02 criterion 3) and wrote a higher one, but nothing happened to the people
+waiting: `fillAvailableSpots` runs on a confirmation, a cancellation, an offer's lapse and
+the maintenance job's sweep of events with a hold past its deadline — and an event whose
+capacity grew has no lapsed hold, so its queue stood until somebody cancelled or the job
+happened to pass. Criterion 4 ("given capacity is increased, when the transaction commits,
+then existing waiting-list entries are allocated before any later direct registration") was
+true only because the next direct registration would fill the queue first. The owner chose:
+the offers go out on save, and a sentence in the editor says so.
+
+**Decision.** *The save.* `saveEventAndTranslations` compares the row before and after
+(`capacityRaised`: INTERNAL, and either a higher number or a number turned to none) and,
+when raised, calls `offerRaisedCapacity` **inside the same transaction**, after the guarded
+update — which already row-locks the event — and once more through `lockEventForCapacity`,
+the serialization point every capacity-changing decision takes (AGENTS.md §10.6), reading
+the row as it now stands; then `fillAvailableSpots` with it, the one thing that offers.
+The new number and the offers it makes commit together or not at all. `fillAvailableSpots`
+now returns how many it offered; its other callers ignore the number. A series save (§130)
+does the same per date it touches, when the capacity travelled and is higher than *that
+date's* own number — each date has its own line and its own places — and the two counts add
+up. *Not on a cancelled race.* `capacityRaised` asks for SCHEDULED too: a race cancelled and
+widened in the same press — the status and the number are one form — would otherwise email
+24-hour offers whose link answers only that the event is cancelled; cancelling expires
+nobody, so the same holds for a later edit of a cancelled event with people still waiting.
+On the series path each date's own status counts, as it now stands. *The count behind the
+lock.* Criterion 3's count of the places taken now runs after `lockEventForCapacity`, on
+the event and on every series date: a plain SELECT inside the transaction waited for
+nothing, so a confirmation committing between the count and the guarded update could leave
+the number one below the places taken — the version guard only ever caught another save.
+*The locked row's places.* The allocator's locked paths — the email link, the signature, the
+desk's confirmation and promotion, a cancellation — handed `allocateOrWaitlist` the
+caller's row, whose `capacity` was read before the lock; now that a raise is an everyday
+save, a person confirming while it lands would be waitlisted against the old number with the
+new places standing free until the allocator's next visit. `withLockedCapacity` gives them
+the locked row's number instead. *The lifted cap.* Nothing is ever waitlisted against an uncapped event, so
+`fillAvailableSpots` returned at once for one — which would have left the people waiting
+under the old number stranded the moment it was removed. For an uncapped event the waiting
+count now stands in for the available places: zero on every ordinary visit, everyone waiting
+on the visit that lifts the cap. AGENTS.md §15.6 says so. *The words.* The service answers
+`{ appliedTo, offered }`; the action carries `offered=N` beside the existing `saved` and
+`applied`, and the editor's banner reads "Salvat — locuri oferite listei de așteptare: 12."
+or, with a series, "Salvat — și pe încă 3 date ale seriei; locuri oferite listei de
+așteptare: 12."; nothing new when nobody was offered. The count stands after a colon
+because "1 locuri" and "100 locuri" are both wrong in Romanian and the catalogues carry no
+ICU plurals (`docs/VIBECODING.md`). Under "Număr de locuri", while anyone
+waits: "Pe lista de așteptare: N. Dacă mărești numărul, locurile noi se oferă imediat, în
+ordine, câte 24 h fiecare." — the organizer's word on that screen is the number, not the
+capacity — the count is read once on the page (`countEligibleWaitlisted`)
+and handed to both the queue panel, which counted it itself before, and the settings form,
+as a number; the form is a Server Component and builds the sentence. The queue panel's
+"how to simulate" note names the raise beside a cancellation and a lapse.
+
+*Rejected:* offering from the action after the commit (a second transaction, a second lock,
+and a save that succeeds while its offers fail); a count taken from the outbox or the rows
+after the call (the allocator knows what it did); calling the allocator on every save (the
+sentence promises offers on a raise, and a lapsed hold's offer belongs to the job that
+notifies it); a new message type or a different hold for the raise (a place is a place; the
+runner's email is the same offer); a second formula for "raised" on the series (the same
+function, each date's own number); offering on a cancelled event because the allocator's
+other doors are status-blind (they are reached by a person's act on a live event; the editor
+is the one door where the status changes in the same transaction); an ICU plural for the
+banner's count (the catalogues carry none; the colon needs no agreement).
+
+**Consequences.** `registrations/service.ts` (`fillAvailableSpots` returns the offers,
+fills a lifted cap; `withLockedCapacity` in every locked path); `content/events/service.ts`
+(`capacityRaised` — SCHEDULED and INTERNAL, `offerRaisedCapacity`, the row locked before
+criterion 3's count in `saveEventFields`, `saveEventAndTranslations` and `applyToSeries`,
+`applyToSeries` over a `Transaction` returning `{ applied, offered }`,
+`saveEventAndTranslations` returning `offered`); `app/[locale]/admin/actions.ts`,
+`admin/events/[id]/page.tsx`; `content/events/ui/EventFieldsForm.tsx` (`waiting`),
+`registrations/ui/QueuePanel.tsx` (`waiting` as a prop); three keys under `Admin.editor`
+in both catalogues and `Admin.queue.simulate` extended;
+`tests/integration/cms/capacity-raise.test.ts` (new). BR-REQ-034-02 criterion 5;
+AGENTS.md §15.6. The concurrency contract (`tests/concurrency/capacity.test.ts`) is
+untouched: the raise takes the same lock, in the same place, and nothing bypasses
+`transitionRegistration`.
+
+Baseline `BR-V1.38-2026-09-18`.

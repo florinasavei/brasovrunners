@@ -45,6 +45,7 @@ export const privacyNoticeRo: LegalDocumentBody = {
       heading: "5. E-mailurile",
       paragraphs: [
         "Trimitem doar mesaje despre înscrierea ta: confirmări, legături, lista de așteptare, un memento cu 48 de ore înainte și cel mult o mulțumire după cursă, despre acel eveniment — nu comunicări comerciale în sensul Legii nr. 506/2004 privind prelucrarea datelor cu caracter personal și protecția vieții private în sectorul comunicațiilor electronice (art. 12); marketing, doar cu consimțământ separat. Temei: art. 6(1)(b) GDPR. Din fiecare mesaj păstrăm adresa, datele lui și starea trimiterii, nu textul; legăturile, doar ca amprentă.",
+        "„Anunță-mă când se deschid înscrierile”: dacă lași adresa ta pe pagina unui eveniment înainte să se deschidă înscrierile, îți trimitem un singur e-mail, la scurt timp după ce se deschid, cu legătura către formular. Adresa o păstrăm în lista de anunțare doar până la trimiterea acelui mesaj și o ștergem din listă odată cu el (mesajul însuși păstrează adresa ca orice alt mesaj, vezi mai sus) — sau fără mesaj, dacă evenimentul e anulat ori înscrierile nu se mai deschid pe site. Temei: consimțământul tău (art. 6(1)(a) GDPR), pe care îl poți retrage oricând înainte de trimitere, scriindu-ne la <EMAIL DE CONTACT>.",
       ],
     },
     {
@@ -129,6 +130,7 @@ export const privacyNoticeEn: LegalDocumentBody = {
       heading: "5. Emails",
       paragraphs: [
         "We send only messages about your registration: confirmations, links, the waiting list, a reminder 48 hours before and at most one thank-you after the race, about that event — not commercial communications under Romanian Law no. 506/2004 on the processing of personal data and the protection of privacy in the electronic communications sector (art. 12); marketing only with separate consent. Basis: art. 6(1)(b) GDPR. Of each message we keep the address, its facts and delivery state, not the text; links, only as a fingerprint.",
+        "\"Tell me when registration opens\": if you leave your address on an event's page before its registration opens, we send you one email, shortly after it opens, with the link to the form. We keep the address on the notification list only until that message is sent and delete it from the list with it (the message itself keeps the address like any other message, see above) — or without a message, if the event is cancelled or registration no longer opens on the site. Basis: your consent (art. 6(1)(a) GDPR), which you can withdraw at any time before it is sent by writing to <CONTACT EMAIL>.",
       ],
     },
     {

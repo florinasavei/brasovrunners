@@ -41,6 +41,7 @@ import {
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
 import { assignBibNumbers } from "@/modules/registrations/bibs";
+import { withdrawInterest } from "@/modules/registrations/interest";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -388,7 +389,7 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string; applied?: string };
+  let outcome: { error?: string; saved?: string; applied?: string; offered?: string };
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
@@ -397,7 +398,7 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
     const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
     const scope = text(form, "scope");
 
-    const { appliedTo } = await saveEventAndTranslations(getDb(), {
+    const { appliedTo, offered } = await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
       fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -408,7 +409,11 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
       acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
       scope: ticked.length > 0 ? { ids: ticked } : SERIES_EDIT_SCOPES.includes(scope as (typeof SERIES_EDIT_SCOPES)[number]) ? (scope as SeriesEditScope) : "this",
     });
-    outcome = appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" };
+    // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
+    outcome = {
+      ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
+      offered: offered > 0 ? String(offered) : undefined,
+    };
   } catch (error) {
     outcome = outcomeOf(error);
   }
@@ -628,6 +633,28 @@ export async function removeTestRegistrationsAction(form: FormData): Promise<voi
     const actor = await requireStaffRole("ADMIN");
     await removeTestRegistrations(getDb(), actor, eventId);
     outcome = { saved: "testRegistrationsRemoved" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  backTo(path, outcome);
+}
+
+/**
+ * Withdrawal from "Anunță-mă" (§146), as the notice promises: an Administrator types the
+ * address the person wrote from, and the row goes by its canonical identity. The address is
+ * posted, never put in the URL; the outcome is a flag.
+ */
+export async function withdrawInterestAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const path = editorPath(locale, eventId);
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    await requireStaffRole("ADMIN");
+    const removed = await withdrawInterest(getDb(), eventId, text(form, "email"));
+    outcome = { saved: removed ? "interestRemoved" : "interestNotFound" };
   } catch (error) {
     outcome = outcomeOf(error);
   }

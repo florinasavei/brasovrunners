@@ -353,6 +353,21 @@ const T = {
       ],
       action: "Intră în backoffice",
     },
+    registrationOpened: {
+      // To an address, not a participant (§146): the greeting names nobody.
+      subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis. Te poți înscrie cu butonul de mai jos.`,
+        "Primești acest mesaj pentru că ai cerut, pe pagina evenimentului, să fii anunțat când se deschid înscrierile. E singurul: adresa ta a fost ștearsă din lista de anunțare odată cu trimiterea lui.",
+      ],
+      action: "Înscrie-te",
+      links: (d: TemplateData) => [
+        ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+      ],
+    },
     registrationCancelled: {
       subject: "Înscrierea a fost anulată",
       body: (d: TemplateData) => [`Înscrierea ta la ${d.eventTitle ?? "eveniment"} a fost anulată.`],
@@ -493,6 +508,20 @@ const T = {
       ],
       action: "Open the backoffice",
     },
+    registrationOpened: {
+      subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Registration for ${d.eventTitle ?? "the event"} is open. Register with the button below.`,
+        "You are getting this because you asked, on the event's page, to be told when registration opens. It is the only one: your address was deleted from the notification list when it was sent.",
+      ],
+      action: "Register",
+      links: (d: TemplateData) => [
+        ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+      ],
+    },
     registrationConfirmed: {
       subject: "Your registration is confirmed",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -566,6 +595,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   DECLARATION_ARCHIVE: "declarationArchive",
   BIB_ASSIGNED: "bibAssigned",
   STAFF_INVITATION: "staffInvitation",
+  REGISTRATION_OPENED: "registrationOpened",
 };
 
 /**

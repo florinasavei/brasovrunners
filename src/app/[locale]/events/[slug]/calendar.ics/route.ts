@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
 import { localizedSchedule, readScheduleItems } from "@/modules/events/domain/schedule";
 import { buildCalendar } from "@/modules/events/ical";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
@@ -22,10 +23,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const url = `${env.APP_BASE_URL}${getPathname({ locale: known, href: { pathname: "/events/[slug]", params: { slug } } })}`;
   const body = buildCalendar({
-    events: [{ ...event, url, programme: localizedSchedule(readScheduleItems(event.scheduleItems), known) }],
+    events: [{ ...event, url, programme: localizedSchedule(readScheduleItems(event.scheduleItems), known), registrationOpensAt: upcomingRegistrationOpening(event, new Date()) }],
     baseUrl: env.APP_BASE_URL,
     name: event.title,
-    labels: { programme: t("schedule"), locale: known },
+    labels: { programme: t("schedule"), locale: known, registrationOpens: (date) => t("calendar.registrationOpens", { date }) },
   });
   return new Response(body, {
     headers: {

@@ -141,6 +141,7 @@
       "placesRemaining": "{count, plural, one {# loc liber} few {# locuri libere} other {# de locuri libere}}",
       "full": "Nu mai sunt locuri libere. Poți intra pe lista de așteptare: dacă se eliberează un loc, primul de pe listă îl primește.",
       "opensOn": "Înscrierile se deschid pe {date}.",
+      "opensOnShort": "Înscrierile se deschid pe {date}",
       "closed": "Înscrierile s-au închis pentru acest eveniment.",
       "closedRaceWeek": "Înscrierile s-au închis — vino la masă cu QR-ul din email.",
       "cancelled": "Evenimentul a fost anulat, așa că înscrierile s-au oprit.",
@@ -190,7 +191,19 @@
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
     "openFacebookEvent": "Evenimentul pe Facebook",
+    "interest": {
+      "heading": "Anunță-mă când se deschid înscrierile",
+      "email": "Adresa ta de email",
+      "submit": "Anunță-mă",
+      "submitting": "Se trimite…",
+      "note": "Îți trimitem un singur email când se deschid înscrierile; adresa se șterge după aceea.",
+      "privacy": "Detalii în nota de confidențialitate.",
+      "done": "Te anunțăm pe email când se deschid înscrierile.",
+      "invalid": "Adresa de email nu pare validă. Verific-o și încearcă din nou.",
+      "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite."
+    },
     "calendar": {
+      "registrationOpens": "Înscrieri din {date}",
       "feedName": "🏃 BVR"
     }
   },
@@ -513,6 +526,7 @@
       "registrationModeHelp": "Înscrierea aici cere o declarație; înscrierea în altă parte cere linkul organizatorului.",
       "capacity": "Număr de locuri",
       "capacityHelp": "Lasă gol pentru nelimitat. Nu poate fi coborât sub locurile deja ocupate.",
+      "capacityWaiting": "Pe lista de așteptare: {waiting}. Dacă mărești numărul, locurile noi se oferă imediat, în ordine, câte 24 h fiecare.",
       "registrationOpensAt": "Înscrierile se deschid",
       "registrationClosesAt": "Înscrierile se închid",
       "registrationWindowHelp": "Lasă deschiderea goală și înscrierile pornesc la publicarea evenimentului; lasă închiderea goală și se opresc la startul evenimentului.",
@@ -553,6 +567,8 @@
       "repeatStopHelp": "Nu se mai creează date noi; cele existente rămân (bifează-le în listă ca să le ștergi).",
       "repeatStopped": "Seria e oprită: nu se mai creează date noi.",
       "savedSeries": "Salvat — și pe încă {applied} date ale seriei.",
+      "savedSeriesOffered": "Salvat — și pe încă {applied} date ale seriei; locuri oferite listei de așteptare: {offered}.",
+      "savedOffered": "Salvat — locuri oferite listei de așteptare: {offered}.",
       "scope": {
         "title": "Salvează pentru:",
         "this": "Doar această dată",
@@ -676,7 +692,13 @@
       "test": "test",
       "offered": "ofertă până la {until}",
       "since": "din {when}",
-      "simulate": "Cum simulezi lista de așteptare (nu în producție): pune un număr mic de locuri în Setări, salvează, apoi adaugă mai jos mai multe înscrieri de test decât locuri — primele iau locurile (ca rezervări de 30 de minute), restul intră aici, în ordine. Anulează una confirmată sau lasă o rezervare să expire (jobul de întreținere rulează la 15 minute) și prima din listă primește oferta; emailul ei apare în Outbox, la înscrierea respectivă."
+      "interestTitle": "Adrese care așteaptă anunțul deschiderii: {count}",
+      "interestHelp": "Lăsate la „Anunță-mă” pe pagina evenimentului. Primesc un singur email la prima rulare a jobului după ce se deschid înscrierile și se șterg odată cu el. Dacă cineva îți scrie că nu mai vrea mesajul, tastează adresa lui aici: dispare din listă. Adresele nu se afișează.",
+      "interestEmail": "Adresa de retras",
+      "interestRemove": "Șterge din listă",
+      "interestRemoved": "Adresa a fost ștearsă din lista de anunțare.",
+      "interestNotFound": "Adresa nu era pe lista acestui eveniment. Verifică dacă a scris de pe altă adresă.",
+      "simulate": "Cum simulezi lista de așteptare (nu în producție): pune un număr mic de locuri în Setări, salvează, apoi adaugă mai jos mai multe înscrieri de test decât locuri — primele iau locurile (ca rezervări de 30 de minute), restul intră aici, în ordine. Anulează una confirmată, lasă o rezervare să expire (jobul de întreținere rulează la 15 minute) sau mărește numărul de locuri și prima din listă primește oferta; emailul ei apare în Outbox, la înscrierea respectivă."
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -1281,7 +1303,9 @@
         "EVENT_THANKS": "Mulțumim după cursă",
         "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
         "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)",
-        "BIB_ASSIGNED": "Numărul de concurs dat de mână"
+        "BIB_ASSIGNED": "Numărul de concurs dat de mână",
+        "STAFF_INVITATION": "Invitația în echipă",
+        "REGISTRATION_OPENED": "Înscrierile s-au deschis"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1298,7 +1322,9 @@
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
         "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el.",
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune.",
-        "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare."
+        "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare.",
+        "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
+        "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere."
       },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",

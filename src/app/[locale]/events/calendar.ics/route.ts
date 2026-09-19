@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
 import { localizedSchedule, readScheduleItems } from "@/modules/events/domain/schedule";
 import { buildCalendar } from "@/modules/events/ical";
 import { listPublishedEventsBetween } from "@/modules/events/repository";
@@ -30,10 +31,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
       ...event,
       url: `${env.APP_BASE_URL}${getPathname({ locale: known, href: { pathname: "/events/[slug]", params: { slug: event.slug } } })}`,
       programme: localizedSchedule(readScheduleItems(event.scheduleItems), known),
+      // The opening date while it is ahead (§146); the public row's own value would also name one long past.
+      registrationOpensAt: upcomingRegistrationOpening(event, now),
     })),
     baseUrl: env.APP_BASE_URL,
     name: t("calendar.feedName"),
-    labels: { programme: t("schedule"), locale: known },
+    labels: { programme: t("schedule"), locale: known, registrationOpens: (date) => t("calendar.registrationOpens", { date }) },
   });
   return new Response(body, {
     headers: {

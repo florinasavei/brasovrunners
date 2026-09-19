@@ -30,6 +30,12 @@ export type CalendarEvent = {
   programme?: readonly ProgrammeRow[];
   /** The event's own zone, for the programme lines' clock. */
   timezone?: string;
+  /**
+   * When registration opens, only while that is ahead (§146) — `upcomingRegistrationOpening`
+   * decides, so a feed built from the public row must set it explicitly. A line in the
+   * description, written with `labels.registrationOpens`.
+   */
+  registrationOpensAt?: Date | null;
   /** The event's public page, absolute. */
   url: string;
   /** When the row last changed, for `DTSTAMP`/`LAST-MODIFIED`; the start when unknown. */
@@ -107,16 +113,36 @@ function calendarPlace(event: Pick<CalendarEvent, "locationName" | "mapUrl">): {
   return { location: event.locationName, line: "" };
 }
 
-export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { programme: string; locale?: "ro" | "en" }): string[] {
+export type CalendarLabels = {
+  programme: string;
+  locale?: "ro" | "en";
+  /** "Înscrieri din {date}" (§146), given the date already formatted in the event's zone. */
+  registrationOpens?: (date: string) => string;
+};
+
+export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: CalendarLabels): string[] {
   const stamp = event.updatedAt ?? event.startsAt;
   const rows = event.programme ?? [];
+  const timeZone = event.timezone ?? "Europe/Bucharest";
+  const locale = labels.locale ?? "ro";
   // The rows first, then the text beneath them, under one heading — as the page shows them.
   const programme = [
-    ...programmeLines(rows, event.timezone ?? "Europe/Bucharest", labels.locale ?? "ro"),
+    ...programmeLines(rows, timeZone, locale),
     ...[scheduleLines(event.scheduleJson)].filter((text) => text.length > 0),
   ].join("\n");
   const place = calendarPlace(event);
-  const description = [place.line, event.excerpt?.trim() ?? "", programme ? `${labels.programme}:\n${programme}` : "", event.url]
+  // "Registration from …" while the window is ahead (§146): the fact a subscriber reads the
+  // feed for, above the programme — a phone that rings for the start is no help with a race
+  // that filled up the week entries opened.
+  const opens =
+    event.registrationOpensAt && labels.registrationOpens
+      ? labels.registrationOpens(
+          new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone }).format(
+            event.registrationOpensAt,
+          ),
+        )
+      : "";
+  const description = [place.line, event.excerpt?.trim() ?? "", opens, programme ? `${labels.programme}:\n${programme}` : "", event.url]
     .filter((part) => part.length > 0)
     .join("\n\n");
   const lines = [
@@ -162,7 +188,7 @@ export function buildCalendar(params: {
   baseUrl: string;
   /** The calendar's own name, shown by the subscriber's app. */
   name: string;
-  labels: { programme: string; locale?: "ro" | "en" };
+  labels: CalendarLabels;
   /** The subscriber's refresh hint: an hour (§129). Outlook reads it; Google and Apple keep their own clock. */
   refreshHours?: number;
 }): string {
