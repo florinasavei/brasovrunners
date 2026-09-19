@@ -6231,3 +6231,22 @@ eight chips wrap fine. The backoffice list keeps "8 date": there the number is t
 catalogues. BR-REQ-041-01 criterion 9 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 139. Decided — "Adaugă în calendarul tău" is a small region under the month, the address and the explanation folded (2026-09-19)
+
+**Context.** The owner: "I hate how this ics is shown: make it smaller and with a collapsed
+'i'"; "should be a region like 'Add to my calendar', and this info [when each app re-reads]
+should be in a tooltip". The line above the month spelled the feed's address out and
+explained Google's refresh in a sentence, every visit.
+
+**Decision.** Under the month, a bordered region titled "Adaugă în calendarul tău" with the
+three doors of §107 as small 44-pixel buttons — Google Calendar, Apple/Outlook/phone
+(`webcal://`), the download — an "i" (`shared/ui/InfoTip`, a tooltip whose sentence is also
+its accessible name) carrying the refresh note, and the plain address inside a `<details>`
+for the app that wants it pasted. Below the month rather than above: the month is what the
+page is for.
+
+**Consequences.** `app/[locale]/events/page.tsx`, `shared/ui/InfoTip.tsx` (new), two keys
+replace one in both catalogues. BR-REQ-041-01 criterion 7 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

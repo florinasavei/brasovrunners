@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **"Adaugă în calendarul tău"** is a small boxed region under the month: three buttons, an "i" with the refresh note, the address folded. §139.
 - **A series card says "Săptămânal"** instead of "8 date", and shows every coming date. §138.
 - **The month is a calendar on a phone too.** Same grid on every width; each event a chip with its type's and its surface's glyph, the time, and the title in a tooltip; "Listă" one press away and kept by the month links. §137.
 - **The backoffice list's status chips say what they are**: "Publicat · 8 date" for a series, and the registration mode reads "Înscrieri pe site" / "Înscrieri la organizator" / "Fără înscrieri", with a hover title naming the setting. Still Romanian, by §35.

@@ -4,7 +4,7 @@ import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
-import MuiLink from "@mui/material/Link";
+import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { webcalUrl } from "@/modules/events/ical";
 import { env } from "@/shared/config/env";
@@ -23,6 +23,7 @@ import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
+import InfoTip from "@/shared/ui/InfoTip";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
@@ -154,37 +155,44 @@ export default async function EventsPage({ params, searchParams }: Props) {
 
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
       <Box sx={{ mt: 2, mb: 4 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {/* Three doors (the owner: "this subscription to calendar does not work" — a `webcal://`
-            link does nothing where no app claims the scheme, which on a desktop is most
-            browsers): Google Calendar's own "add by URL" address, `webcal://` for Apple,
-            Outlook and phones, and the plain address to paste anywhere else. */}
-        {t("calendar.subscribe")}{" "}
-        <MuiLink
-          href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`))}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
-        >
-          {t("calendar.subscribeGoogle")}
-        </MuiLink>
-        {" · "}
-        <MuiLink href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-          {t("calendar.subscribeApple")}
-        </MuiLink>
-        {" · "}
-        <MuiLink href={`/${locale}/events/calendar.ics`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-          {t("calendar.downloadLink")}
-        </MuiLink>
-        {" · "}
-        <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
-        {/* The feed is fresh on every read (§129); when the phone shows a change is the app's
-            clock, and the owner asked why Google still showed the old hour. */}
-        <Box component="span" sx={{ display: "block", mt: 0.5 }}>
-          {t("calendar.refreshNote")}
+        <EventCalendar view={view} events={inRange} now={now} query={query} layout={layout} />
+
+        {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
+            calendar does not work" — a `webcal://` link does nothing where no app claims the
+            scheme, which on a desktop is most browsers): Google Calendar's own "add by URL"
+            address, `webcal://` for Apple, Outlook and phones, the file itself; the plain
+            address folded away for any other app, and the "when does it update" behind an "i"
+            (the feed is fresh on every read, §129; when the phone shows a change is the app's
+            clock, and the owner asked why Google still showed the old hour). */}
+        <Box component="section" aria-labelledby="add-to-calendar" sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
+          <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            <Typography id="add-to-calendar" component="h3" variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
+              {t("calendar.addTitle")}
+            </Typography>
+            <Button
+              component="a"
+              href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              variant="outlined"
+              sx={{ minHeight: 44 }}
+            >
+              {t("calendar.subscribeGoogle")}
+            </Button>
+            <Button component="a" href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+              {t("calendar.subscribeApple")}
+            </Button>
+            <Button component="a" href={`/${locale}/events/calendar.ics`} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+              {t("calendar.downloadLink")}
+            </Button>
+            <InfoTip text={t("calendar.refreshNote")} />
+          </Stack>
+          <Box component="details" sx={{ mt: 0.5, "& > summary": { cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center", fontSize: "0.8125rem", color: "text.secondary" } }}>
+            <summary>{t("calendar.feedAddress")}</summary>
+            <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
+          </Box>
         </Box>
-      </Typography>
-      <EventCalendar view={view} events={inRange} now={now} query={query} layout={layout} />
       </Box>
 
       {/*
