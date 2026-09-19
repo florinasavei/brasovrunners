@@ -5395,8 +5395,11 @@ stored).
 
 *Amended the same evening* (the owner: "group runs don't have registrations!"): the page and
 the card say nothing about registration on a group run — not even "none needed"; the
-question does not arise. And Repeat sits right under Publication on the editor ("repeating
-the event should be more on the top"), before the settings, the queue and the test data.
+question does not arise, and neither do test registrations, which the editor offers only on
+an event that takes registrations. Repeat sits right under Publication on the editor
+("repeating the event should be more on the top"), before the settings, the queue and the
+test data; and the Save bar is sticky at the bottom of the window, above the footer, while
+the long form scrolls ("this save button should be sticky at the bottom").
 
 **Consequences.** `event-type.ts` (`takesRegistrations`, `hasProgramme`), `OnlyForType`,
 `EventFieldsForm`, `TranslationFieldsForm` (`eventType`), `content/events/service.ts`

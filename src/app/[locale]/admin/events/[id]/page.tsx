@@ -134,8 +134,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
   // Administrator only, and never in production — the second half is the environment, and it is
   // asserted again in the service and once more at the insert.
+  // Only where there is a queue to fill: a group run has none (§111; the owner: "test
+  // registrations do not make sense for group runs!").
   const mayFillTheQueue =
-    canManageTestRegistrations(staffUser.role) && areTestRegistrationsAvailable();
+    canManageTestRegistrations(staffUser.role) && areTestRegistrationsAvailable() && event.registrationMode === "INTERNAL";
 
   /**
    * Romanian first, then English — `routing.locales` order, which is the order the club works
@@ -331,8 +333,24 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Box>
 
           {maySaveAnything && (
-            <Box component="section">
-              <Divider sx={{ mb: 2 }} />
+            /*
+              Sticky at the bottom of the window while the long form scrolls (the owner: "this
+              save button should be sticky at the bottom"), above the footer's own 44px bar;
+              it settles into place once the end of the form is in view.
+            */
+            <Box
+              component="section"
+              sx={{
+                position: "sticky",
+                bottom: 44,
+                zIndex: 2,
+                bgcolor: "background.default",
+                pt: 1.5,
+                pb: 1.5,
+                borderTop: 1,
+                borderColor: "divider",
+              }}
+            >
               {/* BR-REQ-051-01 criterion 4, once for the whole save now that there is one save.
                   Binding three times over: `required`, so the browser refuses the submit and
                   names the box; the dimmed button with its sentence, so the organizer sees why
