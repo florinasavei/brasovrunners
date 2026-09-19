@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **The programme as timed rows.** On every event but a group run, the editor takes rows — date, time, until, what in both languages, where — shown as a list under "Programme" on the page, repeated in the reminder, and each its own entry in the `.ics` and the feed; the free text stays beneath. Migration `0043`. The last-but-one developer row on `/admin/tasks` is done. §117.
 - **A smarter calendar.** Month and year selects, a "Month | Year" switch — the year as an agenda of its months — and the type's glyph on every entry. §116.
 - **The light/dark switch is in the bottom-left corner**, on the footer's line, which is 44px now; the header keeps the language switcher alone. §115.
 - **Bulk actions that work, in a bar above the list.** "All", "Ticked: N", publish, archive and — for an Administrator — delete with a confirmation; a series is deleted with one tick. The old fold's ticks never reached its form (MUI's `Checkbox` put `form=` on a span), so every bulk publish and archive had posted nothing. §114.

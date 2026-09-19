@@ -220,6 +220,18 @@ export const events = pgTable(
      */
     stravaEventUrl: text("strava_event_url"),
 
+    /**
+     * The programme as data (`DECISIONS.md` §117): the timed rows — when, what, where — that
+     * the page shows as a list, the reminder repeats and the calendar carries as one entry
+     * each. `[{ startsAt, endsAt, label: { ro, en }, place }]`, instants as ISO strings, read
+     * through `events/domain/schedule.ts` so a row nobody wrote this way is dropped, never
+     * rendered. On the event rather than the translation: the time and the place are the same
+     * fact in either language (§36), only the label is a translation, and it carries both.
+     * Null is "no programme", like `schedule_json` on the translation, which stays as the
+     * prose beneath the rows.
+     */
+    scheduleItems: jsonb("schedule_items"),
+
     distanceMeters: integer("distance_meters"),
     elevationGainMeters: integer("elevation_gain_meters"),
 

@@ -204,7 +204,6 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
 /** In the order to take them. Each has its title, its "why" and its steps in `Admin.tasks.items`. */
 export const BACKLOG = [
-  "scheduleStructured",
   "docsSimplify",
 ] as const;
 

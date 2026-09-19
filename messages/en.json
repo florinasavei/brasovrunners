@@ -449,7 +449,20 @@
       "create": "Create the event",
       "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
       "rulesEmpty": "(none yet — press to write)",
-      "scheduleHelp": "Optional. The programme by the hour: kit pickup (where, when), the briefing, the start, the cut-offs, the awards. Shown on the event page under “Programme”; the emails point there.",
+      "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
+      "programmeSection": "Programme",
+      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored.",
+      "programmeRows": {
+        "date": "Date",
+        "time": "Time",
+        "endTime": "Until",
+        "ro": "What (Romanian)",
+        "en": "What (English)",
+        "place": "Where",
+        "add": "Add a row",
+        "remove": "Remove row",
+        "empty": "No rows yet."
+      },
       "rulesHelp": "Optional. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
       "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email and the reminder.",
       "type": "Event type",
@@ -762,16 +775,6 @@
             "Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
             "In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
             "Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
-          ]
-        },
-        "scheduleStructured": {
-          "title": "The event programme as data (times), not only text",
-          "todo": "The programme is free text per language (the page's “Programme” section). The calendar (.ics, subscription, Google Calendar) exists since §107 and carries the programme as text. Left: structured rows — the time, what happens, where — shown the same on the page, in the emails and as separate calendar entries.",
-          "done": "The programme has timed rows and can be added to the phone's calendar.",
-          "how": [
-            "Schema: an event_schedule_items table (event_id, starts_at, ends_at?, label per language, place) — or structured JSON on the event.",
-            "Editor: rows “time + text + place”, in order; the page shows them as a timed list; the reminder email sends them.",
-            "Calendar: from those rows, one VEVENT per row in the event's .ics (the file and the subscription exist: modules/events/ical.ts)."
           ]
         },
         "declarationArchiveMail": {

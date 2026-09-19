@@ -5555,3 +5555,47 @@ JavaScript-only calendar (every address here is a link a crawler follows).
 `tests/unit/events/calendar.test.ts`. BR-REQ-020-01 criterion 10.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 117. Decided — the programme as data: timed rows on the event, a list on the page, in the reminder, one calendar entry each (2026-09-19)
+
+**Context.** The last developer row on `/admin/tasks` but one: since §96 the programme was
+free text per language, and §107's calendar carried it as text in the description. A trail
+race publishes kit pickup on Saturday, the briefing at 09:30, the start at 10:00, the cut-offs
+— rows with a time, and a runner wants the briefing in the phone's calendar, not only the
+start.
+
+**Decision.** `events.schedule_items` (migration `0043`, `jsonb`, null for none): `[{ startsAt,
+endsAt, label: { ro, en }, place }]`, instants as ISO strings. On the event rather than the
+translation because the time and the place are the same fact in either language (§36) and
+only the label is a translation — so the row carries both, and a save through the editor
+requires both, the way publication requires both languages (§28). `events/domain/schedule.ts`
+is the one reader (`readScheduleItems` drops what is not a row), the one localizer, the one
+shifter for a repeated event (§64: on the wall clock, so 09:30 stays 09:30 across the clock
+change) and the one line-writer for the plain places. The editor's rows
+(`ScheduleRowsEditor`, the settings' one island: add a row, remove one) post
+`event.schedule[i].<box>`; a blank row is the spare line and is dropped, a half row is refused
+with its number. The page shows the rows under `#schedule` as a list — the time, what, where,
+with a day heading when they span days — and the free text beneath (`EventProgramme`, shared
+with the preview). The reminder repeats them as one sentence per language. The `.ics` — the
+event's file and the club's feed — carries one VEVENT per row after the event's own, "Crosul
+aniversar — Kit pickup" at the row's time and place, UID `<event id>-<n>`, and the event's
+description lists the rows before the text. Not on a group run (§111).
+
+*Rejected:* a table (`event_schedule_items` — a join, an order column, ids to edit by, for
+rows that are saved with the event in one version-guarded write anyway); rows per
+translation (two lists that drift — the time is one fact); a label in one language with a
+fallback (a row on one page and not the other is what §28 exists to prevent); a rich-text
+table (the editor's allowlist has no table, and a table is not data).
+
+**Consequences.** `schema/events.ts`, migration `0043_event_schedule_items`,
+`events/domain/schedule.ts`, `content/events/fields.ts` (`scheduleRows`), `service.ts`
+(`resolveTimes`, `normalizeForType`, `copiedEventValues`, `repeatEvent`),
+`admin/actions.ts#eventFieldsFrom`, `ScheduleRowsEditor`, `EventFieldsForm`,
+`events/ui/EventProgramme.tsx`, the event page and the preview, `events/repository.ts`,
+`ical.ts` (`programme`), the two `.ics` routes, `notifications/render.ts` and `templates.ts`
+(`eventProgramme`), the catalogues, the `scheduleStructured` row retired; `tests/unit/events/schedule.test.ts`,
+`tests/unit/events/ical.test.ts`, `tests/integration/cms/programme-rows.test.ts`,
+`tests/integration/notifications/render.test.ts`. BR-REQ-020-01 criterion 11, BR-REQ-050-02
+criterion 13.
+
+Baseline `BR-V1.38-2026-09-18`.

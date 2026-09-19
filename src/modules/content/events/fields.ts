@@ -179,6 +179,25 @@ const timezone = z
   );
 
 /**
+ * One programme row as the editor posts it (`DECISIONS.md` §117): a date and a 24-hour time,
+ * an optional end time on the same day, the label in both languages, a place. Everything a
+ * string, empty allowed here — a row left blank is dropped by the service, and a half-filled
+ * one is refused there with the row's number, once the timezone is known to place it.
+ */
+const scheduleRowSchema = z
+  .object({
+    date: z.string().trim().max(10).optional().default(""),
+    time: z.string().trim().max(5).optional().default(""),
+    endTime: z.string().trim().max(5).optional().default(""),
+    ro: z.string().trim().max(200).optional().default(""),
+    en: z.string().trim().max(200).optional().default(""),
+    place: z.string().trim().max(200).optional().default(""),
+  })
+  .strict();
+
+export type ScheduleRowInput = z.infer<typeof scheduleRowSchema>;
+
+/**
  * The event-level fields, as the form sends them — every column an organizer owns.
  *
  * The times arrive as wall-clock strings from `<input type="datetime-local">` — "10:00" means
@@ -215,6 +234,8 @@ export const eventFieldsSchema = z
       })
       .transform((value) => (value === null ? null : Number(value))),
     raceStartsAtWallTime: z.string().trim(),
+    /** The programme's rows (§117), at most fifty; absent for a caller from before they existed. */
+    scheduleRows: z.array(scheduleRowSchema).max(50).optional().default([]),
 
     /**
      * The four facts that are the same event in either language (`DECISIONS.md` §36).

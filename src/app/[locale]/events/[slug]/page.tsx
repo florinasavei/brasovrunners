@@ -14,6 +14,7 @@ import { routing } from "@/i18n/routing";
 import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventProgramme from "@/modules/events/ui/EventProgramme";
 import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import Box from "@mui/material/Box";
@@ -216,15 +217,8 @@ export default async function EventDetailPage({ params }: Props) {
         </Box>
       )}
 
-      {/* The programme (§96), under `#schedule`: kit pickup, briefing, start, cut-offs. */}
-      {!isRichTextEmpty(readRichText(event.scheduleJson)) && (
-        <Box component="section" id="schedule" sx={{ mt: 4 }}>
-          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("schedule")}
-          </Typography>
-          <RichText body={event.scheduleJson} />
-        </Box>
-      )}
+      {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
+      <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
       {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
       {!isRichTextEmpty(readRichText(event.rulesJson)) && (

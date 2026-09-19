@@ -111,6 +111,18 @@ function eventFieldsFrom(form: FormData) {
     return `${date}T${value(`${field}Time`) || "00:00"}`;
   };
 
+  /**
+   * The programme's rows (§117), posted as `event.schedule[i].<box>` by `ScheduleRowsEditor`;
+   * gathered by index in the order the boxes came, blanks included — the service drops those.
+   */
+  const scheduleRows: Array<Record<string, string>> = [];
+  for (const [key, entry] of form.entries()) {
+    const match = /^event\.schedule\[(\d+)\]\.(date|time|endTime|ro|en|place)$/.exec(key);
+    if (!match || typeof entry !== "string") continue;
+    const index = Number(match[1]);
+    scheduleRows[index] = { ...(scheduleRows[index] ?? {}), [match[2]]: entry };
+  }
+
   return {
     type: value("type"),
     // Optional, like difficulty below: "" from the unselected dropdown means "none".
@@ -121,6 +133,7 @@ function eventFieldsFrom(form: FormData) {
     endsAtWallTime: wallTime("endsAt"),
     durationMinutes: value("durationMinutes"),
     raceStartsAtWallTime: wallTime("raceStartsAt"),
+    scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),

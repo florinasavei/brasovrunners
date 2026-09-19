@@ -5,8 +5,11 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { EVENT_SURFACES, EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
+import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import { readScheduleItems } from "@/modules/events/domain/schedule";
+import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import OnlyForType from "./OnlyForType";
+import ScheduleRowsEditor from "./ScheduleRowsEditor";
 import WallTimeField from "./WallTimeField";
 import {
   EVENT_STATUS_LABEL,
@@ -51,6 +54,12 @@ export default async function EventFieldsForm({
   // an organizer as to a visitor. Two catalogues of the same eight words would drift.
   const tEvent = await getTranslations("Event");
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
+  // The programme's rows as wall-clock boxes in the event's zone (§117).
+  const scheduleRows = readScheduleItems(event?.scheduleItems ?? null).map((item) => {
+    const start = toWallTimeInput(new Date(item.startsAt), zone);
+    const end = item.endsAt ? toWallTimeInput(new Date(item.endsAt), zone) : "";
+    return { date: start.slice(0, 10), time: start.slice(11, 16), endTime: end.slice(11, 16), ro: item.label.ro, en: item.label.en, place: item.place ?? "" };
+  });
 
   return (
     <Stack spacing={2}>
@@ -152,6 +161,32 @@ export default async function EventFieldsForm({
         inputMode="numeric"
         sx={{ width: 220 }}
       />
+
+      {/* The programme as rows (§117) — not on a group run (§111), like the registration block. */}
+      <OnlyForType type={EVENT_TYPES.filter(hasProgramme)} selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
+        <Stack spacing={1}>
+          <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
+            {t("editor.programmeSection")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("editor.programmeHelp")}
+          </Typography>
+          <ScheduleRowsEditor
+            initial={scheduleRows}
+            labels={{
+              date: t("editor.programmeRows.date"),
+              time: t("editor.programmeRows.time"),
+              endTime: t("editor.programmeRows.endTime"),
+              ro: t("editor.programmeRows.ro"),
+              en: t("editor.programmeRows.en"),
+              place: t("editor.programmeRows.place"),
+              add: t("editor.programmeRows.add"),
+              remove: t("editor.programmeRows.remove"),
+              empty: t("editor.programmeRows.empty"),
+            }}
+          />
+        </Stack>
+      </OnlyForType>
 
       {/*
         The place, and the two facts about taking part, once (`DECISIONS.md` §36).

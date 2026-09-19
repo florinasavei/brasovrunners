@@ -449,7 +449,20 @@
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
-      "scheduleHelp": "Opțional. Programul pe ore: ridicarea kiturilor (unde, când), briefingul, startul, limitele de timp, festivitatea. Apare pe pagina evenimentului la „Program”; emailurile trimit acolo.",
+      "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
+      "programmeSection": "Program",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat.",
+      "programmeRows": {
+        "date": "Data",
+        "time": "Ora",
+        "endTime": "Până la",
+        "ro": "Ce (română)",
+        "en": "Ce (engleză)",
+        "place": "Unde",
+        "add": "Adaugă un rând",
+        "remove": "Șterge rândul",
+        "empty": "Niciun rând încă."
+      },
       "rulesHelp": "Opțional. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
       "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare și în reminder.",
       "type": "Tip eveniment",
@@ -762,16 +775,6 @@
             "Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
             "În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
             "Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
-          ]
-        },
-        "scheduleStructured": {
-          "title": "Programul evenimentului ca date (ore), nu doar text",
-          "todo": "Programul e text liber pe limbă (secțiunea „Program” a paginii). Calendarul (.ics, abonament, Google Calendar) există din §107 și duce programul ca text. Rămâne: rânduri structurate — ora, ce se întâmplă, unde — care s-ar arăta la fel pe pagină, în emailuri și ca intrări separate în calendar.",
-          "done": "Programul are rânduri cu ore și se poate adăuga în calendarul telefonului.",
-          "how": [
-            "Schema: o tabelă event_schedule_items (event_id, starts_at, ends_at?, etichetă pe limbă, loc) — sau JSON structurat pe eveniment.",
-            "Editorul: rânduri „oră + text + loc”, în ordine; pagina le arată ca listă cu ore; reminderul le trimite.",
-            "Calendarul: din rândurile acestea, câte un VEVENT pe rând în .ics-ul evenimentului (fișierul și abonamentul există deja: modules/events/ical.ts)."
           ]
         },
         "declarationArchiveMail": {

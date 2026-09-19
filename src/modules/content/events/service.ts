@@ -6,6 +6,7 @@ import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
@@ -160,6 +161,8 @@ type ResolvedTimes = {
   raceStartsAt: Date | null;
   registrationOpensAt: Date | null;
   registrationClosesAt: Date | null;
+  /** The programme's rows with their instants, soonest first; empty for none (§117). */
+  scheduleItems: ScheduleItem[];
 };
 
 function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
@@ -190,6 +193,29 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
   const registrationOpensAt = optional(fields.registrationOpensAtWallTime, "registrationOpensAt");
   const registrationClosesAt = optional(fields.registrationClosesAtWallTime, "registrationClosesAt");
 
+  /**
+   * The programme's rows (§117). A row left blank in every box is the editor's spare line and
+   * is dropped; anything else must say when, and what in both languages — the page shows the
+   * rows in either language, so a label in one is a row missing from the other. The end, when
+   * given, is a time on the same day, at or after the start.
+   */
+  const scheduleItems = fields.scheduleRows
+    .map((row, index) => {
+      const blank = !row.date && !row.time && !row.endTime && !row.ro && !row.en && !row.place;
+      if (blank) return null;
+      const name = `schedule[${index + 1}]`;
+      if (!row.date || !row.time) throw new DomainError("VALIDATION_ERROR", `${name}: a date and time are required`);
+      const startsAt = required(`${row.date}T${row.time}`, name);
+      const endsAt = row.endTime ? required(`${row.date}T${row.endTime}`, `${name}.end`) : null;
+      if (endsAt && endsAt.getTime() < startsAt.getTime()) {
+        throw new DomainError("VALIDATION_ERROR", `${name}: the end cannot be before the start`);
+      }
+      if (!row.ro || !row.en) throw new DomainError("VALIDATION_ERROR", `${name}: the label is needed in both languages`);
+      return { startsAt: startsAt.toISOString(), endsAt: endsAt ? endsAt.toISOString() : null, label: { ro: row.ro, en: row.en }, place: row.place || null };
+    })
+    .filter((item): item is ScheduleItem => item !== null)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
   if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
     throw new DomainError("VALIDATION_ERROR", "endsAt: the event cannot end before it begins");
   }
@@ -216,7 +242,7 @@ function resolveTimes(fields: EventFieldsInput): ResolvedTimes {
     );
   }
 
-  return { startsAt, endsAt, raceStartsAt, registrationOpensAt, registrationClosesAt };
+  return { startsAt, endsAt, raceStartsAt, registrationOpensAt, registrationClosesAt, scheduleItems };
 }
 
 /**
@@ -276,6 +302,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     startsAt: times.startsAt,
     endsAt: times.endsAt,
     raceStartsAt: times.raceStartsAt,
+    scheduleItems: times.scheduleItems.length > 0 ? times.scheduleItems : null,
     mapUrl: fields.mapUrl,
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
@@ -311,6 +338,8 @@ function normalizeForType<T extends EventFieldsInput>(fields: T): T {
   if (takesRegistrations(fields.type)) return fields;
   return {
     ...fields,
+    // No programme rows on a turn-up type either (§111, §117).
+    scheduleRows: [],
     registrationMode: "NONE",
     capacity: null,
     declarationDocumentId: null,
@@ -867,6 +896,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     startsAt: source.startsAt,
     endsAt: source.endsAt,
     raceStartsAt: source.raceStartsAt,
+    // The programme's rows travel with a copy at the source's dates; a repeat shifts them.
+    scheduleItems: source.scheduleItems,
     timezone: source.timezone,
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
@@ -1082,6 +1113,9 @@ export async function repeatEvent<T extends Record<string, unknown>>(
           startsAt: occurrence.startsAt,
           endsAt: shift(source.endsAt, occurrence.step),
           raceStartsAt: shift(source.raceStartsAt, occurrence.step),
+          scheduleItems: source.scheduleItems
+            ? shiftScheduleItems(readScheduleItems(source.scheduleItems), source.timezone, occurrence.step)
+            : null,
           registrationOpensAt: shift(source.registrationOpensAt, occurrence.step),
           registrationClosesAt: shift(source.registrationClosesAt, occurrence.step),
           ...(publish ? { editorialStatus: "PUBLISHED" as const, publishedAt: now } : {}),

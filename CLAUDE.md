@@ -109,7 +109,11 @@ sections and in `CHANGELOG.md`.
 
 - Event pages in both languages, JSON-LD, sitemap, robots; the site root is the listing; an
   unpublished locale is a 404, never the other language (BR-REQ-040-02, §28). Rich-text
-  description, rules (`#rules`) and programme (`#schedule`) per language (§71, §96).
+  description, rules (`#rules`) and programme (`#schedule`) per language (§71, §96); the
+  programme's **timed rows** on the event — a list on the page, repeated in the reminder, one
+  calendar entry each (§117). A repeated event is **one line** on the listing and in the
+  backoffice (§113); glyphs on type, surface, difficulty and cost (§112); the calendar picks
+  a month or a year (§116); a group run takes no registration and has no programme (§111).
 - The listing: featured event, type filters, a month view (grid from `sm`, agenda on a phone)
   (§89); Open Graph cards drawn from the event, a square one for Instagram, share links (§90);
   **events as a calendar** — `.ics` per event, Google Calendar's add link, and a `webcal://`
@@ -208,9 +212,8 @@ sections and in `CHANGELOG.md`.
   `idle_in_transaction_session_timeout` (`docs/PLATFORM.md` § Connections are not the ceiling). The repository is public: `yarn secrets:check` in `yarn check`, GitHub
   secret scanning and push protection on (§98).
 
-Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); the
-structured programme rows (the calendar carries the programme as text, §107); a custom domain
-for the bucket. `SETUP.md` is long because it is the record of every account the club opened;
+Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); a
+custom domain for the bucket. `SETUP.md` is long because it is the record of every account the club opened;
 the procedures still valid are the numbered sections, and `docs/VIBECODING.md` is the short
 way in.
 

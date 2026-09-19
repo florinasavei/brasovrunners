@@ -145,9 +145,11 @@ export function renderBilingual(
   const first = buildTemplateContent(messageType, locale, data, actionUrl);
   // The second language repeats the words, not the picture: one QR per message is enough —
   // and its date is its own ("Sunday 11 October", not "duminică").
-  const otherData: TemplateData = data.eventStartsAtFormattedOther
-    ? { ...data, eventStartsAtFormatted: data.eventStartsAtFormattedOther }
-    : data;
+  const otherData: TemplateData = {
+    ...data,
+    ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
+    ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
+  };
   const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl), image: undefined };
   const a = renderContent(first, locale);
   const b = renderContent(second, OTHER_LOCALE[locale]);
@@ -191,6 +193,9 @@ export type TemplateData = {
   eventRulesUrl?: string;
   /** The programme on that page, when there is one (§96). */
   eventScheduleUrl?: string;
+  /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
+  eventProgramme?: string[];
+  eventProgrammeOther?: string[];
   /** When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`. */
   holdExpiresAtFormatted?: string;
   /** True when the hold is the participation window's (§104), not the thirty minutes. */
@@ -277,6 +282,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "Evenimentul"} este peste două zile. Iată ce ai nevoie.`,
+        ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Numărul tău de concurs: ${d.bibNumber}.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
@@ -411,6 +417,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "The event"} is two days away. Here is what you need.`,
+        ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
         ...(d.bibNumber ? [`Your race number: ${d.bibNumber}.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
