@@ -130,9 +130,9 @@ export default async function EventCalendar({
     </IconButton>
   );
 
-  /** The agenda of some days: the weekday and the number, then the day's events. */
-  const agenda = (days: CalendarDay[], byDay: Map<string, PublicEvent[]>) => (
-    <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+  /** The agenda of some days: the weekday and the number, then the day's events; `dense` in a month box. */
+  const agenda = (days: CalendarDay[], byDay: Map<string, PublicEvent[]>, dense = false) => (
+    <Stack component="ol" spacing={dense ? 1 : 1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
       {days.map((day) => {
         const items = byDay.get(day.key) ?? [];
         const isToday = day.key === today;
@@ -147,7 +147,7 @@ export default async function EventCalendar({
                 {day.day}
               </Typography>
             </Box>
-            <Stack spacing={0.5}>{items.map((event) => eventLink(event, false))}</Stack>
+            <Stack spacing={0.5}>{items.map((event) => eventLink(event, dense))}</Stack>
           </Box>
         );
       })}
@@ -214,15 +214,23 @@ export default async function EventCalendar({
             {t("calendar.yearEmpty")}
           </Typography>
         ) : (
-          <Stack spacing={3}>
+          /* One box per month (the owner: "the year calendar is not boxed enough"): a card
+             each, in columns from `sm` up, so a year reads as a shelf of months rather than
+             one long list; on a phone the boxes stack. */
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: 2, alignItems: "start" }}>
             {months.map((ym) => {
               const items = byMonth.get(monthParam(ym)) ?? [];
               const byDay = groupByDay(items);
               const days = monthGrid(ym).flat().filter((day) => day.inMonth && byDay.has(day.key));
               return (
-                <Box key={monthParam(ym)} component="section" aria-label={monthNames[ym.month - 1]}>
-                  <Stack direction="row" spacing={1} sx={{ alignItems: "baseline", mb: 1 }}>
-                    <Typography component="h3" variant="h3" sx={{ fontSize: "1.0625rem", textTransform: "capitalize" }}>
+                <Box
+                  key={monthParam(ym)}
+                  component="section"
+                  aria-label={monthNames[ym.month - 1]}
+                  sx={{ border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden", bgcolor: "background.paper" }}
+                >
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center", px: 1.5, bgcolor: "action.hover", borderBottom: 1, borderColor: "divider" }}>
+                    <Typography component="h3" variant="h3" sx={{ fontSize: "1rem", fontWeight: 600, textTransform: "capitalize" }}>
                       <Link href={{ pathname: "/events", query: { ...query, month: monthParam(ym) } }} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
                         {monthNames[ym.month - 1]}
                       </Link>
@@ -231,11 +239,11 @@ export default async function EventCalendar({
                       · {items.length}
                     </Typography>
                   </Stack>
-                  {agenda(days, byDay)}
+                  <Box sx={{ p: 1.5 }}>{agenda(days, byDay, true)}</Box>
                 </Box>
               );
             })}
-          </Stack>
+          </Box>
         )}
       </Box>
     );

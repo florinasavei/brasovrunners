@@ -5541,7 +5541,10 @@ the calendar has; `useRouter().push`, so the listing's loading state shows rathe
 page). A "Month | Year" pair of chips switches the view: `?year=2027` shows the whole year as
 the agenda of every month with something on it, each month a heading (a link to its month
 view) with its count, then the days — the same agenda the phone shows for a month, so the
-year view needs no second design. The arrows step a year in that view. Every entry, in the
+year view needs no second design. The arrows step a year in that view. *Amended the same
+evening* (the owner: "the year calendar is not boxed enough"): each month is a card — a
+bordered box with the month on a tinted band — in two columns from `sm` and three from `lg`,
+so the year reads as a shelf of months rather than one long list. Every entry, in the
 grid, the agenda and the year, carries the type's glyph (§112) before the time. The year wins
 when the address names both.
 
