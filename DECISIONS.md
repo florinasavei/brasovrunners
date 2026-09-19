@@ -5505,3 +5505,26 @@ the deleted alert), `admin/actions.ts` (`bulkDeleteEventsAction`), the catalogue
 `tests/e2e/events-bulk.spec.ts`. BR-REQ-050-02 criterion 12.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 115. Decided — the light/dark switch in the bottom-left corner (2026-09-19)
+
+**Context.** The owner: "the theme switcher should be in the bottom left corner!" §93 put it in
+the header beside the language switcher — the header is what every visitor pays for, and a
+control used once sat on its most expensive line.
+
+**Decision.** `ThemeModeToggle` moves to the footer's one visible line, positioned in its
+left corner the way the social marks are positioned in its middle: the line is the summary's,
+and a flex row cannot hold a third thing between a summary and its panel. The summary starts
+after the switch; on a phone its label gives up the switch's width as well as the marks'. The
+bar grows from 40 to 44px: it was thinner than a tap target while it held a disclosure and
+three marks, and it holds a control now (BR-REQ-041-01). The header keeps the language
+switcher alone on its right.
+
+*Rejected:* a floating button fixed to the viewport corner (it would cover the summary on a
+phone and float away from the page's column on a wide screen); keeping a second switch in the
+header (one control, one place).
+
+**Consequences.** `shared/ui/SiteFooter.tsx` (`SWITCH_WIDTH`, `BAR_HEIGHT` 44),
+`shared/ui/SiteHeader.tsx`, `ThemeModeToggle`'s words. BR-REQ-041-01 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.

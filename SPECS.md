@@ -169,6 +169,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 8. Given the test suite, when it runs, then every registration journey runs under a mobile viewport project as well as desktop.
 9. Given the public registration form, when it renders, then every field a submission is refused without is present without opening anything, every optional data field is collapsed behind a native disclosure whose summary names what is inside, and every consent is presented uncollapsed. It is one page; a multi-step form is refused (`DECISIONS.md` §47).
 10. Given a submission the server rejects, when the response renders, then the page is entered at a focusable summary naming each rejected field as a link to that field, and each rejected field carries its own message next to it.
+11. Given any public page, when it renders, then the light/dark switch is the first control on the footer's line, in its bottom-left corner, 44px tall like the line, and the header carries none (2026-09-19, `DECISIONS.md` §115).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects; unit `registrations/form-errors.test.ts`; release check on a real device
 

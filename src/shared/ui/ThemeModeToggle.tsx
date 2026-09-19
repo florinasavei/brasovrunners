@@ -8,7 +8,8 @@ import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
 
 /**
- * Light or dark, from the header (`DECISIONS.md` §93).
+ * Light or dark, from the footer's bottom-left corner (`DECISIONS.md` §93, moved there in
+ * §115 — the owner: "the theme switcher should be in the bottom left corner").
  *
  * `useColorScheme` is MUI's own: the choice is kept in `localStorage`, applied before paint by
  * `InitColorSchemeScript` in the layout, and light until somebody presses this — never the

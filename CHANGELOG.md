@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **The light/dark switch is in the bottom-left corner**, on the footer's line, which is 44px now; the header keeps the language switcher alone. §115.
 - **Bulk actions that work, in a bar above the list.** "All", "Ticked: N", publish, archive and — for an Administrator — delete with a confirmation; a series is deleted with one tick. The old fold's ticks never reached its form (MUI's `Checkbox` put `form=` on a span), so every bulk publish and archive had posted nothing. §114.
 - **A repeated event is one line.** The same title and type, grouped: on the listing one card with "every Monday and Wednesday at 18:30", the next date's facts and the coming dates as links; in the backoffice one row with the dates folded inside, ticked together for the bulk verbs. The month view keeps every date. §113.
 - **Glyphs on the closed sets.** Event type, surface, difficulty and cost carry an icon before the word on the listing's filter and cards, the featured hero (its "Featured event" chip has a star), the event page and the facts; the Instagram mark in the footer is its gradient. §112.

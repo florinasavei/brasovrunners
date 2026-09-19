@@ -7,26 +7,31 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
+import ThemeModeToggle from "./ThemeModeToggle";
 import { PAGE_WIDTH } from "@/theme/brand";
 
 /**
  * The height of the footer's one visible line. Thin, by the owner's instruction: the bar sits at
- * the bottom of every page and should cost as little of the screen as a tap target allows. 40px
- * is under the 44px BR-REQ-041-01 asks of the form's controls and above the 24px WCAG minimum;
- * the two things on this line are a disclosure and two icons, not a submit button.
+ * the bottom of every page and should cost as little of the screen as a tap target allows. It
+ * was 40px while the line held a disclosure and the social marks; since the scheme switch moved
+ * here (§115) the line carries a control, and 44px is what BR-REQ-041-01 asks of one.
  */
-const BAR_HEIGHT = 40;
+const BAR_HEIGHT = 44;
+
+/** The scheme switch's own width, which the summary starts after. */
+const SWITCH_WIDTH = 44;
 
 /**
  * The footer: one thin line, with the social marks always on it and everything else behind it.
  *
- * Three things share the line. On the left, a `<summary>` that opens the rest — the club, the
- * contact, the legal pages — and names them, so a visitor after the privacy notice knows to open
- * it (`AGENTS.md` §9.2 asks the legal routes be *linked from* the footer; they are, and the
- * registration form links the notice directly where it matters, BR-REQ-070-01). In the middle,
- * the social marks — Facebook, Instagram and the Strava club — **outside the disclosure and
- * always visible**, by the owner's instruction on 2026-09-17. On the right, the build badge
- * keeps its fixed corner.
+ * Four things share the line. In the bottom-left corner, the light/dark switch (§115: "the
+ * theme switcher should be in the bottom left corner" — it was in the header). Then a
+ * `<summary>` that opens the rest — the club, the contact, the legal pages — and names them, so
+ * a visitor after the privacy notice knows to open it (`AGENTS.md` §9.2 asks the legal routes
+ * be *linked from* the footer; they are, and the registration form links the notice directly
+ * where it matters, BR-REQ-070-01). In the middle, the social marks — Facebook, Instagram and
+ * the Strava club — **outside the disclosure and always visible**, by the owner's instruction
+ * on 2026-09-17. On the right, the build badge keeps its fixed corner.
  *
  * ## Why the marks are positioned rather than laid out
  *
@@ -76,6 +81,10 @@ export default async function SiteFooter() {
       }}
     >
       <Container maxWidth={PAGE_WIDTH} sx={{ position: "relative" }}>
+        {/* Positioned like the marks, for the same reason: the line is the summary's. */}
+        <Box sx={{ position: "absolute", top: 0, left: { xs: 8, sm: 16 }, height: BAR_HEIGHT, display: "flex", alignItems: "center" }}>
+          <ThemeModeToggle />
+        </Box>
         <Box component="details">
           <Box
             component="summary"
@@ -88,11 +97,13 @@ export default async function SiteFooter() {
               // centre — where a pointer test clicks — under the social marks, and made empty
               // space on the bar toggle the panel.
               width: "fit-content",
+              // After the scheme switch, which sits in the corner before it.
+              ml: `${SWITCH_WIDTH}px`,
               // On a phone the marks sit on the right of this same line (three of them, ~130px
               // with their gaps): the label stops before them, whatever its length, and its
               // tail — ", contact and legal" — is dropped there so what is left reads whole.
               // The owner saw "About the club, contact and lega" under the Facebook mark.
-              maxWidth: { xs: "calc(100% - 140px)", sm: "none" },
+              maxWidth: { xs: `calc(100% - 140px - ${SWITCH_WIDTH}px)`, sm: "none" },
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -105,8 +116,8 @@ export default async function SiteFooter() {
             </Box>
           </Box>
 
-          {/* Indented to the summary's text, past its marker, so the panel reads as its body. */}
-          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: 2.5, maxWidth: "40rem" }}>
+          {/* Indented to the summary's text, past the switch and its marker, so the panel reads as its body. */}
+          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: `${SWITCH_WIDTH + 20}px`, maxWidth: "40rem" }}>
             <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
               <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
               <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
