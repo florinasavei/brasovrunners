@@ -8,6 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import GlyphSelect from "./GlyphSelect";
 import OnlyForType from "./OnlyForType";
 import ScheduleRowsEditor from "./ScheduleRowsEditor";
 import WallTimeField from "./WallTimeField";
@@ -69,35 +70,26 @@ export default async function EventFieldsForm({
         nothing, but every event is one of the five types.
       */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
-          select
+        {/* The closed sets with their glyphs (§121), the same the public pages show (§112). */}
+        <GlyphSelect
           name="event.type"
           label={t("editor.type")}
           helperText={t("editor.typeHelp")}
           defaultValue={event?.type ?? "GROUP_RUN"}
+          options={EVENT_TYPES.map((type) => ({ value: type, label: tEvent(`type.${type}`), glyph: `type:${type}` as const }))}
           sx={{ flex: 1 }}
           required
-        >
-          {EVENT_TYPES.map((type) => (
-            <MenuItem key={type} value={type}>
-              {tEvent(`type.${type}`)}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
+        />
+        <GlyphSelect
           name="event.surface"
           label={t("editor.surface")}
           defaultValue={event?.surface ?? ""}
+          options={[
+            { value: "", label: t("editor.notStated") },
+            ...EVENT_SURFACES.map((surface) => ({ value: surface, label: tEvent(`surface.${surface}`), glyph: `surface:${surface}` as const })),
+          ]}
           sx={{ flex: 1 }}
-        >
-          <MenuItem value="">{t("editor.notStated")}</MenuItem>
-          {EVENT_SURFACES.map((surface) => (
-            <MenuItem key={surface} value={surface}>
-              {tEvent(`surface.${surface}`)}
-            </MenuItem>
-          ))}
-        </TextField>
+        />
         <TextField
           select
           name="event.eventStatus"
@@ -215,35 +207,27 @@ export default async function EventFieldsForm({
         omits the row entirely rather than guessing that an event with no stated cost is free.
       */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
+        <GlyphSelect
           name="event.difficulty"
           label={t("editor.fields.difficulty")}
-          select
           defaultValue={event?.difficulty ?? ""}
+          options={[
+            { value: "", label: t("editor.notStated") },
+            ...(["EASY", "MODERATE", "HARD"] as const).map((value) => ({ value, label: t(`editor.difficultyValues.${value}`), glyph: `difficulty:${value}` as const })),
+          ]}
           sx={{ flex: 1 }}
-        >
-          <MenuItem value="">{t("editor.notStated")}</MenuItem>
-          {(["EASY", "MODERATE", "HARD"] as const).map((value) => (
-            <MenuItem key={value} value={value}>
-              {t(`editor.difficultyValues.${value}`)}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
+        />
+        <GlyphSelect
           name="event.costType"
           label={t("editor.fields.costType")}
-          select
           helperText={t("editor.costHelp")}
           defaultValue={event?.costType ?? ""}
+          options={[
+            { value: "", label: t("editor.notStated") },
+            ...(["FREE", "PAID"] as const).map((value) => ({ value, label: t(`editor.costValues.${value}`), glyph: `cost:${value}` as const })),
+          ]}
           sx={{ flex: 1 }}
-        >
-          <MenuItem value="">{t("editor.notStated")}</MenuItem>
-          {(["FREE", "PAID"] as const).map((value) => (
-            <MenuItem key={value} value={value}>
-              {t(`editor.costValues.${value}`)}
-            </MenuItem>
-          ))}
-        </TextField>
+        />
       </Stack>
 
       {/* Where to meet, as one pasted link. Coordinates were asked for here until `DECISIONS.md`
@@ -280,6 +264,28 @@ export default async function EventFieldsForm({
         defaultValue={event?.stravaEventUrl ?? ""}
         inputMode="url"
       />
+
+      {/* The other organization the event is held with (§121): a name, and its page. */}
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+        <TextField
+          name="event.coHostName"
+          label={t("editor.coHostName")}
+          defaultValue={event?.coHostName ?? ""}
+          slotProps={{ htmlInput: { maxLength: 200 } }}
+          sx={{ flex: 1 }}
+        />
+        <TextField
+          name="event.coHostUrl"
+          type="url"
+          label={t("editor.coHostUrl")}
+          defaultValue={event?.coHostUrl ?? ""}
+          inputMode="url"
+          sx={{ flex: 1 }}
+        />
+      </Stack>
+      <Typography variant="body2" color="text.secondary">
+        {t("editor.coHostHelp")}
+      </Typography>
 
       {/* A film of the event — a YouTube link, embedded on the page (criterion 9). */}
       <TextField

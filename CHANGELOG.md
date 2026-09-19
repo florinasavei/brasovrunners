@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **Equipment testing and External event** join the types; Meetup reads "Other event"; a **co-host** (name and page) on an event, shown as "Together with …" and told to Google as a second organizer; every club event **says it is free** — in words on the listing and the footer, and as a zero offer in the structured data; the editor's selects show their glyphs; asphalt is a road. Migration `0044`. §121.
 - **24-hour clock everywhere**, English too; the meeting point is the map link on the page, the hero and a series card. §120.
 - **`/devs` has the backoffice's tabs**, title and sign-out, from the one shell every staff page now shares; the light/dark switch sits in the footer bar's own corner. §119.
 - **Echipa says what "Add" does.** Adding an address sends no email and no code — it allowlists; the person needs a Zitadel account with that address and signs in at `/admin`. The sentence had blamed a missing sending domain, which is live since §98 (the owner, 2026-09-19: "I did not receive the code").

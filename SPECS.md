@@ -197,8 +197,9 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 - **Release:** M1
 
 Two closed sets where there was one (`DECISIONS.md` §61): the **type** says what the event is —
-group run, race, hike, coffee, meetup — and the **surface** says what it is run on — asphalt,
-trail, mixed — and may be absent, because a coffee is run on nothing.
+group run, race, hike, coffee, equipment testing, other event, external event (§121) — and the
+**surface** says what it is run on — asphalt, trail, mixed — and may be absent, because a
+coffee is run on nothing.
 
 **Acceptance criteria**
 
@@ -1122,6 +1123,7 @@ way through every step, and none of them is a way around the allocator.
 10. Given a group run, when the editor renders, then neither the registration block nor the programme editor is offered, and when one is saved — through the form or with the hidden fields still posting a mode, a capacity or a programme — then it is written with `registration_mode = NONE`, no capacity, window, declaration, public list or external fields, and no programme in either language; a race, a hike, a coffee and a meetup keep both (2026-09-19, `DECISIONS.md` §111).
 11. Given events of the same type with the same title, when the backoffice list renders, then they are one row: the title (linking to the next date's editor), a count of dates, how the series recurs, and the dates folded with each one's state and entries; the state column counts each state, the date column is the range; ticking the row selects every date for the bulk verbs, each with its own version; the type's glyph stands before every title (2026-09-19, `DECISIONS.md` §113).
 12. Given the events list, when it renders for a role that may create events, then a bar above the table offers "all", how many rows are ticked, "Publish the ticked ones" and "Archive the ticked ones", and — for an Administrator — "Delete the ticked ones" behind a confirmation; when delete is confirmed, then every ticked event with no registration is removed and the ones with registrations are counted and left; the row ticks belong to that form (the `form` attribute on the `<input>`), so a verb posts exactly the ticked rows and a series row posts every one of its dates (2026-09-19, `DECISIONS.md` §114).
+14. Given the editor, when it renders, then the type, surface, difficulty and cost selects show each option with its glyph, the type offers Group run, Race, Hike, Coffee, Equipment testing, Other event and External event, and a co-host's name and page may be entered — shown as "Together with …" in the facts and carried by a duplicate and a repeat (2026-09-19, `DECISIONS.md` §121).
 13. Given the editor of any type but a group run, when it renders, then a "Programme" section offers rows — a date, a 24-hour time, an optional end time, the label in Romanian and in English, a place — with "Add a row" and a remove control per row; when saved, then each row's wall-clock time in the event's zone is stored as an instant, the rows sorted soonest first, a row left entirely blank is dropped, and a row missing its date, its time or either label — or ending before it starts — is refused naming the row's number, with nothing written; when the event is duplicated, then the rows go with it; when it is repeated, then each occurrence's rows are moved by the same interval on the wall clock (2026-09-19, `DECISIONS.md` §117).
 
 **Verification:** integration `cms/crud.test.ts`, `cms/workflow.test.ts`, `cms/repeat.test.ts`, `cms/turn-up-events.test.ts`, `cms/programme-rows.test.ts`; e2e `cms-publish.spec.ts`, `event-route.spec.ts`, `events-bulk.spec.ts`
@@ -1251,6 +1253,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 6. Given any structured data block on any page, when it is inspected, then it contains no participant name, email, registration list, or declaration content.
 7. Given the test suite, when it runs, then it parses the emitted JSON-LD and asserts the required properties are present.
 8. Given a published event page, when it renders, then its `og:image` is a 1200×630 card drawn on the server from the event's own facts (title, date and time, meeting point, distance), absolute under `APP_BASE_URL`, with `twitter:card = summary_large_image`; every other public page carries the site's card; and the event page offers the same card as a square picture to download and share links for Facebook and WhatsApp (2026-09-18, `DECISIONS.md` §90).
+9. Given an event not marked as charging a fee, when its block renders, then it carries `isAccessibleForFree: true` and an `Offer` at price `0` in `RON` at the event's own page, valid from its publication; a `PAID` event carries neither; and given an event with a co-host, then `organizer` is the club followed by the co-host as an `Organization` with its page (2026-09-19, `DECISIONS.md` §121).
 
 **Verification:** integration `seo/structured-data.test.ts`; e2e `event-page.spec.ts`
 

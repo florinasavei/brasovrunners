@@ -4,19 +4,23 @@ import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
-import LocationCityIcon from "@mui/icons-material/LocationCity";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PaidIcon from "@mui/icons-material/Paid";
+import ScienceIcon from "@mui/icons-material/Science";
 import SignalCellularAltIcon from "@mui/icons-material/SignalCellularAlt";
 import SignalCellularAlt1BarIcon from "@mui/icons-material/SignalCellularAlt1Bar";
 import SignalCellularAlt2BarIcon from "@mui/icons-material/SignalCellularAlt2Bar";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
 import StarIcon from "@mui/icons-material/Star";
 import TerrainIcon from "@mui/icons-material/Terrain";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
+import type { ComponentType } from "react";
 import type { EventSurface, EventType } from "../domain/event-type";
+import RoadIcon from "./RoadIcon";
 
-/** An icon component, named from one of them so the barrel is never imported (§90). */
-export type Glyph = typeof DirectionsRunIcon;
+/** An icon component — Material's, or one drawn here (`RoadIcon`); the barrel is never imported (§90). */
+export type Glyph = ComponentType<SvgIconProps>;
 
 /**
  * One glyph per closed set the event page and the listing show as a word (`DECISIONS.md`
@@ -26,20 +30,25 @@ export type Glyph = typeof DirectionsRunIcon;
  * `@mui/icons-material` (§90), never the whole barrel.
  *
  * The choices are metaphors, so they are written down: a race is the chequered flag, not a
- * trophy (every runner finishes a race, few win one); asphalt is the city, trail the mountain,
- * mixed the fork in the path; difficulty is one, two or three bars — the shape a phone's signal
- * uses for "how much", which needs no legend; cost is a coin, crossed out when there is none.
+ * trophy (every runner finishes a race, few win one); a gear test is the flask (something is
+ * being tried); "other event" is a group of people; an external event opens elsewhere;
+ * asphalt is a road (drawn here — Material has none without a mark on it), trail the mountain,
+ * mixed the fork in the path; difficulty is one, two or three bars — the shape a phone's
+ * signal uses for "how much", which needs no legend; cost is a coin, crossed out when there is
+ * none.
  */
 export const TYPE_GLYPH: Record<EventType, Glyph> = {
   GROUP_RUN: DirectionsRunIcon,
   RACE: SportsScoreIcon,
   HIKE: HikingIcon,
   COFFEE: LocalCafeIcon,
+  GEAR_TEST: ScienceIcon,
   MEETUP: GroupsIcon,
+  EXTERNAL: OpenInNewIcon,
 };
 
 export const SURFACE_GLYPH: Record<EventSurface, Glyph> = {
-  ASPHALT: LocationCityIcon,
+  ASPHALT: RoadIcon,
   TRAIL: TerrainIcon,
   MIXED: AltRouteIcon,
 };

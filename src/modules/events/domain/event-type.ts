@@ -9,9 +9,13 @@
  * Two lists rather than the one seven-value `EVENT_KINDS` this file used to hold: what an event
  * *is* and what it is *run on* are separate questions, and one chip could not answer both
  * (`DECISIONS.md` §61). A hike and a coffee are their own types because the club holds both
- * regularly; a special meetup — a shoe-testing evening — is `MEETUP` with the theme in the title.
+ * regularly; `GEAR_TEST` is the shoe-testing evening (§121), and `MEETUP` — the value keeps its
+ * name — is labelled "special event": the one-off the club does with a partner or for an
+ * occasion (the owner: "meetup is a bit vague, and I need a special event type"); `EXTERNAL`
+ * is somebody else's event the club goes to together — another city's race, say — where the
+ * organizer's own page takes the entries (`registration_mode = EXTERNAL`).
  */
-export const EVENT_TYPES = ["GROUP_RUN", "RACE", "HIKE", "COFFEE", "MEETUP"] as const;
+export const EVENT_TYPES = ["GROUP_RUN", "RACE", "HIKE", "COFFEE", "GEAR_TEST", "MEETUP", "EXTERNAL"] as const;
 
 export type EventType = (typeof EVENT_TYPES)[number];
 

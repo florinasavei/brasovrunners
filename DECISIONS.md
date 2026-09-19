@@ -5709,3 +5709,41 @@ card — and stays words inside an event card, which is one link itself (`EventF
 BR-REQ-020-01 criterion 12.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 121. Decided — two more types, "other event", a co-host, "always free", and glyphs in the editor's selects (2026-09-19)
+
+**Context.** The owner, testing the editor and the listing, in one evening: "on the event
+types I need an equipment testing type; meetup is a bit vague, and I need a special event
+type" — then "eveniment special e un pic ciudat, zi doar 'alt eveniment'" — "add the
+equipment testing type, co-host, external and special events"; "a co-host race — this year we
+had a featured co-host event with another ONG"; "state somewhere that Brașov Runners events
+are always free — this also helps us pass the Google verifications"; "these drop-downs should
+also have icons"; "I hate the asphalt icon, I need something like a road".
+
+**Decision.** Migration `0044`, expand-only: `GEAR_TEST` and `EXTERNAL` join `event_type`;
+`MEETUP` keeps its value (Postgres does not rename one) and is labelled *Alt eveniment* /
+*Other event*. `co_host_name` and `co_host_url` (https, checked) on the event: shown as
+"Împreună cu <name>", a link to its page, in the facts on the page, the hero and a series
+card; carried by a duplicate and a repeat (a series held with a partner is held with them
+every time); named as a second `organizer` in the JSON-LD after the club. Every club event
+not marked `PAID` says so to Google — `isAccessibleForFree` and an `Offer` at price 0 in
+lei, at the event's own page, valid from its publication — and the listing's intro and the
+footer's description say "always free" in words. The editor's four closed-set selects take
+their options' glyphs (`GlyphSelect`, a client component for the reason `GlyphChip` is). The
+asphalt glyph is a road drawn here (`RoadIcon`: two edges to the horizon, a dashed centre) —
+Material has none without a plus, a pencil or a minus on it — and `Glyph` is any component
+that takes `SvgIconProps`, so a drawn one sits beside Material's.
+
+*Rejected:* renaming `MEETUP` in the database (a migration with a lock for a label, §103's
+reasoning); removing `MEETUP` (every row keeps its value; a contract migration for a word); a
+co-host on the translation (a name is the same in both languages, §36); "free" only in words
+(Google reads the offer, not the sentence).
+
+**Consequences.** `schema/events.ts`, migration `0044_event_types_cohost_repeat` (which also
+carries §122's columns), `event-type.ts`, `glyphs.ts` (`Glyph`, `RoadIcon`), `GlyphSelect`,
+`EventFieldsForm`, `fields.ts`, `service.ts`, `actions.ts`, `repository.ts`, `EventFacts`
+("Together with"), `structured-data.ts`, the preview, the catalogues, `AGENTS.md` §10.1;
+`tests/unit/events/structured-data.test.ts`. BR-REQ-010-01, BR-REQ-052-02 criterion 9,
+BR-REQ-050-02 criterion 14.
+
+Baseline `BR-V1.38-2026-09-18`.

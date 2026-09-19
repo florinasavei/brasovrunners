@@ -307,6 +307,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
     stravaEventUrl: fields.stravaEventUrl,
+    coHostName: fields.coHostName,
+    coHostUrl: fields.coHostName ? fields.coHostUrl : null,
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     difficulty: fields.difficulty,
@@ -902,9 +904,12 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     mapUrl: source.mapUrl,
     routeUrl: source.routeUrl,
     // Not carried: a film is of one edition, and last year's would be wrong on next year's;
-    // a Strava group event is one occurrence's page.
+    // a Strava group event is one occurrence's page. The co-host is: a series held with a
+    // partner is held with them every time.
     videoUrl: null,
     stravaEventUrl: null,
+    coHostName: source.coHostName,
+    coHostUrl: source.coHostUrl,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
     difficulty: source.difficulty,

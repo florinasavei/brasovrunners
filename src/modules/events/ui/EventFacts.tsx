@@ -1,4 +1,5 @@
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
@@ -11,7 +12,7 @@ import SocialIcon from "@/shared/ui/SocialIcon";
 import { distanceInKm, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
-import { COST_GLYPH, DIFFICULTY_GLYPH } from "./glyphs";
+import { COST_GLYPH, DIFFICULTY_GLYPH, type Glyph } from "./glyphs";
 
 /**
  * The facts of an event, in three lines: when, where, and the route in numbers.
@@ -81,7 +82,7 @@ export default async function EventFacts({
   );
 
   // A word with its glyph in front, for the closed sets (§112); the word is what is read.
-  const withGlyph = (Icon: typeof CalendarMonthIcon, word: string) => (
+  const withGlyph = (Icon: Glyph, word: string) => (
     <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
       <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
       {word}
@@ -136,7 +137,7 @@ export default async function EventFacts({
 
   // A glyph beside each question (the owner, 2026-09-18: "more icons in the app"), decorative:
   // the label is the word, the glyph is what the eye finds first on a card.
-  const glyph = (Icon: typeof CalendarMonthIcon) => (
+  const glyph = (Icon: Glyph) => (
     <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary", verticalAlign: "-3px", mr: 0.5 }} />
   );
 
@@ -161,10 +162,18 @@ export default async function EventFacts({
     );
   }
 
-  const lines: Array<{ label: string; icon: typeof CalendarMonthIcon; value: ReactNode[] }> = [
+  const lines: Array<{ label: string; icon: Glyph; value: ReactNode[] }> = [
     { label: t("when"), icon: CalendarMonthIcon, value: when },
   ];
   if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
+  // Held with another organization (§121): its name, as a link to its page when it has one.
+  if (event.coHostName) {
+    lines.push({
+      label: t("coHost"),
+      icon: HandshakeIcon,
+      value: [links && event.coHostUrl ? outLink(event.coHostUrl, event.coHostName) : event.coHostName],
+    });
+  }
   if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
   if (state === "NOT_APPLICABLE" && mentionsRegistration) {
     lines.push({ label: t("registration"), icon: HowToRegIcon, value: [t("registrationState.NOT_APPLICABLE")] });

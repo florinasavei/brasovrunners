@@ -119,6 +119,8 @@ export default async function PreviewEventPage({ params }: Props) {
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
     scheduleItems: event.scheduleItems,
+    coHostName: event.coHostName,
+    coHostUrl: event.coHostUrl,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,

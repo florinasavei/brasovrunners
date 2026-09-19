@@ -40,6 +40,9 @@ const PUBLIC_COLUMNS = {
   videoUrl: events.videoUrl,
   // The club's Strava group event for this occurrence (criterion 10).
   stravaEventUrl: events.stravaEventUrl,
+  // The other organization the event is held with, when there is one (§121).
+  coHostName: events.coHostName,
+  coHostUrl: events.coHostUrl,
   featured: events.featured,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,

@@ -269,6 +269,9 @@ export const eventFieldsSchema = z
       .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isStravaLink(value)), {
         message: "a Strava event link must be an https page on strava.com",
       }),
+    // The other organization, when there is one (§121): a name, and its page if it has one.
+    coHostName: optionalText(200).optional().transform((value) => value ?? null),
+    coHostUrl: httpsUrl("the co-host's page must start with https://").optional().transform((value) => value ?? null),
     // Optional in the input as well as in the value — a caller from before the field existed
     // (a script, a duplicate) sends nothing and means "no film".
     videoUrl: z

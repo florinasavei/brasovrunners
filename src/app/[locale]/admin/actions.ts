@@ -135,6 +135,8 @@ function eventFieldsFrom(form: FormData) {
     raceStartsAtWallTime: wallTime("raceStartsAt"),
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
+    coHostName: value("coHostName"),
+    coHostUrl: value("coHostUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
