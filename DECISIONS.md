@@ -6046,30 +6046,33 @@ BR-REQ-050-02 criterion 16.
 
 Baseline `BR-V1.38-2026-09-18`.
 
-## 132. Decided — the templates arrive with the club's name and contact address written in (2026-09-19)
+## 132. Decided — the templates arrive with the club's facts written in, from the environment (2026-09-19)
 
 **Context.** Approving the three legal texts on production was the last step between the
 club and its first registration, and the owner's patience with "fill the four facts" ran out:
-"AI was supposed to do it all for me." Two of the four facts were in hand — the legal name is
-on the club's own paper declaration ("Prin Organizator se înțelege Asociația Sportivă
-Alergători cu Jumătate de Normă"), and the contact address is `EMAIL_REPLY_TO`, which every
-email already says to reply to. The other two — the registered address and the registration
-number — are in no document the club handed over and not in this public repository (§98).
+"AI was supposed to do it all for me." He then shared the club's ANAF fiscal registration
+certificate — the legal name, the CIF and the registered seat — with two instructions:
+"remember this" and "remember the repo is public".
 
-**Decision.** `templates/club-facts.ts`: `CLUB_LEGAL_NAME`, and `fillClubFacts`, which
-writes the known facts into a template body before the "start from the platform's text" page
-shows it — the legal name and `env.EMAIL_REPLY_TO` — and leaves an unknown fact's
-`<PLACEHOLDER>` standing. The page's intro names what is still a blank
-(`remainingPlaceholders`), so the Administrator types two things rather than searching for
-four. The seed's sample texts keep every blank: a sample must not look approved. Approving is
-now: New version → start from the platform's text → type the address and the CUI in both
-tabs → save → approve, three times.
+**Decision.** The four facts reach the templates from the environment, never from source.
+`CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER` and `CLUB_REGISTERED_ADDRESS` are set on both
+Vercel projects and kept in `.env.local`; the contact address is `EMAIL_REPLY_TO`, which every
+email already says to reply to. `templates/club-facts.ts#fillClubFacts` writes whatever the
+deployment knows into a template body before the "start from the platform's text" page shows
+it, leaves an unknown fact's `<PLACEHOLDER>` standing, and the page's intro names what is
+still blank (`remainingPlaceholders`). With all four set, the intro says the draft is
+complete, and approving is: New version → start from the platform's text → read → save →
+approve, three times, no typing. The seed's sample texts keep every blank: a sample must not
+look approved. The same reasoning that keeps the club's domain out of `src/` (§8) keeps a
+registered seat — somebody's address — out of a public repository (§98), even though the
+approved privacy notice will show it on the site: the site is the club's to publish, the
+repository is everyone's to clone.
 
-*Rejected:* an environment variable for the legal name (a fact, not configuration, and the
-name is public); guessing the address and the number from a registry search (found nothing
-reliable, and a wrong CUI on a privacy notice is worse than a blank).
+*Rejected:* a constant in the source (the first cut of this decision, reversed within the
+hour on "the repo is public"); asking the club to type the facts (the point was not to).
 
-**Consequences.** `club-facts.ts`; `admin/legal/new/page.tsx`; the catalogue's two intro
-strings; `tests/unit/legal-documents/club-facts.test.ts`.
+**Consequences.** `env.ts` (three optional variables), `.env.example`, `club-facts.ts`,
+`admin/legal/new/page.tsx`, the catalogue's two intro strings;
+`tests/unit/legal-documents/club-facts.test.ts`; the values on both Vercel projects.
 
 Baseline `BR-V1.38-2026-09-18`.

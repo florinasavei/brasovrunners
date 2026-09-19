@@ -10,7 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
-- **The templates arrive with the club's name and contact address written in.** "Start from the platform's text" fills the legal name (from the club's own paper declaration) and `EMAIL_REPLY_TO`; the page names the two blanks left (registered address, registration number). §132.
+- **The templates arrive with the club's facts written in.** "Start from the platform's text" fills the legal name, the CIF and the registered seat from `CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER`, `CLUB_REGISTERED_ADDRESS` (environment, never source — the repository is public) and the contact address from `EMAIL_REPLY_TO`; the page names whatever is still blank. §132.
 
 The evening's test on QA, and what it found.
 

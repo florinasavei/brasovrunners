@@ -11,7 +11,7 @@ import { routing } from "@/i18n/routing";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
 import { isLegalDocumentKey, LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
-import { CLUB_LEGAL_NAME, fillClubFacts, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
+import { clubFactsFromEnv, fillClubFacts, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
 import { env } from "@/shared/config/env";
 import LegalDocumentForm, {
   type LegalDocumentFormValues,
@@ -71,9 +71,9 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   // `?template=<key>` starts from the platform's own text (§95): the club reads, fills its
   // four facts and approves, rather than drafting a privacy notice from nothing.
   const fromTemplate = template && isLegalDocumentKey(template) ? LEGAL_TEMPLATES[template] : undefined;
-  // The facts the platform knows are written in before the club reads (§132): the legal name
-  // from the club's own paper declaration, the contact address every email already names.
-  const facts = { legalName: CLUB_LEGAL_NAME, contactEmail: env.EMAIL_REPLY_TO ?? null };
+  // The facts the deployment knows are written in before the club reads (§132): the legal
+  // name, the CIF and the seat from the environment, the contact address every email names.
+  const facts = clubFactsFromEnv(env);
   const values: LegalDocumentFormValues | undefined = source
     ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }
     : fromTemplate && template && isLegalDocumentKey(template)
