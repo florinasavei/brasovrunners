@@ -619,7 +619,12 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The privacy notice, the terms, and the declaration participants sign. A version is written as a draft, approved, and from then on fixed; a change is the next version.",
+      "intro": "The three texts a participant accepts. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "whatIs": {
+        "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
+        "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
+        "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed."
+      },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version, choose the document, paste the approved wording in both languages, save the draft, read it, approve it.",
       "document": "Document",
