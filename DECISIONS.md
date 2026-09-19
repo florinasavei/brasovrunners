@@ -5654,3 +5654,26 @@ deleting the M2–M5 roadmap in §29 (it is still the plan for what is not built
 `/admin/tasks`; `CLAUDE.md`'s note on `SETUP.md`'s length.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 119. Decided — `/devs` wears the backoffice's chrome; the switch in the bar's own corner (2026-09-19)
+
+**Context.** The owner, testing: "the config page is missing the navbar" — the Configurație tab
+led to a page with no tabs to come back by, because `/devs` is its own route (BR-REQ-090-04)
+outside `/admin`'s layout, and the title, the signed-in line, sign out and the tabs were that
+layout's body. And, at the footer: "the theme switcher should be all the way to the left" —
+§115 had put it at the page column's edge, not the bar's.
+
+**Decision.** `BackofficeShell` (`staff-identity/ui`) is the chrome — the title, who is signed
+in, sign out, the tabs — and both `/admin`'s layout and a new `/devs` layout render it; the
+sign-out action is handed in, so the module never imports the app's actions. The `/devs` layout
+applies the same gate (sign in, or 404 where there is no sign-in) and the diagnostics
+threshold, which each page still asserts for itself. The three `/devs` pages drop their own
+`<main>` and title; their headings are section headings under the shell's. The scheme switch
+sits in the footer bar's corner (`left: 0` on the bar, not the column); the summary keeps
+clear of it below `xl`, where the column's own margin does.
+
+**Consequences.** `staff-identity/ui/BackofficeShell.tsx`, `admin/layout.tsx`,
+`devs/layout.tsx`, `devs/page.tsx`, `devs/theme/page.tsx`, `devs/docs/[name]/page.tsx`,
+`shared/ui/SiteFooter.tsx`. BR-REQ-090-04 criterion 7, BR-REQ-041-01 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.

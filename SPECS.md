@@ -169,7 +169,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 8. Given the test suite, when it runs, then every registration journey runs under a mobile viewport project as well as desktop.
 9. Given the public registration form, when it renders, then every field a submission is refused without is present without opening anything, every optional data field is collapsed behind a native disclosure whose summary names what is inside, and every consent is presented uncollapsed. It is one page; a multi-step form is refused (`DECISIONS.md` §47).
 10. Given a submission the server rejects, when the response renders, then the page is entered at a focusable summary naming each rejected field as a link to that field, and each rejected field carries its own message next to it.
-11. Given any public page, when it renders, then the light/dark switch is the first control on the footer's line, in its bottom-left corner, 44px tall like the line, and the header carries none (2026-09-19, `DECISIONS.md` §115).
+11. Given any public page, when it renders, then the light/dark switch is the first control on the footer's line, in the bar's own bottom-left corner (not the page column's), 44px tall like the line, and the header carries none (2026-09-19, `DECISIONS.md` §115, §119).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects; unit `registrations/form-errors.test.ts`; release check on a real device
 
@@ -1487,6 +1487,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 4. Given `EMAIL_DELIVERY_MODE=capture` on a deployed environment, when the page renders, then it is reported as limited rather than correct, because captured messages on a serverless host reach nobody.
 5. Given an Author or an Editor, when `/devs` is requested, then the response is 404, the same answer a route that does not exist gives.
 6. Given the route, when a crawler requests it, then it is disallowed in `robots.txt`, carries `noindex`, and is served with a private, no-store cache policy.
+7. Given `/devs` and its pages, when a staff member who may see them opens one, then it carries the backoffice's own chrome — the title, who is signed in, sign out and the section tabs — the same as every `/admin` page, from one shared component (2026-09-19, `DECISIONS.md` §119).
 
 **Verification:** unit `diagnostics/configuration.test.ts`; unit `seo/private-paths.test.ts`
 

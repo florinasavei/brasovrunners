@@ -138,9 +138,10 @@ export default async function DevsPage({ params }: Props) {
     status === "blocked" ? "error" : status === "limited" ? "warning" : "success";
 
   return (
-    <Stack spacing={4} sx={{ py: { xs: 3, sm: 5 }, px: { xs: 2, sm: 3 }, maxWidth: 900, mx: "auto" }}>
+    <Stack spacing={4} sx={{ maxWidth: 900 }}>
       <Box>
-        <Typography variant="h1" sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }}>
+        {/* Under the backoffice's own title and tabs (§119): a section heading, like the others. */}
+        <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">

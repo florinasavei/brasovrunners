@@ -80,11 +80,12 @@ export default async function SiteFooter() {
         zIndex: 1000,
       }}
     >
+      {/* In the corner of the bar itself, not of the page's column (the owner: "all the way to
+          the left") — positioned like the marks, because the line is the summary's. */}
+      <Box sx={{ position: "absolute", top: 0, left: 0, height: BAR_HEIGHT, display: "flex", alignItems: "center" }}>
+        <ThemeModeToggle />
+      </Box>
       <Container maxWidth={PAGE_WIDTH} sx={{ position: "relative" }}>
-        {/* Positioned like the marks, for the same reason: the line is the summary's. */}
-        <Box sx={{ position: "absolute", top: 0, left: { xs: 8, sm: 16 }, height: BAR_HEIGHT, display: "flex", alignItems: "center" }}>
-          <ThemeModeToggle />
-        </Box>
         <Box component="details">
           <Box
             component="summary"
@@ -97,8 +98,9 @@ export default async function SiteFooter() {
               // centre — where a pointer test clicks — under the social marks, and made empty
               // space on the bar toggle the panel.
               width: "fit-content",
-              // After the scheme switch, which sits in the corner before it.
-              ml: `${SWITCH_WIDTH}px`,
+              // Clear of the scheme switch in the bar's corner: on a wide screen the column's
+              // own margin already is (`xl`: 168px either side of the `lg` column).
+              ml: { xs: `${SWITCH_WIDTH}px`, xl: 0 },
               // On a phone the marks sit on the right of this same line (three of them, ~130px
               // with their gaps): the label stops before them, whatever its length, and its
               // tail — ", contact and legal" — is dropped there so what is left reads whole.
@@ -117,7 +119,7 @@ export default async function SiteFooter() {
           </Box>
 
           {/* Indented to the summary's text, past the switch and its marker, so the panel reads as its body. */}
-          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: `${SWITCH_WIDTH + 20}px`, maxWidth: "40rem" }}>
+          <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: { xs: `${SWITCH_WIDTH + 20}px`, xl: 2.5 }, maxWidth: "40rem" }}>
             <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
               <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
               <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
