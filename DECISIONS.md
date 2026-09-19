@@ -6190,3 +6190,29 @@ Romanian too (an English abbreviation on a Romanian consent line).
 `tests/e2e/registration-form.spec.ts`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 137. Decided — the month is the grid on a phone too, with the surface's glyph and a tooltip; the list by choice (2026-09-19)
+
+**Context.** §89 gave a phone the agenda because seven columns at 320px are 40px each. The
+owner, on QA: "calendar looks bad on mobile: use the same calendar view man, we can have
+tooltips", then "or we can choose compact view but by default I need calendar view!", and
+"the icons in the calendar should also contain the type of terrain … we love icons and
+emojis".
+
+**Decision.** The month is the grid on every width. A chip in a cell is the type's glyph and
+the surface's (§112) over the time on a phone, the two glyphs, the time and the title in one
+line from `sm` up, the whole sentence in a tooltip and as the link's accessible name — 44px
+tall wherever it is. The agenda stays, as the choice: `?view=list`, a chip pair
+"Calendar" / "Listă" in the header, kept by the month links and the filter like `?type=`.
+The chip is a client island (`CalendarEventChip`) because `Tooltip` needs a ref on its child
+and the glyphs are made on that side of the boundary, by name.
+
+*Rejected:* the agenda by default on a phone (§89, reversed on the owner's word); a tooltip
+that opens on tap (a tap on a link is the link — the page is the tooltip on a phone);
+remembering the choice in a cookie (a link says it, and a link can be shared).
+
+**Consequences.** `events/ui/EventCalendar.tsx` (`layout`), `events/ui/CalendarEventChip.tsx`
+(new), `app/[locale]/events/page.tsx` (`?view=`), two keys in both catalogues;
+`tests/e2e/event-pages.spec.ts`. BR-REQ-041-01 criterion 5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

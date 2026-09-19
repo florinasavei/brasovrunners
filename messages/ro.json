@@ -57,6 +57,8 @@
       "nextYear": "Anul următor",
       "viewMonth": "Lună",
       "viewYear": "An",
+      "layoutGrid": "Calendar",
+      "layoutList": "Listă",
       "pickMonth": "Luna",
       "pickYear": "Anul",
       "yearEmpty": "Nimic programat în acest an.",

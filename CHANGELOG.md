@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **The month is a calendar on a phone too.** Same grid on every width; each event a chip with its type's and its surface's glyph, the time, and the title in a tooltip; "Listă" one press away and kept by the month links. §137.
 - **The backoffice list's status chips say what they are**: "Publicat · 8 date" for a series, and the registration mode reads "Înscrieri pe site" / "Înscrieri la organizator" / "Fără înscrieri", with a hover title naming the setting. Still Romanian, by §35.
 - **The legal texts are called GDPR and Termeni de concurs / Racing TOS** everywhere their name shows — the backoffice list, the footer, the form; the declaration keeps its name. §136.
 - **"Editează" on the event page** for a signed-in Redactor or above — one press into the editor. §135.

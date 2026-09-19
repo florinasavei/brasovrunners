@@ -57,6 +57,8 @@
       "nextYear": "Next year",
       "viewMonth": "Month",
       "viewYear": "Year",
+      "layoutGrid": "Calendar",
+      "layoutList": "List",
       "pickMonth": "Month",
       "pickYear": "Year",
       "yearEmpty": "Nothing scheduled this year.",

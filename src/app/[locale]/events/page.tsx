@@ -29,14 +29,14 @@ import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, ty
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
-import EventCalendar, { type CalendarView } from "@/modules/events/ui/EventCalendar";
+import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[] }>;
+  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[]; view?: string | string[] }>;
 };
 
 /**
@@ -55,11 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam, year: yearParam, type: typeParam } = await searchParams;
+  const { month: monthParam, year: yearParam, type: typeParam, view: viewParam } = await searchParams;
   // The type filter (§89): one of the closed set, or everything.
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
-  const query: Record<string, string> = type ? { type } : {};
+  // The month as a list rather than the grid (§137), kept by the month links like the filter.
+  const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
+  const query: Record<string, string> = { ...(type ? { type } : {}), ...(layout === "list" ? { view: "list" } : {}) };
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
@@ -138,7 +140,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
             const active = candidate === type;
             // A string href: a component reference cannot cross into MUI's client component —
             // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
-            const href = getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } });
+            const href = getPathname({ locale, href: { pathname: "/events", query: { ...(candidate ? { type: candidate } : {}), ...(layout === "list" ? { view: "list" } : {}) } } });
             const look = { color: active ? ("primary" as const) : ("default" as const), variant: active ? ("filled" as const) : ("outlined" as const) };
             // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
             return (
@@ -182,7 +184,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
           {t("calendar.refreshNote")}
         </Box>
       </Typography>
-      <EventCalendar view={view} events={inRange} now={now} query={query} />
+      <EventCalendar view={view} events={inRange} now={now} query={query} layout={layout} />
       </Box>
 
       {/*
