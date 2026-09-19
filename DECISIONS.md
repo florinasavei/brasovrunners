@@ -5399,3 +5399,41 @@ stored).
 `tests/integration/cms/turn-up-events.test.ts`. BR-REQ-050-02 criterion 10.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 112. Decided — a glyph beside every closed-set word: type, surface, difficulty, cost; the Instagram mark in its gradient (2026-09-19)
+
+**Context.** The owner, looking at the listing: "I also need icons for event type, surfaces,
+etc", then, pointing at the featured hero's chips, "these pills should have icons", and, at the
+footer, "the instagram icon should be colored." §90 brought `@mui/icons-material` for the admin
+tabs and the facts' three questions; the four closed sets an event is described with — what it
+is, what it is run on, how hard, whether it costs — were still bare words on chips.
+
+**Decision.** `events/ui/glyphs.ts` holds one glyph per value of the four sets, chosen as
+metaphors and written down there: a run, a chequered flag, a hiker, a cup, a group; the city,
+the mountain, the fork; one, two, three bars; a coin and a crossed-out coin — and a flat map of
+them by name (`type:RACE`, `surface:TRAIL`, …, `featured`). `EventKindChips` renders the type
+and surface chips, once, for the listing card and the hero — whose "Featured event" chip gets
+a star; the type filter carries them; the event page's overline shows them before the words;
+the facts show them before the difficulty and the cost. The word stays the label everywhere —
+BR-REQ-070-03 says nothing by colour alone, and nothing by shape alone follows — the glyph is
+`aria-hidden` and what the eye finds first. The Instagram mark is its gradient (yellow, pink,
+violet, corner to corner) as a `<defs>` in the same inline SVG, because one flat pink beside
+Facebook's blue disc and Strava's orange read as the odd one out.
+
+**What a chip's icon cannot be.** `icon={<StarIcon />}` from a Server Component typechecks,
+renders in the browser, and fails hydration on every chip: during server rendering the element
+reaches MUI's `Chip` as a lazy Flight reference, `React.isValidElement` says no, the icon is
+dropped from the HTML, and the browser then renders it. So `GlyphChip` is a client component
+that takes the glyph's *name* and makes the element on its own side of the boundary — the same
+rule as the filter chips' string `href` (`AGENTS.md`: a Server Component hands MUI strings,
+never component references, and now never elements either where MUI inspects them).
+
+*Rejected:* a glyph without the word (a riddle on a phone, and nothing for a screen reader);
+an icon element through a chip prop from a Server Component (above); Instagram's five-stop
+official gradient (three stops are the same picture at 22 pixels).
+
+**Consequences.** `events/ui/glyphs.ts` (`GLYPHS`, `GlyphName`), `events/ui/GlyphChip.tsx`,
+`events/ui/EventKindChips.tsx`, the listing, the hero, the event page, `EventFacts`,
+`shared/ui/SocialIcon.tsx`. BR-REQ-020-01 criterion 8.
+
+Baseline `BR-V1.38-2026-09-18`.

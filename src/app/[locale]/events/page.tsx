@@ -16,7 +16,9 @@ import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
@@ -122,18 +124,31 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", gap: 1, mt: 4 }}>
         {[undefined, ...EVENT_TYPES].map((candidate) => {
           const active = candidate === type;
-          return (
+          // A string href: a component reference cannot cross into MUI's client component —
+          // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
+          const href = getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } });
+          // 44px tall (BR-REQ-041-01 criterion 6): a filter is a tap target like any other link.
+          const sx = { height: 44, borderRadius: 22, px: 0.5, fontSize: "0.9375rem" };
+          return candidate ? (
+            <GlyphChip
+              key={candidate}
+              glyph={`type:${candidate}`}
+              href={href}
+              color={active ? "primary" : "default"}
+              variant={active ? "filled" : "outlined"}
+              label={tEvent(`type.${candidate}`)}
+              sx={sx}
+            />
+          ) : (
             <Chip
-              key={candidate ?? "all"}
+              key="all"
               component="a"
-              // A string href: a component reference cannot cross into MUI's client component.
-              href={getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } })}
+              href={href}
               clickable
               color={active ? "primary" : "default"}
               variant={active ? "filled" : "outlined"}
-              label={candidate ? tEvent(`type.${candidate}`) : t("filter.all")}
-              // 44px tall (BR-REQ-041-01 criterion 6): a filter is a tap target like any other link.
-              sx={{ height: 44, borderRadius: 22, px: 0.5, fontSize: "0.9375rem" }}
+              label={t("filter.all")}
+              sx={sx}
             />
           );
         })}
@@ -228,9 +243,8 @@ async function EventCard({
       <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
         <CardContent>
           <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-            <Chip size="small" label={tEvent(`type.${event.type}`)} />
-            {/* The surface beside the type, only when the club has said. */}
-            {event.surface && <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />}
+            {/* What it is and what it is run on, with their glyphs (§112). */}
+            <EventKindChips type={event.type} surface={event.surface} />
             {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
             {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
             {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}

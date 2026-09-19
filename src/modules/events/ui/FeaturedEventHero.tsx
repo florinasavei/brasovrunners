@@ -8,6 +8,8 @@ import { raceWeek } from "../domain/race-week";
 import type { PublicEvent } from "../repository";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
+import EventKindChips from "./EventKindChips";
+import GlyphChip from "./GlyphChip";
 import RegistrationCta from "./RegistrationCta";
 import { fadeIn } from "@/theme/motion";
 
@@ -58,11 +60,8 @@ export default async function FeaturedEventHero({
       }}
     >
       <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-        <Chip size="small" color="primary" label={t("featured")} />
-        <Chip size="small" label={tEvent(`type.${event.type}`)} />
-        {event.surface && (
-          <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />
-        )}
+        <GlyphChip glyph="featured" color="primary" label={t("featured")} />
+        <EventKindChips type={event.type} surface={event.surface} />
         {/* BR-REQ-020-01 criterion 2: a cancelled event says so wherever it appears. */}
         {event.eventStatus === "CANCELLED" && (
           <Chip size="small" color="error" label={tEvent("cancelled")} />

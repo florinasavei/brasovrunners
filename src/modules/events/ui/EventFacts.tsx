@@ -11,6 +11,7 @@ import SocialIcon from "@/shared/ui/SocialIcon";
 import { distanceInKm, isStravaLink } from "../domain/event-type";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
+import { COST_GLYPH, DIFFICULTY_GLYPH } from "./glyphs";
 
 /**
  * The facts of an event, in three lines: when, where, and the route in numbers.
@@ -72,6 +73,14 @@ export default async function EventFacts({
     </Link>
   );
 
+  // A word with its glyph in front, for the closed sets (§112); the word is what is read.
+  const withGlyph = (Icon: typeof CalendarMonthIcon, word: string) => (
+    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+      <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary" }} />
+      {word}
+    </Box>
+  );
+
   /* When: the date, then the times — a race has two, each named; anything else has one. */
   const when: ReactNode[] = [<strong key="date">{date}</strong>];
   if (event.raceStartsAt) {
@@ -93,8 +102,9 @@ export default async function EventFacts({
     route.push(t("distanceKm", { km: format.number(distance, { maximumFractionDigits: 1 }) }));
   }
   if (event.elevationGainMeters) route.push(t("elevationM", { m: format.number(event.elevationGainMeters) }));
-  if (event.difficulty) route.push(t(`difficultyValues.${event.difficulty}`));
-  if (event.costType) route.push(t(`costValues.${event.costType}`));
+  // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
+  if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
+  if (event.costType) route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
   if (!compact && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl)));
   if (!compact && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), true));
 

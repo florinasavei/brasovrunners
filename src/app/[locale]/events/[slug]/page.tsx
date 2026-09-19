@@ -15,6 +15,7 @@ import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/e
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventVideo from "@/modules/events/ui/EventVideo";
+import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -39,6 +40,16 @@ type Props = { params: Promise<{ locale: string; slug: string }> };
  */
 export const dynamic = "force-dynamic";
 
+
+function TypeGlyph({ type }: { type: keyof typeof TYPE_GLYPH }) {
+  const Icon = TYPE_GLYPH[type];
+  return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
+}
+
+function SurfaceGlyph({ surface }: { surface: keyof typeof SURFACE_GLYPH }) {
+  const Icon = SURFACE_GLYPH[surface];
+  return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
+}
 
 /** Absolute URL for this event in a given locale, always derived from APP_BASE_URL. */
 function eventUrl(locale: "ro" | "en", slug: string): string {
@@ -111,10 +122,18 @@ export default async function EventDetailPage({ params }: Props) {
         </Alert>
       )}
 
-      {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61). */}
-      <Typography variant="overline" color="text.secondary">
+      {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
+          each with its glyph (§112); the words stay, the glyphs decorate. */}
+      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+        <TypeGlyph type={event.type} />
         {t(`type.${event.type}`)}
-        {event.surface && ` · ${t(`surface.${event.surface}`)}`}
+        {event.surface && (
+          <>
+            <span aria-hidden="true">·</span>
+            <SurfaceGlyph surface={event.surface} />
+            {t(`surface.${event.surface}`)}
+          </>
+        )}
       </Typography>
       <Typography variant="h1" gutterBottom>
         {event.title}
