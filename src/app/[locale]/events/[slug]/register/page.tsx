@@ -628,15 +628,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
-                BR-REQ-039-01, `DECISIONS.md` §85. Asked only when this event publishes a
-                start list: three boxes in two directions confused everybody ("people accept
-                all"), and a question about a list that does not exist is noise. Switching the
-                list on later means asking the people already registered — the notice, not a
-                pre-answered box.
+                BR-REQ-039-01, `DECISIONS.md` §85, §143. Asked only when this event publishes a
+                start list, and asked the way round the other consents are (the owner: "it
+                should be the other way: 'I want to be on the participant list'") — a tick puts
+                the name on, no tick keeps it off. A question about a list that does not exist
+                is noise. Switching the list on later means asking the people already
+                registered — the notice, not a pre-answered box.
               */}
               {event.participantListVisibility === "NAMES" && (
-                <CheckboxField name="listOptOut" defaultChecked={typed("listOptOut") === "on"}>
-                  {`${t("listOptOut")} — ${t("optionalSuffix")}`}
+                <CheckboxField name="listOptIn" defaultChecked={typed("listOptIn") === "on"}>
+                  {`${t("listOptIn")} — ${t("optionalSuffix")}`}
                 </CheckboxField>
               )}
 

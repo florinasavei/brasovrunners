@@ -6336,3 +6336,28 @@ cookie (a table for a ten-minute draft).
 BR-REQ-041-01 criterion 10 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 143. Decided — the participant list is opted into: "Vreau să apar pe lista de participanți" (2026-09-19)
+
+**Context.** The owner, on the form's consents: "here it should be the other way round: 'I
+want to appear on the participant list'". §32 made the list an opt-out — a refusal box,
+legitimate interest with the right to object — beside two consents that ask the other way,
+and the one box that read backwards was the one people got wrong.
+
+**Decision.** The box reads "Vreau să apar pe lista de participanți", unticked; a tick puts
+the name on, no tick keeps it off. The row keeps `list_opt_out` — the column, the published
+set (`list_opt_out = false`) and the privacy test are unchanged — and the form writes the
+tick's opposite. The staff entry form asks the same way. The platform's privacy notice and
+terms say consent (art. 6(1)(a)) rather than objection (art. 21), withdrawn by writing to
+the club; the club approves the texts on production, none is in force yet, so the wording
+changes with the box. Existing rows keep what they answered.
+
+*Rejected:* renaming the column (a migration and every query for a word); keeping the
+objection wording with a consent box (the texts would say the opposite of the form).
+
+**Consequences.** The register page and `form-mapping.ts`, the staff entry page and its
+action, `templates/privacy-notice.ts`, `templates/terms.ts`, two keys in both catalogues;
+`BUSINESS.md` BR-BUS-039, `AGENTS.md` §10.10, `CLAUDE.md`; `tests/unit/registrations/form-mapping.test.ts`,
+`tests/e2e/registration-form.spec.ts`. BR-REQ-039-01 criteria 3–5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

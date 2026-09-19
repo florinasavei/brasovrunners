@@ -214,7 +214,7 @@ export async function createRegistrationAction(form: FormData): Promise<void> {
         },
         email: text(form, "email"),
         locale: toLocale(form.get("participantLocale")),
-        listOptOut: form.get("listOptOut") === "on",
+        listOptOut: form.get("listOptIn") !== "on",
         relayedByParticipantRequest: form.get("relayedByParticipantRequest") === "on",
         fastTrack: form.get("fastTrack") === "on",
       },

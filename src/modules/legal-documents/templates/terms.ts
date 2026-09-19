@@ -55,7 +55,7 @@ export const termsRo: LegalDocumentBody = {
     {
       heading: "7. Numele tău, rezultatele, fotografiile",
       paragraphs: [
-        "Numele tău poate apărea pe lista publică de participanți a unui eveniment doar dacă clubul o pornește pentru acel eveniment și nu te-ai opus la înscriere, și în rezultatele publicate doar dacă ai bifat acordul la înscriere; pe listă și în rezultate apare numele de pe formular (sau numele de afișare, dacă e permis) și clubul, nimic altceva. Amândouă se retrag oricând din pagina înscrierii tale, fără să piardă înscrierea.",
+        "Numele tău poate apărea pe lista publică de participanți a unui eveniment doar dacă clubul o pornește pentru acel eveniment și ai bifat la înscriere că vrei să apari, și în rezultatele publicate doar dacă ai bifat acordul la înscriere; pe listă și în rezultate apare numele de pe formular (sau numele de afișare, dacă e permis) și clubul, nimic altceva. Amândouă se retrag oricând din pagina înscrierii tale, fără să piardă înscrierea.",
         "Textele, fotografiile, traseele, sigla și numele clubului sunt protejate de Legea nr. 8/1996 privind dreptul de autor și drepturile conexe: le poți citi, descărca pentru uz personal și distribui prin legături; orice altă folosire cere acordul nostru scris.",
         "Clubul poate publica fotografii și filmări de la evenimente în galerie și pe canalele sale, în interesul său legitim (GDPR, articolul 6 alineatul (1) litera (f)) și cu respectarea dreptului tău la propria imagine (Codul civil, articolele 73–75). Te poți opune oricând, fără motiv: spune-ne care fotografie și o scoatem în cel mult o lună.",
       ],
@@ -133,7 +133,7 @@ export const termsEn: LegalDocumentBody = {
     {
       heading: "7. Your name, the results, the photographs",
       paragraphs: [
-        "Your name appears on an event's public participant list only if the club switches that list on for the event and you did not opt out when registering, and in published results only if you ticked that consent when registering; the list and the results show the name from the form (or the display name, where allowed) and the club, nothing else. Both are withdrawn at any time from your registration's page, without losing the registration.",
+        "Your name appears on an event's public participant list only if the club switches that list on for the event and you ticked that you want to when registering, and in published results only if you ticked that consent when registering; the list and the results show the name from the form (or the display name, where allowed) and the club, nothing else. Both are withdrawn at any time from your registration's page, without losing the registration.",
         "The club's texts, photographs, routes, logo and name are protected by Law no. 8/1996 on copyright and related rights: read them, download them for personal use, share links; any other use needs our written permission.",
         "The club may publish event photographs and video in its gallery and on its channels, in its legitimate interest (GDPR, article 6(1)(f)) and respecting your right to your own image (Civil Code, articles 73–75). You may object at any time, without a reason: tell us which photograph and it comes down within a month.",
       ],

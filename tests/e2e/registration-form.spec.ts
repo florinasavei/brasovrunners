@@ -62,9 +62,9 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // BR-REQ-072-01 criterion 1 and BR-REQ-039-01: these two are optional and still *presented*
     // — a consent behind a summary somebody never opens has not been put to them.
     await expect(page.locator('[name="resultsNameConsent"]')).toBeVisible();
-    // The list opt-out is asked only on an event whose list is switched on (`DECISIONS.md`
-    // §85); the seeded events publish none, so the box is absent rather than a third consent.
-    await expect(page.locator('[name="listOptOut"]')).toHaveCount(0);
+    // "I want to appear on the participant list" is asked only on an event whose list is switched
+    // on (`DECISIONS.md` §85, §143); the seeded events publish none, so the box is absent.
+    await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);
 
     // The optional groups are open as the page loads (the owner's instruction of 2026-09-17,
     // reversing DECISIONS.md §47): a runner's own club was the field people missed when it sat

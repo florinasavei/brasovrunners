@@ -345,7 +345,7 @@ coffee is run on nothing.
 
 **Verification:** integration `capacity/queue-priority.test.ts`
 
-#### BR-REQ-039-01 — The public participant list is opt-out, off by default, and names only
+#### BR-REQ-039-01 — The public participant list is opted into, off by default, and names only
 
 - **Source:** BR-BUS-039, BR-BUS-070
 - **Implements:** AGENTS.md §10.10, §12.3, §12.6
@@ -359,9 +359,9 @@ coffee is run on nothing.
 
 1. Given a newly created or newly duplicated event, when its participant-list setting is read, then it is `HIDDEN`.
 2. Given an event whose setting is `HIDDEN`, when its public page renders, then nothing about who is registered appears — no list, no heading and no count.
-3. Given an event whose setting is `NAMES`, when its public page renders, then it lists the registered name of every `CONFIRMED`, `REAL` registration that has not opted out, ordered by confirmation time, and nothing else about any of them.
-4. Given a registration that is not `CONFIRMED`, of kind `TEST`, or opted out, when the list renders, then that person does not appear and no count reveals them.
-5. Given the registration form, when it renders, then it offers a plainly worded opt-out, on every event, whatever that event's current setting is.
+3. Given an event whose setting is `NAMES`, when its public page renders, then it lists the registered name of every `CONFIRMED`, `REAL` registration whose participant asked to be on it, ordered by confirmation time, and nothing else about any of them.
+4. Given a registration that is not `CONFIRMED`, of kind `TEST`, or that did not ask to be listed, when the list renders, then that person does not appear and no count reveals them.
+5. Given the registration form of an event whose list is switched on, when it renders, then it offers a plainly worded, unticked "I want to appear on the participant list" — a tick puts the name on, no tick keeps it off, and the row's `list_opt_out` is the tick's opposite; the staff entry form asks the same way (2026-09-19, `DECISIONS.md` §143; asked only where a list exists since §85).
 6. Given an event whose registration mode is not `INTERNAL`, when `NAMES` is saved, then it is refused by the service and again by a database constraint.
 7. Given the public queries, when they are read, then no participant email address can be returned by any of them.
 
