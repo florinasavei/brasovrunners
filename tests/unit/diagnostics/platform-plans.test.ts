@@ -60,9 +60,9 @@ function messageAt(messages: (typeof ro) | (typeof en), path: string): unknown {
 }
 
 describe("BR-REQ-090-05 criterion 3 how much of today's allowance is left", () => {
-  it("does the arithmetic PLATFORM.md states in prose: 100 a day is 25 registrations", () => {
-    // Four messages each since the reminder (`DECISIONS.md` §81); three made it 33.
-    expect(registrationsLeftToday(BASE)).toBe(25);
+  it("does the arithmetic PLATFORM.md states in prose: 100 a day is 20 registrations", () => {
+    // Five messages each since the signed declaration goes out on its own (`DECISIONS.md` §95); four made it 25.
+    expect(registrationsLeftToday(BASE)).toBe(20);
   });
 
   it("counts down as the day is spent", () => {
@@ -345,5 +345,18 @@ describe("BR-REQ-090-04 the operational half on /devs", () => {
         );
       }
     }
+  });
+});
+
+describe("the Neon monthly figure (§88)", () => {
+  it("projects this month's pace to a full month at Launch's rates, with no base fee", async () => {
+    const { projectedNeonLaunchUsdPerMonth } = await import("@/modules/diagnostics/platform-plans");
+    // 50 CU-hours in 15 days is 100 in 30; 100 × $0.106 = $10.60; plus 1 GiB × $0.35.
+    expect(
+      projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: 50, neonHoursElapsed: 15 * 24, databaseBytes: 1024 ** 3 }),
+    ).toBe(10.95);
+    // Without the API figure there is no pace to project.
+    expect(projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: null, neonHoursElapsed: 100 })).toBeNull();
+    expect(projectedNeonLaunchUsdPerMonth({ neonCuHoursThisMonth: 10, neonHoursElapsed: 0 })).toBeNull();
   });
 });

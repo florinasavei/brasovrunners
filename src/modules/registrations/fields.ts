@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { E164_PHONE } from "./phone";
 
 /**
  * The registration form's editable fields (BR-REQ-031-01 criterion 1): full name, email,
@@ -11,6 +12,11 @@ import { z } from "zod";
  * exactly like success (a generic "check your email" response), never with a validation error
  * that would tell a bot which defense it tripped.
  */
+/** Strava's own hosts only: a profile (`/athletes/<id>`) or the app's share link. */
+export const STRAVA_URL = /^https:\/\/(www\.)?strava\.com\/(athletes|pros)\/[A-Za-z0-9_-]+\/?$|^https:\/\/strava\.app\.link\/[A-Za-z0-9_-]+$/;
+/** Instagram usernames: letters, digits, dots and underscores, up to thirty, no leading `@`. */
+export const INSTAGRAM_HANDLE = /^[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+
 const submissionFields = z.object({
   /**
    * The legal name, in two parts (BR-REQ-031-04). Composed into `registered_name` at write
@@ -48,15 +54,44 @@ const submissionFields = z.object({
 
   /**
    * The organizer's way of reaching somebody on race day, and somebody else if that fails.
-   * Required on the public form for that reason, and deliberately not validated against a
-   * national format: a runner from anywhere may enter, and rejecting a valid foreign number is
-   * a worse failure than storing one nobody rings.
+   * Required on the public form for that reason. Since `DECISIONS.md` §84 the form asks for
+   * the country and the number, `form-mapping.ts` composes E.164 (`+40712345678`), and this
+   * is what the row stores — deliberately not a national-format check beyond that: a runner
+   * from anywhere may enter, and rejecting a valid foreign number is a worse failure than
+   * storing one nobody rings.
    */
-  phone: z.string().trim().min(3).max(40),
+  phone: z.string().regex(E164_PHONE, "a telephone number in international form"),
   emergencyContactName: z.string().trim().min(1).max(200),
-  emergencyContactPhone: z.string().trim().min(3).max(40),
+  emergencyContactPhone: z.string().regex(E164_PHONE, "a telephone number in international form"),
 
   clubName: z.string().trim().max(200).optional(),
+
+  /**
+   * The parent or legal guardian (§108): required when the birth date gives under eighteen
+   * today — `guardianRule` below — optional otherwise, and ignored for an adult who typed it.
+   */
+  guardianName: z.string().trim().max(200).optional(),
+
+  /**
+   * Socials, optional (§106). A Strava link is one of Strava's own addresses — a profile, or
+   * the short link the app shares — and nothing else, so the field cannot become a link to
+   * anywhere; an Instagram handle is the username, with or without the `@`, which is stored
+   * without it. Empty is the common case and means "did not say".
+   */
+  stravaUrl: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .transform((value) => (value ? value : undefined))
+    .refine((value) => value === undefined || STRAVA_URL.test(value), "a Strava profile link, like https://www.strava.com/athletes/12345"),
+  instagramHandle: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .transform((value) => (value ? value.replace(/^@/, "") : undefined))
+    .refine((value) => value === undefined || INSTAGRAM_HANDLE.test(value), "an Instagram username, like @brasovrunners"),
 
   /**
    * "I am a Brașov Runners team member" (BR-REQ-031-06).
@@ -121,6 +156,33 @@ const submissionFields = z.object({
  * text quietly dropped, because dropping it would leave somebody believing an organizer
  * knows about their asthma.
  */
+/** Eighteen on the day, by calendar years — the same arithmetic a desk uses on an ID card. */
+export function isMinorOn(birthDate: string, on: Date): boolean {
+  const birth = new Date(`${birthDate}T00:00:00Z`);
+  const eighteenth = new Date(Date.UTC(birth.getUTCFullYear() + 18, birth.getUTCMonth(), birth.getUTCDate()));
+  return on.getTime() < eighteenth.getTime();
+}
+
+/**
+ * A minor is registered by a parent or legal guardian (§108; the terms and the declaration
+ * have said so since §95): the form must carry the guardian's name, and the declaration is
+ * then theirs to sign. Checked against today rather than the event's day — a birth date is
+ * parsed here without the event in hand, and a runner who turns eighteen between the two
+ * loses nothing by having named a parent.
+ */
+const guardianRule = (
+  value: { birthDate?: string; guardianName?: string },
+  ctx: z.RefinementCtx,
+): void => {
+  if (value.birthDate && isMinorOn(value.birthDate, new Date()) && !value.guardianName) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["guardianName"],
+      message: "a participant under eighteen is registered by a parent or legal guardian, whose name is required",
+    });
+  }
+};
+
 const healthConsentRule = (
   value: { healthNotes?: string; healthConsent?: boolean },
   ctx: z.RefinementCtx,
@@ -138,7 +200,7 @@ const healthConsentRule = (
 };
 
 /** The public form. Every race detail is insisted on (BR-REQ-031-04 criterion 2). */
-export const registrationSubmissionSchema = submissionFields.superRefine(healthConsentRule);
+export const registrationSubmissionSchema = submissionFields.superRefine(healthConsentRule).superRefine(guardianRule);
 
 /**
  * The same form as an organizer fills it in for somebody who telephoned (BR-REQ-031-04
@@ -159,13 +221,23 @@ export const staffRegistrationSubmissionSchema = submissionFields
     emergencyContactName: true,
     emergencyContactPhone: true,
   })
-  .superRefine(healthConsentRule);
+  .superRefine(healthConsentRule)
+  .superRefine(guardianRule);
 
 export type RegistrationSubmissionInput = z.infer<typeof registrationSubmissionSchema>;
+
+/**
+ * "CI seria BV nr. 123456", as people write it: letters, digits, spaces, dots and dashes,
+ * between four and thirty characters. A passport number for a runner from abroad fits the
+ * same shape. Not parsed into series and number — the declaration prints it as one thing.
+ */
+export const ID_DOCUMENT = /^[A-Za-z0-9][A-Za-z0-9 .\-\/]{2,28}[A-Za-z0-9]$/;
 
 export const declarationSigningSchema = z.object({
   accepted: z.literal(true),
   typedName: z.string().trim().min(1).max(200),
+  /** Required when the declaration's text names it (`mergeFieldsIn`); the service decides. */
+  idDocument: z.string().trim().regex(ID_DOCUMENT, "an identity document is a series and a number").optional(),
   /**
    * The version the page rendered, by id and content hash (BR-REQ-033-02 criterion 6). The
    * service compares both with the version that is current at signing time and refuses a

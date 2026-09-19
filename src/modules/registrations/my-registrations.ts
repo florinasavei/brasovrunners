@@ -72,6 +72,8 @@ export type MyRegistration = {
   eventTimezone: string;
   checkinCode: string | null;
   checkedInAt: Date | null;
+  /** The race number, once given (§87). */
+  bibNumber: number | null;
   /** "I am here" is offered from the day before the start, confirmed registrations only. */
   selfCheckinOpen: boolean;
 };
@@ -94,6 +96,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       eventTimezone: events.timezone,
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
+      bibNumber: registrations.bibNumber,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))
@@ -142,6 +145,8 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
     startsAt: event.startsAt,
     registrationOpensAt: event.registrationOpensAt,
     registrationClosesAt: event.registrationClosesAt,
+    confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
+    confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
     capacity: event.capacity,
     raceId: event.raceId,
     publishedAt: null,

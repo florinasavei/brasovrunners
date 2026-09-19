@@ -29,11 +29,18 @@ export type RegistrationListRow = {
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
+  firstName: string | null;
+  lastName: string | null;
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
   /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
   clubMemberDeclared: boolean;
+  /** The optional socials (§106), as typed; null when not given. */
+  stravaUrl: string | null;
+  instagramHandle: string | null;
+  /** The parent or guardian of a minor (§108); null for an adult. */
+  guardianName: string | null;
   submittedAt: Date;
   confirmedAt: Date | null;
   /** The race number, once assigned (BR-REQ-038-01). */
@@ -41,6 +48,7 @@ export type RegistrationListRow = {
   checkedInAt: Date | null;
   /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
   emailRejectedReason: string | null;
+  idDocument: string | null;
 };
 
 export type RegistrationListFilters = {
@@ -122,6 +130,18 @@ function escapeLike(term: string): string {
  * when every message went through, or none was sent yet. A short sanitized reason (§16.1),
  * never a body.
  */
+/**
+ * The identity document the latest declaration names (§95): what the desk checks the kit
+ * against, and what the export carries for the organiser who hands kits out by ID.
+ */
+const latestIdDocument = sql<string | null>`(
+  SELECT ${declarationAcceptances.idDocument}
+  FROM ${declarationAcceptances}
+  WHERE ${declarationAcceptances.registrationId} = ${registrations.id}
+  ORDER BY ${declarationAcceptances.acceptedAt} DESC
+  LIMIT 1
+)`;
+
 const emailRejectedReason = sql<string | null>`(
   SELECT coalesce(${emailOutbox.lastError}, ${emailOutbox.status}::text)
   FROM ${emailOutbox}
@@ -204,15 +224,21 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       kind: registrations.kind,
       source: registrations.source,
       registeredName: registrations.registeredName,
+      firstName: registrations.firstName,
+      lastName: registrations.lastName,
       participantEmail: participants.deliveryEmail,
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      stravaUrl: registrations.stravaUrl,
+      instagramHandle: registrations.instagramHandle,
+      guardianName: registrations.guardianName,
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
+      idDocument: latestIdDocument,
     })
     .from(registrations)
     .innerJoin(participants, eq(participants.id, registrations.participantId))
@@ -275,6 +301,11 @@ export type RegistrationDetail = {
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
+  /** The optional socials (§106), as typed; null when not given. */
+  stravaUrl: string | null;
+  instagramHandle: string | null;
+  /** The parent or guardian of a minor (§108); null for an adult. */
+  guardianName: string | null;
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
@@ -316,6 +347,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
     .select({
       bibNumber: registrations.bibNumber,
       checkinCode: registrations.checkinCode,
+  idDocument: latestIdDocument,
       checkedInAt: registrations.checkedInAt,
       checkedInByName: checkedInBy.displayName,
       emailConfirmedByName: emailConfirmedBy.displayName,
@@ -330,6 +362,9 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      stravaUrl: registrations.stravaUrl,
+      instagramHandle: registrations.instagramHandle,
+      guardianName: registrations.guardianName,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
       waitlistedAt: registrations.waitlistedAt,
@@ -369,6 +404,8 @@ export type DeskRegistration = {
   status: RegistrationStatus;
   kind: RegistrationKind;
   registeredName: string;
+  /** The parent or guardian of a minor (§108): who the kit goes to; null for an adult. */
+  guardianName: string | null;
   eventId: string;
   eventTitle: string | null;
   eventStartsAt: Date;
@@ -379,6 +416,7 @@ export type DeskRegistration = {
   checkedInByName: string | null;
   /** The desk sees who never got the email (`DECISIONS.md` §76) — the reason, never the address. */
   emailRejectedReason: string | null;
+  idDocument: string | null;
 };
 
 const DESK_COLUMNS = {
@@ -386,11 +424,13 @@ const DESK_COLUMNS = {
   status: registrations.status,
   kind: registrations.kind,
   registeredName: registrations.registeredName,
+  guardianName: registrations.guardianName,
   eventId: registrations.eventId,
   eventTitle: eventTranslations.title,
   eventStartsAt: events.startsAt,
   bibNumber: registrations.bibNumber,
   checkinCode: registrations.checkinCode,
+  idDocument: latestIdDocument,
   checkedInAt: registrations.checkedInAt,
   checkedInByName: checkedInBy.displayName,
   emailRejectedReason,
@@ -470,6 +510,7 @@ export type DeclarationAcceptanceRow = {
   attestedByName: string | null;
   acceptedAt: Date;
   typedName: string;
+  idDocument: string | null;
   declarationVersion: number;
 };
 
@@ -481,6 +522,7 @@ export async function listDeclarationAcceptances<T extends Record<string, unknow
     .select({
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
+      idDocument: declarationAcceptances.idDocument,
       declarationVersion: declarationAcceptances.declarationVersion,
       method: declarationAcceptances.method,
       attestedByName: staffUsers.displayName,
@@ -599,3 +641,30 @@ export async function listEventsForDesk<T extends Record<string, unknown>>(
     )
     .orderBy(asc(events.startsAt));
 }
+
+/**
+ * One event's active registrations for the queue panel (`DECISIONS.md` §92): confirmed and
+ * holds first, then the waiting list in exactly the order `lockOldestWaitlisted` serves it —
+ * oldest `waitlisted_at` first, `id` breaking a tie — so the panel's numbering is a promise.
+ */
+export async function listQueueForEvent<T extends Record<string, unknown>>(db: Database<T>, eventId: string) {
+  return db
+    .select({
+      id: registrations.id,
+      status: registrations.status,
+      kind: registrations.kind,
+      registeredName: registrations.registeredName,
+      submittedAt: registrations.submittedAt,
+      waitlistedAt: registrations.waitlistedAt,
+      holdExpiresAt: registrations.holdExpiresAt,
+    })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        sql`${registrations.status} in ('PENDING_DECLARATION', 'WAITLISTED', 'WAITLIST_OFFERED', 'CONFIRMED')`,
+      ),
+    )
+    .orderBy(asc(registrations.waitlistedAt), asc(registrations.id));
+}
+

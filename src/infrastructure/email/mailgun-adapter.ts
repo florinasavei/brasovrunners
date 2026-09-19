@@ -188,6 +188,10 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       form.set("text", message.text);
       form.set("html", message.html);
       if (config.replyTo) form.set("h:Reply-To", config.replyTo);
+      // Mailgun takes files as repeated `attachment` parts of the same multipart form.
+      for (const attachment of message.attachments ?? []) {
+        form.append("attachment", new Blob([new Uint8Array(attachment.data)], { type: attachment.contentType }), attachment.filename);
+      }
 
       /**
        * The outbox row's key, carried through the provider and back.

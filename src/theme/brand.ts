@@ -56,6 +56,33 @@ export const COLOR = {
 } as const;
 
 /**
+ * The same brand after dark (`DECISIONS.md` §93; the owner: "I need a dark theme switcher").
+ *
+ * Not an inversion: pure blue on near-black is 2.4:1 and unreadable, so the primary lifts to
+ * a lighter blue of the same hue (`blue`), and the ink-blue hover becomes the lighter `blueInk`
+ * so the order — resting, then hover — reads the same way. Paper and surface are warm greys,
+ * not black, for the reason `paper` is not white. The orange stays; it was chosen as a fill
+ * under dark text, and that pair holds on either scheme. Every pair below is asserted in
+ * `tests/unit/theme/brand.test.ts` exactly as the light ones are.
+ */
+export const COLOR_DARK = {
+  /** Primary as text and outlines: 7.6:1 on the dark page. */
+  blue: "#7b9cff",
+  /** Hover and pressed states, lighter still. */
+  blueInk: "#a3b8ff",
+  /** Page background. */
+  paper: "#111318",
+  /** Card and surface background, one step lighter than the page. */
+  surface: "#1a1d24",
+  /** Body text. */
+  ink: "#f3f2ee",
+  /** Secondary text. */
+  inkMuted: "#b5b2a9",
+  /** Hairlines and dividers. */
+  line: "#2c3038",
+} as const;
+
+/**
  * The club kit's gradient: deep navy at the shoulders, running lighter and more cyan down the
  * body, to white at the hem. It is the most distinctive thing the club already owns, and the
  * one part of the identity that is theirs rather than generic.

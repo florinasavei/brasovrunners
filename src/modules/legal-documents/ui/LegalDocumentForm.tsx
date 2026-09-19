@@ -88,10 +88,11 @@ export default async function LegalDocumentForm({
                 required
                 defaultValue={values?.[locale].title ?? ""}
               />
+              {/* The declaration's merge fields (§95): named here, filled in per person and event. */}
               <TextField
                 name={`${locale}Body`}
                 label={t("bodyField")}
-                helperText={t("bodyHelp")}
+                helperText={`${t("bodyHelp")} ${t("tokensHelp")}`}
                 required
                 multiline
                 minRows={12}

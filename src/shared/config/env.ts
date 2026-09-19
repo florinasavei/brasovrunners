@@ -73,6 +73,11 @@ export const envSchema = z
     // Read-only, for `/devs` to show the database's CU-hours against the plan (SETUP.md §33).
     NEON_API_KEY: z.string().min(1).optional(),
     NEON_PROJECT_ID: z.string().min(1).optional(),
+    // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
+    // project id is under the Vercel project's Settings → General; the team id only on a team.
+    VERCEL_API_TOKEN: z.string().min(1).optional(),
+    VERCEL_PROJECT_ID: z.string().min(1).optional(),
+    VERCEL_TEAM_ID: z.string().min(1).optional(),
 
     /**
      * The club's real site, for the "this is not the real site" banner to link to (§7.5).
@@ -118,7 +123,25 @@ export const envSchema = z
     R2_BUCKET: z.string().min(1).optional(),
     R2_PUBLIC_BASE_URL: z.url().optional(),
 
+    /**
+     * Cloudflare Turnstile on the public registration form (`DECISIONS.md` §97). Both or
+     * neither: with both set the widget shows and the server verifies; with neither the
+     * honeypot and the timing check stand alone, as before.
+     */
+    TURNSTILE_SITE_KEY: z.string().min(1).optional(),
+    TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+
     // AGENTS.md §7.2 and §16.4. Defaults to the mode that transmits nothing.
+    /**
+     * Whether the registration form offers "appear publicly under another name" (§95, the
+     * club's organiser: kits are handed out against an identity card, so a nickname on the
+     * list only invites "somebody else took it"). Off unless set to `true`; the column and
+     * the list's fallback to the registered name stay either way.
+     */
+    FEATURE_DISPLAY_NAME: z
+      .string()
+      .optional()
+      .transform((value) => value === "true" || value === "1"),
     EMAIL_DELIVERY_MODE: z.enum(EMAIL_DELIVERY_MODES).default("capture"),
     EMAIL_ALLOWLIST: allowlist,
     MAILGUN_API_KEY: z.string().min(1).optional(),
@@ -151,6 +174,13 @@ export const envSchema = z
      * Setting this to a mailbox the club actually reads is the whole of "people can reply".
      */
     EMAIL_REPLY_TO: z.email().optional(),
+    /**
+     * The club's archive mailbox for signed declarations (`DECISIONS.md` §99). Set, every
+     * signature — electronic or on paper at the desk — also queues `DECLARATION_ARCHIVE` to
+     * this address with the same PDF attached, so the archive builds itself; unset, the
+     * participant's copy and the per-event bundle on the event page are the archive.
+     */
+    DECLARATIONS_ARCHIVE_TO: z.email().optional(),
     // Verifies inbound Mailgun webhooks (AGENTS.md §16.5) — a separate secret from the API
     // key, since the two prove different things: one authenticates outbound calls this
     // application makes, the other authenticates inbound calls Mailgun makes to it.

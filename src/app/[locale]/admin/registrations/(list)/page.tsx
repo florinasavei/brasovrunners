@@ -272,16 +272,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         data-testid="outbox-panel"
       >
         <Typography variant="body2" sx={{ flex: 1 }}>
-          {t("outbox.status", {
+          {t(`outbox.status.${volume.period}`, {
             waiting: volume.waitingMessages,
-            sent: volume.sentMessages,
-            allowance: volume.allowance,
-            remaining: volume.remaining,
+            sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+            allowance: volume.allowance ?? "",
+            remaining: volume.remaining ?? "",
+            plan: volume.planName,
           })}
         </Typography>
         {/* The button only when there is something to send and room to send it: a disabled
             button cannot say why (`SubmitButton`'s own rule), a sentence can. */}
-        {volume.waitingMessages > 0 && volume.remaining > 0 ? (
+        {volume.waitingMessages > 0 && (volume.remaining === null || volume.remaining > 0) ? (
           <Box component="form" action={sendOutboxNowAction}>
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="listQuery" value={listQueryString} />

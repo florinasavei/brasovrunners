@@ -26,7 +26,11 @@ export type OutgoingEmail = {
    * identifies the trigger and never the participant.
    */
   idempotencyKey: string;
+  /** Files carried with the message — the signed declaration (§95). Rendered at send time, never stored in the outbox. */
+  attachments?: EmailAttachment[];
 };
+
+export type EmailAttachment = { filename: string; contentType: string; data: Buffer };
 
 /**
  * The four outcomes the outbox knows how to act on.

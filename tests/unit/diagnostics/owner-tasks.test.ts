@@ -17,11 +17,15 @@ const LAUNCHED: OwnerTaskInputs = {
   hasApprovedPrivacyNotice: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
+  appEnv: "production",
   staleJobNames: [],
   staffCount: 3,
   publishedEventCount: 4,
   roDomainBound: true,
   storageConfigured: true,
+  botCheckConfigured: true,
+  declarationArchiveConfigured: true,
+  vercelUsageConfigured: true,
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -29,7 +33,10 @@ const stateOf = (input: OwnerTaskInputs, id: string) =>
 
 describe("owner tasks", () => {
   it("says nothing is blocking once everything is really in place", () => {
-    expect(ownerTasks(LAUNCHED).every((task) => task.state === "done")).toBe(true);
+    const tasks = ownerTasks(LAUNCHED);
+    expect(tasks.some((task) => task.state === "blocking")).toBe(false);
+    // The club's rows are all done; the developer's queued work stays open by design (§97).
+    expect(tasks.filter((task) => task.owner === "club").every((task) => task.state === "done")).toBe(true);
   });
 
   it("treats sample legal text as blocking, not as done", () => {
@@ -88,6 +95,18 @@ describe("owner tasks", () => {
     // a photo, and a checklist somebody ticks would not know that.
     expect(stateOf({ ...LAUNCHED, storageConfigured: false }, "mediaStorage")).toBe("open");
     expect(stateOf(LAUNCHED, "mediaStorage")).toBe("done");
+    // The queued work: developer-owned, always open, after the club's rows.
+    const developer = ownerTasks(LAUNCHED).filter((task) => task.owner === "developer").map((task) => task.id);
+    expect(developer).toEqual(["scheduler", "scheduleStructured", "docsSimplify"]);
+    // Vercel's figures (§101): the row is the club's switch — a token and a project id.
+    expect(stateOf({ ...LAUNCHED, vercelUsageConfigured: false }, "vercelUsage")).toBe("open");
+    expect(stateOf(LAUNCHED, "vercelUsage")).toBe("done");
+    // The archive copy is built (§99); the row is the club's switch, open until the mailbox is named.
+    expect(stateOf({ ...LAUNCHED, declarationArchiveConfigured: false }, "declarationArchiveMail")).toBe("open");
+    expect(stateOf(LAUNCHED, "declarationArchiveMail")).toBe("done");
+    // The bot check is a switch the club flips (§97): open without the keys, never blocking.
+    expect(stateOf({ ...LAUNCHED, botCheckConfigured: false }, "botCheck")).toBe("open");
+    expect(stateOf(LAUNCHED, "botCheck")).toBe("done");
   });
 
   it("leaves every task but the scheduler to the club", () => {
@@ -98,6 +117,9 @@ describe("owner tasks", () => {
       "inviteStaff",
       "publishEvents",
       "mediaStorage",
+      "botCheck",
+      "declarationArchiveMail",
+      "vercelUsage",
       "roDomain",
     ]);
   });
@@ -119,3 +141,17 @@ describe("owner tasks", () => {
     expect(sorted[0].state).toBe("blocking");
   });
 });
+
+describe("the email task off production", () => {
+  it("reads done on QA in allowlist mode, where live is refused by rule, and blocking in capture", async () => {
+    const { ownerTasks } = await import("@/modules/diagnostics/owner-tasks");
+    const qa = ownerTasks({ ...LAUNCHED, appEnv: "qa", emailDeliveryMode: "allowlist" });
+    expect(qa.find((task) => task.id === "liveEmail")?.state).toBe("done");
+    const captured = ownerTasks({ ...LAUNCHED, appEnv: "qa", emailDeliveryMode: "capture" });
+    expect(captured.find((task) => task.id === "liveEmail")?.state).toBe("blocking");
+    // Production still needs `live`.
+    const prod = ownerTasks({ ...LAUNCHED, appEnv: "production", emailDeliveryMode: "allowlist" });
+    expect(prod.find((task) => task.id === "liveEmail")?.state).toBe("blocking");
+  });
+});
+

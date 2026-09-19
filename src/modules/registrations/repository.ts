@@ -199,6 +199,9 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       emergencyContactName: input.details?.emergencyContactName ?? null,
       emergencyContactPhone: input.details?.emergencyContactPhone ?? null,
       clubName: input.details?.clubName ?? null,
+      guardianName: input.details?.guardianName ?? null,
+      stravaUrl: input.details?.stravaUrl ?? null,
+      instagramHandle: input.details?.instagramHandle ?? null,
       // NOT NULL with a default of false: "did not say" and "said no" are the same answer to
       // a question that grants nothing, unlike the two consents above it, where they are not.
       clubMemberDeclared: input.details?.clubMemberDeclared ?? false,
@@ -273,11 +276,12 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 export async function listPublicStartList<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<Array<{ displayName: string }>> {
+): Promise<Array<{ displayName: string; clubName: string | null }>> {
   return db
-    // BR-REQ-039-02: the display name, never the legal one. The select list is the guarantee
-    // — widening it is what tests/privacy/public-surface.test.ts refuses.
-    .select({ displayName: registrations.displayName })
+    // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
+    // The select list is the guarantee — widening it is what
+    // tests/privacy/public-surface.test.ts refuses.
+    .select({ displayName: registrations.displayName, clubName: registrations.clubName })
     .from(registrations)
     .where(
       and(
@@ -473,6 +477,7 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     contentSha256: string;
     locale: Locale;
     typedName: string;
+    idDocument?: string | null;
     acceptedAt: Date;
     /** `PAPER` with the staff id that recorded it; omitted for the email link (BR-REQ-037-07). */
     method?: "EMAIL_LINK" | "PAPER";
@@ -486,6 +491,7 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     contentSha256: input.contentSha256,
     locale: input.locale,
     typedName: input.typedName,
+    idDocument: input.idDocument ?? null,
     acceptedAt: input.acceptedAt,
     method: input.method ?? "EMAIL_LINK",
     attestedByStaffUserId: input.attestedByStaffUserId ?? null,

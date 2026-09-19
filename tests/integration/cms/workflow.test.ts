@@ -39,11 +39,11 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     await resetTables(db);
     [author] = await db
       .insert(staffUsers)
-      .values({ email: "contributor@dev.test", displayName: "Author", role: "CONTRIBUTOR" })
+      .values({ email: "copywriter@dev.test", displayName: "Author", role: "COPYWRITER" })
       .returning();
     [otherAuthor] = await db
       .insert(staffUsers)
-      .values({ email: "other@dev.test", displayName: "Other author", role: "CONTRIBUTOR" })
+      .values({ email: "other@dev.test", displayName: "Other author", role: "COPYWRITER" })
       .returning();
     [editor] = await db
       .insert(staffUsers)
@@ -172,7 +172,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     }
   }
 
-  describe("criterion 1 an Author edits their own drafts and submits for review", () => {
+  describe("criterion 1 a copywriter edits the texts and submits for review", () => {
     it("saves an Author's own draft", async () => {
       const { translation } = await seedEvent();
 
@@ -187,15 +187,26 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(saved.version).toBe(translation.version + 1);
     });
 
-    it("refuses an Author a colleague's draft", async () => {
+    it("lets a copywriter edit a colleague's draft, and refuses a volunteer any text (§103)", async () => {
       const { translation } = await seedEvent({ authorId: otherAuthor.id });
+      const saved = await saveEventTranslation(db, {
+        actor: author,
+        translationId: translation.id,
+        expectedVersion: translation.version,
+        fields: { ...FIELDS, title: "Corectat de redactor" },
+      });
+      expect(saved.title).toBe("Corectat de redactor");
 
+      const [volunteer] = await db
+        .insert(staffUsers)
+        .values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" })
+        .returning();
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: author,
+            actor: volunteer,
             translationId: translation.id,
-            expectedVersion: translation.version,
+            expectedVersion: saved.version,
             fields: FIELDS,
           }),
         ),
@@ -437,25 +448,38 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
   });
 
-  describe("criterion 3 an Author cannot edit published content", () => {
-    it("refuses the save and writes nothing", async () => {
+  describe("criterion 3 a copywriter edits live text with the acknowledgement; a volunteer never (§103)", () => {
+    it("saves the copywriter's live correction, and refuses the volunteer's, writing nothing", async () => {
       const { translation } = await seedEvent({ status: "PUBLISHED" });
 
+      const saved = await saveEventTranslation(db, {
+        actor: author,
+        translationId: translation.id,
+        expectedVersion: translation.version,
+        acknowledgeLiveEdit: true,
+        fields: { ...FIELDS, title: "Titlu corectat de redactor" },
+      });
+      expect(saved.title).toBe("Titlu corectat de redactor");
+
+      const [volunteer] = await db
+        .insert(staffUsers)
+        .values({ email: "volunteer2@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" })
+        .returning();
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: author,
+            actor: volunteer,
             translationId: translation.id,
-            expectedVersion: translation.version,
+            expectedVersion: saved.version,
             acknowledgeLiveEdit: true,
-            fields: { ...FIELDS, title: "Titlu schimbat de autor" },
+            fields: { ...FIELDS, title: "Titlu schimbat de voluntar" },
           }),
         ),
       ).toBe("FORBIDDEN");
 
       const current = await findTranslationById(db, translation.id);
-      expect(current?.title).toBe(FIELDS.title);
-      expect(current?.version).toBe(translation.version);
+      expect(current?.title).toBe("Titlu corectat de redactor");
+      expect(current?.version).toBe(saved.version);
     });
   });
 

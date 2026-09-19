@@ -62,14 +62,17 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // BR-REQ-072-01 criterion 1 and BR-REQ-039-01: these two are optional and still *presented*
     // — a consent behind a summary somebody never opens has not been put to them.
     await expect(page.locator('[name="resultsNameConsent"]')).toBeVisible();
-    await expect(page.locator('[name="listOptOut"]')).toBeVisible();
+    // The list opt-out is asked only on an event whose list is switched on (`DECISIONS.md`
+    // §85); the seeded events publish none, so the box is absent rather than a third consent.
+    await expect(page.locator('[name="listOptOut"]')).toHaveCount(0);
 
     // The optional groups are open as the page loads (the owner's instruction of 2026-09-17,
     // reversing DECISIONS.md §47): a runner's own club was the field people missed when it sat
     // behind a summary, and a field nobody sees is a field nobody fills.
     await expect(page.locator('[name="healthNotes"]')).toBeVisible();
     await expect(page.locator('[name="clubName"]')).toBeVisible();
-    await expect(page.locator('[name="displayName"]')).toBeVisible();
+    // The public display name is behind `FEATURE_DISPLAY_NAME`, off by default (§95): absent.
+    await expect(page.locator('[name="displayName"]')).toHaveCount(0);
     // BR-REQ-031-05 criterion 1: the health question keeps its own consent beside it.
     await expect(page.locator('[name="healthConsent"]')).toBeVisible();
     // BR-REQ-031-06: the club's own people say so here.
@@ -107,7 +110,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
     // Criterion 1, with every disclosure open — the widest the page can be made. They open by
     // default now, so nothing needs clicking; assert that rather than assume it.
-    for (const name of ["healthNotes", "clubName", "displayName"]) {
+    for (const name of ["healthNotes", "clubName", "preferredLocale"]) {
       await expect(page.locator(`[name="${name}"]`)).toBeVisible();
     }
     const overflow = await page.evaluate(() => ({
@@ -136,6 +139,14 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
       .boundingBox();
     expect(consentBox?.height ?? 0).toBeGreaterThanOrEqual(44);
     expect(consentBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+
+    // BR-REQ-031-01 criterion 5 (`DECISIONS.md` §102): what is being signed up for, on the
+    // form — the event's page, the terms and the privacy notice as links, each a tap target.
+    for (const name of ["Detaliile evenimentului", "Termeni și condiții", "Confidențialitate"]) {
+      const link = page.locator("#main").getByRole("link", { name, exact: true }).first();
+      await expect(link).toBeVisible();
+      expect((await link.boundingBox())?.height ?? 0, name).toBeGreaterThanOrEqual(44);
+    }
   });
 });
 

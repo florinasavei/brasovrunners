@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import MuiLink from "@mui/material/Link";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -19,6 +20,7 @@ import {
   listDeclarationAcceptances,
   listOutboxHistory,
 } from "@/modules/registrations/admin-repository";
+import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -57,10 +59,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const registration = await findRegistrationDetailForAdmin(db, id);
   if (!registration) notFound();
 
-  const [acceptances, outboxHistory, auditTrail] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     listAuditTrail(db, "registration", id),
+    // The first free numbers, for a preferential one picked rather than guessed (§105).
+    suggestFreeBibNumbers(db, registration.eventId),
   ]);
 
   const { resent, saved, error } = await searchParams;
@@ -128,6 +132,27 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {registration.guardianName && (
+        <Typography variant="body2" color="text.secondary">
+          {tr("desk.guardian", { name: registration.guardianName })}
+        </Typography>
+      )}
+      {/* The socials the person offered (§106): links to follow back, never published here. */}
+      {(registration.stravaUrl || registration.instagramHandle) && (
+        <Typography variant="body2" color="text.secondary">
+          {registration.stravaUrl && (
+            <MuiLink href={registration.stravaUrl} target="_blank" rel="noopener noreferrer nofollow">
+              Strava
+            </MuiLink>
+          )}
+          {registration.stravaUrl && registration.instagramHandle ? " · " : ""}
+          {registration.instagramHandle && (
+            <MuiLink href={`https://www.instagram.com/${encodeURIComponent(registration.instagramHandle)}/`} target="_blank" rel="noopener noreferrer nofollow">
+              @{registration.instagramHandle}
+            </MuiLink>
+          )}
+        </Typography>
+      )}
 
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
         <form action={resendRegistrationEmailAction}>
@@ -202,6 +227,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     {tr("desk.saveBib")}
                   </Button>
                 </Stack>
+                {/* A preferential number is picked among the free ones (§105): the first free
+                    numbers, and the runner is emailed the one that is saved. */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                  {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                </Typography>
               </form>
               <form action={checkInAction}>
                 {deskHidden}
@@ -389,7 +419,20 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           ))}
         {acceptances.map((acceptance, index) => (
           <Typography key={index} variant="body2">
-            {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} — {acceptance.typedName} (v{acceptance.declarationVersion})
+            {tr("registrations.declaration")}: {dt(acceptance.acceptedAt)} —{" "}
+            <Box component="span" sx={{ fontFamily: "var(--font-signature), cursive", fontSize: "1.375rem" }}>
+              {acceptance.typedName}
+            </Box>{" "}
+            (v{acceptance.declarationVersion})
+            {acceptance.idDocument && ` — ${tr("registrations.idDocument")}: ${acceptance.idDocument}`}
+            {index === 0 && (
+              <>
+                {" — "}
+                <a href={`/api/admin/registrations/${registration.id}/declaration`} target="_blank" rel="noopener">
+                  {tr("registrations.declarationPdf")}
+                </a>
+              </>
+            )}
             {acceptance.method === "PAPER" &&
               ` — ${tr("registrations.declarationPaper", { who: acceptance.attestedByName ?? tr("registrations.auditActorRemoved") })}`}
           </Typography>

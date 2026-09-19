@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -88,6 +88,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/wait-for-migration.mjs`](./scripts/wait-for-migration.mjs) | First step of `yarn build`: on a Vercel production deployment, waits until the environment's database has applied the migration the build was compiled against, so new code never goes live against an old schema. Applies nothing (`AGENTS.md` §7.6, `DECISIONS.md` §62) |
 | [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; runs in `yarn check` (`AGENTS.md` §7.6) |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
+| [`scripts/secrets-check.mjs`](./scripts/secrets-check.mjs) | Refuses a commit carrying a provider credential — the repository is public; runs in `yarn check` and CI (`DECISIONS.md` §98) |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |
 | [`scripts/db-reset-local.mjs`](./scripts/db-reset-local.mjs) | `yarn db:reset:local`: drops both schemas, migrates and seeds; refuses any non-local database |
 | [`scripts/dev.mjs`](./scripts/dev.mjs) | `yarn dev`: starts on port 47821, or the next free one, and keeps `APP_BASE_URL` matching |
@@ -95,6 +96,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/setup.mjs`](./scripts/setup.mjs) | `yarn setup`: points git at `.githooks` so `yarn check` runs before every commit, and adds the `git gone` alias |
 | [`.githooks/pre-commit`](./.githooks/pre-commit) | Runs `yarn check` and blocks the commit on failure; the same command CI runs |
 | [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md) | How to run this locally: prerequisites, first run, every command, and what will catch you out |
+| [`docs/VIBECODING.md`](./docs/VIBECODING.md) | The one page before asking an AI to change anything: the loop, where things live, adding a field end to end, the rules that bite |
 | [`docs/PRACTICES.md`](./docs/PRACTICES.md) | Practice guides and checklists: code priorities, delivery, mobile-first, SEO, AIO, accessibility, performance, editorial, launch. Guidance, not authority |
 | [`docs/brand/README.md`](./docs/brand/README.md) | The club's logo, kit photograph and display typeface: what each file is, which of the two blues is authoritative, and why the kit font cannot set a Romanian word |
 | [`docs/PLATFORM.md`](./docs/PLATFORM.md) | Every account the platform runs on: plan, what it holds, who can recover it, and **what its limits stop the club from doing**. Operational fact, not authority; no secret and no hostname |
@@ -612,6 +614,7 @@ MANIFEST.txt
 
 scripts/
   docs-check.mjs        documentation synchronization check
+  secrets-check.mjs     no provider credential in a tracked or staged file
   release.mjs           versioned release build into dist/
   setup.mjs             yarn setup: installs the tracked git hooks
 

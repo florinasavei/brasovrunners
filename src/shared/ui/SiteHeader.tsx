@@ -8,6 +8,7 @@ import { listPublishedPages } from "@/modules/content/pages/repository";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
+import ThemeModeToggle from "./ThemeModeToggle";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
 
@@ -149,22 +150,34 @@ export default async function SiteHeader() {
       >
         <Box sx={{ order: 1, flexShrink: 0 }}>
         <LogoLink label={t("name")}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={LOGO.lockup.src}
-            // The attributes reserve the box at its largest, from the artwork's own
-            // proportions, so the header does not reflow while the SVG loads; the CSS below
-            // draws it at the fluid size. A differently shaped lockup needs no change here.
-            height={HEADER_MARK_HEIGHT_PX}
-            width={Math.round((HEADER_MARK_HEIGHT_PX * LOGO.lockup.width) / LOGO.lockup.height)}
-            alt=""
-            style={{
-              display: "block",
-              flexShrink: 0,
-              height: HEADER_MARK_HEIGHT,
-              width: "auto",
-            }}
-          />
+          {/*
+            Two files, one shown: the blue lockup by day and the white one after dark, chosen
+            by the `data-dark` attribute the theme puts on <html> (§93) — CSS, so the swap
+            happens with the scheme and never after it.
+          */}
+          {[
+            { src: LOGO.lockup.src, hideOn: "[data-dark] &" },
+            { src: LOGO.lockup.onDark, hideOn: "[data-light] &, :root:not([data-dark]) &" },
+          ].map((variant) => (
+            <Box
+              key={variant.src}
+              component="img"
+              src={variant.src}
+              // The attributes reserve the box at its largest, from the artwork's own
+              // proportions, so the header does not reflow while the SVG loads; the CSS below
+              // draws it at the fluid size. A differently shaped lockup needs no change here.
+              height={HEADER_MARK_HEIGHT_PX}
+              width={Math.round((HEADER_MARK_HEIGHT_PX * LOGO.lockup.width) / LOGO.lockup.height)}
+              alt=""
+              sx={{
+                display: "block",
+                flexShrink: 0,
+                height: HEADER_MARK_HEIGHT,
+                width: "auto",
+                [variant.hideOn]: { display: "none" },
+              }}
+            />
+          ))}
         </LogoLink>
         </Box>
 
@@ -196,7 +209,8 @@ export default async function SiteHeader() {
           />
         </Box>
 
-        <Box sx={{ order: 3, ml: "auto", flexShrink: 0 }}>
+        <Box sx={{ order: 3, ml: "auto", flexShrink: 0, display: "flex", alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
+          <ThemeModeToggle />
           <LocaleSwitcher />
         </Box>
       </Container>

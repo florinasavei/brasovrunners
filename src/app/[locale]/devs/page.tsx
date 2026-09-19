@@ -18,9 +18,14 @@ import {
 } from "@/modules/diagnostics/configuration";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
+import { megabytes, NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
+import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
+import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
+import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
+import MuiLink from "@mui/material/Link";
 import { Link } from "@/i18n/navigation";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { canSeeDiagnostics, STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
@@ -73,6 +78,8 @@ export default async function DevsPage({ params }: Props) {
   const format = await getFormatter();
   const now = new Date();
   const neon = await readNeonConsumption(env);
+  // This month's deployments and build minutes (§101): the two Hobby ceilings a token can read.
+  const vercel = await readVercelMonth(env, now);
 
   /**
    * The whole of the secret handling on this page: presence, computed here, values discarded.
@@ -113,13 +120,18 @@ export default async function DevsPage({ params }: Props) {
     ),
   );
   const volume = await readEmailVolumeToday(db, now);
+  const emailHealth = await checkEmailHealth(db, now);
   const pictures = await countMediaAssets(db, now);
+  const databaseBytes = await readDatabaseSizeBytes(db);
 
   /** The value each configuration enum currently holds, for marking it in the list below. */
   const currentSetting: Record<string, string> = {
     APP_ENV: env.APP_ENV,
     EMAIL_DELIVERY_MODE: env.EMAIL_DELIVERY_MODE,
     STAFF_AUTH_MODE: env.STAFF_AUTH_MODE ?? "disabled",
+    FEATURE_DISPLAY_NAME: env.FEATURE_DISPLAY_NAME ? "true" : "false",
+    TURNSTILE: env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY ? "on" : "off",
+    DECLARATIONS_ARCHIVE: env.DECLARATIONS_ARCHIVE_TO ? "on" : "off",
   };
 
   const severity = (status: string) =>
@@ -302,15 +314,25 @@ export default async function DevsPage({ params }: Props) {
           severity={
             volume.remaining === 0
               ? "error"
-              : volume.projectedMessages > volume.remaining
+              : volume.remaining !== null && volume.projectedMessages > volume.remaining
                 ? "warning"
                 : "success"
           }
           sx={{ mb: 2 }}
         >
-          {t("emailVolumeHeadroom", {
-            remaining: volume.remaining,
-            allowance: volume.allowance,
+          {t(`emailVolumeHeadroom.${volume.period}`, {
+            remaining: volume.remaining ?? "",
+            allowance: volume.allowance ?? "",
+            plan: volume.planName,
+          })}
+        </Alert>
+        {/* The stall the monitors are told about (§98): `/api/health` answers 503 while it lasts. */}
+        <Alert severity={emailHealth.status === "stalled" ? "error" : "success"} sx={{ mb: 2 }}>
+          {t(`emailHealth.${emailHealth.status}`, {
+            deferred: emailHealth.deferred,
+            overdue: emailHealth.overdue,
+            failed: emailHealth.failed,
+            reason: emailHealth.lastError ?? "—",
           })}
         </Alert>
         <Stack spacing={0.5}>
@@ -327,7 +349,9 @@ export default async function DevsPage({ params }: Props) {
             {t("queuedMessages")}: <strong>{volume.queuedMessages}</strong>
           </Typography>
           <Typography variant="body2">
-            {t("sentMessages")}: <strong>{volume.sentMessages}</strong> / {volume.allowance}
+            {t("sentMessages")}: <strong>{volume.sentMessages}</strong>
+            {volume.period === "day" ? ` / ${volume.allowance}` : ""} · {t("sentThisMonth")}: <strong>{volume.sentThisMonth}</strong>
+            {volume.period === "month" ? ` / ${volume.allowance}` : ""} · {t("emailPlanLabel")}: <strong>{volume.planName}</strong>
           </Typography>
         </Stack>
       </Box>
@@ -344,6 +368,20 @@ export default async function DevsPage({ params }: Props) {
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t("neon.intro")}
+        </Typography>
+        {/* Storage, from the database itself (§88): no key needed, and the other half of the plan. */}
+        <Typography
+          variant="body1"
+          sx={{ fontWeight: 600, mb: 1 }}
+          color={databaseBytes !== null && databaseBytes >= NEON_FREE_STORAGE_BYTES * 0.8 ? "error.main" : "text.primary"}
+        >
+          {databaseBytes === null
+            ? t("neon.sizeUnknown")
+            : t("neon.size", {
+                used: megabytes(databaseBytes),
+                of: Math.round(NEON_FREE_STORAGE_BYTES / (1024 * 1024)),
+                percent: Math.round((databaseBytes / NEON_FREE_STORAGE_BYTES) * 100),
+              })}
         </Typography>
         {neon.ok ? (
           <Stack spacing={0.5}>
@@ -372,11 +410,76 @@ export default async function DevsPage({ params }: Props) {
             {neon.reason === "unconfigured" ? t("neon.unavailable") : t("neon.failed", { reason: neon.reason })}
           </Alert>
         )}
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          {t("neon.vercel")}
+        {/*
+          Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"). Vercel
+          publishes no usage figure to a Hobby project's own code, so this is what the platform
+          injects about the running deployment, and the one link to the usage dashboard.
+        */}
+        <Typography variant="h3" sx={{ fontSize: "1rem", mt: 3, mb: 1 }}>
+          {t("vercel.title")}
+        </Typography>
+        {process.env.VERCEL ? (
+          <Stack spacing={0.25} sx={{ mb: 1 }}>
+            <Typography variant="body2">
+              {t("vercel.deployment", {
+                env: process.env.VERCEL_ENV ?? "?",
+                region: process.env.VERCEL_REGION ?? "?",
+                commit: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7) || "?",
+                branch: process.env.VERCEL_GIT_COMMIT_REF ?? "?",
+              })}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("vercel.id", { id: process.env.VERCEL_DEPLOYMENT_ID ?? "?" })}
+            </Typography>
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t("vercel.notOnVercel")}
+          </Typography>
+        )}
+        {vercel.ok ? (
+          <Alert
+            severity={
+              vercel.month.buildMinutes >= VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH * 0.8 ||
+              vercel.month.deploymentsToday >= VERCEL_HOBBY_DEPLOYMENTS_PER_DAY * 0.8
+                ? "warning"
+                : "success"
+            }
+            sx={{ mb: 1 }}
+          >
+            {t("vercel.month", {
+              deployments: vercel.month.deployments,
+              today: vercel.month.deploymentsToday,
+              perDay: VERCEL_HOBBY_DEPLOYMENTS_PER_DAY,
+              minutes: Math.round(vercel.month.buildMinutes),
+              of: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+              percent: Math.round((vercel.month.buildMinutes / VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH) * 100),
+              errored: vercel.month.errored,
+            })}
+          </Alert>
+        ) : (
+          <Alert severity={vercel.reason === "unconfigured" ? "info" : "warning"} sx={{ mb: 1 }}>
+            {vercel.reason === "unconfigured" ? t("vercel.unavailable") : t("vercel.failed", { reason: vercel.reason })}
+          </Alert>
+        )}
+        <Typography variant="body2" color="text.secondary">
+          {t("vercel.notInApi")} {t("neon.vercel")}{" "}
+          <MuiLink href="https://vercel.com/dashboard/usage" target="_blank" rel="noopener noreferrer">
+            {t("vercel.usageLink")}
+          </MuiLink>
         </Typography>
         <Typography variant="body2" sx={{ mt: 2 }}>
           <Link href="/devs/theme">{t("theme.link")}</Link>
+        </Typography>
+        {/* The repository's documents, readable here (§88): the runbook, the setup, the decisions. */}
+        <Typography variant="body2" sx={{ mt: 1 }}>
+          {t("docs.title")}:{" "}
+          {REPO_DOCS.map((doc, index) => (
+            <span key={doc.name}>
+              {index > 0 ? " · " : ""}
+              <Link href={{ pathname: "/devs/docs/[name]", params: { name: doc.name } }}>{doc.name}</Link>
+            </span>
+          ))}
         </Typography>
       </Box>
 

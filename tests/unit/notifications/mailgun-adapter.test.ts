@@ -135,3 +135,21 @@ describe("BR-REQ-080-03 transient and permanent are not the same failure", () =>
     expect(error).not.toContain("key-not-a-real-key");
   });
 });
+
+describe("attachments (§95)", () => {
+  it("posts each attachment as an `attachment` part of the same form, with its name and type", async () => {
+    respondWith(200, JSON.stringify({ id: "<x@mailgun>", message: "Queued." }));
+    const result = await adapter().send({
+      ...MESSAGE,
+      attachments: [{ filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: Buffer.from("%PDF-1.7 test") }],
+    });
+    expect(result.outcome).toBe("sent");
+    const form = calls[0].init.body as FormData;
+    const parts = form.getAll("attachment");
+    expect(parts).toHaveLength(1);
+    const file = parts[0] as File;
+    expect(file.name).toBe("declaratie-semnata.pdf");
+    expect(file.type).toBe("application/pdf");
+    expect(await file.text()).toBe("%PDF-1.7 test");
+  });
+});

@@ -11,6 +11,8 @@ import type { Database, Transaction } from "@/db/types";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { pickBibNumber } from "./bibs";
+import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import {
@@ -19,13 +21,15 @@ import {
   markEmailVerified,
 } from "@/modules/participants/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
+import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
-import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
+import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import {
   declarationSigningSchema,
+  isMinorOn,
   registrationSubmissionSchema,
   staffRegistrationSubmissionSchema,
 } from "./fields";
@@ -69,6 +73,9 @@ export type EventForRegistration = {
   capacity: number | null;
   raceId: string | null;
   publishedAt: Date | null;
+  /** The participation window (§104); absent on a partial row means the thirty-minute hold. */
+  confirmationOpensDaysBefore?: number | null;
+  confirmationDeadlineDaysBefore?: number | null;
 };
 
 function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDesk = false): void {
@@ -138,6 +145,8 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
             now,
             registrationClosesAt: event.registrationClosesAt,
             eventStartsAt: event.startsAt,
+            // A week-before confirmation for a race still far off (§104); thirty minutes otherwise.
+            window: confirmationWindow(event),
           }),
         },
         now,
@@ -469,6 +478,10 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     emergencyContactName: input.emergencyContactName ?? null,
     emergencyContactPhone: input.emergencyContactPhone ?? null,
     clubName: input.clubName ?? null,
+    // Kept only for a minor: an adult who typed a name into the folded field named nobody's guardian.
+    guardianName: input.birthDate && isMinorOn(input.birthDate, now) && input.guardianName ? input.guardianName : null,
+    stravaUrl: input.stravaUrl ?? null,
+    instagramHandle: input.instagramHandle ?? null,
     clubMemberDeclared: input.clubMemberDeclared,
     tshirtSize: input.tshirtSize,
     healthNotes,
@@ -668,6 +681,13 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       );
     }
 
+    // The identity document, when the declaration's own text names it (§95): the club hands
+    // out kits against it, so a signature without one is not the declaration the club wrote.
+    const asksForIdDocument = mergeFieldsIn(document.body).has("idDocument");
+    if (asksForIdDocument && !parsed.data.idDocument) {
+      throw new DomainError("VALIDATION_ERROR", "idDocument: the declaration names an identity document");
+    }
+
     await repo.insertDeclarationAcceptance(tx, {
       registrationId: current.id,
       legalDocumentId: document.id,
@@ -675,6 +695,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       contentSha256: document.contentSha256,
       locale: current.locale,
       typedName: parsed.data.typedName,
+      idDocument: asksForIdDocument ? parsed.data.idDocument : null,
       acceptedAt: now,
     });
 
@@ -682,7 +703,14 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       id: current.id,
       to: "CONFIRMED",
       fromStatuses: ["PENDING_DECLARATION", "WAITLIST_OFFERED"],
-      changes: { confirmedAt: now, holdExpiresAt: null, checkinCode: current.checkinCode ?? newCheckinCode() },
+      changes: {
+        confirmedAt: now,
+        holdExpiresAt: null,
+        checkinCode: current.checkinCode ?? newCheckinCode(),
+        // The race number, at the moment the place is certain (§87): under the event lock
+        // held above. A test registration wears none, as in the batch assignment.
+        bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await pickBibNumber(tx, current.eventId) : null),
+      },
       now,
     });
     if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
@@ -697,9 +725,48 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
       now,
     });
+    await enqueueDeclarationCopies(tx, confirmed, now);
 
     return confirmed;
   });
+}
+
+/**
+ * The copies of a signed declaration (§95, §99): the participant's own, as a PDF attached —
+ * its own message, so the confirmation stays what it is and the declaration is found by its
+ * subject — and, when the club has named an archive mailbox, the club's, the same PDF to
+ * `DECLARATIONS_ARCHIVE_TO`. The archive copy carries no action link (a manage token in the
+ * club's mailbox would be a secret handed to the wrong person, §12.8) and is not sent for a
+ * test registration: a synthetic runner's declaration is not a record the club keeps.
+ */
+async function enqueueDeclarationCopies<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  confirmed: Registration,
+  now: Date,
+): Promise<void> {
+  await enqueueEmail(tx, {
+    participantId: confirmed.participantId,
+    registrationId: confirmed.id,
+    messageType: "DECLARATION_SIGNED",
+    locale: confirmed.locale,
+    recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
+    payload: {},
+    idempotencyKey: `registration:${confirmed.id}:declaration-signed:${now.toISOString()}`,
+    now,
+  });
+  if (env.DECLARATIONS_ARCHIVE_TO && confirmed.kind === "REAL") {
+    await enqueueEmail(tx, {
+      participantId: confirmed.participantId,
+      registrationId: confirmed.id,
+      messageType: "DECLARATION_ARCHIVE",
+      // The club reads Romanian; the message is bilingual regardless (§96).
+      locale: "ro",
+      recipientEmail: env.DECLARATIONS_ARCHIVE_TO,
+      payload: {},
+      idempotencyKey: `registration:${confirmed.id}:declaration-archive:${now.toISOString()}`,
+      now,
+    });
+  }
 }
 
 // --- §15.5 Self-unregistration, and offer decline (the same transition) ---------------------
@@ -754,7 +821,12 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     id: current.id,
     to: "CONFIRMED",
     fromStatuses: ["PENDING_DECLARATION", "WAITLIST_OFFERED"],
-    changes: { confirmedAt: now, holdExpiresAt: null, checkinCode: current.checkinCode ?? newCheckinCode() },
+    changes: {
+      confirmedAt: now,
+      holdExpiresAt: null,
+      checkinCode: current.checkinCode ?? newCheckinCode(),
+      bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await pickBibNumber(tx, current.eventId) : null),
+    },
     now,
   });
   if (!confirmed) throw new DomainError("CONFLICT", "this registration changed state concurrently");
@@ -769,6 +841,8 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
     now,
   });
+  // The copy of the paper declaration's record, by email, as after an electronic signature (§95).
+  await enqueueDeclarationCopies(tx, confirmed, now);
   return confirmed;
 }
 

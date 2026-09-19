@@ -1747,6 +1747,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mui/icons-material@npm:9.4.0":
+  version: 9.4.0
+  resolution: "@mui/icons-material@npm:9.4.0"
+  dependencies:
+    "@babel/runtime": "npm:^7.29.7"
+  peerDependencies:
+    "@mui/material": ^9.4.0
+    "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10c0/929f818e1d514a9478776eac33063956732f353a24cb061221e889c9ee1f69b9b1a16d78157d5c01ab9647a9ba33af37dacd255a3c5f4dff2e1bd3fc4386a55c
+  languageName: node
+  linkType: hard
+
 "@mui/material-nextjs@npm:9.4.0":
   version: 9.4.0
   resolution: "@mui/material-nextjs@npm:9.4.0"
@@ -3724,6 +3740,7 @@ __metadata:
     "@emotion/react": "npm:11.14.0"
     "@emotion/server": "npm:11.11.0"
     "@emotion/styled": "npm:11.14.1"
+    "@mui/icons-material": "npm:9.4.0"
     "@mui/material": "npm:9.4.0"
     "@mui/material-nextjs": "npm:9.4.0"
     "@playwright/test": "npm:1.62.1"
@@ -3743,6 +3760,7 @@ __metadata:
     eslint: "npm:9.39.5"
     eslint-config-next: "npm:16.3.4"
     flag-icons: "npm:7.5.0"
+    marked: "npm:16.4.1"
     next: "npm:16.3.4"
     next-auth: "npm:5.0.0-beta.32"
     next-intl: "npm:4.14.2"
@@ -6207,6 +6225,15 @@ __metadata:
   dependencies:
     "@jridgewell/sourcemap-codec": "npm:^1.5.5"
   checksum: 10c0/299378e38f9a270069fc62358522ddfb44e94244baa0d6a8980ab2a9b2490a1d03b236b447eee309e17eb3bddfa482c61259d47960eb018a904f0ded52780c4a
+  languageName: node
+  linkType: hard
+
+"marked@npm:16.4.1":
+  version: 16.4.1
+  resolution: "marked@npm:16.4.1"
+  bin:
+    marked: bin/marked.js
+  checksum: 10c0/2b5bc04db3453e493ea78758f1fe5006d725ec90aab9bf991242b0820a069d9748e2ac26fb0e2603848a409649c77900e599f3f66d251d0f7e5f606576090a54
   languageName: node
   linkType: hard
 

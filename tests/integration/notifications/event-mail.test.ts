@@ -248,7 +248,7 @@ describe("§81 the reminder and §82 after the race", () => {
       db,
       NOW,
     );
-    expect(message.subject).toBe("Thank you for running with us");
+    expect(message.subject).toBe("Thank you for running with us / Mulțumim că ai alergat cu noi");
     expect(message.text).toContain("Results and photos: https://photos.example/album");
     expect(message.html).not.toContain("<img");
   });

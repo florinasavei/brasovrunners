@@ -7,6 +7,7 @@ import {
   type RichTextBlock,
   type RichTextText,
 } from "../domain/schema";
+import RichTextVideo from "./RichTextVideo";
 
 /**
  * An editorial body, rendered on the server through the same allowlist that validated it
@@ -36,6 +37,10 @@ export default function RichText({ body }: { body: unknown }) {
 
 function renderBlock(block: RichTextBlock): ReactNode {
   switch (block.type) {
+    case "youtube":
+      // Behind one press, like the event's own film (§69, §110): the embed is built from the
+      // id on the server, and nothing is fetched from Google until the reader opens it.
+      return <RichTextVideo videoId={block.attrs.videoId} caption={block.attrs.caption} />;
     case "image":
       // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
       // address was validated to be one of this site's own variants (§72). The figure takes

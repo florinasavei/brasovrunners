@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -4460,3 +4460,909 @@ opening SETUP §33 — and both deployed projects have their keys since this eve
 sentence should not be seen again.
 
 Baseline `BR-V1.37-2026-09-18`.
+
+## 84. Decided — a telephone number is a country and digits, stored as one thing a phone can dial (2026-09-18)
+
+**Status:** Decided and built. `registrations/phone.ts`, `ui/PhoneField.tsx`, `fields.ts`,
+`form-mapping.ts`; BR-REQ-031-04.
+
+The form accepted any three characters as a phone; "asdasdasdas" registered and the organizer
+would have found out on race morning. Now both phone fields are a country (a native select,
+Romania first, every nationality that has a calling code) and the digits; the server composes
+E.164 (`+40712345678`) and refuses what cannot be a number — fewer than four digits, letters,
+an international form for a different country than the one chosen. Tolerant of what people
+type (spaces, dots, dashes, a `00`, a repeated `+40`, the trunk zero before a mobile), strict
+about the one thing that matters. Not a per-country format check: a runner from anywhere may
+enter, and refusing a valid foreign number is worse than storing one nobody rings.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 85. Decided — who is coming, folded, with the club; the opt-out asked only where a list exists (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-039-02 criterion 4; `events/ui/StartList.tsx`,
+`listPublicStartList`, the sample privacy notice.
+
+Three consent boxes in two directions — agree, may appear, keep me off — read as a puzzle;
+the owner: "people usually accept all." The opt-out is now asked only on an event whose list
+is switched on (every event starts off), so most forms have two boxes in one direction.
+Switching a list on later is a question for the people already registered, and the answer is
+the notice and a message, not a box they never saw. The list itself is a folded section with
+the count in its summary, and shows the club beside the name — "who is coming" at a race is
+answered by clubs as much as by names. That widens the disclosure of §32 by one field, so the
+privacy notice that allows the list must name it: the sample notice does; the club's real one
+must before the list is switched on. The select list in the repository stays the guarantee,
+and the surface test names both columns and no third.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 86. Decided — the signature looks like one, and what happens next is said (2026-09-18)
+
+**Status:** Decided and built. The declaration page, the registration page's acceptance line,
+`layout.tsx` (Caveat, self-hosted).
+
+The owner asked for the typed name to appear in a hand, "or people should be able to draw, so
+it is compliant with Romanian law." The law first: under Legea 455/2001 and eIDAS a typed name
+with a click, a timestamp and the hash of the text signed — `declaration_acceptances` records
+all three, and refuses a signature against any other text (§57) — is a simple electronic
+signature; a drawn scribble is the same category and no stronger. So the hand is presentation,
+and presentation matters: the name is typed in a handwriting face (Caveat, self-hosted like
+every other font, loaded only where named) and shown the same way in the backoffice. A drawing
+pad — a canvas island, an image column, a size cap — is not built; it would add nothing but
+work, and is recorded here as refused for that reason, open to reversal if the club's lawyer
+says otherwise.
+
+After signing, the page said "confirmed" and stopped; the first person through asked "what is
+next?". It now says: the confirmation email with the QR is on its way, a reminder comes two
+days before, cancel from the link. The desk row says what its controls do, in one line above
+the rows, because the same person asked "what do I do here".
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 87. Decided — the race number is given at confirmation (2026-09-18)
+
+**Status:** Decided and built. BR-REQ-038-01; `bibs.ts` (`nextBibNumber`), the two
+confirmation paths in `registrations/service.ts`, the confirmation and reminder emails, the
+runner's pages.
+
+"Bib numbers should be generated automatically." They are: the moment a registration is
+confirmed — by the participant's signature or at the desk on paper — it takes the next number
+after the highest ever given at that event, inside the transaction that already holds the event
+row locked for capacity, which is what makes "max + 1" safe; the unique constraint is the
+backstop. A cancelled number stays taken. A test registration wears none, as in the batch. The
+number goes in the confirmation email ("you collect it at the desk"), the reminder and "my
+registrations"; the batch assignment stays for events confirmed before this, and the hand-typed
+number at the desk stays for the day somebody swaps.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 88. Decided — erased means gone; the database's size where the organizer looks; the repository's documents in the app (2026-09-18)
+
+**Status:** Decided and built. `admin-service.ts` (erase), `diagnostics/database-size.ts`,
+`/admin/tasks`, `/devs`, `/devs/docs/<name>` (`marked`, pinned).
+
+**Erase.** BR-REQ-037-06 deleted the registration and its acceptance and left the participant
+row — the address — behind. Now the participant goes with their last registration, and with it,
+by cascade, their tokens and outbox rows; a participant with another registration stays. The
+audit row's `participant_id` is null from then on, which is the point.
+
+**Size.** `pg_database_size` against the Free plan's half gigabyte, read from Postgres itself
+with no key, on `/devs` and on the Neon row of `/admin/tasks` — "measured", where it said "not
+measured". CU-hours still come from Neon's API.
+
+**Docs.** The repository's Markdown, rendered at `/devs/docs/<name>` for `DEV` and above — the
+owner asked to read them "straight from the repo" without a checkout. A closed list of names,
+never a path from the URL; the files are traced into the function; `marked` renders GFM. One
+dependency, pinned, for one screen, because a Markdown renderer written by hand is the worse
+choice.
+
+Also: the email task on `/admin/tasks` reads done on QA in allowlist mode, where live is
+refused by rule (§16.4) — it read "blocking" for ever there and meant nothing.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 89. Decided — the listing has a month view, because the club runs on a week (2026-09-18)
+
+**Status:** Decided and built. `events/domain/calendar.ts`, `events/ui/EventCalendar.tsx`,
+`listPublishedEventsBetween`; BR-REQ-020-01 criterion 5.
+
+The owner: "I need a calendar on the events page, similar to Google Calendar — we usually
+have at least two events per week (every Monday and every Wednesday) and sometimes weekend
+long runs," and, of a series he had just published, "I still can't see recurring events."
+The list showed them, one card each, under the featured race, folded on a phone past four —
+a list is the wrong shape for a schedule. The month is now on the listing under the hero:
+`?month=YYYY-MM`, server-rendered, links only, so it costs no script and a crawler reads
+next month. From `sm` up a seven-column grid, Monday first, today ringed, a race in the brand
+blue and everything else quiet; at 320px an agenda of the month's days, because forty pixels
+a column holds a number and nothing a thumb can hit. Wall-clock arithmetic in the club's zone
+throughout — the month begins at midnight in Brașov — and the cards below stay, because the
+next race deserves more than a cell.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 90. Decided — an event shared is a card; icons throughout (2026-09-18)
+
+**Status:** Decided and built. `events/share-image.tsx`, `[locale]/opengraph-image.tsx`,
+`events/[slug]/opengraph-image.tsx`, `events/[slug]/share-image` (route),
+`events/ui/ShareLinks.tsx`; `@mui/icons-material` pinned; BR-REQ-052-02 criterion 8.
+
+"The posts and events should be Facebook and Instagram shareable, and should look nice on
+social media." A link pasted anywhere showed the title and no picture, because an event has
+no cover picture. Now every event page has an Open Graph card drawn on the server from its
+own facts — title, date and time, meeting point, distance, in the brand's blue with the kit
+orange — and every other page the site's own card; X gets the large-card tag. Instagram takes
+no link, so the event page offers the same card as a square PNG to save and post, beside
+"share on Facebook" and "send on WhatsApp", which are the networks' fixed share addresses
+and load nothing from them (`docs-check` allows the two hosts as it allows YouTube's). No
+photograph is stored and none is needed: a card that says when and where is what a runner
+wants from a share.
+
+**Icons.** `AGENTS.md` §1.5 prefers nothing over a dependency, and `SocialIcon.tsx` refused
+the icon package for three glyphs. The owner asked for icons — on the admin tabs, on the
+facts, "overall I need more icons in the app" — and the package is the honest answer:
+`@mui/icons-material`, pinned, imported one file per glyph so the bundle carries the dozen
+used and not the two thousand. The brand marks stay inline, because the package's brand
+glyphs are deprecated and not the networks' current shapes.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 91. Decided — the flow in five steps, the emails on a page, and four smaller things the test asked for (2026-09-18)
+
+**Status:** Decided and built. `registrations/ui/RegistrationSteps.tsx`, `/admin/emails`,
+`content/events/ui/EventRowMenu.tsx`, `EventFieldsForm.tsx`, `/admin/tasks`.
+
+**The flow.** "It must be super clear for users what the flow is." The journey strip on the
+form says where they stand; it did not say the whole of it. Five steps with a glyph each —
+form, email, declaration, confirmed with QR and number, race day — and one aside about the
+waiting list, folded on the event page under the button and on the form under the strip. The
+deadlines in it are the lifecycle's own constants, so the page cannot promise what the
+allocator does not keep.
+
+**The emails.** "I must be able to see the email templates that get sent to them."
+`/admin/emails`, for any staff role, renders every message type in both languages through
+the same `buildTemplateContent` and `renderContent` the outbox uses, with a made-up runner
+and links that go nowhere, each in a sandboxed `<iframe srcdoc>` — an email has its own
+`<html>`. Linked from the guide. There is no second copy of the wording to drift.
+
+**The row menu.** "More actions should be a context menu." The events list's native
+`<details>` held two buttons open under the row; it is now `⋮` with a menu anchored to it —
+preview, registrations, duplicate, delete or the reason it cannot be — and the verbs stay the
+same Server Actions on hidden forms the menu submits after its confirmation. The third client
+island on that page, and the first that earns it by doing what every app on the phone does.
+
+**One place.** "Meeting point and address are a bit redundant." One field, a name or a street
+or both; `location_address` stays for the rows that have one and nothing writes it. The map
+field is "Meeting point link", which is what it is.
+
+**The Neon row.** "That is a bit vague, I need a monthly cost." The row on `/admin/tasks`
+projects this month's CU-hours to a full month at Launch's rates read from Neon's pricing on
+2026-09-18 — no monthly fee, $0.106 a CU-hour, $0.35 a GB-month — and says the figure in
+dollars; without `NEON_API_KEY` it says the rates and what 100 CU-hours would cost.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 92. Decided — the queue is visible, in the order it is served (2026-09-18)
+
+**Status:** Decided and built. `registrations/ui/QueuePanel.tsx`, `listQueueForEvent`;
+BR-REQ-037-04 criterion 8.
+
+"I need to see and simulate the waiting list." Simulating existed — test registrations on
+`@test.invalid` addresses, §30 — but nothing showed the queue they filled: the list screen
+shows rows and statuses, not places. The event page now has the queue as the allocator sees
+it — places, confirmed, held, free by the public formula, waiting — and the waiting list
+numbered in exactly the order `lockOldestWaitlisted` serves it (oldest `waitlisted_at`, `id`
+on a tie), each with its offer deadline when one is out; and one paragraph saying how to make
+it move. Administrator only, because it names people. Reads through `countOccupied` and
+`computeOccupied`, so the panel and the public "free places" cannot disagree.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 93. Decided — a dark scheme, chosen by the visitor or by the device (2026-09-18)
+
+**Status:** Decided and built. `theme/brand.ts` (`COLOR_DARK`), `theme/theme.ts`
+(`colorSchemes`), `layout.tsx` (`InitColorSchemeScript`), `shared/ui/ThemeModeToggle.tsx`,
+the header's lockup.
+
+"I need a dark theme switcher as well." MUI's own mechanism, nothing added: two colour
+schemes on the one theme, selected by `data-light` / `data-dark` on `<html>`, a script in the
+body that sets the attribute before the first paint from what the visitor chose (kept in
+`localStorage` under MUI's key) or, until they choose, from the device's setting; a button in
+the header beside the language that flips it, showing the mode it would switch *to*. The dark
+palette is the brand after dark, not an inversion: pure blue on near-black is 2.4:1, so the
+primary lifts to a lighter blue of the same hue, the paper is a warm grey rather than black,
+and every text-on-surface pair is asserted at AA in `brand.test.ts` exactly as the light ones
+are. The header shows the white lockup after dark, swapped by CSS on the same attribute so it
+changes with the scheme and never after it. `brand.ts` remains the only file with a hex in it.
+Amended the same evening (§95): light by default, never the device's setting — dark is what
+the switch chooses.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 94. Decided — race numbers are drawn at random, and every bib can be seen before it is printed (2026-09-18)
+
+**Status:** Decided and built, reversing the order half of §65 and §87. `bibs.ts`
+(`pickBibNumber`), `bib-image.tsx`, `/api/admin/events/<id>/bibs/preview`, the event page;
+BR-REQ-038-01 criteria 1, 2 and 9.
+
+"The bibs must be generated randomly." They were the next number after the highest ever
+given — sequential, which tells everybody who registered first and hands the club's own
+runners the low numbers. Now a registration draws, the moment it is confirmed, a number at
+random from those never worn at the event: three digits while they last, four once most of
+the three-digit ones are gone, so a number stays readable on a shirt; a cancelled number is
+still taken, because reuse is how two people end up wearing 17. Drawn from the free set, not
+"draw until unused", which is slow exactly when the range is nearly full. Under the same lock
+as before; the unique constraint remains the backstop. The batch button numbers, at random,
+whatever was confirmed before §87. The audit row lists the numbers given rather than a range,
+because there is no range.
+
+"I should be able to preview and see bibs for each participant — a pretty bib, with our logo,
+participant name, race." Each numbered, real, confirmed registration is drawn as a picture on
+request — the lockup, the race and its date, the number in the club's blue as large as the
+card allows, the name — in a folded grid on the event page, Administrator only like the
+sheet, since a bib carries a name. Roboto Regular and Bold, the PDF's own files, are embedded
+in every picture `next/og` draws (§90's cards included), because Satori's fallback has one
+weight and a race number that is not bold is not a race number.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 95. Decided — the club's declaration, as the paper one reads: tokens, the identity document, a copy by email, the archive, and the texts the club approves (2026-09-18)
+
+**Status:** Decided and built, amending §29 and AGENTS.md §1.2 on legal text.
+`legal-documents/domain/merge-fields.ts`, `legal-documents/templates/*`,
+`registrations/declaration-pdf.ts`, `registrations/signed-declaration.ts`, migration `0032`
+(`id_document`) and `0033` (`DECLARATION_SIGNED`), `jobs/retention.ts`, `FEATURE_DISPLAY_NAME`;
+BR-REQ-033-02 criteria 7–10, BR-REQ-037-04, BR-REQ-053-01.
+
+**What the club handed over.** The declaration it used this year: "Subsemnatul/a …, posesor al
+CI seria … nr. …, declar că particip pe proprie răspundere la concursul …, care va avea loc în
+data de …, în locația …", the bullets, the photographs, the minors, GDPR, "DREPT PENTRU CARE
+SEMNEZ, Semnătura, Data". "Exactly this is what we must do too." And, the same evening: it
+must be reusable across events, so the blanks must be tokens; the identity document is needed
+because kits are handed out against it, but no scan is ever kept; the signed declaration must go
+back to the participant by email, as its own message; the club needs somewhere to keep them;
+everything must comply with Romanian law; and the platform's legal texts should be written out,
+GDPR-compliant, rather than left as outlines.
+
+**Tokens.** A version approved in `/admin/legal` is one fixed text whose hash a signature binds
+to (§57). The blanks are six named fields inside it — `{{participant}}`, `{{idDocument}}`,
+`{{event}}`, `{{eventDate}}`, `{{eventLocation}}`, `{{signedAt}}` — filled in when the text is
+shown to one person for one event, when it is printed, and never in what is signed: the template
+is signed, the fill-ins are recorded beside it, and neither drifts from the other. A field with
+no value renders as the paper form's dotted blank, which is what the blank form for the desk
+shows. Six and no more; the organiser's legal name is the text's own words.
+
+**The identity document.** Asked at signing only when the text names it (`mergeFieldsIn`), as
+the series and number typed — "BV 123456", or a passport — validated for shape and nothing
+else, stored on the acceptance (`id_document`), shown on the desk row and in the export beside
+the two halves of the name, printed into the declaration. Never a scan, never a photograph:
+the club's own words, "we can't save ID documents as scans, so even if we require it, it's just
+in that declaration." Null for a paper acceptance, where the paper has it.
+
+**The copy.** Signing enqueues `DECLARATION_SIGNED`, its own message with the PDF attached —
+the participant's copy, found by its subject — and the confirmation carries a link to the same
+PDF from the same manage token, read without spending it. The adapter learned attachments
+(Mailgun takes repeated `attachment` parts); the PDF is rendered at send time from the rows,
+never stored in the outbox. A paper signature at the desk sends the same message, saying so.
+Five messages per completed registration now, and PLATFORM.md's arithmetic says twenty a day.
+
+**Where they live.** In the database, as rows: the acceptance, the version, the fill-ins. The
+PDF — the lockup, the title centred, the merged text, the typed name in Caveat, the date, the
+method, the version and the hash — is a rendering, reproducible for as long as the rows exist,
+and never a file on R2, whose reads are public. The club's archive is `Declarațiile semnate
+(PDF)` on the event page: every signed declaration of the event in one file, one per page,
+oldest first — two hundred runners are about two megabytes and a few seconds, in one query —
+downloaded after the race and kept wherever the club keeps its papers, with restricted access.
+Not sent to a club mailbox by attachment, because the club has no mailbox yet.
+
+**Retention, made true.** §45 left how long a registration is kept to the club. The privacy
+notice now says three years from the event — Codul civil art. 2517, the general limitation
+period, within which the declaration is the evidence — so the sweep enforces it: the
+registrations of events that started more than three years ago go, with their declarations,
+and then every participant left with none. Erase by hand does the same sooner.
+
+**The texts.** §29 kept every club fact a placeholder and AGENTS.md §1.2 forbade inventing
+legal wording; the owner asked for the opposite — "just invent all those documents, we must be
+GDPR compliant." The line drawn: the platform ships **complete texts** (`templates/`) — a
+privacy notice written from the schema and satisfying GDPR art. 13 item by item, with the
+processors, the periods, the rights and the ANSPDCP; terms for a free platform; the declaration
+above — and the club **approves** them in `/admin/legal` after filling exactly four facts (its
+legal name, address, registration number, contact address), which stay `<LIKE THIS>` because
+nobody here knows them. "Start from the platform's text" prefills the draft. The seed wraps the
+same texts in the not-approved banner everywhere but production, as before, and production is
+still refused a seed. What gives a text effect is the club's approval, not its authorship; the
+banner still says "not legal advice".
+
+**The display name.** The organiser's other complaint: "kits are handed out against the ID
+card, I do not want nicknames on our list." `FEATURE_DISPLAY_NAME`, off unless `true`, hides
+the field on both forms and ignores a posted value; the list falls back to the registered name
+as it always did; the export carries first name, last name and the identity document.
+
+**Also.** Dark is chosen only by the switch, never by the device (§93 amended: "by default we
+are on white"). Pictures were already compressed (two WebP variants, no original); there are
+no uploaded documents — the PDFs are generated, and pdfkit deflates them.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 96. Decided — the emails as the runner keeps them: bilingual, branded, with the deep links; the rules on the event page; Romanian at the root; the short texts (2026-09-18)
+
+**Status:** Decided and built. `notifications/templates.ts` (`renderBilingual`, `card`),
+`notifications/render.ts`, `event_translations.rules_json` (migration `0034`), `i18n/routing.ts`
+(`localeCookie: false`), `/devs`; BR-REQ-080-01 criteria 7–8, BR-REQ-020-01 criterion 6,
+BR-REQ-040-01 criterion 8.
+
+**The mail.** The owner, reading the confirmation from QA: "we need better email, with deep
+links (including 'I can't make it any more'); links to the event and the event rules; make it
+bilingual by default." Every message is now one card — the club's name on a blue band, the
+one action as a button in the club's blue, the deep links as a list beneath it — and carries
+both languages, the registration's own first and the other under a rule, with the two subjects
+joined by " / ": a runner from abroad registered in English still shows the mail to a Romanian
+friend, and a Romanian who chose English by accident reads the top half. Inline styles only,
+no table layout, still text-first and under 100 KB. The links: *Vezi înscrierea* (the
+button), *Nu mai pot veni — anulez înscrierea* (the manage page's `#cancel` section; the GET
+still mutates nothing, the cancel is the form there), *Pagina evenimentului*, *Regulamentul
+evenimentului* when the page has rules, *Declarația semnată (PDF)* (§95). The reminder and
+the declaration request carry the same page and rules links. Five messages per completed
+registration stay five.
+
+**The rules, and the programme.** "Also on the event page I need to show the rules" and,
+later, "I need to organize race pick-up and stuff like the event schedule — treat this like a
+UTMB trail race." `rules_json` and `schedule_json` per language, written in the same editor
+as the description, shown under `#rules` and `#schedule` on the event page and in the preview
+— kit pickup hours, the briefing, the start, the cut-offs, the awards; the declaration's own
+words — "I have read the rules on the event's page" — point somewhere now, and so do the
+emails. Empty stays absent. Both editors are folded and mount on opening
+(`LazyRichTextEditor`): six Tiptap instances at once made the editor slow to wake on a phone,
+and a save that never opened the fold posts the stored text back unchanged. Each half of a
+bilingual message formats the date in its own language ("Sunday 11 October", not
+"duminică"); the meeting point stays in the club's words. The bib pictures moved to their own
+page (`/admin/events/<id>/bibs`) for the same reason: drawn on request, not on every visit
+to the editor.
+
+**Romanian at the root.** "The default language must be Romanian." `localeDetection` was
+already off (§ the switcher); the locale cookie still sent a visitor who had once chosen
+English back to `/en` from the bare root, which the owner read as the site defaulting to
+English. `localeCookie: false`: every page carries its locale in its address, so English
+survives navigation, and the root is Romanian for everybody, every time. The privacy notice
+names no locale cookie any more.
+
+**Also.** `/devs` shows the running Vercel deployment (environment, region, commit, branch,
+deployment id) and links to the usage dashboard — Vercel publishes no usage figure to a
+Hobby project's own code, so the link is the honest most. The nationality field is labelled
+*Cetățenie* / *Citizenship*, which is what it asks. And the legal texts of §95 were cut to a
+third at the owner's word — "short, but match the legal stuff" — by a second pass that kept
+every GDPR art. 13 item and every citation and dropped the explanations: a runner reads them
+on a phone, and a document nobody reads protects nobody.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 97. Decided — a captcha the club can switch on, the language a runner asks for, the texts cut to a third, and the page for whoever codes next (2026-09-18)
+
+**Status:** Decided and built. `registrations/turnstile.ts` (`TURNSTILE_SITE_KEY`,
+`TURNSTILE_SECRET_KEY`), the form's `preferredLocale`, `legal-documents/templates/*`,
+`docs/VIBECODING.md`; BR-REQ-031-01 criterion 4, BR-REQ-031-04 criterion 7.
+
+**The captcha.** §19.4 built a honeypot and a timing check and said Turnstile only if those
+fail. The owner: "I need a captcha when people register — I need to be safe from bots." So
+Cloudflare Turnstile, behind two keys and off without them: with both set the public form
+shows the widget and the server refuses a submission whose token Cloudflare does not confirm
+(a network failure is a failure — a bot's token is not waved through on a bad day), and the
+refusal is a field error a person reads and retries. The honeypot and the timing check stay
+in front either way; the staff form has no widget. It is the one script the public site
+loads from anybody else, and the visitor's address goes to Cloudflare with the challenge,
+which the privacy notice says, in the sentence that only applies when the keys are set.
+
+**The language.** "Users should be able to set a preferred language, so they may receive
+the declaration in English." The registration's language was the page's; now the form asks
+— "the language for your emails and the declaration", the page's language preselected — and
+that is the language the declaration is signed in and the one that comes first in every
+(bilingual, §96) email. The switcher in the header stays for the site itself.
+
+**The texts, short.** §95 shipped complete texts at four thousand words; the owner: "the
+terms and the GDPR notice should be short, but match the legal stuff." A second pass cut
+them to a third — the notice to about 1,300 words a language in eleven sections, the terms
+to under 900 in ten — and two audits checked afterwards, item by item, that every GDPR
+art. 13 point and every citation survived, and that nothing said contradicts the code. What
+went: explanations of why a rule exists, the same point said twice, the sections that belong
+to the other document. What changed on the way, because the audits caught it: Legea 214/2024
+replaced 455/2001 in October 2024 and is what the signature cites now (§86 cited the old
+law); the public list and the photographs rest on legitimate interest with the right to
+object, not consent; the identity document's series and number and the health note leave the
+rows seven days after the event (the sweep does it), the audit log after three years; a minor
+is registered by a parent, who signs for them — the declaration says so in its first line.
+
+**The page for whoever codes next.** "This entire app must be more vibecoder friendly."
+`docs/VIBECODING.md`: the loop, where things live, adding a field end to end, the rules that
+bite — one page, first in the read order. `CLAUDE.md` stays the long form.
+
+**The queue, on the board.** "Add them in the TODO section — basically all the queued work,
+so I can continue tomorrow." `/admin/tasks` now carries the Turnstile row for the club (open
+until the two keys exist) and, developer-owned and open by design, the work asked for and not
+built: a parent
+registering a minor online, the programme as timed rows with an `.ics`, each signed
+declaration sent to a club archive mailbox too, Vercel usage in figures, the documentation
+shortened. Static rows (`BACKLOG` in `owner-tasks.ts`) with the plan as their steps; whoever
+finishes one removes it there and writes the §. The first came off the same night: the club's
+mailbox is `brasovrunners@gmail.com` (a Gmail of the club's, not a person's), reading
+`contact@mail.<domain>` through the Mailgun route and replying from it through Mailgun's SMTP
+— free, and the privacy notice already says the mailbox is at Google. Migadu Micro ($19/year,
+a mailbox on the domain with a GDPR contract) stays the upgrade if the club wants one; Zoho's
+free plan is web-only now and not worth the account.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 98. Decided — the club is told when email stops, the public repository's guard rails, and a race the CI found (2026-09-18)
+
+**Context.** Three things from the last hours of the evening. The owner: "I must be notified
+when I can't send emails anymore!" — the outbox keeps every message Mailgun refuses (§40:
+a spent allowance defers, a socket error retries, an exhausted message is `FAILED` and kept),
+and nothing tells anybody, because the only channel the platform has *is* email. Then "make
+sure this public repo is safe": the repository has been public since it was created, and the
+weekend put more provider credentials in play than any week before it. And PR #57's end-to-end
+job failed four times on one test, `tasks-cost.spec.ts`, which passed on every laptop run.
+
+**Email has stopped — decided.** `modules/notifications/health.ts` reads three counts from
+the outbox rows the worker leaves behind: **deferred** (`PENDING` with a next attempt more
+than an hour away, which only the allowance reset produces), **overdue** (`PENDING` whose turn
+passed more than ninety minutes ago — longer than six backoffs and the hourly night cadence
+can explain, so the scheduler is not draining), and **failed** (every attempt spent, in the
+last seven days). Any of them above zero is `stalled`. `/api/health` carries the block as
+`email`, reports `degraded`, and — the change that matters — **answers 503 for every status
+but `ok`**, where it used to answer 200 for `degraded`. The word stays (a stalled job still
+delays a notification rather than breaking the site, §16.2); the code changes because a
+monitor that emails on a non-2xx is the one notification path that does not go through
+Mailgun. The third cron-job.org monitor, `GET /api/health` every thirty minutes with
+"notify on failure", is now a step in the "Monitors" row of `/admin/tasks` and in `SETUP.md`
+§26; cron-job.org sends its failure mail from its own servers. `yarn smoke` reads the JSON
+body, so `--allow-degraded` is unchanged. The same answer is red on `/admin/tasks` (the club's
+screen: how many, why, and when they resume) and on `/devs`. Bounces are not in it: a bounce
+is one address, and BR-REQ-080-04 shows it on the registration.
+
+*Rejected:* failing the outbox job endpoint instead — cron-job.org disables a job that keeps
+failing, which would stop the drain that clears the condition; a message to the club's
+mailbox — through the channel that is down; a Vercel or Neon alert — neither sees the outbox.
+
+**The public repository — decided.** The audit found nothing to rotate: no credential shape
+in any tracked file or in the whole history, no `.env` ever tracked, the owner's name and
+address in no file, phones only as the `+40712345678` examples. What it changes: GitHub's
+**secret scanning and push protection** are switched on (free on a public repository; they
+know Mailgun, Vercel, GitHub and AWS formats), Dependabot vulnerability alerts too, and
+`yarn secrets:check` runs inside `yarn check` — the local half, before the commit exists,
+knowing the shapes GitHub does not scan for: Neon (`npg_`, `napi_`), Turnstile, a
+`JOB_SECRET`, a connection string with a password that is not the local one. No allowlist
+file, deliberately: a false positive is escaped by writing the example differently. The
+Zitadel issuer hostname and client ids stay in `docs/RUNBOOKS.md`; both are in every
+sign-in redirect a browser makes and secure nothing on their own. Dependabot's first alert
+(esbuild ≤ 0.24, pulled by `@esbuild-kit/core-utils` under `drizzle-kit` to bundle
+`drizzle.config.ts`) is dismissed as *not used* with the reason on the alert: the advisory is
+about esbuild's development server, which nothing here runs.
+
+**The CI race — understood, not fought.** `/admin/tasks` streams behind `loading.tsx`.
+React 19.2 reveals a streamed Suspense boundary on the next animation frame rather than in
+the script that delivers it (`$RC` queues, `$RV` reveals). On a slow CI machine the frame
+comes after hydration, and MUI's colour-scheme provider — there since §93, which is exactly
+when the failures began — re-renders once on mount (`useCurrentColorScheme`'s
+`setIsClient`); that update reaches the still-dehydrated boundary and React client-renders
+it from the RSC payload instead of waiting. For a frame the page holds two copies of every
+paragraph: the rendered one in `#main`, and the streamed one still parked in `<div hidden
+id="S:0">` at the end of `<body>`. Invisible to a person; a strict-mode violation for
+`getByText`. Traced from the retry's Playwright trace, which CI now keeps (the `github`
+reporter alone wrote nothing to disk — hence "no valid artifacts"). The test scopes its text
+locators to `#main`. MUI's `noSsr`, which removes that re-render, was rejected: it exposes the
+stored mode on the client's first render, so a visitor who chose dark would hydrate against
+a light server tree and React would throw the whole page away instead of one boundary.
+
+**Consequences.** `checkEmailHealth`; `/api/health` `email` block and 503 on `degraded`;
+the red alert on `/admin/tasks` and `/devs`; the fifth step of the "Monitors" row;
+`scripts/secrets-check.mjs` in `yarn check`; the repository settings; the Playwright HTML
+report and traces uploaded on failure; `tests/integration/notifications/email-health.test.ts`.
+BR-REQ-080-02 criterion 6.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 99. Decided — the archive copy of every signed declaration, to the club's mailbox (2026-09-19)
+
+**Context.** §95 gave the runner a PDF of what they signed and gave the club one PDF per
+event, rendered from the rows on request; "where do the declarations live" was answered with
+"in the database, three years, and in every runner's inbox". The owner asked for the archive
+to build itself once the club had a mailbox, and the club has one since the evening of
+2026-09-18 (`SETUP.md` §35). This was the first of the developer rows on `/admin/tasks`.
+
+**Decision.** `DECLARATIONS_ARCHIVE_TO`, an email address, optional. Set, every signature —
+by link or on paper at the desk — queues a second message, `DECLARATION_ARCHIVE`, to that
+address with the same PDF the runner receives, a subject that names the participant and the
+event so the mailbox is searchable, a greeting for the club rather than the runner, and **no
+action link**: the runner's copy carries their manage token, and a manage token in the club's
+mailbox is a secret handed to the wrong person (§12.8). Not for a test registration: a
+synthetic runner's declaration is not a record the club keeps. Unset, nothing changes — the
+per-event bundle on the event page is the archive. One more message per registration on
+Mailgun's allowance, so `messagesPerCompletedRegistration(archive)` is what the projections
+and the task board now use; the constant stays the floor. The row on `/admin/tasks` is the
+club's switch: open until the variable is set, never blocking. The migration is one enum
+value, expand-only, as `0033` was.
+
+*Rejected:* a shared mailbox the platform reads or writes to (nothing reads incoming mail,
+§35), a Drive or Dropbox folder (another processor for a document that is already in two
+places), and reusing `DECLARATION_SIGNED` with a payload flag — the emails page lists every
+type by name, and "the club's copy" is a type.
+
+**Consequences.** `enqueueDeclarationCopies` in `registrations/service.ts` (both paths);
+`declarationArchive` in `templates.ts` (a subject and a greeting can be functions of the
+data now); the attachment in `render.ts`; migration `0036`; `.env.example`; `/devs`; the
+row's steps; `tests/integration/registrations/declaration-archive.test.ts`. BR-REQ-033-02
+criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 100. Decided — the Mailgun plan is a setting an Administrator changes, not a constant (2026-09-19)
+
+**Context.** `notifications/volume.ts` said, since `BR-V1.19`: "a constant and not
+configuration, deliberately … an environment variable would invite it being set to whatever
+makes the page look calm." The owner's request on 2026-09-19 — "I need to know the Mailgun
+SKU so I know the queue limit; this should be a setting on the admin side so I can change it
+dynamically when I temporarily enable Mailgun paid" — is the case that argument did not
+cover: the club *will* buy a month of Basic around a race (`docs/PLATFORM.md` has said so
+since limit 1 was written), and the day it does, every page that says "100 a day" is wrong
+until a developer deploys, "Trimite acum" stops at a hundred that no longer binds, and the
+cost table shows a free plan the club is paying for. Mailgun's API does not tell a domain
+sending key which plan the account is on, so the platform cannot read it; somebody has to
+say it.
+
+**Decision.** A `platform_settings` table — key, JSON value, when, by whom; not for secrets,
+ever — and its first key, `emailPlan`: one of Free, Basic, Foundation, Scale (the catalogue
+in `notifications/domain/email-plan.ts`, read from mailgun.com/pricing on 2026-09-19: $0
+with 100 a day; $15 with 10,000 a month; $35 with 50,000; $90 with 100,000; no daily ceiling
+on any paid plan) or `CUSTOM` with the ceilings typed from Mailgun's own Account → Plan page,
+both empty meaning none. An Administrator sets it on `/admin/emails`, above the messages,
+next to the day's and the month's counts that would expose a wrong answer; an audit row
+records who, from what, to what, and the note ("Basic for October's race, cancel on the
+20th"). A stored value this code can no longer read falls back to Free, the smallest ceiling.
+
+Every figure follows it. `readEmailVolumeToday` now returns the plan, the period that binds
+(day, month, none), the ceiling and what is left of it over that period — null when nothing
+binds, and the pages print the word rather than a big number. The outbox panel, `/devs`, the
+task board's Mailgun row (its price as a paid line in "what the club pays today", its "next"
+column from the catalogue) and the "send now" loop's stop all read the same answer. The worker
+itself is unchanged: Mailgun's 402/420 still defers a message to the reset (§40), whatever
+the setting says — the setting is the club's claim, the provider's refusal is the fact, and
+`/api/health` (§98) tells the club when the two disagree.
+
+*Rejected:* an environment variable (the original objection stands for a value nobody sees;
+this one is on the screen that sets it, with the counts beside it, and changes with the
+month, which a deploy should not have to); reading the plan from Mailgun (the sending key
+cannot); a dropdown of plans without `CUSTOM` (Mailgun's catalogue changes more often than
+this code).
+
+**Consequences.** `db/schema/platform-settings.ts` and migration `0037` (expand-only);
+`notifications/domain/email-plan.ts`, `notifications/email-plan.ts`, `EmailPlanPanel`,
+`admin/emails/actions.ts`; `volume.ts` (`allowance`/`remaining` nullable, `period`,
+`sentThisMonth`), `send-now.ts`, `platform-plans.ts` (`emailAllowance` nullable, the plan
+facts); the audit action `email_plan.changed` on entity `platform_setting`; the three pages;
+the guide; `tests/unit/notifications/email-plan.test.ts`,
+`tests/integration/notifications/email-plan.test.ts`. BR-REQ-080-02 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 101. Decided — Vercel's month on `/devs`, as far as Vercel's API allows (2026-09-19)
+
+**Context.** §88 put the database's month on `/devs` from Neon's API. The owner asked for
+Vercel's figures beside it ("as a dev I should also see the DB usage and Vercel usage, if
+possible"), and the row on `/admin/tasks` promised "a call to the usage API, with the same
+thresholds as Neon's". There is no such API: Vercel's public REST endpoint index (read
+2026-09-19) has deployments, projects, domains, billing charges for paid teams — and nothing
+that returns bandwidth, invocations or CPU for an account. Those exist on the dashboard's
+Usage page and nowhere a token can reach.
+
+**Decision.** Read what a token can read — the deployments list, `GET /v6/deployments` for the
+project since the first of the month, paged by `until` — and derive the two Hobby ceilings a
+club can actually meet: deployments a day (100) and build minutes a month (6,000, summed from
+each deployment's `buildingAt` → `ready`), plus how many builds failed and when the last one
+finished. Warning at eighty percent of either, as the Neon card does. The card says in plain
+words that bandwidth and invocations are not in the API and links to the dashboard for them,
+because a figure a page cannot show should be named as missing rather than left out. Three
+optional variables: `VERCEL_API_TOKEN` (an account token, read-only in effect since nothing
+here writes), `VERCEL_PROJECT_ID`, `VERCEL_TEAM_ID` for a team account. The row on
+`/admin/tasks` is the club's switch, done when the first two exist; `secrets:check` refuses a
+token with a value in a tracked file.
+
+*Rejected:* scraping the dashboard (a session cookie in the environment, and a page that
+changes), the observability endpoints (Pro), and dropping the row as impossible — the two
+ceilings above are the ones an evening of pushes spends, and a vibecoder deploying forty
+times is exactly who reads this page.
+
+**Consequences.** `diagnostics/vercel.ts`; the three variables in `env.ts` and
+`.env.example`; the card on `/devs`; the row and its steps; `SETUP.md` §33;
+`tests/unit/diagnostics/vercel.test.ts`. BR-REQ-090-07 criterion 4.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 102. Decided — the form names what it is for, and the terms name the list, the results and the photographs (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "make sure to show the race date, details and TOS on the
+sign-up form as links; on the TOS & GDPR also note your public name appearance, race photos
+and race results." The form's title carried the event's name and nothing else; the terms
+were linked from the footer only; and while the privacy notice's §4 already covered the
+public list, the results and the photographs in full, the terms' §7 covered copyright and
+photographs and said nothing about a name.
+
+**Decision.** Under the form's title: the event's date and time in the event's own zone, the
+meeting point, and four links with 44 px targets — the event's page, its rules (only when the
+organizer wrote any), the terms and the privacy notice. Nothing else moves; the consents stay
+where they were. The terms' §7 is now "Your name, the results, the photographs": a name is on
+the public list only when the club switches the list on for that event and the person did not
+opt out, and in results only with the separate consent; both withdrawable from the
+registration's page without losing the registration; the copyright and photograph paragraphs
+follow unchanged. The privacy notice is untouched — it said this already (§4, since §95).
+The templates are not yet approved anywhere, so the change reaches the club's texts the day
+it approves them; a club that already approved would take it as the next version.
+
+**Consequences.** `events/[slug]/register/page.tsx`; `Registration.facts.*`;
+`legal-documents/templates/terms.ts` §7 in both languages. BR-REQ-031-01 criterion 5.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 103. Decided — six roles the club can name: the volunteer has the desk, the copywriter has the words (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "I need the copywriter role — someone who can edit texts —
+because people will argue about who edits what; this needs to be simple and self-explanatory;
+and volunteers who scan codes and handle registrations can do just that." And, minutes later:
+"in the backoffice I need a how-to page depending on each role." Five roles existed (§10.2):
+the lowest, `CONTRIBUTOR`, drafted its own texts and submitted them, and also worked the desk
+(§67) and saw the events list; a volunteer handed a phone on race day was offered pages they
+had no business in, and nobody's job was "the words".
+
+**Decision.** Six roles, one new value in the `staff_role` enum (`COPYWRITER`, migration
+`0038`, expand-only, placed before `MODERATOR`), and a new meaning for the lowest:
+
+- **Voluntar** (`CONTRIBUTOR`) — the desk and the guide, nothing else. `/admin` takes them to
+  the desk; the tabs offer two sections; every text is refused. The enum value keeps its name
+  because Postgres does not rename enum values and nothing is gained by a second migration.
+- **Redactor** (`COPYWRITER`) — `canEditTexts`: the text of any event and any page, theirs or
+  a colleague's, at any status — a live edit with the same acknowledgement an organizer gives
+  — page drafts, and submitting any draft for review. Not the event row, not publication, not
+  the gallery, not deleting or reordering pages, nothing about registrations.
+- **Organizator** (`MODERATOR`), **Tehnic**, **Administrator**, **Superadministrator** as
+  before; the labels change so the staff form reads as a job description. The form's role
+  select says what each role is for in one line, and its default is a role that exists (it
+  said `AUTHOR`, a value from before `0016`, so nothing was selected).
+- `/admin/guide` carries a copywriter's section and puts the reader's own sections first and
+  open, the colleagues' after and folded (`roles` on every section in the catalogue).
+
+The own-draft rule of BR-REQ-051-01 criterion 1 goes: "whose draft is it" was a rule for a
+role that no longer writes, and a copywriter correcting a colleague's typo is the point.
+`canEditTranslation` and `canTransition` keep their signatures — the callers compute the
+author and the status, and a future rule may read them again.
+
+*Rejected:* a seventh role for "publishes but does not configure" (the organizer does both and
+the club is small); scoping the copywriter to drafts only (the commonest text edit is a live
+typo); renaming the enum value (a migration with a lock on `staff_users` for a label).
+
+**Consequences.** `roles.ts` (`canEditTexts`, `canCreatePage`, the rank, the sections),
+`staff-labels.ts`, the dev switcher's `Dev Copywriter`, `pages/service.ts`, the pages
+routes, the events list's redirect, the staff form, the guide, the catalogues; `AGENTS.md`
+§10.2, `BUSINESS.md`'s role table, `SETUP.md` §34; BR-REQ-051-01 criteria 1 and 3,
+BR-REQ-050-03 criterion 9, BR-REQ-060-01 criterion 8; `tests/unit/staff/roles.test.ts`,
+`tests/integration/cms/{workflow,one-save,pages}.test.ts`, `tests/e2e/cms-publish.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 104. Decided — a free race is confirmed a week before: the participation window (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "Before the race people need to confirm their
+participation (since it is free); this will be the same step as signing the declaration, one
+week before the race; this needs to be clear from the sign-up wizard." The pilot's rule
+(§10.5, BR-REQ-033-01): email verified → a place held thirty minutes → the declaration
+signed → confirmed. Right for a Wednesday run announced on Monday. Wrong for a race
+published in June: everyone who clicks in June is confirmed in June, and the club learns
+who is actually coming on the morning of the race.
+
+**Decision.** Two integers on the event, the organizer's: `confirmation_opens_days_before`
+(default 7) and `confirmation_deadline_days_before` (default 2); zero on the first switches
+the window off, and a deadline at or after the opening is no window. For an event further
+away than the opening, a registration that clears email verification enters
+`PENDING_DECLARATION` with its hold at the **deadline** — not thirty minutes, and not capped
+by registration close, because closing entries ten days out while confirmations are owed two
+days out is exactly the shape a race wants. The declaration email goes at once, says the
+deadline and that the signature is the confirmation ("the race is free, so we ask for a
+confirmation"), and the maintenance job queues it again, once per registration, when the
+window opens (`queueParticipationConfirmations`, key `registration:<id>:confirm-participation`).
+A signature at any point confirms. An unsigned hold lapses at the deadline through the hold
+expiry that has always existed, and the place goes to the front of the waiting list with the
+ordinary twenty-four-hour offer. Inside the window, and on an event without one — every
+weekly run — the thirty minutes stand untouched: the person is present and the place is
+scarce now. The wizard's third step reads "confirm a week before" only while that week is
+still ahead; otherwise its old sentence.
+
+Nothing in the allocator changed but the number a hold is given. `kind` still appears in no
+condition; the capacity formula still counts unexpired holds; the desk still confirms on
+paper; a waiting-list offer is still a signature within a day. The two columns have defaults,
+so every existing event carries the window from the migration on.
+
+*Rejected:* a second "I am coming" click separate from the declaration (two confirmations
+for one fact, and the owner named them the same step); a declaration window on the waiting
+list's offers (an offered place is wanted now); reading the window from the club's calendar
+rather than the event (a race and a run differ, and the organizer knows which is which).
+
+**Consequences.** Migration `0039` (expand-only, defaults 7 and 2);
+`hold-deadlines.ts` (`confirmationWindow`, the `window` on `computeDeclarationHoldExpiry`);
+`EventForRegistration` and every full-row construction of it; the `COMPLETE_DECLARATION`
+template and `render.ts`; `queueParticipationConfirmations` on the maintenance job;
+`RegistrationSteps` with a `window`; the editor's two fields; the catalogue; `AGENTS.md`
+timing defaults, `BUSINESS.md`; BR-REQ-033-01 criterion 6;
+`tests/unit/registrations/hold-deadlines.test.ts`,
+`tests/integration/registrations/confirmation-window.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 105. Decided — a preferential race number, picked among the free ones, and told to the runner (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "in the backoffice I can give preferential bibs (from the
+available ones, avoiding conflicts); the participant will receive the bib in the email."
+Numbers are drawn at random at confirmation (§94) and the confirmation email carries the
+number (§87); the desk and the registration's page could already type one (§67), refused a
+duplicate with a sentence, and told nobody — a number changed after the confirmation lived on
+the desk's screen only.
+
+**Decision.** Beside the field on the registration's page, the first free numbers at the event
+(`suggestFreeBibNumbers`), so a preferential number is picked rather than guessed; the
+uniqueness constraint and its sentence stay the guard. A number given or changed by hand on a
+confirmed registration queues `BIB_ASSIGNED` (migration `0040`, one enum value): the number,
+the event's facts, the QR code and the manage link, and a line saying it replaces any earlier
+number. Clearing a number sends nothing — there is nothing to hand over. A number set at the
+desk on the race morning sends the same message; the runner standing there reads their phone
+or does not, and the record is right either way.
+
+**Consequences.** `bibs.ts#suggestFreeBibNumbers`; `admin-service.ts#setBibNumberByStaff`;
+the `bibAssigned` template and the token map in `render.ts`; the registration's page; the
+catalogue; `tests/integration/registrations/race-day.test.ts`. BR-REQ-038-01 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 106. Decided — an optional "socials" section on the form: a Strava link and an Instagram username (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "optionally, when they sign up people can put their Strava
+link; make a 'socials' section (optional)." The club runs on Strava and posts on Instagram;
+following a new runner back and tagging them in the race's photos is how a club of this size
+keeps people. The form had no place for it and a member typed handles into the club field.
+
+**Decision.** Two columns on the registration (`strava_url`, `instagram_handle`; migration
+`0041`), a folded disclosure at the end of the optional block — closed by default, the one
+section a person skips without the form being less complete — and two rules on what they
+may hold: a Strava link is one of Strava's own addresses (a profile, or the app's share link)
+and nothing else, so the field cannot become a link to anywhere; a username is letters,
+digits, dots and underscores, stored without the `@` whichever way it was typed. Shown to
+Administrators on the registration's page as links and in the export as two columns; never
+on the public site, never in an email. The privacy notice template names them under the data
+we keep, with consent as the basis and deletion on request; retention is the registration's
+(§95). On the registration row rather than the participant: what somebody offers for one
+race is not a profile, and the M4 profile can lift it when it exists.
+
+**Consequences.** `fields.ts` (`STRAVA_URL`, `INSTAGRAM_HANDLE`), `form-mapping.ts`,
+`form-errors.ts`, `names.ts`, `repository.ts`, `service.ts`, the form, the registration's
+page, `admin-repository.ts`, `csv.ts` and the export route, the privacy-notice template, the
+catalogue; `tests/unit/registrations/socials.test.ts`, the CSV test. BR-REQ-031-04 criterion 8.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 107. Decided — events as a calendar: one `.ics` per event, and a feed the phone subscribes to (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "Can the events be iCal, so they appear in Google Calendar
+and other calendars?" The listing had a month view (§89) and the backlog row for the
+structured programme promised "one .ics per event". A club that runs every Monday and
+Wednesday is a club whose members want the runs in the calendar they already look at.
+
+**Decision.** `modules/events/ical.ts` writes RFC 5545 by hand — twenty lines, and the two
+things that go wrong (folding at 75 octets, escaping) are the two things the unit test pins.
+Instants in UTC, so no VTIMEZONE block has to be right about DST; every calendar shows the
+same moment in the reader's zone. Two routes, public like the events: one event
+(`/<locale>/events/<slug>/calendar.ics`, `attachment`) and the club's feed
+(`/<locale>/events/calendar.ics`, every published event from a month back to a year ahead,
+a calendar name, a daily refresh hint, an hour of cache). The event page offers Google
+Calendar's own add-event address — one tap, no file — and the `.ics` for Apple, Outlook and
+the phone's app, beside the share links; the listing offers the feed as `webcal://` and as a
+download, with the sentence that it updates by itself. The description carries the short
+description, the programme as plain text (§96) and the page's address, so the calendar entry
+is enough on the morning. UIDs are `<event id>@<site host>`: stable across edits, so a
+changed time updates the entry rather than adding a second, and distinct between QA and
+production.
+
+*Rejected:* a library (`ics` and friends bring more code than the format); per-locale
+duplicate UIDs (a person who subscribes to both would see every run twice — the UID is the
+event's, and the two feeds differ only in words); structured programme rows *before* the
+calendar (the rows are still owed; the calendar did not have to wait for them).
+
+**Consequences.** `events/ical.ts`; the two routes; `ShareLinks` with a `calendar` prop;
+the listing's subscribe line; `updatedAt` in the public columns; `calendar.google.com` in the
+provider hosts; the catalogue; `tests/unit/events/ical.test.ts`. BR-REQ-020-01 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 108. Decided — a parent registers a minor online: the guardian's name, and who the declaration names as declarant (2026-09-19)
+
+**Context.** The terms and the declaration have said since §95 that a minor is registered by
+a parent or legal guardian who signs on the child's behalf — and the form had no place for
+that person, so a parent typed their own name as the runner's or the child's as the signer's.
+The first developer row on `/admin/tasks` since §97.
+
+**Decision.** `registrations.guardian_name` (migration `0042`). The public form carries a
+folded disclosure, "Registering a minor — parent or legal guardian", opened automatically when
+the server named it; under eighteen by the calendar on the day of submission
+(`isMinorOn`), a submission without the name is refused with `guardianName` in the fields,
+so the error summary links to it. An adult's entry in the field is dropped at the service —
+nobody's guardian was named. Two merge fields join the declaration's: `{{declarant}}`, which
+reads the runner's name for an adult and "<guardian> (părinte/tutore legal al minorului
+<runner>)" for a minor, in the text's language, and `{{guardian}}`, the bare name or an em
+dash; the templates open with `{{declarant}}` and keep the clause that says in which capacity
+one signs. The identity document typed at signing is the signer's — the parent's. The desk
+row and the registration's page show "Minor — parent/guardian: <name>" (the kit goes to that
+person), and the export has a `Guardian` column. The staff-entered form is unchanged: an
+organizer entering a child at the desk records the parent on paper, as before.
+
+*Rejected:* the age at the event's date (the schema parses a birth date without the event in
+hand, and a runner who turns eighteen between the two loses nothing by having named a
+parent); a separate guardian identity document field (the signer types theirs at signing,
+which is where the document is asked); a guardian email (the parent's address is the one on
+the form — it is the parent filling it in).
+
+**Consequences.** `fields.ts` (`isMinorOn`, `guardianRule`), `form-mapping.ts`,
+`form-errors.ts`, `names.ts`, `repository.ts`, `service.ts`, the form; `merge-fields.ts`
+(`declarant`, `guardian`), `signed-declaration.ts#declarantValues`, the declare page, the
+templates; `DeskRow`, the registration's page, `admin-repository.ts`, `csv.ts` and the export;
+the catalogue; `tests/integration/registrations/minors.test.ts`. BR-REQ-031-04 criterion 9.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 109. Decided — `CLAUDE.md` says where each thing is decided, not what it is (2026-09-19)
+
+**Context.** "The documentation, shortened" was the last developer row on `/admin/tasks`:
+every document grew at the pace of the decisions, and `CLAUDE.md` — the first thing an agent
+reads — carried three hundred lines of prose under "What exists right now", each paragraph a
+summary of a `DECISIONS.md` section that already existed. The owner's standing instruction is
+"vibecoder friendly": the first page must say where to look, not repeat what is there.
+
+**Decision.** The section is a map: one line per built thing, the `DECISIONS.md` section that
+records why, and the `AGENTS.md` subsection or `BR-REQ` where the rule is stated. The hard
+rules stay in the table above it, untouched. An adversarial check compared the old text with
+the map and the pointed sections for facts an agent would need and could no longer reach; the
+six it found (the one-count rule and `readPublicAvailability`, the `EMAIL_DELIVERY_MODE`
+values, erase taking the acceptance in one transaction, `STAFF_AUTH_MODE=disabled` answering
+404, the two pool timeouts, the wordmark's one place) were written back as one line each, and
+three `§` references that pointed at `AGENTS.md` subsections were labelled so. `SETUP.md` is
+not shortened: its numbered sections are procedures with values, still valid, and its length
+is the record of every account the club opened; the row on `/admin/tasks` narrows to it.
+
+**Consequences.** `CLAUDE.md` (429 → ~290 lines); the `docsSimplify` row's text; nothing else.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 110. Decided — a YouTube film in the editor: the id and a caption, shown behind one press (2026-09-19)
+
+**Context.** The owner: "in the WYSIWYG editor add the option to add YouTube videos." An
+event already had one film (§69): a `videoUrl` column, shown as a closed `<details>` so the
+page fetches nothing from Google until pressed, and the privacy notice describes YouTube as
+"loaded when you press". The editor's allowlist (§11.3) has "no raw HTML node, scripts,
+iframes, arbitrary embeds" — a rule worth keeping while adding the one embed the club wants.
+
+**Decision.** A `youtube` block in the schema: `videoId` (eleven characters, the regex) and
+`caption`, strict — never an address, never markup, never another host. The editor's control
+opens a field for the film's address; `youtubeVideoId` (the same parser the event uses)
+turns `watch?v=`, `youtu.be/`, `shorts/`, `embed/` and `live/` addresses into the id and
+refuses anything else under the field; the address itself is kept nowhere. In the editor the
+block is the film's own thumbnail with a play mark — a request to YouTube's image host in the
+backoffice, by the organizer who placed the film, not on a reader's page. The renderer emits
+the same closed disclosure `EventVideo` does, the `youtube-nocookie.com` embed lazy inside it,
+the caption as the summary and beneath it. A click on the block opens a panel: caption, or
+remove. The plain text of a body counts the caption as its words; a body holding only a film
+is not empty.
+
+*Rejected:* Tiptap's own YouTube extension (it stores the address and renders an iframe in
+the editor — the rule says no iframe reaches a page from a document, and the parser here
+already existed); a thumbnail-first "click to load" on the public page (the same request to
+Google the disclosure avoids); any other video host (one host, one parser, one privacy
+sentence).
+
+**Consequences.** `rich-text/domain/schema.ts` (`youtubeNode`, the plain-text walker,
+`hasRichTextContent`), `ui/RichTextVideo.tsx`, `ui/RichText.tsx`, `ui/RichTextEditor.tsx`
+(the node, the control, the panel), `ui/labels.ts`, the catalogue, `i.ytimg.com` in the
+provider hosts; `AGENTS.md` §11.3; `tests/unit/content/rich-text.test.ts`,
+`tests/e2e/pages.spec.ts`. BR-REQ-050-03 criterion 16.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -63,6 +63,24 @@ export type Headroom =
   | { kind: "derived"; reached: boolean }
   | { kind: "notMeasured" };
 
+/**
+ * Neon Launch, read from neon.com/pricing on 2026-09-18: no monthly fee, $0.106 per CU-hour,
+ * $0.35 per GB-month. The owner asked for "a monthly cost", so the row projects this month's
+ * pace to a full month at those rates — what the club would pay if it left Free today.
+ */
+export const NEON_LAUNCH_USD_PER_CU_HOUR = 0.106;
+export const NEON_LAUNCH_USD_PER_GB_MONTH = 0.35;
+
+export function projectedNeonLaunchUsdPerMonth(
+  input: Pick<PlatformFacts, "neonCuHoursThisMonth" | "neonHoursElapsed" | "databaseBytes">,
+): number | null {
+  if (typeof input.neonCuHoursThisMonth !== "number" || !input.neonHoursElapsed || input.neonHoursElapsed <= 0) return null;
+  const monthHours = 30 * 24;
+  const cuHoursPerMonth = (input.neonCuHoursThisMonth / input.neonHoursElapsed) * monthHours;
+  const gb = typeof input.databaseBytes === "number" ? input.databaseBytes / (1024 * 1024 * 1024) : 0;
+  return Math.round((cuHoursPerMonth * NEON_LAUNCH_USD_PER_CU_HOUR + gb * NEON_LAUNCH_USD_PER_GB_MONTH) * 100) / 100;
+}
+
 /** A temporary bump nobody reverses is the expensive failure, so each row says which it is. */
 export type BumpKind = "temporary" | "permanent";
 
@@ -117,11 +135,27 @@ export const RO_DOMAIN_PRICE_EUR_PER_YEAR = 12;
 export const VENDOR_PLANS_CHECKED_ON = "2026-09-05";
 
 export type PlatformFacts = {
-  /** Free-tier daily message allowance, and what today has already spent of it. */
-  emailAllowance: number;
+  /**
+   * The ceiling that binds on the plan the club is on (§100) — Free's hundred a day, a paid
+   * plan's month — and what has been spent of it over that period. Null when nothing binds.
+   */
+  emailAllowance: number | null;
   emailSentToday: number;
+  /** The plan's own name and monthly price, from `notifications/domain/email-plan.ts`. */
+  emailPlanName?: string;
+  emailPlanUsdPerMonth?: number;
+  emailPeriod?: "day" | "month" | "none";
+  /** The plan after this one, for the "next" column; null when there is none in the catalogue. */
+  emailNextPlan?: { name: string; usdPerMonth: number } | null;
   /** Messages this application sends for one registration that completes normally. */
   messagesPerRegistration: number;
+  /** The database's size in bytes, read from Postgres (§88); null when it could not be read. */
+  databaseBytes?: number | null;
+  databaseStorageAllowanceBytes?: number;
+  /** This month's compute so far, from Neon (`/devs` reads it with a key); null without one. */
+  neonCuHoursThisMonth?: number | null;
+  /** How far into the month that figure is, in hours, so it can be projected to a full month. */
+  neonHoursElapsed?: number | null;
   /** Is any published event charging an entry fee? `events.cost_type = 'PAID'`. */
   hasPaidEvent: boolean;
   /**
@@ -142,11 +176,13 @@ export type PlatformFacts = {
  * lower than this and a club that plans against it has margin rather than a surprise.
  */
 export function registrationsLeftToday(input: {
-  emailAllowance: number;
+  emailAllowance: number | null;
   emailSentToday: number;
   messagesPerRegistration: number;
-}): number {
+}): number | null {
   if (input.messagesPerRegistration <= 0) return 0;
+  // No ceiling, no count: null, and the page prints the word for it rather than a big number.
+  if (input.emailAllowance === null) return null;
   const remaining = Math.max(0, input.emailAllowance - input.emailSentToday);
   return Math.floor(remaining / input.messagesPerRegistration);
 }
@@ -162,8 +198,9 @@ export function registrationsLeftToday(input: {
  * line with no free plan under it, then email, because it is the ceiling a race day meets.
  */
 export function platformServices(input: PlatformFacts): ServiceRow[] {
-  const remaining = Math.max(0, input.emailAllowance - input.emailSentToday);
+  const remaining = input.emailAllowance === null ? null : Math.max(0, input.emailAllowance - input.emailSentToday);
   const left = registrationsLeftToday(input);
+  const emailUsd = input.emailPlanUsdPerMonth ?? 0;
 
   return [
     {
@@ -186,19 +223,25 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
     },
     {
       id: "mailgun",
-      planToday: "Free",
-      costToday: { kind: "free" },
+      // The plan the club says it is on (§100): the name, and a year of its monthly price when
+      // it has one — a temporary month of Basic reads as a year's worth until it is switched back,
+      // which is the honest figure for "what does today's setup cost".
+      planToday: input.emailPlanName ?? "Free",
+      costToday: emailUsd > 0 ? { kind: "paid", amount: emailUsd * 12, currency: "USD", plusVat: true } : { kind: "free" },
       checkedOn: VENDOR_PLANS_CHECKED_ON,
       // The one ceiling on this page read from the deployment's own data rather than quoted.
-      headroom: {
-        kind: "measured",
-        used: input.emailSentToday,
-        of: input.emailAllowance,
-        state: remaining === 0 ? "reached" : left <= 5 ? "close" : "ok",
-      },
-      severity: remaining === 0 ? "act" : left <= 5 ? "watch" : "ok",
-      nextPlan: "Basic",
-      nextCost: "$15/mo",
+      headroom:
+        input.emailAllowance === null || remaining === null || left === null
+          ? { kind: "derived", reached: false }
+          : {
+              kind: "measured",
+              used: input.emailSentToday,
+              of: input.emailAllowance,
+              state: remaining === 0 ? "reached" : left <= 5 ? "close" : "ok",
+            },
+      severity: remaining === 0 ? "act" : left !== null && left <= 5 ? "watch" : "ok",
+      nextPlan: input.emailNextPlan === undefined ? "Basic" : (input.emailNextPlan?.name ?? null),
+      nextCost: input.emailNextPlan === undefined ? "$15/mo" : input.emailNextPlan ? `$${input.emailNextPlan.usdPerMonth}/mo` : null,
       bump: "temporary",
     },
     {
@@ -221,10 +264,31 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
       planToday: "Free",
       costToday: { kind: "free" },
       checkedOn: VENDOR_PLANS_CHECKED_ON,
-      // Storage and CU-hours live in Neon's console and this application never reads them.
-      // "Not measured" is the honest render; a green row here would be a claim.
-      headroom: { kind: "notMeasured" },
-      severity: "unknown",
+      // Storage is measured from Postgres itself since §88 (`pg_database_size` against the
+      // plan's half gigabyte); CU-hours still live in Neon's console (`/devs` reads them with
+      // a key). Unmeasured stays "not measured": a green row here would be a claim.
+      headroom:
+        typeof input.databaseBytes === "number" && input.databaseStorageAllowanceBytes
+          ? {
+              kind: "measured",
+              used: Math.round(input.databaseBytes / (1024 * 1024)),
+              of: Math.round(input.databaseStorageAllowanceBytes / (1024 * 1024)),
+              state:
+                input.databaseBytes >= input.databaseStorageAllowanceBytes
+                  ? "reached"
+                  : input.databaseBytes >= input.databaseStorageAllowanceBytes * 0.8
+                    ? "close"
+                    : "ok",
+            }
+          : { kind: "notMeasured" },
+      severity:
+        typeof input.databaseBytes === "number" && input.databaseStorageAllowanceBytes
+          ? input.databaseBytes >= input.databaseStorageAllowanceBytes
+            ? "act"
+            : input.databaseBytes >= input.databaseStorageAllowanceBytes * 0.8
+              ? "watch"
+              : "ok"
+          : "unknown",
       nextPlan: "Launch",
       nextCost: "$0.106/CU-hour",
       bump: "temporary",

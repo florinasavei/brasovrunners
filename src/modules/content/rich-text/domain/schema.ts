@@ -163,6 +163,22 @@ const imageNode = z.object({
   }),
 });
 
+/**
+ * A YouTube film between paragraphs (`DECISIONS.md` §110): the eleven-character video id and
+ * nothing else — never a URL, never an iframe, never a third host. The renderer builds the
+ * `youtube-nocookie.com` embed from the id behind a closed disclosure, as the event's own film
+ * is shown (§69): nothing is fetched from Google until the reader presses. `caption` is the
+ * sentence under it, visible to everybody.
+ */
+const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+const youtubeNode = z.object({
+  type: z.literal("youtube"),
+  attrs: z.object({
+    videoId: z.string().regex(YOUTUBE_ID, "a YouTube video id is eleven characters"),
+    caption: z.string().max(500).nullable().optional().transform((value) => value ?? ""),
+  }).strict(),
+});
+
 const blockNode = z.discriminatedUnion("type", [
   paragraphNode,
   headingNode,
@@ -170,6 +186,7 @@ const blockNode = z.discriminatedUnion("type", [
   orderedListNode,
   blockquoteNode,
   imageNode,
+  youtubeNode,
 ]);
 
 export const richTextSchema = z.object({
@@ -281,6 +298,9 @@ export function richTextToPlainText(doc: RichTextDoc): string {
         // A picture's words are its alt text and its caption: what a screen reader says and
         // what everybody reads beneath it. A decorative, uncaptioned picture contributes nothing.
         return [block.attrs.alt, block.attrs.caption];
+      case "youtube":
+        // A film's words are its caption; the id is not a word.
+        return [block.attrs.caption];
     }
   };
 
@@ -303,7 +323,7 @@ export function fromPlainText(text: string | null | undefined): RichTextDoc {
 
 /** Whether a body holds anything at all — words, or a picture with nothing said about it. */
 export function hasRichTextContent(doc: RichTextDoc): boolean {
-  return !isRichTextEmpty(doc) || (doc.content ?? []).some((block) => block.type === "image");
+  return !isRichTextEmpty(doc) || (doc.content ?? []).some((block) => block.type === "image" || block.type === "youtube");
 }
 
 /** The pictures in a body that a screen reader would have nothing to say for. */

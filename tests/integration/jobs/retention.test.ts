@@ -1,5 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events } from "@/db/schema/events";
@@ -7,6 +9,8 @@ import { jobRuns } from "@/db/schema/job-runs";
 import { participants } from "@/db/schema/participants";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrations } from "@/db/schema/registrations";
+import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
+import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { pruneExpiredRows, RETENTION } from "@/modules/jobs/retention";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -193,13 +197,21 @@ describe("retention sweep", () => {
     expect(keys).toEqual(["old-bounced", "recent-sent"]);
   });
 
-  it("never touches a registration, a participant or an event", async () => {
-    await pruneExpiredRows(db, new Date(NOW.getTime() + 3650 * 24 * 60 * 60_000));
-
-    // Ten years on, with every window long past, the rows that belong to people are untouched:
-    // how long the club keeps an entry is the club's decision, not a sweep's (DECISIONS.md §45).
+  it("keeps a registration for three years after its event, then removes it with the participant — never the event", async () => {
+    const year = 365.25 * 24 * 60 * 60_000;
+    // Two years and eleven months after the event (2026-10-01): still the club's record.
+    const before = await pruneExpiredRows(db, new Date(Date.UTC(2029, 8, 1)));
+    expect(before.registrations).toBe(0);
     expect(await db.select().from(registrations).where(eq(registrations.id, registrationId))).toHaveLength(1);
     expect(await db.select().from(participants)).toHaveLength(1);
+
+    // Past three years (`DECISIONS.md` §95, the limitation period): the registration, the
+    // declaration and the participant go; the event stays — it is the club's history.
+    const after = await pruneExpiredRows(db, new Date(Date.UTC(2026, 9, 1) + 3 * year + 24 * 60 * 60_000));
+    expect(after.registrations).toBe(1);
+    expect(after.participants).toBe(1);
+    expect(await db.select().from(registrations).where(eq(registrations.id, registrationId))).toHaveLength(0);
+    expect(await db.select().from(participants)).toHaveLength(0);
     expect(await db.select().from(events)).toHaveLength(1);
   });
 
@@ -208,5 +220,54 @@ describe("retention sweep", () => {
 
     expect((await pruneExpiredRows(db, NOW)).jobRuns).toBe(1);
     expect((await pruneExpiredRows(db, NOW)).jobRuns).toBe(0);
+  });
+
+  it("takes the identity document and the health note out seven days after the event, and the audit log after three years (§95)", async () => {
+    const translations = [
+      { locale: "ro" as const, title: "Declarație", body: { sections: [{ paragraphs: ["{{idDocument}}"] }] } },
+      { locale: "en" as const, title: "Declaration", body: { sections: [{ paragraphs: ["{{idDocument}}"] }] } },
+    ];
+    const version = await insertLegalDocumentVersion(db, {
+      key: "EVENT_DECLARATION",
+      version: 1,
+      effectiveAt: NOW,
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+    await db.insert(declarationAcceptances).values({
+      registrationId,
+      legalDocumentId: version,
+      declarationVersion: 1,
+      contentSha256: computeContentHash(translations),
+      locale: "ro",
+      typedName: "Ana Pop",
+      idDocument: "BV 123456",
+      acceptedAt: NOW,
+    });
+    await db.update(registrations).set({ healthNotes: "astm", healthConsentVersion: 1, healthConsentAt: NOW }).where(eq(registrations.id, registrationId));
+    await db.insert(auditLogs).values({ actorStaffUserId: null, action: "registration.cancelled_by_staff", entityType: "registration", entityId: registrationId, metadataJson: {}, createdAt: NOW });
+
+    // Six days after the event (2026-10-01): everything still there.
+    const soon = await pruneExpiredRows(db, new Date("2026-10-07T09:00:00.000Z"));
+    expect(soon.identityDocuments).toBe(0);
+    expect((await db.select().from(declarationAcceptances))[0].idDocument).toBe("BV 123456");
+
+    // Eight days after: the two fields go; the rows stay.
+    const later = await pruneExpiredRows(db, new Date("2026-10-09T10:00:00.000Z"));
+    expect(later.identityDocuments).toBe(1);
+    expect(later.healthNotes).toBe(1);
+    const [acceptance] = await db.select().from(declarationAcceptances);
+    expect(acceptance.idDocument).toBeNull();
+    expect(acceptance.typedName).toBe("Ana Pop");
+    const [registration] = await db.select().from(registrations).where(eq(registrations.id, registrationId));
+    expect(registration.healthNotes).toBeNull();
+    expect(registration.healthConsentAt).toBeNull();
+    expect(later.auditLogs).toBe(0);
+
+    // Three years and a day after the action: the audit row goes.
+    const old = await pruneExpiredRows(db, new Date("2029-09-07T12:00:00.000Z"));
+    expect(old.auditLogs).toBe(1);
   });
 });

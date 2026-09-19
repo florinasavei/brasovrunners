@@ -124,7 +124,8 @@ function eventFieldsFrom(form: FormData) {
     stravaEventUrl: value("stravaEventUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
-    locationAddress: value("locationAddress"),
+    // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
+    locationAddress: null,
     // Closed sets since migration `0018`. An unselected dropdown posts "", which `fields.ts`
     // reads as "the club has not said" rather than as an invalid value.
     difficulty: value("difficulty") || null,
@@ -136,6 +137,8 @@ function eventFieldsFrom(form: FormData) {
     featured: form.get("event.featured") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
+    confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
+    confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),
     registrationClosesAtWallTime: wallTime("registrationClosesAt"),
     declarationDocumentId: value("declarationDocumentId"),
@@ -169,6 +172,8 @@ function translationFieldsFrom(form: FormData, locale: Locale) {
       excerptBody: value("excerptBody"),
       checklist: value("checklist"),
       body: value("body"),
+      rules: value("rules"),
+      schedule: value("schedule"),
       seoTitle: value("seoTitle"),
       seoDescription: value("seoDescription"),
     },

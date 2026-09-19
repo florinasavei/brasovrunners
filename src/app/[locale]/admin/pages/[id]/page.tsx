@@ -17,7 +17,7 @@ import PageFieldsForm from "@/modules/content/pages/ui/PageFieldsForm";
 import {
   allowedTransitions,
   canEditEventFields,
-  isEditorial,
+  canEditTexts,
 } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
@@ -49,7 +49,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!isEditorial(actor.role)) notFound();
+  if (!canEditTexts(actor.role)) notFound();
 
   const found = await findPageForEditor(getDb(), id);
   if (!found) notFound();

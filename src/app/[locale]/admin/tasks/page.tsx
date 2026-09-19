@@ -14,6 +14,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { checkEmailHealth } from "@/modules/notifications/health";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { ownerTasks, sortTasks, type TaskState } from "@/modules/diagnostics/owner-tasks";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -30,9 +31,13 @@ import {
   type ServiceRow,
   type ServiceSeverity,
 } from "@/modules/diagnostics/platform-plans";
+import { NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
+import { readNeonConsumption } from "@/modules/diagnostics/neon";
+import { projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
+import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
+import { readEmailPlan } from "@/modules/notifications/email-plan";
 import {
-  MAILGUN_FREE_DAILY_MESSAGES,
-  MESSAGES_PER_COMPLETED_REGISTRATION,
+  messagesPerCompletedRegistration,
   readEmailVolumeToday,
 } from "@/modules/notifications/volume";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -121,6 +126,12 @@ export default async function AdminTasksPage({ params }: Props) {
    */
   const hasPaidEvent = published.some((event) => event.costType === "PAID");
   const volume = await readEmailVolumeToday(db, now);
+  // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
+  const email = await checkEmailHealth(db, now);
+  // The plan the club says it is on (§100): its price is a row on the cost table below.
+  const emailPlan = await readEmailPlan(db);
+  const emailPlanCeilings = emailCeilings(emailPlan);
+  const emailNext = nextEmailPlan(emailPlan.plan);
   // One row is the Administrator inserted by hand; a second is somebody invited from
   // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
   const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
@@ -169,21 +180,36 @@ export default async function AdminTasksPage({ params }: Props) {
       // which is deliberate: a sample that could be mistaken for approved wording is the risk.
       legalTextIsSample: /EXEMPLU|SAMPLE/i.test(privacyNotice?.title ?? ""),
       emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
+      appEnv: env.APP_ENV,
       staleJobNames,
       staffCount,
       publishedEventCount,
       roDomainBound,
       storageConfigured: isStorageConfigured(),
+      botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
+      declarationArchiveConfigured: Boolean(env.DECLARATIONS_ARCHIVE_TO),
+      vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
     }),
   );
 
   const t = await getTranslations("Admin.tasks");
   const blocking = tasks.filter((task) => task.state === "blocking").length;
 
+  const databaseBytes = await readDatabaseSizeBytes(db);
+  const neon = await readNeonConsumption(env);
   const facts = {
-    emailAllowance: MAILGUN_FREE_DAILY_MESSAGES,
-    emailSentToday: volume.sentMessages,
-    messagesPerRegistration: MESSAGES_PER_COMPLETED_REGISTRATION,
+    databaseBytes,
+    neonCuHoursThisMonth: neon.ok ? neon.consumption.cuHours : null,
+    neonHoursElapsed: neon.ok ? (now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000 : null,
+    databaseStorageAllowanceBytes: NEON_FREE_STORAGE_BYTES,
+    emailAllowance: volume.allowance,
+    // Over the period that binds: today on Free, this month on a paid plan.
+    emailSentToday: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+    emailPlanName: volume.planName,
+    emailPlanUsdPerMonth: emailPlanCeilings.usdPerMonth,
+    emailPeriod: volume.period,
+    emailNextPlan: emailNext ? { name: EMAIL_PLANS[emailNext].name, usdPerMonth: EMAIL_PLANS[emailNext].usdPerMonth } : null,
+    messagesPerRegistration: messagesPerCompletedRegistration(Boolean(env.DECLARATIONS_ARCHIVE_TO)),
     hasPaidEvent,
     clubDomainBound,
     jobsHealthy,
@@ -199,15 +225,26 @@ export default async function AdminTasksPage({ params }: Props) {
   const freshness = priceFreshness(oldestCheckDate(services), now);
 
   /** How close this service is to its ceiling, in that service's own words. */
+  const neonMonthly = projectedNeonLaunchUsdPerMonth(facts);
   const howClose = (row: ServiceRow) => {
     if (row.headroom.kind === "measured") {
-      return t(`services.${row.id}.closeMeasured`, {
+      const base = t(row.id === "mailgun" && volume.period === "month" ? "services.mailgun.closeMeasuredMonth" : `services.${row.id}.closeMeasured`, {
         used: row.headroom.used,
         of: row.headroom.of,
-        left: registrationsLeft,
+        left: registrationsLeft ?? 0,
+        plan: volume.planName,
       });
+      // The monthly figure the owner asked for (§88): this month's pace on the next plan.
+      if (row.id === "neon") {
+        return neon.ok && neonMonthly !== null
+          ? `${base} ${t("services.neon.monthly", { cu: Math.round(neon.consumption.cuHours), usd: neonMonthly.toFixed(2) })}`
+          : `${base} ${t("services.neon.monthlyUnknown")}`;
+      }
+      return base;
     }
     if (row.headroom.kind === "derived") {
+      // Mailgun with no ceiling at all (§100): the plan's name is the whole of the answer.
+      if (row.id === "mailgun") return t("services.mailgun.closeNone", { plan: volume.planName });
       return t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`);
     }
     return t(`services.${row.id}.closeUnknown`);
@@ -227,6 +264,44 @@ export default async function AdminTasksPage({ params }: Props) {
       <Alert severity={blocking > 0 ? "warning" : "success"}>
         {blocking > 0 ? t("blockingSummary", { count: blocking }) : t("nothingBlocking")}
       </Alert>
+
+      {/* Email has stopped (§98). Red, above the list, because every row below assumes the
+          confirmations are going out — and this page is the one the club opens. */}
+      {email.status === "stalled" && (
+        <Alert severity="error">
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {t("emailStalled.title")}
+          </Typography>
+          {email.deferred > 0 && (
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("emailStalled.deferred", {
+                count: email.deferred,
+                allowance: volume.allowance ?? "—",
+                resumesAt: email.resumesAt
+                  ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "Europe/Bucharest",
+                    }).format(new Date(email.resumesAt))
+                  : "—",
+              })}
+            </Typography>
+          )}
+          {email.failed > 0 && (
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("emailStalled.failed", { count: email.failed, reason: email.lastError ?? "—" })}
+            </Typography>
+          )}
+          {email.overdue > 0 && (
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("emailStalled.overdue", { count: email.overdue })}
+            </Typography>
+          )}
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
+            {t("emailStalled.notify")}
+          </Typography>
+        </Alert>
+      )}
 
       <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
         {tasks.map((task) => (
@@ -319,10 +394,11 @@ export default async function AdminTasksPage({ params }: Props) {
           {t(`freeVerdict.${verdict}`)}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t("registrationsLeftToday", {
-            count: registrationsLeft,
-            sent: volume.sentMessages,
-            allowance: MAILGUN_FREE_DAILY_MESSAGES,
+          {t(`registrationsLeft.${volume.period}`, {
+            count: registrationsLeft ?? "",
+            sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+            allowance: volume.allowance ?? "",
+            plan: volume.planName,
           })}
         </Typography>
         <Typography variant="body2" color="text.secondary">

@@ -171,6 +171,16 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
           <ButtonLink href="/admin/legal/new" variant="contained" sx={{ minHeight: 44 }}>
             {t("legal.newTitle")}
           </ButtonLink>
+          {/* The platform's own texts, complete but for the club's four facts (§95). */}
+          <Typography variant="body2" sx={{ mt: 1.5 }}>
+            {t("legal.templatesIntro")}{" "}
+            {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key, index) => (
+              <span key={key}>
+                {index > 0 ? " · " : ""}
+                <Link href={{ pathname: "/admin/legal/new", query: { template: key } }}>{t(`legal.keys.${key}`)}</Link>
+              </span>
+            ))}
+          </Typography>
         </Box>
       )}
 

@@ -37,6 +37,8 @@ async function loadEventForRegistration(
     startsAt: event.startsAt,
     registrationOpensAt: event.registrationOpensAt,
     registrationClosesAt: event.registrationClosesAt,
+    confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
+    confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
     capacity: event.capacity,
     raceId: event.raceId,
     publishedAt: null,
@@ -76,7 +78,7 @@ export async function consumeAndConfirmEmail(secret: string, now: Date) {
 
 export async function consumeAndSignDeclaration(
   secret: string,
-  input: { accepted: boolean; typedName: string; documentId: string; contentSha256: string },
+  input: { accepted: boolean; typedName: string; idDocument?: string; documentId: string; contentSha256: string },
   now: Date,
 ) {
   const db = getDb();

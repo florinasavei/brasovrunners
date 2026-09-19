@@ -1,4 +1,4 @@
-import { and, eq, gt, isNotNull, isNull, lte } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
@@ -32,6 +32,65 @@ export const REMINDER_HOURS_BEFORE = 48;
  * registrations are included — they behave as real ones everywhere (§12.6) and their
  * addresses go nowhere.
  */
+/**
+ * "Confirm your participation" (`DECISIONS.md` §104): when an event's window opens, every
+ * registration still waiting for its signature gets the declaration email again, once — the
+ * link the first one carried is still valid until the deadline, but a week has passed and the
+ * message is the reminder. The key holds across every run that sees the event inside the
+ * window; a hold that lapses at the deadline is the maintenance job's ordinary work.
+ */
+export async function queueParticipationConfirmations<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<number> {
+  const day = 24 * 60 * 60_000;
+  const rows = await db
+    .select({
+      registrationId: registrations.id,
+      participantId: registrations.participantId,
+      locale: registrations.locale,
+      recipientEmail: participants.deliveryEmail,
+      holdExpiresAt: registrations.holdExpiresAt,
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .innerJoin(participants, eq(participants.id, registrations.participantId))
+    .where(
+      and(
+        eq(registrations.status, "PENDING_DECLARATION"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.registrationMode, "INTERNAL"),
+        gt(events.startsAt, now),
+        // The window is open: the start is within `opens` days, and the deadline is ahead.
+        sql`${events.confirmationOpensDaysBefore} > ${events.confirmationDeadlineDaysBefore}`,
+        sql`${events.startsAt} <= ${now.toISOString()}::timestamptz + make_interval(days => ${events.confirmationOpensDaysBefore})`,
+        sql`${events.startsAt} > ${now.toISOString()}::timestamptz + make_interval(days => ${events.confirmationDeadlineDaysBefore})`,
+      ),
+    );
+  // Only the holds the window gave: a thirty-minute hold taken inside the window is a person
+  // signing right now, not somebody to remind a week later.
+  const waiting = rows.filter((row) => row.holdExpiresAt && row.holdExpiresAt.getTime() - now.getTime() > day);
+  if (waiting.length === 0) return 0;
+
+  let queued = 0;
+  await db.transaction(async (tx) => {
+    for (const row of waiting) {
+      const inserted = await enqueueEmail(tx, {
+        participantId: row.participantId,
+        registrationId: row.registrationId,
+        messageType: "COMPLETE_DECLARATION",
+        locale: row.locale,
+        recipientEmail: row.recipientEmail,
+        payload: {},
+        idempotencyKey: `registration:${row.registrationId}:confirm-participation`,
+        now,
+      });
+      if (inserted) queued += 1;
+    }
+  });
+  return queued;
+}
+
 export async function queueEventReminders<T extends Record<string, unknown>>(
   db: Database<T>,
   now: Date,

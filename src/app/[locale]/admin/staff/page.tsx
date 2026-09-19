@@ -128,10 +128,17 @@ export default async function StaffPage({ params, searchParams }: Props) {
           <Stack spacing={2}>
             <TextField name="email" type="email" label={t("staff.email")} required />
             <TextField name="displayName" label={t("staff.name")} required />
-            <TextField name="role" label={t("staff.role")} defaultValue="AUTHOR" select required>
+            <TextField
+              name="role"
+              label={t("staff.role")}
+              defaultValue="CONTRIBUTOR"
+              select
+              required
+              helperText={t("staff.roleHelp")}
+            >
               {STAFF_ROLES.map((role) => (
                 <MenuItem key={role} value={role}>
-                  {STAFF_ROLE_LABEL[role]}
+                  {STAFF_ROLE_LABEL[role]} — {t(`staff.roles.${role}`)}
                 </MenuItem>
               ))}
             </TextField>

@@ -25,7 +25,9 @@ import {
   promoteRegistrationByStaff,
   setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
+import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { isCheckinCode } from "@/modules/registrations/checkin-code";
+import { renderOutboxMessage } from "@/modules/notifications/render";
 import { checkIn, type EventForRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -327,6 +329,10 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "a@example.org", { fastTrack: true });
     const b = await enter(event, "b@example.org", { fastTrack: true, at: new Date(NOW.getTime() + 60_000) });
+    // Confirmed at the desk, so numbered on the spot (§87), at random (§94), distinct.
+    expect(a.registration.bibNumber).not.toBeNull();
+    expect(b.registration.bibNumber).not.toBeNull();
+    expect(a.registration.bibNumber).not.toBe(b.registration.bibNumber);
 
     await setBibNumberByStaff(db, volunteer, a.registration.id, 5, NOW);
     expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 5, NOW))).toBe("CONFLICT");
@@ -339,6 +345,24 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
       .select()
       .from(auditLogs)
       .where(eq(auditLogs.action, "registration.bib_set"));
-    expect(entry.metadataJson).toEqual({ from: null, to: 5 });
+    expect(entry.metadataJson).toEqual({ from: a.registration.bibNumber, to: 5 });
+
+    // The runner is told the number given by hand, once per number, and not when it is cleared (§105).
+    const told = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, a.registration.id))).filter(
+      (row) => row.messageType === "BIB_ASSIGNED",
+    );
+    expect(told).toHaveLength(1);
+    expect(told[0].payloadJson).toEqual({ bibNumber: 5 });
+    const message = await renderOutboxMessage({ ...told[0], status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+    expect(message.subject).toMatch(/^Numărul tău de concurs: /);
+    expect(message.html).toContain("#cancel"); // the manage link, localized, with the cancel section
+  });
+
+  it("suggests the first free numbers, skipping the ones worn (§105)", async () => {
+    const event = await createInternalEvent(10);
+    const a = await enter(event, "a@example.org", { fastTrack: true });
+    await setBibNumberByStaff(db, volunteer, a.registration.id, 2, NOW);
+    expect(await suggestFreeBibNumbers(db, event.id, 1, 4)).toEqual([1, 3, 4, 5]);
+    expect(await suggestFreeBibNumbers(db, event.id, 40, 2)).toEqual([40, 41]);
   });
 });

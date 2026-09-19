@@ -1,0 +1,1 @@
+ALTER TABLE "declaration_acceptances" ADD COLUMN "id_document" text;

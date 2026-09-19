@@ -35,12 +35,14 @@ export const EDITORIAL_TRANSITION_LABEL: Record<EditorialStatus, string> = {
   ARCHIVED: "Arhivează",
 };
 
+/** The names the club uses (§103): what each role is for, not a rank. */
 export const STAFF_ROLE_LABEL: Record<StaffRole, string> = {
-  CONTRIBUTOR: "Colaborator",
-  MODERATOR: "Moderator",
+  CONTRIBUTOR: "Voluntar",
+  COPYWRITER: "Redactor",
+  MODERATOR: "Organizator",
   DEV: "Tehnic",
   ADMIN: "Administrator",
-  SUPERADMIN: "Administrator principal",
+  SUPERADMIN: "Superadministrator",
 };
 
 export const EVENT_STATUS_LABEL: Record<"SCHEDULED" | "CANCELLED" | "COMPLETED", string> = {

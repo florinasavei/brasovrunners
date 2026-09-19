@@ -14,7 +14,9 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { registrationState } from "@/modules/events/domain/registration-window";
+import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
@@ -22,9 +24,14 @@ import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import PhoneField from "@/modules/registrations/ui/PhoneField";
+import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import Script from "next/script";
+import { TURNSTILE_SCRIPT_URL, turnstileSiteKey } from "@/modules/registrations/turnstile";
 import { submitRegistrationAction } from "./actions";
 import { PAGE_WIDTH } from "@/theme/brand";
+import { env } from "@/shared/config/env";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
@@ -149,15 +156,63 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     helperText: invalid.has(name) ? t("errors.field") : help,
   });
 
+  // What they are signing up for, on the form itself (§102): the date, the place, and the
+  // event's page, its rules and the two legal texts as links — the owner: "show the race date,
+  // details and TOS on the sign-up form as links". Formatted in the event's own zone.
+  const whenLabel = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone: event.timezone,
+  }).format(event.startsAt);
+  const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
+  // The third step of the wizard (§104): "confirm a week before" only while that week is ahead.
+  const window = confirmationWindow(event);
+  const stepsWindow =
+    window && window.opensAt.getTime() > now.getTime()
+      ? { opensDays: event.confirmationOpensDaysBefore, deadlineDays: event.confirmationDeadlineDaysBefore }
+      : null;
+  const factLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight, marginRight: 16 } as const;
+
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title", { event: event.title })}
       </Typography>
 
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+          {whenLabel}
+          {event.locationName ? ` · ${event.locationName}` : ""}
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+          <Link href={{ pathname: "/events/[slug]", params: { slug } }} style={factLink}>
+            {t("facts.details")}
+          </Link>
+          {hasRules && (
+            <Link href={{ pathname: "/events/[slug]", params: { slug }, hash: "rules" }} style={factLink}>
+              {t("facts.rules")}
+            </Link>
+          )}
+          <Link href="/legal/terms" style={factLink}>
+            {t("facts.terms")}
+          </Link>
+          <Link href="/legal/privacy" style={factLink}>
+            {t("facts.privacy")}
+          </Link>
+        </Box>
+      </Box>
+
       {/* Where they are in the journey, and what happens next — the same component every page
           of this flow renders, so the answer never depends on which page they are looking at. */}
       <RegistrationJourney current={submitted ? "confirm" : "details"} />
+
+      {/* The five steps and the waiting list, folded: the journey above says where they are,
+          this says the whole of it (`DECISIONS.md` §91). */}
+      {!submitted && (
+        <Box sx={{ mb: 3 }}>
+          <RegistrationSteps folded window={stepsWindow} />
+        </Box>
+      )}
 
       {submitted ? (
         <Stack spacing={2}>
@@ -351,25 +406,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 autoComplete="email"
                 slotProps={{ htmlInput: { inputMode: "email" } }}
               />
-              {/*
-                A deliberately permissive pattern: a runner from anywhere may enter, and refusing
-                a valid foreign number is a worse failure than accepting one nobody rings. It
-                exists so the browser catches a typed word before the server has to.
-              */}
-              <TextField
-                {...field("phone")}
-                type="tel"
+              {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
+              <PhoneField
+                name="phone"
+                id={fieldId("phone")}
                 label={t("phone")}
+                countryLabel={t("phoneCountry")}
+                locale={locale}
                 required
-                autoComplete="tel"
-                slotProps={{
-                  htmlInput: {
-                    inputMode: "tel",
-                    pattern: "[0-9+()./\\s-]{3,40}",
-                    minLength: 3,
-                    maxLength: 40,
-                  },
-                }}
+                autoComplete="tel-national"
+                error={invalid.has("phone")}
+                helperText={invalid.has("phone") ? t("errors.phone") : t("phoneHelp")}
               />
 
               {/*
@@ -377,7 +424,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 `autoComplete="off"` on both: this is deliberately somebody *else's* name and
                 number, and a phone offering the runner's own would be accepted by reflex.
               */}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <Stack spacing={2}>
                 <TextField
                   {...field("emergencyContactName")}
                   label={t("emergencyContactName")}
@@ -385,21 +432,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   fullWidth
                   autoComplete="off"
                 />
-                <TextField
-                  {...field("emergencyContactPhone")}
-                  type="tel"
+                <PhoneField
+                  name="emergencyContactPhone"
+                  id={fieldId("emergencyContactPhone")}
                   label={t("emergencyContactPhone")}
+                  countryLabel={t("phoneCountry")}
+                  locale={locale}
                   required
-                  fullWidth
                   autoComplete="off"
-                  slotProps={{
-                    htmlInput: {
-                      inputMode: "tel",
-                      pattern: "[0-9+()./\\s-]{3,40}",
-                      minLength: 3,
-                      maxLength: 40,
-                    },
-                  }}
+                  error={invalid.has("emergencyContactPhone")}
+                  helperText={invalid.has("emergencyContactPhone") ? t("errors.phone") : undefined}
                 />
               </Stack>
 
@@ -422,6 +464,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 a start list says the name you just gave. Opening it changes what is published
                 without changing who the declaration is signed by.
               */}
+              {env.FEATURE_DISPLAY_NAME && (
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("displayNameToggle")}
@@ -439,6 +482,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </Box>
+              )}
               <Box component="details" open sx={disclosureSx}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.race")}
@@ -476,6 +520,55 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {...field("clubName", t("optional"))}
                     label={t("clubName")}
                     autoComplete="organization"
+                  />
+                </Stack>
+              </Box>
+
+              {/* A minor's parent or guardian (§108): folded, named for the one case it is
+                  required in, and the server refuses a minor without it. */}
+              <Box component="details" sx={disclosureSx} open={invalid.has("guardianName")}>
+                <Typography component="summary" variant="body2">
+                  {t("disclosure.guardian")}
+                </Typography>
+                <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("guardianHelp")}
+                  </Typography>
+                  <TextField
+                    {...field("guardianName", t("guardianNameHelp"))}
+                    label={t("guardianName")}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: 200 } }}
+                  />
+                </Stack>
+              </Box>
+
+              {/* Socials, optional and folded (§106): the club follows back and tags; never
+                  published by the platform. Closed by default — it is the one section a
+                  person can skip without the form being any less complete. */}
+              <Box component="details" sx={disclosureSx}>
+                <Typography component="summary" variant="body2">
+                  {t("disclosure.socials")}
+                </Typography>
+                <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("socialsHelp")}
+                  </Typography>
+                  <TextField
+                    {...field("stravaUrl", t("stravaUrlHelp"))}
+                    label={t("stravaUrl")}
+                    placeholder="https://www.strava.com/athletes/12345"
+                    type="url"
+                    inputMode="url"
+                    autoComplete="url"
+                    slotProps={{ htmlInput: { maxLength: 200 } }}
+                  />
+                  <TextField
+                    {...field("instagramHandle", t("instagramHandleHelp"))}
+                    label={t("instagramHandle")}
+                    placeholder="@numele.tau"
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: 40 } }}
                   />
                 </Stack>
               </Box>
@@ -528,14 +621,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
-                BR-REQ-039-01. Asked on every form, including for an event that publishes no
-                start list today: an organizer can switch one on months later, and a question
-                nobody put to this person cannot be answered on their behalf afterwards. The
-                label says "if the club publishes one" for exactly that reason.
+                BR-REQ-039-01, `DECISIONS.md` §85. Asked only when this event publishes a
+                start list: three boxes in two directions confused everybody ("people accept
+                all"), and a question about a list that does not exist is noise. Switching the
+                list on later means asking the people already registered — the notice, not a
+                pre-answered box.
               */}
-              <CheckboxField name="listOptOut">
-                {`${t("listOptOut")} — ${t("optionalSuffix")}`}
-              </CheckboxField>
+              {event.participantListVisibility === "NAMES" && (
+                <CheckboxField name="listOptOut">
+                  {`${t("listOptOut")} — ${t("optionalSuffix")}`}
+                </CheckboxField>
+              )}
 
               {/*
                 Pressable, always, and deliberately — and, since 2026-09-17, honest about it.
@@ -550,6 +646,31 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 while any required field is empty, and a press still runs the browser's check.
                 One client island, shared with every other form here.
               */}
+              {/* The language of the emails and the declaration (§97): the page's, unless said otherwise. */}
+              <TextField
+                name="preferredLocale"
+                label={t("preferredLocale")}
+                helperText={t("preferredLocaleHelp")}
+                select
+                fullWidth
+                defaultValue={locale}
+              >
+                <MenuItem value="ro">{t("preferredLocaleOptions.ro")}</MenuItem>
+                <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>
+              </TextField>
+
+              {/* Cloudflare Turnstile, when the club switched it on (§97). */}
+              {turnstileSiteKey() && (
+                <Box id={fieldId("captcha")}>
+                  <div className="cf-turnstile" data-sitekey={turnstileSiteKey()} data-language={locale} />
+                  {invalid.has("captcha") && (
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                      {t("errors.captcha")}
+                    </Typography>
+                  )}
+                  <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
+                </Box>
+              )}
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}
