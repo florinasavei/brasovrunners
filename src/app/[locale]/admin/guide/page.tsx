@@ -6,13 +6,16 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
+import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export const dynamic = "force-dynamic";
 
-type GuideSection = { title: string; who: string; steps: string[] };
+/** `roles`: whose section this is; the signed-in role's come first and open (§103). */
+type GuideSection = { title: string; who: string; steps: string[]; roles: StaffRole[] };
 
 /**
  * The platform, explained to the people who use it (BR-REQ-060-01 criterion 6): the volunteer
@@ -25,10 +28,15 @@ export default async function GuidePage({ params }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  await requireStaff();
+  const staffUser = await requireStaff();
 
   const t = await getTranslations("Admin");
-  const sections = t.raw("guide.sections") as GuideSection[];
+  const all = t.raw("guide.sections") as GuideSection[];
+  // The reader's own section first — the owner: "a how-to page depending on each role" — then
+  // the colleagues' in the catalogue's order, folded. A stable partition, not a sort.
+  const mine = all.filter((section) => section.roles.includes(staffUser.role));
+  const others = all.filter((section) => !section.roles.includes(staffUser.role));
+  const sections = [...mine, ...others];
 
   return (
     <Stack spacing={3}>
@@ -36,6 +44,9 @@ export default async function GuidePage({ params }: Props) {
         {t("guide.title")}
       </Typography>
       <Typography color="text.secondary">{t("guide.intro")}</Typography>
+      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        {t("guide.yours", { role: STAFF_ROLE_LABEL[staffUser.role] })}
+      </Typography>
       {/* What participants receive, message by message (§91). */}
       <Typography variant="body2">
         <Link href="/admin/emails">{t("emails.link")}</Link>
@@ -44,7 +55,7 @@ export default async function GuidePage({ params }: Props) {
         <Box
           key={index}
           component="details"
-          open={index === 0}
+          open={index < Math.max(1, mine.length)}
           sx={{
             border: 1,
             borderColor: "divider",

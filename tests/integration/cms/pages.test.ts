@@ -28,7 +28,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  */
 const NOW = new Date("2026-09-07T10:00:00.000Z");
 
-async function seedStaff(db: TestDatabase, role: "MODERATOR" | "CONTRIBUTOR" | "ADMIN") {
+async function seedStaff(db: TestDatabase, role: "MODERATOR" | "CONTRIBUTOR" | "COPYWRITER" | "ADMIN") {
   const [row] = await db
     .insert(staffUsers)
     .values({
@@ -122,11 +122,14 @@ describe("BR-REQ-050-03 standing pages", () => {
     expect(await findPublishedPageBySlug(db, "ro", "despre-noi")).toBeUndefined();
   });
 
-  it("refuses a Contributor, who has drafts and nothing else", async () => {
-    const contributor = await seedStaff(db, "CONTRIBUTOR");
-    expect(await codeOf(createPage(db, { actor: contributor, fields: fields(), now: NOW }))).toBe(
+  it("refuses a volunteer, who has the desk and nothing else; a copywriter starts a page (§103)", async () => {
+    const volunteer = await seedStaff(db, "CONTRIBUTOR");
+    expect(await codeOf(createPage(db, { actor: volunteer, fields: fields(), now: NOW }))).toBe(
       "FORBIDDEN",
     );
+    const copywriter = await seedStaff(db, "COPYWRITER");
+    const page = await createPage(db, { actor: copywriter, fields: fields(), now: NOW });
+    expect(page.editorialStatus).toBe("DRAFT");
   });
 
   it("refuses a second page claiming an address already in use, naming the field", async () => {

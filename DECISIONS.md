@@ -5098,3 +5098,48 @@ it approves them; a club that already approved would take it as the next version
 `legal-documents/templates/terms.ts` §7 in both languages. BR-REQ-031-01 criterion 5.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 103. Decided — six roles the club can name: the volunteer has the desk, the copywriter has the words (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "I need the copywriter role — someone who can edit texts —
+because people will argue about who edits what; this needs to be simple and self-explanatory;
+and volunteers who scan codes and handle registrations can do just that." And, minutes later:
+"in the backoffice I need a how-to page depending on each role." Five roles existed (§10.2):
+the lowest, `CONTRIBUTOR`, drafted its own texts and submitted them, and also worked the desk
+(§67) and saw the events list; a volunteer handed a phone on race day was offered pages they
+had no business in, and nobody's job was "the words".
+
+**Decision.** Six roles, one new value in the `staff_role` enum (`COPYWRITER`, migration
+`0038`, expand-only, placed before `MODERATOR`), and a new meaning for the lowest:
+
+- **Voluntar** (`CONTRIBUTOR`) — the desk and the guide, nothing else. `/admin` takes them to
+  the desk; the tabs offer two sections; every text is refused. The enum value keeps its name
+  because Postgres does not rename enum values and nothing is gained by a second migration.
+- **Redactor** (`COPYWRITER`) — `canEditTexts`: the text of any event and any page, theirs or
+  a colleague's, at any status — a live edit with the same acknowledgement an organizer gives
+  — page drafts, and submitting any draft for review. Not the event row, not publication, not
+  the gallery, not deleting or reordering pages, nothing about registrations.
+- **Organizator** (`MODERATOR`), **Tehnic**, **Administrator**, **Superadministrator** as
+  before; the labels change so the staff form reads as a job description. The form's role
+  select says what each role is for in one line, and its default is a role that exists (it
+  said `AUTHOR`, a value from before `0016`, so nothing was selected).
+- `/admin/guide` carries a copywriter's section and puts the reader's own sections first and
+  open, the colleagues' after and folded (`roles` on every section in the catalogue).
+
+The own-draft rule of BR-REQ-051-01 criterion 1 goes: "whose draft is it" was a rule for a
+role that no longer writes, and a copywriter correcting a colleague's typo is the point.
+`canEditTranslation` and `canTransition` keep their signatures — the callers compute the
+author and the status, and a future rule may read them again.
+
+*Rejected:* a seventh role for "publishes but does not configure" (the organizer does both and
+the club is small); scoping the copywriter to drafts only (the commonest text edit is a live
+typo); renaming the enum value (a migration with a lock on `staff_users` for a label).
+
+**Consequences.** `roles.ts` (`canEditTexts`, `canCreatePage`, the rank, the sections),
+`staff-labels.ts`, the dev switcher's `Dev Copywriter`, `pages/service.ts`, the pages
+routes, the events list's redirect, the staff form, the guide, the catalogues; `AGENTS.md`
+§10.2, `BUSINESS.md`'s role table, `SETUP.md` §34; BR-REQ-051-01 criteria 1 and 3,
+BR-REQ-050-03 criterion 9, BR-REQ-060-01 criterion 8; `tests/unit/staff/roles.test.ts`,
+`tests/integration/cms/{workflow,one-save,pages}.test.ts`, `tests/e2e/cms-publish.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -150,7 +150,7 @@ the whole registration block including capacity, the window and the approved dec
 participant signs — previews it, publishes it, archives it when it is over, and deletes one made
 by mistake. `src/db/seeds/pilot.ts` is no longer how an event is configured (`DECISIONS.md` §28).
 Deleting is Administrator-only and is refused for an event with any registration against it;
-archiving is the answer there. Three staff roles asserted on the server, staff administration for
+archiving is the answer there. Six staff roles asserted on the server (volunteer, copywriter, organizer, dev, administrator, superadministrator — `DECISIONS.md` §103), staff administration for
 an Administrator, DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED **for the event** — both languages go
 live together, and PUBLISHED is refused while either is incomplete — and a save that carries the
 version it was loaded with, on the translation *and* on the event row, so a second organizer's

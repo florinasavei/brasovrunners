@@ -527,7 +527,16 @@
       "tableCaption": "Conturile care pot intra în administrare, cu rolul fiecăruia",
       "empty": "Nu există niciun cont în echipă.",
       "changeRolePending": "Se salvează…",
-      "revokePending": "Se retrage…"
+      "revokePending": "Se retrage…",
+      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar masa de ridicare.",
+      "roles": {
+        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
+        "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
+        "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
+        "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
+        "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
+        "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
+      }
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -1074,7 +1083,7 @@
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
         "Înainte de cursă (organizator): pe pagina evenimentului, la „Numere de concurs”, apasă „Alocă numerele”, apoi „Descarcă foaia (PDF)” și tipărește-o. Tipărește și declarația aprobată (Documente legale → PDF), câteva exemplare, pentru cine o semnează pe loc.",
-        "Voluntarii: invită-i din „Echipa”, cu rolul Colaborator. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Voluntarii: invită-i din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide pagina persoanei. Sau caută după nume ori după numărul de concurs.",
         "Apasă „Prezent” și dă-i numărul din foaie. Nu are număr? Scrie-l în căsuță și apasă „Salvează”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă apare „în așteptare”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă aici”, apoi „Prezent”.",
@@ -1198,7 +1207,7 @@
       "sections": [
         {
           "title": "Voluntar la masa de ridicare a numerelor",
-          "who": "Rol: Colaborator (sau orice rol). Pe telefon.",
+          "who": "Rol: Voluntar (sau orice rol). Pe telefon.",
           "steps": [
             "Intră pe site și apasă „Intră în cont” (jos sau la /admin). Te autentifici cu contul primit de la organizator.",
             "Apasă „Ziua cursei” în bara de sus. Alege evenimentul de azi din listă.",
@@ -1210,6 +1219,9 @@
             "Nu s-a înscris deloc: apasă „Adaugă pe cineva”, completezi numele și emailul, „Adaugă înscrierea”. Semnează declarația pe hârtie, apoi „Prezent”. Dacă evenimentul e plin, intră pe lista de așteptare — „Dă-i un loc” merge doar dacă cineva s-a retras.",
             "Ai apăsat greșit: „Anulează prezența”. Tot ce apeși rămâne în istoric, cu numele tău — nu se pierde nimic.",
             "Ce nu poți face de aici (și e în regulă): anula sau șterge înscrieri, vedea adrese de email, exporta liste. Pentru astea, cheamă un administrator."
+          ],
+          "roles": [
+            "CONTRIBUTOR"
           ]
         },
         {
@@ -1221,11 +1233,33 @@
             "Din același email are un link „Gestionează înscrierea”: de acolo se poate retrage, își vede codul și, din ziua dinaintea startului, poate apăsa „Am ajuns”.",
             "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are 30 de minute să semneze declarația.",
             "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc."
+          ],
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "title": "Redactor — textele evenimentelor și paginile",
+          "who": "Rol: Redactor. Scrii; nu setezi și nu publici.",
+          "roles": [
+            "COPYWRITER"
+          ],
+          "steps": [
+            "„Evenimente” → alege evenimentul → tab-ul Română și tab-ul English: titlul, descrierea scurtă, descrierea, regulamentul, programul și câmpurile SEO. O singură salvare scrie ambele limbi.",
+            "Un eveniment publicat: ce salvezi apare imediat pe site — bifează „Știu că modific o pagină publicată”. Adresa paginii nu se mai schimbă după publicare.",
+            "„Pagini”: paginile fixe ale site-ului. Creezi o ciornă, scrii în editor (titluri, liste, linkuri, imagini), o trimiți spre verificare; un Organizator o publică.",
+            "Nu ai și nu îți trebuie: setările evenimentului (data, locurile, înscrierile), publicarea, galeria, înscrierile. Dacă un text depinde de o setare greșită, spune Organizatorului.",
+            "Ambele limbi contează: un eveniment nu poate fi publicat fără text complet în română și în engleză, iar pagina în engleză rămâne cu textul vechi până o corectezi și pe ea."
           ]
         },
         {
           "title": "Organizator — evenimente și numere",
-          "who": "Rol: Moderator sau mai sus.",
+          "who": "Rol: Organizator sau mai sus.",
           "steps": [
             "„Evenimente” → „Eveniment nou” (sau „Duplică” pe ediția trecută / „Repetă” pentru serii săptămânale). Completezi setările — tip, dată, loc, distanță, traseu, link video — și textele în română și engleză.",
             "Înscrieri: în Setări alege „Înscriere locală”, pune capacitatea și perioada de înscriere, alege declarația aprobată.",
@@ -1233,6 +1267,10 @@
             "Numere de concurs (Administrator): pe pagina evenimentului, „Alocă numerele” dă numere în ordinea confirmării; „Descarcă foaia (PDF)” — două numere pe A4, cu logo. Tipărește și declarația (Documente legale → PDF) pentru semnături pe loc.",
             "În ziua cursei: „Masa de ridicare a numerelor” de pe pagina evenimentului sau „Ziua cursei” din bară. Cifrele „Confirmați / Prezenți” sunt cifrele cursei.",
             "După: „Arhivează” evenimentul. Pozele merg în „Galerie” (album nou, încarci pozele din telefon, le publici)."
+          ],
+          "roles": [
+            "MODERATOR",
+            "DEV"
           ]
         },
         {
@@ -1242,10 +1280,14 @@
             "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
             "„Echipa” (Superadministrator): adaugi oameni după email și rol. Persoana trebuie să existe și în Zitadel (consola de autentificare) ca să se poată loga.",
-            "Cont pentru voluntari: în Zitadel creezi utilizatorul (email + parolă), apoi în „Echipa” îl adaugi cu rolul Colaborator. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
+            "Cont pentru voluntari: în Zitadel creezi utilizatorul (email + parolă), apoi în „Echipa” îl adaugi cu rolul Voluntar. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
             "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc."
+          ],
+          "roles": [
+            "ADMIN",
+            "SUPERADMIN"
           ]
         },
         {
@@ -1260,9 +1302,14 @@
             "Cât se păstrează: înscrierile și declarațiile 3 ani de la eveniment (termenul general de prescripție), apoi se șterg automat; la cerere, mai devreme, din „Ștergere” pe pagina înscrierii. Emailurile trimise 90 de zile, linkurile consumate 30 de zile. Exact așa scrie și în nota de confidențialitate.",
             "Nota de confidențialitate și termenii: pornește tot de la textul platformei — sunt complete (GDPR art. 13, Legea 190/2018, procesatorii, perioadele, drepturile, ANSPDCP); completezi doar denumirea juridică, sediul, CUI-ul și emailul de contact, citești, salvezi ciorna și aprobi. Fără text aprobat nu se poate face nicio înscriere.",
             "Numele afișat public (porecla) este oprit implicit (FEATURE_DISPLAY_NAME): pe listă și în export apar numele reale, iar kitul se ridică pe bază de act de identitate."
+          ],
+          "roles": [
+            "ADMIN",
+            "SUPERADMIN"
           ]
         }
-      ]
+      ],
+      "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor."
     }
   },
   "NotFound": {
@@ -1578,10 +1625,11 @@
     "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
     "youAre": "rolul tău",
     "roleSummary": {
-      "CONTRIBUTOR": "propune texte și le trimite spre aprobare",
-      "MODERATOR": "editează orice eveniment și aprobă",
+      "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
+      "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
+      "MODERATOR": "creează și setează evenimente, publică, galeria",
       "DEV": "plus pagina de configurare. Fără date despre participanți",
-      "ADMIN": "plus înscrieri, participanți, export, ștergerea unui eveniment",
+      "ADMIN": "plus înscrieri, participanți, export, texte legale, ștergerea unui eveniment",
       "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
     },
     "settings": "Setări",

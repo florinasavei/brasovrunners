@@ -87,40 +87,45 @@ test.describe("BR-REQ-060-01 the backoffice refuses an anonymous request", () =>
   });
 });
 
-test.describe("BR-REQ-051-01 an Author may not publish", () => {
-  test("shows an Author no publish control on published content", async ({ page }) => {
-    await signIn(page, "Dev Contributor");
+test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a volunteer has the desk (§103)", () => {
+  test("shows a copywriter the text and no publish control, and says the settings are not theirs", async ({ page }) => {
+    await signIn(page, "Dev Copywriter");
     await page.goto("/ro/admin");
 
     const event = EVENT_BY_PROJECT[test.info().project.name];
     await page.getByRole("link", { name: event.title }).first().click();
     await expect(page).toHaveURL(/\/admin\/events\//);
 
-    // Publication is the event's, so the control an Author must not see is the event's too.
+    // Publication is the event's, so the control a copywriter must not see is the event's too.
     await expect(page.getByRole("button", { name: "Publică" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Mută în ciornă" })).toHaveCount(0);
 
-    // And the reason the text is read-only is stated rather than the form simply being absent.
+    // The words are theirs: the Romanian title is a field, not a sentence about permissions.
     const romanian = page.getByRole("tabpanel", { name: /Română/ });
-    await expect(romanian.getByText(/Nu poți edita acest text/)).toBeVisible();
+    await expect(romanian.getByRole("textbox", { name: "Titlu", exact: true })).toBeVisible();
+    await expect(romanian.getByText(/Nu poți edita acest text/)).toHaveCount(0);
 
-    // An Author owns no settings either, and the panel says so rather than being missing.
+    // A copywriter owns no settings, and the panel says so rather than being missing.
     await expect(page.getByText(/Doar un editor sau un administrator/)).toBeVisible();
   });
 
-  test("refuses an Author the staff page", async ({ page }) => {
+  test("takes a volunteer to the desk and offers only the desk and the guide", async ({ page }) => {
     await signIn(page, "Dev Contributor");
-    // 404, the same answer a route that does not exist gives: an Author is not told that the
-    // staff list is there and refused.
-    const response = await page.goto("/ro/admin/staff");
-    expect(response?.status()).toBe(404);
+    await expect(page).toHaveURL(/\/ro\/admin\/checkin$/);
+    await expect(page.getByRole("tab", { name: "Ziua cursei" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Evenimente" })).toHaveCount(0);
   });
 
-  test("refuses an Author the new-event form", async ({ page }) => {
-    await signIn(page, "Dev Contributor");
-    const response = await page.goto("/ro/admin/events/new");
-    expect(response?.status()).toBe(404);
-  });
+  test.describe.configure({ mode: "parallel" });
+  for (const identity of ["Dev Copywriter", "Dev Contributor"] as const) {
+    test(`refuses ${identity} the staff page and the new-event form`, async ({ page }) => {
+      await signIn(page, identity);
+      // 404, the same answer a route that does not exist gives: nobody is told the page is
+      // there and refused (BR-REQ-060-01).
+      expect((await page.goto("/ro/admin/staff"))?.status()).toBe(404);
+      expect((await page.goto("/ro/admin/events/new"))?.status()).toBe(404);
+    });
+  }
 });
 
 test.describe("BR-REQ-050-02 an Editor creates an event without a developer", () => {

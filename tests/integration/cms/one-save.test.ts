@@ -74,7 +74,7 @@ beforeEach(async () => {
     .returning();
   [author] = await db
     .insert(staffUsers)
-    .values({ email: "contributor@dev.test", displayName: "Author", role: "CONTRIBUTOR" })
+    .values({ email: "copywriter@dev.test", displayName: "Author", role: "COPYWRITER" })
     .returning();
 });
 

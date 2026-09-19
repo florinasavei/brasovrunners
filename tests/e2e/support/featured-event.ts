@@ -36,7 +36,8 @@ export const HUMAN_PAUSE_MS = 3_500;
 export async function signIn(page: Page, identity: string) {
   await page.goto("/ro/autentificare");
   await page.getByRole("button", { name: new RegExp(identity) }).click();
-  await expect(page).toHaveURL(/\/ro\/admin$/, { timeout: 30_000 });
+  // A volunteer lands on the desk (`DECISIONS.md` §103); everyone else on the events list.
+  await expect(page).toHaveURL(/\/ro\/admin(\/checkin)?$/, { timeout: 30_000 });
   await hydrated(page);
 }
 

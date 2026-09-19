@@ -1052,15 +1052,23 @@ Rules:
 
 ### 10.2 Staff roles
 
-Five roles, ordered, each a superset of the one before it:
+Six roles, ordered, each a superset of the one before it (`DECISIONS.md` §103; the club
+sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator —
+`staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  own drafts; submit them for approval
-MODERATOR    edit any event; approve, publish, unpublish, archive
+CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
+COPYWRITER   the words of any event and any page, at any status; submit a draft for review
+MODERATOR    the organizer: create and configure events; approve, publish, unpublish, archive; the gallery
 DEV          + the configuration report (/devs). No participant data
-ADMIN        + registrations, participants, exports, test registrations, delete an event
+ADMIN        + registrations, participants, exports, legal texts, emails, tasks, delete an event
 SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
+
+`canEditTexts` (≥ COPYWRITER) is the line between writing and configuring; `isEditorial`
+(≥ MODERATOR) the line between writing and deciding. Until §103 the lowest role drafted its
+own texts and submitted them; the club asked for a role whose whole job is the words and for
+volunteers who "can do just that" — the desk.
 
 `modules/staff-identity/domain/roles.ts` is the single place this order is written. Every
 capability is `atLeast(role, MINIMUM)` rather than a list of roles, which is what makes the

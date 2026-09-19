@@ -527,7 +527,16 @@
       "tableCaption": "The accounts that may sign in to the backoffice, with each one's role",
       "empty": "There is no staff account yet.",
       "changeRolePending": "Saving…",
-      "revokePending": "Removing…"
+      "revokePending": "Removing…",
+      "roleHelp": "Each role can do what the one below it can, plus what it says here. Volunteers see the desk only.",
+      "roles": {
+        "CONTRIBUTOR": "the desk: scans codes, marks people present, confirms on paper, gives a free place, types a number. That is all.",
+        "COPYWRITER": "the words: descriptions, rules, programmes and the site's pages, in both languages. No settings, no publishing.",
+        "MODERATOR": "the events: creates, configures (dates, places, registration), publishes, the gallery.",
+        "DEV": "plus the technical page /devs. No participant data.",
+        "ADMIN": "plus registrations, the export, the legal texts, the emails, the tasks.",
+        "SUPERADMIN": "plus the team: who has access and with which role."
+      }
     },
     "queue": {
       "title": "The registration queue",
@@ -1074,7 +1083,7 @@
       "howTitle": "How race day works, step by step",
       "how": [
         "Before the race (organizer): on the event page, under “Race numbers”, press “Assign numbers”, then “Download the sheet (PDF)” and print it. Print the approved declaration too (Legal documents → PDF), a few copies, for anyone who signs on the spot.",
-        "Volunteers: invite them from “Staff” with the Contributor role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
+        "Volunteers: invite them from “Staff” with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number. No email addresses, and nobody can be cancelled from here.",
         "Every confirmed participant got a QR code by email. At the desk: press “Scan” (on Android) or open the phone's camera and point it at the code — the person's page opens. Or search by name or by race number.",
         "Press “Here” and hand over the number from the sheet. No number? Type it in the box and press “Save”.",
         "No email arrived, or they cannot find the QR: search by name. If it says “pending”, give them the paper declaration to sign, press “Confirm here”, then “Here”.",
@@ -1198,7 +1207,7 @@
       "sections": [
         {
           "title": "Volunteer at the number pickup desk",
-          "who": "Role: Contributor (or any role). On a phone.",
+          "who": "Role: Volunteer (or any role). On a phone.",
           "steps": [
             "Open the site and press “Sign in” (at the bottom, or at /admin). Use the account the organizer gave you.",
             "Press “Race day” in the top bar. Pick today's event from the list.",
@@ -1210,6 +1219,9 @@
             "Never registered: press “Add somebody”, fill in name and email, “Add registration”. They sign the paper declaration, then “Here”. If the event is full they join the waiting list — “Give a place” only works once somebody withdrew.",
             "Pressed the wrong thing: “Undo”. Everything you press stays in the history with your name — nothing is lost.",
             "What you cannot do from here (and that is fine): cancel or erase registrations, see email addresses, export lists. For those, call an administrator."
+          ],
+          "roles": [
+            "CONTRIBUTOR"
           ]
         },
         {
@@ -1221,11 +1233,33 @@
             "The same email has a “Manage your registration” link: from there they can withdraw, see their code and, from the day before the start, press “I have arrived”.",
             "Event full: they join the waiting list and get an email when a place frees up, with 30 minutes to sign the declaration.",
             "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot."
+          ],
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "title": "Copywriter — the events' texts and the pages",
+          "who": "Role: Copywriter. You write; you do not configure or publish.",
+          "roles": [
+            "COPYWRITER"
+          ],
+          "steps": [
+            "“Events” → pick the event → the Romanian tab and the English tab: the title, the short description, the description, the rules, the programme and the SEO fields. One save writes both languages.",
+            "A published event: what you save is on the site at once — tick “I know I am changing a published page”. The page's address does not change after publication.",
+            "“Pages”: the site's standing pages. Create a draft, write in the editor (headings, lists, links, pictures), submit it for review; an Organizer publishes it.",
+            "Not yours, and not needed: the event's settings (date, places, registration), publishing, the gallery, the registrations. If a text depends on a wrong setting, tell the Organizer.",
+            "Both languages count: an event cannot be published without complete text in Romanian and in English, and the English page keeps its old text until you correct that too."
           ]
         },
         {
           "title": "Organizer — events and numbers",
-          "who": "Role: Moderator or above.",
+          "who": "Role: Organizer or above.",
           "steps": [
             "“Events” → “New event” (or “Duplicate” last year's / “Repeat” for weekly series). Fill in the settings — type, date, place, distance, route, video link — and the texts in Romanian and English.",
             "Registrations: in Settings choose “Local registration”, set the capacity and the window, pick the approved declaration.",
@@ -1233,6 +1267,10 @@
             "Race numbers (Administrator): on the event page, “Assign numbers” gives numbers in confirmation order; “Download the sheet (PDF)” — two per A4, with the logo. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
             "On race day: “Number pickup desk” from the event page, or “Race day” in the bar. The “Confirmed / Here” figures are the race's figures.",
             "Afterwards: “Archive” the event. Photos go in “Gallery” (new album, upload from the phone, publish)."
+          ],
+          "roles": [
+            "MODERATOR",
+            "DEV"
           ]
         },
         {
@@ -1242,10 +1280,14 @@
             "“Registrations”: the full list, filters, name search, CSV export, each registration's page with its history. From there: correct a name, cancel (the place is released), erase on request, resend the email.",
             "“Legal documents”: privacy notice, terms, declaration. New version → save the draft → PDF to review → “Approve”. An approved text never changes; a correction is the next version.",
             "“Staff” (Superadministrator): add people by email and role. The person must also exist in Zitadel (the sign-in console) to be able to log in.",
-            "Volunteer accounts: create the user in Zitadel (email + password), then add them in “Staff” with the Contributor role. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
+            "Volunteer accounts: create the user in Zitadel (email + password), then add them in “Staff” with the Volunteer role. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
             "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
             "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back."
+          ],
+          "roles": [
+            "ADMIN",
+            "SUPERADMIN"
           ]
         },
         {
@@ -1260,9 +1302,14 @@
             "How long they are kept: registrations and declarations 3 years from the event (the general limitation period), then deleted automatically; earlier on request, with “Erase” on the registration page. Sent emails 90 days, spent links 30 days. The privacy notice says exactly this.",
             "The privacy notice and the terms: start from the platform's text too — they are complete (GDPR art. 13, Law 190/2018, the processors, the periods, the rights, the ANSPDCP); you only fill in the legal name, the registered address, the registration number and the contact email, read, save the draft and approve. Without approved texts nobody can register.",
             "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document."
+          ],
+          "roles": [
+            "ADMIN",
+            "SUPERADMIN"
           ]
         }
-      ]
+      ],
+      "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'."
     }
   },
   "NotFound": {
@@ -1578,11 +1625,12 @@
     "rolesIntro": "Each role can do everything the one below it can, plus one thing more. The line that matters is between Technical and Admin: from there up, participant data is visible.",
     "youAre": "your role",
     "roleSummary": {
-      "CONTRIBUTOR": "proposes text and submits it for approval",
-      "MODERATOR": "edits any event and approves",
+      "CONTRIBUTOR": "the race-number desk, and nothing else",
+      "COPYWRITER": "the words of any event and of the pages; submits for approval",
+      "MODERATOR": "creates and configures events, publishes, the gallery",
       "DEV": "plus the configuration page. No participant data",
-      "ADMIN": "plus registrations, participants, exports, deleting an event",
-      "SUPERADMIN": "plus staff administration: who has access and what they may do"
+      "ADMIN": "plus registrations, participants, export, legal texts, deleting an event",
+      "SUPERADMIN": "plus team administration: who has access and what they can do"
     },
     "settings": "Settings",
     "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",

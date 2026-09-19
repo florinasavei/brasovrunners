@@ -646,8 +646,9 @@ list of roles, so adding a role later cannot silently take one away.
 
 | Staff role | Adds, on top of the role below |
 | --- | --- |
-| Contributor | Writes and translates drafts, and submits their own for approval. Proposes; does not decide |
-| Moderator | Edits any event and approves — publishing, unpublishing, archiving. The club's editorial hands |
+| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number. Nothing else (`DECISIONS.md` §103) |
+| Copywriter (`COPYWRITER`) | The words of every event and page, in both languages, at any status; submits drafts for approval. No settings, no publishing |
+| Organizer (`MODERATOR`) | Creates and configures events, approves — publishing, unpublishing, archiving — and the gallery. The club's editorial hands |
 | Technical (dev) | The configuration report at `/devs`. **No participant data** |
 | Admin | Registrations, participants, waiting lists, exports, test registrations, and deleting an event |
 | Superadmin | The staff list itself: who is here and what they may do |

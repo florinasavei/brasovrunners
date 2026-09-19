@@ -1725,7 +1725,9 @@ the project id from the project's **Settings → General → Project ID** (`prj_
 
 ## 34. Volunteer accounts for race day
 
-Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Contributor**.
+Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Voluntar**
+(`CONTRIBUTOR` in the database; since `DECISIONS.md` §103 that role is the desk and nothing
+else, and `/admin` takes them straight to it).
 Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
 
 1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk

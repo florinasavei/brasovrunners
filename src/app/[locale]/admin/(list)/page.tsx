@@ -7,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -21,6 +21,7 @@ import {
 import {
   canCreateEvent,
   canDeleteEvent,
+  canEditTexts,
   canManageRegistrations,
 } from "@/modules/staff-identity/domain/roles";
 import {
@@ -87,6 +88,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
+  // A volunteer's backoffice is the desk (§103): `/admin` takes them there rather than to a list
+  // of events they may neither write nor configure. The tabs offer them the same two sections.
+  if (!canEditTexts(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
   const current = await searchParams;
   const { error, saved, archived, failed, created, published } = current;
 
