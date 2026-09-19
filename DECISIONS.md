@@ -5859,3 +5859,31 @@ latest 22; `engines.node` stays `22.x`. Nothing in the repository depends on a p
 **Consequences.** `.nvmrc`, `README.md`, `docs/DEVELOPMENT.md`, `CLAUDE.md`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 126. Decided — fewer messages: the signed declaration rides on the confirmation, and no reminder to somebody confirmed yesterday (2026-09-19)
+
+**Context.** The owner: "we need to minimize the number of emails sent by the platform." A
+completed registration sent five — verify, sign, confirmed, the signed declaration, the
+reminder — and §96 had kept it at five on purpose. Two of them said what another already said.
+
+**Decision.** The signed declaration's PDF is attached to the confirmation — the one message
+a runner keeps, which already linked the PDF — and `DECLARATION_SIGNED` is no longer queued
+(the type stays, for a resend from the registration's page and for rows already queued). The
+reminder 48 hours before is not sent to a registration confirmed within the last 24 hours:
+that confirmation carries the same date, place, QR and number, and a copy an hour later is the
+mail people learn to ignore. Four messages on the common path; three when the runner
+registers on the eve. The club's archive copy (§99) is unchanged: it is the club's, and
+opt-in.
+
+*Rejected:* dropping the reminder altogether (a runner who registered a month ago wants it);
+folding the verification into the sign-in link (the address is proven before anything is
+held, §12.8); a "no more emails" switch per participant (unsubscribing from the mail that
+carries your race number is not a favour).
+
+**Consequences.** `registrations/service.ts#enqueueDeclarationCopies`,
+`notifications/render.ts` (the attachment on `REGISTRATION_CONFIRMED`),
+`notifications/event-mail.ts#queueEventReminders`; `tests/integration/registrations/
+signed-declaration.test.ts`, `declaration-archive.test.ts`, `notifications/event-mail.test.ts`.
+BR-REQ-036-02 criterion 9, BR-REQ-080-01 criteria 5 and 8.
+
+Baseline `BR-V1.38-2026-09-18`.

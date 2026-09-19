@@ -109,8 +109,8 @@ describe("the club's archive copy (§99)", () => {
     const archive = queued.find((r) => r.messageType === "DECLARATION_ARCHIVE");
     expect(archive).toBeDefined();
     expect(archive!.recipientEmail).toBe(ARCHIVE);
-    // The participant's own copy still goes, to the participant.
-    expect(queued.find((r) => r.messageType === "DECLARATION_SIGNED")?.recipientEmail).toBe("ana@example.ro");
+    // The participant's own copy rides on their confirmation (§126), to the participant.
+    expect(queued.find((r) => r.messageType === "REGISTRATION_CONFIRMED")?.recipientEmail).toBe("ana@example.ro");
 
     const message = await renderOutboxMessage({ ...archive!, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(message.to).toBe(ARCHIVE);
@@ -137,7 +137,7 @@ describe("the club's archive copy (§99)", () => {
     await signDeclaration(db, event, row.id, { ...(await signingInput(db, NOW, "Runner Test")), idDocument: "BV 000000" }, NOW);
 
     const types = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, row.id))).map((r) => r.messageType);
-    expect(types).toContain("DECLARATION_SIGNED");
+    expect(types).toContain("REGISTRATION_CONFIRMED");
     expect(types).not.toContain("DECLARATION_ARCHIVE");
   });
 

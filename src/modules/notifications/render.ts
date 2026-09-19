@@ -176,9 +176,13 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
 
   // The signed declaration itself, rendered now from the rows and never stored as a file
-  // (§95): a copy the participant keeps, in the language they signed in.
+  // (§95): a copy the participant keeps, in the language they signed in — on the confirmation
+  // since §126, on the club's archive copy, and on the older message type for a resend.
   let attachments: OutgoingEmail["attachments"];
-  if ((row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") && registration) {
+  if (
+    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") &&
+    registration
+  ) {
     const signed = await findSignedDeclaration(db, registration.id);
     if (signed) {
       const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, declarationWords(signed.locale, now), now);
