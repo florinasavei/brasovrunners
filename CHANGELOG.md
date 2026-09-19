@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **"Resend the invitation" is on every row that never signed in**, key or no key: without the key the answer says which key and where (To do → "Invite the team"), instead of a button that is not there. §123.
 - **Tick the dates a save reaches.** In the editor of a series, every date's chip is a tick, its arrow opens it, "Toate" ticks them all; the folded box above Save says the choice in words and its three presets — this date, this and the following, all — set the ticks (the old radios could all be on at once). §134.
 - **The type filter is small and only offers what is there.** One small chip per kind that has an event on the page, none when there is one kind; the link under each is still 44 pixels tall. §133.
 
