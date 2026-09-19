@@ -5473,3 +5473,35 @@ cannot be a link itself — the title is the link).
 BR-REQ-020-01 criterion 9, BR-REQ-050-02 criterion 11.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 114. Decided — the bulk verbs in a bar above the list: all, N ticked, publish, archive, delete — and the ticks that never posted (2026-09-19)
+
+**Context.** The owner, at the events list: "these batches are strange … I should be able to
+batch delete all!" The bulk verbs were a fold *below* the table, out of sight of the ticks
+they acted on; there was no way to tick everything and no delete. And they were stranger than
+they looked: the row checkbox carried `form={BULK_FORM}` as a prop of MUI's `Checkbox`, which
+puts unknown props on its wrapping span, never on the `<input>` — so no tick belonged to the
+form, every bulk publish and archive posted nothing and answered "you did not tick any". Found
+by the e2e test written for the new bar, whose counter stayed at zero.
+
+**Decision.** `BulkBar`, a client island above the table, owns the form: a "select all"
+checkbox (indeterminate when some), "Ticked: N" (a template string filled on the client — a
+function cannot cross from a Server Component), and three submit buttons each with its own
+Server Action as `formAction`: publish and archive as before, and **delete**, Administrator
+only, with a dialog first; `requestSubmit(button)` names the submitter so the right action
+receives the ticks. `bulkDeleteEventsAction` refuses the whole batch for a role that may not
+delete, then takes each event through `deleteEvent`, which refuses one with a registration —
+counted and reported, never forced. The row checkbox's `form` moved to
+`slotProps.input`, where it reaches the `<input>`; a series row's tick is its dates' refs joined
+by commas (§113), so deleting a whole test series is one tick. Without JavaScript the buttons
+still post — the counter and "all" go quiet, and the server answers "nothing ticked".
+
+*Rejected:* buttons disabled at zero ticks (without JavaScript zero is all the bar knows);
+keeping the fold with a delete added (the fold was the strangeness); a confirmation on publish
+and archive (a click away from being undone).
+
+**Consequences.** `content/events/ui/BulkBar.tsx`, the events list (the bar, `slotProps.input.form`,
+the deleted alert), `admin/actions.ts` (`bulkDeleteEventsAction`), the catalogues;
+`tests/e2e/events-bulk.spec.ts`. BR-REQ-050-02 criterion 12.
+
+Baseline `BR-V1.38-2026-09-18`.

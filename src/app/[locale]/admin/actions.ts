@@ -29,7 +29,7 @@ import {
   type DevIdentityKey,
   ensureDevStaffUser,
 } from "@/modules/staff-identity/dev-switcher";
-import type { EditorialStatus, StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canDeleteEvent, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import {
@@ -316,6 +316,42 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   }
 
   redirect(`${listPath}?saved=eventsPublished&published=${published}&failed=${failed}#admin-alert`);
+}
+
+/**
+ * Delete the ticked events (`DECISIONS.md` §114): the whole of a test series, the drafts of a
+ * season that never happened. Administrator only, refused whole for anybody else; then each
+ * event through `deleteEvent`, which refuses one with a registration against it — counted and
+ * skipped, never forced, because archiving is the answer for an event that happened.
+ */
+export async function bulkDeleteEventsAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin" });
+
+  const selected = selectedEventRefs(form);
+  if (selected.length === 0) backTo(listPath, { error: "NOTHING_SELECTED" });
+
+  let deleted = 0;
+  let failed = 0;
+  try {
+    const actor = await requireStaff();
+    if (!canDeleteEvent(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not delete events`);
+    const db = getDb();
+
+    for (const { eventId } of selected) {
+      try {
+        await deleteEvent(db, { actor, eventId });
+        deleted += 1;
+      } catch (error) {
+        if (!isDomainError(error)) throw error;
+        failed += 1;
+      }
+    }
+  } catch (error) {
+    backTo(listPath, outcomeOf(error));
+  }
+
+  redirect(`${listPath}?saved=eventsDeleted&deleted=${deleted}&failed=${failed}#admin-alert`);
 }
 
 /**

@@ -31,16 +31,17 @@ import {
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import BulkBar from "@/modules/content/events/ui/BulkBar";
 import EventRowMenu from "@/modules/content/events/ui/EventRowMenu";
 import { groupSeries } from "@/modules/events/domain/series";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
-import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import {
   bulkArchiveEventsAction,
+  bulkDeleteEventsAction,
   bulkPublishEventsAction,
   deleteEventAction,
   duplicateEventAction,
@@ -53,7 +54,7 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
-/** The bulk form sits below the table and owns the checkboxes inside it. */
+/** The bulk form is the bar above the table (§114) and owns the checkboxes inside the table. */
 const BULK_FORM = "bulk-archive";
 
 type EventRow = {
@@ -111,7 +112,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // of events they may neither write nor configure. The tabs offer them the same two sections.
   if (!canEditTexts(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
   const current = await searchParams;
-  const { error, saved, archived, failed, created, published } = current;
+  const { error, saved, archived, failed, created, published, deleted } = current;
 
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
@@ -338,7 +339,12 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {t("events.eventsPublished", { published: published ?? "0", failed: failed ?? "0" })}
           </Alert>
         )}
-        {saved && saved !== "eventsArchived" && saved !== "eventsRepeated" && saved !== "eventsPublished" && (
+        {saved === "eventsDeleted" && (
+          <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
+            {t("events.eventsDeleted", { deleted: deleted ?? "0", failed: failed ?? "0" })}
+          </Alert>
+        )}
+        {saved && !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted"].includes(saved) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -369,6 +375,29 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           </Button>
         )}
       </Stack>
+
+      {/* The bulk verbs, above the ticks they act on (§114): all, N ticked, publish, archive, delete. */}
+      {lines.length > 0 && canCreateEvent(staffUser.role) && (
+        <BulkBar
+          formId={BULK_FORM}
+          uiLocale={locale}
+          publish={bulkPublishEventsAction}
+          archive={bulkArchiveEventsAction}
+          remove={canDeleteEvent(staffUser.role) ? bulkDeleteEventsAction : undefined}
+          labels={{
+            selectAll: t("events.bulkSelectAll"),
+            selected: t("events.bulkSelected", { count: "{count}" }),
+            help: t("events.bulkHelp"),
+            publish: t("events.bulkPublishAction"),
+            archive: t("events.bulkArchiveAction"),
+            remove: t("events.bulkDeleteAction"),
+            confirmTitle: t("confirm.bulkDeleteTitle"),
+            confirmBody: t("confirm.bulkDeleteBody"),
+            confirm: t("events.bulkDeleteAction"),
+            cancel: t("confirm.cancel"),
+          }}
+        />
+      )}
 
       <AdminTable
         caption={t("events.tableCaption")}
@@ -406,9 +435,13 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 // each row was loaded with and a colleague's edit still wins a CONFLICT (§11.5).
                 // A series ticks every one of its dates: the refs joined by a comma (§113).
                 value={members.map((member) => refOf(member.event)).join(",")}
-                form={BULK_FORM}
                 slotProps={{
                   input: {
+                    // On the `<input>` itself: as a prop of the Checkbox it landed on the
+                    // wrapping span, and the form posted nothing — "these batches are
+                    // strange" (§114). `form` is what makes a tick inside the table belong
+                    // to the bar's form above it.
+                    form: BULK_FORM,
                     "aria-label": t("events.selectEvent", {
                       title: translations[0]?.title ?? event.id,
                     }),
@@ -515,42 +548,6 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         }}
       />
 
-      {lines.length > 0 && canCreateEvent(staffUser.role) && (
-        <Box
-          component="details"
-          sx={{
-            border: 1,
-            borderColor: "divider",
-            borderRadius: 1,
-            px: 2,
-            "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert" },
-          }}
-        >
-          <Typography component="summary" variant="body2">
-            {t("events.bulkTitle")}
-          </Typography>
-          <Box component="form" id={BULK_FORM} action={bulkArchiveEventsAction}>
-            <input type="hidden" name="uiLocale" value={locale} />
-            <Stack spacing={1.5} sx={{ pb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                {t("events.bulkHelp")}
-              </Typography>
-              <Stack direction="row" spacing={1.5} sx={{ flexWrap: "wrap", gap: 1 }}>
-                {/* The same selection, two verbs: a series made as drafts is published here
-                    (BR-REQ-050-02 criterion 7), a season that is over is archived here. */}
-                <Button type="submit" formAction={bulkPublishEventsAction} variant="contained" sx={{ minHeight: 44 }}>
-                  {t("events.bulkPublishAction")}
-                </Button>
-                <SubmitButton
-                  label={t("events.bulkArchiveAction")}
-                  pendingLabel={t("events.bulkArchivePending")}
-                  variant="outlined"
-                />
-              </Stack>
-            </Stack>
-          </Box>
-        </Box>
-      )}
     </Stack>
   );
 }
