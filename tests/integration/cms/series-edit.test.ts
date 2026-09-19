@@ -4,7 +4,7 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { repeatEvent, saveEventAndTranslations } from "@/modules/content/events/service";
+import { repeatEvent, saveEventAndTranslations, type SeriesEditScope } from "@/modules/content/events/service";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
@@ -121,7 +121,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     ...changes,
   });
 
-  async function save(row: typeof events.$inferSelect, scope: "this" | "following" | "all", changes: { fields?: Record<string, unknown>; ro?: Record<string, unknown> }) {
+  async function save(row: typeof events.$inferSelect, scope: SeriesEditScope, changes: { fields?: Record<string, unknown>; ro?: Record<string, unknown> }) {
     const ro = await translationOf(row.id, "ro");
     return saveEventAndTranslations(db, {
       actor: editor,
@@ -233,6 +233,22 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     expect((await reload(source.id)).capacity).toBe(30);
     expect((await reload(source.id)).locationName).toBe("Parcul Tractorul");
     expect((await reload(dates[0].id)).locationName).toBe("Parcul Tractorul");
+  });
+
+  // Criterion 17 (§134): the dates ticked in the header, and no other.
+  it("reaches exactly the dates ticked by hand — an id outside the series or of this date is ignored, none is this date only", async () => {
+    const { source, dates } = await seedSeries();
+    const [oct18, oct25, nov1, nov8] = dates;
+
+    const result = await save(await reload(source.id), { ids: [oct25.id, nov8.id, source.id, "00000000-0000-4000-8000-000000000000"] }, { fields: { locationName: "Poiana Brașov" } });
+    expect(result.appliedTo).toBe(2);
+    expect((await reload(oct25.id)).locationName).toBe("Poiana Brașov");
+    expect((await reload(nov8.id)).locationName).toBe("Poiana Brașov");
+    expect((await reload(oct18.id)).locationName).toBe("Parcul Tractorul");
+    expect((await reload(nov1.id)).locationName).toBe("Parcul Tractorul");
+
+    expect((await save(await reload(source.id), { ids: [] }, { fields: { capacity: "40" } })).appliedTo).toBe(0);
+    expect((await reload(oct25.id)).capacity).not.toBe(40);
   });
 
   it("is ignored on an event that is not part of a series", async () => {

@@ -1,8 +1,10 @@
 import { z } from "zod";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { enqueueEmail } from "@/modules/notifications/outbox";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canManageStaff, STAFF_ROLES, type StaffRole } from "./domain/roles";
+import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
 import {
   countSuperadministrators,
   deleteStaffUser,
@@ -17,12 +19,13 @@ import {
 /**
  * Staff administration: who exists, and what each of them may do (BR-REQ-060-01).
  *
- * There is no invitation email. There cannot be one yet — delivery to a real person needs the
- * club's sending domain, which is the same blocker registration waits on — and inventing a
- * message the club has not approved is forbidden by AGENTS.md §1.2. The row *is* the
- * invitation: an Administrator records the colleague's address and role, and the first time
- * that person signs in, the identity provider's subject is bound to the row that was waiting
- * for them. No row, no access, whatever a provider asserts.
+ * The row *is* the invitation: an Administrator records the colleague's address and role, and
+ * the first time that person signs in, the identity provider's subject is bound to the row
+ * that was waiting for them. No row, no access, whatever a provider asserts. Since §141 the
+ * platform also *tells* them — `STAFF_INVITATION`, queued in the same transaction as the row,
+ * through the club's own outbox: who added them, as what, and the sign-in page. The Zitadel
+ * account itself is created by the action when the club's key is set (§123), and otherwise by
+ * the person at the sign-in page; either way the email is the same.
  *
  * Every function takes the acting staff user explicitly rather than reading a session. The
  * server asserts authorization here, once, and the pages and actions above pass in whoever
@@ -76,7 +79,48 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
     throw new DomainError("CONFLICT", "a staff user with this email address already exists");
   }
 
-  return insertStaffUser(db, { ...parsed.data, email: normalizeStaffEmail(parsed.data.email) });
+  const now = new Date();
+  return db.transaction(async (tx) => {
+    const member = await insertStaffUser(tx, { ...parsed.data, email: normalizeStaffEmail(parsed.data.email) });
+    await enqueueStaffInvitation(tx, actor, member, now);
+    return member;
+  });
+}
+
+/** The invitation again (§123, §141): a new row with its own key — a resend is a new trigger. */
+export async function resendStaffInvitation<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: StaffUser,
+  email: string,
+  now = new Date(),
+): Promise<StaffUser> {
+  assertAdministrator(actor);
+  const member = await findStaffUserByEmail(db, email);
+  if (!member) throw new DomainError("NOT_FOUND", "no such staff user");
+  if (member.firstSignedInAt) throw new DomainError("CONFLICT", "this person has signed in already; there is nothing to invite them to");
+  await db.transaction((tx) => enqueueStaffInvitation(tx, actor, member, now, true));
+  return member;
+}
+
+async function enqueueStaffInvitation<T extends Record<string, unknown>>(
+  tx: Parameters<typeof enqueueEmail<T>>[0],
+  actor: StaffUser,
+  member: StaffUser,
+  now: Date,
+  isManualResend = false,
+): Promise<void> {
+  await enqueueEmail(tx, {
+    participantId: null,
+    registrationId: null,
+    messageType: "STAFF_INVITATION",
+    locale: member.preferredLocale,
+    recipientEmail: member.email,
+    payload: { displayName: member.displayName, role: STAFF_ROLE_LABEL[member.role], inviterName: actor.displayName },
+    idempotencyKey: `staff:${member.id}:invitation:${now.toISOString()}`,
+    requestedByStaffUserId: actor.id,
+    isManualResend,
+    now,
+  });
 }
 
 export async function changeStaffRole<T extends Record<string, unknown>>(

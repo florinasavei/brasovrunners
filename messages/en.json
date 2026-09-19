@@ -57,10 +57,13 @@
       "nextYear": "Next year",
       "viewMonth": "Month",
       "viewYear": "Year",
+      "layoutGrid": "Calendar",
+      "layoutList": "List",
       "pickMonth": "Month",
       "pickYear": "Year",
       "yearEmpty": "Nothing scheduled this year.",
-      "subscribe": "Every club event in your own calendar, updating by itself — subscribe with:",
+      "addTitle": "Add to your calendar",
+      "feedAddress": "The address for other apps",
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / phone",
       "downloadLink": "download the .ics",
@@ -74,6 +77,7 @@
   },
   "Event": {
     "backToEvents": "Back to events",
+    "editInBackoffice": "Edit",
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
@@ -85,11 +89,13 @@
     "meetingPoint": "Meeting point",
     "share": {
       "title": "Share:",
+      "native": "Share",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
-      "instagram": "Picture for Instagram",
+      "instagram": "Instagram",
+      "calendarTitle": "Add to calendar:",
       "googleCalendar": "Google Calendar",
-      "ics": "Add to calendar (.ics)"
+      "ics": ".ics file"
     },
     "rules": "Event rules",
     "schedule": "Event programme",
@@ -169,9 +175,10 @@
       "atTime": "{sentence} at {time}",
       "dates": "{count} dates, until {last}",
       "count": "{count} dates",
+      "weeklyChip": "Weekly",
+      "fortnightlyChip": "Every two weeks",
       "nextLabel": "Next",
-      "allDates": "All dates",
-      "moreInCalendar": "{count} more in the calendar"
+      "allDates": "All dates"
     },
     "route": "Route",
     "openRoute": "View the route",
@@ -182,6 +189,7 @@
     },
     "stravaEvent": "On Strava",
     "openStravaEvent": "The event on Strava",
+    "openFacebookEvent": "The event on Facebook",
     "calendar": {
       "feedName": "🏃 BVR"
     }
@@ -265,7 +273,7 @@
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
-      "listOptOut": "They do not want to appear on the public participant list",
+      "listOptIn": "The person wants to appear on the public participant list",
       "relayConfirmation": "I confirm this person asked me to register them.",
       "create": "Add the registration",
       "viewForEvent": "See this event's registrations",
@@ -353,6 +361,7 @@
       "registrations": "Registrations",
       "columnTitle": "Event",
       "columnStatus": "Status",
+      "registrationModeTitle": "The registration mode, from the event's settings",
       "columnDate": "Date",
       "seriesDates": "The dates of this series",
       "seriesEdit": "Edit the next date",
@@ -535,13 +544,17 @@
         "this": "This date only",
         "following": "This and the following dates",
         "all": "All dates of the series",
-        "help": "As in Google Calendar: only what you changed here reaches the other dates — a new time lands at that time on each date's own day; a date moved or cancelled on its own stays so unless the place or the status is what you changed. Each date's page address stays."
+        "help": "As in Google Calendar: only what you changed here reaches the other dates — a new time lands at that time on each date's own day; a date moved or cancelled on its own stays so unless the place or the status is what you changed. Each date's page address stays.",
+        "chosen": "this date and {count} more ticked above",
+        "selectAll": "All",
+        "selectNone": "None",
+        "open": "Open the date {date}"
       },
       "repeatOfNote": "Changes here — a cancellation, another place, another time — are this date's alone, unless you choose otherwise at Save.",
       "series": {
         "kicker": "Series “{title}”",
         "editing": "Editing the date {date}",
-        "position": "Date {position} of {count} in the series. Press another date to open it.",
+        "position": "Date {position} of {count} in the series. Tick the dates the save should reach; the arrow opens a date.",
         "previous": "← Previous date: {date}",
         "next": "Next date: {date} →"
       },
@@ -580,6 +593,8 @@
       "coHostHelp": "Optional. When the event is held together with another organization — an NGO, a shop, a brand — its name here, and its page, if it has one. Shown as “Together with …” beside the club's name, and named as a second organizer to Google.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
+      "facebookEventUrl": "Link to the Facebook event",
+      "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. This edition only; never copied.",
       "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page under the short description.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
@@ -603,12 +618,12 @@
       "role": "Role",
       "preferredLocale": "Preferred language",
       "invite": "Add",
-      "inviteHelp": "This adds the address to the list of who is staff — no email or code is sent. The person also needs a Zitadel account with exactly this address (they create one at the sign-in page, or you do in the Zitadel console → Users), then signs in at /admin. Access begins at that first sign-in.",
-      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation with the link to choose a password. Then they sign in at /admin.",
-      "inviteSent": "Added, and the invitation is on its way to their mailbox.",
-      "inviteExists": "Added. They already have a sign-in account with this address — they can sign in at /admin right away.",
-      "inviteManual": "Added to the list. No invitation was sent: create their account in the Zitadel console (Users → New) with exactly this address, or let them create it at the sign-in page.",
-      "inviteFailed": "Added to the list, but the sign-in provider refused to create the account ({reason}). Create it in the Zitadel console (Users → New) with exactly this address.",
+      "inviteHelp": "This adds the address to the list of who is staff and emails them the invitation: who added them, as what, and the sign-in link. They create their sign-in account at the sign-in page with exactly this address; with the Zitadel key set (To do → \"Invite the team\", SETUP.md §37) we create it for them and they also get the password link. Access begins at their first sign-in.",
+      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation — who added them, as what, the sign-in link — and the link to choose a password. Then they sign in at /admin.",
+      "inviteSent": "Added. The invitation is on its way to their mailbox, with the link to choose a password.",
+      "inviteExists": "Added, the invitation is on its way. They already have a sign-in account with this address — they can sign in at /admin right away.",
+      "inviteManual": "Added. The invitation is on its way to their mailbox: they create their account at the sign-in page with exactly this address. (With the Zitadel key set — To do → \"Invite the team\" — we would create it for them.)",
+      "inviteFailed": "Added and the invitation is on its way, but the sign-in provider refused to create the account ({reason}). They can create it at the sign-in page with exactly this address.",
       "resendInvite": "Resend the invitation",
       "resendInvitePending": "Sending…",
       "pending": "Has not signed in yet",
@@ -675,8 +690,8 @@
       "approved": "Approved",
       "draft": "Draft",
       "keys": {
-        "PRIVACY_NOTICE": "Privacy notice",
-        "TERMS": "Terms and conditions",
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Racing TOS",
         "EVENT_DECLARATION": "Participant declaration"
       },
       "referenced": "{signatures} signatures · {events} events",
@@ -806,7 +821,7 @@
           "done": "The team has accounts.",
           "how": [
             "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
-            "With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), “Add” also creates their Zitadel account and emails them the invitation — the link to choose a password. Without it, the person creates a Zitadel account with exactly that address, or you create it in the Zitadel console → Users. Zitadel only proves who they are; the list here decides whether they are staff.",
+            "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
         },
@@ -1432,8 +1447,8 @@
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
-    "privacyLinkLabel": "Privacy",
-    "termsLinkLabel": "Terms and conditions"
+    "privacyLinkLabel": "GDPR",
+    "termsLinkLabel": "Racing TOS"
   },
   "Registration": {
     "title": "Register: {event}",
@@ -1441,7 +1456,7 @@
     "privacyPrefix": "I have read and agree to the",
     "privacyLinkLabel": "privacy notice",
     "resultsNameConsent": "My name may appear in public results",
-    "listOptOut": "Keep me off the public participant list, if there is one",
+    "listOptIn": "I want to appear on the participant list",
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
@@ -1449,7 +1464,7 @@
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
-      "phone": "Type only the digits of the number, without the country code (that is chosen on the left).",
+      "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again."
@@ -1513,7 +1528,7 @@
       "clubName": "Club or team",
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
-      "privacyAcknowledged": "Privacy notice",
+      "privacyAcknowledged": "GDPR",
       "captcha": "The anti-bot check",
       "stravaUrl": "Strava profile",
       "instagramHandle": "Instagram",
@@ -1581,8 +1596,8 @@
     "facts": {
       "details": "Event details",
       "rules": "The rules",
-      "terms": "Terms and conditions",
-      "privacy": "Privacy"
+      "terms": "Racing TOS",
+      "privacy": "GDPR"
     },
     "socialsHelp": "If you want us to find you and tag you in the club's posts. Not published on the site, not given to anyone.",
     "stravaUrl": "Your Strava profile (link)",

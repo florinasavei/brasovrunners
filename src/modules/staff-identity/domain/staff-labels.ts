@@ -52,9 +52,9 @@ export const EVENT_STATUS_LABEL: Record<"SCHEDULED" | "CANCELLED" | "COMPLETED",
 };
 
 export const REGISTRATION_MODE_LABEL: Record<"NONE" | "INTERNAL" | "EXTERNAL", string> = {
-  NONE: "Fără înscriere",
-  INTERNAL: "Înscriere aici",
-  EXTERNAL: "Înscriere în altă parte",
+  NONE: "Fără înscrieri",
+  INTERNAL: "Înscrieri pe site",
+  EXTERNAL: "Înscrieri la organizator",
 };
 
 export const REGISTRATION_STATUS_LABEL: Record<RegistrationStatus, string> = {

@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
+import Button from "@mui/material/Button";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -28,6 +29,8 @@ import StartList from "@/modules/events/ui/StartList";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
+import { canEditTexts } from "@/modules/staff-identity/domain/roles";
+import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -102,13 +105,26 @@ export default async function EventDetailPage({ params }: Props) {
   const t = await getTranslations("Event");
   const tSite = await getTranslations("Site");
   const now = new Date();
+  // A staff member who may edit the words gets the way into the editor from here (§135; the
+  // owner: "when I am signed in … I should be able to edit events from the event page"). The
+  // page is rendered per request anyway, so reading the session costs it nothing; the editor
+  // asserts the role again for itself (BR-REQ-060-01). Never where there is no sign-in.
+  const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await getCurrentStaffUser();
+  const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <JsonLd data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"))} />
 
-      <Typography variant="body2" sx={{ mb: 2 }}>
-        <Link href="/events">{t("backToEvents")}</Link>
-      </Typography>
+      <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center", justifyContent: "space-between" }}>
+        <Typography variant="body2">
+          <Link href="/events">{t("backToEvents")}</Link>
+        </Typography>
+        {editHref && (
+          <Button component="a" href={editHref} variant="outlined" size="small" sx={{ minHeight: 44 }}>
+            {t("editInBackoffice")}
+          </Button>
+        )}
+      </Stack>
 
       {/* Stated in words, not only by colour — BR-REQ-070-03 criterion 3. */}
       {event.eventStatus === "CANCELLED" && (

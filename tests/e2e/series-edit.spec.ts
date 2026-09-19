@@ -2,10 +2,11 @@ import { expect, test } from "@playwright/test";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * BR-REQ-050-02 criteria 7, 15 and 16 (`DECISIONS.md` §128, §130, §131) — a series from the
- * event page keeps the event's own day; the editor of a date says which date it is and shows
- * the others; a save "for this and the following dates" reaches them, at the same hour on
- * each date's own day.
+ * BR-REQ-050-02 criteria 7, 15, 16 and 17 (`DECISIONS.md` §128, §130, §131, §134) — a series
+ * from the event page keeps the event's own day; the editor of a date says which date it is
+ * and shows the others as chips that tick the dates a save reaches, the arrow on each opening
+ * it; the preset "this and the following dates" ticks them, and the save reaches them at the
+ * same hour on each date's own day.
  */
 test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for the following dates", () => {
   test("makes a Sunday-and-Wednesday series, opens a date by its chip, and moves the following ones to 08:50", async ({ page }) => {
@@ -54,29 +55,39 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await expect(page.locator("#admin-alert")).toContainText("8 ediții create", { timeout: 15_000 });
     await hydrated(page);
 
-    // The header (§131): which date this is, and every date as a chip, this one current.
+    // The header (§131, §134): which date this is, every date as a chip — this one current,
+    // the others tickable — and "Toate" in front of them.
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(first))}(,| la) 08:00`) })).toBeVisible();
     await expect(main.getByText("Data 1 din 9 ale seriei")).toBeVisible();
-    await expect(main.locator("a[aria-current='page']")).toHaveText(short(first));
+    await expect(main.locator(".MuiChip-root[aria-current='page']")).toHaveText(short(first));
+    await expect(main.getByRole("checkbox", { name: short(plus(3)), exact: true })).toHaveAttribute("aria-checked", "false");
+    await expect(main.getByRole("button", { name: "Toate", exact: true })).toBeVisible();
 
-    // The second date — the Wednesday after — one press away.
-    await main.getByRole("link", { name: short(plus(3)), exact: true }).click();
+    // The second date — the Wednesday after — one press on its arrow away.
+    await main.getByLabel(`Deschide data de ${short(plus(3))}`, { exact: true }).click();
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(plus(3)))}(,| la) 08:00`) })).toBeVisible({ timeout: 15_000 });
     await expect(main.getByText("Data 2 din 9 ale seriei")).toBeVisible();
     await hydrated(page);
 
-    // 08:50 for this date and the following ones (§130).
+    // 08:50 for this date and the following ones (§130, §134): the preset in the folded box
+    // ticks the six chips after this one; the two before it stay unticked.
     await field("event.startsAtTime").fill("08:50");
-    await main.getByRole("radio", { name: "Această dată și următoarele" }).check();
+    const scopeBox = main.locator("details").filter({ hasText: "Salvează pentru" });
+    await expect(scopeBox.locator("summary")).toContainText("Doar această dată");
+    await scopeBox.locator("summary").click();
+    await scopeBox.getByRole("button", { name: "Această dată și următoarele", exact: true }).click();
+    await expect(scopeBox.locator("summary")).toContainText("Această dată și următoarele (7)");
+    await expect(main.getByRole("checkbox", { name: short(plus(28)), exact: true })).toHaveAttribute("aria-checked", "true");
+    await expect(main.getByRole("checkbox", { name: short(first), exact: true })).toHaveAttribute("aria-checked", "false"); // the source is before this date
     await main.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.locator("#admin-alert")).toContainText("Salvat — și pe încă 7 date ale seriei", { timeout: 15_000 });
     await hydrated(page);
 
     // The last Sunday is at 08:50 now; the source Sunday before this date is still at 08:00.
-    await main.getByRole("link", { name: short(plus(28)), exact: true }).click();
+    await main.getByLabel(`Deschide data de ${short(plus(28))}`, { exact: true }).click();
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(plus(28)))}(,| la) 08:50`) })).toBeVisible({ timeout: 15_000 });
     await expect(field("event.startsAtTime")).toHaveValue("08:50");
-    await main.getByRole("link", { name: short(first), exact: true }).click();
+    await main.getByLabel(`Deschide data de ${short(first)}`, { exact: true }).click();
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(first))}(,| la) 08:00`) })).toBeVisible({ timeout: 15_000 });
     await expect(field("event.startsAtTime")).toHaveValue("08:00");
   });

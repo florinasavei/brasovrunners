@@ -57,10 +57,13 @@
       "nextYear": "Anul următor",
       "viewMonth": "Lună",
       "viewYear": "An",
+      "layoutGrid": "Calendar",
+      "layoutList": "Listă",
       "pickMonth": "Luna",
       "pickYear": "Anul",
       "yearEmpty": "Nimic programat în acest an.",
-      "subscribe": "Toate evenimentele clubului în calendarul tău, actualizat singur — abonează-te cu:",
+      "addTitle": "Adaugă în calendarul tău",
+      "feedAddress": "Adresa pentru alte aplicații",
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / telefon",
       "downloadLink": "descarcă .ics",
@@ -74,6 +77,7 @@
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
+    "editInBackoffice": "Editează",
     "date": "Data",
     "startTime": "Ora de start",
     "gatheringTime": "Ora de întâlnire",
@@ -85,11 +89,13 @@
     "meetingPoint": "Punct de întâlnire",
     "share": {
       "title": "Dă mai departe:",
+      "native": "Distribuie",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
-      "instagram": "Poză pentru Instagram",
+      "instagram": "Instagram",
+      "calendarTitle": "Adaugă în calendar:",
       "googleCalendar": "Google Calendar",
-      "ics": "Adaugă în calendar (.ics)"
+      "ics": "Fișier .ics"
     },
     "rules": "Regulamentul evenimentului",
     "schedule": "Programul evenimentului",
@@ -169,9 +175,10 @@
       "atTime": "{sentence}, la {time}",
       "dates": "{count} date, până pe {last}",
       "count": "{count} date",
+      "weeklyChip": "Săptămânal",
+      "fortnightlyChip": "La două săptămâni",
       "nextLabel": "Următoarea",
-      "allDates": "Toate datele",
-      "moreInCalendar": "încă {count} în calendar"
+      "allDates": "Toate datele"
     },
     "route": "Traseu",
     "openRoute": "Vezi traseul",
@@ -182,6 +189,7 @@
     },
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
+    "openFacebookEvent": "Evenimentul pe Facebook",
     "calendar": {
       "feedName": "🏃 BVR"
     }
@@ -258,14 +266,14 @@
       "new": "Adaugă o înscriere",
       "newTitle": "Adaugă o înscriere",
       "newExplanation": "Pentru cineva care a cerut personal, la telefon sau după o alergare. Înscrierea intră exact ca una făcută de participant: aceeași ordine la locuri, aceeași listă de așteptare și aceeași stare de început. Persoana primește e-mailul obișnuit de confirmare și semnează singură declarația — nimeni nu poate semna în locul altcuiva.",
-      "noEventsAcceptingRegistrations": "Niciun eveniment nu primește înscrieri prin platformă. Setează modul de înscriere pe „Înscriere aici” în pagina evenimentului.",
+      "noEventsAcceptingRegistrations": "Niciun eveniment nu primește înscrieri prin platformă. Setează modul de înscriere pe „Înscrieri pe site” în pagina evenimentului.",
       "event": "Evenimentul",
       "participantName": "Numele participantului",
       "participantEmail": "Adresa de e-mail a participantului",
       "participantEmailHelp": "Aici ajung confirmarea și linkul pentru declarație. Trebuie să fie adresa persoanei, nu a clubului.",
       "participantLocale": "Limba în care îi scriem",
       "participantLocaleHelp": "Limba tuturor e-mailurilor legate de această înscriere.",
-      "listOptOut": "Persoana nu vrea să apară pe lista publică de participanți",
+      "listOptIn": "Persoana vrea să apară pe lista publică de participanți",
       "relayConfirmation": "Confirm că această persoană mi-a cerut să o înscriu.",
       "create": "Adaugă înscrierea",
       "viewForEvent": "Vezi înscrierile acestui eveniment",
@@ -353,6 +361,7 @@
       "registrations": "Înscrieri",
       "columnTitle": "Evenimentul",
       "columnStatus": "Stare",
+      "registrationModeTitle": "Modul de înscriere, din setările evenimentului",
       "columnDate": "Data",
       "seriesDates": "Datele acestei serii",
       "seriesEdit": "Editează următoarea dată",
@@ -535,13 +544,17 @@
         "this": "Doar această dată",
         "following": "Această dată și următoarele",
         "all": "Toate datele seriei",
-        "help": "Ca în Google Calendar: doar ce ai schimbat aici ajunge și pe celelalte date — o oră nouă, la aceeași oră în ziua fiecăreia; o dată mutată sau anulată separat rămâne așa dacă nu schimbi chiar locul sau starea. Adresa paginii fiecărei date nu se schimbă."
+        "help": "Ca în Google Calendar: doar ce ai schimbat aici ajunge și pe celelalte date — o oră nouă, la aceeași oră în ziua fiecăreia; o dată mutată sau anulată separat rămâne așa dacă nu schimbi chiar locul sau starea. Adresa paginii fiecărei date nu se schimbă.",
+        "chosen": "această dată și încă {count} alese sus",
+        "selectAll": "Toate",
+        "selectNone": "Niciuna",
+        "open": "Deschide data de {date}"
       },
       "repeatOfNote": "Ce schimbi aici — o anulare, alt loc, altă oră — privește doar această dată, dacă nu alegi altfel la Salvează.",
       "series": {
         "kicker": "Seria „{title}”",
         "editing": "Editezi data de {date}",
-        "position": "Data {position} din {count} ale seriei. Apasă o altă dată ca s-o deschizi.",
+        "position": "Data {position} din {count} ale seriei. Bifează datele pe care ajunge salvarea; săgeata deschide data.",
         "previous": "← Data dinainte: {date}",
         "next": "Data următoare: {date} →"
       },
@@ -580,6 +593,8 @@
       "coHostHelp": "Opțional. Când evenimentul e organizat împreună cu altă organizație — un ONG, un magazin, un brand — numele ei aici și pagina, dacă are una. Apare ca „Împreună cu …” lângă numele clubului și e trecută ca al doilea organizator pentru Google.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
+      "facebookEventUrl": "Link către evenimentul Facebook",
+      "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Doar pentru această ediție; nu se copiază.",
       "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
@@ -603,12 +618,12 @@
       "role": "Rol",
       "preferredLocale": "Limbă preferată",
       "invite": "Adaugă",
-      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă — nu se trimite niciun email și niciun cod. Persoana are nevoie și de un cont Zitadel cu exact această adresă (și-l face din pagina de autentificare, sau i-l faci tu în consola Zitadel → Users), apoi se autentifică la /admin. Accesul începe la prima autentificare.",
-      "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația cu linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
-      "inviteSent": "Adăugat, iar invitația e pe drum către căsuța lui de email.",
-      "inviteExists": "Adăugat. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
-      "inviteManual": "Adăugat pe listă. Nu s-a trimis nicio invitație: creează-i contul în consola Zitadel (Users → New) cu exact această adresă, sau lasă-l să și-l facă din pagina de autentificare.",
-      "inviteFailed": "Adăugat pe listă, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Creează-l în consola Zitadel (Users → New) cu exact această adresă.",
+      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare și-l face singur din pagina de autentificare, cu exact această adresă; cu cheia Zitadel pusă (To do → „Invită echipa”, SETUP.md §37) i-l creăm noi și primește și linkul pentru parolă. Accesul începe la prima autentificare.",
+      "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația — cine l-a adăugat, cu ce rol, linkul de autentificare — și linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
+      "inviteSent": "Adăugat. Invitația e pe drum către căsuța lui de email, cu linkul pentru alegerea parolei.",
+      "inviteExists": "Adăugat, invitația e pe drum. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
+      "inviteManual": "Adăugat. Invitația e pe drum către căsuța lui de email: își face contul din pagina de autentificare, cu exact această adresă. (Cu cheia Zitadel pusă — To do → „Invită echipa” — i-am crea contul noi.)",
+      "inviteFailed": "Adăugat și invitația e pe drum, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Își poate face contul din pagina de autentificare, cu exact această adresă.",
       "resendInvite": "Retrimite invitația",
       "resendInvitePending": "Se trimite…",
       "pending": "Nu s-a autentificat încă",
@@ -675,8 +690,8 @@
       "approved": "Aprobat",
       "draft": "Ciornă",
       "keys": {
-        "PRIVACY_NOTICE": "Nota de confidențialitate",
-        "TERMS": "Termeni și condiții",
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Termeni de concurs",
         "EVENT_DECLARATION": "Declarația participantului"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
@@ -806,7 +821,7 @@
           "done": "Echipa are conturi.",
           "how": [
             "Deschide /admin/staff, scrie adresa de email a persoanei și alege rolul: Moderator (scrie și publică), Administrator (înscrieri, texte legale, această pagină) sau Superadministrator (și echipa).",
-            "Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), „Adaugă” îi creează și contul Zitadel și îi trimite pe email invitația — linkul pentru alegerea parolei. Fără ea, persoana își face cont în Zitadel cu exact aceeași adresă, sau i-l creezi tu din consola Zitadel → Users. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
+            "„Adaugă” îi trimite pe email invitația clubului: cine l-a adăugat, cu ce rol, linkul de autentificare. Cu cheia de invitații pusă (SETUP.md §37: tokenul unui service user Zitadel, ca ZITADEL_MANAGEMENT_PAT pe ambele proiecte Vercel), îi creează și contul Zitadel și primește și linkul pentru alegerea parolei. Fără ea, persoana își face contul din pagina de autentificare, cu exact aceeași adresă. Zitadel doar dovedește cine e; lista de aici decide dacă e din echipă.",
             "Intră pe {baseUrl}/admin, se autentifică prin Zitadel și gata. „Access Denied” înseamnă email neverificat sau altă adresă decât cea invitată."
           ]
         },
@@ -1432,8 +1447,8 @@
   },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
-    "privacyLinkLabel": "Confidențialitate",
-    "termsLinkLabel": "Termeni și condiții"
+    "privacyLinkLabel": "GDPR",
+    "termsLinkLabel": "Termeni de concurs"
   },
   "Registration": {
     "title": "Înscriere: {event}",
@@ -1441,7 +1456,7 @@
     "privacyPrefix": "Am citit și sunt de acord cu",
     "privacyLinkLabel": "nota de confidențialitate",
     "resultsNameConsent": "Numele meu poate apărea în rezultatele publice",
-    "listOptOut": "Nu vreau să apar pe lista publică de participanți, dacă va exista una",
+    "listOptIn": "Vreau să apar pe lista de participanți",
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
@@ -1449,7 +1464,7 @@
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
-      "phone": "Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
+      "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
@@ -1513,7 +1528,7 @@
       "clubName": "Club sau echipă",
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
-      "privacyAcknowledged": "Nota de confidențialitate",
+      "privacyAcknowledged": "GDPR",
       "captcha": "Verificarea anti-bot",
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
@@ -1581,8 +1596,8 @@
     "facts": {
       "details": "Detaliile evenimentului",
       "rules": "Regulamentul",
-      "terms": "Termeni și condiții",
-      "privacy": "Confidențialitate"
+      "terms": "Termeni de concurs",
+      "privacy": "GDPR"
     },
     "socialsHelp": "Dacă vrei să te găsim și să te etichetăm în postările clubului. Nu le publicăm pe site și nu le dăm nimănui.",
     "stravaUrl": "Profilul tău de Strava (link)",

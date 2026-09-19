@@ -223,6 +223,11 @@ export const events = pgTable(
      * duplicate or a repeat. Checked to be a Strava page at the form (`isStravaLink`).
      */
     stravaEventUrl: text("strava_event_url"),
+    /**
+     * The Facebook event for this occurrence (§144): where most of the club says "going". One
+     * occurrence's link, like the Strava one; checked to be a Facebook page at the form.
+     */
+    facebookEventUrl: text("facebook_event_url"),
 
     /**
      * The other organization an event is held with (`DECISIONS.md` §121; the owner: "a co-host
@@ -400,6 +405,10 @@ export const events = pgTable(
     check(
       "events_strava_event_url_is_https",
       sql`${t.stravaEventUrl} IS NULL OR ${t.stravaEventUrl} LIKE 'https://%'`,
+    ),
+    check(
+      "events_facebook_event_url_is_https",
+      sql`${t.facebookEventUrl} IS NULL OR ${t.facebookEventUrl} LIKE 'https://%'`,
     ),
     check(
       "events_co_host_url_is_https",

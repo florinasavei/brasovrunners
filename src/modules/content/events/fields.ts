@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { isYoutubeLink } from "@/modules/events/domain/video";
-import { isStravaLink } from "@/modules/events/domain/event-type";
+import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 
@@ -268,6 +268,16 @@ export const eventFieldsSchema = z
       .transform((value) => (value ? value : null))
       .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isStravaLink(value)), {
         message: "a Strava event link must be an https page on strava.com",
+      }),
+    // The Facebook event for this occurrence (§144): a Facebook page, or nothing.
+    facebookEventUrl: z
+      .string()
+      .trim()
+      .max(2000)
+      .optional()
+      .transform((value) => (value ? value : null))
+      .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isFacebookLink(value)), {
+        message: "a Facebook event link must be an https page on facebook.com",
       }),
     // The other organization, when there is one (§121): a name, and its page if it has one.
     coHostName: optionalText(200).optional().transform((value) => value ?? null),

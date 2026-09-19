@@ -13,6 +13,23 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 - **The three legal texts, approved in one press.** `/admin/legal` shows the club's facts it would write and a button that creates and approves version 1 of every missing document from the platform's text; a text in force is never replaced; the task-board row and the runbook say so. §132.
 - **The templates arrive with the club's facts written in.** "Start from the platform's text" fills the legal name, the CIF and the registered seat from `CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER`, `CLUB_REGISTERED_ADDRESS` (environment, never source — the repository is public) and the contact address from `EMAIL_REPLY_TO`; the page names whatever is still blank. §132.
 
+The owner's second pass on QA, the same evening.
+
+- **A Facebook event link on the event**, beside the Strava one: a box in the editor, a labelled fact with the Facebook mark on the page. Migration `0046`. §144.
+- **"Vreau să apar pe lista de participanți"** — the list is opted into, like the other consents; no tick, no listing. The platform's privacy notice and terms say so. §143.
+- **A rejected registration form comes back filled in** — every box, select and tick as typed, from an encrypted ten-minute cookie, never the address; the phone's message says the number is not valid. §142.
+- **"Add" on Echipa emails the invitation itself** — who added them, as what, the sign-in link — through the club's own outbox, key or no key; the Zitadel key still creates the account and adds the password link. "Resend" sends it again. Migration `0045`. §141.
+- **Sharing is buttons** — the phone's own share sheet first, then Facebook, WhatsApp and "Instagram" (the square picture); "add to calendar" on its own row. §140.
+- **"Adaugă în calendarul tău"** is a small boxed region under the month: three buttons, an "i" with the refresh note, the address folded. §139.
+- **A series card says "Săptămânal"** instead of "8 date", and shows every coming date. §138.
+- **The month is a calendar on a phone too.** Same grid on every width; each event a chip with its type's and its surface's glyph, the time, and the title in a tooltip; "Listă" one press away and kept by the month links. §137.
+- **The backoffice list's status chips say what they are**: "Publicat · 8 date" for a series, and the registration mode reads "Înscrieri pe site" / "Înscrieri la organizator" / "Fără înscrieri", with a hover title naming the setting. Still Romanian, by §35.
+- **The legal texts are called GDPR and Termeni de concurs / Racing TOS** everywhere their name shows — the backoffice list, the footer, the form; the declaration keeps its name. §136.
+- **"Editează" on the event page** for a signed-in Redactor or above — one press into the editor. §135.
+- **"Resend the invitation" is on every row that never signed in**, key or no key: without the key the answer says which key and where (To do → "Invite the team"), instead of a button that is not there. §123.
+- **Tick the dates a save reaches.** In the editor of a series, every date's chip is a tick, its arrow opens it, "Toate" ticks them all; the folded box above Save says the choice in words and its three presets — this date, this and the following, all — set the ticks (the old radios could all be on at once). §134.
+- **The type filter is small and only offers what is there.** One small chip per kind that has an event on the page, none when there is one kind; the link under each is still 44 pixels tall. §133.
+
 The evening's test on QA, and what it found.
 
 - **The editor says which date you are on.** Any date of a series opens under a header with the series' name, the date in words, "date 3 of 9", every date as a chip (the open one filled), and previous/next. §131.

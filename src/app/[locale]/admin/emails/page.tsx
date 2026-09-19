@@ -65,6 +65,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     eventRulesUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#rules`,
     eventScheduleUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE-event#schedule`,
     manageUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
+    // The staff invitation (§141): a made-up colleague, added by a made-up administrator.
+    staffRole: "Organizator",
+    inviterName: "Florin",
+    staffEmail: "ana.popescu@example.org",
+    signInUrl: `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`,
   };
   const actionUrl = `${env.APP_BASE_URL}/${emailLocale}/EXAMPLE`;
 

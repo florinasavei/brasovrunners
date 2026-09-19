@@ -36,7 +36,7 @@ export const privacyNoticeRo: LegalDocumentBody = {
     {
       heading: "4. Lista publică, rezultatele, fotografiile",
       paragraphs: [
-        "Lista publică de participanți, oprită la fiecare eveniment până când clubul o pornește, arată doar numele (sau numele de afișare) și clubul participanților confirmați, până după eveniment — interes legitim, art. 6(1)(f) GDPR: ca participanții să vadă cine mai vine. Te poți opune fără motiv (art. 21 GDPR): bifa „nu vreau să apar pe listă” din formular este această opoziție; mai târziu, scrie-ne.",
+        "Lista publică de participanți, oprită la fiecare eveniment până când clubul o pornește, arată doar numele (sau numele de afișare) și clubul participanților confirmați care au bifat „vreau să apar pe lista de participanți” la înscriere, până după eveniment — consimțământ, art. 6(1)(a) GDPR, pe care îl retragi oricând scriindu-ne; fără bifă nu apari.",
         "Numele tău în rezultatele publicate: doar cu consimțământ separat, retractabil oricând (art. 6(1)(a) GDPR); înscrierea este valabilă și fără el.",
         "Fotografiile și filmările de la evenimente, publicate în galerie și pe canalele clubului: interes legitim (art. 6(1)(f) GDPR) — a arăta evenimentele clubului; spațiu public, fără nume, fără EXIF. Un portret îl publicăm doar cu acordul tău (Codul civil, art. 73–75). Spune-ne care și o scoatem în cel mult o lună, fără motiv.",
       ],
@@ -120,7 +120,7 @@ export const privacyNoticeEn: LegalDocumentBody = {
     {
       heading: "4. Public list, results, photographs",
       paragraphs: [
-        "The public participant list, off on every event until the club switches it on, shows only the name (or display name) and club of confirmed participants, until after the event — legitimate interest, art. 6(1)(f) GDPR: so participants see who else is coming. You may object without reason (art. 21 GDPR): the “keep me off the list” tick on the form is that objection; later, write to us.",
+        "The public participant list, off on every event until the club switches it on, shows only the name (or display name) and club of confirmed participants who ticked “I want to appear on the participant list” when registering, until after the event — consent, art. 6(1)(a) GDPR, withdrawn at any time by writing to us; no tick, no listing.",
         "Your name in published results: only with separate, withdrawable consent (art. 6(1)(a) GDPR); the registration is valid without it.",
         "Photographs and video from events, published in the gallery and on the club's channels: legitimate interest (art. 6(1)(f) GDPR) — showing the club's events; public place, no names, no EXIF. A portrait is published only with your agreement (Romanian Civil Code, art. 73–75). Tell us which and we take it down within a month, no reason needed.",
       ],

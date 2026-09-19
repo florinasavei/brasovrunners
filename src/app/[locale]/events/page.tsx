@@ -4,7 +4,7 @@ import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
-import MuiLink from "@mui/material/Link";
+import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { webcalUrl } from "@/modules/events/ical";
 import { env } from "@/shared/config/env";
@@ -23,20 +23,21 @@ import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
+import InfoTip from "@/shared/ui/InfoTip";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
 import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
-import EventCalendar, { type CalendarView } from "@/modules/events/ui/EventCalendar";
+import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[] }>;
+  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[]; view?: string | string[] }>;
 };
 
 /**
@@ -55,11 +56,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam, year: yearParam, type: typeParam } = await searchParams;
+  const { month: monthParam, year: yearParam, type: typeParam, view: viewParam } = await searchParams;
   // The type filter (§89): one of the closed set, or everything.
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
-  const query: Record<string, string> = type ? { type } : {};
+  // The month as a list rather than the grid (§137), kept by the month links like the filter.
+  const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
+  const query: Record<string, string> = { ...(type ? { type } : {}), ...(layout === "list" ? { view: "list" } : {}) };
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
@@ -93,6 +96,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
    * emphasis.
    */
   const featured = upcoming.length > 0 && upcoming[0].featured ? upcoming[0] : undefined;
+  // The kinds on the calendar (§133): a chip for a kind the club has no event of filters
+  // nothing, so it is not offered — the one in the address stays, so the page can say so.
+  const presentTypes = EVENT_TYPES.filter((candidate) => candidate === type || [...events, ...inRange].some((event) => event.type === candidate));
   const listed = (featured ? events.filter((event) => event.id !== featured.id) : events).filter(
     (event) => !type || event.type === type,
   );
@@ -127,73 +133,66 @@ export default async function EventsPage({ params, searchParams }: Props) {
 
       {featured && <FeaturedEventHero event={featured} now={now} />}
 
-      {/* What kind: one chip per type, a link each, kept by the month links (§89). */}
-      <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", gap: 1, mt: 4 }}>
-        {[undefined, ...EVENT_TYPES].map((candidate) => {
-          const active = candidate === type;
-          // A string href: a component reference cannot cross into MUI's client component —
-          // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
-          const href = getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } });
-          // 44px tall (BR-REQ-041-01 criterion 6): a filter is a tap target like any other link.
-          const sx = { height: 44, borderRadius: 22, px: 0.5, fontSize: "0.9375rem" };
-          return candidate ? (
-            <GlyphChip
-              key={candidate}
-              glyph={`type:${candidate}`}
-              href={href}
-              color={active ? "primary" : "default"}
-              variant={active ? "filled" : "outlined"}
-              label={tEvent(`type.${candidate}`)}
-              sx={sx}
-            />
-          ) : (
-            <Chip
-              key="all"
-              component="a"
-              href={href}
-              clickable
-              color={active ? "primary" : "default"}
-              variant={active ? "filled" : "outlined"}
-              label={t("filter.all")}
-              sx={sx}
-            />
-          );
-        })}
-      </Stack>
+      {/* What kind: one small chip per type the club actually has on the calendar, a link
+          each, kept by the month links (§89, §133). Fewer than two kinds is nothing to filter. */}
+      {presentTypes.length > 1 && (
+        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: 3 }}>
+          {[undefined, ...presentTypes].map((candidate) => {
+            const active = candidate === type;
+            // A string href: a component reference cannot cross into MUI's client component —
+            // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
+            const href = getPathname({ locale, href: { pathname: "/events", query: { ...(candidate ? { type: candidate } : {}), ...(layout === "list" ? { view: "list" } : {}) } } });
+            const look = { color: active ? ("primary" as const) : ("default" as const), variant: active ? ("filled" as const) : ("outlined" as const) };
+            // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
+            return (
+              <Box key={candidate ?? "all"} component="a" href={href} aria-current={active ? "page" : undefined} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}>
+                {candidate ? <GlyphChip glyph={`type:${candidate}`} label={tEvent(`type.${candidate}`)} {...look} /> : <Chip size="small" label={t("filter.all")} {...look} />}
+              </Box>
+            );
+          })}
+        </Stack>
+      )}
 
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
       <Box sx={{ mt: 2, mb: 4 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {/* Three doors (the owner: "this subscription to calendar does not work" — a `webcal://`
-            link does nothing where no app claims the scheme, which on a desktop is most
-            browsers): Google Calendar's own "add by URL" address, `webcal://` for Apple,
-            Outlook and phones, and the plain address to paste anywhere else. */}
-        {t("calendar.subscribe")}{" "}
-        <MuiLink
-          href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`))}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
-        >
-          {t("calendar.subscribeGoogle")}
-        </MuiLink>
-        {" · "}
-        <MuiLink href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-          {t("calendar.subscribeApple")}
-        </MuiLink>
-        {" · "}
-        <MuiLink href={`/${locale}/events/calendar.ics`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-          {t("calendar.downloadLink")}
-        </MuiLink>
-        {" · "}
-        <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
-        {/* The feed is fresh on every read (§129); when the phone shows a change is the app's
-            clock, and the owner asked why Google still showed the old hour. */}
-        <Box component="span" sx={{ display: "block", mt: 0.5 }}>
-          {t("calendar.refreshNote")}
+        <EventCalendar view={view} events={inRange} now={now} query={query} layout={layout} />
+
+        {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
+            calendar does not work" — a `webcal://` link does nothing where no app claims the
+            scheme, which on a desktop is most browsers): Google Calendar's own "add by URL"
+            address, `webcal://` for Apple, Outlook and phones, the file itself; the plain
+            address folded away for any other app, and the "when does it update" behind an "i"
+            (the feed is fresh on every read, §129; when the phone shows a change is the app's
+            clock, and the owner asked why Google still showed the old hour). */}
+        <Box component="section" aria-labelledby="add-to-calendar" sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
+          <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            <Typography id="add-to-calendar" component="h3" variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
+              {t("calendar.addTitle")}
+            </Typography>
+            <Button
+              component="a"
+              href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`))}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              variant="outlined"
+              sx={{ minHeight: 44 }}
+            >
+              {t("calendar.subscribeGoogle")}
+            </Button>
+            <Button component="a" href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+              {t("calendar.subscribeApple")}
+            </Button>
+            <Button component="a" href={`/${locale}/events/calendar.ics`} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+              {t("calendar.downloadLink")}
+            </Button>
+            <InfoTip text={t("calendar.refreshNote")} />
+          </Stack>
+          <Box component="details" sx={{ mt: 0.5, "& > summary": { cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center", fontSize: "0.8125rem", color: "text.secondary" } }}>
+            <summary>{t("calendar.feedAddress")}</summary>
+            <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
+          </Box>
         </Box>
-      </Typography>
-      <EventCalendar view={view} events={inRange} now={now} query={query} />
       </Box>
 
       {/*

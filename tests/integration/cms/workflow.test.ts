@@ -819,6 +819,21 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(cleared.stravaEventUrl).toBeNull();
     });
 
+    /** BR-REQ-011-01 criterion 10, the Facebook half (`DECISIONS.md` §144): a Facebook page or nothing. */
+    it("saves a Facebook event link, refuses one on another host, and clears it", async () => {
+      const { event } = await seedEvent();
+      const link = "https://www.facebook.com/events/1234567890";
+      const saved = await saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: event.version, fields: { ...EVENT_FIELDS, facebookEventUrl: link } });
+      expect(saved.facebookEventUrl).toBe(link);
+      expect(
+        await codeOf(
+          saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: saved.version, fields: { ...EVENT_FIELDS, facebookEventUrl: "https://example.test/not-facebook" } }),
+        ),
+      ).toBe("VALIDATION_ERROR");
+      const cleared = await saveEventFields(db, { actor: editor, eventId: event.id, expectedVersion: saved.version, fields: EVENT_FIELDS });
+      expect(cleared.facebookEventUrl).toBeNull();
+    });
+
     it("interprets the times in the timezone the same save sets", async () => {
       const { event } = await seedEvent();
 

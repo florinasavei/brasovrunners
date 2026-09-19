@@ -6092,3 +6092,292 @@ must carry a person's name).
 BR-REQ-053-02 criterion 10.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 133. Decided — the type filter offers only the kinds on the calendar, as small chips (2026-09-19)
+
+**Context.** The owner, looking at the listing on QA with two events on it: "these filters
+should be smaller and I should not show for types that do not exist". Seven 44-pixel pills
+— every kind the platform knows — stood above a calendar that held a run and a race.
+
+**Decision.** The filter row is made of the kinds that have a published event in what the
+page shows — the upcoming list and the month or year in view — plus the kind the address
+names, so a filtered page can still say what it is filtered by. Fewer than two kinds is
+nothing to choose between, and the row is not rendered. Each chip is MUI's small size, the
+glyph in front, inside a 44-pixel-tall link: the tap target is the rule (BR-REQ-041-01
+criterion 6, measured by the e2e suite on every link of the page), the pill's size is not.
+
+*Rejected:* a 32-pixel chip as the link (the suite fails, and rightly: a thumb is the same
+size on a filter as on a card); hiding the active kind when it has no event (the page would
+be filtered by something it does not show).
+
+**Consequences.** `app/[locale]/events/page.tsx`; BR-REQ-041-01 criterion 5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 134. Decided — the dates a save reaches are ticked in the header; the three presets set the ticks (2026-09-19)
+
+**Context.** The owner, on the header of §131: "here I should have a select all!" — and on
+the three radios of §130: "this does not work correctly, they should be radios! I can
+select 'this date only' but also 'this and the following dates' and 'all dates'?? does not
+make sense!", then "should be more boxed and collapsible, it looks ugly on mobile!". The
+radios were three standalone MUI `Radio`s sharing a `name`: the browser unticks the others,
+MUI's own state does not follow, and all three showed ticked at once.
+
+**Decision.** The chips are the choice. Every other date of the series is a chip with a tick;
+a press ticks it, the arrow on it opens that date's editor, and "Toate" in front ticks every
+one (or none). Above Save, a framed `<details>` says the choice in words — "doar această
+dată", "această dată și următoarele (7)", "toate datele seriei (8)", or "această dată și încă
+3 alese sus" — and offers the three presets as one exclusive `ToggleButtonGroup` that sets
+the ticks; its explanation is inside the fold. Both read one piece of state
+(`SeriesScopeProvider`, a context around the page) so the header and the box cannot disagree,
+and the ticked ids reach the form as hidden `dates` inputs. The service's `SeriesEditScope`
+gained `{ ids }`: exactly those dates, an id outside the series ignored, none is "this". The
+three words stay for the API and the tests. The date the page is about is always in.
+
+*Rejected:* a `RadioGroup` alone (fixes the tick, not "select all"); chips that open on
+press with the tick on the icon (a tick nobody can reach from the keyboard); the box open
+by default (the phone was the complaint).
+
+**Consequences.** `content/events/ui/SeriesScope.tsx` (new; `RadioField` no longer used by
+the editor), the editor page, `admin/actions.ts`, `service.ts#applyToSeries`, four keys in
+both catalogues; `tests/integration/cms/series-edit.test.ts`, `tests/e2e/series-edit.spec.ts`.
+BR-REQ-050-02 criterion 17.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 135. Decided — the event page offers its editor to a signed-in staff member (2026-09-19)
+
+**Context.** The owner: "when I am signed in as an admin or editor and I have the rights, I
+should be able to edit events from the event page!" The way was the backoffice list, then
+the row, then Edit.
+
+**Decision.** The public event page reads the staff session — it is rendered per request
+already (`dynamic = "force-dynamic"`), so this costs nothing — and, for a role that may edit
+the words (`canEditTexts`: Redactor and above), shows an "Editează" button beside "back to
+events", 44 pixels tall, leading to `/admin/events/<id>`. Nothing else changes for a
+visitor: no session, no button, and where `STAFF_AUTH_MODE` is `disabled` the session is not
+even asked for. The editor asserts the role for itself (BR-REQ-060-01); the button is a
+door, not a permission.
+
+*Rejected:* a client island that asks `/api/…` who is signed in (worth it only when the page
+stops being per-request — see the caching decision, when it comes); showing the button to a
+volunteer with the editor refusing (a door that does not open is a bug report).
+
+**Consequences.** `app/[locale]/events/[slug]/page.tsx`, one key in both catalogues;
+`tests/e2e/event-edit-link.spec.ts`. BR-REQ-050-02 criterion 18.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 136. Decided — the three legal texts are called GDPR, the racing terms and the declaration (2026-09-19)
+
+**Context.** The owner, on `/admin/legal`: "these documents are not named correctly! privacy
+notice => GDPR, TOS => Racing TOS, declaration is fine" — and, asked whether the public
+links change too: everywhere, with "Termeni de concurs" as the Romanian.
+
+**Decision.** Wherever a reader sees the *name* of a document — the backoffice list, the
+footer, the registration form's links and its consent line, the error summary — the privacy
+notice is "GDPR" in both languages and the terms are "Termeni de concurs" / "Racing TOS";
+the participant declaration keeps its name. The document *kinds* and their keys
+(`PRIVACY_NOTICE`, `TERMS`, `EVENT_DECLARATION`), the routes (`/legal/privacy`,
+`/legal/terms`), the vocabulary in `BUSINESS.md` and the prose that explains what a privacy
+notice *is* do not change: a name is what the club calls the thing, not what the thing is.
+The texts' own titles are the club's, written in `/admin/legal`.
+
+*Rejected:* renaming only the backoffice list (the owner chose everywhere); "Racing TOS" in
+Romanian too (an English abbreviation on a Romanian consent line).
+
+**Consequences.** Seven keys in each catalogue; `tests/e2e/legal-versions.spec.ts`,
+`tests/e2e/registration-form.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 137. Decided — the month is the grid on a phone too, with the surface's glyph and a tooltip; the list by choice (2026-09-19)
+
+**Context.** §89 gave a phone the agenda because seven columns at 320px are 40px each. The
+owner, on QA: "calendar looks bad on mobile: use the same calendar view man, we can have
+tooltips", then "or we can choose compact view but by default I need calendar view!", and
+"the icons in the calendar should also contain the type of terrain … we love icons and
+emojis".
+
+**Decision.** The month is the grid on every width. A chip in a cell is the type's glyph and
+the surface's (§112) over the time on a phone, the two glyphs, the time and the title in one
+line from `sm` up, the whole sentence in a tooltip and as the link's accessible name — 44px
+tall wherever it is. The agenda stays, as the choice: `?view=list`, a chip pair
+"Calendar" / "Listă" in the header, kept by the month links and the filter like `?type=`.
+The chip is a client island (`CalendarEventChip`) because `Tooltip` needs a ref on its child
+and the glyphs are made on that side of the boundary, by name.
+
+*Rejected:* the agenda by default on a phone (§89, reversed on the owner's word); a tooltip
+that opens on tap (a tap on a link is the link — the page is the tooltip on a phone);
+remembering the choice in a cookie (a link says it, and a link can be shared).
+
+**Consequences.** `events/ui/EventCalendar.tsx` (`layout`), `events/ui/CalendarEventChip.tsx`
+(new), `app/[locale]/events/page.tsx` (`?view=`), two keys in both catalogues;
+`tests/e2e/event-pages.spec.ts`. BR-REQ-041-01 criterion 5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 138. Decided — a series card says "Săptămânal", and shows every date (2026-09-19)
+
+**Context.** The owner, on the listing: "8 dates here is redundant, just show weekly", and
+"'2 more in the calendar' does not mean anything".
+
+**Decision.** The card's chip says the rhythm the dates have — "Săptămânal", "La două
+săptămâni" — and only a set with no rhythm keeps "N date". Every coming date is a chip; the
+six-and-a-count of §113 is gone, because a series is made eight weeks ahead (§122) and
+eight chips wrap fine. The backoffice list keeps "8 date": there the number is the point.
+
+**Consequences.** `events/ui/SeriesCard.tsx`, two keys added and one removed in both
+catalogues. BR-REQ-041-01 criterion 9 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 139. Decided — "Adaugă în calendarul tău" is a small region under the month, the address and the explanation folded (2026-09-19)
+
+**Context.** The owner: "I hate how this ics is shown: make it smaller and with a collapsed
+'i'"; "should be a region like 'Add to my calendar', and this info [when each app re-reads]
+should be in a tooltip". The line above the month spelled the feed's address out and
+explained Google's refresh in a sentence, every visit.
+
+**Decision.** Under the month, a bordered region titled "Adaugă în calendarul tău" with the
+three doors of §107 as small 44-pixel buttons — Google Calendar, Apple/Outlook/phone
+(`webcal://`), the download — an "i" (`shared/ui/InfoTip`, a tooltip whose sentence is also
+its accessible name) carrying the refresh note, and the plain address inside a `<details>`
+for the app that wants it pasted. Below the month rather than above: the month is what the
+page is for.
+
+**Consequences.** `app/[locale]/events/page.tsx`, `shared/ui/InfoTip.tsx` (new), two keys
+replace one in both catalogues. BR-REQ-041-01 criterion 7 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 140. Decided — sharing is buttons, the phone's own sheet first; the picture is "Instagram" (2026-09-19)
+
+**Context.** The owner: "the picture for Instagram should be just 'Instagram', and sharing on
+social media should look nicer." §90's row was five text links in a line.
+
+**Decision.** Two rows of 44-pixel pill buttons: "Dă mai departe" — the phone's own share
+sheet (`NativeShareButton`, rendered only where `navigator.share` exists, through
+`useSyncExternalStore` so the HTML and the first client render agree), Facebook, WhatsApp,
+"Instagram" (the square card to save, as before) — and "Adaugă în calendar" — Google
+Calendar, the `.ics`. The share sheet is the honest answer to "nicer on social media": on a
+phone it reaches Instagram stories, Messenger, Telegram and whatever else is installed, which
+no list of links can.
+
+*Rejected:* a script from a network (§90's reason stands); an Instagram deep link (there is
+none that takes a picture).
+
+**Consequences.** `events/ui/ShareLinks.tsx`, `events/ui/NativeShareButton.tsx` (new), two
+keys added and two reworded in both catalogues. BR-REQ-052-02 criterion 8 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 141. Decided — the platform emails the staff invitation itself; Zitadel's key is a bonus (2026-09-19)
+
+**Context.** The owner, testing Echipa on QA: "my top priority is to invite users to the
+platform, which did not work". It did what §123 says without the key: added the row and
+said to create the account by hand. The key (`SETUP.md` §37) is a Zitadel-console step only
+he can do, and until he does, "Add" sent nothing — the one thing he expected it to do.
+
+**Decision.** A sixteenth message type, `STAFF_INVITATION`, queued in the transaction that
+inserts the staff row and sent through the club's own outbox like every other message: to
+the address, in the colleague's language, saying who added them (the actor's name), as what
+(the role's label) and where to sign in — the sign-in page as the action, no token, because
+the sign-in page is what asserts who they are. The Zitadel account is still created by the
+action when the key is set (§123), and Zitadel still sends its password link then; without
+the key the person creates the account at the sign-in page with that address, as the email
+says. "Resend the invitation" queues the message again (a new key; a resend is a new
+trigger, §12.11) and Zitadel's code where configured; refused once they have signed in.
+The page's sentences say what happened in each case, and the To-do row's steps lead with the
+email.
+
+*Rejected:* waiting for the key (the row without a word to the person is what "did not
+work"); sending through Zitadel's SMTP (that is Zitadel's message about a password, not the
+club's about the team); a token in the invitation (nothing to act on — the allowlist row is
+the grant).
+
+**Consequences.** `email-outbox.ts` (enum), migration `0045`, `templates.ts`, `render.ts`,
+`staff-identity/service.ts` (`inviteStaffUser` in a transaction, `resendStaffInvitation`),
+the two actions, the preview's sample, six sentences in both catalogues, the task row's
+steps; `BUSINESS.md` BR-BUS-080, `AGENTS.md` §16.3, `SETUP.md` §37;
+`tests/integration/auth/role-boundaries.test.ts`. BR-REQ-060-01 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 142. Decided — a rejected registration form comes back filled in, from an encrypted cookie (2026-09-19)
+
+**Context.** The owner, on the QA form: "the fields are cleared after submit! super
+annoying! also I can't see that the phone was not valid…". §47's rejection is a redirect
+back to the form with the field *names* in the address — never the values (§14.5: a URL is
+logged by every proxy between here and the phone) — so the person arrived at a summary that
+named the field and a form with nothing in it, and the phone's message read like an
+instruction rather than a verdict.
+
+**Decision.** On a rejection the action keeps what was posted in a cookie for ten minutes:
+AES-256-GCM under a key derived from the deployment's secret (`AUTH_SECRET`, or
+`JOB_SECRET` where there is no sign-in), `httpOnly`, `sameSite=lax`, on the form's own path.
+The page reads it once, only when the address says `error=`, and prefills every box — text,
+the MUI selects (whose choice lives in React state, which is why the DOM could not be
+refilled after the fact), the ticks, both halves of each phone. Left out: the bot fields,
+the address of the form, and the privacy consent, which is re-read every time. Health notes
+ride in it, which is why it is encrypted and short rather than plain and long; a draft past
+the cookie's size (~3.8 KB) is dropped, not truncated, and the person retypes as before. A
+submission that goes through clears it. The phone's message now opens with "the number is
+not valid".
+
+*Rejected:* the values in the URL (§14.5); a client-side form with `useActionState` (the
+whole 700-line Server Component would become a client one to keep four selects); a
+`sessionStorage` island (cannot refill a MUI select either); a server-side store keyed by a
+cookie (a table for a ten-minute draft).
+
+**Consequences.** `registrations/form-draft.ts` (new), the register action and page,
+`ui/PhoneField.tsx` (`draft`), one sentence in both catalogues;
+`tests/unit/registrations/form-draft.test.ts`, `tests/e2e/registration-form.spec.ts`.
+BR-REQ-041-01 criterion 10 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 143. Decided — the participant list is opted into: "Vreau să apar pe lista de participanți" (2026-09-19)
+
+**Context.** The owner, on the form's consents: "here it should be the other way round: 'I
+want to appear on the participant list'". §32 made the list an opt-out — a refusal box,
+legitimate interest with the right to object — beside two consents that ask the other way,
+and the one box that read backwards was the one people got wrong.
+
+**Decision.** The box reads "Vreau să apar pe lista de participanți", unticked; a tick puts
+the name on, no tick keeps it off. The row keeps `list_opt_out` — the column, the published
+set (`list_opt_out = false`) and the privacy test are unchanged — and the form writes the
+tick's opposite. The staff entry form asks the same way. The platform's privacy notice and
+terms say consent (art. 6(1)(a)) rather than objection (art. 21), withdrawn by writing to
+the club; the club approves the texts on production, none is in force yet, so the wording
+changes with the box. Existing rows keep what they answered.
+
+*Rejected:* renaming the column (a migration and every query for a word); keeping the
+objection wording with a consent box (the texts would say the opposite of the form).
+
+**Consequences.** The register page and `form-mapping.ts`, the staff entry page and its
+action, `templates/privacy-notice.ts`, `templates/terms.ts`, two keys in both catalogues;
+`BUSINESS.md` BR-BUS-039, `AGENTS.md` §10.10, `CLAUDE.md`; `tests/unit/registrations/form-mapping.test.ts`,
+`tests/e2e/registration-form.spec.ts`. BR-REQ-039-01 criteria 3–5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 144. Decided — a Facebook event link on the event, beside the Strava one (2026-09-19)
+
+**Context.** The owner: "we also need a field for the Facebook event and the Strava event".
+The Strava event existed (§71, criterion 10 of BR-REQ-011-01); Facebook is where most of
+the club says "going".
+
+**Decision.** `events.facebook_event_url`, the twin of `strava_event_url` in every respect:
+a page on `facebook.com`, `fb.com` or `fb.me` and nothing else (`isFacebookLink`, the same
+hostname comparison as `isStravaLink` — a comparison, not an emitted address, so §8 stands),
+`https://` by CHECK, its own box in the editor under the Strava one, its own labelled fact
+with the Facebook mark on the event page, absent from the card, never carried onto a
+duplicate or a repeated edition because it is one occurrence's page. Migration `0046`.
+
+**Consequences.** `db/schema/events.ts`, migration `0046`, `domain/event-type.ts`,
+`content/events/fields.ts`, `service.ts` (save and duplicate), the editor form and action,
+`events/repository.ts`, the preview, `ui/EventFacts.tsx`, three keys in both catalogues;
+`tests/integration/cms/workflow.test.ts`. BR-REQ-011-01 criterion 10 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -479,10 +479,11 @@ Rules:
   agreed to anything yet, and publishing that they tried is a disclosure they never made;
 - **the registered name and nothing else.** No email address, no status, no place number, no
   count of who is still deciding, and nothing at all about a waiting list;
-- **a participant may keep their own name off it.** The registration form asks, in plain words,
-  on every event — including one with no list today, because the club may add one later and a
-  question nobody was asked cannot be answered on their behalf. A participant may also ask
-  afterwards, by writing to the club;
+- **a participant is on it only because they asked to be.** The registration form of an event
+  with a list offers, in plain words, "I want to appear on the participant list", unticked; no
+  tick, no listing (`DECISIONS.md` §143). A list switched on later means asking the people already
+  registered, because a question nobody was asked cannot be answered on their behalf. A
+  participant may withdraw afterwards, by writing to the club;
 - **it may not be switched on until the approved privacy notice describes it.** The sample
   notice carries the paragraph with the club's facts left as placeholders; the approved wording
   is the club's to write;
@@ -729,7 +730,11 @@ Messages include:
 - waiting-list offer expired;
 - secure registration-management link;
 - secure public-profile management link;
-- current registration status notice for a cancelled or expired registration.
+- current registration status notice for a cancelled or expired registration;
+- the reminder before the event and the thank-you after it;
+- the signed declaration to the participant, and the club's archive copy;
+- a race number given by hand;
+- a staff invitation: who added the colleague, as what, and where to sign in (`DECISIONS.md` §141).
 
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
 

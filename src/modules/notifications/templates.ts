@@ -201,6 +201,11 @@ export type TemplateData = {
   /** True when the hold is the participation window's (§104), not the thirty minutes. */
   confirmLater?: boolean;
   manageUrl?: string;
+  /** The staff invitation (§141): who is invited, as what, by whom, and where to sign in. */
+  staffRole?: string;
+  inviterName?: string;
+  staffEmail?: string;
+  signInUrl?: string;
 };
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
@@ -340,6 +345,14 @@ const T = {
         "Copia pentru arhiva clubului. Se păstrează 3 ani după eveniment, ca în nota de informare; același document este și în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice.",
       ],
     },
+    staffInvitation: {
+      subject: "Ești în echipa Brașov Runners",
+      body: (d: TemplateData) => [
+        `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca ${d.staffRole ?? "membru al echipei"}.`,
+        `Intri cu adresa ${d.staffEmail ?? "aceasta"}: dacă nu ai încă un cont, îl faci din pagina de autentificare, cu exact această adresă (contul e legat de adresă). Accesul începe la prima autentificare.`,
+      ],
+      action: "Intră în backoffice",
+    },
     registrationCancelled: {
       subject: "Înscrierea a fost anulată",
       body: (d: TemplateData) => [`Înscrierea ta la ${d.eventTitle ?? "eveniment"} a fost anulată.`],
@@ -472,6 +485,14 @@ const T = {
         "The club's archive copy. Kept for 3 years after the event, as the privacy notice says; the same document is in the all-declarations PDF on the event's backoffice page.",
       ],
     },
+    staffInvitation: {
+      subject: "You are on the Brașov Runners team",
+      body: (d: TemplateData) => [
+        `${d.inviterName || "A colleague"} added you to the team that runs the Brașov Runners website, as ${d.staffRole ?? "a team member"}.`,
+        `You sign in with ${d.staffEmail ?? "this address"}: if you have no account yet, create one at the sign-in page with exactly this address (the account is tied to the address). Access begins at your first sign-in.`,
+      ],
+      action: "Open the backoffice",
+    },
     registrationConfirmed: {
       subject: "Your registration is confirmed",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -544,6 +565,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   DECLARATION_SIGNED: "declarationSigned",
   DECLARATION_ARCHIVE: "declarationArchive",
   BIB_ASSIGNED: "bibAssigned",
+  STAFF_INVITATION: "staffInvitation",
 };
 
 /**

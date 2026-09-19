@@ -1,4 +1,4 @@
-import { and, eq, gt, ne, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -318,6 +318,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
     stravaEventUrl: fields.stravaEventUrl,
+    facebookEventUrl: fields.facebookEventUrl,
     coHostName: fields.coHostName,
     coHostUrl: fields.coHostName ? fields.coHostUrl : null,
     locationName: fields.locationName,
@@ -701,7 +702,11 @@ export type SaveEventAndTranslationsInput = {
 
 /** As Google Calendar asks: this date, this and the following ones, or every date of the series. */
 export const SERIES_EDIT_SCOPES = ["this", "following", "all"] as const;
-export type SeriesEditScope = (typeof SERIES_EDIT_SCOPES)[number];
+/**
+ * Which other dates a save reaches (§130): one of the three words, or the dates ticked by
+ * hand in the editor's header (§134) — ids outside the series are ignored, none is "this".
+ */
+export type SeriesEditScope = (typeof SERIES_EDIT_SCOPES)[number] | { ids: readonly string[] };
 
 /** The row's columns a series edit carries to its other dates — every one an organizer sets, minus the ones below. */
 const SERIES_COLUMNS = [
@@ -805,7 +810,10 @@ async function applyToSeries<T extends Record<string, unknown>>(
   }
 
   // The series is the source and every date made from it; "following" is by the day this
-  // date had before the save, so moving it does not change which dates follow.
+  // date had before the save, so moving it does not change which dates follow; ticked dates
+  // are those and no other, whatever else the list carried.
+  const chosen = typeof input.scope === "object" ? input.scope.ids.filter((id) => id !== before.id) : null;
+  if (chosen && chosen.length === 0) return 0;
   const members = await tx
     .select()
     .from(events)
@@ -814,6 +822,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
         or(eq(events.id, sourceId), eq(events.repeatOf, sourceId)),
         ne(events.id, before.id),
         input.scope === "following" ? gt(events.startsAt, before.startsAt) : undefined,
+        chosen ? inArray(events.id, chosen) : undefined,
       ),
     );
 
@@ -1109,6 +1118,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // partner is held with them every time.
     videoUrl: null,
     stravaEventUrl: null,
+    facebookEventUrl: null,
     coHostName: source.coHostName,
     coHostUrl: source.coHostUrl,
     // Never the rule: a copy is one date, and only the source repeats (§122).

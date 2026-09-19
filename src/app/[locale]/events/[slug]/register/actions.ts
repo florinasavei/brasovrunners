@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { findEventForRegistrationById, findPublishedEventBySlug } from "@/modules/events/repository";
+import { clearFormDraft, stashFormDraft } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { submitRegistration } from "@/modules/registrations/service";
@@ -44,7 +45,10 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);
-  if (verdict === "failed") redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
+  if (verdict === "failed") {
+    await stashFormDraft(form, path);
+    redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
+  }
 
   try {
     const internalEvent = await findEventForRegistrationById(db, publicEvent.id);
@@ -71,6 +75,8 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
       // Field names, never values: nothing a participant typed goes into a URL, which is
       // logged by every proxy between here and them (§14.5).
       const fields = error.fields.length > 0 ? `&fields=${error.fields.join(",")}` : "";
+      // What they typed comes back with them — in a cookie, never in the URL (§142).
+      await stashFormDraft(form, path);
       // The fragment is what stops a rejection landing somebody at the top of a long form with
       // nothing said: the browser scrolls to the summary and, because it is focusable, focuses
       // it. No JavaScript is involved, which is the point — this path exists for the submission
@@ -80,5 +86,6 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
     throw error;
   }
 
+  await clearFormDraft(path);
   redirect(`${path}?submitted=1`);
 }

@@ -17,6 +17,7 @@ export default function PhoneField({
   countryLabel,
   locale,
   value,
+  draft,
   required = false,
   autoComplete,
   id,
@@ -29,6 +30,8 @@ export default function PhoneField({
   locale: "ro" | "en";
   /** A stored E.164 number to prefill, or nothing. */
   value?: string | null;
+  /** What was typed before a rejected submit (§142): the two boxes as posted, over `value`. */
+  draft?: { country?: string; national?: string };
   required?: boolean;
   autoComplete?: string;
   id?: string;
@@ -36,7 +39,9 @@ export default function PhoneField({
   helperText?: string;
 }) {
   const names = new Intl.DisplayNames([locale], { type: "region" });
-  const { countryCode, national } = splitPhone(value ?? null);
+  const split = splitPhone(value ?? null);
+  const countryCode = draft?.country && (PHONE_COUNTRY_CODES as readonly string[]).includes(draft.country) ? draft.country : split.countryCode;
+  const national = draft ? (draft.national ?? "") : split.national;
   const options = PHONE_COUNTRY_CODES.map((code) => ({
     code,
     label: `${names.of(code) ?? code} (+${DIALING_CODES[code]})`,

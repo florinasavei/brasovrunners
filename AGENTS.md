@@ -1336,9 +1336,11 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
   ordered by `confirmed_at` then `id`. The select list is the registered name and nothing else —
   no address, no status, no identifier, and no count of anything unconfirmed;
-- `registrations.list_opt_out` is the participant's own refusal, asked on every registration
-  form whatever the event's current setting is: a list can be switched on months later, and a
-  question nobody put to that person cannot be answered on their behalf;
+- `registrations.list_opt_out` is the participant's own answer, the opposite of the tick "I want
+  to appear on the participant list" (`DECISIONS.md` §143): no tick, no listing. Asked on the
+  form of an event whose list is switched on (§85); switching a list on later means asking the
+  people already registered, because a question nobody put to that person cannot be answered
+  on their behalf;
 - it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
   sample notice carries the paragraph with the club's facts as placeholders (§29,
   `DECISIONS.md` §29);
@@ -2662,6 +2664,10 @@ PROFILE_MANAGE_LINK
 REGISTRATION_STATE_NOTICE
 EVENT_REMINDER
 EVENT_THANKS
+DECLARATION_SIGNED
+DECLARATION_ARCHIVE
+BIB_ASSIGNED
+STAFF_INVITATION
 ```
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
@@ -2676,6 +2682,12 @@ footer "reply to this email with questions" when `EMAIL_REPLY_TO` is set.
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary
 public event registration page. It carries no scoped token and creates none.
+
+`STAFF_INVITATION` is the one message with no participant: queued in the transaction that
+adds a colleague on Echipa (`staff:<id>:invitation:<time>`), to the staff address, in the
+colleague's language — who added them, as what, the sign-in page as the action. No token:
+the sign-in page asserts who they are. Sent again from the row until they first sign in
+(`DECISIONS.md` §141).
 
 Complete Romanian/English HTML and text templates. Locale/timezone-aware dates and localized URLs. No fragile sentence fragments.
 

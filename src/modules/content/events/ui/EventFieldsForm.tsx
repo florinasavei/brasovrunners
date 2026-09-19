@@ -265,6 +265,16 @@ export default async function EventFieldsForm({
         inputMode="url"
       />
 
+      {/* The Facebook event for this occurrence (§144). */}
+      <TextField
+        name="event.facebookEventUrl"
+        type="url"
+        label={t("editor.facebookEventUrl")}
+        helperText={t("editor.facebookEventUrlHelp")}
+        defaultValue={event?.facebookEventUrl ?? ""}
+        inputMode="url"
+      />
+
       {/* The other organization the event is held with (§121): a name, and its page. */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField

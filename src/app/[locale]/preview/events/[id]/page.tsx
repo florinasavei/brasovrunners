@@ -93,6 +93,7 @@ export default async function PreviewEventPage({ params }: Props) {
     routeUrl: event.routeUrl,
     videoUrl: event.videoUrl,
     stravaEventUrl: event.stravaEventUrl,
+    facebookEventUrl: event.facebookEventUrl,
     featured: event.featured,
     distanceMeters: event.distanceMeters,
     elevationGainMeters: event.elevationGainMeters,

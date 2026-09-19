@@ -334,8 +334,10 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     expect(b.registration.bibNumber).not.toBeNull();
     expect(a.registration.bibNumber).not.toBe(b.registration.bibNumber);
 
-    await setBibNumberByStaff(db, volunteer, a.registration.id, 5, NOW);
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 5, NOW))).toBe("CONFLICT");
+    // A number neither of them drew: the draw is random, and 5 has come up (a flaky run, 2026-09-19).
+    const chosen = [5, 6, 7].find((n) => n !== a.registration.bibNumber && n !== b.registration.bibNumber) as number;
+    await setBibNumberByStaff(db, volunteer, a.registration.id, chosen, NOW);
+    expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, chosen, NOW))).toBe("CONFLICT");
     expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 0, NOW))).toBe("VALIDATION_ERROR");
     expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 1.5, NOW))).toBe("VALIDATION_ERROR");
 
@@ -345,7 +347,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
       .select()
       .from(auditLogs)
       .where(eq(auditLogs.action, "registration.bib_set"));
-    expect(entry.metadataJson).toEqual({ from: a.registration.bibNumber, to: 5 });
+    expect(entry.metadataJson).toEqual({ from: a.registration.bibNumber, to: chosen });
 
     // The runner is told the number given by hand, once per number, and not when it is cleared (§105).
     const told = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, a.registration.id))).filter(

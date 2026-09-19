@@ -15,7 +15,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, listSeriesDates } from "@/modules/content/events/repository";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
-import SeriesDates from "@/modules/events/ui/SeriesDates";
+import { SeriesScopeBox, SeriesScopeChips, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote } from "@/modules/events/ui/series-sentence";
 import {
   describeIncompleteLocales,
@@ -44,7 +44,6 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
-import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
@@ -193,6 +192,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
 
   return (
+    <SeriesScopeProvider dates={dateChips} currentId={event.id}>
     <Stack spacing={4}>
       <Box>
         <Typography variant="body2">
@@ -296,7 +296,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             {t("editor.series.position", { position: String(position + 1), count: String(seriesDates.length) })}
             {event.repeatOf ? ` ${t("editor.repeatOfNote")}` : ""}
           </Typography>
-          <SeriesDates dates={dateChips} currentId={event.id} />
+          <SeriesScopeChips />
           <Stack direction="row" spacing={2} sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
             {previousDate && (
               <Link href={{ pathname: "/admin/events/[id]", params: { id: previousDate.id } }}>
@@ -465,23 +465,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   </CheckboxField>
                 </Box>
               )}
-              {/* A date of a series (§130): as Google Calendar asks — this date, this and the
-                  following, or all. Only what changed travels; the service says how. */}
+              {/* A date of a series (§130, §134): the dates ticked in the header, said in words,
+                  with the three presets — this date, this and the following, all — as one
+                  exclusive control. Only what changed travels; the service says how. */}
               {inSeries && maySaveSettings && (
-                <Box sx={{ mb: 1.5 }}>
-                  <Typography variant="body2" sx={{ mb: 0.5 }}>
-                    {t("editor.scope.title")}
-                  </Typography>
-                  <Stack direction={{ xs: "column", sm: "row" }} sx={{ columnGap: 1 }}>
-                    <RadioField name="scope" value="this" defaultChecked>
-                      {t("editor.scope.this")}
-                    </RadioField>
-                    <RadioField name="scope" value="following">{t("editor.scope.following")}</RadioField>
-                    <RadioField name="scope" value="all">{t("editor.scope.all")}</RadioField>
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    {t("editor.scope.help")}
-                  </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <SeriesScopeBox />
                 </Box>
               )}
               <SubmitButton
@@ -756,5 +745,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
       </Box>
     </Stack>
+    </SeriesScopeProvider>
   );
 }
