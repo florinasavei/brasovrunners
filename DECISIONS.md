@@ -5309,3 +5309,26 @@ templates; `DeskRow`, the registration's page, `admin-repository.ts`, `csv.ts` a
 the catalogue; `tests/integration/registrations/minors.test.ts`. BR-REQ-031-04 criterion 9.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 109. Decided — `CLAUDE.md` says where each thing is decided, not what it is (2026-09-19)
+
+**Context.** "The documentation, shortened" was the last developer row on `/admin/tasks`:
+every document grew at the pace of the decisions, and `CLAUDE.md` — the first thing an agent
+reads — carried three hundred lines of prose under "What exists right now", each paragraph a
+summary of a `DECISIONS.md` section that already existed. The owner's standing instruction is
+"vibecoder friendly": the first page must say where to look, not repeat what is there.
+
+**Decision.** The section is a map: one line per built thing, the `DECISIONS.md` section that
+records why, and the `AGENTS.md` subsection or `BR-REQ` where the rule is stated. The hard
+rules stay in the table above it, untouched. An adversarial check compared the old text with
+the map and the pointed sections for facts an agent would need and could no longer reach; the
+six it found (the one-count rule and `readPublicAvailability`, the `EMAIL_DELIVERY_MODE`
+values, erase taking the acceptance in one transaction, `STAFF_AUTH_MODE=disabled` answering
+404, the two pool timeouts, the wordmark's one place) were written back as one line each, and
+three `§` references that pointed at `AGENTS.md` subsections were labelled so. `SETUP.md` is
+not shortened: its numbered sections are procedures with values, still valid, and its length
+is the record of every account the club opened; the row on `/admin/tasks` narrows to it.
+
+**Consequences.** `CLAUDE.md` (429 → ~290 lines); the `docsSimplify` row's text; nothing else.
+
+Baseline `BR-V1.38-2026-09-18`.

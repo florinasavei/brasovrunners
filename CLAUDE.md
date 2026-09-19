@@ -98,271 +98,128 @@ code underneath unchanged ones.
 and blocks on an undefined `BR-REQ-*`, a leaked hostname, or a root file missing from the
 README index — application source under `src/` is not indexed and needs no README row.
 
-## What exists right now
+## What exists right now — the map, with where each thing is decided
 
-Public Romanian event pages, running and tested. `/ro/evenimente` lists seeded events and
-`/ro/evenimente/<slug>` shows one, with `SportsEvent` JSON-LD, a sitemap and robots. English
-translations are published too: every event carries a complete Romanian and English
-translation. BR-REQ-040-02 still holds — an unpublished locale is a 404 and never a fallback
-to the other language. The site root redirects to the events listing, which is the landing page.
+Everything below is built, tested and deployed unless a line says otherwise. Each line names
+the `DECISIONS.md` section that records *why*; the section is the place to read before
+changing the thing. The prose that used to stand here (three hundred lines) is in those
+sections and in `CHANGELOG.md`.
 
-**Registration has a door.** `modules/events/ui/RegistrationCta.tsx` is the one control, on the
-featured hero and on the event page, rendering exactly one state: the organizer's own link for an
-event registered elsewhere, a primary button and the free places for an open one, the waiting list
-when it is full, and a sentence — opening date, closed, cancelled — where there is no button to
-offer. The count is the allocator's own formula (`readPublicAvailability`), never a second one.
-Until `BR-V1.19` the whole lifecycle was built, tested and unreachable: the route existed and no
-file under `src/` linked to it.
+**Public site**
 
-**The form a stranger fills in is one page, and what loads is the required half.** Fifteen
-questions were asked on one screen — 2,697 pixels at 390 wide, now 2,117; a multi-step form was considered and refused in all three shapes it
-could take, because each keeps partial answers somewhere that costs more than the scrolling it
-saves — hidden fields would put health text in the markup of every later step, a partial row
-would need a condition inside the allocator, and a client wizard would have to reimplement the
-browser's own validation in two languages. What loads now is what a submission is refused
-without, plus the consents; the t-shirt, the club, the display name and the health note sit
-in native `<details>` — **open by default since 2026-09-17** (`DECISIONS.md` §59: the club field
-was reported missing while folded), still foldable. A consent is never collapsed — a question behind a summary nobody
-opens has not been put to them. A rejection the browser could not catch returns to a focusable
-error summary by URL fragment, with each field named as a link to that field. The declaration
-page names the event and the instant the hold expires, above the text rather than after it
-(`DECISIONS.md` §47).
+- Event pages in both languages, JSON-LD, sitemap, robots; the site root is the listing; an
+  unpublished locale is a 404, never the other language (BR-REQ-040-02, §28). Rich-text
+  description, rules (`#rules`) and programme (`#schedule`) per language (§71, §96).
+- The listing: featured event, type filters, a month view (grid from `sm`, agenda on a phone)
+  (§89); Open Graph cards drawn from the event, a square one for Instagram, share links (§90);
+  **events as a calendar** — `.ics` per event, Google Calendar's add link, and a `webcal://`
+  feed of every published event (§107). Race week: countdown, "come to the desk with the QR"
+  (§76–§79). Gallery on R2, "Galerie" in the nav while an album is published (BR-REQ-054-01, §66).
+- The header lockup (§58); the kit-face wordmark on the homepage and nowhere else
+  (`shared/ui/Wordmark`, CHANGELOG `BR-V1.32`); `PAGE_WIDTH` in `theme/brand.ts`; a
+  dark scheme by the switch only (§93); icons from `@mui/icons-material`, one file per glyph.
 
-**The club can see which entries are its own.** An optional "I am a Brașov Runners team member"
-tick, on the public form and the staff-entered one, inside the optional disclosure whose summary
-names the club. Staff were never blocked from registering — `participants` and `staff_users`
-share no constraint and the public form reads no session — so what this adds is visibility, not
-access. It is a **claim**: matching against `staff_users` would answer "no" for most members,
-who have no backoffice account. It grants nothing and appears in no condition in the allocator
-or the capacity formula, which a test enforces; the export prints "Yes" or an empty cell and
-never "No" (`DECISIONS.md` §48).
+**Registration**
 
-**A public participant list, built and switched off.** `events.participant_list_visibility` is
-`HIDDEN` for every event and `NAMES` publishes the registered names of confirmed, real, not
-opted-out participants and nothing else. It may not be turned on until the club's approved privacy
-notice describes the disclosure — the sample notice carries the paragraph with placeholders
-(BR-REQ-039-01, `DECISIONS.md` §32).
+- One door, `RegistrationCta`: the organizer's own link, the button with the free places, the
+  waiting list, or a sentence — and one count, `readPublicAvailability`, the allocator's own
+  formula, never a second one; an uncapped event shows no number (CHANGELOG `BR-V1.19`,
+  `AGENTS.md` §10.6). One-page form, required half first, optional sections
+  folded but open (§59), a consent never folded; a rejection returns to a focusable error
+  summary naming each field (§47). Phones are E.164 (§84); citizenship; the runner's language
+  for the emails and the declaration (§97); "I am a Brașov Runners team member" is a claim
+  that grants nothing (§48); `FEATURE_DISPLAY_NAME` (off) hides nicknames (§95); the event's
+  date, place and links to its page, its rules, the terms and the privacy notice on the form
+  (§102); an optional **socials** section — Strava link, Instagram username (§106); a parent
+  registers a **minor**: the guardian's name, required under eighteen (§108).
+- The flow in five steps on the form and the event page (§91): form → email link (48 h) →
+  the declaration → confirmed (QR, race number) → race day. **A free race is confirmed a week
+  before**: for an event further away than its participation window (per event, default asked
+  7 days before, due 2 days before), the place is held until the deadline and the declaration —
+  the confirmation — is asked at once and again when the window opens; inside the window and
+  on a weekly run, the thirty-minute hold (§104).
+- The lifecycle, one allocator for the click and the job, proven under real concurrency
+  (`tests/concurrency/capacity.test.ts`); the 30-minute hold, the waiting list and its
+  24-hour offers, self-unregistration, the maintenance job (`AGENTS.md` §10.5–§10.6, §40, §68). Test registrations
+  (`kind = TEST`) go through the same queue and are counted nowhere the club looks (§30).
+  A public participant list, built and `HIDDEN` until the privacy notice describes it (§32).
+- The declaration: the club's text with tokens — `{{participant}}`, `{{declarant}}`,
+  `{{guardian}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`,
+  `{{signedAt}}` — the identity document typed at signing and never scanned, the signature in
+  a hand, the signed PDF emailed back and rendered per event, the blank paper form; retention
+  three years, the document and the health note seven days after the event (§85–§87, §95).
+  The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99).
+- Race numbers drawn at random at confirmation, never reused, a picture of every bib, a bib
+  sheet; a preferential number typed by hand among the free ones, emailed to the runner
+  (§87, §94, §105). Check-in codes and hosted QR; "Înscrierile mele" on one link (§77).
+- Anti-bot: honeypot + timing check; Cloudflare Turnstile behind two keys (§97).
 
-**The backoffice, and the whole of an event in it.** An organizer signs in, creates a race or
-duplicates last year's, sets every column the row carries — type and surface, event status, both
-times, the end time and the timezone, the map link and the route link, distance, climb, difficulty, the featured flag, and
-the whole registration block including capacity, the window and the approved declaration a
-participant signs — previews it, publishes it, archives it when it is over, and deletes one made
-by mistake. `src/db/seeds/pilot.ts` is no longer how an event is configured (`DECISIONS.md` §28).
-Deleting is Administrator-only and is refused for an event with any registration against it;
-archiving is the answer there. Six staff roles asserted on the server (volunteer, copywriter, organizer, dev, administrator, superadministrator — `DECISIONS.md` §103), staff administration for
-an Administrator, DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED **for the event** — both languages go
-live together, and PUBLISHED is refused while either is incomplete — and a save that carries the
-version it was loaded with, on the translation *and* on the event row, so a second organizer's
-save is a CONFLICT rather than an overwrite. The editor is **one form and one save** now —
-Publication, then Settings, then Content as one tabbed panel per language — writing the event row
-and both translations in a single transaction, where a stale version anywhere fails the whole save
-and writes none of it. Only what a translator would change is entered per language: the title, the
-page address, the short description and the two SEO fields. The meeting point, the street address,
-the difficulty and the cost are one value for the whole event (`AGENTS.md` §11.7, `DECISIONS.md`
-§36), which means the English page shows them in the club's own words — the accepted trade, and
-migration `0017` has since dropped the columns they left behind. Built ahead of its milestone on purpose: `DECISIONS.md` §25, §28. Staff sign-in is Auth.js with the Zitadel OAuth provider
-(`DECISIONS.md` §26, reversing §24, which was never shipped to anyone). `STAFF_AUTH_MODE=provider`
-is the real thing; local and test still use the development switcher of `AGENTS.md` §13.1, and any
-environment without a Zitadel tenant runs `STAFF_AUTH_MODE=disabled`, answering 404 to every staff
-request. Everywhere there *is* a way in, a signed-out `/admin` goes to sign-in and comes back to
-the backoffice afterwards.
+**Email**
 
-**The header carries the club's lockup** — the supplied artwork entire, mountains over
-`BRASOV RUNNERS` in the lettering the logo was drawn with, at 44px so that lettering reads. The
-browser tab shows the same file. The kit-face wordmark (Facón) is on the **homepage**, above the
-listing, and nowhere else (`shared/ui/Wordmark`). Three other arrangements were tried on
-2026-09-17 and are recorded in `SiteHeader.tsx` with what was wrong with each (`DECISIONS.md`
-§58). The page is `xl` wide; `PAGE_WIDTH` in `theme/brand.ts` is the one place that says so.
+- Fourteen message types (`email_outbox.email_message_type`), bilingual by default, one branded
+  card, the action as a button, deep links — event, programme, rules, "I can't make it any
+  more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
+  at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`
+  only on production — QA `allowlist`, local `capture` — and live outside production is refused
+  at startup (§37, `AGENTS.md` §16). The outbox drains after the request that
+  queued it and on the scheduler (§68); a spent Mailgun allowance defers, never discards (§40).
+  The reminder 48 hours before, the thank-you after (§81–§83); the participation confirmation
+  when the window opens (§104); the number given by hand (§105).
+- **The Mailgun plan is a setting** on `/admin/emails` — Free, Basic, Foundation, Scale or
+  typed ceilings — and every "how much can we still send" figure and the cost table follow it
+  (§100). **The club is told when email stops**: `/api/health` answers 503 for anything but
+  `ok`, with an `email` block; a cron-job.org monitor with failure notifications is the alarm
+  (§98). Canonical email identity, versioned; Gmail dots are two addresses (§74).
 
-**Standing pages are written in an editor.** `modules/content/rich-text`: an allowlisted Tiptap
-schema (`AGENTS.md` §11.3) validated on the server, a server renderer that can only emit what the
-allowlist names, and one client island for the writing. Headings, bold, italic, links, lists and
-quotations — and nothing else, because everything else in StarterKit is switched off in the editor
-*and* refused by the schema. Bodies written before it are read through the same module, so no
-migration ran. **Pictures are in the text** (`DECISIONS.md` §72, §73): the picture control
-shrinks in the browser, stores on R2 like a gallery photo, and inserts a block whose address
-the schema accepts and no other; a click on the picture opens a panel for its alt text (empty
-until written, never the file name), a caption, one of four widths, and "choose one already
-uploaded". `/admin/gallery/pictures` lists every stored picture with where it is used; the
-orphan sweep (`media/references.ts`, on the maintenance job) deletes what nothing has
-referenced for seven days, drafts counting as references. An event's short description is the
-same editor (`excerpt_json`; the plain `excerpt` is derived on save).
+**Backoffice**
 
-**Legal documents.** `legal_documents`/`legal_document_translations` (§12.5), immutable once
-approved or referenced. The backoffice **writes** them and never **rewrites** them
-(`DECISIONS.md` §46, §53): an Administrator drafts a version, reads it, approves it, and from
-that moment its words are fixed — a correction is the next version, and an event *selects* an
-approved declaration rather than editing one. A draft that was **never** approved may now be
-deleted, because nothing can have relied on it; an approved version is never deleted and its
-approval is never withdrawn, and §53 records why the second of those is a registration-lifecycle
-change rather than a missing button. The defect §53 found is fixed: the declaration page posts the
-id and hash of the text it showed, and a signature against any other version is refused
-(`DECISIONS.md` §57). An approved version's page offers **the next version from this one**,
-prefilled — that is what "editing" a legal document means here. The club no longer needs a developer to publish
-its own wording, which was the last thing standing between a real runner and a registration. Every environment except production is
-seeded with a full **sample** privacy notice, terms and declaration in both languages: complete in
-structure, every club-specific fact a visible `<PLACEHOLDER>`, and a not-approved banner as the
-first thing on the rendered page. Production is refused outright (`DECISIONS.md` §29, superseding
-§27). The two public routes (`/ro/confidentialitate`, `/ro/termeni`) render whatever is currently
-approved, or say plainly that nothing is yet.
+- Six roles the club can name — Voluntar (the desk only), Redactor (the words), Organizator,
+  Tehnic, Administrator, Superadministrator — asserted on the server (§103, BR-REQ-060-01);
+  Zitadel sign-in (§26); `STAFF_AUTH_MODE`: `provider` deployed, `dev-switcher` locally and in
+  tests, `disabled` answers 404 to every staff route (`AGENTS.md` §13.1). `/admin/guide` opens the reader's
+  own sections first (§103).
+- The whole of an event in one form and one save, both languages together, versions on the
+  row and the translations (§28, §36, §64, §70, §71); recurring events published as a series;
+  the ⋮ menu; the queue panel with the waiting list in order (§92); the participation window's
+  two numbers (§104). Legal documents written, approved and never rewritten (§46, §53, §57);
+  "start from the platform's text" prefills the club's three texts (§95). Standing pages in
+  the editor, pictures in the text (§72–§73).
+- Registrations: list, filters (bounced too), timeline, resend, CSV with names, identity
+  document, socials, guardian, check-in and bounce (`AGENTS.md` §15.10); enter, rename, cancel,
+  erase — erase takes the declaration acceptance with the row in one transaction, the audit row
+  first, which cancelling never does (§33, §44, §67, §88); "Trimite acum" within the allowance (§80). The race-day desk on a phone: scan or
+  type, confirm on paper, give a place, a number, check in, walk-ins (§67); the desk row names
+  a minor's parent (§108).
+- `/admin/tasks`: what the club still owes and what it pays, read from the system — the
+  monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro` — with the steps
+  under each row; the cost table with the Mailgun plan's price (§41, §97–§101). `/devs`: the
+  configuration, Neon's month, Vercel's deployments and build minutes, the outbox, the
+  repository's documents at `/devs/docs/<name>` (§88, §101).
 
-**The registration lifecycle, proven under real concurrency.** Submission (honeypot + timing
-check, generic response regardless of what the address turns out to mean), email confirmation,
-the 30-minute declaration hold, capacity, the waiting list, self-unregistration, and the
-registration-maintenance job — one shared allocator
-(`modules/registrations/service.ts`) that a participant's click and the scheduled job both go
-through. `tests/concurrency/capacity.test.ts` proves twenty simultaneous confirmations against
-one free place produce exactly one winner, and that a released place goes to the front of the
-waiting list rather than to a concurrent new registration — against real PostgreSQL, not the
-single-connection PGlite the rest of the suite runs on. The pilot's `CHECK (capacity IS NULL)`
-guard is gone, removed only after that suite passed.
+**Platform**
 
-**Email.** Ten message types (§16.3), Romanian and English, HTML and text, through the outbox
-built earlier. A message that carries an action link mints its token at send time — the outbox
-row itself never holds a secret, satisfying §14.5 even though the row can sit queued for
-minutes before a worker renders it. Two job endpoints
-(`/api/internal/jobs/email-outbox`, `.../registration-maintenance`) behind a constant-time
-`JOB_SECRET`, and `/api/webhooks/mailgun` verifying Mailgun's own signature. No in-process
-interval: this deploys to Vercel serverless functions, which have no persistent process for one
-to live in, so the external scheduler is the only mechanism, not a fallback. The Mailgun
-adapter itself is still declared and deliberately not wired — it throws rather than dropping
-mail — and startup still refuses live delivery outside production.
+- Production on the club's `.com`, QA on `qa.`, each a Vercel project over its own Neon
+  project; releases are the `qa → main` PR; the gated migration workflow (§31) and the build
+  that waits for it (§62); `/api/health` and `yarn smoke` (§31, §98). Monitors on cron-job.org,
+  fifteen minutes by day and hourly at night, because Neon's free month is 100 CU-hours (§68).
+  Mailgun live on `mail.<domain>`; `contact@` forwards to the club's Gmail (`SETUP.md` §35).
+- Guards: token validation keyed on the hash, throttled job endpoints, the resend oracle rule
+  (§39, `AGENTS.md` §19.4); the pool's `statement_timeout` and
+  `idle_in_transaction_session_timeout` (`docs/PLATFORM.md` § Connections are not the ceiling). The repository is public: `yarn secrets:check` in `yarn check`, GitHub
+  secret scanning and push protection on (§98).
 
-**A registrations backoffice that can change a registration, within three moves.** List and
-filter by event and status, one registration's full timeline, a resend that can only ever send
-what §15.8 allows for the current status, and a CSV export with formula-neutralized cells
-(§15.10). Beyond reading: **enter** a registration for somebody who asked in person — the same
-allocator, the same queue position, the same unconfirmed start, `source = STAFF` and the organizer
-on the row; **correct** the registered name, and nothing else, because the verified address is the
-identity; and **cancel**, which is what "remove them" means, releasing the place to the front of
-the waiting list; and **erase**, for somebody who asks to be removed rather than to withdraw,
-which takes the declaration with it and is the one thing cancelling cannot do. Every one of the
-four writes an `audit_logs` row. A staff-entered registration reaches CONFIRMED only when the participant signs
-the declaration from their own email — consent cannot be relayed (BR-REQ-037-03, BR-REQ-037-05,
-`DECISIONS.md` §33). Administrator only, asserted on the server.
+Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); the
+structured programme rows (the calendar carries the programme as text, §107); a custom domain
+for the bucket. `SETUP.md` is long because it is the record of every account the club opened;
+the procedures still valid are the numbered sections, and `docs/VIBECODING.md` is the short
+way in.
 
-**Test registrations, so the queue can be watched working.** `registrations.kind` is `REAL` or
-`TEST`; an Administrator fills an event's queue with synthetic participants on `@test.invalid`
-addresses and clears them again. A `TEST` row goes through the same allocator, occupies a place
-and is promoted in turn — `kind` appears in no condition in the allocator or the capacity formula,
-and a test asserts the two kinds produce identical transitions. It is omitted from the CSV export,
-labelled everywhere it is listed, and cannot exist when `APP_ENV=production`, refused twice
-(`DECISIONS.md` §30).
+**Two settings that cost an afternoon between them:** the Zitadel application needs
+**"Include user's profile info in the ID Token"**, or every sign-in is refused by the allowlist
+that cannot see an address; and the first Administrator is a `staff_users` row inserted by
+hand, because the screen that invites people is behind the sign-in it would grant.
 
-**`/api/health`.** Database reachability plus each scheduled job's own liveness — degraded, not
-down, when a job is stale or has never run, because a stalled scheduler delays a notification
-rather than breaking the site.
-
-**The guards are finished, and the pool is bounded in time.** §19.4 named five surfaces and
-guarded two; token validation is now keyed on the presented token's *hash* — the threat is one
-link hammered, not enumeration — and the job endpoints are throttled per job name, counted only
-after `JOB_SECRET` verifies. The second surface has a route now: `/registrations/resend` lets a
-participant ask for their own link back when nothing arrived, sending only what the current
-status allows and answering identically whatever it finds, because a form anybody can type any
-address into is a membership oracle the moment it says "no such registration". Uploads are the
-fifth and have nothing behind them yet. The database
-pool sets `statement_timeout` and `idle_in_transaction_session_timeout`: its size was never the
-risk (`docs/PLATFORM.md` § "Connections are not the ceiling" does the arithmetic), one unbounded
-query holding a serverless function for 300 seconds was. And a **spent Mailgun allowance now
-defers a message instead of discarding it** — the provider refuses a spent daily cap with the
-same 400 it uses for a malformed message, which the adapter called permanent, so on the club's
-busiest day every message queued after the cap was thrown away (`DECISIONS.md` §40). `/devs`
-shows the volume against the allowance before a window opens, and explains every configuration
-enum rather than only reporting its value (§41).
-
-**1033 unit and integration tests, 140 end-to-end runs (70 per viewport project), and five
-concurrency tests.** `yarn test` needs no database — PGlite runs real
-PostgreSQL in process. `yarn test:e2e` needs `docker compose up -d db` and a seed, and so does
-`yarn test:concurrency`, which needs two genuine connections and would prove nothing on a
-single-connection database.
-
-**A photo gallery, on R2.** Albums with photos shrunk in the browser and re-encoded on the
-server to two WebP variants (no original, no EXIF), stored through the §17 adapter —
-`STORAGE_MODE` derives `local`/`fake`/`r2`/`unconfigured` from the five `R2_*` variables.
-The bucket exists since 2026-09-18 and both deployed environments have the variables
-(`SETUP.md` §32). Public `/galerie`; "Galerie" in the nav while an album is published
-(BR-REQ-054-01, `DECISIONS.md` §66).
-
-**The race-day desk** (`/admin/checkin`, "Ziua cursei"; `DECISIONS.md` §67). Every staff role,
-on a phone: scan a runner's QR or type a name, a number or the code; mark them here; confirm a
-pending registration on a paper declaration the participant signed (recorded under the
-volunteer's name); give a waiting-list entry a free place; type a number; enter a walk-in with
-the fast track. Nothing at the desk places anybody past capacity. Every confirmation mints
-`registrations.checkin_code`; the confirmation email carries the code and a hosted QR;
-participants can say "I am here" from their own link from the day before. `/admin/guide`
-explains the platform per role, volunteers first; `SETUP.md` §34 is the volunteer-account
-procedure.
-
-**The event editor asks for what organizers think in** (`DECISIONS.md` §64, §70, §71): a date
-and a 24-hour time; a duration in minutes rather than an end; a gun time only on a race; a full
-description per language in the §11.3 rich-text editor; a Strava event link and a YouTube film;
-recurrence — cadence, days of the week, weeks — on the creation form, with the events list
-publishing a whole series at once.
-
-**The database gets to sleep** (`DECISIONS.md` §68). A request that queues an email drains the
-outbox after its own response; the external monitors run every fifteen minutes by day and
-hourly at night, Romania time, because Neon's free month is 100 CU-hours and a five-minute
-pinger spends 180. `/devs` shows the month's figure with `NEON_API_KEY` (`SETUP.md` §33).
-
-**What the first real test found** (`DECISIONS.md` §84–§88): phones are a country plus digits
-(E.164); the list opt-out is asked only where a list exists and "who is coming" is folded with
-the club; the signature is typed in a hand and the page says what is next; race numbers are
-given at confirmation; erase removes the participant with the last registration; the database's
-size is on `/admin/tasks` and `/devs`; the repository's `.md` files render at `/devs/docs/<name>`.
-Then, the same evening (§89–§92): a month view on the listing; Open Graph cards drawn from the
-event, a square one for Instagram, share links; icons (`@mui/icons-material`, pinned, one file
-per glyph); the flow in five steps; every email on `/admin/emails`; the events list's ⋮ menu;
-one place field; the Neon row in dollars a month; the queue panel with the waiting list in order;
-a dark scheme (§93); race numbers drawn at random with a picture of every bib (§94); the club's
-declaration with tokens, the identity document at signing, the signed PDF emailed back and
-archived per event, three-year retention, complete legal templates, `FEATURE_DISPLAY_NAME` (§95);
-bilingual branded emails with deep links, event rules under `#rules`, Romanian at the root (§96);
-Turnstile behind two keys, the runner's language on the form, the texts cut to a third (§97).
-
-**The email people keep, the reminder, and after the race** (`DECISIONS.md` §81–§83).
-The confirmation and the reminder open with a bold facts line (date, time, meeting point),
-the map and Strava links, the organizer's one-line "what to bring" (`checklist`, per
-language), the QR and the manage link; every email ends "reply to this email with questions".
-`EVENT_REMINDER` goes from the maintenance job 48 hours before the start, once per confirmed
-registration (`registration:<id>:reminder`). `COMPLETED` means over: "S-a încheiat", no
-registration control, the desk closed, the job hands off. `EVENT_THANKS` is sent by an
-Administrator from the event page, once, to everyone checked in, with an optional link —
-never automatic. The registrations list filters to bounced emails; the export carries
-`Checked in` and `Email bounced`; the events list shows confirmed · here on race day.
-
-**Race week, for the runner and the desk** (`DECISIONS.md` §76–§79). Within seven days of
-the featured event the homepage counts down on the event's own calendar and, once
-registration has closed, says to come to the desk with the QR; "Alte evenimente" folds on a
-phone. `/inscrieri/ale-mele` ("Înscrierile mele", in the footer): one address, one link, every
-active registration — code and QR, "I am here", cancel — on the `MANAGE_PROFILE` token, its
-first use; the same oracle rule as "send me my link again". The desk row and the registration
-page carry "email respins" with Mailgun's reason when a message bounced. A confirmed row's
-resend is the confirmation itself, QR included; the bib sheet prints one per page on request.
-**Gmail dots are two addresses** since canonicalization version 2 (`DECISIONS.md` §74): the
-club rehearses from its own inbox; the plus tag still collapses.
-
-Not built: the rest of the CMS — articles and what M2–M4 name (multi-distance races, one bib
-per race across distances, results, runner profiles). A custom domain for the bucket
-(`media.<domain>`) is optional and undone.
-
-**What is deployed.** Production on the club's `.com` and QA on its `qa.` subdomain,
-each a Vercel project (`fra1`) over its own Neon project (Frankfurt), sharing nothing.
-Production tracks `main` and QA tracks `qa`; a release is the `qa → main` PR, whose merge
-fires the gated migration workflow and whose build waits for that migration
-(`docs/RUNBOOKS.md` § Deploy a release). The hostnames live in `SETUP.md` §26 and nowhere
-else; `APP_BASE_URL` is the only thing that knows them. **Staff sign-in works on both**: each
-has its own Zitadel application on the one tenant (`STAFF_AUTH_MODE=provider`), and the owner
-is SUPERADMIN on production. Production email is **live** since 2026-09-18; QA stays
-`allowlist`.
-
-Two settings that are not obvious and cost an afternoon between them: the Zitadel application
-needs **"Include user's profile info in the ID Token"** enabled, or the ID token carries no
-`email` claim and every sign-in is refused by the allowlist gate that cannot see an address;
-and the first Administrator is a `staff_users` row inserted by hand, because the screen that
-invites people is itself behind the sign-in it would be granting.
-
-**Still owed, all of it account creation or a decision rather than code** (as of 2026-09-18;
+**Still owed, all of it account creation or a decision rather than code** (as of 2026-09-19;
 `/admin/tasks` shows the same list with the steps, read from the system):
 
 1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.

@@ -770,12 +770,12 @@
         },
         "docsSimplify": {
           "title": "Documentația scurtată (SETUP, RUNBOOKS, CLAUDE)",
-          "todo": "Documentele din repo au crescut în ritmul deciziilor. docs/VIBECODING.md e pagina scurtă; restul merită o trecere de simplificare: fiecare document să spună o dată ce e de făcut, cu valorile la vedere, iar istoricul să stea în DECISIONS.",
+          "todo": "CLAUDE.md e acum o hartă: un rând pe lucru, cu secțiunea din DECISIONS care spune de ce (§109). Rămâne SETUP.md: 1.800 de rânduri în care procedurile încă valabile (numerotate, cu valori) stau lângă istoria fiecărui cont deschis — de mutat istoria în CHANGELOG/DECISIONS și de păstrat doar ce mai e de făcut.",
           "done": "Fiecare document din repo e scurt și spune o dată ce e de făcut.",
           "how": [
-            "SETUP.md: doar procedurile încă valabile, cu valorile; ce s-a făcut o dată trece în CHANGELOG/DECISIONS.",
-            "CLAUDE.md: secțiunea „Ce există acum” înlocuită cu trimiteri la §-urile din DECISIONS.",
-            "docs:check rămâne verde; MANIFEST/README actualizate."
+            "SETUP.md: fiecare secțiune numerotată rămâne doar dacă e o procedură încă valabilă, cu valorile la vedere; „făcut la data X” se mută într-o linie de CHANGELOG sau în DECISIONS.",
+            "docs/RUNBOOKS.md: același principiu — o intrare pe situație, pașii, nimic despre cum s-a ajuns aici.",
+            "docs:check rămâne verde; README-ul (indexul) se actualizează."
           ]
         },
         "roDomain": {
