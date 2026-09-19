@@ -680,8 +680,8 @@
       "approved": "Approved",
       "draft": "Draft",
       "keys": {
-        "PRIVACY_NOTICE": "Privacy notice",
-        "TERMS": "Terms and conditions",
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Racing TOS",
         "EVENT_DECLARATION": "Participant declaration"
       },
       "referenced": "{signatures} signatures · {events} events",
@@ -1437,8 +1437,8 @@
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
-    "privacyLinkLabel": "Privacy",
-    "termsLinkLabel": "Terms and conditions"
+    "privacyLinkLabel": "GDPR",
+    "termsLinkLabel": "Racing TOS"
   },
   "Registration": {
     "title": "Register: {event}",
@@ -1518,7 +1518,7 @@
       "clubName": "Club or team",
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
-      "privacyAcknowledged": "Privacy notice",
+      "privacyAcknowledged": "GDPR",
       "captcha": "The anti-bot check",
       "stravaUrl": "Strava profile",
       "instagramHandle": "Instagram",
@@ -1586,8 +1586,8 @@
     "facts": {
       "details": "Event details",
       "rules": "The rules",
-      "terms": "Terms and conditions",
-      "privacy": "Privacy"
+      "terms": "Racing TOS",
+      "privacy": "GDPR"
     },
     "socialsHelp": "If you want us to find you and tag you in the club's posts. Not published on the site, not given to anyone.",
     "stravaUrl": "Your Strava profile (link)",

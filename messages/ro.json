@@ -680,8 +680,8 @@
       "approved": "Aprobat",
       "draft": "Ciornă",
       "keys": {
-        "PRIVACY_NOTICE": "Nota de confidențialitate",
-        "TERMS": "Termeni și condiții",
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Termeni de concurs",
         "EVENT_DECLARATION": "Declarația participantului"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
@@ -1437,8 +1437,8 @@
   },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
-    "privacyLinkLabel": "Confidențialitate",
-    "termsLinkLabel": "Termeni și condiții"
+    "privacyLinkLabel": "GDPR",
+    "termsLinkLabel": "Termeni de concurs"
   },
   "Registration": {
     "title": "Înscriere: {event}",
@@ -1518,7 +1518,7 @@
       "clubName": "Club sau echipă",
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
-      "privacyAcknowledged": "Nota de confidențialitate",
+      "privacyAcknowledged": "GDPR",
       "captcha": "Verificarea anti-bot",
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
@@ -1586,8 +1586,8 @@
     "facts": {
       "details": "Detaliile evenimentului",
       "rules": "Regulamentul",
-      "terms": "Termeni și condiții",
-      "privacy": "Confidențialitate"
+      "terms": "Termeni de concurs",
+      "privacy": "GDPR"
     },
     "socialsHelp": "Dacă vrei să te găsim și să te etichetăm în postările clubului. Nu le publicăm pe site și nu le dăm nimănui.",
     "stravaUrl": "Profilul tău de Strava (link)",

@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **The legal texts are called GDPR and Termeni de concurs / Racing TOS** everywhere their name shows — the backoffice list, the footer, the form; the declaration keeps its name. §136.
 - **"Editează" on the event page** for a signed-in Redactor or above — one press into the editor. §135.
 - **"Resend the invitation" is on every row that never signed in**, key or no key: without the key the answer says which key and where (To do → "Invite the team"), instead of a button that is not there. §123.
 - **Tick the dates a save reaches.** In the editor of a series, every date's chip is a tick, its arrow opens it, "Toate" ticks them all; the folded box above Save says the choice in words and its three presets — this date, this and the following, all — set the ticks (the old radios could all be on at once). §134.

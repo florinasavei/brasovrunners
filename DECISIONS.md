@@ -6167,3 +6167,26 @@ volunteer with the editor refusing (a door that does not open is a bug report).
 `tests/e2e/event-edit-link.spec.ts`. BR-REQ-050-02 criterion 18.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 136. Decided — the three legal texts are called GDPR, the racing terms and the declaration (2026-09-19)
+
+**Context.** The owner, on `/admin/legal`: "these documents are not named correctly! privacy
+notice => GDPR, TOS => Racing TOS, declaration is fine" — and, asked whether the public
+links change too: everywhere, with "Termeni de concurs" as the Romanian.
+
+**Decision.** Wherever a reader sees the *name* of a document — the backoffice list, the
+footer, the registration form's links and its consent line, the error summary — the privacy
+notice is "GDPR" in both languages and the terms are "Termeni de concurs" / "Racing TOS";
+the participant declaration keeps its name. The document *kinds* and their keys
+(`PRIVACY_NOTICE`, `TERMS`, `EVENT_DECLARATION`), the routes (`/legal/privacy`,
+`/legal/terms`), the vocabulary in `BUSINESS.md` and the prose that explains what a privacy
+notice *is* do not change: a name is what the club calls the thing, not what the thing is.
+The texts' own titles are the club's, written in `/admin/legal`.
+
+*Rejected:* renaming only the backoffice list (the owner chose everywhere); "Racing TOS" in
+Romanian too (an English abbreviation on a Romanian consent line).
+
+**Consequences.** Seven keys in each catalogue; `tests/e2e/legal-versions.spec.ts`,
+`tests/e2e/registration-form.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
