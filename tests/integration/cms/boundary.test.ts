@@ -267,7 +267,10 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       `DECISIONS.md` §53 and is guarded the same way as the rest — it refuses an approved
       version outright, and refuses a draft anything references. `isReliedOn` is a pure
       predicate over three counts and writes nothing; it is exported so the backoffice list and
-      the service cannot disagree about what "referenced" means.
+      the service cannot disagree about what "referenced" means. `approvePlatformTemplates`
+      (`DECISIONS.md` §132) is not a sixth writer but the first two in one act — it calls
+      `createDraftVersion` and `approveVersion` for each document that has no approved
+      version and touches nothing that has one.
 
       There is deliberately no `withdrawApproval` here. §53 has the reasoning: a declaration is
       bound to the participant when the form is posted rather than when it is read, so changing
@@ -275,6 +278,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     */
     const service = await import("@/modules/legal-documents/service");
     expect(Object.keys(service).sort()).toEqual([
+      "approvePlatformTemplates",
       "approveVersion",
       "createDraftVersion",
       "deleteDraftVersion",

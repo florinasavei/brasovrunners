@@ -6068,11 +6068,27 @@ registered seat — somebody's address — out of a public repository (§98), ev
 approved privacy notice will show it on the site: the site is the club's to publish, the
 repository is everyone's to clone.
 
+**And one press.** "Do it for me" is not a thing a page can do for the person who must take
+responsibility, but it can be one act instead of fifteen: `approvePlatformTemplates` creates
+and approves version 1 of every document that has no approved version, from the platform's
+text with the facts written in, by the Superadministrator who presses — the same
+`createDraftVersion` and `approveVersion` the long way uses, so the number is derived, the
+hash is of what is stored, `effective_at` is the moment and the approver is on the row. A
+document already in force is left alone (§46, §53), a fact still unknown refuses the whole act
+naming the placeholder, and the page shows the facts it would write before the button, so a
+wrong CIF is caught on the backoffice and not on the public notice. The row on
+`/admin/tasks` and the runbook lead with it.
+
 *Rejected:* a constant in the source (the first cut of this decision, reversed within the
-hour on "the repo is public"); asking the club to type the facts (the point was not to).
+hour on "the repo is public"); asking the club to type the facts (the point was not to);
+approving from a seed or a script (production is refused a seed by rule, §29, and the act
+must carry a person's name).
 
 **Consequences.** `env.ts` (three optional variables), `.env.example`, `club-facts.ts`,
-`admin/legal/new/page.tsx`, the catalogue's two intro strings;
-`tests/unit/legal-documents/club-facts.test.ts`; the values on both Vercel projects.
+`admin/legal/new/page.tsx`, `service.ts#approvePlatformTemplates`, the action and the box on
+`/admin/legal`, the catalogue, the task row's steps, the runbook;
+`tests/unit/legal-documents/club-facts.test.ts`,
+`tests/integration/legal/platform-approve.test.ts`; the values on both Vercel projects.
+BR-REQ-053-02 criterion 10.
 
 Baseline `BR-V1.38-2026-09-18`.
