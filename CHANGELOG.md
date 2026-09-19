@@ -12,6 +12,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **The editor says which date you are on.** Any date of a series opens under a header with the series' name, the date in words, "date 3 of 9", every date as a chip (the open one filled), and previous/next. §131.
+- **Edit one date, the following ones, or the whole series** — as Google Calendar asks, three radios above Save on any event in a series. Only what you changed travels: the new hour lands at that hour on every date's own day; a date you moved or cancelled on its own stays so. §130.
 - **The calendar feed is live**: every read is the current data (the edge had kept a copy for an hour, which is why Google showed 19:00 after the change to 18:50); it is called "🏃 BVR"; the place is the map link, one tap to open, with the meeting point's name in the description; the listing says when each app re-reads it. §129.
 - **A series keeps its first event's day.** Ticking Wednesday on a Sunday run makes Sundays and Wednesdays, not a Sunday followed by Wednesdays; the editor shows the event's own day ticked and locked. §128.
 - **Links and pictures in legal texts**: `[the words](https://…)` and `![what it shows](https://…)` in a paragraph render on the page; the PDFs write the words and the address. §127.

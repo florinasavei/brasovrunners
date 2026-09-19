@@ -13,7 +13,10 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { findEventForEditing } from "@/modules/content/events/repository";
+import { findEventForEditing, listSeriesDates } from "@/modules/content/events/repository";
+import { editionDifference, usualOf } from "@/modules/events/domain/series";
+import SeriesDates from "@/modules/events/ui/SeriesDates";
+import { editionNote } from "@/modules/events/ui/series-sentence";
 import {
   describeIncompleteLocales,
   missingPublicEventFields,
@@ -41,6 +44,7 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
+import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
@@ -61,7 +65,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -103,7 +107,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, created } = await searchParams;
+  const { error, saved, assigned, total, created, applied } = await searchParams;
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -167,6 +171,26 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const ruleWords = repeatRule ? await ruleSentence(repeatRule, event, event.timezone, locale) : null;
   const ruleEnded = repeatRule?.until ? new Date(`${repeatRule.until}T23:59:59`).getTime() < now.getTime() : false;
   const seriesTitle = event.repeatOf ? await findEventTitle(db, event.repeatOf, locale) : null;
+  const inSeries = event.repeatOf !== null || repeatRule !== null;
+
+  // Which date is open, and the others one press away (§131; the owner: "it must be clear
+  // which edition I am editing; the recurring ones must be easier to edit"). Every date of the
+  // series as a chip, this one filled, the ones unlike the others marked as on the card (§122).
+  const seriesDates = inSeries ? await listSeriesDates(db, event.repeatOf ?? event.id) : [];
+  const usual = usualOf(seriesDates);
+  const dateChips = await Promise.all(
+    seriesDates.map(async (member) => ({
+      id: member.id,
+      href: getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: member.id } } }),
+      label: format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "short", day: "numeric", month: "short" }),
+      note: await editionNote(editionDifference(member, usual)),
+    })),
+  );
+  const position = seriesDates.findIndex((member) => member.id === event.id);
+  const previousDate = position > 0 ? seriesDates[position - 1] : null;
+  const nextDate = position >= 0 && position < seriesDates.length - 1 ? seriesDates[position + 1] : null;
+  const dateWords = (member: { startsAt: Date; timezone: string }) =>
+    format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
 
   return (
     <Stack spacing={4}>
@@ -190,7 +214,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
         )}
         {saved === "repeatStopped" && <Alert severity="success">{t("editor.repeatStopped")}</Alert>}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped"].includes(saved) && !(saved === "created" && created) && (
+        {saved === "eventSeries" && <Alert severity="success">{t("editor.savedSeries", { applied: applied ?? "0" })}</Alert>}
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries"].includes(saved) && !(saved === "created" && created) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -259,12 +284,37 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         date of a series (a note and the way back), a source with a rule (how it repeats, and
         stop), or the form that makes a series.
       */}
-      {event.repeatOf ? (
-        <Alert severity="info">
-          {t("editor.repeatOfNote", { title: seriesTitle ?? "…" })}{" "}
-          <Link href={{ pathname: "/admin/events/[id]", params: { id: event.repeatOf } }}>{t("editor.repeatOfLink")}</Link>
-        </Alert>
-      ) : repeatRule && ruleWords ? (
+      {inSeries && (
+        <Box component="section" sx={{ p: 2, border: 2, borderColor: "primary.main", borderRadius: 2 }}>
+          <Typography variant="overline" component="p" sx={{ lineHeight: 1.6 }}>
+            {t("editor.series.kicker", { title: seriesTitle ?? orderedTranslations[0]?.title ?? "…" })}
+          </Typography>
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 0.5 }}>
+            {t("editor.series.editing", { date: dateWords(event) })}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t("editor.series.position", { position: String(position + 1), count: String(seriesDates.length) })}
+            {event.repeatOf ? ` ${t("editor.repeatOfNote")}` : ""}
+          </Typography>
+          <SeriesDates dates={dateChips} currentId={event.id} />
+          <Stack direction="row" spacing={2} sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
+            {previousDate && (
+              <Link href={{ pathname: "/admin/events/[id]", params: { id: previousDate.id } }}>
+                {t("editor.series.previous", { date: dateWords(previousDate) })}
+              </Link>
+            )}
+            {nextDate && (
+              <Link href={{ pathname: "/admin/events/[id]", params: { id: nextDate.id } }}>
+                {t("editor.series.next", { date: dateWords(nextDate) })}
+              </Link>
+            )}
+            {event.repeatOf && (
+              <Link href={{ pathname: "/admin/events/[id]", params: { id: event.repeatOf } }}>{t("editor.repeatOfLink")}</Link>
+            )}
+          </Stack>
+        </Box>
+      )}
+      {event.repeatOf ? null : repeatRule && ruleWords ? (
         <Box component="section">
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
             {t("editor.repeatRuleTitle")}
@@ -413,6 +463,25 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <CheckboxField name="acknowledgeLiveEdit" required>
                     {t("editor.acknowledgeLive")}
                   </CheckboxField>
+                </Box>
+              )}
+              {/* A date of a series (§130): as Google Calendar asks — this date, this and the
+                  following, or all. Only what changed travels; the service says how. */}
+              {inSeries && maySaveSettings && (
+                <Box sx={{ mb: 1.5 }}>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    {t("editor.scope.title")}
+                  </Typography>
+                  <Stack direction={{ xs: "column", sm: "row" }} sx={{ columnGap: 1 }}>
+                    <RadioField name="scope" value="this" defaultChecked>
+                      {t("editor.scope.this")}
+                    </RadioField>
+                    <RadioField name="scope" value="following">{t("editor.scope.following")}</RadioField>
+                    <RadioField name="scope" value="all">{t("editor.scope.all")}</RadioField>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    {t("editor.scope.help")}
+                  </Typography>
                 </Box>
               )}
               <SubmitButton

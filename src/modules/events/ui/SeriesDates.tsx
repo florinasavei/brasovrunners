@@ -13,7 +13,16 @@ export type SeriesDate = { id: string; href: string; label: string; note: Editio
  * can sit inside the chip — an icon element handed to `Chip` from a Server Component is
  * dropped during server rendering (§112).
  */
-export default function SeriesDates({ dates, more }: { dates: readonly SeriesDate[]; more?: string }) {
+export default function SeriesDates({
+  dates,
+  more,
+  currentId,
+}: {
+  dates: readonly SeriesDate[];
+  more?: string;
+  /** The date the page is about, filled and marked current — the editor's header (§131). */
+  currentId?: string;
+}) {
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
       {dates.map((date) => (
@@ -22,7 +31,9 @@ export default function SeriesDates({ dates, more }: { dates: readonly SeriesDat
           component="a"
           href={date.href}
           clickable
-          variant="outlined"
+          variant={date.id === currentId ? "filled" : "outlined"}
+          color={date.id === currentId ? "primary" : "default"}
+          aria-current={date.id === currentId ? "page" : undefined}
           icon={date.note ? <EditionMark note={date.note} size={16} /> : undefined}
           label={date.label}
           sx={{
