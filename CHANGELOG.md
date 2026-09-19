@@ -13,6 +13,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 - **The three legal texts, approved in one press.** `/admin/legal` shows the club's facts it would write and a button that creates and approves version 1 of every missing document from the platform's text; a text in force is never replaced; the task-board row and the runbook say so. §132.
 - **The templates arrive with the club's facts written in.** "Start from the platform's text" fills the legal name, the CIF and the registered seat from `CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER`, `CLUB_REGISTERED_ADDRESS` (environment, never source — the repository is public) and the contact address from `EMAIL_REPLY_TO`; the page names whatever is still blank. §132.
 
+The owner's second pass on QA, the same evening.
+
+- **The type filter is small and only offers what is there.** One small chip per kind that has an event on the page, none when there is one kind; the link under each is still 44 pixels tall. §133.
+
 The evening's test on QA, and what it found.
 
 - **The editor says which date you are on.** Any date of a series opens under a header with the series' name, the date in words, "date 3 of 9", every date as a chip (the open one filled), and previous/next. §131.

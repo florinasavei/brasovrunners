@@ -6092,3 +6092,24 @@ must carry a person's name).
 BR-REQ-053-02 criterion 10.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 133. Decided — the type filter offers only the kinds on the calendar, as small chips (2026-09-19)
+
+**Context.** The owner, looking at the listing on QA with two events on it: "these filters
+should be smaller and I should not show for types that do not exist". Seven 44-pixel pills
+— every kind the platform knows — stood above a calendar that held a run and a race.
+
+**Decision.** The filter row is made of the kinds that have a published event in what the
+page shows — the upcoming list and the month or year in view — plus the kind the address
+names, so a filtered page can still say what it is filtered by. Fewer than two kinds is
+nothing to choose between, and the row is not rendered. Each chip is MUI's small size, the
+glyph in front, inside a 44-pixel-tall link: the tap target is the rule (BR-REQ-041-01
+criterion 6, measured by the e2e suite on every link of the page), the pill's size is not.
+
+*Rejected:* a 32-pixel chip as the link (the suite fails, and rightly: a thumb is the same
+size on a filter as on a card); hiding the active kind when it has no event (the page would
+be filtered by something it does not show).
+
+**Consequences.** `app/[locale]/events/page.tsx`; BR-REQ-041-01 criterion 5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

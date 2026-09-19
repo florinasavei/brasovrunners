@@ -93,6 +93,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
    * emphasis.
    */
   const featured = upcoming.length > 0 && upcoming[0].featured ? upcoming[0] : undefined;
+  // The kinds on the calendar (§133): a chip for a kind the club has no event of filters
+  // nothing, so it is not offered — the one in the address stays, so the page can say so.
+  const presentTypes = EVENT_TYPES.filter((candidate) => candidate === type || [...events, ...inRange].some((event) => event.type === candidate));
   const listed = (featured ? events.filter((event) => event.id !== featured.id) : events).filter(
     (event) => !type || event.type === type,
   );
@@ -127,39 +130,25 @@ export default async function EventsPage({ params, searchParams }: Props) {
 
       {featured && <FeaturedEventHero event={featured} now={now} />}
 
-      {/* What kind: one chip per type, a link each, kept by the month links (§89). */}
-      <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", gap: 1, mt: 4 }}>
-        {[undefined, ...EVENT_TYPES].map((candidate) => {
-          const active = candidate === type;
-          // A string href: a component reference cannot cross into MUI's client component —
-          // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
-          const href = getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } });
-          // 44px tall (BR-REQ-041-01 criterion 6): a filter is a tap target like any other link.
-          const sx = { height: 44, borderRadius: 22, px: 0.5, fontSize: "0.9375rem" };
-          return candidate ? (
-            <GlyphChip
-              key={candidate}
-              glyph={`type:${candidate}`}
-              href={href}
-              color={active ? "primary" : "default"}
-              variant={active ? "filled" : "outlined"}
-              label={tEvent(`type.${candidate}`)}
-              sx={sx}
-            />
-          ) : (
-            <Chip
-              key="all"
-              component="a"
-              href={href}
-              clickable
-              color={active ? "primary" : "default"}
-              variant={active ? "filled" : "outlined"}
-              label={t("filter.all")}
-              sx={sx}
-            />
-          );
-        })}
-      </Stack>
+      {/* What kind: one small chip per type the club actually has on the calendar, a link
+          each, kept by the month links (§89, §133). Fewer than two kinds is nothing to filter. */}
+      {presentTypes.length > 1 && (
+        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: 3 }}>
+          {[undefined, ...presentTypes].map((candidate) => {
+            const active = candidate === type;
+            // A string href: a component reference cannot cross into MUI's client component —
+            // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
+            const href = getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } });
+            const look = { color: active ? ("primary" as const) : ("default" as const), variant: active ? ("filled" as const) : ("outlined" as const) };
+            // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
+            return (
+              <Box key={candidate ?? "all"} component="a" href={href} aria-current={active ? "page" : undefined} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}>
+                {candidate ? <GlyphChip glyph={`type:${candidate}`} label={tEvent(`type.${candidate}`)} {...look} /> : <Chip size="small" label={t("filter.all")} {...look} />}
+              </Box>
+            );
+          })}
+        </Stack>
+      )}
 
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
       <Box sx={{ mt: 2, mb: 4 }}>
