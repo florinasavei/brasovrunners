@@ -1,5 +1,10 @@
-import { and, eq, isNotNull, lt, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, lt, notExists, or } from "drizzle-orm";
+import { auditLogs } from "@/db/schema/audit-logs";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
+import { events } from "@/db/schema/events";
+import { participants } from "@/db/schema/participants";
+import { registrations } from "@/db/schema/registrations";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { jobRuns } from "@/db/schema/job-runs";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
@@ -57,6 +62,23 @@ export const RETENTION = {
    * evidence. Rows that failed permanently are kept: those are the ones somebody investigates.
    */
   sentOutboxDays: 90,
+  /**
+   * A registration and the declaration signed for it are kept three years from the event's
+   * start — the general limitation period of Codul civil art. 2517, within which a claim
+   * about the event could still be made and the declaration is the evidence — and then go,
+   * with the participant row when it was their last registration (`DECISIONS.md` §95). The
+   * privacy notice says exactly this, and this is what makes it true.
+   */
+  registrationsYearsAfterEvent: 3,
+  /**
+   * The identity document's series and number, and the health note, go seven days after the
+   * event's start — the kits are handed out by then, and the privacy notice says so (§95).
+   * The declaration keeps the name, the signature, the version and the hash; the participant
+   * keeps the PDF that was emailed with the number in it.
+   */
+  identityAndHealthDaysAfterEvent: 7,
+  /** The log of staff actions: three years, as the notice says. */
+  auditLogYears: 3,
 } as const;
 
 export type PruneCounts = {
@@ -64,6 +86,11 @@ export type PruneCounts = {
   rateLimitBuckets: number;
   actionTokens: number;
   outboxMessages: number;
+  registrations: number;
+  participants: number;
+  identityDocuments: number;
+  healthNotes: number;
+  auditLogs: number;
 };
 
 const daysBefore = (now: Date, days: number) => new Date(now.getTime() - days * 24 * 60 * 60_000);
@@ -119,11 +146,64 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     )
     .returning({ id: emailOutbox.id });
 
+  /**
+   * Registrations of events that started more than the retention period ago, with their
+   * declarations; then every participant left with no registration at all. Test rows go the
+   * same way. Erase by hand (`admin-service.ts`) does the same for one person, sooner.
+   */
+  const eventCutoff = new Date(now.getTime());
+  eventCutoff.setUTCFullYear(eventCutoff.getUTCFullYear() - RETENTION.registrationsYearsAfterEvent);
+  const stale = db
+    .select({ id: registrations.id })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(lt(events.startsAt, eventCutoff));
+  await db.delete(declarationAcceptances).where(inArray(declarationAcceptances.registrationId, stale));
+  const deletedRegistrations = await db
+    .delete(registrations)
+    .where(inArray(registrations.id, stale))
+    .returning({ id: registrations.id });
+  const deletedParticipants =
+    deletedRegistrations.length > 0
+      ? await db
+          .delete(participants)
+          .where(notExists(db.select({ id: registrations.id }).from(registrations).where(eq(registrations.participantId, participants.id))))
+          .returning({ id: participants.id })
+      : [];
+
+  // Seven days after the event: the identity document out of the declaration, the health note
+  // out of the registration. The rows stay; the two fields go.
+  const shortCutoff = daysBefore(now, RETENTION.identityAndHealthDaysAfterEvent);
+  const recent = db
+    .select({ id: registrations.id })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .where(lt(events.startsAt, shortCutoff));
+  const clearedDocuments = await db
+    .update(declarationAcceptances)
+    .set({ idDocument: null })
+    .where(and(isNotNull(declarationAcceptances.idDocument), inArray(declarationAcceptances.registrationId, recent)))
+    .returning({ id: declarationAcceptances.id });
+  const clearedHealth = await db
+    .update(registrations)
+    .set({ healthNotes: null, healthConsentVersion: null, healthConsentAt: null, updatedAt: now })
+    .where(and(isNotNull(registrations.healthNotes), inArray(registrations.id, recent)))
+    .returning({ id: registrations.id });
+
+  const auditCutoff = new Date(now.getTime());
+  auditCutoff.setUTCFullYear(auditCutoff.getUTCFullYear() - RETENTION.auditLogYears);
+  const deletedAudit = await db.delete(auditLogs).where(lt(auditLogs.createdAt, auditCutoff)).returning({ id: auditLogs.id });
+
   return {
     jobRuns: deletedJobRuns.length,
     rateLimitBuckets: deletedBuckets.length,
     actionTokens: deletedTokens.length,
     outboxMessages: deletedOutbox.length,
+    registrations: deletedRegistrations.length,
+    participants: deletedParticipants.length,
+    identityDocuments: clearedDocuments.length,
+    healthNotes: clearedHealth.length,
+    auditLogs: deletedAudit.length,
   };
 }
 

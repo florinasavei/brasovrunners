@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -318,7 +318,7 @@ For a capped event:
 - every capacity-changing action promotes eligible waiting participants before allocating a direct place to a later registrant;
 - concurrent actions must never exceed capacity or let a later registrant jump the queue.
 
-The initial direct declaration hold is 30 minutes. This is a configurable application setting and is always capped by registration closing and event start.
+The initial direct declaration hold is 30 minutes, capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104).
 
 For an event without a capacity limit, the page shows that registration is open without displaying a fabricated number of places.
 
@@ -646,8 +646,9 @@ list of roles, so adding a role later cannot silently take one away.
 
 | Staff role | Adds, on top of the role below |
 | --- | --- |
-| Contributor | Writes and translates drafts, and submits their own for approval. Proposes; does not decide |
-| Moderator | Edits any event and approves — publishing, unpublishing, archiving. The club's editorial hands |
+| Volunteer (`CONTRIBUTOR`) | The race-day desk: scans, marks present, confirms on paper, gives a place, types a number. Nothing else (`DECISIONS.md` §103) |
+| Copywriter (`COPYWRITER`) | The words of every event and page, in both languages, at any status; submits drafts for approval. No settings, no publishing |
+| Organizer (`MODERATOR`) | Creates and configures events, approves — publishing, unpublishing, archiving — and the gallery. The club's editorial hands |
 | Technical (dev) | The configuration report at `/devs`. **No participant data** |
 | Admin | Registrations, participants, waiting lists, exports, test registrations, and deleting an event |
 | Superadmin | The staff list itself: who is here and what they may do |

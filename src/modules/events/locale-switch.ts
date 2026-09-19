@@ -83,6 +83,7 @@ export async function resolveLocaleSwitch(
   // The staff routes carry an id rather than a slug, and an id is the same in both languages.
   if (
     parsed.route === "/admin/events/[id]" ||
+    parsed.route === "/admin/events/[id]/bibs" ||
     parsed.route === "/preview/events/[id]" ||
     parsed.route === "/admin/registrations/[id]" ||
     parsed.route === "/admin/legal/[id]" ||
@@ -105,6 +106,13 @@ export async function resolveLocaleSwitch(
     const token = parsed.params.token;
     if (!token) return listing;
     return getPathname({ locale: target, href: { pathname: parsed.route, params: { token } } });
+  }
+
+  // A repository document's name is the same in either language (§88).
+  if (parsed.route === "/devs/docs/[name]") {
+    const name = parsed.params.name;
+    if (!name) return listing;
+    return getPathname({ locale: target, href: { pathname: parsed.route, params: { name } } });
   }
 
   // The desk code is the same in either language (BR-REQ-037-08).

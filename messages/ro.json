@@ -19,6 +19,8 @@
       "title": "Site de test ({environment}) — acesta nu este site-ul real al clubului.",
       "body": "Tot ce vezi aici sunt date de probă, pentru încercarea site-ului, și pot fi șterse oricând. Te rugăm să nu îl folosești pentru a te înscrie la un eveniment real. Site-ul oficial al clubului urmează, la adresa lui proprie."
     },
+    "themeDark": "Temă întunecată",
+    "themeLight": "Temă luminoasă",
     "skipToContent": "Sari la conținut",
     "nav": {
       "label": "Navigare principală",
@@ -42,6 +44,19 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Alte evenimente ({count})",
+    "filter": {
+      "label": "Tipul evenimentului",
+      "all": "Toate"
+    },
+    "calendar": {
+      "previous": "Luna anterioară",
+      "next": "Luna următoare",
+      "today": "Azi",
+      "empty": "Nimic programat în luna asta.",
+      "subscribe": "Toate evenimentele clubului, în calendarul tău (Google, Apple, Outlook) — se actualizează singur:",
+      "subscribeLink": "Abonează-te",
+      "downloadLink": "sau descarcă .ics"
+    },
     "raceWeek": {
       "today": "Azi, {when}",
       "tomorrow": "Mâine, {when}",
@@ -59,6 +74,16 @@
     "where": "Unde",
     "raceStartTime": "Startul cursei",
     "meetingPoint": "Punct de întâlnire",
+    "share": {
+      "title": "Dă mai departe:",
+      "facebook": "Facebook",
+      "whatsapp": "WhatsApp",
+      "instagram": "Poză pentru Instagram",
+      "googleCalendar": "Google Calendar",
+      "ics": "Adaugă în calendar (.ics)"
+    },
+    "rules": "Regulamentul evenimentului",
+    "schedule": "Programul evenimentului",
     "openMap": "Vezi pe hartă",
     "address": "Adresă",
     "distance": "Distanță",
@@ -86,6 +111,7 @@
     },
     "startList": {
       "title": "Cine vine",
+      "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
       "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei."
     },
@@ -129,7 +155,10 @@
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi."
     },
     "stravaEvent": "Pe Strava",
-    "openStravaEvent": "Evenimentul pe Strava"
+    "openStravaEvent": "Evenimentul pe Strava",
+    "calendar": {
+      "feedName": "Brașov Runners — evenimente"
+    }
   },
   "Admin": {
     "title": "Administrare",
@@ -164,10 +193,14 @@
       "guide": "Ghid"
     },
     "outbox": {
-      "status": "Emailuri în așteptare: {waiting} · trimise azi: {sent} din {allowance} (mai rămân {remaining})",
+      "status": {
+        "day": "Emailuri în așteptare: {waiting} · trimise azi: {sent} din {allowance} (mai rămân {remaining})",
+        "month": "Emailuri în așteptare: {waiting} · trimise luna aceasta: {sent} din {allowance} (mai rămân {remaining}; planul {plan}, fără limită zilnică)",
+        "none": "Emailuri în așteptare: {waiting} · trimise azi: {sent} (planul {plan}, fără limită)"
+      },
       "sendNow": "Trimite acum",
       "nothingWaiting": "Nimic de trimis.",
-      "allowanceSpent": "Limita zilnică Mailgun este atinsă; restul pleacă mâine.",
+      "allowanceSpent": "Limita planului Mailgun este atinsă; restul pleacă după resetare.",
       "sending": "Se trimit…",
       "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
       "sentNow": "Emailuri trimise acum: {count}."
@@ -275,6 +308,10 @@
       "openDesk": "Deschide la masă",
       "notCheckedIn": "Nu a fost marcat prezent.",
       "checkedIn": "Prezent: {time} · {who}",
+      "idDocument": "Act de identitate",
+      "declarationPdf": "Declarația semnată (PDF)",
+      "declarationsPdf": "Declarațiile semnate (PDF)",
+      "declarationForm": "Formular declarație pe hârtie (PDF)",
       "declarationPaper": "pe hârtie, înregistrată de {who}",
       "emailVouched": "adresă garantată de {who}"
     },
@@ -285,6 +322,7 @@
       "edit": "Editează",
       "editNamed": "Editează {title}",
       "moreActions": "Alte acțiuni",
+      "registrationsLink": "Înscrieri ({count})",
       "new": "Eveniment nou",
       "registrations": "Înscrieri",
       "columnTitle": "Evenimentul",
@@ -322,7 +360,7 @@
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
-      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește un număr liber, ales la întâmplare. Numerele deja date rămân."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -339,8 +377,9 @@
       "startsAtHelp": "Ora locală a evenimentului ({timezone}). Pentru o cursă, aceasta este ora de întâlnire.",
       "raceStartsAt": "Startul cursei",
       "raceStartsAtHelp": "Ora la care se dă startul, dacă diferă de ora de întâlnire. Lasă gol dacă există o singură oră.",
-      "mapUrl": "Link către hartă",
-      "mapUrlHelp": "Opțional. Un link către punctul de întâlnire — Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
+      "mapUrl": "Link către punctul de întâlnire",
+      "mapUrlHelp": "Opțional. Punctul de întâlnire pe Google Maps sau orice altă hartă. Trebuie să înceapă cu https://.",
+      "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă. La fel în ambele limbi, completat o dată.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
       "saveEvent": "Salvează detaliile evenimentului",
@@ -367,7 +406,9 @@
         "difficulty": "Dificultate",
         "costType": "Cost",
         "checklist": "Ce să aduci (o linie, în emailuri)",
-        "body": "Descriere completă"
+        "body": "Descriere completă",
+        "rules": "Regulamentul evenimentului",
+        "schedule": "Programul evenimentului"
       },
       "sharedFieldHelp": "Comun ambelor limbi. Se completează o singură dată.",
       "contentHelp": "Același eveniment, în două limbi. Aici se schimbă doar textul; ora, locul, dificultatea și costul sunt mai sus, la Setări, și sunt comune amândurora.",
@@ -382,6 +423,9 @@
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
+      "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
+      "scheduleHelp": "Opțional. Programul pe ore: ridicarea kiturilor (unde, când), briefingul, startul, limitele de timp, festivitatea. Apare pe pagina evenimentului la „Program”; emailurile trimit acolo.",
+      "rulesHelp": "Opțional. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
       "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare și în reminder.",
       "type": "Tip eveniment",
       "surface": "Suprafață",
@@ -459,7 +503,10 @@
       "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
-      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă."
+      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă.",
+      "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
+      "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
+      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -491,7 +538,32 @@
       "tableCaption": "Conturile care pot intra în administrare, cu rolul fiecăruia",
       "empty": "Nu există niciun cont în echipă.",
       "changeRolePending": "Se salvează…",
-      "revokePending": "Se retrage…"
+      "revokePending": "Se retrage…",
+      "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar masa de ridicare.",
+      "roles": {
+        "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
+        "COPYWRITER": "textele: descrierea, regulamentul, programul și paginile site-ului, în ambele limbi. Fără setări, fără publicare.",
+        "MODERATOR": "evenimentele: creează, setează (date, locuri, înscrieri), publică, galeria.",
+        "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
+        "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
+        "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
+      }
+    },
+    "queue": {
+      "title": "Coada de înscrieri",
+      "capacity": "Locuri",
+      "unlimited": "nelimitat",
+      "confirmed": "Confirmate",
+      "holds": "Rezervate",
+      "free": "Libere",
+      "waiting": "În așteptare",
+      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
+      "lineTitle": "Lista de așteptare ({count})",
+      "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
+      "test": "test",
+      "offered": "ofertă până la {until}",
+      "since": "din {when}",
+      "simulate": "Cum simulezi lista de așteptare (nu în producție): pune un număr mic de locuri în Setări, salvează, apoi adaugă mai jos mai multe înscrieri de test decât locuri — primele iau locurile (ca rezervări de 30 de minute), restul intră aici, în ordine. Anulează una confirmată sau lasă o rezervare să expire (jobul de întreținere rulează la 15 minute) și prima din listă primește oferta; emailul ei apare în Outbox, la înscrierea respectivă."
     },
     "testRegistrations": {
       "title": "Înscrieri de test",
@@ -535,6 +607,9 @@
       "backToList": "Înapoi la documentele legale",
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
+      "newFromTemplateIntro": "Precompletat cu textul platformei: complet, cu cele patru date ale clubului lăsate între paranteze unghiulare <AȘA>. Completează-le, citește tot, salvează ciorna, apoi aprob-o.",
+      "templatesIntro": "Sau pornește de la textul platformei:",
+      "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{idDocument}}' (actul de identitate tastat la semnare), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
       "newVersion": "Versiune nouă",
       "saveDraft": "Salvează ciorna",
@@ -565,6 +640,13 @@
       "intro": "Ce lipsește ca platforma să poată primi înscrieri reale. Fiecare linie este citită din sistem, nu bifată de mână.",
       "blockingSummary": "Blochează înscrierile reale: {count}.",
       "nothingBlocking": "Nimic nu blochează înscrierile. Restul sunt îmbunătățiri.",
+      "emailStalled": {
+        "title": "Emailurile nu pleacă.",
+        "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure la {resumesAt} (ora României); nimic nu s-a pierdut.",
+        "failed": "Mesaje care nu au putut fi trimise în ultimele 7 zile: {count} — motivul dat de Mailgun: „{reason}”. Deschide Mailgun → Sending → Logs; dacă domeniul sau cheia s-au schimbat, actualizează variabilele MAILGUN_* în Vercel.",
+        "overdue": "Mesaje cu rândul trecut de peste 90 de minute: {count} — monitoarele nu rulează. Vezi rândul „Monitoarele” de mai jos.",
+        "notify": "Ca să afli de asta fără să deschizi pagina: un monitor pe cron-job.org către /api/health, cu notificare la eșec — pasul din rândul „Monitoarele”."
+      },
       "state": {
         "blocking": "Blochează",
         "open": "De făcut",
@@ -609,7 +691,8 @@
             "Adresele: {outboxUrl} și {maintenanceUrl}. La toate: Request method POST, iar la Headers: Authorization = Bearer urmat de JOB_SECRET-ul acestui mediu (valoarea din Vercel → Settings → Environment Variables; nu apare aici).",
             "Zi: Execution schedule → Custom → toate zilele, orele 7–22, minutele 0, 15, 30, 45. Noapte: Custom → toate zilele, orele 23, 0, 1, 2, 3, 4, 5, 6, minutul 0. Nu la 5 minute: baza de date Neon nu ar adormi niciodată și cele 100 de ore-CU gratuite pe lună s-ar termina la jumătatea lunii, iar site-ul ar cădea până luna următoare.",
             "Bifează notificarea prin email la eșec, ca să afli când un monitor moare. La prima rulare rândul acesta devine verde; /devs arată fiecare sarcină cu ora ultimei rulări și consumul bazei de date. Noaptea site-ul răspunde mai încet la prima cerere — e voit.",
-            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă din cele 100 de ore-CU ale proiectului lui."
+            "Pe QA: o singură pereche, la 60 de minute, zi și noapte (sau oprită când nu testezi): și QA consumă din cele 100 de ore-CU ale proiectului lui.",
+            "Al treilea monitor, cel care te anunță când emailurile nu mai pleacă: „Create cronjob” cu adresa {baseUrl}/api/health, Request method GET, fără header, la 30 de minute (Custom → toate zilele, toate orele, minutele 0 și 30). La Notifications bifează „on failure” (și „when the job gets disabled”). Pagina răspunde 503 cât timp un mesaj e amânat de limita zilnică, a eșuat sau a rămas neridicat de monitoare — și cron-job.org îți trimite email de la el, nu prin Mailgun. Când se rezolvă, răspunde iar 200 și primești „job successful”."
           ]
         },
         "inviteStaff": {
@@ -644,6 +727,57 @@
             "Un singur eveniment poate fi „principal” — el deschide prima pagină. Anul viitor: „Duplică” pe cel de anul acesta."
           ]
         },
+        "botCheck": {
+          "title": "Verificarea anti-bot la înscriere (Cloudflare Turnstile)",
+          "todo": "Formularul de înscriere are deja un câmp-capcană și o verificare a timpului de completare, care opresc roboții simpli. Turnstile — captcha-ul Cloudflare, gratuit, de obicei fără niciun puzzle — oprește și restul. Este oprit până când există cele două chei; nimic nu se schimbă între timp.",
+          "done": "Formularul de înscriere are verificarea anti-bot pornită.",
+          "how": [
+            "Cloudflare (același cont ca pentru fotografii) → meniul din stânga → Turnstile → Add widget.",
+            "Nume „brasovrunners-site”; hostname-uri: domeniul clubului și subdomeniul qa; Widget mode „Managed”. Salvează: primești un Site key și un Secret key.",
+            "În Vercel → proiectul de producție (și QA, cu aceleași chei) → Settings → Environment Variables: TURNSTILE_SITE_KEY și TURNSTILE_SECRET_KEY. Redeploy.",
+            "Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
+          ]
+        },
+        "scheduleStructured": {
+          "title": "Programul evenimentului ca date (ore), nu doar text",
+          "todo": "Programul e text liber pe limbă (secțiunea „Program” a paginii). Calendarul (.ics, abonament, Google Calendar) există din §107 și duce programul ca text. Rămâne: rânduri structurate — ora, ce se întâmplă, unde — care s-ar arăta la fel pe pagină, în emailuri și ca intrări separate în calendar.",
+          "done": "Programul are rânduri cu ore și se poate adăuga în calendarul telefonului.",
+          "how": [
+            "Schema: o tabelă event_schedule_items (event_id, starts_at, ends_at?, etichetă pe limbă, loc) — sau JSON structurat pe eveniment.",
+            "Editorul: rânduri „oră + text + loc”, în ordine; pagina le arată ca listă cu ore; reminderul le trimite.",
+            "Calendarul: din rândurile acestea, câte un VEVENT pe rând în .ics-ul evenimentului (fișierul și abonamentul există deja: modules/events/ical.ts)."
+          ]
+        },
+        "declarationArchiveMail": {
+          "title": "Declarațiile semnate ajung automat și în arhiva clubului",
+          "todo": "Fiecare participant primește declarația semnată pe email, iar clubul descarcă toate declarațiile unui eveniment ca un singur PDF din pagina evenimentului. Construit: când variabila DECLARATIONS_ARCHIVE_TO e setată, fiecare declarație semnată — electronic sau pe hârtie, la masă — ajunge automat și în căsuța clubului, ca atașament; arhiva se construiește singură. Costă un mesaj în plus pe înscriere din cele 100 pe zi.",
+          "done": "Fiecare declarație semnată ajunge automat și în căsuța de arhivă a clubului.",
+          "how": [
+            "În Vercel → proiectul de producție → Settings → Environment Variables: DECLARATIONS_ARCHIVE_TO = brasovrunners@gmail.com (căsuța clubului, SETUP.md §35). Redeploy.",
+            "Pe QA, aceeași variabilă doar dacă vrei să vezi mesajul în teste — altfel lasă-l gol; QA trimite doar către adresele din lista de test.",
+            "Verifică: semnează o declarație (sau confirmă una pe hârtie la masă) — în căsuță apare „Declarație semnată: <nume> — <eveniment>” cu PDF-ul. Rândul devine verde. Înscrierile de test nu trimit copia."
+          ]
+        },
+        "vercelUsage": {
+          "title": "Consumul Vercel în cifre, pe /devs",
+          "todo": "Construit, atât cât permite Vercel: API-ul lor public nu expune traficul și invocările (acelea sunt doar în dashboard → Usage), dar expune lista de deploy-uri — de unde /devs arată deploy-urile lunii, cele de azi din 100 pe zi și minutele de build din cele 6.000 pe lună ale planului Hobby. Pornit când există un token de citire și id-ul proiectului.",
+          "done": "/devs arată deploy-urile și minutele de build ale lunii, cu prag de avertizare.",
+          "how": [
+            "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
+            "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
+            "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
+          ]
+        },
+        "docsSimplify": {
+          "title": "Documentația scurtată (SETUP, RUNBOOKS, CLAUDE)",
+          "todo": "CLAUDE.md e acum o hartă: un rând pe lucru, cu secțiunea din DECISIONS care spune de ce (§109). Rămâne SETUP.md: 1.800 de rânduri în care procedurile încă valabile (numerotate, cu valori) stau lângă istoria fiecărui cont deschis — de mutat istoria în CHANGELOG/DECISIONS și de păstrat doar ce mai e de făcut.",
+          "done": "Fiecare document din repo e scurt și spune o dată ce e de făcut.",
+          "how": [
+            "SETUP.md: fiecare secțiune numerotată rămâne doar dacă e o procedură încă valabilă, cu valorile la vedere; „făcut la data X” se mută într-o linie de CHANGELOG sau în DECISIONS.",
+            "docs/RUNBOOKS.md: același principiu — o intrare pe situație, pașii, nimic despre cum s-a ajuns aici.",
+            "docs:check rămâne verde; README-ul (indexul) se actualizează."
+          ]
+        },
         "roDomain": {
           "title": "Domeniul .ro, peste un an",
           "todo": "Hotărât pe 16 septembrie 2026: .com acum, .ro la un an, amândouă active în același timp (12 EUR + TVA pe an la ROTLD). Nu blochează nimic; se bifează singur când site-ul răspunde pe .ro.",
@@ -660,7 +794,6 @@
         "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat. Nu se pierde nimic — pleacă după miezul nopții. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
         "notFree": "Atenție, dar nu neapărat o problemă. Este publicat un eveniment cu taxă. Planul gratuit al furnizorului nu se uită la faptul că suntem ONG — asta nu este o scutire. Ce contează este cum sunt cerute banii: o donație este permisă explicit, o taxă obligatorie nu, chiar dacă acoperă strict costurile. Site-ul nu încasează bani și nu are cum să o facă — asta ajută, dar nu decide singură."
       },
-      "registrationsLeftToday": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
       "costTitle": "Cât costă",
       "costToday": {
         "nothing": "Astăzi clubul nu plătește nimic. Toate serviciile sunt pe planuri gratuite.",
@@ -716,7 +849,9 @@
           "ceiling": "Prima limită: 100 de e-mailuri pe zi, adică vreo 33 de înscrieri, pentru că o înscriere completă cere trei e-mailuri.",
           "whenCrossed": "E-mailurile de peste limită nu se pierd: rămân la coadă și pleacă după miezul nopții. Dar o cursă la care confirmările ajung abia a doua zi dimineață este o cursă proastă, așa că planul plătit se ia înainte de deschiderea înscrierilor, nu în timpul lor.",
           "closeMeasured": "Azi au plecat {used} din {of} e-mailuri — mai ajung pentru vreo {left} înscrieri.",
-          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung."
+          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung.",
+          "closeMeasuredMonth": "Luna aceasta au plecat {used} din {of} e-mailuri (planul {plan}) — mai ajung pentru vreo {left} înscrieri.",
+          "closeNone": "Planul {plan}, fără limită de mesaje."
         },
         "vercel": {
           "name": "Vercel (locul unde stă site-ul)",
@@ -732,6 +867,9 @@
           "freeGives": "Gratuit: o bază de date mică (0,5 GB) și o cantitate de lucru inclusă în fiecare lună.",
           "ceiling": "Prima limită: spațiul și cantitatea de lucru incluse lunar.",
           "whenCrossed": "Pe planul gratuit baza de date adoarme când nu o folosește nimeni, așa că prima pagină după o pauză se încarcă mai greu. Peste limită, site-ul devine lent și pot apărea erori. Pasul următor se plătește la consum, nu ca abonament fix.",
+          "closeMeasured": "Măsurat din baza de date: {used} MB din {of} MB ocupați. Orele de calcul (CU) se văd pe /devs.",
+          "monthly": "Cost lunar dacă am ieși din gratuit, la ritmul acestei luni ({cu} ore-CU până acum): circa {usd} $/lună pe Launch (0,106 $/oră-CU, 0,35 $/GB, fără abonament).",
+          "monthlyUnknown": "Cost lunar pe Launch: 0,106 $/oră-CU + 0,35 $/GB, fără abonament — la 100 de ore-CU ar fi circa 11 $/lună. Ritmul exact apare când NEON_API_KEY e setat.",
           "closeUnknown": "Nemăsurat: site-ul nu știe cât s-a consumat. Se vede în contul Neon și merită privit înainte de o cursă.",
           "bumpBack": "Se ia pentru zilele înscrierilor și se coboară după ce acestea se închid."
         },
@@ -768,6 +906,11 @@
           "open": "Gratuit ajung vreo 33 de înscrieri pe zi. Dacă la o cursă sunt așteptați mai mulți, cei 15 dolari pe o lună se plătesc înainte de deschiderea înscrierilor, nu în timpul lor — altfel confirmările ajung a doua zi dimineață. Până când: cu o zi înainte să se deschidă înscrierile.",
           "answered": "Clubul nu mai depinde de limita zilnică gratuită."
         }
+      },
+      "registrationsLeft": {
+        "day": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
+        "month": "Luna aceasta au plecat {sent} din {allowance} mesaje (planul {plan}, fără limită zilnică). Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
+        "none": "Planul {plan} nu are o limită de mesaje. Astăzi au plecat {sent}."
       }
     },
     "richText": {
@@ -795,10 +938,19 @@
       "imageRemove": "Șterge imaginea",
       "imageDone": "Gata",
       "imageFromGallery": "Alege o imagine deja încărcată",
+      "imageShort": "Imagine",
+      "imageFromGalleryShort": "Din galerie",
       "imageGalleryLoading": "Se încarcă imaginile…",
       "imageGalleryEmpty": "Nu există nicio imagine încărcată încă.",
       "imageNoAltOne": "O imagine nu are text alternativ — apasă pe imagine ca să-l scrii.",
-      "imageNoAltMany": "{count} imagini nu au text alternativ — apasă pe fiecare ca să-l scrii."
+      "imageNoAltMany": "{count} imagini nu au text alternativ — apasă pe fiecare ca să-l scrii.",
+      "youtube": "Adaugă un film de pe YouTube",
+      "youtubeShort": "YouTube",
+      "youtubeUrl": "Adresa filmului (YouTube)",
+      "youtubeApply": "Adaugă filmul",
+      "youtubeInvalid": "Nu e o adresă de YouTube. Copiază linkul din bara browserului sau din „Distribuie” (youtube.com/watch?v=… sau youtu.be/…).",
+      "youtubeCaption": "Legendă (sub film)",
+      "youtubeRemove": "Scoate filmul"
     },
     "pages": {
       "title": "Pagini",
@@ -909,7 +1061,7 @@
     },
     "thanks": {
       "title": "După cursă",
-      "help": "Un email de mulțumire pentru toți cei marcați prezenți la masă — o singură dată pe eveniment, trimis de tine, niciodată automat. Poți pune un link către rezultate sau poze.",
+      "help": "Un email de mulțumire pentru toți cei marcați prezenți la masă — o singură dată pe eveniment, trimis de tine, niciodată automat. Poți pune un link către rezultate sau poze. Mesajul privește doar evenimentul la care persoana a participat și nu promovează nimic altceva — nu este comunicare comercială (Legea nr. 506/2004).",
       "url": "Link (opțional)",
       "urlHelp": "Rezultatele, pozele — o adresă care începe cu https://.",
       "send": "Trimite mulțumirile",
@@ -925,17 +1077,21 @@
       "from": "De la",
       "to": "Până la",
       "download": "Descarcă foaia (PDF)",
+      "preview": "Vezi numerele ({count})",
+      "previewTitle": "Numerele de concurs — {event} ({count})",
+      "backToEvent": "← Înapoi la eveniment",
+      "previewAlt": "Numărul {number} — {name}",
       "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
-      "helpNone": "Niciun număr alocat încă. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
-      "helpSome": "{total} numere alocate. Alocarea dă numere, în ordinea confirmării, tuturor înscrierilor confirmate care nu au încă unul; un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
+      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
+      "helpSome": "{total} numere date. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
         "Înainte de cursă (organizator): pe pagina evenimentului, la „Numere de concurs”, apasă „Alocă numerele”, apoi „Descarcă foaia (PDF)” și tipărește-o. Tipărește și declarația aprobată (Documente legale → PDF), câteva exemplare, pentru cine o semnează pe loc.",
-        "Voluntarii: invită-i din „Echipa”, cu rolul Colaborator. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
+        "Voluntarii: invită-i din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr. Nu văd adrese de email și nu pot anula pe nimeni.",
         "Fiecare participant confirmat a primit pe email un cod QR. La masă: apasă „Scanează” (pe Android) sau deschide camera telefonului și îndreapt-o spre cod — se deschide pagina persoanei. Sau caută după nume ori după numărul de concurs.",
         "Apasă „Prezent” și dă-i numărul din foaie. Nu are număr? Scrie-l în căsuță și apasă „Salvează”.",
         "Nu a primit emailul sau nu găsește QR-ul: caută după nume. Dacă apare „în așteptare”, îi dai declarația pe hârtie să o semneze, apeși „Confirmă aici”, apoi „Prezent”.",
@@ -964,11 +1120,13 @@
       "nobody": "Nimeni nu se potrivește.",
       "backToDesk": "← Înapoi la masă",
       "scannedTitle": "Participant scanat",
-      "confirmHere": "Confirmă aici",
+      "confirmHere": "Confirmă pe hârtie",
+      "idDocument": "Act de identitate",
+      "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu l-ai alocat deja) → Salvează; când persoana a ajuns → Prezent. Cine nu a confirmat emailul semnează declarația pe hârtie → Confirmă pe hârtie.",
       "givePlace": "Dă-i un loc",
       "bibField": "Număr de concurs",
-      "saveBib": "Salvează",
-      "checkIn": "Prezent",
+      "saveBib": "Salvează nr.",
+      "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
       "checkedInAt": "Prezent la {time} · {who}",
       "bySelf": "singur",
@@ -981,6 +1139,78 @@
         "bibSet": "Numărul a fost salvat.",
         "checkedIn": "Marcat prezent.",
         "checkinUndone": "Prezența a fost anulată."
+      },
+      "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
+      "guardian": "Minor — părinte/tutore: {name}"
+    },
+    "emails": {
+      "title": "Emailurile trimise participanților",
+      "intro": "Fiecare mesaj pe care platforma îl trimite, exact cum ajunge la participant, cu date de exemplu. Linkurile din exemple nu duc nicăieri.",
+      "link": "Vezi emailurile pe care le primesc participanții →",
+      "subject": "Subiect",
+      "lang": {
+        "ro": "Română",
+        "en": "English"
+      },
+      "types": {
+        "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa de email",
+        "COMPLETE_DECLARATION": "Semnează declarația",
+        "WAITLIST_JOINED": "Ești pe lista de așteptare",
+        "WAITLIST_SPOT_OFFER": "S-a eliberat un loc",
+        "REGISTRATION_CONFIRMED": "Înscriere confirmată (cu QR și număr)",
+        "REGISTRATION_CANCELLED": "Înscriere anulată",
+        "WAITLIST_OFFER_EXPIRED": "Oferta a expirat",
+        "REGISTRATION_MANAGE_LINK": "Linkul tău de înscriere",
+        "PROFILE_MANAGE_LINK": "Înscrierile mele",
+        "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
+        "EVENT_REMINDER": "Reminder cu 48 de ore înainte",
+        "EVENT_THANKS": "Mulțumim după cursă",
+        "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
+        "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)",
+        "BIB_ASSIGNED": "Numărul de concurs dat de mână"
+      },
+      "when": {
+        "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
+        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut 30 de minute.",
+        "WAITLIST_JOINED": "După confirmarea adresei, când nu mai sunt locuri.",
+        "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. 24 de ore să semneze.",
+        "REGISTRATION_CONFIRMED": "Imediat după semnarea declarației — sau la masă, pe hârtie.",
+        "REGISTRATION_CANCELLED": "Când participantul se retrage sau un organizator anulează înscrierea.",
+        "WAITLIST_OFFER_EXPIRED": "Când cele 24 de ore ale ofertei trec fără semnătură.",
+        "REGISTRATION_MANAGE_LINK": "La cerere, din „Retrimite linkul” (site sau backoffice).",
+        "PROFILE_MANAGE_LINK": "La cerere, când cineva vrea să-și vadă toate înscrierile.",
+        "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
+        "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată.",
+        "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
+        "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el.",
+        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune.",
+        "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare."
+      },
+      "plan": {
+        "title": "Planul Mailgun și cât mai putem trimite",
+        "intro": "Platforma nu poate citi de la Mailgun pe ce plan e contul, așa că îi spui tu aici — și de aici se calculează cât mai poate pleca azi, pe /admin/tasks, pe /devs și la „Trimite acum”. Când plătești o lună de Basic înainte de cursă, schimbi aici; când o anulezi, schimbi înapoi.",
+        "status": {
+          "day": "Planul {plan}: {sent} din {allowance} mesaje trimise azi, mai rămân {remaining}; în coadă: {waiting}.",
+          "month": "Planul {plan}: {sent} din {allowance} mesaje trimise luna aceasta, mai rămân {remaining}; fără limită zilnică; în coadă: {waiting}.",
+          "none": "Planul {plan}: fără limită. Trimise azi: {sent}; în coadă: {waiting}."
+        },
+        "updatedAt": "Setat la {when}. Notă: {note}",
+        "field": "Planul pe care e contul Mailgun",
+        "fieldHelp": "Prețurile și limitele de pe mailgun.com/pricing, verificate pe {checkedOn}. Basic ajunge pentru un sezon întreg.",
+        "option": "{name} — {ceiling}, {price}",
+        "perDay": "{count} mesaje pe zi",
+        "perMonth": "{count} mesaje pe lună",
+        "free": "gratuit",
+        "month": "lună",
+        "custom": "Altceva — scriu eu limitele de mai jos",
+        "dailyAllowance": "Limita zilnică (doar la „Altceva”)",
+        "monthlyAllowance": "Limita lunară (doar la „Altceva”)",
+        "customHelp": "Doar pentru „Altceva”: scrie ce arată Mailgun în Account → Plan; lasă gol ce nu există (amândouă goale înseamnă fără limită). La celelalte planuri numerele vin din catalog.",
+        "note": "Notă (de ce, până când)",
+        "save": "Salvează planul",
+        "saving": "Se salvează…",
+        "saved": "Planul a fost salvat; cifrele de mai sus și de pe /admin/tasks îl folosesc de acum.",
+        "unlimited": "fără limită"
       }
     },
     "guide": {
@@ -989,7 +1219,7 @@
       "sections": [
         {
           "title": "Voluntar la masa de ridicare a numerelor",
-          "who": "Rol: Colaborator (sau orice rol). Pe telefon.",
+          "who": "Rol: Voluntar (sau orice rol). Pe telefon.",
           "steps": [
             "Intră pe site și apasă „Intră în cont” (jos sau la /admin). Te autentifici cu contul primit de la organizator.",
             "Apasă „Ziua cursei” în bara de sus. Alege evenimentul de azi din listă.",
@@ -1001,6 +1231,9 @@
             "Nu s-a înscris deloc: apasă „Adaugă pe cineva”, completezi numele și emailul, „Adaugă înscrierea”. Semnează declarația pe hârtie, apoi „Prezent”. Dacă evenimentul e plin, intră pe lista de așteptare — „Dă-i un loc” merge doar dacă cineva s-a retras.",
             "Ai apăsat greșit: „Anulează prezența”. Tot ce apeși rămâne în istoric, cu numele tău — nu se pierde nimic.",
             "Ce nu poți face de aici (și e în regulă): anula sau șterge înscrieri, vedea adrese de email, exporta liste. Pentru astea, cheamă un administrator."
+          ],
+          "roles": [
+            "CONTRIBUTOR"
           ]
         },
         {
@@ -1011,19 +1244,48 @@
             "Citește și semnează declarația online, cu numele tastat. Înscrierea devine „confirmată” și primește emailul de confirmare cu codul QR.",
             "Din același email are un link „Gestionează înscrierea”: de acolo se poate retrage, își vede codul și, din ziua dinaintea startului, poate apăsa „Am ajuns”.",
             "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are 30 de minute să semneze declarația.",
-            "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc."
+            "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc.",
+            "În calendarul lui: pe fiecare eveniment sunt „Google Calendar” și „Adaugă în calendar (.ics)”; pe pagina de evenimente, „Abonează-te” pune tot calendarul clubului în telefon și se actualizează singur când publicați ceva nou."
+          ],
+          "roles": [
+            "CONTRIBUTOR",
+            "COPYWRITER",
+            "MODERATOR",
+            "DEV",
+            "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "title": "Redactor — textele evenimentelor și paginile",
+          "who": "Rol: Redactor. Scrii; nu setezi și nu publici.",
+          "roles": [
+            "COPYWRITER"
+          ],
+          "steps": [
+            "„Evenimente” → alege evenimentul → tab-ul Română și tab-ul English: titlul, descrierea scurtă, descrierea, regulamentul, programul și câmpurile SEO. O singură salvare scrie ambele limbi.",
+            "Un eveniment publicat: ce salvezi apare imediat pe site — bifează „Știu că modific o pagină publicată”. Adresa paginii nu se mai schimbă după publicare.",
+            "Un film de pe YouTube: în editor, butonul „YouTube” → lipești adresa filmului → „Adaugă filmul”. Apasă pe film ca să-i pui o legendă. Pe pagină apare închis, „Vezi filmul”; se încarcă doar când cititorul apasă.",
+            "„Pagini”: paginile fixe ale site-ului. Creezi o ciornă, scrii în editor (titluri, liste, linkuri, imagini), o trimiți spre verificare; un Organizator o publică.",
+            "Nu ai și nu îți trebuie: setările evenimentului (data, locurile, înscrierile), publicarea, galeria, înscrierile. Dacă un text depinde de o setare greșită, spune Organizatorului.",
+            "Ambele limbi contează: un eveniment nu poate fi publicat fără text complet în română și în engleză, iar pagina în engleză rămâne cu textul vechi până o corectezi și pe ea."
           ]
         },
         {
           "title": "Organizator — evenimente și numere",
-          "who": "Rol: Moderator sau mai sus.",
+          "who": "Rol: Organizator sau mai sus.",
           "steps": [
             "„Evenimente” → „Eveniment nou” (sau „Duplică” pe ediția trecută / „Repetă” pentru serii săptămânale). Completezi setările — tip, dată, loc, distanță, traseu, link video — și textele în română și engleză.",
             "Înscrieri: în Setări alege „Înscriere locală”, pune capacitatea și perioada de înscriere, alege declarația aprobată.",
             "Publicare: „Trimite spre verificare” → „Publică”. Ambele limbi merg live împreună; o limbă incompletă blochează publicarea.",
             "Numere de concurs (Administrator): pe pagina evenimentului, „Alocă numerele” dă numere în ordinea confirmării; „Descarcă foaia (PDF)” — două numere pe A4, cu logo. Tipărește și declarația (Documente legale → PDF) pentru semnături pe loc.",
             "În ziua cursei: „Masa de ridicare a numerelor” de pe pagina evenimentului sau „Ziua cursei” din bară. Cifrele „Confirmați / Prezenți” sunt cifrele cursei.",
+            "Numere de concurs: la confirmare fiecare primește unul la întâmplare. Un număr preferențial: pagina înscrierii → „Număr de concurs” — vezi lângă câmp numerele libere, scrii unul, salvezi; participantul primește numărul pe email, cu codul QR. Un număr purtat deja de altcineva este refuzat.",
             "După: „Arhivează” evenimentul. Pozele merg în „Galerie” (album nou, încarci pozele din telefon, le publici)."
+          ],
+          "roles": [
+            "MODERATOR",
+            "DEV"
           ]
         },
         {
@@ -1033,12 +1295,37 @@
             "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
             "„Echipa” (Superadministrator): adaugi oameni după email și rol. Persoana trebuie să existe și în Zitadel (consola de autentificare) ca să se poată loga.",
-            "Cont pentru voluntari: în Zitadel creezi utilizatorul (email + parolă), apoi în „Echipa” îl adaugi cu rolul Colaborator. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
+            "Cont pentru voluntari: în Zitadel creezi utilizatorul (email + parolă), apoi în „Echipa” îl adaugi cu rolul Voluntar. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
-            "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă."
+            "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
+            "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc."
+          ],
+          "roles": [
+            "ADMIN",
+            "SUPERADMIN"
+          ]
+        },
+        {
+          "title": "Declarațiile pe proprie răspundere și datele personale (GDPR)",
+          "who": "Rol: Administrator. De citit o dată, înainte de primul eveniment cu înscrieri.",
+          "steps": [
+            "Textul declarației este un document legal din „Documente legale”. Pornește de la textul platformei (linkul „Declarație” de sub „Versiune nouă”): e declarația clubului, cu blancurile ca tokeni — {{participant}}, {{idDocument}}, {{event}}, {{eventDate}}, {{eventLocation}}, {{signedAt}} — completate automat pentru fiecare persoană și eveniment. Un singur text aprobat servește toate evenimentele.",
+            "La semnare, participantul citește textul completat cu numele lui și evenimentul, tastează seria și numărul actului de identitate (nu încărcăm nicio poză/scan de buletin) și își scrie numele ca semnătură. Se înregistrează: numele, actul, versiunea textului, amprenta lui (SHA-256), momentul și metoda. Asta e semnătură electronică simplă (eIDAS și Legea 214/2024).",
+            "Imediat după semnare, participantul primește pe email declarația semnată ca PDF atașat („Declarația ta semnată”), plus linkul către ea din pagina înscrierii. La masă, kitul se dă pe baza actului de identitate scris în declarație — apare pe rândul din „Ziua cursei” și în CSV.",
+            "Cine nu poate semna din email semnează pe hârtie: pe pagina evenimentului, „Formular declarație pe hârtie (PDF)” tipărește formularul cu evenimentul completat. La masă, „Confirmă pe hârtie” înregistrează semnătura sub numele voluntarului; hârtia originală se păstrează de club.",
+            "Unde stau declarațiile: în baza de date (Neon, Frankfurt), ca înregistrări — nu ca fișiere. PDF-ul se generează la cerere din ele, oricând, identic. După eveniment, de pe pagina evenimentului: „Declarațiile semnate (PDF)” — toate într-un singur fișier, câte una pe pagină (200 de declarații ≈ 2 MB, câteva secunde) — și exportul CSV. Păstrează-le în arhiva clubului, cu acces restrâns (conțin nume și acte de identitate).",
+            "Cât se păstrează: înscrierile și declarațiile 3 ani de la eveniment (termenul general de prescripție), apoi se șterg automat; la cerere, mai devreme, din „Ștergere” pe pagina înscrierii. Emailurile trimise 90 de zile, linkurile consumate 30 de zile. Exact așa scrie și în nota de confidențialitate.",
+            "Nota de confidențialitate și termenii: pornește tot de la textul platformei — sunt complete (GDPR art. 13, Legea 190/2018, procesatorii, perioadele, drepturile, ANSPDCP); completezi doar denumirea juridică, sediul, CUI-ul și emailul de contact, citești, salvezi ciorna și aprobi. Fără text aprobat nu se poate face nicio înscriere.",
+            "Numele afișat public (porecla) este oprit implicit (FEATURE_DISPLAY_NAME): pe listă și în export apar numele reale, iar kitul se ridică pe bază de act de identitate.",
+            "Minori: un participant sub 18 ani este înscris de părinte/tutore, care își scrie numele în secțiunea „Înscriu un minor” a formularului (obligatorie sub 18 ani), semnează declarația cu actul lui de identitate și ridică kitul; la masă și în export apare „Minor — părinte/tutore: <nume>”."
+          ],
+          "roles": [
+            "ADMIN",
+            "SUPERADMIN"
           ]
         }
-      ]
+      ],
+      "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor."
     }
   },
   "NotFound": {
@@ -1077,6 +1364,8 @@
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
+      "phone": "Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
+      "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
     },
@@ -1098,9 +1387,17 @@
       "MALE": "Masculin",
       "UNSPECIFIED": "Prefer să nu spun"
     },
-    "nationality": "Naționalitate",
+    "nationality": "Cetățenie",
     "city": "Oraș",
+    "preferredLocale": "Limba în care vrei emailurile și declarația",
+    "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
+    "preferredLocaleOptions": {
+      "ro": "Română",
+      "en": "Engleză"
+    },
     "phone": "Telefon",
+    "phoneCountry": "Țara",
+    "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
     "emergencyContactName": "Persoană de contact în caz de urgență",
     "emergencyContactPhone": "Telefonul persoanei de contact",
     "tshirtSize": "Mărime tricou",
@@ -1121,16 +1418,21 @@
       "email": "Adresă de email",
       "birthDate": "Data nașterii",
       "sex": "Sex",
-      "nationality": "Naționalitate",
+      "nationality": "Cetățenie",
       "city": "Oraș",
       "phone": "Telefon",
+      "phoneCountry": "Țara",
       "emergencyContactName": "Persoană de contact în caz de urgență",
       "emergencyContactPhone": "Telefonul persoanei de contact",
       "tshirtSize": "Mărime tricou",
       "clubName": "Club sau echipă",
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
-      "privacyAcknowledged": "Nota de confidențialitate"
+      "privacyAcknowledged": "Nota de confidențialitate",
+      "captcha": "Verificarea anti-bot",
+      "stravaUrl": "Profilul de Strava",
+      "instagramHandle": "Instagram",
+      "guardianName": "Părinte / tutore"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1142,6 +1444,34 @@
       "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
       "prompt": "Nu a ajuns mesajul?",
       "linkLabel": "Trimite-l din nou"
+    },
+    "steps": {
+      "title": "Cum funcționează înscrierea",
+      "form": {
+        "title": "Completezi formularul",
+        "body": "Numele, emailul, telefonul și contactul de urgență. Durează un minut."
+      },
+      "email": {
+        "title": "Confirmi adresa de email",
+        "body": "Primești un link. Apasă-l în {hours} de ore — altfel înscrierea expiră și locul rămâne liber."
+      },
+      "declaration": {
+        "title": "Semnezi declarația",
+        "body": "Din același email, citești declarația și îți scrii numele. Locul e ținut {minutes} de minute cât semnezi.",
+        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opensDays} zile înainte de start primești un email și semnezi declarația pe proprie răspundere, până cel târziu cu {deadlineDays} zile înainte. Poți semna și mai devreme, din emailul de înscriere. Fără semnătură până la termen, locul trece la lista de așteptare."
+      },
+      "confirmed": {
+        "title": "Ești înscris",
+        "body": "Primești emailul de confirmare, cu codul QR și numărul de concurs. Cu două zile înainte îți trimitem un reminder."
+      },
+      "raceDay": {
+        "title": "În ziua cursei",
+        "body": "Arăți codul QR (sau spui numele) la masa de înscrieri și îți iei numărul."
+      },
+      "waitingList": {
+        "title": "Dacă nu mai sunt locuri",
+        "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offerHours} de ore să semnezi declarația."
+      }
     },
     "journey": {
       "steps": {
@@ -1158,9 +1488,25 @@
     },
     "disclosure": {
       "race": "Membru Brașov Runners, club și tricou — opțional",
-      "health": "Informații medicale — opțional"
+      "health": "Informații medicale — opțional",
+      "socials": "Rețele sociale — opțional",
+      "guardian": "Înscriu un minor — părinte sau tutore legal"
     },
-    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners"
+    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners",
+    "facts": {
+      "details": "Detaliile evenimentului",
+      "rules": "Regulamentul",
+      "terms": "Termeni și condiții",
+      "privacy": "Confidențialitate"
+    },
+    "socialsHelp": "Dacă vrei să te găsim și să te etichetăm în postările clubului. Nu le publicăm pe site și nu le dăm nimănui.",
+    "stravaUrl": "Profilul tău de Strava (link)",
+    "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
+    "instagramHandle": "Instagram (numele de utilizator)",
+    "instagramHandleHelp": "Cu sau fără @.",
+    "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Pentru un adult, lasă secțiunea goală.",
+    "guardianName": "Numele complet al părintelui / tutorelui",
+    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",
@@ -1182,7 +1528,21 @@
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
       "deadline": "Locul tău este rezervat până la {deadline}.",
-      "typedNameHelp": "Scrie numele complet cu care te-ai înscris."
+      "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
+      "idDocument": "Act de identitate (seria și numărul)",
+      "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui.",
+      "idDocumentPlaceholder": "BV 123456",
+      "nextTitle": "Ce urmează",
+      "nextConfirmed": [
+        "Primești acum emailul de confirmare, cu codul QR și codul tău de acces — păstrează-l pentru ziua cursei.",
+        "Cu două zile înainte de start primești un reminder cu ora, locul, ce să aduci și, dacă a fost alocat, numărul de concurs.",
+        "Dacă nu mai poți veni, anulezi din linkul din email: locul tău merge la cineva de pe lista de așteptare."
+      ],
+      "nextWaitlisted": [
+        "Ești pe lista de așteptare; dacă se eliberează un loc, primești un email cu un link de confirmare.",
+        "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
+        "Poți renunța oricând din emailul primit."
+      ]
     },
     "mine": {
       "title": "Înscrierile mele",
@@ -1194,6 +1554,7 @@
       "listTitle": "Înscrierile tale",
       "empty": "Nu ai nicio înscriere activă în acest moment.",
       "code": "Cod de acces",
+      "bib": "Număr de concurs",
       "cancel": "Renunț la această înscriere",
       "cancelledTitle": "Înscrierea a fost anulată",
       "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",
@@ -1213,6 +1574,7 @@
       "done": "Înscrierea a fost anulată.",
       "eventStarted": "Evenimentul a început deja; înscrierea nu mai poate fi anulată.",
       "doneTitle": "Înscriere anulată",
+      "declarationPdf": "Declarația pe care ai semnat-o (PDF)",
       "raceDayTitle": "În ziua cursei",
       "codeIntro": "Arată acest cod la masa de ridicare a numerelor. Îl ai și în emailul de confirmare.",
       "qrAlt": "Codul tău QR {code}",
@@ -1293,17 +1655,26 @@
     "rolesIntro": "Fiecare rol poate tot ce poate cel de sub el, plus încă ceva. Linia care contează este între Tehnic și Administrator: de acolo în sus se văd datele participanților.",
     "youAre": "rolul tău",
     "roleSummary": {
-      "CONTRIBUTOR": "propune texte și le trimite spre aprobare",
-      "MODERATOR": "editează orice eveniment și aprobă",
+      "CONTRIBUTOR": "masa de ridicare a numerelor, și atât",
+      "COPYWRITER": "textele oricărui eveniment și ale paginilor; trimite spre aprobare",
+      "MODERATOR": "creează și setează evenimente, publică, galeria",
       "DEV": "plus pagina de configurare. Fără date despre participanți",
-      "ADMIN": "plus înscrieri, participanți, export, ștergerea unui eveniment",
+      "ADMIN": "plus înscrieri, participanți, export, texte legale, ștergerea unui eveniment",
       "SUPERADMIN": "plus administrarea echipei: cine are acces și ce poate face"
     },
     "settings": "Setări",
     "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
     "emailVolume": "Volum de e-mail astăzi",
     "emailVolumeIntro": "Trei mesaje pentru fiecare înscriere finalizată, raportat la alocația zilnică a furnizorului. Verifică asta înainte de a deschide înscrierile, nu după. Numărat de la miezul nopții UTC.",
-    "emailVolumeHeadroom": "Au mai rămas {remaining} din {allowance} mesaje astăzi.",
+    "emailVolumeHeadroom": {
+      "day": "Au mai rămas {remaining} din {allowance} mesaje astăzi (planul {plan}).",
+      "month": "Au mai rămas {remaining} din {allowance} mesaje luna aceasta (planul {plan}, fără limită zilnică).",
+      "none": "Planul {plan}: fără limită de mesaje."
+    },
+    "emailHealth": {
+      "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health răspunde 200.",
+      "stalled": "Trimiterea s-a oprit — amânate de limita zilnică: {deferred}; întârziate (monitoarele nu rulează): {overdue}; eșuate în ultimele 7 zile: {failed}. Ultimul motiv: „{reason}”. /api/health răspunde 503 până se rezolvă, ca monitorul să anunțe."
+    },
     "registrationsToday": "Înscrieri astăzi",
     "testRegistrations": "de test",
     "projectedMessages": "Mesaje estimate",
@@ -1369,6 +1740,11 @@
         "body": "Impuse de această aplicație, nu de Neon: db/client.ts le setează pe pool. Riscul nu a fost niciodată numărul de conexiuni (max: 10 este per instanță caldă, iar PgBouncer acceptă mult mai multe), ci o interogare nemărginită care ține o funcție Vercel 300 de secunde. Primul timeout este impus de PostgreSQL, deci ține și când procesul Node este blocat; al doilea acoperă o instanță ucisă între două instrucțiuni ale unei tranzacții deschise. Conexiunea nu are timeout, deliberat: pe Neon Free prima cerere după inactivitate așteaptă pornirea bazei."
       }
     },
+    "docs": {
+      "title": "Documentele din repo",
+      "back": "← Configurație",
+      "file": "{file} · {kb} KB · exact ce e în repo la versiunea instalată"
+    },
     "theme": {
       "title": "Laborator de temă",
       "intro": "Încearcă site-ul cu alt corp de literă, altă familie de fonturi sau alte colțuri — doar în acest browser, fără nicio publicare. Deschide apoi orice pagină ca să vezi rezultatul; „Revino la normal” șterge tot.",
@@ -1381,8 +1757,21 @@
       "back": "← Înapoi la configurație",
       "link": "Laborator de temă →"
     },
+    "vercel": {
+      "title": "Găzduire (Vercel)",
+      "deployment": "Deploy-ul curent: {env} · regiunea {region} · commit {commit} pe {branch}.",
+      "id": "Id deploy: {id}",
+      "notOnVercel": "Nu rulează pe Vercel (local sau test).",
+      "usageLink": "Deschide Vercel → Usage.",
+      "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build din {of} ({percent}%), {errored} eșuate.",
+      "unavailable": "Nu este configurat. Două minute: Vercel → Account Settings → Tokens → Create (scope: contul, 1 an); Project ID din proiect → Settings → General; apoi VERCEL_API_TOKEN și VERCEL_PROJECT_ID în variabilele proiectului. Pașii sunt și pe /admin/tasks.",
+      "failed": "Vercel nu a răspuns: {reason}.",
+      "notInApi": "Traficul și invocările nu sunt expuse de API-ul Vercel; se văd doar în dashboard."
+    },
     "neon": {
       "title": "Baza de date (Neon)",
+      "size": "Spațiu ocupat: {used} MB din {of} MB ({percent}%).",
+      "sizeUnknown": "Spațiul ocupat nu a putut fi citit.",
       "intro": "Consumul proiectului în perioada curentă, citit din Neon. Planul gratuit dă 100 ore-CU pe lună pe proiect; când se termină, baza de date se oprește până la începutul lunii următoare.",
       "used": "{used} din 100 ore-CU folosite ({percent}%)",
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
@@ -1390,7 +1779,9 @@
       "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id <id>`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/<id>) sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
-    }
+    },
+    "sentThisMonth": "Trimise luna aceasta",
+    "emailPlanLabel": "Plan Mailgun"
   },
   "Error": {
     "title": "Ceva nu a funcționat",

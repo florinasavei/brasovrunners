@@ -27,6 +27,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: page.seoTitle ?? page.title,
     description: page.seoDescription ?? undefined,
     robots: { index: true, follow: true },
+    // Shared as an article, with the site's card (`[locale]/opengraph-image.tsx`, §90).
+    openGraph: { title: page.seoTitle ?? page.title, description: page.seoDescription ?? undefined, type: "article" },
   };
 }
 

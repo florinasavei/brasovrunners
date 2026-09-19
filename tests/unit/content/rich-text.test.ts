@@ -3,6 +3,7 @@ import {
   countImagesWithoutAlt,
   EMPTY_DOC,
   isRichTextEmpty,
+  hasRichTextContent,
   parseRichText,
   readRichText,
   richTextToPlainText,
@@ -48,6 +49,27 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
    * route answers — one of its own WebP variants. Anything else is a way to put a third
    * party's image, a tracking pixel or a data URI on the club's page.
    */
+  /**
+   * A YouTube film (`DECISIONS.md` §110): the id and a caption, nothing else — never an
+   * address the renderer would have to trust, and never any other host's embed.
+   */
+  describe("films", () => {
+    it("accepts a video id with a caption, defaults the caption, and counts the caption as its words", () => {
+      const parsed = parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", caption: "Startul din 2025" } }));
+      expect(parsed.content?.[0]).toEqual({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", caption: "Startul din 2025" } });
+      expect(parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ" } })).content?.[0]).toMatchObject({ attrs: { caption: "" } });
+      expect(richTextToPlainText(parsed)).toBe("Startul din 2025");
+      expect(hasRichTextContent(parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ" } })))).toBe(true);
+    });
+
+    it("refuses anything but an eleven-character id", () => {
+      for (const videoId of ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "short", "dQw4w9WgXcQ/../x", "<script>", ""]) {
+        expect(() => parseRichText(doc({ type: "youtube", attrs: { videoId } })), videoId).toThrow();
+      }
+      expect(() => parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", src: "https://x" } }))).toThrow();
+    });
+  });
+
   describe("pictures", () => {
     const ours = "https://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
     const local = "/api/media/local/3f2a1b4c-0000-4000-8000-000000000000/web.webp";

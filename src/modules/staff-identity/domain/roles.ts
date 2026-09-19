@@ -29,7 +29,13 @@
  * does rather than at the top.
  */
 
-export const STAFF_ROLES = ["CONTRIBUTOR", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
+/**
+ * Six roles, in rank order (`DECISIONS.md` §103). The names the club sees are in
+ * `staff-labels.ts`: the volunteer, the copywriter, the organizer, the developer, the
+ * administrator, the superadministrator. The enum keeps `CONTRIBUTOR` for the volunteer
+ * because a Postgres enum value is not renamed; what the role *does* changed in §103.
+ */
+export const STAFF_ROLES = ["CONTRIBUTOR", "COPYWRITER", "MODERATOR", "DEV", "ADMIN", "SUPERADMIN"] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
 /**
@@ -40,10 +46,11 @@ export type StaffRole = (typeof STAFF_ROLES)[number];
  */
 const RANK: Record<StaffRole, number> = {
   CONTRIBUTOR: 1,
-  MODERATOR: 2,
-  DEV: 3,
-  ADMIN: 4,
-  SUPERADMIN: 5,
+  COPYWRITER: 2,
+  MODERATOR: 3,
+  DEV: 4,
+  ADMIN: 5,
+  SUPERADMIN: 6,
 };
 
 /** Whether `role` is at least `minimum` in the hierarchy. Every capability below is one of these. */
@@ -65,6 +72,16 @@ export function isEditorial(role: StaffRole): boolean {
 }
 
 /**
+ * The copywriter's whole job (§103): the words of any event and any page, at any status —
+ * the title, the description, the rules, the programme, the SEO fields, a page's body — and
+ * nothing that is not words: no event setting, no publication, no gallery, no registration.
+ * The volunteer (`CONTRIBUTOR`) is below this line: the desk, and only the desk.
+ */
+export function canEditTexts(role: StaffRole): boolean {
+  return atLeast(role, "COPYWRITER");
+}
+
+/**
  * Content that is live, or has been submitted for someone else to judge, is out of a
  * Contributor's hands (§11.2).
  *
@@ -78,10 +95,12 @@ export function canEditTranslation(
   translation: { editorialStatus: EditorialStatus; authorStaffUserId: string | null },
   actorId: string,
 ): boolean {
-  if (isEditorial(role)) return true;
-  // A Contributor edits their own drafts. Not a colleague's, and not one they submitted for
-  // review — after submission the piece belongs to the reviewer until it comes back.
-  return translation.editorialStatus === "DRAFT" && translation.authorStaffUserId === actorId;
+  // Since §103 the answer no longer depends on whose draft it is: a copywriter edits every
+  // text and a volunteer none. The status and the author stay in the signature because the
+  // callers pass them and a future rule (a locked piece under review, say) would read them.
+  void translation;
+  void actorId;
+  return canEditTexts(role);
 }
 
 /**
@@ -108,8 +127,8 @@ export function isLiveContent(status: EditorialStatus): boolean {
 type Transition = { from: EditorialStatus; to: EditorialStatus; minimum: StaffRole };
 
 export const TRANSITIONS: readonly Transition[] = [
-  // Submit for approval. The one move a Contributor may make, and only on their own draft.
-  { from: "DRAFT", to: "IN_REVIEW", minimum: "CONTRIBUTOR" },
+  // Submit for approval: the one move a copywriter may make (§103).
+  { from: "DRAFT", to: "IN_REVIEW", minimum: "COPYWRITER" },
   // Return to the contributor.
   { from: "IN_REVIEW", to: "DRAFT", minimum: "MODERATOR" },
   { from: "IN_REVIEW", to: "PUBLISHED", minimum: "MODERATOR" },
@@ -129,8 +148,9 @@ export function canTransition(
 ): boolean {
   const transition = TRANSITIONS.find((t) => t.from === from && t.to === to);
   if (!transition || !atLeast(role, transition.minimum)) return false;
-  // A Contributor may submit their own draft and nobody else's. Anyone editorial may submit any.
-  if (!isEditorial(role)) return isOwnDraft;
+  // A copywriter submits any draft, theirs or a colleague's (§103): the reviewer is the
+  // organizer either way. `isOwnDraft` stays in the signature for the callers that compute it.
+  void isOwnDraft;
   return true;
 }
 
@@ -159,6 +179,11 @@ export function canEditEventFields(role: StaffRole): boolean {
  */
 export function canCreateEvent(role: StaffRole): boolean {
   return isEditorial(role);
+}
+
+/** A page is words; a copywriter starts one as a draft. Deleting and ordering stay editorial. */
+export function canCreatePage(role: StaffRole): boolean {
+  return canEditTexts(role);
 }
 
 /**
@@ -278,12 +303,15 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
   return [
-    "events" as const,
+    // The events list, for everyone who writes or configures one; a volunteer's backoffice
+    // is the desk and the guide, nothing else (§103).
+    ...(canEditTexts(role) ? (["events"] as const) : []),
     // The desk: a volunteer's whole backoffice (BR-REQ-037-08), and the guide that explains it.
     ...(canWorkTheDesk(role) ? (["checkin", "guide"] as const) : []),
-    // Standing pages are editorial control of what the club says about itself, so the same
-    // roles that configure an event write them (BR-REQ-050-03).
-    ...(isEditorial(role) ? (["pages", "gallery"] as const) : []),
+    // Standing pages are words, so the copywriter writes them (BR-REQ-050-03, §103); the
+    // gallery is pictures and stays with the roles that configure an event.
+    ...(canEditTexts(role) ? (["pages"] as const) : []),
+    ...(isEditorial(role) ? (["gallery"] as const) : []),
     ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
     // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
     ...(canManageRegistrations(role) ? (["tasks"] as const) : []),

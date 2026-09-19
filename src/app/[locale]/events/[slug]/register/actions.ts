@@ -8,6 +8,8 @@ import { findEventForRegistrationById, findPublishedEventBySlug } from "@/module
 import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { submitRegistration } from "@/modules/registrations/service";
+import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
+import { headers } from "next/headers";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 function toLocale(value: FormDataEntryValue | null): Locale {
@@ -36,6 +38,13 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   const db = getDb();
   const publicEvent = await findPublishedEventBySlug(db, locale, slug);
   if (!publicEvent) redirect(getPathname({ locale, href: "/events" }));
+
+  // The bot check, when configured (§97): a token Cloudflare does not confirm is a field
+  // error on the form — a person whose widget timed out reads why and presses again.
+  const requestHeaders = await headers();
+  const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);
+  if (verdict === "failed") redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);
 
   try {
     const internalEvent = await findEventForRegistrationById(db, publicEvent.id);

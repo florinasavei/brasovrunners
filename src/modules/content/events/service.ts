@@ -288,6 +288,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     featured: fields.featured,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
+    confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
+    confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
     registrationOpensAt: times.registrationOpensAt,
     registrationClosesAt: times.registrationClosesAt,
     declarationDocumentId: fields.declarationDocumentId,
@@ -386,7 +388,7 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     );
   }
 
-  const { body, excerptBody, ...columns } = fields;
+  const { body, rules, schedule, excerptBody, ...columns } = fields;
   // The rich excerpt, when the editor posted one, and its words as the plain `excerpt` — the
   // listing card, the meta description and the publish check all read the plain column
   // (`DECISIONS.md` §73). An editor that posted nothing leaves the plain text as typed.
@@ -400,6 +402,8 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
       excerpt: excerptJson ? richTextToPlainText(excerptJson).replace(/\s+/g, " ").trim().slice(0, 500) || null : columns.excerpt,
       excerptJson,
       bodyJson: body,
+      rulesJson: hasRichTextContent(rules) ? rules : null,
+      scheduleJson: hasRichTextContent(schedule) ? schedule : null,
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -849,6 +853,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     elevationGainMeters: source.elevationGainMeters,
     featured: false,
     capacity: source.capacity,
+    confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
+    confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,
     registrationMode: source.registrationMode,
     registrationOpensAt: source.registrationOpensAt,
     registrationClosesAt: source.registrationClosesAt,
@@ -880,6 +886,8 @@ function copiedTranslationValues(
     excerpt: translation.excerpt,
     excerptJson: translation.excerptJson,
     bodyJson: translation.bodyJson,
+    rulesJson: translation.rulesJson,
+    scheduleJson: translation.scheduleJson,
     checklist: translation.checklist,
     coverAltText: translation.coverAltText,
     seoTitle: translation.seoTitle,

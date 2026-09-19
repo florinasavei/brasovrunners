@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   allowedTransitions,
+  canCreatePage,
   canEditEventFields,
+  canEditTexts,
   canEditTranslation,
   canManageStaff,
   canTransition,
@@ -24,57 +26,47 @@ import {
 const AUTHOR_ID = "11111111-1111-1111-1111-111111111111";
 const OTHER_ID = "22222222-2222-2222-2222-222222222222";
 
-describe("BR-REQ-051-01 criterion 1 an Author works on their own drafts", () => {
-  it("lets an Author edit a draft they wrote", () => {
-    expect(
-      canEditTranslation(
-        "CONTRIBUTOR",
-        { editorialStatus: "DRAFT", authorStaffUserId: AUTHOR_ID },
-        AUTHOR_ID,
-      ),
-    ).toBe(true);
+describe("BR-REQ-051-01 criterion 1 a copywriter works on the words, a volunteer on none (§103)", () => {
+  it("lets a copywriter edit any text, theirs or a colleague's, at any status", () => {
+    for (const status of EDITORIAL_STATUSES) {
+      expect(
+        canEditTranslation("COPYWRITER", { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
+        `copywriter editing ${status}`,
+      ).toBe(true);
+    }
   });
 
-  it("refuses an Author a colleague's draft", () => {
-    expect(
-      canEditTranslation(
-        "CONTRIBUTOR",
-        { editorialStatus: "DRAFT", authorStaffUserId: OTHER_ID },
-        AUTHOR_ID,
-      ),
-    ).toBe(false);
+  it("refuses a volunteer every text, even a draft they are named on", () => {
+    for (const status of EDITORIAL_STATUSES) {
+      expect(
+        canEditTranslation("CONTRIBUTOR", { editorialStatus: status, authorStaffUserId: AUTHOR_ID }, AUTHOR_ID),
+        `volunteer editing ${status}`,
+      ).toBe(false);
+    }
   });
 
-  it("refuses an Author a draft that is already in review", () => {
-    // Once submitted the piece belongs to the reviewer, or the review is of a moving target.
-    expect(
-      canEditTranslation(
-        "CONTRIBUTOR",
-        { editorialStatus: "IN_REVIEW", authorStaffUserId: AUTHOR_ID },
-        AUTHOR_ID,
-      ),
-    ).toBe(false);
-  });
-
-  it("lets an Author submit their own draft for review and nothing else", () => {
-    expect(allowedTransitions("CONTRIBUTOR", "DRAFT", true)).toEqual(["IN_REVIEW"]);
-    expect(allowedTransitions("CONTRIBUTOR", "DRAFT", false)).toEqual([]);
-    expect(allowedTransitions("CONTRIBUTOR", "IN_REVIEW", true)).toEqual([]);
-    expect(allowedTransitions("CONTRIBUTOR", "PUBLISHED", true)).toEqual([]);
+  it("lets a copywriter submit a draft for review and nothing else; a volunteer nothing at all", () => {
+    expect(allowedTransitions("COPYWRITER", "DRAFT", true)).toEqual(["IN_REVIEW"]);
+    expect(allowedTransitions("COPYWRITER", "DRAFT", false)).toEqual(["IN_REVIEW"]);
+    expect(allowedTransitions("COPYWRITER", "IN_REVIEW", true)).toEqual([]);
+    expect(allowedTransitions("COPYWRITER", "PUBLISHED", true)).toEqual([]);
+    for (const from of EDITORIAL_STATUSES) expect(allowedTransitions("CONTRIBUTOR", from, true)).toEqual([]);
   });
 });
 
-describe("BR-REQ-051-01 criterion 3 published content is out of an Author's hands", () => {
-  it.each(["PUBLISHED", "ARCHIVED"] as const)("refuses an Author a %s translation", (status) => {
-    expect(
-      canEditTranslation("CONTRIBUTOR", { editorialStatus: status, authorStaffUserId: AUTHOR_ID }, AUTHOR_ID),
-    ).toBe(false);
+describe("BR-REQ-051-01 criterion 3 publishing is out of a copywriter's hands", () => {
+  it.each(["COPYWRITER", "CONTRIBUTOR"] as const)("never lets %s publish, whatever the starting status", (role) => {
+    for (const from of EDITORIAL_STATUSES) {
+      expect(canTransition(role, from, "PUBLISHED", true), `from ${from}`).toBe(false);
+    }
   });
 
-  it("never lets an Author publish, whatever the starting status", () => {
-    for (const from of EDITORIAL_STATUSES) {
-      expect(canTransition("CONTRIBUTOR", from, "PUBLISHED", true), `from ${from}`).toBe(false);
-    }
+  it("keeps the event row and the pages' order and deletion above the copywriter", () => {
+    expect(canEditEventFields("COPYWRITER")).toBe(false);
+    expect(canEditTexts("COPYWRITER")).toBe(true);
+    expect(canEditTexts("CONTRIBUTOR")).toBe(false);
+    expect(canCreatePage("COPYWRITER")).toBe(true);
+    expect(canCreatePage("CONTRIBUTOR")).toBe(false);
   });
 });
 
@@ -138,6 +130,7 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canManageStaff("ADMIN")).toBe(false);
     expect(canManageStaff("DEV")).toBe(false);
     expect(canManageStaff("MODERATOR")).toBe(false);
+    expect(canManageStaff("COPYWRITER")).toBe(false);
     expect(canManageStaff("CONTRIBUTOR")).toBe(false);
   });
 
@@ -162,13 +155,14 @@ describe("BR-REQ-060-01 what each role may reach", () => {
  * is a pure function rather than a conditional inside a React component.
  */
 describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
-  it("gives every signed-in role the events section and nothing it may not open", () => {
-    // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67): a volunteer handing out
-    // numbers is a CONTRIBUTOR, and the desk is their whole backoffice.
-    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["events", "checkin", "guide"]);
-    // A Moderator gains the club's standing pages (BR-REQ-050-03): writing what the club says
-    // about itself is editorial control of what it advertises, which is where an event's own
-    // settings already sit. A Contributor still has drafts and nothing else.
+  it("gives each role the sections it may open and nothing it may not", () => {
+    // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
+    // volunteer's whole backoffice: a person handing out numbers is not offered the events.
+    expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
+    // The copywriter: the events (their texts), the desk, the pages — no gallery, no settings.
+    expect(visibleAdminSections("COPYWRITER")).toEqual(["events", "checkin", "guide", "pages"]);
+    // An Organizer gains the gallery (BR-REQ-050-03): pictures sit with the roles that
+    // configure an event, where an event's own settings already sit.
     expect(visibleAdminSections("MODERATOR")).toEqual(["events", "checkin", "guide", "pages", "gallery"]);
   });
 

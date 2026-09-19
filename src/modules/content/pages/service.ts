@@ -6,8 +6,9 @@ import type { Database } from "@/db/types";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import {
   allowedTransitions,
-  canCreateEvent,
+  canCreatePage,
   canEditEventFields,
+  canEditTexts,
   canTransition,
   type EditorialStatus,
 } from "@/modules/staff-identity/domain/roles";
@@ -87,7 +88,7 @@ export async function createPage<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; fields: unknown; now?: Date },
 ): Promise<Page> {
-  if (!canCreateEvent(input.actor.role)) {
+  if (!canCreatePage(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not create a page`);
   }
 
@@ -140,7 +141,8 @@ export async function savePage<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; pageId: string; expectedVersion: number; fields: unknown; now?: Date },
 ): Promise<Page> {
-  if (!canEditEventFields(input.actor.role)) {
+  // Words (§103): the copywriter's. The slug of a live page is refused below regardless of role.
+  if (!canEditTexts(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit a page`);
   }
 

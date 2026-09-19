@@ -92,6 +92,10 @@ export const translationFieldsSchema = z
      * a field error, empty allowed. Optional in the input for callers from before it existed.
      */
     body: richTextField,
+    /** The rules, the same contract as the body (§96); empty allowed. */
+    rules: richTextField,
+    /** The programme — kit pickup, briefing, start, cut-offs (§96); empty allowed. */
+    schedule: richTextField,
     seoTitle: optionalText(200),
     seoDescription: optionalText(320),
   })
@@ -121,6 +125,12 @@ const optionalWholeNumber = (options: { min: number; max: number }) =>
       { message: `must be a whole number between ${options.min} and ${options.max}` },
     )
     .transform((value) => (value === null ? null : Number(value)));
+
+/** As `optionalWholeNumber`, with a default for an absent or empty value rather than null. */
+const wholeNumberWithDefault = (fallback: number, options: { min: number; max: number }) =>
+  optionalWholeNumber(options)
+    .optional()
+    .transform((value) => (value === null || value === undefined ? fallback : value));
 
 const optionalUuid = z
   .string()
@@ -258,6 +268,13 @@ export const eventFieldsSchema = z
     // a declaration only on an INTERNAL event, the external fields only on an EXTERNAL one.
     registrationMode: z.enum(["NONE", "INTERNAL", "EXTERNAL"]),
     capacity: optionalWholeNumber({ min: 1, max: 100_000 }),
+    /**
+     * The participation window (§104), in days before the start: when the confirmation is
+     * asked and when it is owed. Absent (an older form, a test fixture) means the defaults; an
+     * empty box means the default too. Zero "opens" switches the window off.
+     */
+    confirmationOpensDaysBefore: wholeNumberWithDefault(7, { min: 0, max: 60 }),
+    confirmationDeadlineDaysBefore: wholeNumberWithDefault(2, { min: 0, max: 60 }),
     registrationOpensAtWallTime: z.string().trim(),
     registrationClosesAtWallTime: z.string().trim(),
     declarationDocumentId: optionalUuid,

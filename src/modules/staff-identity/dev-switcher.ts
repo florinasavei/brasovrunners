@@ -26,7 +26,7 @@ import type { StaffRole } from "./domain/roles";
 const DEV_SUBJECT_PREFIX = "dev:";
 
 /** One key per role. `role-boundaries.test.ts` asserts the set matches `STAFF_ROLES`. */
-export type DevIdentityKey = "contributor" | "moderator" | "dev" | "admin" | "superadmin";
+export type DevIdentityKey = "contributor" | "copywriter" | "moderator" | "dev" | "admin" | "superadmin";
 
 type DevIdentity = {
   key: DevIdentityKey;
@@ -48,6 +48,13 @@ export const DEV_IDENTITIES: readonly DevIdentity[] = [
     email: "dev-contributor@dev.test",
     displayName: "Dev Contributor",
     role: "CONTRIBUTOR",
+  },
+  {
+    key: "copywriter",
+    zitadelSubject: `${DEV_SUBJECT_PREFIX}copywriter`,
+    email: "dev-copywriter@dev.test",
+    displayName: "Dev Copywriter",
+    role: "COPYWRITER",
   },
   {
     key: "moderator",

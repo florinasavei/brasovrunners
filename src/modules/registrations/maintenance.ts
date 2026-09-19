@@ -2,7 +2,7 @@ import type { Database } from "@/db/types";
 import { pruneExpiredRows, totalPruned } from "@/modules/jobs/retention";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { sweepOrphanAssets } from "@/modules/media/references";
-import { queueEventReminders } from "@/modules/notifications/event-mail";
+import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
 
@@ -30,6 +30,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   prunedRows: number;
   orphanPicturesDeleted: number;
   remindersQueued: number;
+  /** "Confirm your participation" messages queued this run (§104). */
+  confirmationsQueued: number;
 }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
@@ -57,6 +59,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
             startsAt: event.startsAt,
             registrationOpensAt: event.registrationOpensAt,
             registrationClosesAt: event.registrationClosesAt,
+            confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
+            confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
             capacity: event.capacity,
             raceId: event.raceId,
             publishedAt: null,
@@ -80,6 +84,14 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   let remindersQueued = 0;
   try {
     remindersQueued = await queueEventReminders(db, now);
+  } catch {
+    errorCount += 1;
+  }
+  // The participation confirmations (§104), the same way: once per registration when the
+  // event's window opens; a failure is a late reminder, not a failed run.
+  let confirmationsQueued = 0;
+  try {
+    confirmationsQueued = await queueParticipationConfirmations(db, now);
   } catch {
     errorCount += 1;
   }
@@ -118,11 +130,11 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     jobRunId,
     {
       itemsProcessed:
-        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued,
+        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued,
       errorCount,
     },
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued };
+  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued, confirmationsQueued };
 }

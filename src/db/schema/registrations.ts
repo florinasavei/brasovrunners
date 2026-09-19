@@ -210,6 +210,20 @@ export const registrations = pgTable(
     emergencyContactPhone: text("emergency_contact_phone"),
 
     clubName: text("club_name"),
+    /**
+     * The optional "socials" (§106): a Strava profile link and an Instagram handle, as the
+     * person typed them, for the club to follow back and tag. Never published by the platform,
+     * shown to Administrators and in the export; deleted with the row three years after the
+     * event like every other detail here.
+     */
+    stravaUrl: text("strava_url"),
+    instagramHandle: text("instagram_handle"),
+    /**
+     * The parent or legal guardian who registers a minor (§108): required by the form when the
+     * birth date gives under eighteen, the name that signs the declaration on the child's
+     * behalf and that the desk hands the kit to. Null for an adult.
+     */
+    guardianName: text("guardian_name"),
 
     /**
      * "I am a Brașov Runners team member", as the person filling the form said it

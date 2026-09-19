@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1264,7 +1264,19 @@ Header: Authorization: Bearer <that environment's JOB_SECRET>
 
 On cron-job.org that is Settings → Time zone `Europe/Bucharest`, then per production address
 two jobs with a **Custom** schedule: day = every day, hours 7–22, minutes 0/15/30/45; night =
-every day, hours 23 and 0–6, minute 0. The health check knows the two cadences
+every day, hours 23 and 0–6, minute 0.
+
+**The third monitor — the one that tells the club when email has stopped (`DECISIONS.md`
+§98).** `GET <APP_BASE_URL>/api/health`, no header, every 30 minutes (Custom → every day,
+every hour, minutes 0 and 30), and under *Notifications* tick **on failure** and *when the job
+gets disabled*. `/api/health` answers 503 while any outbox message is deferred by Mailgun's
+daily allowance, has failed, or has waited more than ninety minutes for a scheduler that is
+not running; cron-job.org then emails the account's address from its own mail servers — the
+one path that does not go through the provider that is down. When the condition clears the
+page answers 200 again and the "job successful" mail follows. Not on the job endpoints: a
+job cron-job.org sees failing for long enough is disabled by it, and the outbox job is the
+thing that clears the condition. Every environment; on QA it also catches a monitor pair
+somebody paused and forgot. The health check knows the two cadences
 (`modules/jobs/quiet-hours.ts`): fifty minutes since the last run is `ok` at 03:00 and `stale`
 at noon. The site is allowed to be slower at night — the first request after an idle hour
 pays Neon's cold start — because nobody in Brașov is registering at 03:00 and a warm database
@@ -1285,14 +1297,20 @@ domain's sending key "brasovrunners-production"), `MAILGUN_WEBHOOK_SIGNING_KEY`,
 `EMAIL_FROM_ADDRESS=noreply@mail.brasovrunners.com`, `EMAIL_REPLY_TO=contact@mail.brasovrunners.com`,
 `EMAIL_DELIVERY_MODE=live`. Verified with `yarn email:probe` pointed at the domain.
 
-**The club's reply address, until it has a mailbox.** `contact@mail.brasovrunners.com` is a
+**The club's mailbox (2026-09-18 evening): `brasovrunners@gmail.com`**, a Gmail of the club's
+(password and 2-step backup codes in the club's password store), which reads `contact@` and
+replies from it — Gmail "Send mail as" `contact@mail.brasovrunners.com` through
+`smtp.eu.mailgun.org:587`, user `postmaster@mail.brasovrunners.com`, the domain's SMTP
+credential (the one Zitadel uses; do not reset it). `contact@mail.brasovrunners.com` is a
 Mailgun **Route** (Send → Receiving → Routes): match recipient `contact@mail.brasovrunners.com`
-→ Forward to the owner's Gmail, Stop, priority 0, no "store and notify" (nothing reads incoming
+→ Forward to `brasovrunners@gmail.com, <the owner's address>`, Stop, priority 0, no "store and notify" (nothing reads incoming
 mail, and storing people's messages at a third party for nothing is not a feature). Receiving
 works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
 Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
 copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
-is right, because every email the site sends carries `Reply-To: contact@…`. When the club gets Google or Microsoft
+is right, because every email the site sends carries `Reply-To: contact@…`. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
+is set on the production project (`DECISIONS.md` §99): every signed declaration arrives there
+as a PDF at signing. One more message per registration on Mailgun's allowance. When the club gets Google or Microsoft
 mailboxes, those take the **apex** (`@brasovrunners.com`) and this subdomain is untouched; only
 the two reply-to values move — `EMAIL_REPLY_TO` here and the Zitadel SMTP provider's.
 
@@ -1395,6 +1413,16 @@ yarn setup
 `yarn setup` points git at the tracked `.githooks` directory. From then on `yarn check`
 runs before every commit and a failing commit is blocked. Skipping it is the one way to get a
 red pull request from a green working copy, so it is not optional.
+
+**The repository is public.** Anything committed is published, and a credential that was
+pushed is a credential to rotate, whatever happens to the commit afterwards. Three guards
+(`DECISIONS.md` §98): `yarn secrets:check` runs inside `yarn check` and refuses a commit
+carrying a Mailgun, Neon, Turnstile, Vercel or GitHub key, a private key block, a connection
+string with a real password, or a `JOB_SECRET`-style variable with a value; GitHub's secret
+scanning and push protection are on for the formats it knows; and every real value lives in
+`.env.local` (ignored) or in the host's environment variables — `.env.example` names
+variables and never fills them. If the check fires on an example, write the example
+differently; there is no allowlist to add it to, on purpose.
 
 **Per change:**
 
@@ -1686,9 +1714,20 @@ it: CU-hours used against 100, hours awake against hours elapsed, and when the p
    with the production project's values; the same for QA with QA's project id. Redeploy.
 4. `/devs` → "Database (Neon)" shows the figures; red past 80%. Nothing else reads the key.
 
+**The same for Vercel, as far as Vercel allows (`DECISIONS.md` §101).** Vercel's public API
+has no usage endpoint — bandwidth and invocations are on the dashboard's Usage page only — but
+it lists deployments, and from those `/devs` shows the month's deployments, today's against
+Hobby's 100 a day and the build minutes against Hobby's 6,000 a month. Vercel → avatar →
+**Account Settings** → **Tokens** → Create (`brasovrunners-devs`, scope the account, one year);
+the project id from the project's **Settings → General → Project ID** (`prj_…`); then
+`VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID` on each project (QA with its own id;
+`VERCEL_TEAM_ID` only on a team account). Redeploy. `/admin/tasks` carries the same steps.
+
 ## 34. Volunteer accounts for race day
 
-Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Contributor**.
+Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Voluntar**
+(`CONTRIBUTOR` in the database; since `DECISIONS.md` §103 that role is the desk and nothing
+else, and `/admin` takes them straight to it).
 Sign-in is Zitadel plus the `staff_users` allowlist (§25), so a volunteer needs both:
 
 1. Zitadel console → **Users** → **New** — email (theirs, or a club address for a shared desk

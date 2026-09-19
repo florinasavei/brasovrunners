@@ -49,6 +49,13 @@ export const declarationAcceptances = pgTable(
     // Explicit checkbox plus typed full name (§10.8) — not a qualified electronic signature.
     // For `PAPER` it is the registered name, as written on the form staff hold.
     typedName: text("typed_name").notNull(),
+    /**
+     * The identity document the declaration names — "posesor al CI seria BV nr. 123456" — as
+     * the participant typed it at signing (`DECISIONS.md` §95). The club's own paper
+     * declaration asks for it and hands out kits against it. Null for `PAPER`, where the paper
+     * has it, and for acceptances recorded before the field existed.
+     */
+    idDocument: text("id_document"),
 
     method: declarationMethod("method").notNull().default("EMAIL_LINK"),
     /** Who recorded a paper signature. Required for `PAPER`, absent otherwise. */

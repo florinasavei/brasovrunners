@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
@@ -7,16 +6,14 @@ import { listPublicStartList } from "@/modules/registrations/repository";
 import type { PublicEvent } from "../repository";
 
 /**
- * Who is coming, when the club has decided to say (BR-REQ-039-01).
+ * Who is coming (BR-REQ-039-01, BR-REQ-039-02; `DECISIONS.md` §32, §85): the confirmed, real,
+ * not-opted-out participants of an event whose organizer switched the list on.
  *
- * Off unless the event's own `participant_list_visibility` is `NAMES`, which no event has by
- * default and which an organizer sets one event at a time. This renders nothing at all
- * otherwise — not an empty heading, not a count, nothing that says a list exists.
- *
- * What it can show is exactly what `listPublicStartList` returns: the names of the people who
- * confirmed and did not ask to be left out, in the order they confirmed. There is no code path
- * here that could render an address, a status or a number of people still deciding, because
- * none of those is fetched.
+ * A native disclosure, closed, with the count in its summary: a page whose bottom third is a
+ * list of names reads like a list of names, and the event page is about the event. Each row
+ * is the display name and — since §85 — the club they wrote, because "who is coming" at a
+ * race is answered by clubs as much as by names. Nothing else: the select list in the
+ * repository is the guarantee.
  */
 export default async function StartList({ event }: { event: PublicEvent }) {
   if (event.participantListVisibility !== "NAMES") return null;
@@ -25,31 +22,49 @@ export default async function StartList({ event }: { event: PublicEvent }) {
   const participants = await listPublicStartList(getDb(), event.id);
 
   return (
-    <Box component="section" aria-labelledby="start-list-title" sx={{ mt: 4 }}>
-      <Typography id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-        {t("startList.title")}
+    <Box
+      component="details"
+      aria-labelledby="start-list-title"
+      data-testid="start-list"
+      sx={{
+        mt: 4,
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 2,
+        px: 2,
+        "& > summary": { cursor: "pointer", py: 1.5, minHeight: 44, listStyle: "revert" },
+      }}
+    >
+      <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+        {t("startList.titleCount", { count: participants.length })}
       </Typography>
 
       {participants.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ pb: 2 }}>
           {t("startList.empty")}
         </Typography>
       ) : (
         <>
-          <Stack component="ol" spacing={0.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+          <Box component="ol" sx={{ listStyle: "none", p: 0, m: 0, columnGap: 3, columns: { sm: 2, md: 3 } }}>
             {participants.map((participant, index) => (
               // The name is not unique — two people called Ana Popescu may both be running —
               // so the position in the confirmed order is what identifies the row to React.
-              <Typography component="li" variant="body1" key={`${index}-${participant.displayName}`}>
+              <Typography component="li" variant="body1" key={`${index}-${participant.displayName}`} sx={{ py: 0.25, breakInside: "avoid" }}>
                 {participant.displayName}
+                {participant.clubName && (
+                  <Typography component="span" variant="body2" color="text.secondary">
+                    {" · "}
+                    {participant.clubName}
+                  </Typography>
+                )}
               </Typography>
             ))}
-          </Stack>
+          </Box>
 
           {/* Said on the page rather than only in the privacy notice: somebody reading their own
               name here should be able to see, without leaving, that it was their choice and how
               to change it. */}
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, pb: 2 }}>
             {t("startList.note")}
           </Typography>
         </>

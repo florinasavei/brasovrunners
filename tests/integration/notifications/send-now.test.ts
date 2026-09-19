@@ -75,7 +75,7 @@ describe("§80 the outbox sent by hand", () => {
     expect(result.sent).toBe(25);
     expect(result.batches).toBe(2);
     expect(result.sentToday).toBe(25);
-    expect(result.remaining).toBe(result.allowance - 25);
+    expect(result.remaining).toBe((result.allowance ?? 0) - 25);
     expect((await readEmailVolumeToday(db, NOW)).waitingMessages).toBe(0);
 
     const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "outbox.sent_by_staff"));

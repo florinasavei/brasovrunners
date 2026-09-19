@@ -39,8 +39,9 @@ export type SendNowResult = OutboxBatchSummary & {
   batches: number;
   /** The day's figures after the run, for the sentence the page shows. */
   sentToday: number;
-  allowance: number;
-  remaining: number;
+  /** Null when the plan has no ceiling (§100). */
+  allowance: number | null;
+  remaining: number | null;
 };
 
 /** What the worker and the counter read; any fuller schema — the app's, the tests' — fits. */
@@ -68,13 +69,13 @@ export async function sendOutboxNow(
   let volume = await readEmailVolumeToday(db, now);
 
   const { sender } = createEmailSenderForEnvironment(env);
-  while (batches < MAX_BATCHES && volume.remaining > 0) {
+  while (batches < MAX_BATCHES && (volume.remaining === null || volume.remaining > 0)) {
     const summary = await processOutboxBatch(db, {
       sender,
       render: renderOutboxMessage,
       now,
       // Never past what the day still allows: the counter is the ceiling, not a display.
-      batchSize: Math.min(20, volume.remaining),
+      batchSize: Math.min(20, volume.remaining ?? 20),
     });
     // An empty claim is not a batch: nothing was waiting, and nothing is counted.
     if (summary.claimed === 0) break;

@@ -37,8 +37,17 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     // Raw, with its `{count}` placeholder: the island substitutes the number itself.
     imageNoAltMany: rt.raw("imageNoAltMany") as string,
     imageFromGallery: rt("imageFromGallery"),
+    imageShort: rt("imageShort"),
+    imageFromGalleryShort: rt("imageFromGalleryShort"),
     imageGalleryLoading: rt("imageGalleryLoading"),
     imageGalleryEmpty: rt("imageGalleryEmpty"),
     imageGalleryClose: rt("linkCancel"),
+    youtube: rt("youtube"),
+    youtubeShort: rt("youtubeShort"),
+    youtubeUrl: rt("youtubeUrl"),
+    youtubeApply: rt("youtubeApply"),
+    youtubeInvalid: rt("youtubeInvalid"),
+    youtubeCaption: rt("youtubeCaption"),
+    youtubeRemove: rt("youtubeRemove"),
   };
 }

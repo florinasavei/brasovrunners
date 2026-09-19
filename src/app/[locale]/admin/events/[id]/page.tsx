@@ -40,6 +40,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
+import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
@@ -343,6 +344,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             >
               {t("registrations.viewForEvent")}
             </Button>
+            {/* The declarations (§95): every signed one as the club's archive; the blank one to print. */}
+            <Button component="a" href={`/api/admin/events/${event.id}/declarations?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
+              {t("registrations.declarationsPdf")}
+            </Button>
+            <Button component="a" href={`/api/admin/events/${event.id}/declaration-form?locale=${locale}`} variant="text" size="small" sx={{ minHeight: 44 }}>
+              {t("registrations.declarationForm")}
+            </Button>
             {/* The desk for this event (BR-REQ-037-08): where race morning happens. */}
             <Button
               component="a"
@@ -410,6 +418,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               </form>
             )}
           </Stack>
+
+          {/* Every bib as it will print, on its own page (§94): drawn on request, not on every visit here. */}
+          {bibs.length > 0 && (
+            <Typography variant="body2" sx={{ mt: 2 }}>
+              <Link href={{ pathname: "/admin/events/[id]/bibs", params: { id: event.id } }}>
+                {t("bibs.preview", { count: bibs.length })}
+              </Link>
+            </Typography>
+          )}
         </Box>
       )}
 
@@ -461,6 +478,17 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             )}
           </Box>
         )}
+
+      {/* The queue as the allocator sees it, and the waiting list in its order (§92). */}
+      {canManageRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && (
+        <Box component="section">
+          <Divider sx={{ mb: 3 }} />
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
+            {t("queue.title")}
+          </Typography>
+          <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity }} now={now} />
+        </Box>
+      )}
 
       {mayFillTheQueue && (
         <Box component="section">

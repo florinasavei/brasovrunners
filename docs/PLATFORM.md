@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -92,9 +92,10 @@ not taken, so the club can see it is not locked in.
 ### The four that will actually bite this club
 
 **1. Mailgun's 100 emails/day is the binding constraint on registration day.** This application
-sends **four emails per completed registration** — verify the address, sign the declaration,
-confirmed, and the reminder two days before (`DECISIONS.md` §81) — and a waitlisted entrant
-costs two more. So the free plan supports roughly **25 registrations per day**, and a race that
+sends **five emails per completed registration** — verify the address, sign the declaration,
+confirmed, the signed declaration as a PDF (`DECISIONS.md` §95), and the reminder two days
+before (§81) — and a waitlisted entrant costs two more. So the free plan supports roughly
+**20 registrations per day**, and a race that
 opens entries to a hundred people exceeds it before lunch. Basic at $15/mo removes the daily limit and includes 10,000/month. **Budget one month of
 Basic per race, not a permanent subscription.**
 
@@ -259,8 +260,10 @@ was a **green skip**, which is exactly the failure `DECISIONS.md` §31 records, 
 straight after it returned **401** until the Vercel project's own `JOB_SECRET` matched, at about
 05:47Z — a green tick is not evidence that a job ran. And GitHub documents that scheduled
 workflows are disabled on repositories after a period of inactivity: still unconfirmed, still the
-case a club site quiet for a season would trip, and **there is still no alert on `degraded`** —
-somebody has to look.
+case a club site quiet for a season would trip. **Since `DECISIONS.md` §98 there is an alert
+on `degraded`:** `/api/health` answers 503 for every status but `ok`, and a cron-job.org
+monitor on it with "notify on failure" emails the club — from cron-job.org's own mail, which
+is the point, because the commonest reason is that the club cannot send any.
 
 ### 5. Neon Free scales to zero
 
@@ -358,9 +361,13 @@ absorb load that a limit should have refused is paying for abuse.
 
 ### When the daily allowance runs out — decided, and it is not a bounce
 
-This will happen: four messages per completed registration against 100 a day is 25
+This will happen: five messages per completed registration against 100 a day is 20
 registrations, and a race opening entries to a hundred people crosses it before lunch (limit 1).
-What happens then is now a decision rather than an accident.
+What happens then is now a decision rather than an accident. **Which plan the account is on is
+a setting since `DECISIONS.md` §100** — `/admin/emails`, Administrator, audited — and every
+figure on `/admin/tasks`, `/devs` and the outbox panel counts against that plan's ceiling over
+its own period: a day on Free, a month on Basic and above. The month of Basic before a race is
+therefore two clicks and no deploy: pay at Mailgun, set the plan; cancel, set it back.
 
 **The messages wait, and go out when the allowance resets.** Mailgun refuses a send whose
 allowance is spent, the adapter classifies that refusal as `throttled`, and the outbox leaves the
@@ -427,7 +434,7 @@ Things already decided and owed, so they are not rediscovered.
 | A decision on whether the backoffice stays bilingual or becomes Romanian-only | The owner raised it; the enum labels were the smaller half and are done | `DECISIONS.md` §35 |
 | The approved privacy notice must describe the participant list before `NAMES` may be used | Publishing participants' names is a disclosure | `DECISIONS.md` §32 |
 | No way to discard a registration whose address was never confirmed | §10.5 has no such transition; it lapses in 48 hours instead | `DECISIONS.md` §33 |
-| An alert on `/api/health` going `degraded` | The health check is the detection; nothing watches it | this page, limit 4 |
+| ~~An alert on `/api/health` going `degraded`~~ | Done 2026-09-18: 503 on anything but `ok`, a cron-job.org monitor with failure notifications watches it | `DECISIONS.md` §98 |
 | Rate limiting on the one surface with no route yet | §19.4 names five. Built: submission, admin resend, token validation, the job endpoints as the auth-adjacent one, and the participant's own link request — `/registrations/resend` landed in `BR-V1.22`, throttled on the canonical email identity. Only uploads remain, and media storage is deferred (`AGENTS.md` §17), so there is nothing yet to guard | `AGENTS.md` §19.4 |
 
 ---

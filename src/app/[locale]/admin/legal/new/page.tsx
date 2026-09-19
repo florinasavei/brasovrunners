@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
+import { isLegalDocumentKey, LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import LegalDocumentForm, {
   type LegalDocumentFormValues,
 } from "@/modules/legal-documents/ui/LegalDocumentForm";
@@ -18,7 +19,7 @@ import { createLegalVersionAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string; from?: string }>;
+  searchParams: Promise<{ error?: string; from?: string; template?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -53,7 +54,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
 
   await requireStaffRole("SUPERADMIN");
 
-  const { error, from } = await searchParams;
+  const { error, from, template } = await searchParams;
   const t = await getTranslations("Admin");
 
   /**
@@ -65,9 +66,18 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
    * A `from` that resolves to nothing — deleted, mistyped — is the empty form, not an error.
    */
   const source = from ? await findVersionWithTranslations(getDb(), from) : undefined;
+  // `?template=<key>` starts from the platform's own text (§95): the club reads, fills its
+  // four facts and approves, rather than drafting a privacy notice from nothing.
+  const fromTemplate = template && isLegalDocumentKey(template) ? LEGAL_TEMPLATES[template] : undefined;
   const values: LegalDocumentFormValues | undefined = source
     ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }
-    : undefined;
+    : fromTemplate && template && isLegalDocumentKey(template)
+      ? {
+          key: template,
+          ro: { title: fromTemplate.ro.title, body: fromTemplate.ro.body },
+          en: { title: fromTemplate.en.title, body: fromTemplate.en.body },
+        }
+      : undefined;
 
   return (
     <Stack spacing={3}>
@@ -77,7 +87,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
           {t("legal.newTitle")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {source ? t("legal.newFromIntro", { version: source.version }) : t("legal.newIntro")}
+          {source ? t("legal.newFromIntro", { version: source.version }) : fromTemplate ? t("legal.newFromTemplateIntro") : t("legal.newIntro")}
         </Typography>
       </Stack>
 
@@ -91,7 +101,7 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         action={createLegalVersionAction}
         locale={locale}
         values={values}
-        keyLocked={Boolean(source)}
+        keyLocked={Boolean(source || fromTemplate)}
         submitLabel={t("legal.saveDraft")}
       />
     </Stack>

@@ -40,7 +40,10 @@ export default function AppTheme({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ThemeProvider theme={active}>
+    // Light until the visitor presses the switch — never the device's setting (§93); the
+    // choice lives in localStorage under MUI's own key and the layout's script applies it
+    // before the first paint.
+    <ThemeProvider theme={active} defaultMode="light">
       <CssBaseline />
       {/* Every rem on the site — MUI's own type scale included — follows the root size. */}
       {preview && preview.scale !== 100 && <GlobalStyles styles={{ html: { fontSize: `${preview.scale}%` } }} />}

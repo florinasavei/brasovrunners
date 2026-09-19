@@ -10,7 +10,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listPagesForAdmin, type PageListRow } from "@/modules/content/pages/repository";
-import { isEditorial, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
+import { canEditTexts, type EditorialStatus } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
@@ -50,7 +50,7 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!isEditorial(actor.role)) notFound();
+  if (!canEditTexts(actor.role)) notFound();
 
   const current = await searchParams;
   const { saved, error } = current;

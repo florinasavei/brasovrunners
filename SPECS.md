@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -81,6 +81,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 5. Given any localized page, when it renders, then the alternate-locale link points at the corresponding localized slug and not at a concatenated URL.
 6. Given the language switcher in the site header, when it is used on any page, then the visitor lands on the same page in the other language — resolved on the server, because the two locales of an event have different slugs and only the database holds the pair. When that page has no published translation in the target language, the switcher lands on that language's event listing rather than on a 404.
 7. Given the switcher, when it renders, then the current language is marked rather than offered as a link, and the visible label is the language code with the flag as decoration beside it — a flag is a country, not a language.
+8. Given the bare root, when any visitor requests it, then they land on the Romanian listing — no `Accept-Language` negotiation and no locale cookie; the chosen language lives in the address of every page (2026-09-18, `DECISIONS.md` §96).
 
 **Verification:** unit `i18n/alternate-path.test.ts`; integration `events/locale-switch.test.ts`; e2e `event-pages.spec.ts`
 
@@ -248,6 +249,9 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 2. Given an event with `event_status = CANCELLED` and a published translation, when its page is requested, then it renders with a clearly visible cancelled status.
 3. Given a cancelled or completed event, when a registration is attempted, then it is rejected.
 4. Given an event with `event_status = COMPLETED` (set by the organizer in the editor), when its page or card renders, then it says "S-a încheiat" in words and offers no registration control; when a check-in is attempted at the desk, then it is refused with a sentence and the desk shows the rows without buttons; and the maintenance job no longer touches the event (2026-09-18, `DECISIONS.md` §82).
+5. Given the listing, when it renders, then it carries, right under the featured event, a row of type filters (`?type=`, one of the closed set) and a month view of the published events — the month `?month=YYYY-MM` names or the current one, in the club's time zone, Monday first, each event a link, a cancelled one struck through — as a grid from `sm` up and as an agenda of the month's days on a phone; the filter applies to the month and to the cards and is kept by the month links (2026-09-18, `DECISIONS.md` §89).
+6. Given an event whose translation has rules or a programme (`event_translations.rules_json`, `schedule_json`, written in the description's editor, folded), when its page or preview renders, then the programme appears under `#schedule` and the rules under `#rules` below the description, in the reader's language; an event without them shows no section, and the emails link to each only when it exists (2026-09-18, `DECISIONS.md` §96).
+7. Given a published event, when `/<locale>/events/<slug>/calendar.ics` is requested, then it is a valid RFC 5545 calendar with one VEVENT — UTC start and end (the start again when the event has no end), the title, the meeting point, the short description and the programme as plain text, the event's page as URL, lines folded under 75 octets, text escaped — and the event page offers it and Google Calendar's add-event address beside the share links; given `/<locale>/events/calendar.ics`, then it is the same for every published event from a month ago to a year ahead, with a calendar name and a daily refresh hint, cached an hour, and the listing offers it as a `webcal://` subscription and a download (`DECISIONS.md` §107).
 
 **Verification:** integration `events/publication.test.ts`; e2e `event-cancelled.spec.ts`
 
@@ -369,8 +373,11 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 1. Given the registration form, when it renders, then it asks only for full name, email, and acknowledgment of the privacy notice, and offers no password field or login link.
 2. Given a completed registration, when the participant record is inspected, then it holds no password, no provider token, and no staff role.
 3. Given a submitted registration, when the response renders, then it states that an email has been sent, without revealing whether that address was already registered.
+4. Given `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` both set, when the public form renders, then it carries the Cloudflare Turnstile widget, and a submission whose token Cloudflare does not confirm — or that carries none, or when Cloudflare cannot be reached — is refused with a field error the person can act on; with either key unset nothing is shown or checked, and the honeypot and the timing check stand either way; the staff form never shows it (2026-09-18, `DECISIONS.md` §97).
 
-**Verification:** e2e `registration-submit.spec.ts`; integration `participants/identity.test.ts`
+5. Given the registration form, when it renders, then under its title it states the event's date and time in the event's zone and its meeting point, and offers as links, each a 44 px target: the event's page, its rules when the organizer wrote any, the terms and the privacy notice — so what is being signed up for and under which terms is on the form itself (`DECISIONS.md` §102).
+
+**Verification:** e2e `registration-submit.spec.ts`, `registration-form.spec.ts` (5); integration `participants/identity.test.ts`; unit `registrations/turnstile.test.ts`
 
 #### BR-REQ-031-02 — Privacy-notice acknowledgment is recorded
 
@@ -437,7 +444,13 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 5. Given a registration an organizer enters for somebody who asked in person (BR-REQ-037-05), when a detail is unknown, then it may be left blank and the registration is still accepted — an organizer records what the person said on the telephone, and refusing the row would lose the registration entirely.
 6. Given any stored registration, when the legal name is read, then it is the pair of name fields, and the declaration is signed against that name and not against the display name.
 
-**Verification:** integration `registrations/entry-details.test.ts`; e2e `registration-submit.spec.ts`
+7. Given the public form, when it renders, then it offers the language of the emails and the declaration — Romanian or English, the page's language preselected — and the registration is kept in that language: the declaration is signed in it and it comes first in every message (2026-09-18, `DECISIONS.md` §97).
+
+8. Given the public form, when it renders, then a folded, optional "Socials" section offers a Strava profile link and an Instagram username; a link is accepted only on Strava's own hosts, a username is stored without its `@`, both may be empty; they are shown to Administrators on the registration's page and in the export, never published, and the privacy notice names them (`DECISIONS.md` §106).
+
+9. Given a birth date under eighteen years before today, when the public form is submitted without a parent or legal guardian's name, then it is refused naming `guardianName`; given the name, then it is kept on the registration, shown at the desk and on the registration's page and in the export, and the declaration's `{{declarant}}` reads "<guardian> (parent/legal guardian of the minor <participant>)" in the text's language — the signer's own identity document beside it — while an adult's entry in the field is dropped (`DECISIONS.md` §108).
+
+**Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`
 
 #### BR-REQ-031-05 — Health information is consented separately and never published
 
@@ -543,6 +556,7 @@ registration — and it lists registrations and never changes an address.
 1. Given an event whose participant list is `NAMES`, when the list renders, then each row is the registration's display name and nothing else.
 2. Given a registration whose display name differs from its legal name, when the list renders, then the legal name appears nowhere in the markup.
 3. Given the rules of BR-REQ-039-01, when the list renders, then they are unchanged: confirmed and real registrations only, opt-outs excluded, ordered by confirmation.
+4. Given a registration that named a club, when the list renders, then the club appears beside the display name — the only thing beside it; the list is a folded section, closed, with the count in its summary; and the privacy notice that allows the list names the club as published (2026-09-18, `DECISIONS.md` §85). The opt-out box is asked only on an event whose list is switched on.
 
 **Verification:** privacy `public-surface.test.ts`
 
@@ -626,7 +640,9 @@ registration — and it lists registrations and never changes an address.
 4. Given a hold that would extend past registration close or event start, when it is created, then it is capped at the earlier of the two.
 5. Given a registration that has not reached `CONFIRMED`, when the participant list is inspected, then that person is not counted as attending.
 
-**Verification:** integration `registrations/lifecycle.test.ts`; e2e `registration-happy-path.spec.ts`
+6. Given an event further away than its participation window (`confirmation_opens_days_before`, default 7; deadline `confirmation_deadline_days_before`, default 2 — both per event, zero switches the window off), when a registration clears email verification, then its hold lasts until the deadline rather than 30 minutes and is not capped by registration close; the declaration email says the deadline and that the signature is the confirmation of participation; when the window opens the maintenance job queues that email once more per waiting registration; a signature at any point confirms; an unsigned hold lapses at the deadline through criterion 3. Inside the window, and on an event without one, criterion 3's thirty minutes stand. The wizard's third step says which applies (`DECISIONS.md` §104).
+
+**Verification:** integration `registrations/lifecycle.test.ts`, `registrations/confirmation-window.test.ts` (6); unit `registrations/hold-deadlines.test.ts`; e2e `registration-happy-path.spec.ts`
 
 #### BR-REQ-033-02 — Declaration acceptance evidence
 
@@ -643,8 +659,14 @@ registration — and it lists registrations and never changes an address.
 4. Given an acceptance form submitted without the explicit checkbox or without a typed name, when it is posted, then it is rejected.
 5. Given any surface presenting the declaration, when it renders, then it does not describe the acceptance as a qualified electronic signature.
 6. Given a declaration page that rendered one version, when a newer version is approved before the form is posted, then the signature is refused, nothing is recorded, the action link is not spent, and the participant is shown the current text to read and sign again — so the stored acceptance always names the version the participant read (`DECISIONS.md` §57).
+7. Given a declaration text with merge fields (`{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`, `{{signedAt}}`), when the page renders for one registration, then the fields are filled from the registration and the event and an unfilled one shows as a dotted blank; what is signed — id and hash — is the template, and the fill-ins are recorded beside it (2026-09-18, `DECISIONS.md` §95).
+8. Given a declaration text that names `{{idDocument}}`, when the form is posted without an identity document, or with one that is not a series and a number (4–30 letters, digits, spaces, dots, dashes), then it is refused; when posted with one, then it is stored on the acceptance as typed, shown on the desk row and in the export, and printed into the declaration. Never a scan or an image. A text without the field asks for none and stores null.
+9. Given a signature — by link or on paper — when it is recorded, then a `DECLARATION_SIGNED` message is queued to the participant with the signed declaration as an attached PDF (the merged text, the typed name in the signature face, the instant, the method, the version and the hash) and a link to the same PDF from the manage token; the confirmation carries the link too; the participant's manage page offers it.
+10. Given an Administrator, when they request an event's declarations, then every signed one of its real registrations is one PDF, one per page, oldest first, and one registration's is its own PDF; any staff role may print the event's blank form on the current approved text. All three are renderings of the stored rows, never files kept elsewhere; a registration and its acceptance are deleted three years after the event's start by the retention sweep (`jobs/retention.ts`).
 
-**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6); e2e `registration-form.spec.ts`
+11. Given `DECLARATIONS_ARCHIVE_TO` set to the club's mailbox, when a real registration's declaration is signed — by link or on paper — then a `DECLARATION_ARCHIVE` message is queued to that address with the same PDF attached, a subject naming the participant and the event, and no action link or token; unset, or for a test registration, no such message exists (`DECISIONS.md` §99).
+
+**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `registrations/declaration-archive.test.ts` (11), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`; e2e `registration-form.spec.ts`
 
 #### BR-REQ-033-03 — Staff cannot sign for a participant
 
@@ -868,6 +890,8 @@ registration — and it lists registrations and never changes an address.
 5. Given an Administrator in an environment other than production, when they add N test registrations to an event, then N synthetic participants go through the ordinary submission and confirmation path, each on a distinct address in a reserved domain that can never receive mail.
 6. Given the same Administrator, when they remove the test registrations for that event, then those rows and the synthetic participants behind them are deleted and every real registration is left standing.
 7. Given `APP_ENV=production`, when a test registration is attempted, then it is refused in two independent places.
+8. Given an Administrator on an event with internal registration, when the event page renders, then it shows the queue as the allocator counts it — places, confirmed, held, free, waiting — and the waiting list numbered in the order it is served, with an offer's deadline where one is out (2026-09-18, `DECISIONS.md` §92).
+9. Given `FEATURE_DISPLAY_NAME` unset or not `true`, when the public or the staff form renders, then no display-name field is offered and a posted value is ignored, so the list shows the registered name; the CSV export always carries the first name, the last name and the identity document beside the registered name (2026-09-18, `DECISIONS.md` §95).
 
 **Verification:** integration `registrations/test-kind.test.ts`
 
@@ -987,14 +1011,15 @@ way through every step, and none of them is a way around the allocator.
 
 **Acceptance criteria**
 
-1. Given an Administrator on an event that takes registrations here, when they assign race numbers, then every confirmed, real registration without a number receives the next free number for that event, in order of confirmation (earliest first, id as the tie-break), inside one transaction that locks the event row; the outcome states how many were assigned and how many the event has.
-2. Given a registration that already has a number, when numbers are assigned again, then its number is unchanged; new numbers continue after the highest ever given for that event, and a registration confirmed earlier than the first batch but numbered later gets a later number.
+1. Given a registration of a real kind, when it is confirmed — by the participant's signature or at the desk — then it receives a number drawn at random from those never worn at that event (three digits while they last, four after), inside the transaction that holds the event row; and given an Administrator on an event that takes registrations here, when they assign race numbers, then every confirmed, real registration without one receives such a number, in order of confirmation, and the outcome states how many were assigned and how many the event has (2026-09-18, `DECISIONS.md` §87, §94).
+2. Given a registration that already has a number, when numbers are assigned again, then its number is unchanged; a number once worn at the event — by any registration, cancelled included — is never drawn again.
 3. Given a test registration, a waitlisted, pending, cancelled or expired one, when numbers are assigned, then it receives none; a cancelled registration that had a number keeps it, so the number is never given to somebody else.
 4. Given two registrations of one event, when both would carry the same number, then the database refuses the second.
 5. Given assigned numbers, when the sheet is requested — all of them, or a range `from`/`to` for a reprint or a late batch — then the response is a PDF, Administrator only, of A4 pages with two bibs each and a dashed cut line between them, or, with `layout=one` ("câte unul pe pagină"), the same A5-sized bib centred one per A4 page (2026-09-18, `DECISIONS.md` §79); each bib carries the club's lockup, the number in the club's blue as large as the paper allows, the participant's registered name, and the event's title and date in the requested language. Only confirmed, real registrations are printed.
 6. Given the assignment, when it completes with at least one number given, then one audit row records who, for which event, and the range assigned — never a participant.
-7. Given one confirmed registration, when any staff role types a number for it — or clears it — then the number is a whole number from 1 to 99999, a number already worn at that event is refused with a sentence rather than a stack trace, and an audit row records the number before and after (2026-09-18, `DECISIONS.md` §67).
+7. Given one confirmed registration, when any staff role types a number for it — or clears it — then the number is a whole number from 1 to 99999, a number already worn at that event is refused with a sentence rather than a stack trace, and an audit row records the number before and after (2026-09-18, `DECISIONS.md` §67); the registration's page lists the first free numbers beside the field, and a number given or changed by hand on a confirmed registration queues `BIB_ASSIGNED` to the participant — the number, the QR code and the manage link — while clearing one sends nothing (`DECISIONS.md` §105).
 8. Given a registration for which Mailgun reported `permanent_fail` or `complained` on any message (BR-REQ-080-04), when the desk row or the registration page renders, then it carries an "email respins" chip with the provider's short reason, so the organizer knows before race day who never got the email and calls them; the participant sees nothing (2026-09-18, `DECISIONS.md` §76). The registrations list filters to those rows ("doar email respins"), shows the same chip, and its CSV export carries `Checked in` and `Email bounced` columns; the events list shows confirmed and checked-in counts beside an event within a day of its start (`DECISIONS.md` §83).
+9. Given numbered registrations, when an Administrator opens the event page, then each confirmed, real registration's bib can be seen as a picture — the club's lockup, the event's title and date, the number in the club's blue, the registered name — drawn on request at `/api/admin/events/<id>/bibs/preview?registration=<id>`, Administrator only (2026-09-18, `DECISIONS.md` §94).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`; unit `registrations/bibs-pdf.test.ts`
 
@@ -1114,12 +1139,13 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 6. Given a published page, when its address is edited, then it is refused: links already shared have to keep working.
 7. Given a page address, when it is submitted, then it is lowercase letters, digits and hyphens, is not a reserved word, and is not already in use in that locale.
 8. Given published pages, when the public header renders, then each appears as a navigation entry in the order the club set, and when the sitemap is produced, then each published locale's address is listed.
-9. Given a Contributor, when they attempt to create or edit a page, then it is refused; given an Editor, then it is allowed.
+9. Given a volunteer, when they attempt to create or edit a page, then it is refused; given a copywriter or an Editor, then it is allowed; deleting a page and ordering the navigation stay with the Editor (§103).
 10. Given the rich-text editor — on a page, on an event's description or on its short description — when a staff member presses the picture control and chooses a JPEG, PNG or WebP (or pastes or drops one as a file), then the browser shrinks it to at most 2000px, `POST /api/admin/media` stores it exactly as a gallery photo is stored (two WebP variants through the §17 adapter, one `media_assets` row naming who uploaded it), and the editor inserts an image block carrying the stored variant's address and size, an empty alt and no caption; the schema refuses an image whose address is not one of this site's stored variants (a third party's image, a data URI, a pasted `<img>` from another site); the page renders it as a lazy `<img>` sized by its stored dimensions; a picture is a block between paragraphs, never inline (2026-09-18, `DECISIONS.md` §72).
 11. Given a picture in the editor, when it is clicked, then a panel beside it offers its alt text, an optional caption, one of four widths (100, 75, 50 or 33 percent of the text column on a wide screen; always the full width on a phone), removal, and the pictures already stored to choose from instead of uploading again; the page renders the caption as a `<figcaption>` and the width as the figure's; and while any picture in the body has no alt text, a dimmed sentence under the editor says how many — a sentence, never a block on saving (2026-09-18, `DECISIONS.md` §73).
 12. Given the page editor, when a body is written, then headings, bold, italic, links, bulleted and numbered lists and quotations are available, each with a keyboard-reachable control carrying its own name; and when the page renders, it shows what the editor showed.
 13. Given a body posted to the server, when it contains any node, mark or attribute outside the allowlist of `AGENTS.md` §11.3 — or a link that is not http, https, mailto or a path on this site — then the save is refused, whatever produced it.
 14. Given a stored picture referenced by no gallery item, no album cover and no body — a draft page or event counts as a reference — for more than seven days, when the registration-maintenance job runs, then its row and both objects are deleted, last in the run and in its own try/catch, and `/devs` shows how many pictures are stored, how many are used nowhere and how many the next run will take; given the pictures page (`/admin/gallery/pictures`), when an editorial role opens it, then every stored picture is listed with where it is used, each use a link to that page, event or album, and a picture in use cannot be deleted from there (2026-09-18, `DECISIONS.md` §73).
+16. Given the editor, when a YouTube address is entered in its "YouTube" control, then only the eleven-character video id and a caption are stored as a `youtube` block — any other host or a malformed address is refused under the field — and when the body renders, the film is a closed disclosure with the `youtube-nocookie.com` embed lazy inside it, the caption as its summary and beneath it, so nothing is fetched from YouTube until the reader presses (`DECISIONS.md` §110).
 15. Given a page, when it is deleted, then it and both translations go — permitted where deleting an event is not, because nothing a participant owns hangs off a page.
 
 **Verification:** integration `cms/pages.test.ts`; integration `cms/boundary.test.ts`; integration `cms/media-references.test.ts`; unit `content/rich-text.test.ts`; e2e `pages.spec.ts`
@@ -1157,9 +1183,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 
 **Acceptance criteria**
 
-1. Given an Author, when they work in the CMS, then they can create and edit their own drafts and submit for review, and cannot publish.
+1. Given a copywriter (`COPYWRITER`), when they work in the CMS, then they can edit the text of any event or page at any status — with the live-edit acknowledgement on published content — create page drafts and submit any draft for review, and cannot publish, configure an event, or touch the gallery; given a volunteer (`CONTRIBUTOR`), then every text is refused and their backoffice is the desk and the guide (`DECISIONS.md` §103).
 2. Given an Editor or Administrator, when they review a submission, then they can publish, unpublish, and archive the event, and both languages go live or come down together.
-3. Given published content, when an Author attempts to edit it, then it is refused.
+3. Given published content, when a volunteer attempts to edit it, then it is refused; a copywriter's live edit is accepted with the acknowledgement of criterion 4.
 4. Given a save that affects live content, when it is submitted, then the interface warns before it takes effect.
 5. Given two editors saving the same record, when the second save carries a stale version, then it is rejected as a conflict, and the first editor's save survives intact. This is verified with two real database connections, not the in-process test database, which is single-connection and cannot express the race. The event row carries a version of its own, so a publish that races a change to the event is a conflict too.
 6. Given an event where any language is missing a field the public page renders, or has no translation at all, when publication is attempted, then it is refused with the language and the missing fields named, and nothing goes public.
@@ -1214,6 +1240,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 5. Given a published article (M5), when it renders, then it contains an `Article` block with `datePublished` and `dateModified`.
 6. Given any structured data block on any page, when it is inspected, then it contains no participant name, email, registration list, or declaration content.
 7. Given the test suite, when it runs, then it parses the emitted JSON-LD and asserts the required properties are present.
+8. Given a published event page, when it renders, then its `og:image` is a 1200×630 card drawn on the server from the event's own facts (title, date and time, meeting point, distance), absolute under `APP_BASE_URL`, with `twitter:card = summary_large_image`; every other public page carries the site's card; and the event page offers the same card as a square picture to download and share links for Facebook and WhatsApp (2026-09-18, `DECISIONS.md` §90).
 
 **Verification:** integration `seo/structured-data.test.ts`; e2e `event-page.spec.ts`
 
@@ -1324,8 +1351,10 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 4. Given the confirmation or the reminder, when it renders, then it opens with one bold line — the event's date, time and meeting point — followed by the map link and the Strava event link when set, carries the translation's one-line "what to bring" (`event_translations.checklist`, ≤ 300 characters) when written, the desk code with its hosted QR, and the manage link; every message ends with "Reply to this email with questions" when `EMAIL_REPLY_TO` is set; text-first, no image but the QR, well under 100 KB (2026-09-18, `DECISIONS.md` §81).
 5. Given a CONFIRMED registration to a SCHEDULED event with local registration, when the maintenance job runs within 48 hours of the start, then one `EVENT_REMINDER` is queued for it with the key `registration:<id>:reminder`, and a job that runs again queues nothing more; a WAITLISTED entry, a cancelled or completed event and an event further out get none; the registration's state is untouched (`DECISIONS.md` §81).
 6. Given an event that has started, when an Administrator presses "Trimite mulțumirile" on its page and confirms, then one `EVENT_THANKS` is queued for every registration checked in at that event — with the optional `https://` link the organizer typed — `events.thanks_sent_at` is set so the button is gone afterwards and a second press is refused, and an audit row names the event and the count, never a recipient; never automatic (`DECISIONS.md` §82).
+7. Given any message, when it renders, then it carries both languages — the registration's own first, the other under a rule, the two subjects joined by " / " — as one branded card with the action as a button and the deep links beneath: the event's page, its rules when it has them, "I can't make it any more" (the manage page's `#cancel` section, a GET that mutates nothing) on the confirmation, and the signed declaration's PDF on the confirmation and the declaration message (2026-09-18, `DECISIONS.md` §96).
+8. Given a signature, when it is recorded, then a `DECLARATION_SIGNED` message is queued with the signed declaration attached as a PDF, rendered at send time from the rows (`DECISIONS.md` §95); the Mailgun adapter posts attachments as `attachment` parts.
 
-**Verification:** unit `notifications/templates.test.ts`; integration `notifications/event-mail.test.ts`
+**Verification:** unit `notifications/templates.test.ts`, `notifications/mailgun-adapter.test.ts`; integration `notifications/event-mail.test.ts`, `registrations/signed-declaration.test.ts`
 
 #### BR-REQ-080-02 — Outbox is authoritative and idempotent
 
@@ -1342,7 +1371,11 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 4. Given a permanent failure reported by the provider, when it is received, then further sends to that address for that trigger are suppressed and the failure is visible in the backoffice.
 5. Given an Administrator on `/admin/registrations`, when the outbox panel shows what is waiting and the day's count against the provider's allowance, and they press "Trimite acum", then the same worker the scheduled job runs drains the queue in batches — never past the day's remaining allowance, at most a hundred in one press, stopping when the provider defers — audited with the counts, throttled per Administrator apart from the job's own bucket; and when nothing is waiting or the allowance is spent, then a sentence says which, and there is no button (2026-09-18, `DECISIONS.md` §80).
 
-**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`
+6. Given an outbox row deferred by the provider's allowance, one whose turn passed more than ninety minutes ago, or one that spent every attempt in the last seven days, when `/api/health` answers, then it reports `email.status = stalled`, an overall `degraded`, and HTTP 503 — every status but `ok` is a 503 — so an external monitor that notifies on a non-2xx tells the club that email has stopped through a channel that is not email; the same counts, the reason and the resume time are shown on `/admin/tasks` and `/devs`; a bounce alone is not a stall (`DECISIONS.md` §98).
+
+7. Given an Administrator on `/admin/emails`, when they set the Mailgun plan the account is on — Free, Basic, Foundation, Scale, or a custom one with the ceilings typed — then the setting is stored once (`platform_settings.emailPlan`) with an audit row naming who changed it from what; every figure that says how much can still be sent (the outbox panel, `/devs`, `/admin/tasks`, the "send now" stop) counts against that plan's ceiling over its own period — Free's day, a paid plan's month, none at all — and the cost table carries the plan's price; a Moderator is refused; an unreadable stored value reads as Free (`DECISIONS.md` §100).
+
+**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`; integration `notifications/email-health.test.ts`; integration `notifications/email-plan.test.ts` (7); unit `notifications/email-plan.test.ts`
 
 #### BR-REQ-080-03 — Environment-appropriate delivery
 
@@ -1392,7 +1425,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 5. Given an Administrator, when they administer staff, then they may add a colleague by email address and role, change a colleague's role, and revoke access; an Author or an Editor is refused every one of those operations.
 6. Given an Administrator, when they attempt to change their own role, remove their own access, or leave the club with no Administrator at all, then it is refused.
 7. Given the development staff switcher, when `APP_ENV` is qa or production, then it is unavailable, and a process configured to use it there does not start.
-8. Given an Author or an Editor, when they attempt to delete an event or to add or remove test registrations, then it is refused at the server; both are the Administrator's alone.
+8. Given a volunteer, a copywriter or an Editor, when they attempt to delete an event or to add or remove test registrations, then it is refused at the server; both are the Administrator's alone. Given a volunteer, when they open `/admin`, then they land on the desk, and the tabs offer the desk and the guide only; given any staff role, when they open `/admin/guide`, then their own role's sections come first and open (§103).
 9. Given `APP_ENV=production`, when a test registration is created by any path, then it is refused — at the feature's entrance and again at the statement that would write the row.
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`; e2e `cms-publish.spec.ts`
@@ -1501,7 +1534,9 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 2. Given eighty percent of the allowance used, when the figure renders, then it is shown as a warning.
 3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence in production is fifteen minutes by day and hourly by night (23:00–07:00 `Europe/Bucharest`, `jobs/quiet-hours.ts`), the health threshold is twice the cadence in force plus five minutes, and the compute sleeps between runs.
 
-**Verification:** unit `diagnostics/neon.test.ts`; integration `jobs/health.test.ts`
+4. Given `VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID`, when `/devs` renders, then it shows this month's deployments, today's against Hobby's 100 a day, and the build minutes against Hobby's 6,000 a month, warning at eighty percent of either, summed from Vercel's deployments list across its pages; without them it says how to set them; and it says that bandwidth and invocations are not in Vercel's API and links to the dashboard's Usage page (`DECISIONS.md` §101).
+
+**Verification:** unit `diagnostics/neon.test.ts`; unit `diagnostics/vercel.test.ts` (4); integration `jobs/health.test.ts`
 
 **Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`
 

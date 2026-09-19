@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -673,6 +673,33 @@ It prints what it will do before it does it. `production` additionally requires 
 
 ---
 
+## Email has stopped
+
+The monitor mail from cron-job.org says `/api/health` failed, or `/admin/tasks` is red at the
+top (`DECISIONS.md` §98). Three causes, told apart by the same page:
+
+1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
+   lost; the queue resumes at the time the alert names (the UTC reset, five minutes past).
+   If it is registration day and people are waiting for confirmations: Mailgun → Billing →
+   Basic removes the daily limit the moment it is paid; then `/admin/emails` → "The Mailgun
+   plan" → Basic → save, so the counters and "Trimite acum" stop counting against a hundred
+   (`DECISIONS.md` §100); the next scheduler tick — or "Trimite acum" — sends everything. When
+   the month is over and the plan is cancelled, set it back to Free there. `docs/PLATFORM.md`
+   has the price.
+2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
+   the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
+   `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing
+   "Trimite acum" on `/admin/registrations` drains the outbox by hand meanwhile.
+3. **Failed** — Mailgun refused six times. The alert carries the last reason. A `401` is the
+   `MAILGUN_API_KEY`; a `404` is the domain or the API base (`SETUP.md` §35: EU domains
+   answer at `api.eu.mailgun.net`); "not allowed to send" is the account under review — open
+   Mailgun → Sending → Logs. A failed message is not retried; once the cause is fixed, resend
+   it from the registration's page (`/admin/registrations/<id>` → Retrimite).
+
+The health page answers 200 again on its own once no row is deferred, overdue or failed in
+the last seven days; a failed row that is not resent keeps the alert up for those seven days,
+which is deliberate — it is the one the club still owes somebody.
+
 ## Legal document version
 
 Applies to the privacy notice, the terms, and the event declaration. All three share the
@@ -692,8 +719,29 @@ Related requirement: `BR-REQ-053-01`.
 | Prepares the migration or seed | Developer |
 | Verifies the result in QA and production | Administrator |
 
-An AI agent may format approved text and prepare the migration. It must never write,
-paraphrase, translate, or "improve" the substance of legal wording.
+An AI agent may draft the platform's templates (`src/modules/legal-documents/templates/`,
+`DECISIONS.md` §95), format approved text and prepare the migration. It never marks a text
+approved and never fills in a club fact; the club reads and approves.
+
+### The short path: start from the platform's text (2026-09-18)
+
+`/admin/legal` → "Versiune nouă" → the link for the document under "or start from the
+platform's text". The draft is prefilled with the complete text in both languages; fill the
+four facts in angle brackets (legal name, registered address, registration number, contact
+email), read it, save, open the PDF, approve. The declaration's text carries tokens —
+`{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`,
+`{{signedAt}}` — that are filled per person and per event; leave them as they are.
+
+### After a race: the declarations and the export
+
+On the event page: "Declarațiile semnate (PDF)" — every signed declaration, one per page — and
+"Export CSV" on the registrations list (first name, last name, identity document among the
+columns). Keep both in the club's own archive with restricted access; they carry names and
+identity documents. The platform keeps the rows three years from the event and then removes
+them; the PDF can be regenerated at any time until then. Each participant already holds their
+own copy, sent by email at signing. With `DECLARATIONS_ARCHIVE_TO` set to the club's mailbox
+(`SETUP.md` §35), the club's copy arrives there at signing too, one email per declaration,
+subject "Declarație semnată: <name> — <event>" — the archive builds itself (`DECISIONS.md` §99).
 
 ### Sample versions, and why the first approved one is not version 1
 

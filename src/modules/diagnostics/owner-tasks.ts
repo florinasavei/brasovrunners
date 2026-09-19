@@ -46,6 +46,8 @@ export type OwnerTaskInputs = {
    * Mailgun (`docs/RUNBOOKS.md`) — and one variable on the deployment.
    */
   emailDeliveryMode: "capture" | "allowlist" | "live";
+  /** Which deployment this is: off production, `allowlist` is the finished state (§16.4). */
+  appEnv: "local" | "test" | "qa" | "production";
   /**
    * Each scheduled job's own liveness, not one boolean for all of them.
    *
@@ -73,6 +75,12 @@ export type OwnerTaskInputs = {
    * always can — disk and memory — which is why the task can only be open on QA or production.
    */
   storageConfigured: boolean;
+  /** Are both Turnstile keys set (`DECISIONS.md` §97)? Off, the honeypot and the timing check stand alone. */
+  botCheckConfigured: boolean;
+  /** Is `DECLARATIONS_ARCHIVE_TO` set (§99)? Off, the club downloads the bundle per event. */
+  declarationArchiveConfigured: boolean;
+  /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
+  vercelUsageConfigured: boolean;
   /**
    * Does this deployment answer on a `.ro` hostname?
    *
@@ -107,10 +115,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
   // Nothing reaches a real person while the site captures mail, and the sandbox that replaces
   // capture reaches five addresses. The detail names the mode, so "not live" is not a mystery.
+  // On QA the mode is `allowlist` by rule (§16.4: live is refused outside production), so the
+  // row would read "blocking" for ever there and mean nothing. Off production the task is done
+  // when the provider is configured at all; the detail still names the mode.
+  const emailDone =
+    input.emailDeliveryMode === "live" ||
+    (input.appEnv !== "production" && input.emailDeliveryMode === "allowlist");
   tasks.push({
     id: "liveEmail",
     owner: "club",
-    state: input.emailDeliveryMode === "live" ? "done" : "blocking",
+    state: emailDone ? "done" : "blocking",
     detail: input.emailDeliveryMode === "live" ? undefined : input.emailDeliveryMode,
   });
 
@@ -147,6 +161,29 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.storageConfigured ? "done" : "open",
   });
 
+  // Not blocking either: the form already refuses the dumb bots. Open until the two keys exist,
+  // because a race that opens entries to a hundred people is when the other kind shows up (§97).
+  tasks.push({
+    id: "botCheck",
+    owner: "club",
+    state: input.botCheckConfigured ? "done" : "open",
+  });
+
+  // Built (§99); open until the club names the mailbox, never blocking: the per-event bundle
+  // on the event page is the archive meanwhile.
+  tasks.push({
+    id: "declarationArchiveMail",
+    owner: "club",
+    state: input.declarationArchiveConfigured ? "done" : "open",
+  });
+
+  // Built (§101), as far as Vercel's API allows; open until the token exists, never blocking.
+  tasks.push({
+    id: "vercelUsage",
+    owner: "club",
+    state: input.vercelUsageConfigured ? "done" : "open",
+  });
+
   // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.
   tasks.push({
     id: "roDomain",
@@ -154,8 +191,22 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.roDomainBound ? "done" : "open",
   });
 
+  /**
+   * The queued work (the owner, 2026-09-18: "all the queued work, so I can continue
+   * tomorrow"): what was asked and not built yet, or built without the last mile. Static and
+   * open — nothing in the system can tell when they are done; whoever finishes one removes it
+   * here and records it in `DECISIONS.md`. Developer-owned, so they sort after the club's.
+   */
+  for (const id of BACKLOG) tasks.push({ id, owner: "developer", state: "open" });
+
   return tasks;
 }
+
+/** In the order to take them. Each has its title, its "why" and its steps in `Admin.tasks.items`. */
+export const BACKLOG = [
+  "scheduleStructured",
+  "docsSimplify",
+] as const;
 
 /** Blocking first, then open, then done — the order somebody scanning the page needs. */
 export function sortTasks(tasks: OwnerTask[]): OwnerTask[] {

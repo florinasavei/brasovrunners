@@ -9,9 +9,11 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { youtubeVideoId } from "@/modules/events/domain/video";
 import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import { EMPTY_DOC, IMAGE_WIDTH_PERCENTS, readRichText } from "../domain/schema";
@@ -92,14 +94,27 @@ export default function RichTextEditor({
     imageNoAltOne: string;
     imageNoAltMany: string;
     imageFromGallery: string;
+    /** The two words on the buttons themselves; the long labels are their accessible names. */
+    imageShort: string;
+    imageFromGalleryShort: string;
     imageGalleryLoading: string;
     imageGalleryEmpty: string;
     imageGalleryClose: string;
+    youtube: string;
+    youtubeShort: string;
+    youtubeUrl: string;
+    youtubeApply: string;
+    youtubeInvalid: string;
+    youtubeCaption: string;
+    youtubeRemove: string;
   };
 }) {
   const initialDoc = readRichText(initialBody);
   const [value, setValue] = useState(() => JSON.stringify(initialDoc));
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
+  /** The YouTube panel: closed, or the address being typed, with a refusal when it is not one. */
+  const [youtubeDraft, setYoutubeDraft] = useState<string | null>(null);
+  const [youtubeInvalid, setYoutubeInvalid] = useState(false);
   const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +154,14 @@ export default function RichTextEditor({
        * The size is a share of the column, rendered here as the same inline width the page
        * uses; the caption shows on hover and in the picture's own panel.
        */
+      /**
+       * A YouTube film (§110): an atom block holding the video id and a caption. Shown in the
+       * editor as the film's own thumbnail with a play mark — enough to see what is there
+       * without loading a player inside a form. `parseHTML` is empty: a pasted embed from
+       * elsewhere is dropped here, and the only way in is the address panel below, which keeps
+       * nothing but the id.
+       */
+      YoutubeNode,
       Image.configure({ inline: false, allowBase64: false }).extend({
         parseHTML() {
           return [];
@@ -230,6 +253,11 @@ export default function RichTextEditor({
     ? (editor.view.dom.querySelector("img.ProseMirror-selectednode") as HTMLElement | null)
     : null;
   const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
+  /** The selected film, for its own panel (§110): caption it, or remove it. */
+  const selectedVideo = editor?.isActive("youtube")
+    ? (editor.view.dom.querySelector(".rt-youtube.ProseMirror-selectednode") as HTMLElement | null)
+    : null;
+  const videoAttrs = selectedVideo ? editor?.getAttributes("youtube") : undefined;
   // Without `.focus()`: the panel's own field keeps the caret, and the node stays selected.
   const setImageAttr = (attrs: Record<string, unknown>) => editor?.chain().updateAttributes("image", attrs).run();
 
@@ -261,6 +289,17 @@ export default function RichTextEditor({
       .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100 } as never)
       .run();
     setGallery(null);
+  };
+
+  /** The address becomes an id, or a refusal under the field; nothing else is kept (§110). */
+  const applyYoutube = () => {
+    const id = youtubeVideoId((youtubeDraft ?? "").trim());
+    if (!id) {
+      setYoutubeInvalid(true);
+      return;
+    }
+    editor?.chain().focus().insertContent({ type: "youtube", attrs: { videoId: id, caption: "" } }).run();
+    setYoutubeDraft(null);
   };
 
   const applyLink = () => {
@@ -344,9 +383,11 @@ export default function RichTextEditor({
               )
             }
           />
+          {/* Words, not glyphs: the picture emoji rendered as a broken box on the owner's
+              machine (2026-09-18), and two of them side by side read as two broken boxes. */}
           <Control
             label={imageState === "uploading" ? labels.imageUploading : labels.image}
-            text="🖼"
+            text={labels.imageShort}
             active={false}
             onClick={() => fileInputRef.current?.click()}
           />
@@ -363,9 +404,18 @@ export default function RichTextEditor({
           />
           <Control
             label={labels.imageFromGallery}
-            text="🖼…"
+            text={labels.imageFromGalleryShort}
             active={gallery !== null}
             onClick={() => void openGallery()}
+          />
+          <Control
+            label={labels.youtube}
+            text={labels.youtubeShort}
+            active={youtubeDraft !== null || (editor?.isActive("youtube") ?? false)}
+            onClick={() => {
+              setYoutubeInvalid(false);
+              setYoutubeDraft((open) => (open === null ? "" : null));
+            }}
           />
           <Control
             label={labels.undo}
@@ -380,6 +430,40 @@ export default function RichTextEditor({
             onClick={() => editor?.chain().focus().redo().run()}
           />
         </Stack>
+
+        {youtubeDraft !== null && (
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ p: 1, borderBottom: 1, borderColor: "divider", flexWrap: "wrap", gap: 1 }}
+            data-testid="rich-text-youtube"
+          >
+            <TextField
+              size="small"
+              label={labels.youtubeUrl}
+              value={youtubeDraft}
+              autoFocus
+              error={youtubeInvalid}
+              helperText={youtubeInvalid ? labels.youtubeInvalid : undefined}
+              onChange={(event) => {
+                setYoutubeDraft(event.target.value);
+                setYoutubeInvalid(false);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  applyYoutube();
+                }
+                if (event.key === "Escape") setYoutubeDraft(null);
+              }}
+              sx={{ flexGrow: 1, minWidth: 240 }}
+            />
+            <Button onClick={applyYoutube}>{labels.youtubeApply}</Button>
+            <Button color="inherit" onClick={() => setYoutubeDraft(null)}>
+              {labels.linkCancel}
+            </Button>
+          </Stack>
+        )}
 
         {imageState !== "idle" && (
           <Typography variant="body2" color={imageState === "failed" ? "error" : "text.secondary"} sx={{ px: 1, py: 0.5 }}>
@@ -585,9 +669,78 @@ export default function RichTextEditor({
           </Stack>
         </Paper>
       </Popper>
+
+      {/* The film's own panel (§110): a caption, or remove it. */}
+      <Popper
+        open={Boolean(selectedVideo)}
+        anchorEl={selectedVideo}
+        placement="bottom-start"
+        modifiers={[{ name: "preventOverflow", options: { altAxis: true, padding: 8 } }]}
+        sx={{ zIndex: (theme) => theme.zIndex.modal }}
+      >
+        <Paper elevation={6} sx={{ p: 1.5, width: 320, maxWidth: "calc(100vw - 32px)" }} data-testid="rich-text-youtube-panel">
+          <Stack spacing={1.5}>
+            <TextField
+              size="small"
+              label={labels.youtubeCaption}
+              value={String(videoAttrs?.caption ?? "")}
+              autoFocus
+              onChange={(event) => editor?.chain().updateAttributes("youtube", { caption: event.target.value }).run()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.preventDefault();
+              }}
+              slotProps={{ htmlInput: { maxLength: 500 } }}
+            />
+            <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
+              <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
+                {labels.youtubeRemove}
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  const to = editor?.state.selection.to ?? 0;
+                  editor?.chain().focus().setTextSelection(to).run();
+                }}
+              >
+                {labels.imageDone}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      </Popper>
     </Box>
   );
 }
+
+/**
+ * The YouTube block (§110): an atom, so the caret never enters it; selectable, so a click opens
+ * its panel; shown as the film's thumbnail from YouTube's image host with a play mark and the
+ * caption beneath — the editor is the backoffice, where a request to Google for a thumbnail is
+ * the organizer's own doing, unlike a reader's page, which fetches nothing until pressed.
+ */
+const YoutubeNode = Node.create({
+  name: "youtube",
+  group: "block",
+  atom: true,
+  selectable: true,
+  draggable: true,
+  addAttributes() {
+    return { videoId: { default: null }, caption: { default: "" } };
+  },
+  parseHTML() {
+    return [];
+  },
+  renderHTML({ node }) {
+    const id = String(node.attrs.videoId ?? "");
+    return [
+      "div",
+      { class: "rt-youtube", "data-youtube": id, style: "position:relative;max-width:480px;margin:8px 0" },
+      ["img", { src: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, alt: "", style: "display:block;width:100%;border-radius:4px" }],
+      ["span", { style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:#fff;text-shadow:0 0 8px #000" }, "▶"],
+      ["div", { style: "font-size:0.875rem;color:#666;text-align:center;margin-top:4px" }, String(node.attrs.caption ?? "")],
+    ];
+  },
+});
 
 /** One stored picture, as `GET /api/admin/media` lists it. */
 type StoredPicture = { id: string; src: string; thumb: string; width: number; height: number; name: string };

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.37-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.37-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -205,7 +205,9 @@ Never invent:
 - provider-specific environment variables already defined by a library;
 - GitHub permission names;
 - vendor quotas/pricing;
-- legal wording or legal effect;
+- legal effect — and legal wording *presented as approved*: the platform ships complete
+  texts as templates the club approves in `/admin/legal` (`DECISIONS.md` §95), with the
+  club's own facts left as visible placeholders; only approval gives a text effect;
 - traffic, registration, or conversion numbers;
 - database fields without a requirement;
 - commands absent from `package.json`.
@@ -869,6 +871,15 @@ WAITLIST_OFFER_TTL_HOURS = 24
 PARTICIPANT_ACTION_SESSION_MINUTES = 30
 ```
 
+The thirty-minute direct hold applies inside an event's **participation window** and on an
+event without one (`DECISIONS.md` §104). For an event further away than
+`events.confirmation_opens_days_before` (default 7), a registration that clears email
+verification keeps its place until `confirmation_deadline_days_before` the start (default 2):
+the declaration — the confirmation of participation — is asked at once and again when the
+window opens, and owed by the deadline, after which the ordinary hold expiry releases the
+place. `registrations/domain/hold-deadlines.ts#confirmationWindow` is the one place that says
+so; both numbers are the organizer's, per event, and zero switches the window off.
+
 All deadlines are capped by registration close and event start. Changing these defaults updates business/spec docs when behavior changes.
 
 ---
@@ -1006,7 +1017,8 @@ answered 404 where `STAFF_AUTH_MODE=disabled`; signing in lands back in the back
 - format with selected locale/event timezone;
 - store distance/elevation in meters;
 - declaration/legal versions have localized content/version/effective date;
-- AI may format approved text but not invent substance.
+- AI may draft the platform's templates (`legal-documents/templates/`, `DECISIONS.md` §95)
+  and format approved text; it never marks a text approved, and never fills in a club fact.
 
 ---
 
@@ -1049,15 +1061,23 @@ Rules:
 
 ### 10.2 Staff roles
 
-Five roles, ordered, each a superset of the one before it:
+Six roles, ordered, each a superset of the one before it (`DECISIONS.md` §103; the club
+sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadministrator —
+`staff-labels.ts`):
 
 ```text
-CONTRIBUTOR  own drafts; submit them for approval
-MODERATOR    edit any event; approve, publish, unpublish, archive
+CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
+COPYWRITER   the words of any event and any page, at any status; submit a draft for review
+MODERATOR    the organizer: create and configure events; approve, publish, unpublish, archive; the gallery
 DEV          + the configuration report (/devs). No participant data
-ADMIN        + registrations, participants, exports, test registrations, delete an event
+ADMIN        + registrations, participants, exports, legal texts, emails, tasks, delete an event
 SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
+
+`canEditTexts` (≥ COPYWRITER) is the line between writing and configuring; `isEditorial`
+(≥ MODERATOR) the line between writing and deciding. Until §103 the lowest role drafted its
+own texts and submitted them; the club asked for a role whose whole job is the words and for
+volunteers who "can do just that" — the desk.
 
 `modules/staff-identity/domain/roles.ts` is the single place this order is written. Every
 capability is `atLeast(role, MINIMUM)` rather than a list of roles, which is what makes the
@@ -1398,6 +1418,11 @@ Canonical body is JSON produced by allowlisted schema. Required nodes/marks:
   column on a wide screen; always the full width on a phone). Built 2026-09-18,
   `DECISIONS.md` §72, §73. An event's short description is a body of this schema too
   (`event_translations.excerpt_json`), its words derived into the plain `excerpt` on save.
+- youtube — a block holding an eleven-character video id and a `caption`, nothing else: never
+  an address, never an iframe. The renderer builds the `youtube-nocookie.com` embed from the
+  id behind a closed `<details>`, as the event's own film (§69), so a reader's page fetches
+  nothing from Google until pressed; the editor turns a pasted YouTube address into the id
+  and keeps the address nowhere. Built 2026-09-19, `DECISIONS.md` §110.
 
 Rules:
 
@@ -2033,7 +2058,11 @@ INDEX(job_name, started_at)
 ```
 
 `job_runs` exists so a stalled scheduler is visible. The health check reports degraded
-when the last successful run of a job is older than its agreed threshold.
+when the last successful run of a job is older than its agreed threshold, and when the outbox
+holds a message deferred by the provider's allowance, overdue, or failed
+(`notifications/health.ts`). Every status but `ok` is an HTTP 503 (`DECISIONS.md` §98): the
+external monitor's failure notification is how the club hears that email has stopped, and it
+must not go through email.
 
 Do not put email body, raw token, declaration body, or full participant export in audit metadata.
 

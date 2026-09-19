@@ -1,3 +1,7 @@
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
+import PlaceIcon from "@mui/icons-material/Place";
+import RouteIcon from "@mui/icons-material/Route";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
@@ -109,23 +113,37 @@ export default async function EventFacts({
     </Box>
   );
 
+  // A glyph beside each question (the owner, 2026-09-18: "more icons in the app"), decorative:
+  // the label is the word, the glyph is what the eye finds first on a card.
+  const glyph = (Icon: typeof CalendarMonthIcon) => (
+    <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary", verticalAlign: "-3px", mr: 0.5 }} />
+  );
+
   if (compact) {
     // Two plain lines on a card: no labels, the state of registration as the last piece.
     const second = [...where, ...route, t(`registrationState.${state}`)];
     return (
       <Box>
-        <Typography variant="body2">{pieces(when)}</Typography>
+        <Typography variant="body2">
+          {glyph(CalendarMonthIcon)}
+          {pieces(when)}
+        </Typography>
         <Typography variant="body2" color="text.secondary">
+          {glyph(PlaceIcon)}
           {pieces(second)}
         </Typography>
       </Box>
     );
   }
 
-  const lines: Array<{ label: string; value: ReactNode[] }> = [{ label: t("when"), value: when }];
-  if (where.length > 0) lines.push({ label: t("where"), value: where });
-  if (route.length > 0) lines.push({ label: t("route"), value: route });
-  if (state === "NOT_APPLICABLE") lines.push({ label: t("registration"), value: [t("registrationState.NOT_APPLICABLE")] });
+  const lines: Array<{ label: string; icon: typeof CalendarMonthIcon; value: ReactNode[] }> = [
+    { label: t("when"), icon: CalendarMonthIcon, value: when },
+  ];
+  if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
+  if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
+  if (state === "NOT_APPLICABLE") {
+    lines.push({ label: t("registration"), icon: HowToRegIcon, value: [t("registrationState.NOT_APPLICABLE")] });
+  }
 
   return (
     <Box
@@ -144,6 +162,7 @@ export default async function EventFacts({
       {lines.map((line) => (
         <Fragment key={line.label}>
           <Typography component="dt" variant="body2" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+            {glyph(line.icon)}
             {line.label}
           </Typography>
           <Typography component="dd" variant="body1" sx={{ m: 0 }}>

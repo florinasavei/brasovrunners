@@ -32,6 +32,12 @@ export const emailMessageType = pgEnum("email_message_type", [
   "EVENT_REMINDER",
   /** After the race, by hand, once per event, to everyone who was checked in (§82). */
   "EVENT_THANKS",
+  /** Right after signing: the signed declaration as a PDF, the participant's own copy (§95). */
+  "DECLARATION_SIGNED",
+  // The club's archive copy of the same PDF (§99): to `DECLARATIONS_ARCHIVE_TO`, no token.
+  "DECLARATION_ARCHIVE",
+  // A race number given or changed by hand after confirmation (§105): the runner is told.
+  "BIB_ASSIGNED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

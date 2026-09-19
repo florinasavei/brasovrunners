@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -177,6 +177,8 @@ async function eventForRegistration<T extends Record<string, unknown>>(
     startsAt: event.startsAt,
     registrationOpensAt: event.registrationOpensAt,
     registrationClosesAt: event.registrationClosesAt,
+    confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
+    confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
     capacity: event.capacity,
     raceId: event.raceId,
     publishedAt: event.publishedAt,
@@ -417,6 +419,22 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     metadata: { from: current.bibNumber, to: bibNumber },
     now,
   });
+  // The runner is told (§105): a number given or changed by hand after the confirmation went
+  // out would otherwise live only on the desk's screen. A cleared number is not news.
+  if (bibNumber !== null && updated.status === "CONFIRMED") {
+    await db.transaction(async (tx) => {
+      await enqueueEmail(tx, {
+        participantId: updated.participantId,
+        registrationId: updated.id,
+        messageType: "BIB_ASSIGNED",
+        locale: updated.locale,
+        recipientEmail: (await tx.select({ deliveryEmail: participants.deliveryEmail }).from(participants).where(eq(participants.id, updated.participantId)).limit(1))[0]?.deliveryEmail ?? "",
+        payload: { bibNumber },
+        idempotencyKey: `registration:${updated.id}:bib:${bibNumber}:${now.toISOString()}`,
+        now,
+      });
+    });
+  }
   return updated;
 }
 
@@ -606,5 +624,16 @@ export async function deleteRegistrationByStaff<T extends Record<string, unknown
   await db.transaction(async (tx) => {
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, registrationId));
     await tx.delete(registrations).where(eq(registrations.id, registrationId));
+    // Erased means gone (`DECISIONS.md` §88): when this was the person's last registration,
+    // the participant row goes too — and with it, by cascade, their action tokens and outbox
+    // rows (the address). The audit row above keeps `participant_id` as null from here, which
+    // is the point: nothing left says who. A participant with another registration stays.
+    const [remaining] = await tx
+      .select({ n: count() })
+      .from(registrations)
+      .where(eq(registrations.participantId, current.participantId));
+    if ((remaining?.n ?? 0) === 0) {
+      await tx.delete(participants).where(eq(participants.id, current.participantId));
+    }
   });
 }

@@ -1,0 +1,2 @@
+ALTER TABLE "events" ADD COLUMN "confirmation_opens_days_before" integer DEFAULT 7 NOT NULL;--> statement-breakpoint
+ALTER TABLE "events" ADD COLUMN "confirmation_deadline_days_before" integer DEFAULT 2 NOT NULL;

@@ -4,8 +4,35 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import ArticleIcon from "@mui/icons-material/Article";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import EventIcon from "@mui/icons-material/Event";
+import GavelIcon from "@mui/icons-material/Gavel";
+import GroupIcon from "@mui/icons-material/Group";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import SettingsIcon from "@mui/icons-material/Settings";
 
-export type AdminTab = { href: string; label: string };
+export type AdminTab = { href: string; label: string; section: string };
+
+/**
+ * One icon per section (the owner, 2026-09-18: "icons for each tab"), from the icon package
+ * MUI ships — imported one file each, so the bundle carries ten glyphs and not the set.
+ */
+const ICONS: Record<string, typeof EventIcon> = {
+  events: EventIcon,
+  checkin: EmojiEventsIcon,
+  guide: MenuBookIcon,
+  pages: ArticleIcon,
+  gallery: PhotoLibraryIcon,
+  registrations: HowToRegIcon,
+  tasks: ChecklistIcon,
+  legal: GavelIcon,
+  staff: GroupIcon,
+  devs: SettingsIcon,
+};
 
 /**
  * The backoffice navigation.
@@ -67,16 +94,21 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
       // like the row it is rather than like clipped text.
       sx={{ mb: 3, borderBottom: 1, borderColor: "divider", minHeight: 44 }}
     >
-      {items.map((item) => (
-        <Tab
-          key={item.href}
-          value={item.href}
-          label={item.label}
-          component="a"
-          href={item.href}
-          sx={{ minHeight: 44, textTransform: "none" }}
-        />
-      ))}
+      {items.map((item) => {
+        const Icon = ICONS[item.section];
+        return (
+          <Tab
+            key={item.href}
+            value={item.href}
+            label={item.label}
+            icon={Icon ? <Icon fontSize="small" /> : undefined}
+            iconPosition="start"
+            component="a"
+            href={item.href}
+            sx={{ minHeight: 44, textTransform: "none" }}
+          />
+        );
+      })}
     </Tabs>
   );
 }

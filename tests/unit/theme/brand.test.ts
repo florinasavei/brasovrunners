@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
-import { COLOR, FONT, LOGO, WORDMARK } from "@/theme/brand";
+import { COLOR, COLOR_DARK, FONT, LOGO, WORDMARK } from "@/theme/brand";
 
 /**
  * BR-REQ-070-02 criterion 4 — colour contrast meets the accessibility baseline.
@@ -53,6 +53,31 @@ describe("BR-REQ-070-02 the palette is readable", () => {
       expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
     });
   }
+
+  // The same pairs after dark (`DECISIONS.md` §93).
+  const darkText: Array<[string, string, string]> = [
+    ["dark: body text on the page", COLOR_DARK.ink, COLOR_DARK.paper],
+    ["dark: body text on a card", COLOR_DARK.ink, COLOR_DARK.surface],
+    ["dark: field labels on the page", COLOR_DARK.inkMuted, COLOR_DARK.paper],
+    ["dark: field labels on a card", COLOR_DARK.inkMuted, COLOR_DARK.surface],
+    ["dark: the blue as text on the page", COLOR_DARK.blue, COLOR_DARK.paper],
+    ["dark: the blue as text on a card", COLOR_DARK.blue, COLOR_DARK.surface],
+    ["dark: the hover shade on the page", COLOR_DARK.blueInk, COLOR_DARK.paper],
+    ["dark: button text on the primary colour", COLOR_DARK.paper, COLOR_DARK.blue],
+    ["dark: text on the secondary colour", COLOR.ink, COLOR.orange],
+  ];
+  for (const [label, foreground, background] of darkText) {
+    it(`clears AA for ${label}`, () => {
+      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  it("keeps the dark surface distinguishable from the dark page, in six-digit hex", () => {
+    expect(COLOR_DARK.surface).not.toBe(COLOR_DARK.paper);
+    for (const [name, value] of Object.entries(COLOR_DARK)) {
+      expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
 
   it("records that the secondary colour is a surface, not a text colour", () => {
     // 2.64:1 on the page background. The theme uses it the only way it works — as a fill with

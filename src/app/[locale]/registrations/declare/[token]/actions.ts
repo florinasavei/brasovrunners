@@ -17,6 +17,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       {
         accepted: form.get("accepted") === "on",
         typedName: String(form.get("typedName") ?? ""),
+        idDocument: String(form.get("idDocument") ?? "").trim() || undefined,
         documentId: String(form.get("documentId") ?? ""),
         contentSha256: String(form.get("contentSha256") ?? ""),
       },

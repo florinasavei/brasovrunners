@@ -62,7 +62,8 @@ test.describe("legal documents: the next version starts from the current one", (
     // The first version in the list. `/admin/legal/new` and the back link do not match the
     // trailing slash plus an id, so only version rows do — and only the visible copy: below
     // `md` the table is hidden and each row is a labelled block (BR-REQ-041-01).
-    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):visible').first().click();
+    // …and not the "start from the platform's text" links either (`?template=`, §95).
+    await page.locator('a[href*="/admin/legal/"]:not([href$="/new"]):not([href*="template="]):visible').first().click();
     await expect(page).toHaveURL(/\/admin\/legal\/[0-9a-f-]{36}$/);
 
     await page.getByRole("link", { name: "Pornește versiunea următoare din aceasta" }).click();

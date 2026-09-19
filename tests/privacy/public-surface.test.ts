@@ -167,7 +167,8 @@ describe("BR-REQ-039-01 what the start list may contain", () => {
 
     // The select list is the guarantee. A future join that widened it would fail here rather
     // than on the day somebody's address appeared on a race page.
-    expect(Object.keys(row)).toEqual(["displayName"]);
+    // The display name and the club they wrote (`DECISIONS.md` §85) — and nothing else.
+    expect(Object.keys(row)).toEqual(["displayName", "clubName"]);
     expect(JSON.stringify(row)).not.toContain("@");
   });
 
@@ -181,7 +182,7 @@ describe("BR-REQ-039-01 what the start list may contain", () => {
 
     const listed = await listPublicStartList(db, event.id);
 
-    expect(listed).toEqual([{ displayName: "Ana P." }]);
+    expect(listed).toEqual([{ displayName: "Ana P.", clubName: null }]);
     // The whole point of the pair of columns: a name on an identity document does not become
     // public because somebody entered a race.
     expect(JSON.stringify(listed)).not.toContain("Popescu");

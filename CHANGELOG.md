@@ -8,6 +8,42 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.38-2026-09-18
+
+The evening's test on QA, and what it found.
+
+- **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.
+- **YouTube films in the editor.** A "YouTube" control on every rich-text field takes the film's address, keeps only its id, and the page shows it behind one press on the no-cookie host — like the event's own film. §110.
+- **`CLAUDE.md` is a map.** "What exists right now" — three hundred lines of prose — is now a page of pointers, one `DECISIONS.md` section per thing, checked against the old text for lost facts. `SETUP.md` keeps its numbered procedures; the shortening of its history is still owed (`/admin/tasks`). §109.
+- **A parent registers a minor online.** Under eighteen the form requires the parent or legal guardian's name; the declaration opens with it ("părinte/tutore legal al minorului …"), the desk and the export show it; an adult's stray entry is dropped. `{{declarant}}` and `{{guardian}}` join the merge fields. §108.
+- **Events in your calendar.** "Google Calendar" and "Add to calendar (.ics)" beside the share links on every event; the listing offers the club's whole calendar as a subscription (`webcal://`) that Google, Apple and Outlook refresh by themselves; the programme rides in the description. §107.
+- **Socials, optional.** A folded section on the form for a Strava profile link (Strava's hosts only) and an Instagram username; on the registration's page and in the export, never published. §106.
+- **A preferential number, and the runner hears of it.** The registration's page lists the free numbers beside the field; a number typed by hand on a confirmed registration goes to the participant by email (`BIB_ASSIGNED`, with the QR). §105.
+- **A free race is confirmed a week before.** Events further away than their participation window (per event; asked 7 days before, due 2 days before by default) hold the place until the deadline; the declaration is the confirmation, asked at registration and again when the window opens; unsigned at the deadline, the place goes to the waiting list. The wizard, the email and the editor say so. §104.
+- **Six roles the club can name.** Volunteer (the desk only; `/admin` lands there), **Copywriter** (the words of every event and page, both languages, no settings or publishing), Organizer, Tehnic, Administrator, Superadministrator; the staff form says what each is for; `/admin/guide` opens the reader's own sections first and has a copywriter's. §103.
+- **The form says what it is for**: the event's date, time and meeting point under the title, and the event's page, its rules, the terms and the privacy notice as links; the terms' §7 now states when a name appears on the public list and in results, and the photographs rule. §102.
+- **Vercel's month on `/devs`** — deployments, today's out of 100, build minutes out of 6,000 — from a read token; bandwidth and invocations stay on the dashboard, which Vercel's API does not expose, and the page says so. §101.
+- **The Mailgun plan is a setting.** `/admin/emails` says which plan the account is on (Free, Basic, Foundation, Scale, or typed ceilings) with an audit row; every "how much can we still send" figure and the cost table follow it, over the day or the month as the plan counts. Reverses the "constant, not configuration" stance of `BR-V1.19`. §100.
+- **The club is told when email stops.** `/api/health` carries an `email` block (deferred by the allowance, overdue, failed) and answers 503 for anything but `ok`; a third cron-job.org monitor with "notify on failure" is the notification; `/admin/tasks` and `/devs` show the same in red. §98.
+- **The public repository:** GitHub secret scanning and push protection on, Dependabot alerts on, `yarn secrets:check` inside `yarn check`; the audit of every file and the whole history found nothing to rotate. §98.
+- **CI keeps the Playwright report and traces** on failure; the task-board test scopes its locators to `#main` because React 19.2's deferred reveal and MUI's mount re-render leave a hidden streamed copy of the page for one frame on a slow machine. §98.
+
+- **Telephone numbers** are a country and digits, stored as E.164; "asdasdasdas" is refused. `DECISIONS.md` §84.
+- **Consents.** The list opt-out is asked only on an event whose list is switched on; **who is coming** is a folded section with the count and shows the club beside the name (the privacy notice must name it — the sample does). §85.
+- **The signature** is typed in a hand; after signing, the page says what happens next; the desk row says what its buttons do. §86.
+- **Race numbers are given at confirmation**, in the confirmation email, the reminder and "my registrations". §87.
+- **Erased means gone** (the participant row too); **the database's size** on `/admin/tasks` and `/devs`; **the repository's documents** at `/devs/docs/<name>`; the email task reads done on QA. §88.
+- **A month view on the listing** — grid from `sm`, agenda on a phone, `?month=` — because the club runs every Monday and Wednesday. §89.
+- **Shareable events.** An Open Graph card drawn from the event's facts on every event page, the site's card everywhere else, a square picture to post on Instagram, and Facebook / WhatsApp share links. **Icons** on the admin tabs, the facts and the flow (`@mui/icons-material`, pinned). §90.
+- **The flow in five steps** on the form and the event page; **every email on `/admin/emails`**; the events list's **⋮ menu**; **one place field** ("Meeting point link"); the Neon row says a **monthly cost**. §91.
+- **The queue panel** on the event page: places, holds, free, and the waiting list numbered in the order it is served. §92.
+- **A dark scheme**, switched in the header or by the device; the white lockup after dark. §93.
+- **Race numbers are drawn at random** (never reused) and **every bib can be previewed** as a picture on the event page — logo, race, number, name. The event type **filter** on the listing, and the calendar right under the featured event. §94, §89.
+- **A captcha the club can switch on** (Cloudflare Turnstile, two keys), **the language a runner asks for** on the form (emails and the declaration), the legal texts **cut to a third** after two audits, and `docs/VIBECODING.md` for whoever codes next; **the queued work on `/admin/tasks`** (Turnstile for the club; the mailbox, minors online, a timed programme, the archive mail, Vercel usage, shorter docs for the developer). §97.
+- **The emails, as the runner keeps them** (§96): bilingual by default (the registration's language first), one branded card, the action as a button, deep links — the event's page, its **rules**, "I can't make it any more", the signed PDF. **Event rules** and **the programme** (kit pickup, briefing, start, cut-offs) per language on the event page (`#rules`, `#schedule`), folded in the editor. The root is **Romanian for everybody** (no locale cookie). `/devs` shows the Vercel deployment and links its usage. "Cetățenie" is what the field asks. The legal texts cut to a third.
+- **The club's declaration** (§95): the paper text with its blanks as tokens (`{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`, `{{signedAt}}`); the identity document typed at signing (never a scan), on the desk row and in the CSV; the signed declaration **emailed back as a PDF** (`DECLARATION_SIGNED`) and linked from the confirmation; **all of an event's declarations in one PDF** and the **blank paper form** on the event page; the runner's copy on their manage page. Registrations kept **three years** after the event, then swept. **Complete privacy notice, terms and declaration** shipped as templates — "start from the platform's text" in `/admin/legal` — with the club's four facts left to fill. `FEATURE_DISPLAY_NAME` (off) hides the public display name. Dark is by the switch only.
+- **Fixes.** The editor's picture buttons are words, not an emoji that rendered as a box. The repository documents' reads are statically traceable, so the deploy does not carry the whole project.
+
 ## BR-V1.37-2026-09-18
 
 After the race, and the email people keep.

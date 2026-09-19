@@ -7,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -21,6 +21,7 @@ import {
 import {
   canCreateEvent,
   canDeleteEvent,
+  canEditTexts,
   canManageRegistrations,
 } from "@/modules/staff-identity/domain/roles";
 import {
@@ -30,7 +31,7 @@ import {
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
-import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import EventRowMenu from "@/modules/content/events/ui/EventRowMenu";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
@@ -87,6 +88,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
+  // A volunteer's backoffice is the desk (§103): `/admin` takes them there rather than to a list
+  // of events they may neither write nor configure. The tabs offer them the same two sections.
+  if (!canEditTexts(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
   const current = await searchParams;
   const { error, saved, archived, failed, created, published } = current;
 
@@ -333,83 +337,70 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             </Button>
 
             {/*
-              Duplicate and Delete live behind a disclosure rather than sitting in the row.
-
-              `<details>` rather than a menu component: an overflow menu is a client island
-              and the standing rule keeps those to the few that earn it. This is the same
-              affordance with no JavaScript at all — it opens on a tap, it closes on the
-              next one, and a keyboard reaches it because a `<summary>` is focusable.
+              Duplicate, Delete, the preview and the registrations behind "⋮" — a context menu
+              (`EventRowMenu`). The verbs are the two hidden forms beside it, each a Server
+              Action the menu submits after its confirmation; the role and the version guard
+              stay on the server.
             */}
             {canCreateEvent(staffUser.role) && (
-              <Box component="details">
-                <Box
-                  component="summary"
-                  sx={{
-                    listStyle: "none",
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    minHeight: 40,
-                    px: { xs: 1, sm: 1.5 },
-                    borderRadius: 1,
-                    border: 1,
-                    borderColor: "divider",
-                    fontSize: "0.8125rem",
-                  }}
-                  aria-label={t("events.moreActions")}
-                >
-                  {/* "⋯" on a phone, the words from `sm` up — same reason as the pen. */}
-                  <Box component="span" aria-hidden="true" sx={{ display: { xs: "inline", sm: "none" }, fontSize: "1.25rem", lineHeight: 1 }}>
-                    ⋯
-                  </Box>
-                  <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
-                    {t("events.moreActions")}
-                  </Box>
-                </Box>
-
-                <Stack spacing={1} sx={{ mt: 1, alignItems: "flex-end" }}>
-                  <Box component="form" action={duplicateEventAction}>
+              <>
+                <form id={`duplicate-${event.id}`} action={duplicateEventAction} hidden>
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="eventId" value={event.id} />
+                </form>
+                {canDeleteEvent(staffUser.role) && entries === 0 && (
+                  <form id={`delete-${event.id}`} action={deleteEventAction} hidden>
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="eventId" value={event.id} />
-                    <ConfirmSubmitButton
-                      label={t("editor.duplicate")}
-                      title={t("confirm.duplicateTitle")}
-                      body={t("confirm.duplicateBody")}
-                      confirmLabel={t("editor.duplicate")}
-                      cancelLabel={t("confirm.cancel")}
-                    />
-                  </Box>
-
-                  {/*
-                    Administrator only, and the service refuses any event that has a registration
-                    against it. When it would refuse, the reason replaces the button: a count is
-                    something an organizer can act on, and a button that fails is not.
-                  */}
-                  {canDeleteEvent(staffUser.role) &&
-                    (entries > 0 ? (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ maxWidth: 260, textAlign: "right" }}
-                      >
-                        {t("events.deleteBlocked", { count: entries })}
-                      </Typography>
-                    ) : (
-                      <Box component="form" action={deleteEventAction}>
-                        <input type="hidden" name="uiLocale" value={locale} />
-                        <input type="hidden" name="eventId" value={event.id} />
-                        <ConfirmSubmitButton
-                          label={t("editor.delete")}
-                          title={t("confirm.deleteTitle")}
-                          body={t("confirm.deleteBody")}
-                          confirmLabel={t("editor.delete")}
-                          cancelLabel={t("confirm.cancel")}
-                          color="error"
-                        />
-                      </Box>
-                    ))}
-                </Stack>
-              </Box>
+                  </form>
+                )}
+                <EventRowMenu
+                  ariaLabel={t("events.moreActions")}
+                  cancelLabel={t("confirm.cancel")}
+                  items={[
+                    {
+                      kind: "link",
+                      label: t("events.preview"),
+                      href: getPathname({ locale, href: { pathname: "/preview/events/[id]", params: { id: event.id } } }),
+                    },
+                    {
+                      kind: "link",
+                      label: t("events.registrationsLink", { count: entries }),
+                      href: `${getPathname({ locale, href: "/admin/registrations" })}?eventId=${event.id}`,
+                    },
+                    {
+                      kind: "submit",
+                      label: t("editor.duplicate"),
+                      formId: `duplicate-${event.id}`,
+                      confirm: {
+                        title: t("confirm.duplicateTitle"),
+                        body: t("confirm.duplicateBody"),
+                        confirmLabel: t("editor.duplicate"),
+                      },
+                    },
+                    // Administrator only, and the service refuses an event with registrations
+                    // against it: the reason replaces the verb, because a count is something an
+                    // organizer can act on and a button that fails is not.
+                    ...(canDeleteEvent(staffUser.role)
+                      ? entries > 0
+                        ? [{ kind: "note" as const, label: t("events.deleteBlocked", { count: entries }) }]
+                        : [
+                            {
+                              kind: "submit" as const,
+                              label: t("editor.delete"),
+                              formId: `delete-${event.id}`,
+                              color: "error" as const,
+                              confirm: {
+                                title: t("confirm.deleteTitle"),
+                                body: t("confirm.deleteBody"),
+                                confirmLabel: t("editor.delete"),
+                              },
+                            },
+                          ]
+                      : []),
+                  ]}
+                />
+              </>
             )}
           </Stack>
         )}

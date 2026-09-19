@@ -89,6 +89,7 @@ export default async function AdminLayout({ children, params }: Props) {
   const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
+    section,
   }));
 
   return (
