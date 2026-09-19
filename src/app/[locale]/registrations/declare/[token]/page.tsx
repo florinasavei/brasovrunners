@@ -110,7 +110,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     registration?.holdExpiresAt && eventDetails
       ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
           dateStyle: "medium",
-          timeStyle: "short",
+          timeStyle: "short", hourCycle: "h23",
           timeZone: eventDetails.timezone,
         }).format(registration.holdExpiresAt)
       : undefined;

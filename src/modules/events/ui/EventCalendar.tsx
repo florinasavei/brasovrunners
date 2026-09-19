@@ -71,7 +71,7 @@ export default async function EventCalendar({
   const nextHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, 1)) }) : href({ year: String(view.year + 1) });
 
   const time = (event: PublicEvent) =>
-    format.dateTime(event.startsAt, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit" });
+    format.dateTime(event.startsAt, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
   // Monday first, named in the reader's language from any Monday; the months from any year.
   const weekdayNames = Array.from({ length: 7 }, (_, i) =>

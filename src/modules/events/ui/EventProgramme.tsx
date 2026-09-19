@@ -33,7 +33,7 @@ export default async function EventProgramme({
   if (rows.length === 0 && !prose) return null;
 
   const days = [...new Set(rows.map((row) => dayKey(row.startsAt, timeZone)))];
-  const time = (at: Date) => format.dateTime(at, { timeZone, hour: "2-digit", minute: "2-digit" });
+  const time = (at: Date) => format.dateTime(at, { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
   return (
     <Box component="section" id="schedule" sx={{ mt: 4 }}>

@@ -571,7 +571,7 @@ export default async function DevsPage({ params }: Props) {
               {job.lastFinishedAt
                 ? ` · ${format.dateTime(new Date(job.lastFinishedAt), {
                     dateStyle: "medium",
-                    timeStyle: "short",
+                    timeStyle: "short", hourCycle: "h23",
                   })}`
                 : ""}
             </Typography>

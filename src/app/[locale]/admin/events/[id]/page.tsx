@@ -485,7 +485,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Typography>
             {event.thanksSentAt ? (
               <Typography variant="body2" color="text.secondary">
-                {t("thanks.sentOn", { date: format.dateTime(event.thanksSentAt, { dateStyle: "long", timeStyle: "short" }) })}
+                {t("thanks.sentOn", { date: format.dateTime(event.thanksSentAt, { dateStyle: "long", timeStyle: "short", hourCycle: "h23" }) })}
               </Typography>
             ) : (
               <form action={sendEventThanksAction}>

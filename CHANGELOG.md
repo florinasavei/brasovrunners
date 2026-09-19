@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **24-hour clock everywhere**, English too; the meeting point is the map link on the page, the hero and a series card. §120.
 - **`/devs` has the backoffice's tabs**, title and sign-out, from the one shell every staff page now shares; the light/dark switch sits in the footer bar's own corner. §119.
 - **Echipa says what "Add" does.** Adding an address sends no email and no code — it allowlists; the person needs a Zitadel account with that address and signs in at `/admin`. The sentence had blamed a missing sending domain, which is live since §98 (the owner, 2026-09-19: "I did not receive the code").
 - **The club's clicks of 2026-09-19, recorded:** Turnstile's widget and keys on both projects, the `/api/health` monitors on cron-job.org for both environments, release #58 live with schema `0042` (`SETUP.md` §36); the Turnstile row's steps are ticked.

@@ -275,7 +275,8 @@ async function EventCard({
             </Typography>
           )}
 
-          <EventFacts event={event} now={now} variant="compact" />
+          {/* No links inside: the card is the link. */}
+          <EventFacts event={event} now={now} variant="compact" links={false} />
 
           {/*
             The card has always been one big link (`CardLink`), and nothing said so. Text plus

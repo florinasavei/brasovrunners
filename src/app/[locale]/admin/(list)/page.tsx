@@ -209,7 +209,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   {members.map((member) => (
                     <Stack component="li" key={member.event.id} direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                       <Link href={{ pathname: "/admin/events/[id]", params: { id: member.event.id } }}>
-                        {format.dateTime(member.event.startsAt, { timeZone: member.event.timezone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        {format.dateTime(member.event.startsAt, { timeZone: member.event.timezone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                       </Link>
                       <Chip
                         size="small"

@@ -280,7 +280,7 @@ export default async function AdminTasksPage({ params }: Props) {
                 resumesAt: email.resumesAt
                   ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
                       dateStyle: "medium",
-                      timeStyle: "short",
+                      timeStyle: "short", hourCycle: "h23",
                       timeZone: "Europe/Bucharest",
                     }).format(new Date(email.resumesAt))
                   : "—",

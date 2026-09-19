@@ -33,10 +33,17 @@ export default async function EventFacts({
   event,
   now,
   variant = "full",
+  links = true,
 }: {
   event: PublicEvent;
   now: Date;
   variant?: "full" | "compact";
+  /**
+   * Whether the facts may carry links of their own: the meeting point as the map link (the
+   * owner: "this address should be a link if I set that in the console"), the route, Strava.
+   * False inside a card that is itself one link (`EventCard`), where a nested link is invalid.
+   */
+  links?: boolean;
 }) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
@@ -48,7 +55,7 @@ export default async function EventFacts({
   // The event's own timezone, not the server's or the reader's. A run in Brașov starts at its
   // local time regardless of where the page is opened.
   const time = (at: Date) =>
-    format.dateTime(at, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit" });
+    format.dateTime(at, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const date = format.dateTime(event.startsAt, {
     timeZone: event.timezone,
     weekday: "long",
@@ -89,10 +96,14 @@ export default async function EventFacts({
     when.push(time(event.startsAt));
   }
 
-  /* Where: the meeting point, and the map when the organizer pasted one. */
+  /* Where: the meeting point — itself the map link when the organizer pasted one and a link
+     may sit here; the same destination is never offered twice on one line. */
   const where: ReactNode[] = [];
-  if (event.locationName) where.push(event.locationName);
-  if (!compact && event.mapUrl) where.push(outLink(event.mapUrl, t("openMap")));
+  if (event.locationName) {
+    where.push(links && event.mapUrl ? outLink(event.mapUrl, event.locationName) : event.locationName);
+  } else if (links && event.mapUrl) {
+    where.push(outLink(event.mapUrl, t("openMap")));
+  }
 
   /* The route in numbers, in the reader's own language for the two enums (migration `0018`);
      cost only when the club has stated one — null means unstated, not free (AGENTS.md §1.2). */
@@ -105,8 +116,8 @@ export default async function EventFacts({
   // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
   if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
   if (event.costType) route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
-  if (!compact && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl)));
-  if (!compact && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), true));
+  if (!compact && links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl)));
+  if (!compact && links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), true));
 
   const pieces = (items: ReactNode[]) => (
     <Box component="span" sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>

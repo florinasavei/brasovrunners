@@ -48,7 +48,7 @@ export async function eventShareImage(
   }).format(event.startsAt);
   // "Duminică, 11 octombrie": the weekday capitalised, the month left as the language writes it.
   const date = formatted.charAt(0).toUpperCase() + formatted.slice(1);
-  const time = new Intl.DateTimeFormat(intl, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit" }).format(
+  const time = new Intl.DateTimeFormat(intl, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(
     event.raceStartsAt ?? event.startsAt,
   );
   const km = distanceInKm(event.distanceMeters);

@@ -5685,3 +5685,24 @@ clear of it below `xl`, where the column's own margin does.
 `shared/ui/SiteFooter.tsx`. BR-REQ-090-04 criterion 7, BR-REQ-041-01 criterion 11.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 120. Decided — a 24-hour clock in English too; the meeting point is the map link (2026-09-19)
+
+**Context.** The owner, on the English listing: "in the calendar the time should be 24H
+format" — `en` formats through `Intl` as 12-hour ("06:30 PM") while §70 already decided a
+runner in Brașov reads a start time on a 24-hour clock. And, at a card: "this address should
+be a link if I set that in the console" — the meeting point was plain text, with a separate
+"Open the map" only on the full page.
+
+**Decision.** Every time the site formats — the calendar, the facts, the programme, the hero,
+the button, the share card, the backoffice lists, the participant's pages — carries
+`hourCycle: "h23"`, so both languages read 18:30. `next-intl` has no global switch for it and
+the routing locale must stay `en`, so the option sits at the calls (twenty, one `sed`). The
+meeting point is itself the map link wherever a link may sit — the page, the hero, a series
+card — and stays words inside an event card, which is one link itself (`EventFacts#links`);
+"Open the map" appears only when there is a link and no name to carry it.
+
+**Consequences.** the twenty call sites; `events/ui/EventFacts.tsx`, the listing's card.
+BR-REQ-020-01 criterion 12.
+
+Baseline `BR-V1.38-2026-09-18`.

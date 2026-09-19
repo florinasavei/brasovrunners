@@ -161,7 +161,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   // details and TOS on the sign-up form as links". Formatted in the event's own zone.
   const whenLabel = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
     dateStyle: "full",
-    timeStyle: "short",
+    timeStyle: "short", hourCycle: "h23",
     timeZone: event.timezone,
   }).format(event.startsAt);
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));

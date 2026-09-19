@@ -92,7 +92,7 @@ export default async function FeaturedEventHero({
               timeZone: event.timezone,
               weekday: "long",
               hour: "2-digit",
-              minute: "2-digit",
+              minute: "2-digit", hourCycle: "h23",
             }),
           })}
         </Typography>
