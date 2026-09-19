@@ -53,6 +53,13 @@
       "next": "Luna următoare",
       "today": "Azi",
       "empty": "Nimic programat în luna asta.",
+      "previousYear": "Anul anterior",
+      "nextYear": "Anul următor",
+      "viewMonth": "Lună",
+      "viewYear": "An",
+      "pickMonth": "Luna",
+      "pickYear": "Anul",
+      "yearEmpty": "Nimic programat în acest an.",
       "subscribe": "Toate evenimentele clubului, în calendarul tău (Google, Apple, Outlook) — se actualizează singur:",
       "subscribeLink": "Abonează-te",
       "downloadLink": "sau descarcă .ics"

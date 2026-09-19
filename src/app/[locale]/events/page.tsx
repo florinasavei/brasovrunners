@@ -26,17 +26,17 @@ import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
-import { monthRange, parseMonth } from "@/modules/events/domain/calendar";
+import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
-import EventCalendar from "@/modules/events/ui/EventCalendar";
+import EventCalendar, { type CalendarView } from "@/modules/events/ui/EventCalendar";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ month?: string | string[]; type?: string | string[] }>;
+  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[] }>;
 };
 
 /**
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam, type: typeParam } = await searchParams;
+  const { month: monthParam, year: yearParam, type: typeParam } = await searchParams;
   // The type filter (§89): one of the closed set, or everything.
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
@@ -75,10 +75,12 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // a broken site, so the last event that happened stands in, dated.
   const latestPast = upcoming.length === 0 ? await findLatestPastEvent(db, locale, now) : undefined;
   const events = upcoming.length > 0 ? upcoming : latestPast ? [latestPast] : [];
-  // The month view (`DECISIONS.md` §89): the month the URL names, or this one.
-  const month = parseMonth(monthParam, now, CLUB_TIME_ZONE);
-  const range = monthRange(month, CLUB_TIME_ZONE);
-  const inMonth = (await listPublishedEventsBetween(db, locale, range.from, range.to)).filter(
+  // The month view (`DECISIONS.md` §89): the month the URL names, or this one — or the whole
+  // year it names (§116). The year wins when both are given: it is the wider question.
+  const year = parseYear(yearParam, now, CLUB_TIME_ZONE);
+  const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
+  const range = view.kind === "year" ? yearRange(view.year, CLUB_TIME_ZONE) : monthRange(view.month, CLUB_TIME_ZONE);
+  const inRange = (await listPublishedEventsBetween(db, locale, range.from, range.to)).filter(
     (event) => !type || event.type === type,
   );
 
@@ -170,7 +172,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
           {t("calendar.downloadLink")}
         </MuiLink>
       </Typography>
-      <EventCalendar month={month} events={inMonth} now={now} query={query} />
+      <EventCalendar view={view} events={inRange} now={now} query={query} />
       </Box>
 
       {/*

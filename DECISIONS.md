@@ -5528,3 +5528,30 @@ header (one control, one place).
 `shared/ui/SiteHeader.tsx`, `ThemeModeToggle`'s words. BR-REQ-041-01 criterion 11.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 116. Decided — the calendar picks a month or a year, and every entry wears its type's glyph (2026-09-19)
+
+**Context.** The owner: "the calendar should be smart, showing icons, and I should be able to
+select per month, or per year!" The month view (§89) stepped one month at a time with two
+arrows and "today", and each entry was a time and a title.
+
+**Decision.** Two native selects — the month and the year, two years either way, the same
+bound `parseMonth` had — go straight to the chosen month (`CalendarPicker`, the one island
+the calendar has; `useRouter().push`, so the listing's loading state shows rather than a blank
+page). A "Month | Year" pair of chips switches the view: `?year=2027` shows the whole year as
+the agenda of every month with something on it, each month a heading (a link to its month
+view) with its count, then the days — the same agenda the phone shows for a month, so the
+year view needs no second design. The arrows step a year in that view. Every entry, in the
+grid, the agenda and the year, carries the type's glyph (§112) before the time. The year wins
+when the address names both.
+
+*Rejected:* twelve mini-months (at 320px a mini-month is dots nobody can tap, and the club's
+year is a schedule to read, not a heat map); a range picker (two selects say it); a
+JavaScript-only calendar (every address here is a link a crawler follows).
+
+**Consequences.** `events/domain/calendar.ts` (`parseYear`, `yearsAround`, `yearRange`,
+`groupByMonth`, `YEARS_EITHER_WAY`), `events/ui/CalendarPicker.tsx`,
+`events/ui/EventCalendar.tsx` (`CalendarView`), the listing, the catalogues;
+`tests/unit/events/calendar.test.ts`. BR-REQ-020-01 criterion 10.
+
+Baseline `BR-V1.38-2026-09-18`.

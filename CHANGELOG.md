@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **A smarter calendar.** Month and year selects, a "Month | Year" switch — the year as an agenda of its months — and the type's glyph on every entry. §116.
 - **The light/dark switch is in the bottom-left corner**, on the footer's line, which is 44px now; the header keeps the language switcher alone. §115.
 - **Bulk actions that work, in a bar above the list.** "All", "Ticked: N", publish, archive and — for an Administrator — delete with a confirmation; a series is deleted with one tick. The old fold's ticks never reached its form (MUI's `Checkbox` put `form=` on a span), so every bulk publish and archive had posted nothing. §114.
 - **A repeated event is one line.** The same title and type, grouped: on the listing one card with "every Monday and Wednesday at 18:30", the next date's facts and the coming dates as links; in the backoffice one row with the dates folded inside, ticked together for the bulk verbs. The month view keeps every date. §113.

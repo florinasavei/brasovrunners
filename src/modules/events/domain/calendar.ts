@@ -23,9 +23,46 @@ export function parseMonth(value: string | string[] | undefined, now: Date, time
     const year = Number(match[1]);
     // Two years either way is as far as the listing goes: further is not a schedule.
     const current = currentMonth(now, timeZone);
-    if (Math.abs(year - current.year) <= 2) return { year, month: Number(match[2]) };
+    if (Math.abs(year - current.year) <= YEARS_EITHER_WAY) return { year, month: Number(match[2]) };
   }
   return currentMonth(now, timeZone);
+}
+
+/** How far the listing looks either way, in years: further is not a schedule. */
+export const YEARS_EITHER_WAY = 2;
+
+/**
+ * The year the URL asked for (`?year=2026`, `DECISIONS.md` §116), or null when it asked for
+ * none or for one outside the two years either way — the caller then shows a month.
+ */
+export function parseYear(value: string | string[] | undefined, now: Date, timeZone: string): number | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw || !/^\d{4}$/.test(raw)) return null;
+  const year = Number(raw);
+  return Math.abs(year - currentMonth(now, timeZone).year) <= YEARS_EITHER_WAY ? year : null;
+}
+
+/** The years the picker offers: two back, two ahead, the current one in the middle. */
+export function yearsAround(now: Date, timeZone: string): number[] {
+  const { year } = currentMonth(now, timeZone);
+  return Array.from({ length: YEARS_EITHER_WAY * 2 + 1 }, (_, index) => year - YEARS_EITHER_WAY + index);
+}
+
+/** The instants a year spans in the club's zone: `[from, to)`. */
+export function yearRange(year: number, timeZone: string): { from: Date; to: Date } {
+  return { from: monthRange({ year, month: 1 }, timeZone).from, to: monthRange({ year, month: 12 }, timeZone).to };
+}
+
+/** Events grouped by the month they start in (`YYYY-MM`), in the input's order. */
+export function groupByMonth<T extends { startsAt: Date; timezone: string }>(items: T[]): Map<string, T[]> {
+  const byMonth = new Map<string, T[]>();
+  for (const item of items) {
+    const key = dayKey(item.startsAt, item.timezone).slice(0, 7);
+    const group = byMonth.get(key);
+    if (group) group.push(item);
+    else byMonth.set(key, [item]);
+  }
+  return byMonth;
 }
 
 export function currentMonth(now: Date, timeZone: string): YearMonth {

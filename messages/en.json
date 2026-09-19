@@ -53,6 +53,13 @@
       "next": "Next month",
       "today": "Today",
       "empty": "Nothing scheduled this month.",
+      "previousYear": "Previous year",
+      "nextYear": "Next year",
+      "viewMonth": "Month",
+      "viewYear": "Year",
+      "pickMonth": "Month",
+      "pickYear": "Year",
+      "yearEmpty": "Nothing scheduled this year.",
       "subscribe": "Every club event in your own calendar (Google, Apple, Outlook) — it updates by itself:",
       "subscribeLink": "Subscribe",
       "downloadLink": "or download the .ics"
