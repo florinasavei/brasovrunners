@@ -1134,7 +1134,8 @@
         "bibSet": "Numărul a fost salvat.",
         "checkedIn": "Marcat prezent.",
         "checkinUndone": "Prezența a fost anulată."
-      }
+      },
+      "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat."
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -1159,7 +1160,8 @@
         "EVENT_REMINDER": "Reminder cu 48 de ore înainte",
         "EVENT_THANKS": "Mulțumim după cursă",
         "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
-        "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)"
+        "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)",
+        "BIB_ASSIGNED": "Numărul de concurs dat de mână"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1175,7 +1177,8 @@
         "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată.",
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
         "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el.",
-        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune."
+        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune.",
+        "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare."
       },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",
@@ -1269,6 +1272,7 @@
             "Publicare: „Trimite spre verificare” → „Publică”. Ambele limbi merg live împreună; o limbă incompletă blochează publicarea.",
             "Numere de concurs (Administrator): pe pagina evenimentului, „Alocă numerele” dă numere în ordinea confirmării; „Descarcă foaia (PDF)” — două numere pe A4, cu logo. Tipărește și declarația (Documente legale → PDF) pentru semnături pe loc.",
             "În ziua cursei: „Masa de ridicare a numerelor” de pe pagina evenimentului sau „Ziua cursei” din bară. Cifrele „Confirmați / Prezenți” sunt cifrele cursei.",
+            "Numere de concurs: la confirmare fiecare primește unul la întâmplare. Un număr preferențial: pagina înscrierii → „Număr de concurs” — vezi lângă câmp numerele libere, scrii unul, salvezi; participantul primește numărul pe email, cu codul QR. Un număr purtat deja de altcineva este refuzat.",
             "După: „Arhivează” evenimentul. Pozele merg în „Galerie” (album nou, încarci pozele din telefon, le publici)."
           ],
           "roles": [

@@ -311,6 +311,20 @@ const T = {
       action: "Gestionează înscrierea",
       links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Declarația semnată (PDF)", url: d.declarationPdfUrl }] : []),
     },
+    bibAssigned: {
+      subject: (d: TemplateData) => `Numărul tău de concurs: ${d.bibNumber ?? "—"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Ți-am dat numărul ${d.bibNumber ?? "—"} la ${d.eventTitle ?? "eveniment"}. Îl ridici la masă în ziua cursei${d.checkinCode ? `, cu codul QR de mai jos sau spunând codul ${d.checkinCode}` : ""}.`,
+        "Dacă ai primit deja un alt număr prin email, acesta îl înlocuiește.",
+      ],
+      action: "Vezi înscrierea",
+      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `Cod QR ${d.checkinCode ?? ""}`, caption: `Codul tău: ${d.checkinCode ?? ""}` } : undefined),
+      links: (d: TemplateData) => [
+        ...(d.manageUrl ? [{ label: "Nu mai pot veni — anulează-mi înscrierea", url: `${d.manageUrl}#cancel` }] : []),
+        ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
+      ],
+    },
     declarationArchive: {
       // Searchable in the mailbox by who and for what: the subject carries both.
       subject: (d: TemplateData) => `Declarație semnată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
@@ -429,6 +443,20 @@ const T = {
       action: "Manage your registration",
       links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Signed declaration (PDF)", url: d.declarationPdfUrl }] : []),
     },
+    bibAssigned: {
+      subject: (d: TemplateData) => `Your race number: ${d.bibNumber ?? "—"}`,
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `You have number ${d.bibNumber ?? "—"} at ${d.eventTitle ?? "the event"}. Collect it at the desk on race day${d.checkinCode ? `, with the QR code below or by saying the code ${d.checkinCode}` : ""}.`,
+        "If an earlier email gave you a different number, this one replaces it.",
+      ],
+      action: "See your registration",
+      image: (d: TemplateData) => (d.checkinQrUrl ? { url: d.checkinQrUrl, alt: `QR code ${d.checkinCode ?? ""}`, caption: `Your code: ${d.checkinCode ?? ""}` } : undefined),
+      links: (d: TemplateData) => [
+        ...(d.manageUrl ? [{ label: "I can't make it any more — cancel my registration", url: `${d.manageUrl}#cancel` }] : []),
+        ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
+      ],
+    },
     declarationArchive: {
       subject: (d: TemplateData) => `Signed declaration: ${d.participantName || "participant"} — ${d.eventTitle ?? "event"}`,
       greeting: () => "Hello,",
@@ -508,6 +536,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   EVENT_THANKS: "eventThanks",
   DECLARATION_SIGNED: "declarationSigned",
   DECLARATION_ARCHIVE: "declarationArchive",
+  BIB_ASSIGNED: "bibAssigned",
 };
 
 /**

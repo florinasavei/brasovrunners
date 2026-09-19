@@ -1134,7 +1134,8 @@
         "bibSet": "Number saved.",
         "checkedIn": "Marked as here.",
         "checkinUndone": "Check-in undone."
-      }
+      },
+      "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused."
     },
     "emails": {
       "title": "The emails participants receive",
@@ -1159,7 +1160,8 @@
         "EVENT_REMINDER": "Reminder 48 hours before",
         "EVENT_THANKS": "Thank you after the race",
         "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
-        "DECLARATION_ARCHIVE": "The club's archive copy (PDF attached)"
+        "DECLARATION_ARCHIVE": "The club's archive copy (PDF attached)",
+        "BIB_ASSIGNED": "A race number given by hand"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1175,7 +1177,8 @@
         "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once.",
         "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
         "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it.",
-        "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link."
+        "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link.",
+        "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link."
       },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
@@ -1269,6 +1272,7 @@
             "Publishing: “Submit for review” → “Publish”. Both languages go live together; an incomplete language blocks publishing.",
             "Race numbers (Administrator): on the event page, “Assign numbers” gives numbers in confirmation order; “Download the sheet (PDF)” — two per A4, with the logo. Print the declaration too (Legal documents → PDF) for on-the-spot signatures.",
             "On race day: “Number pickup desk” from the event page, or “Race day” in the bar. The “Confirmed / Here” figures are the race's figures.",
+            "Race numbers: at confirmation everyone gets one at random. A preferential number: the registration's page → “Race number” — the free numbers are listed beside the field, type one, save; the participant gets the number by email, with the QR code. A number somebody else already wears is refused.",
             "Afterwards: “Archive” the event. Photos go in “Gallery” (new album, upload from the phone, publish)."
           ],
           "roles": [

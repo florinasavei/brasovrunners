@@ -19,6 +19,7 @@ import {
   listDeclarationAcceptances,
   listOutboxHistory,
 } from "@/modules/registrations/admin-repository";
+import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -57,10 +58,12 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   const registration = await findRegistrationDetailForAdmin(db, id);
   if (!registration) notFound();
 
-  const [acceptances, outboxHistory, auditTrail] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     listAuditTrail(db, "registration", id),
+    // The first free numbers, for a preferential one picked rather than guessed (§105).
+    suggestFreeBibNumbers(db, registration.eventId),
   ]);
 
   const { resent, saved, error } = await searchParams;
@@ -202,6 +205,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                     {tr("desk.saveBib")}
                   </Button>
                 </Stack>
+                {/* A preferential number is picked among the free ones (§105): the first free
+                    numbers, and the runner is emailed the one that is saved. */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                  {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                </Typography>
               </form>
               <form action={checkInAction}>
                 {deskHidden}

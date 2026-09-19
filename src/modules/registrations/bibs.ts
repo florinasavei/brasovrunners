@@ -121,6 +121,29 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
   });
 }
 
+/**
+ * The first free numbers at an event, from `from` upwards (§105): what the backoffice shows
+ * beside the "race number" field so a preferential number is picked among the free ones rather
+ * than guessed and refused. Cancelled numbers stay taken, as in the batch (§79).
+ */
+export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+  from = 1,
+  count = 8,
+): Promise<number[]> {
+  const rows = await db
+    .select({ bibNumber: registrations.bibNumber })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), isNotNull(registrations.bibNumber)));
+  const taken = new Set(rows.map((row) => row.bibNumber as number));
+  const free: number[] = [];
+  for (let n = Math.max(1, from); free.length < count && n <= 99_999; n += 1) {
+    if (!taken.has(n)) free.push(n);
+  }
+  return free;
+}
+
 export type BibRow = { id: string; bibNumber: number; registeredName: string };
 
 /**

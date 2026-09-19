@@ -38,6 +38,8 @@ const TOKEN_PURPOSE_BY_MESSAGE_TYPE: Partial<Record<EmailMessageType, EmailActio
   DECLARATION_SIGNED: "MANAGE_REGISTRATION",
   // "Can't come? cancel here" (§81): the same manage link the confirmation carries.
   EVENT_REMINDER: "MANAGE_REGISTRATION",
+  // The number given by hand (§105): the confirmation's facts and link, with the new number.
+  BIB_ASSIGNED: "MANAGE_REGISTRATION",
   // Scoped to the participant, never to a registration (§12.8): the "my registrations" link.
   PROFILE_MANAGE_LINK: "MANAGE_PROFILE",
 };
@@ -119,7 +121,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   // The desk code on the confirmation and the reminder (BR-REQ-037-08). A confirmed
   // registration made before codes existed gets one here, so a resent confirmation carries it too.
   if (
-    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER") &&
+    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER" || row.messageType === "BIB_ASSIGNED") &&
     registration?.status === "CONFIRMED"
   ) {
     let code = registration.checkinCode;

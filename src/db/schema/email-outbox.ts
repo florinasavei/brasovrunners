@@ -36,6 +36,8 @@ export const emailMessageType = pgEnum("email_message_type", [
   "DECLARATION_SIGNED",
   // The club's archive copy of the same PDF (§99): to `DECLARATIONS_ARCHIVE_TO`, no token.
   "DECLARATION_ARCHIVE",
+  // A race number given or changed by hand after confirmation (§105): the runner is told.
+  "BIB_ASSIGNED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

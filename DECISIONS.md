@@ -5191,3 +5191,27 @@ timing defaults, `BUSINESS.md`; BR-REQ-033-01 criterion 6;
 `tests/integration/registrations/confirmation-window.test.ts`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 105. Decided — a preferential race number, picked among the free ones, and told to the runner (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "in the backoffice I can give preferential bibs (from the
+available ones, avoiding conflicts); the participant will receive the bib in the email."
+Numbers are drawn at random at confirmation (§94) and the confirmation email carries the
+number (§87); the desk and the registration's page could already type one (§67), refused a
+duplicate with a sentence, and told nobody — a number changed after the confirmation lived on
+the desk's screen only.
+
+**Decision.** Beside the field on the registration's page, the first free numbers at the event
+(`suggestFreeBibNumbers`), so a preferential number is picked rather than guessed; the
+uniqueness constraint and its sentence stay the guard. A number given or changed by hand on a
+confirmed registration queues `BIB_ASSIGNED` (migration `0040`, one enum value): the number,
+the event's facts, the QR code and the manage link, and a line saying it replaces any earlier
+number. Clearing a number sends nothing — there is nothing to hand over. A number set at the
+desk on the race morning sends the same message; the runner standing there reads their phone
+or does not, and the record is right either way.
+
+**Consequences.** `bibs.ts#suggestFreeBibNumbers`; `admin-service.ts#setBibNumberByStaff`;
+the `bibAssigned` template and the token map in `render.ts`; the registration's page; the
+catalogue; `tests/integration/registrations/race-day.test.ts`. BR-REQ-038-01 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.

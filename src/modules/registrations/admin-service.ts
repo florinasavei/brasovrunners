@@ -419,6 +419,22 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
     metadata: { from: current.bibNumber, to: bibNumber },
     now,
   });
+  // The runner is told (§105): a number given or changed by hand after the confirmation went
+  // out would otherwise live only on the desk's screen. A cleared number is not news.
+  if (bibNumber !== null && updated.status === "CONFIRMED") {
+    await db.transaction(async (tx) => {
+      await enqueueEmail(tx, {
+        participantId: updated.participantId,
+        registrationId: updated.id,
+        messageType: "BIB_ASSIGNED",
+        locale: updated.locale,
+        recipientEmail: (await tx.select({ deliveryEmail: participants.deliveryEmail }).from(participants).where(eq(participants.id, updated.participantId)).limit(1))[0]?.deliveryEmail ?? "",
+        payload: { bibNumber },
+        idempotencyKey: `registration:${updated.id}:bib:${bibNumber}:${now.toISOString()}`,
+        now,
+      });
+    });
+  }
   return updated;
 }
 
