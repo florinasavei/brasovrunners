@@ -4,7 +4,10 @@ import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
+import MuiLink from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import { webcalUrl } from "@/modules/events/ical";
+import { env } from "@/shared/config/env";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -138,7 +141,16 @@ export default async function EventsPage({ params, searchParams }: Props) {
 
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
       <Box sx={{ mt: 2, mb: 4 }}>
-        <EventCalendar month={month} events={inMonth} now={now} query={query} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        {t("calendar.subscribe")}{" "}
+        <MuiLink href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+          {t("calendar.subscribeLink")}
+        </MuiLink>{" "}
+        <MuiLink href={`/${locale}/events/calendar.ics`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+          {t("calendar.downloadLink")}
+        </MuiLink>
+      </Typography>
+      <EventCalendar month={month} events={inMonth} now={now} query={query} />
       </Box>
 
       {/*

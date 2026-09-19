@@ -67,6 +67,8 @@ const PUBLIC_COLUMNS = {
   bodyJson: eventTranslations.bodyJson,
   rulesJson: eventTranslations.rulesJson,
   scheduleJson: eventTranslations.scheduleJson,
+  /** When the event row last changed — the calendar feed's `DTSTAMP` (§107). */
+  updatedAt: events.updatedAt,
   seoTitle: eventTranslations.seoTitle,
   seoDescription: eventTranslations.seoDescription,
   // When the event was first published — one date for both languages now that publication is

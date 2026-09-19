@@ -5241,3 +5241,36 @@ page, `admin-repository.ts`, `csv.ts` and the export route, the privacy-notice t
 catalogue; `tests/unit/registrations/socials.test.ts`, the CSV test. BR-REQ-031-04 criterion 8.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 107. Decided — events as a calendar: one `.ics` per event, and a feed the phone subscribes to (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "Can the events be iCal, so they appear in Google Calendar
+and other calendars?" The listing had a month view (§89) and the backlog row for the
+structured programme promised "one .ics per event". A club that runs every Monday and
+Wednesday is a club whose members want the runs in the calendar they already look at.
+
+**Decision.** `modules/events/ical.ts` writes RFC 5545 by hand — twenty lines, and the two
+things that go wrong (folding at 75 octets, escaping) are the two things the unit test pins.
+Instants in UTC, so no VTIMEZONE block has to be right about DST; every calendar shows the
+same moment in the reader's zone. Two routes, public like the events: one event
+(`/<locale>/events/<slug>/calendar.ics`, `attachment`) and the club's feed
+(`/<locale>/events/calendar.ics`, every published event from a month back to a year ahead,
+a calendar name, a daily refresh hint, an hour of cache). The event page offers Google
+Calendar's own add-event address — one tap, no file — and the `.ics` for Apple, Outlook and
+the phone's app, beside the share links; the listing offers the feed as `webcal://` and as a
+download, with the sentence that it updates by itself. The description carries the short
+description, the programme as plain text (§96) and the page's address, so the calendar entry
+is enough on the morning. UIDs are `<event id>@<site host>`: stable across edits, so a
+changed time updates the entry rather than adding a second, and distinct between QA and
+production.
+
+*Rejected:* a library (`ics` and friends bring more code than the format); per-locale
+duplicate UIDs (a person who subscribes to both would see every run twice — the UID is the
+event's, and the two feeds differ only in words); structured programme rows *before* the
+calendar (the rows are still owed; the calendar did not have to wait for them).
+
+**Consequences.** `events/ical.ts`; the two routes; `ShareLinks` with a `calendar` prop;
+the listing's subscribe line; `updatedAt` in the public columns; `calendar.google.com` in the
+provider hosts; the catalogue; `tests/unit/events/ical.test.ts`. BR-REQ-020-01 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.

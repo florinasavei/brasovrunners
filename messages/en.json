@@ -52,7 +52,10 @@
       "previous": "Previous month",
       "next": "Next month",
       "today": "Today",
-      "empty": "Nothing scheduled this month."
+      "empty": "Nothing scheduled this month.",
+      "subscribe": "Every club event in your own calendar (Google, Apple, Outlook) — it updates by itself:",
+      "subscribeLink": "Subscribe",
+      "downloadLink": "or download the .ics"
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -75,7 +78,9 @@
       "title": "Share:",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
-      "instagram": "Picture for Instagram"
+      "instagram": "Picture for Instagram",
+      "googleCalendar": "Google Calendar",
+      "ics": "Add to calendar (.ics)"
     },
     "rules": "Event rules",
     "schedule": "Event programme",
@@ -150,7 +155,10 @@
       "notice": "The player is YouTube's and loads only when you open it."
     },
     "stravaEvent": "On Strava",
-    "openStravaEvent": "The event on Strava"
+    "openStravaEvent": "The event on Strava",
+    "calendar": {
+      "feedName": "Brașov Runners — events"
+    }
   },
   "Admin": {
     "title": "Backoffice",
@@ -742,12 +750,12 @@
         },
         "scheduleStructured": {
           "title": "The event programme as data (times), not only text",
-          "todo": "The programme is free text per language now (the “Programme” section of the event page). For a big race, structured rows — the time, what happens, where — would show the same on the page, in the emails and in the phone's calendar (an .ics file).",
+          "todo": "The programme is free text per language (the page's “Programme” section). The calendar (.ics, subscription, Google Calendar) exists since §107 and carries the programme as text. Left: structured rows — the time, what happens, where — shown the same on the page, in the emails and as separate calendar entries.",
           "done": "The programme has timed rows and can be added to the phone's calendar.",
           "how": [
             "Schema: an event_schedule_items table (event_id, starts_at, ends_at?, label per language, place) — or structured JSON on the event.",
             "Editor: rows “time + text + place”, in order; the page shows them as a timed list; the reminder email sends them.",
-            "One .ics per event (“Add to calendar” link) generated from those rows."
+            "Calendar: from those rows, one VEVENT per row in the event's .ics (the file and the subscription exist: modules/events/ical.ts)."
           ]
         },
         "declarationArchiveMail": {
@@ -1238,7 +1246,8 @@
             "They read and sign the declaration online, typing their name. The registration becomes “confirmed” and they get the confirmation email with the QR code.",
             "The same email has a “Manage your registration” link: from there they can withdraw, see their code and, from the day before the start, press “I have arrived”.",
             "Event full: they join the waiting list and get an email when a place frees up, with 30 minutes to sign the declaration.",
-            "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot."
+            "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot.",
+            "In their calendar: every event has “Google Calendar” and “Add to calendar (.ics)”; on the events page, “Subscribe” puts the club's whole calendar on the phone and it updates by itself when you publish something new."
           ],
           "roles": [
             "CONTRIBUTOR",

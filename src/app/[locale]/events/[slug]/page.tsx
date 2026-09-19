@@ -21,6 +21,7 @@ import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import ShareLinks from "@/modules/events/ui/ShareLinks";
+import { googleCalendarUrl } from "@/modules/events/ical";
 import StartList from "@/modules/events/ui/StartList";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
@@ -147,7 +148,15 @@ export default async function EventDetailPage({ params }: Props) {
 
       {/* Facebook and WhatsApp take the link; Instagram takes the picture (§90). */}
       <Box sx={{ mt: 2 }}>
-        <ShareLinks url={eventUrl(locale, slug)} title={event.title} imageHref={`/${locale}/events/${slug}/share-image`} />
+        <ShareLinks
+          url={eventUrl(locale, slug)}
+          title={event.title}
+          imageHref={`/${locale}/events/${slug}/share-image`}
+          calendar={{
+            icsHref: `/${locale}/events/${slug}/calendar.ics`,
+            googleUrl: googleCalendarUrl({ ...event, url: eventUrl(locale, slug) }),
+          }}
+        />
       </Box>
 
       {event.locationAddress && (

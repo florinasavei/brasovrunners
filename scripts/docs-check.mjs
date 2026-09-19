@@ -291,6 +291,8 @@ const PROVIDER_HOSTS = [
   "strava.app.link",
   // Instagram, for the link the backoffice builds from a username (§106).
   "www.instagram.com",
+  // Google Calendar's "add this event" address, one tap from the event page (§107).
+  "calendar.google.com",
   // Cloudflare Turnstile's widget and its verification endpoint (§97): fixed, Cloudflare's own.
   "challenges.cloudflare.com",
 ];

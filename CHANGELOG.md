@@ -13,6 +13,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 The evening's test on QA, and what it found.
 
 - **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.
+- **Events in your calendar.** "Google Calendar" and "Add to calendar (.ics)" beside the share links on every event; the listing offers the club's whole calendar as a subscription (`webcal://`) that Google, Apple and Outlook refresh by themselves; the programme rides in the description. §107.
 - **Socials, optional.** A folded section on the form for a Strava profile link (Strava's hosts only) and an Instagram username; on the registration's page and in the export, never published. §106.
 - **A preferential number, and the runner hears of it.** The registration's page lists the free numbers beside the field; a number typed by hand on a confirmed registration goes to the participant by email (`BIB_ASSIGNED`, with the QR). §105.
 - **A free race is confirmed a week before.** Events further away than their participation window (per event; asked 7 days before, due 2 days before by default) hold the place until the deadline; the declaration is the confirmation, asked at registration and again when the window opens; unsigned at the deadline, the place goes to the waiting list. The wizard, the email and the editor say so. §104.

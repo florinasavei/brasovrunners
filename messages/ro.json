@@ -52,7 +52,10 @@
       "previous": "Luna anterioară",
       "next": "Luna următoare",
       "today": "Azi",
-      "empty": "Nimic programat în luna asta."
+      "empty": "Nimic programat în luna asta.",
+      "subscribe": "Toate evenimentele clubului, în calendarul tău (Google, Apple, Outlook) — se actualizează singur:",
+      "subscribeLink": "Abonează-te",
+      "downloadLink": "sau descarcă .ics"
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -75,7 +78,9 @@
       "title": "Dă mai departe:",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
-      "instagram": "Poză pentru Instagram"
+      "instagram": "Poză pentru Instagram",
+      "googleCalendar": "Google Calendar",
+      "ics": "Adaugă în calendar (.ics)"
     },
     "rules": "Regulamentul evenimentului",
     "schedule": "Programul evenimentului",
@@ -150,7 +155,10 @@
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi."
     },
     "stravaEvent": "Pe Strava",
-    "openStravaEvent": "Evenimentul pe Strava"
+    "openStravaEvent": "Evenimentul pe Strava",
+    "calendar": {
+      "feedName": "Brașov Runners — evenimente"
+    }
   },
   "Admin": {
     "title": "Administrare",
@@ -742,12 +750,12 @@
         },
         "scheduleStructured": {
           "title": "Programul evenimentului ca date (ore), nu doar text",
-          "todo": "Programul e acum text liber pe fiecare limbă (secțiunea „Program” din pagina evenimentului). Pentru o cursă mare ar merita rânduri structurate — ora, ce se întâmplă, unde — ca să apară la fel pe pagină, în emailuri și în calendarul din telefon (fișier .ics).",
+          "todo": "Programul e text liber pe limbă (secțiunea „Program” a paginii). Calendarul (.ics, abonament, Google Calendar) există din §107 și duce programul ca text. Rămâne: rânduri structurate — ora, ce se întâmplă, unde — care s-ar arăta la fel pe pagină, în emailuri și ca intrări separate în calendar.",
           "done": "Programul are rânduri cu ore și se poate adăuga în calendarul telefonului.",
           "how": [
-            "Schemă: tabelă event_schedule_items (event_id, starts_at, ends_at?, label pe limbi, place) — sau JSON structurat pe eveniment.",
-            "Editor: rânduri „ora + text + loc”, în ordine; pagina le afișează ca o listă cu ore; emailul de reminder le trimite.",
-            "Un fișier .ics per eveniment (link „Adaugă în calendar”) generat din aceste rânduri."
+            "Schema: o tabelă event_schedule_items (event_id, starts_at, ends_at?, etichetă pe limbă, loc) — sau JSON structurat pe eveniment.",
+            "Editorul: rânduri „oră + text + loc”, în ordine; pagina le arată ca listă cu ore; reminderul le trimite.",
+            "Calendarul: din rândurile acestea, câte un VEVENT pe rând în .ics-ul evenimentului (fișierul și abonamentul există deja: modules/events/ical.ts)."
           ]
         },
         "declarationArchiveMail": {
@@ -1238,7 +1246,8 @@
             "Citește și semnează declarația online, cu numele tastat. Înscrierea devine „confirmată” și primește emailul de confirmare cu codul QR.",
             "Din același email are un link „Gestionează înscrierea”: de acolo se poate retrage, își vede codul și, din ziua dinaintea startului, poate apăsa „Am ajuns”.",
             "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are 30 de minute să semneze declarația.",
-            "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc."
+            "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc.",
+            "În calendarul lui: pe fiecare eveniment sunt „Google Calendar” și „Adaugă în calendar (.ics)”; pe pagina de evenimente, „Abonează-te” pune tot calendarul clubului în telefon și se actualizează singur când publicați ceva nou."
           ],
           "roles": [
             "CONTRIBUTOR",

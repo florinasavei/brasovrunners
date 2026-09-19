@@ -1,3 +1,4 @@
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
@@ -12,7 +13,15 @@ import SocialIcon from "@/shared/ui/SocialIcon";
  * card as a square picture to save and post. Three plain links, no script — the networks'
  * own share addresses, which need nothing loaded from them.
  */
-export default async function ShareLinks({ url, title, imageHref }: { url: string; title: string; imageHref: string }) {
+type Props = {
+  url: string;
+  title: string;
+  imageHref: string;
+  /** "Add to calendar" (§107): the `.ics` to download and Google's own add-event address. */
+  calendar?: { icsHref: string; googleUrl: string };
+};
+
+export default async function ShareLinks({ url, title, imageHref, calendar }: Props) {
   const t = await getTranslations("Event");
   const link = (href: string, label: string, icon: ReactNode, download = false) => (
     <Link
@@ -42,6 +51,8 @@ export default async function ShareLinks({ url, title, imageHref }: { url: strin
         <WhatsAppIcon sx={{ fontSize: 20, color: "#25D366" }} aria-hidden="true" />,
       )}
       {link(imageHref, t("share.instagram"), <SocialIcon network="instagram" size={20} />, true)}
+      {calendar && link(calendar.googleUrl, t("share.googleCalendar"), <EventAvailableIcon sx={{ fontSize: 20 }} aria-hidden="true" />)}
+      {calendar && link(calendar.icsHref, t("share.ics"), <EventAvailableIcon sx={{ fontSize: 20 }} aria-hidden="true" />, true)}
     </Stack>
   );
 }
