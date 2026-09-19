@@ -186,7 +186,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
           {t("calendar.downloadLink")}
         </MuiLink>
         {" · "}
-        <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
+        <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
       </Typography>
       <EventCalendar view={view} events={inRange} now={now} query={query} />
       </Box>
