@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **Tick the dates a save reaches.** In the editor of a series, every date's chip is a tick, its arrow opens it, "Toate" ticks them all; the folded box above Save says the choice in words and its three presets — this date, this and the following, all — set the ticks (the old radios could all be on at once). §134.
 - **The type filter is small and only offers what is there.** One small chip per kind that has an event on the page, none when there is one kind; the link under each is still 44 pixels tall. §133.
 
 The evening's test on QA, and what it found.

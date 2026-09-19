@@ -390,7 +390,9 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
-    // Which dates of the series (§130): the radio on a date of a series; absent elsewhere.
+    // Which dates of the series (§130, §134): the dates ticked in the editor's header, or a
+    // preset word; absent elsewhere. Ticks win — they are what the organizer sees.
+    const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
     const scope = text(form, "scope");
 
     const { appliedTo } = await saveEventAndTranslations(getDb(), {
@@ -402,7 +404,7 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
         .map((contentLocale) => translationFieldsFrom(form, contentLocale))
         .filter((entry) => entry !== undefined),
       acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
-      scope: SERIES_EDIT_SCOPES.includes(scope as SeriesEditScope) ? (scope as SeriesEditScope) : "this",
+      scope: ticked.length > 0 ? { ids: ticked } : SERIES_EDIT_SCOPES.includes(scope as (typeof SERIES_EDIT_SCOPES)[number]) ? (scope as SeriesEditScope) : "this",
     });
     outcome = appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" };
   } catch (error) {

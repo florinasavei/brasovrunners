@@ -535,13 +535,17 @@
         "this": "Doar această dată",
         "following": "Această dată și următoarele",
         "all": "Toate datele seriei",
-        "help": "Ca în Google Calendar: doar ce ai schimbat aici ajunge și pe celelalte date — o oră nouă, la aceeași oră în ziua fiecăreia; o dată mutată sau anulată separat rămâne așa dacă nu schimbi chiar locul sau starea. Adresa paginii fiecărei date nu se schimbă."
+        "help": "Ca în Google Calendar: doar ce ai schimbat aici ajunge și pe celelalte date — o oră nouă, la aceeași oră în ziua fiecăreia; o dată mutată sau anulată separat rămâne așa dacă nu schimbi chiar locul sau starea. Adresa paginii fiecărei date nu se schimbă.",
+        "chosen": "această dată și încă {count} alese sus",
+        "selectAll": "Toate",
+        "selectNone": "Niciuna",
+        "open": "Deschide data de {date}"
       },
       "repeatOfNote": "Ce schimbi aici — o anulare, alt loc, altă oră — privește doar această dată, dacă nu alegi altfel la Salvează.",
       "series": {
         "kicker": "Seria „{title}”",
         "editing": "Editezi data de {date}",
-        "position": "Data {position} din {count} ale seriei. Apasă o altă dată ca s-o deschizi.",
+        "position": "Data {position} din {count} ale seriei. Bifează datele pe care ajunge salvarea; săgeata deschide data.",
         "previous": "← Data dinainte: {date}",
         "next": "Data următoare: {date} →"
       },

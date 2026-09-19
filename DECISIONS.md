@@ -6113,3 +6113,34 @@ be filtered by something it does not show).
 **Consequences.** `app/[locale]/events/page.tsx`; BR-REQ-041-01 criterion 5 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 134. Decided — the dates a save reaches are ticked in the header; the three presets set the ticks (2026-09-19)
+
+**Context.** The owner, on the header of §131: "here I should have a select all!" — and on
+the three radios of §130: "this does not work correctly, they should be radios! I can
+select 'this date only' but also 'this and the following dates' and 'all dates'?? does not
+make sense!", then "should be more boxed and collapsible, it looks ugly on mobile!". The
+radios were three standalone MUI `Radio`s sharing a `name`: the browser unticks the others,
+MUI's own state does not follow, and all three showed ticked at once.
+
+**Decision.** The chips are the choice. Every other date of the series is a chip with a tick;
+a press ticks it, the arrow on it opens that date's editor, and "Toate" in front ticks every
+one (or none). Above Save, a framed `<details>` says the choice in words — "doar această
+dată", "această dată și următoarele (7)", "toate datele seriei (8)", or "această dată și încă
+3 alese sus" — and offers the three presets as one exclusive `ToggleButtonGroup` that sets
+the ticks; its explanation is inside the fold. Both read one piece of state
+(`SeriesScopeProvider`, a context around the page) so the header and the box cannot disagree,
+and the ticked ids reach the form as hidden `dates` inputs. The service's `SeriesEditScope`
+gained `{ ids }`: exactly those dates, an id outside the series ignored, none is "this". The
+three words stay for the API and the tests. The date the page is about is always in.
+
+*Rejected:* a `RadioGroup` alone (fixes the tick, not "select all"); chips that open on
+press with the tick on the icon (a tick nobody can reach from the keyboard); the box open
+by default (the phone was the complaint).
+
+**Consequences.** `content/events/ui/SeriesScope.tsx` (new; `RadioField` no longer used by
+the editor), the editor page, `admin/actions.ts`, `service.ts#applyToSeries`, four keys in
+both catalogues; `tests/integration/cms/series-edit.test.ts`, `tests/e2e/series-edit.spec.ts`.
+BR-REQ-050-02 criterion 17.
+
+Baseline `BR-V1.38-2026-09-18`.
