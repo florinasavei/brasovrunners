@@ -189,6 +189,7 @@
     },
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
+    "openFacebookEvent": "Evenimentul pe Facebook",
     "calendar": {
       "feedName": "🏃 BVR"
     }
@@ -592,6 +593,8 @@
       "coHostHelp": "Opțional. Când evenimentul e organizat împreună cu altă organizație — un ONG, un magazin, un brand — numele ei aici și pagina, dacă are una. Apare ca „Împreună cu …” lângă numele clubului și e trecută ca al doilea organizator pentru Google.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
+      "facebookEventUrl": "Link către evenimentul Facebook",
+      "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Doar pentru această ediție; nu se copiază.",
       "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",

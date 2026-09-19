@@ -318,6 +318,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
     stravaEventUrl: fields.stravaEventUrl,
+    facebookEventUrl: fields.facebookEventUrl,
     coHostName: fields.coHostName,
     coHostUrl: fields.coHostName ? fields.coHostUrl : null,
     locationName: fields.locationName,
@@ -1117,6 +1118,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // partner is held with them every time.
     videoUrl: null,
     stravaEventUrl: null,
+    facebookEventUrl: null,
     coHostName: source.coHostName,
     coHostUrl: source.coHostUrl,
     // Never the rule: a copy is one date, and only the source repeats (§122).

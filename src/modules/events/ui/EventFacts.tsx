@@ -69,14 +69,14 @@ export default async function EventFacts({
   // and `noreferrer` stop the opened page reaching back through `window.opener` and stop it
   // learning which page sent the visitor (`DECISIONS.md` §61 on the Strava mark: the mark
   // decorates, the words are the link, and never Strava's script).
-  const outLink = (href: string, label: string, strava = false) => (
+  const outLink = (href: string, label: string, network?: "strava" | "facebook") => (
     <Link
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
     >
-      {strava && <SocialIcon network="strava" size={18} />}
+      {network && <SocialIcon network={network} size={18} />}
       {label}
     </Link>
   );
@@ -117,8 +117,10 @@ export default async function EventFacts({
   // The two closed sets carry their glyphs (§112): bars for how hard, a coin for the cost.
   if (event.difficulty) route.push(withGlyph(DIFFICULTY_GLYPH[event.difficulty], t(`difficultyValues.${event.difficulty}`)));
   if (event.costType) route.push(withGlyph(COST_GLYPH[event.costType], t(`costValues.${event.costType}`)));
-  if (!compact && links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl)));
-  if (!compact && links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), true));
+  if (!compact && links && event.routeUrl) route.push(outLink(event.routeUrl, t("openRoute"), isStravaLink(event.routeUrl) ? "strava" : undefined));
+  if (!compact && links && event.stravaEventUrl) route.push(outLink(event.stravaEventUrl, t("openStravaEvent"), "strava"));
+  // The Facebook event (§144): where the club's people say "going".
+  if (!compact && links && event.facebookEventUrl) route.push(outLink(event.facebookEventUrl, t("openFacebookEvent"), "facebook"));
 
   const pieces = (items: ReactNode[]) => (
     <Box component="span" sx={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 1 }}>

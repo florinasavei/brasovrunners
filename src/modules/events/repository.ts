@@ -40,6 +40,7 @@ const PUBLIC_COLUMNS = {
   videoUrl: events.videoUrl,
   // The club's Strava group event for this occurrence (criterion 10).
   stravaEventUrl: events.stravaEventUrl,
+  facebookEventUrl: events.facebookEventUrl,
   // The other organization the event is held with, when there is one (§121).
   coHostName: events.coHostName,
   coHostUrl: events.coHostUrl,
@@ -258,6 +259,7 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       locationName: events.locationName,
       mapUrl: events.mapUrl,
       stravaEventUrl: events.stravaEventUrl,
+      facebookEventUrl: events.facebookEventUrl,
       startsAt: events.startsAt,
       timezone: events.timezone,
     })

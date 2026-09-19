@@ -6361,3 +6361,23 @@ action, `templates/privacy-notice.ts`, `templates/terms.ts`, two keys in both ca
 `tests/e2e/registration-form.spec.ts`. BR-REQ-039-01 criteria 3–5 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 144. Decided — a Facebook event link on the event, beside the Strava one (2026-09-19)
+
+**Context.** The owner: "we also need a field for the Facebook event and the Strava event".
+The Strava event existed (§71, criterion 10 of BR-REQ-011-01); Facebook is where most of
+the club says "going".
+
+**Decision.** `events.facebook_event_url`, the twin of `strava_event_url` in every respect:
+a page on `facebook.com`, `fb.com` or `fb.me` and nothing else (`isFacebookLink`, the same
+hostname comparison as `isStravaLink` — a comparison, not an emitted address, so §8 stands),
+`https://` by CHECK, its own box in the editor under the Strava one, its own labelled fact
+with the Facebook mark on the event page, absent from the card, never carried onto a
+duplicate or a repeated edition because it is one occurrence's page. Migration `0046`.
+
+**Consequences.** `db/schema/events.ts`, migration `0046`, `domain/event-type.ts`,
+`content/events/fields.ts`, `service.ts` (save and duplicate), the editor form and action,
+`events/repository.ts`, the preview, `ui/EventFacts.tsx`, three keys in both catalogues;
+`tests/integration/cms/workflow.test.ts`. BR-REQ-011-01 criterion 10 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

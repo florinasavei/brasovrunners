@@ -137,6 +137,7 @@ function eventFieldsFrom(form: FormData) {
     raceStartsAtWallTime: wallTime("raceStartsAt"),
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
+    facebookEventUrl: value("facebookEventUrl"),
     coHostName: value("coHostName"),
     coHostUrl: value("coHostUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
