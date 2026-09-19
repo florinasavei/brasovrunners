@@ -11,12 +11,12 @@ Everything here is a command that exists today. If a command is in this file it 
 
 | | |
 | --- | --- |
-| **Node** | `22.14.0` exactly, from `.nvmrc`; CI reads that same file. `engines.node` says `22.x`, because a host selects a Node *major* and refuses to install when an exact patch it cannot supply is demanded. |
+| **Node** | `22` — the major, from `.nvmrc`; CI reads that same file (§125). `engines.node` says `22.x`, because a host selects a Node *major* and refuses to install when an exact patch it cannot supply is demanded. |
 | **Yarn** | 4.18.0, via Corepack. It ships with Node — you do not install yarn yourself. |
 | **A database** | Only for event pages: `docker compose up -d db`. The home page and the whole test suite need none. |
 
 ```bash
-node --version        # must print v22.14.0
+node --version        # must print v22.something
 corepack enable       # once per machine; makes `yarn` resolve to 4.18.0
 ```
 

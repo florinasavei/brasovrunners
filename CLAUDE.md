@@ -50,7 +50,7 @@ yarn release      versioned archive and share copies under dist/
 Full list with explanations: [`docs/DEVELOPMENT.md`](./docs/DEVELOPMENT.md). Do not write a
 command into a document until it is in `package.json`.
 
-**Toolchain:** Node `22.14.0` (`.nvmrc`), Yarn 4.18.0 via Corepack, TypeScript 5.9.3 — not 7,
+**Toolchain:** Node 22 (`.nvmrc` says the major, `22`; §125), Yarn 4.18.0 via Corepack, TypeScript 5.9.3 — not 7,
 which `typescript-eslint` refuses. Tests need no database: PGlite runs real PostgreSQL in
 process. Concurrency tests must not use it; see `docs/DEVELOPMENT.md`.
 
@@ -258,7 +258,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 
 | Layer | Decision | Status |
 | --- | --- | --- |
-| App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22.14.0 | done |
+| App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
 | Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated (schema `0042` on both after release #58, 2026-09-19; `0043` comes with the next release); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |

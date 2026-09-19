@@ -5845,3 +5845,17 @@ held back and carries a live token.
 shared capture between tests. BR-REQ-090-04 criterion 8.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 125. Decided — `.nvmrc` names the major, `22`, not a patch (2026-09-19)
+
+**Context.** The owner: "Vercel is complaining about the fixed node version." `.nvmrc` said
+`22.14.0` exactly; Vercel runs a major line (`22.x`, as `engines.node` already said) and warns
+about a patch it will not honour, and every developer's `nvm use` failed the day a newer 22
+was installed.
+
+**Decision.** `.nvmrc` says `22`. CI (`node-version-file`) and a version manager take the
+latest 22; `engines.node` stays `22.x`. Nothing in the repository depends on a patch of 22.
+
+**Consequences.** `.nvmrc`, `README.md`, `docs/DEVELOPMENT.md`, `CLAUDE.md`.
+
+Baseline `BR-V1.38-2026-09-18`.

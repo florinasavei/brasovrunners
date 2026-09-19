@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **`.nvmrc` says `22`**, the major, which is what Vercel runs; no more warning about a pinned patch. §125.
 - **Captured emails on `/devs`**, locally: every message the platform would have sent, with its links, so the journey can be clicked through on a laptop. §124.
 - **"Add" on Echipa creates the sign-in account and sends the invitation** through Zitadel, when the club's Zitadel key is set (`SETUP.md` §37 — five minutes, once); the page says what happened, and a row that never signed in has "Resend the invitation". §123.
 - **A series repeats until a date or for ever.** "Repeat" takes an end date or none; the next eight weeks are created at once and the platform keeps every series eight weeks ahead by itself; each date stays its own event — "Stop the series" ends it; a cancelled or moved date is struck through with a warning mark and a tooltip on the card, in the calendar and in the backoffice. Calendar subscription offers Google Calendar's own link, the `webcal://` for Apple/Outlook/phones, and the address to copy. §122.
