@@ -76,6 +76,8 @@ export const envSchema = z
 
     // Verifies job-endpoint callers (AGENTS.md §16.2) — a scheduler, not a staff session.
     JOB_SECRET: z.string().min(1).optional(),
+    /** How often the day-time monitor pings the job endpoints, in minutes (§148): 15 on production, 60 on QA. */
+    PINGER_CADENCE_MINUTES: z.coerce.number().int().min(1).max(240).default(15),
 
     // Read-only, for `/devs` to show the database's CU-hours against the plan (SETUP.md §33).
     NEON_API_KEY: z.string().min(1).optional(),

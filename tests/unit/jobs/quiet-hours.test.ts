@@ -22,7 +22,16 @@ describe("quiet hours, club time", () => {
   });
 
   it("allows an hourly monitor at night and a fifteen-minute one by day", () => {
+    expect(jobStalenessThresholdMs(new Date("2026-07-01T10:00:00.000Z"), 15)).toBe(35 * 60_000);
+    expect(jobStalenessThresholdMs(new Date("2026-07-01T00:00:00.000Z"), 15)).toBe(125 * 60_000);
+  });
+
+  // `DECISIONS.md` §148: QA is pinged hourly by day too, and says so through PINGER_CADENCE_MINUTES.
+  it("measures a deployment against its own day cadence, never below hourly at night", () => {
+    expect(jobStalenessThresholdMs(new Date("2026-07-01T10:00:00.000Z"), 60)).toBe(125 * 60_000);
+    expect(jobStalenessThresholdMs(new Date("2026-07-01T00:00:00.000Z"), 60)).toBe(125 * 60_000);
+    expect(jobStalenessThresholdMs(new Date("2026-07-01T00:00:00.000Z"), 120)).toBe(245 * 60_000);
+    // The default is production's fifteen.
     expect(jobStalenessThresholdMs(new Date("2026-07-01T10:00:00.000Z"))).toBe(35 * 60_000);
-    expect(jobStalenessThresholdMs(new Date("2026-07-01T00:00:00.000Z"))).toBe(125 * 60_000);
   });
 });

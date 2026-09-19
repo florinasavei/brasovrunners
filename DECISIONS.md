@@ -6653,3 +6653,30 @@ untouched: the raise takes the same lock, in the same place, and nothing bypasse
 `transitionRegistration`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 148. Decided — the health check measures each deployment against its own pinger cadence (2026-09-19)
+
+**Context.** The owner's inbox: nine "Cronjob failed: QA health" emails in an evening,
+while `yarn smoke` on QA said `ok` every time it was asked. §68 pings QA's job endpoints once
+an hour to spare its free CU-hours, but §98's health check called a job stale after twice
+production's fifteen minutes plus five — thirty-five minutes — so QA was "degraded" (a 503,
+which is what a monitor treats as failed) for the last twenty-five minutes of every hour by
+day, and the thirty-minute health monitor caught it about half the time.
+
+**Decision.** The day cadence is the deployment's own: `PINGER_CADENCE_MINUTES` (default 15,
+production's; QA carries 60, set on its Vercel project on 2026-09-19). The threshold stays
+twice the cadence plus five; the night stays hourly everywhere, never faster than the day.
+The owner's proposed workaround — move QA's health monitor to minute 2 of the hour, right
+after the ping — would have halved the false alarms and kept the lie; a deployment should
+say how often it is pinged.
+
+*Rejected:* deriving the cadence from `APP_ENV` (a monitor's schedule is set in a console,
+not in the code, and the two have drifted once already); relaxing the threshold everywhere
+(production's alarm would fire an hour late).
+
+**Consequences.** `env.ts` (`PINGER_CADENCE_MINUTES`), `jobs/quiet-hours.ts`
+(`pingerCadenceMinutes`, `jobStalenessThresholdMs(now, dayCadence?)`), `.env.example`,
+`SETUP.md` §36 and the variable table; `tests/unit/jobs/quiet-hours.test.ts`. The QA
+project's variable takes effect on its next deployment — the release of PR #64.
+
+Baseline `BR-V1.38-2026-09-18`.

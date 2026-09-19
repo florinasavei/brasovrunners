@@ -310,6 +310,7 @@ AUTH_ZITADEL_ID          required when STAFF_AUTH_MODE=provider
 AUTH_ZITADEL_SECRET      required when STAFF_AUTH_MODE=provider
 AUTH_ZITADEL_ISSUER      required when STAFF_AUTH_MODE=provider
 JOB_SECRET               verifies the two job endpoints (§16.2); a scheduler's secret, not a staff session
+PINGER_CADENCE_MINUTES   the day-time monitor's cadence in minutes; 15 on production, 60 on QA (§148)
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
 MAILGUN_API_KEY
@@ -1174,6 +1175,9 @@ nobody redoes them (`/admin/tasks` reads the same facts from the deployment):
 - **The health monitors** (`DECISIONS.md` §98): cron-job.org has `GET /api/health` every
   30 minutes with "notify on failure" on production and on QA — the club is emailed when
   email stops. Nine monitors in all: the two job pingers per environment (§26) and this one.
+  QA's pingers are hourly (§68), so QA carries `PINGER_CADENCE_MINUTES=60` (set 2026-09-19,
+  `DECISIONS.md` §148): without it the health check measured QA against production's fifteen
+  minutes and cried "degraded" — a cronjob-failed email — for most of every hour.
 - **Release #58** (`qa → main`, 2026-09-19) is live; the production schema is `0042`
   (`0043`, the programme rows, arrives with the next release and its gated migration run).
 
