@@ -218,6 +218,12 @@ export const registrations = pgTable(
      */
     stravaUrl: text("strava_url"),
     instagramHandle: text("instagram_handle"),
+    /**
+     * The parent or legal guardian who registers a minor (§108): required by the form when the
+     * birth date gives under eighteen, the name that signs the declaration on the child's
+     * behalf and that the desk hands the kit to. Null for an adult.
+     */
+    guardianName: text("guardian_name"),
 
     /**
      * "I am a Brașov Runners team member", as the person filling the form said it

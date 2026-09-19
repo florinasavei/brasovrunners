@@ -29,6 +29,7 @@ import { deriveAllowedResendMessageType } from "./domain/resend";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import {
   declarationSigningSchema,
+  isMinorOn,
   registrationSubmissionSchema,
   staffRegistrationSubmissionSchema,
 } from "./fields";
@@ -477,6 +478,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     emergencyContactName: input.emergencyContactName ?? null,
     emergencyContactPhone: input.emergencyContactPhone ?? null,
     clubName: input.clubName ?? null,
+    // Kept only for a minor: an adult who typed a name into the folded field named nobody's guardian.
+    guardianName: input.birthDate && isMinorOn(input.birthDate, now) && input.guardianName ? input.guardianName : null,
     stravaUrl: input.stravaUrl ?? null,
     instagramHandle: input.instagramHandle ?? null,
     clubMemberDeclared: input.clubMemberDeclared,

@@ -42,7 +42,8 @@ describe("the declaration's merge fields", () => {
     const ro = mergeFieldsIn(declarationRo);
     const en = mergeFieldsIn(declarationEn);
     expect([...ro].sort()).toEqual([...en].sort());
-    for (const field of ["participant", "idDocument", "event", "eventDate", "eventLocation"]) {
+    // `declarant` (§108) opens the text: the runner, or the parent of a minor with the relation spelled out.
+    for (const field of ["declarant", "idDocument", "event", "eventDate", "eventLocation"]) {
       expect(ro.has(field as (typeof MERGE_FIELDS)[number]), field).toBe(true);
     }
   });

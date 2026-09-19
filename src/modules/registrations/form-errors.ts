@@ -29,6 +29,7 @@ export const REGISTRATION_FORM_FIELDS = [
   "emergencyContactPhone",
   "tshirtSize",
   "clubName",
+  "guardianName",
   "stravaUrl",
   "instagramHandle",
   "healthNotes",

@@ -17,6 +17,7 @@ import { findCurrentApprovedDocument } from "@/modules/legal-documents/repositor
 import { mergeFieldsIn, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { findRegistrationById } from "@/modules/registrations/repository";
+import { declarantValues } from "@/modules/registrations/signed-declaration";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -147,6 +148,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           <LegalDocumentBody
             body={mergeLegalBody(declaration.body, {
               participant: registration?.registeredName,
+              ...(registration ? declarantValues(registration.registeredName, registration.guardianName, locale) : {}),
               event: eventDetails?.title,
               eventDate: eventDetails
                 ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)

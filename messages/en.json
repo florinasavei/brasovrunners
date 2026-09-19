@@ -738,16 +738,6 @@
             "Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
           ]
         },
-        "minorsOnline": {
-          "title": "A parent registering a minor, online",
-          "todo": "The terms and the declaration already say a parent/guardian registers the child and signs for them; the form has nothing yet that makes it explicit. To build: on the form, when the birth date gives under 18, a section “I am the parent/guardian” with the parent's name and identity document; the declaration filled with “as parent of '{{participant}}'”; the kit handed to the parent.",
-          "done": "A parent can register a child online, with the declaration signed on the child's behalf.",
-          "how": [
-            "fields.ts: guardianName, guardianIdDocument (required when birthDate < 18 at the event's date).",
-            "The form: the section appears when the birth date gives a minor; the declaration (merge fields) gets {{guardian}}; the PDF and the desk row show the parent.",
-            "An integration test on the lifecycle + one e2e; a decision §; a criterion in BR-REQ-031-04."
-          ]
-        },
         "scheduleStructured": {
           "title": "The event programme as data (times), not only text",
           "todo": "The programme is free text per language (the page's “Programme” section). The calendar (.ics, subscription, Google Calendar) exists since §107 and carries the programme as text. Left: structured rows — the time, what happens, where — shown the same on the page, in the emails and as separate calendar entries.",
@@ -1143,7 +1133,8 @@
         "checkedIn": "Marked as here.",
         "checkinUndone": "Check-in undone."
       },
-      "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused."
+      "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused.",
+      "guardian": "Minor — parent/guardian: {name}"
     },
     "emails": {
       "title": "The emails participants receive",
@@ -1317,7 +1308,8 @@
             "Where the declarations live: in the database (Neon, Frankfurt), as records — not as files. The PDF is generated from them on request, any time, identically. After the event, from the event page: “Signed declarations (PDF)” — all in one file, one per page (200 declarations ≈ 2 MB, a few seconds) — and the CSV export. Keep them in the club's own archive, with restricted access (they carry names and identity documents).",
             "How long they are kept: registrations and declarations 3 years from the event (the general limitation period), then deleted automatically; earlier on request, with “Erase” on the registration page. Sent emails 90 days, spent links 30 days. The privacy notice says exactly this.",
             "The privacy notice and the terms: start from the platform's text too — they are complete (GDPR art. 13, Law 190/2018, the processors, the periods, the rights, the ANSPDCP); you only fill in the legal name, the registered address, the registration number and the contact email, read, save the draft and approve. Without approved texts nobody can register.",
-            "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document."
+            "The public display name (nickname) is off by default (FEATURE_DISPLAY_NAME): the list and the export show real names, and the kit is collected against an identity document.",
+            "Minors: a participant under 18 is registered by the parent/guardian, who types their name in the form's “Registering a minor” section (required under 18), signs the declaration with their own identity document and collects the kit; the desk and the export show “Minor — parent/guardian: <name>”."
           ],
           "roles": [
             "ADMIN",
@@ -1431,7 +1423,8 @@
       "privacyAcknowledged": "Privacy notice",
       "captcha": "The anti-bot check",
       "stravaUrl": "Strava profile",
-      "instagramHandle": "Instagram"
+      "instagramHandle": "Instagram",
+      "guardianName": "Parent / guardian"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -1488,7 +1481,8 @@
     "disclosure": {
       "race": "Brașov Runners member, club and t-shirt — optional",
       "health": "Health information — optional",
-      "socials": "Socials — optional"
+      "socials": "Socials — optional",
+      "guardian": "Registering a minor — parent or legal guardian"
     },
     "clubMemberDeclared": "I am a Brașov Runners team member",
     "facts": {
@@ -1501,7 +1495,10 @@
     "stravaUrl": "Your Strava profile (link)",
     "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
     "instagramHandle": "Instagram (username)",
-    "instagramHandleHelp": "With or without the @."
+    "instagramHandleHelp": "With or without the @.",
+    "guardianHelp": "A participant under 18 is registered by a parent or legal guardian, who also signs the declaration of own responsibility on their behalf and collects the kit. For an adult, leave this empty.",
+    "guardianName": "Full name of the parent / guardian",
+    "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

@@ -5274,3 +5274,38 @@ the listing's subscribe line; `updatedAt` in the public columns; `calendar.googl
 provider hosts; the catalogue; `tests/unit/events/ical.test.ts`. BR-REQ-020-01 criterion 7.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 108. Decided — a parent registers a minor online: the guardian's name, and who the declaration names as declarant (2026-09-19)
+
+**Context.** The terms and the declaration have said since §95 that a minor is registered by
+a parent or legal guardian who signs on the child's behalf — and the form had no place for
+that person, so a parent typed their own name as the runner's or the child's as the signer's.
+The first developer row on `/admin/tasks` since §97.
+
+**Decision.** `registrations.guardian_name` (migration `0042`). The public form carries a
+folded disclosure, "Registering a minor — parent or legal guardian", opened automatically when
+the server named it; under eighteen by the calendar on the day of submission
+(`isMinorOn`), a submission without the name is refused with `guardianName` in the fields,
+so the error summary links to it. An adult's entry in the field is dropped at the service —
+nobody's guardian was named. Two merge fields join the declaration's: `{{declarant}}`, which
+reads the runner's name for an adult and "<guardian> (părinte/tutore legal al minorului
+<runner>)" for a minor, in the text's language, and `{{guardian}}`, the bare name or an em
+dash; the templates open with `{{declarant}}` and keep the clause that says in which capacity
+one signs. The identity document typed at signing is the signer's — the parent's. The desk
+row and the registration's page show "Minor — parent/guardian: <name>" (the kit goes to that
+person), and the export has a `Guardian` column. The staff-entered form is unchanged: an
+organizer entering a child at the desk records the parent on paper, as before.
+
+*Rejected:* the age at the event's date (the schema parses a birth date without the event in
+hand, and a runner who turns eighteen between the two loses nothing by having named a
+parent); a separate guardian identity document field (the signer types theirs at signing,
+which is where the document is asked); a guardian email (the parent's address is the one on
+the form — it is the parent filling it in).
+
+**Consequences.** `fields.ts` (`isMinorOn`, `guardianRule`), `form-mapping.ts`,
+`form-errors.ts`, `names.ts`, `repository.ts`, `service.ts`, the form; `merge-fields.ts`
+(`declarant`, `guardian`), `signed-declaration.ts#declarantValues`, the declare page, the
+templates; `DeskRow`, the registration's page, `admin-repository.ts`, `csv.ts` and the export;
+the catalogue; `tests/integration/registrations/minors.test.ts`. BR-REQ-031-04 criterion 9.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -39,6 +39,8 @@ export type RegistrationListRow = {
   /** The optional socials (§106), as typed; null when not given. */
   stravaUrl: string | null;
   instagramHandle: string | null;
+  /** The parent or guardian of a minor (§108); null for an adult. */
+  guardianName: string | null;
   submittedAt: Date;
   confirmedAt: Date | null;
   /** The race number, once assigned (BR-REQ-038-01). */
@@ -230,6 +232,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       clubMemberDeclared: registrations.clubMemberDeclared,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
+      guardianName: registrations.guardianName,
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
@@ -301,6 +304,8 @@ export type RegistrationDetail = {
   /** The optional socials (§106), as typed; null when not given. */
   stravaUrl: string | null;
   instagramHandle: string | null;
+  /** The parent or guardian of a minor (§108); null for an adult. */
+  guardianName: string | null;
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
@@ -359,6 +364,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       clubMemberDeclared: registrations.clubMemberDeclared,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
+      guardianName: registrations.guardianName,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
       waitlistedAt: registrations.waitlistedAt,
@@ -398,6 +404,8 @@ export type DeskRegistration = {
   status: RegistrationStatus;
   kind: RegistrationKind;
   registeredName: string;
+  /** The parent or guardian of a minor (§108): who the kit goes to; null for an adult. */
+  guardianName: string | null;
   eventId: string;
   eventTitle: string | null;
   eventStartsAt: Date;
@@ -416,6 +424,7 @@ const DESK_COLUMNS = {
   status: registrations.status,
   kind: registrations.kind,
   registeredName: registrations.registeredName,
+  guardianName: registrations.guardianName,
   eventId: registrations.eventId,
   eventTitle: eventTranslations.title,
   eventStartsAt: events.startsAt,

@@ -738,16 +738,6 @@
             "Deschide formularul de înscriere: sub câmpuri apare căsuța „Verify you are human”; o înscriere de test trece. Rândul acesta devine verde."
           ]
         },
-        "minorsOnline": {
-          "title": "Înscrierea unui minor de către părinte, online",
-          "todo": "Termenii și declarația spun deja că un părinte/tutore înscrie copilul și semnează pentru el; formularul nu are încă nimic care să o facă explicit. De construit: pe formular, când data nașterii dă sub 18 ani, o secțiune „Sunt părintele/tutorele” cu numele și actul de identitate ale părintelui; declarația completată cu „în calitate de părinte al '{{participant}}'”; kitul se predă părintelui.",
-          "done": "Un părinte poate înscrie un copil online, cu declarația semnată în numele lui.",
-          "how": [
-            "fields.ts: guardianName, guardianIdDocument (cerute când birthDate < 18 ani la data evenimentului).",
-            "Formularul: secțiunea apare când data nașterii dă minor; declarația (merge-fields) primește {{guardian}}; PDF-ul și rândul de la masă arată părintele.",
-            "Test de integrare pe lifecycle + un e2e; §-ul de decizie; criteriu în BR-REQ-031-04."
-          ]
-        },
         "scheduleStructured": {
           "title": "Programul evenimentului ca date (ore), nu doar text",
           "todo": "Programul e text liber pe limbă (secțiunea „Program” a paginii). Calendarul (.ics, abonament, Google Calendar) există din §107 și duce programul ca text. Rămâne: rânduri structurate — ora, ce se întâmplă, unde — care s-ar arăta la fel pe pagină, în emailuri și ca intrări separate în calendar.",
@@ -1143,7 +1133,8 @@
         "checkedIn": "Marcat prezent.",
         "checkinUndone": "Prezența a fost anulată."
       },
-      "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat."
+      "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
+      "guardian": "Minor — părinte/tutore: {name}"
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -1317,7 +1308,8 @@
             "Unde stau declarațiile: în baza de date (Neon, Frankfurt), ca înregistrări — nu ca fișiere. PDF-ul se generează la cerere din ele, oricând, identic. După eveniment, de pe pagina evenimentului: „Declarațiile semnate (PDF)” — toate într-un singur fișier, câte una pe pagină (200 de declarații ≈ 2 MB, câteva secunde) — și exportul CSV. Păstrează-le în arhiva clubului, cu acces restrâns (conțin nume și acte de identitate).",
             "Cât se păstrează: înscrierile și declarațiile 3 ani de la eveniment (termenul general de prescripție), apoi se șterg automat; la cerere, mai devreme, din „Ștergere” pe pagina înscrierii. Emailurile trimise 90 de zile, linkurile consumate 30 de zile. Exact așa scrie și în nota de confidențialitate.",
             "Nota de confidențialitate și termenii: pornește tot de la textul platformei — sunt complete (GDPR art. 13, Legea 190/2018, procesatorii, perioadele, drepturile, ANSPDCP); completezi doar denumirea juridică, sediul, CUI-ul și emailul de contact, citești, salvezi ciorna și aprobi. Fără text aprobat nu se poate face nicio înscriere.",
-            "Numele afișat public (porecla) este oprit implicit (FEATURE_DISPLAY_NAME): pe listă și în export apar numele reale, iar kitul se ridică pe bază de act de identitate."
+            "Numele afișat public (porecla) este oprit implicit (FEATURE_DISPLAY_NAME): pe listă și în export apar numele reale, iar kitul se ridică pe bază de act de identitate.",
+            "Minori: un participant sub 18 ani este înscris de părinte/tutore, care își scrie numele în secțiunea „Înscriu un minor” a formularului (obligatorie sub 18 ani), semnează declarația cu actul lui de identitate și ridică kitul; la masă și în export apare „Minor — părinte/tutore: <nume>”."
           ],
           "roles": [
             "ADMIN",
@@ -1431,7 +1423,8 @@
       "privacyAcknowledged": "Nota de confidențialitate",
       "captcha": "Verificarea anti-bot",
       "stravaUrl": "Profilul de Strava",
-      "instagramHandle": "Instagram"
+      "instagramHandle": "Instagram",
+      "guardianName": "Părinte / tutore"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1488,7 +1481,8 @@
     "disclosure": {
       "race": "Membru Brașov Runners, club și tricou — opțional",
       "health": "Informații medicale — opțional",
-      "socials": "Rețele sociale — opțional"
+      "socials": "Rețele sociale — opțional",
+      "guardian": "Înscriu un minor — părinte sau tutore legal"
     },
     "clubMemberDeclared": "Sunt membru al echipei Brașov Runners",
     "facts": {
@@ -1501,7 +1495,10 @@
     "stravaUrl": "Profilul tău de Strava (link)",
     "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
     "instagramHandle": "Instagram (numele de utilizator)",
-    "instagramHandleHelp": "Cu sau fără @."
+    "instagramHandleHelp": "Cu sau fără @.",
+    "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Pentru un adult, lasă secțiunea goală.",
+    "guardianName": "Numele complet al părintelui / tutorelui",
+    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

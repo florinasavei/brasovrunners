@@ -13,6 +13,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 The evening's test on QA, and what it found.
 
 - **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.
+- **A parent registers a minor online.** Under eighteen the form requires the parent or legal guardian's name; the declaration opens with it ("părinte/tutore legal al minorului …"), the desk and the export show it; an adult's stray entry is dropped. `{{declarant}}` and `{{guardian}}` join the merge fields. §108.
 - **Events in your calendar.** "Google Calendar" and "Add to calendar (.ics)" beside the share links on every event; the listing offers the club's whole calendar as a subscription (`webcal://`) that Google, Apple and Outlook refresh by themselves; the programme rides in the description. §107.
 - **Socials, optional.** A folded section on the form for a Strava profile link (Strava's hosts only) and an Instagram username; on the registration's page and in the export, never published. §106.
 - **A preferential number, and the runner hears of it.** The registration's page lists the free numbers beside the field; a number typed by hand on a confirmed registration goes to the participant by email (`BIB_ASSIGNED`, with the QR). §105.

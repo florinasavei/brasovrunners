@@ -94,6 +94,10 @@ export default async function DeskRow({
             <Typography component="span" sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
               {row.registeredName}
             </Typography>
+            {/* A minor: the kit goes to the parent named here (§108). */}
+            {row.guardianName && (
+              <Chip size="small" variant="outlined" label={t("desk.guardian", { name: row.guardianName })} />
+            )}
             <Chip
               size="small"
               color={row.status === "CONFIRMED" ? "success" : row.status === "WAITLISTED" ? "default" : "warning"}

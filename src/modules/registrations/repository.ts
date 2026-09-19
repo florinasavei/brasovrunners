@@ -199,6 +199,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       emergencyContactName: input.details?.emergencyContactName ?? null,
       emergencyContactPhone: input.details?.emergencyContactPhone ?? null,
       clubName: input.details?.clubName ?? null,
+      guardianName: input.details?.guardianName ?? null,
       stravaUrl: input.details?.stravaUrl ?? null,
       instagramHandle: input.details?.instagramHandle ?? null,
       // NOT NULL with a default of false: "did not say" and "said no" are the same answer to

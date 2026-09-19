@@ -132,6 +132,11 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {registration.guardianName && (
+        <Typography variant="body2" color="text.secondary">
+          {tr("desk.guardian", { name: registration.guardianName })}
+        </Typography>
+      )}
       {/* The socials the person offered (§106): links to follow back, never published here. */}
       {(registration.stravaUrl || registration.instagramHandle) && (
         <Typography variant="body2" color="text.secondary">

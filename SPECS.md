@@ -448,7 +448,9 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 
 8. Given the public form, when it renders, then a folded, optional "Socials" section offers a Strava profile link and an Instagram username; a link is accepted only on Strava's own hosts, a username is stored without its `@`, both may be empty; they are shown to Administrators on the registration's page and in the export, never published, and the privacy notice names them (`DECISIONS.md` §106).
 
-**Verification:** integration `registrations/entry-details.test.ts`; unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`
+9. Given a birth date under eighteen years before today, when the public form is submitted without a parent or legal guardian's name, then it is refused naming `guardianName`; given the name, then it is kept on the registration, shown at the desk and on the registration's page and in the export, and the declaration's `{{declarant}}` reads "<guardian> (parent/legal guardian of the minor <participant>)" in the text's language — the signer's own identity document beside it — while an adult's entry in the field is dropped (`DECISIONS.md` §108).
+
+**Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`
 
 #### BR-REQ-031-05 — Health information is consented separately and never published
 

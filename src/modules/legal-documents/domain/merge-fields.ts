@@ -14,7 +14,7 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "./content-hash";
  * the rules — is the text's own words. A field with no value renders as the dotted blank the
  * paper form has, which is what a blank declaration printed for the desk should show.
  */
-export const MERGE_FIELDS = ["participant", "idDocument", "event", "eventDate", "eventLocation", "signedAt"] as const;
+export const MERGE_FIELDS = ["participant", "declarant", "guardian", "idDocument", "event", "eventDate", "eventLocation", "signedAt"] as const;
 
 export type MergeField = (typeof MERGE_FIELDS)[number];
 

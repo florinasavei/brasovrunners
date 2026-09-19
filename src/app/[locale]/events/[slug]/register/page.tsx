@@ -524,6 +524,25 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
 
+              {/* A minor's parent or guardian (§108): folded, named for the one case it is
+                  required in, and the server refuses a minor without it. */}
+              <Box component="details" sx={disclosureSx} open={invalid.has("guardianName")}>
+                <Typography component="summary" variant="body2">
+                  {t("disclosure.guardian")}
+                </Typography>
+                <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("guardianHelp")}
+                  </Typography>
+                  <TextField
+                    {...field("guardianName", t("guardianNameHelp"))}
+                    label={t("guardianName")}
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: 200 } }}
+                  />
+                </Stack>
+              </Box>
+
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a
                   person can skip without the form being any less complete. */}

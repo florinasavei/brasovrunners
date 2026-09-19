@@ -67,6 +67,12 @@ const submissionFields = z.object({
   clubName: z.string().trim().max(200).optional(),
 
   /**
+   * The parent or legal guardian (§108): required when the birth date gives under eighteen
+   * today — `guardianRule` below — optional otherwise, and ignored for an adult who typed it.
+   */
+  guardianName: z.string().trim().max(200).optional(),
+
+  /**
    * Socials, optional (§106). A Strava link is one of Strava's own addresses — a profile, or
    * the short link the app shares — and nothing else, so the field cannot become a link to
    * anywhere; an Instagram handle is the username, with or without the `@`, which is stored
@@ -150,6 +156,33 @@ const submissionFields = z.object({
  * text quietly dropped, because dropping it would leave somebody believing an organizer
  * knows about their asthma.
  */
+/** Eighteen on the day, by calendar years — the same arithmetic a desk uses on an ID card. */
+export function isMinorOn(birthDate: string, on: Date): boolean {
+  const birth = new Date(`${birthDate}T00:00:00Z`);
+  const eighteenth = new Date(Date.UTC(birth.getUTCFullYear() + 18, birth.getUTCMonth(), birth.getUTCDate()));
+  return on.getTime() < eighteenth.getTime();
+}
+
+/**
+ * A minor is registered by a parent or legal guardian (§108; the terms and the declaration
+ * have said so since §95): the form must carry the guardian's name, and the declaration is
+ * then theirs to sign. Checked against today rather than the event's day — a birth date is
+ * parsed here without the event in hand, and a runner who turns eighteen between the two
+ * loses nothing by having named a parent.
+ */
+const guardianRule = (
+  value: { birthDate?: string; guardianName?: string },
+  ctx: z.RefinementCtx,
+): void => {
+  if (value.birthDate && isMinorOn(value.birthDate, new Date()) && !value.guardianName) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["guardianName"],
+      message: "a participant under eighteen is registered by a parent or legal guardian, whose name is required",
+    });
+  }
+};
+
 const healthConsentRule = (
   value: { healthNotes?: string; healthConsent?: boolean },
   ctx: z.RefinementCtx,
@@ -167,7 +200,7 @@ const healthConsentRule = (
 };
 
 /** The public form. Every race detail is insisted on (BR-REQ-031-04 criterion 2). */
-export const registrationSubmissionSchema = submissionFields.superRefine(healthConsentRule);
+export const registrationSubmissionSchema = submissionFields.superRefine(healthConsentRule).superRefine(guardianRule);
 
 /**
  * The same form as an organizer fills it in for somebody who telephoned (BR-REQ-031-04
@@ -188,7 +221,8 @@ export const staffRegistrationSubmissionSchema = submissionFields
     emergencyContactName: true,
     emergencyContactPhone: true,
   })
-  .superRefine(healthConsentRule);
+  .superRefine(healthConsentRule)
+  .superRefine(guardianRule);
 
 export type RegistrationSubmissionInput = z.infer<typeof registrationSubmissionSchema>;
 

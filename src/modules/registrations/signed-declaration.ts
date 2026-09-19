@@ -20,6 +20,8 @@ import { renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput }
 export type SignedDeclaration = {
   registrationId: string;
   registeredName: string;
+  /** The parent or guardian who signed for a minor (§108); null for an adult. */
+  guardianName: string | null;
   acceptedAt: Date;
   typedName: string;
   idDocument: string | null;
@@ -34,6 +36,16 @@ export type SignedDeclaration = {
 };
 
 /** The latest acceptance of a registration, with the text it was signed against. */
+/**
+ * `{{declarant}}` and `{{guardian}}` (§108): for a minor, the parent or guardian with the
+ * relationship spelled out; for an adult, the runner and an em dash.
+ */
+export function declarantValues(participant: string, guardianName: string | null | undefined, locale: Locale): { declarant: string; guardian: string } {
+  if (!guardianName) return { declarant: participant, guardian: "—" };
+  const relation = locale === "ro" ? `părinte/tutore legal al minorului ${participant}` : `parent/legal guardian of the minor ${participant}`;
+  return { declarant: `${guardianName} (${relation})`, guardian: guardianName };
+}
+
 export async function findSignedDeclaration<T extends Record<string, unknown>>(
   db: Database<T>,
   registrationId: string,
@@ -47,6 +59,7 @@ function signedDeclarationQuery<T extends Record<string, unknown>>(db: Database<
     .select({
       registrationId: declarationAcceptances.registrationId,
       registeredName: registrations.registeredName,
+      guardianName: registrations.guardianName,
       acceptedAt: declarationAcceptances.acceptedAt,
       typedName: declarationAcceptances.typedName,
       idDocument: declarationAcceptances.idDocument,
@@ -144,7 +157,9 @@ function signedEntry(
     title: signed.title,
     body: mergeLegalBody(signed.body, {
       ...event.values,
-      participant: signed.typedName,
+      // The runner's name, and who declares (§108): the guardian for a minor, the runner otherwise.
+      participant: signed.registeredName,
+      ...declarantValues(signed.registeredName, signed.guardianName, signed.locale),
       idDocument: signed.idDocument,
       signedAt: when,
     }),
