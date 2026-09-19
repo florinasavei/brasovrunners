@@ -22,8 +22,35 @@ describe("the calendar file", () => {
     expect(icalUtc(event.startsAt)).toBe("20261011T060000Z");
     expect(icalText("a, b; c\\ d\nnew")).toBe("a\\, b\\; c\\\\ d\\nnew");
     const folded = icalFold("X".repeat(150));
-    for (const line of folded.split("\r\n")) expect(line.length).toBeLessThanOrEqual(71);
-    expect(folded.split("\r\n")[1].startsWith(" ")).toBe(true);
+    for (const line of folded.split("\r\n")) expect(line.length).toBeLessThanOrEqual(75);
+    expect(folded.split("\r\n")).toEqual([`X`.repeat(75), ` ${"X".repeat(74)}`, ` X`]);
+  });
+
+  it("folds by octets and never splits a character — emoji in a title (§129)", () => {
+    // 73 ASCII octets, then a four-octet runner: the runner goes whole to the next line.
+    const folded = icalFold(`${"a".repeat(73)}🏃 și`);
+    const lines = folded.split("\r\n");
+    expect(lines).toEqual([`${"a".repeat(73)}`, " 🏃 și"]);
+    for (const line of lines) expect(Buffer.byteLength(line, "utf8")).toBeLessThanOrEqual(75);
+    expect(folded.replace(/\r\n /g, "")).toBe(`${"a".repeat(73)}🏃 și`);
+    // No lone surrogate anywhere, whatever the boundary.
+    for (let n = 60; n < 80; n += 1) {
+      expect(icalFold(`${"a".repeat(n)}🏃🏃🏃`)).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
+    }
+  });
+
+  it("makes the map link the place and keeps the meeting point's name in the description (§129)", () => {
+    const mapUrl = "https://maps.app.goo.gl/abc123";
+    const ics = buildCalendar({ events: [{ ...event, mapUrl }], baseUrl: "https://example.test", name: "🏃 BVR", labels: { programme: "Program" } });
+    const unfolded = ics.replace(/\r\n /g, "");
+    expect(unfolded).toContain("X-WR-CALNAME:🏃 BVR");
+    expect(unfolded).toContain("REFRESH-INTERVAL;VALUE=DURATION:PT1H");
+    expect(unfolded).toContain(`LOCATION:${mapUrl}`);
+    expect(unfolded).not.toContain("LOCATION:Parcul");
+    expect(unfolded).toContain("DESCRIPTION:📍 Parcul Tractorul\\, intrarea principală\\n\\nCursa clubului.");
+    const url = new URL(googleCalendarUrl({ ...event, mapUrl }));
+    expect(url.searchParams.get("location")).toBe(mapUrl);
+    expect(url.searchParams.get("details")).toContain("📍 Parcul Tractorul, intrarea principală");
   });
 
   it("is a VCALENDAR with one VEVENT per event, the programme in the description and the page as URL", () => {

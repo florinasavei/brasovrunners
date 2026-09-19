@@ -64,7 +64,7 @@
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / phone",
       "downloadLink": "download the .ics",
-      "subscribeLink": "Subscribe"
+      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read."
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -183,7 +183,7 @@
     "stravaEvent": "On Strava",
     "openStravaEvent": "The event on Strava",
     "calendar": {
-      "feedName": "Brașov Runners — events"
+      "feedName": "🏃 BVR"
     }
   },
   "Admin": {
@@ -546,7 +546,7 @@
       "timeOfDay": "Time (24h)",
       "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
-      "repeatWeekdaysHelp": "Tick the days it happens on — Monday and Wednesday, say; only days after this event are made. Nothing ticked: the event's own day, at the chosen interval.",
+      "repeatWeekdaysHelp": "This event's own day is always in the series; tick the others too — Wednesday, say, for a Sunday run. Only days after this event are made. Nothing ticked: the event's own day alone, at the chosen interval.",
       "repeatOnCreateHelp": "Optional. The following editions are created too, as drafts, with the same details and an address carrying each date. Publish them all at once from the events list with “Publish the ticked ones”.",
       "weekdays": {
         "1": "Mo",

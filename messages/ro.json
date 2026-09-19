@@ -64,7 +64,7 @@
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / telefon",
       "downloadLink": "descarcă .ics",
-      "subscribeLink": "Abonează-te"
+      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare."
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -183,7 +183,7 @@
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
     "calendar": {
-      "feedName": "Brașov Runners — evenimente"
+      "feedName": "🏃 BVR"
     }
   },
   "Admin": {
@@ -546,7 +546,7 @@
       "timeOfDay": "Ora (24h)",
       "repeatWeeks": "Câte săptămâni / ediții",
       "repeatWeekdays": "În zilele (opțional):",
-      "repeatWeekdaysHelp": "Bifează zilele în care are loc — de exemplu luni și miercuri; se creează doar zilele de după acest eveniment. Nimic bifat: ziua evenimentului, la intervalul ales.",
+      "repeatWeekdaysHelp": "Ziua acestui eveniment este mereu în serie; bifează și celelalte — de exemplu miercuri, pentru o tură de duminică. Se creează doar zilele de după acest eveniment. Nimic bifat: doar ziua evenimentului, la intervalul ales.",
       "repeatOnCreateHelp": "Opțional. Se creează și edițiile următoare, ca ciorne, cu aceleași detalii și adrese cu data fiecăreia. Le publici pe toate deodată din lista de evenimente, cu „Publică cele bifate”.",
       "weekdays": {
         "1": "Lu",

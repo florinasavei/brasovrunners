@@ -20,6 +20,8 @@ export type CalendarEvent = {
   /** Null means "the start"; a calendar then shows a point in time rather than an all-day block. */
   endsAt: Date | null;
   locationName: string | null;
+  /** The organizer's map link (§61): the calendar's place, so one tap opens the map (§129). */
+  mapUrl?: string | null;
   /** The short description, plain. */
   excerpt: string | null;
   /** The programme's text (§96), as a rich-text document or null; rendered as plain lines. */
@@ -46,20 +48,35 @@ export function icalText(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
+/** The UTF-8 size of one code point. */
+function octets(char: string): number {
+  const point = char.codePointAt(0) ?? 0;
+  return point < 0x80 ? 1 : point < 0x800 ? 2 : point < 0x10000 ? 3 : 4;
+}
+
 /**
- * RFC 5545 §3.1: lines longer than 75 octets are folded with CRLF + one space. Folded on
- * characters rather than bytes for simplicity, at 70, which keeps every UTF-8 line under 75
- * octets short of a run of four-byte characters — which Romanian does not have.
+ * RFC 5545 §3.1: lines longer than 75 octets are folded with CRLF + one space, and a fold may
+ * not split a character. Counted in octets, code point by code point — the club writes
+ * emoji in its titles (four octets, two UTF-16 units), and slicing the string at a fixed
+ * index would cut one in half.
  */
 export function icalFold(line: string): string {
   const chunks: string[] = [];
-  let rest = line;
-  while (rest.length > 70) {
-    chunks.push(rest.slice(0, 70));
-    rest = ` ${rest.slice(70)}`;
+  let current = "";
+  let size = 0;
+  for (const char of line) {
+    const limit = chunks.length === 0 ? 75 : 74; // the continuation's leading space is an octet
+    const width = octets(char);
+    if (size + width > limit) {
+      chunks.push(current);
+      current = "";
+      size = 0;
+    }
+    current += char;
+    size += width;
   }
-  chunks.push(rest);
-  return chunks.join("\r\n");
+  chunks.push(current);
+  return chunks.map((chunk, index) => (index === 0 ? chunk : ` ${chunk}`)).join("\r\n");
 }
 
 function scheduleLines(scheduleJson: unknown): string {
@@ -78,6 +95,18 @@ function uidHost(baseUrl: string): string {
   }
 }
 
+/**
+ * The calendar's place (§129): the map link when the organizer gave one — Google Calendar,
+ * Apple and Outlook open it in one tap, which an address they would have to geocode does not
+ * promise — and the meeting point's name then moves to the first line of the description,
+ * marked, so the reader still knows where "Aleea de sub Tâmpa" is by name. Without a map link
+ * the name is the place, as before.
+ */
+function calendarPlace(event: Pick<CalendarEvent, "locationName" | "mapUrl">): { location: string | null; line: string } {
+  if (event.mapUrl) return { location: event.mapUrl, line: event.locationName ? `📍 ${event.locationName}` : "" };
+  return { location: event.locationName, line: "" };
+}
+
 export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { programme: string; locale?: "ro" | "en" }): string[] {
   const stamp = event.updatedAt ?? event.startsAt;
   const rows = event.programme ?? [];
@@ -86,7 +115,8 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { pro
     ...programmeLines(rows, event.timezone ?? "Europe/Bucharest", labels.locale ?? "ro"),
     ...[scheduleLines(event.scheduleJson)].filter((text) => text.length > 0),
   ].join("\n");
-  const description = [event.excerpt?.trim() ?? "", programme ? `${labels.programme}:\n${programme}` : "", event.url]
+  const place = calendarPlace(event);
+  const description = [place.line, event.excerpt?.trim() ?? "", programme ? `${labels.programme}:\n${programme}` : "", event.url]
     .filter((part) => part.length > 0)
     .join("\n\n");
   const lines = [
@@ -100,7 +130,7 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { pro
     `DESCRIPTION:${icalText(description)}`,
     `URL:${event.url}`,
   ];
-  if (event.locationName) lines.push(`LOCATION:${icalText(event.locationName)}`);
+  if (place.location) lines.push(`LOCATION:${icalText(place.location)}`);
   lines.push("END:VEVENT");
 
   /**
@@ -120,8 +150,8 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { pro
       `DESCRIPTION:${icalText(event.url)}`,
       `URL:${event.url}`,
     );
-    const place = row.place ?? event.locationName;
-    if (place) lines.push(`LOCATION:${icalText(place)}`);
+    const rowPlace = row.place ?? place.location;
+    if (rowPlace) lines.push(`LOCATION:${icalText(rowPlace)}`);
     lines.push("END:VEVENT");
   });
   return lines;
@@ -133,7 +163,7 @@ export function buildCalendar(params: {
   /** The calendar's own name, shown by the subscriber's app. */
   name: string;
   labels: { programme: string; locale?: "ro" | "en" };
-  /** The subscriber's refresh hint; a day is what the free calendars honour anyway. */
+  /** The subscriber's refresh hint: an hour (§129). Outlook reads it; Google and Apple keep their own clock. */
   refreshHours?: number;
 }): string {
   const lines = [
@@ -143,8 +173,8 @@ export function buildCalendar(params: {
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${icalText(params.name)}`,
-    `REFRESH-INTERVAL;VALUE=DURATION:PT${params.refreshHours ?? 24}H`,
-    `X-PUBLISHED-TTL:PT${params.refreshHours ?? 24}H`,
+    `REFRESH-INTERVAL;VALUE=DURATION:PT${params.refreshHours ?? 1}H`,
+    `X-PUBLISHED-TTL:PT${params.refreshHours ?? 1}H`,
     ...params.events.flatMap((event) => buildVEvent(event, params.baseUrl, params.labels)),
     "END:VCALENDAR",
   ];
@@ -152,14 +182,15 @@ export function buildCalendar(params: {
 }
 
 /** Google Calendar's "add this event" address, for the one tap that needs no file (§107). */
-export function googleCalendarUrl(event: Pick<CalendarEvent, "title" | "startsAt" | "endsAt" | "locationName" | "url" | "excerpt">): string {
+export function googleCalendarUrl(event: Pick<CalendarEvent, "title" | "startsAt" | "endsAt" | "locationName" | "mapUrl" | "url" | "excerpt">): string {
+  const place = calendarPlace(event);
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: event.title,
     dates: `${icalUtc(event.startsAt)}/${icalUtc(event.endsAt ?? event.startsAt)}`,
-    details: [event.excerpt?.trim() ?? "", event.url].filter(Boolean).join("\n\n"),
+    details: [place.line, event.excerpt?.trim() ?? "", event.url].filter(Boolean).join("\n\n"),
   });
-  if (event.locationName) params.set("location", event.locationName);
+  if (place.location) params.set("location", place.location);
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 

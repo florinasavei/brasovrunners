@@ -34,6 +34,7 @@ export async function uploadBodyImage<T extends Record<string, unknown>>(
       byteSize: processed.web.byteLength,
       createdByStaffUserId: input.actorId,
       createdAt: now,
+      lastReferencedAt: now,
     })
     .returning();
 

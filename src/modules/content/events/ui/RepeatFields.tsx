@@ -15,15 +15,21 @@ import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
  *
  * `prefix` namespaces the fields (`repeat.cadence` on the creation form, bare on the event
  * page, which posts its own form). The weekday boxes post `weekday=1..7`, ISO numbered; none
- * ticked means the event's own day, as before.
+ * ticked means the event's own day, as before. The event's own day is always in the series
+ * (§128): on the event page, where it is known, its box is ticked and locked and a hidden
+ * input posts it (a disabled input posts nothing); on the creation form the date is not
+ * typed yet, and the service adds the day itself.
  */
 export default async function RepeatFields({
   prefix = "",
   withNone = false,
+  ownWeekday,
 }: {
   prefix?: string;
   /** Offer "does not repeat" as the default, for the creation form. */
   withNone?: boolean;
+  /** The event's own ISO weekday, when the event exists: ticked and locked. */
+  ownWeekday?: number;
 }) {
   const t = await getTranslations("Admin");
   const name = (field: string) => `${prefix}${field}`;
@@ -61,9 +67,16 @@ export default async function RepeatFields({
         <Typography variant="body2" sx={{ mb: 0.5 }}>
           {t("editor.repeatWeekdays")}
         </Typography>
+        {ownWeekday !== undefined && <input type="hidden" name="weekday" value={String(ownWeekday)} />}
         <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 1 }}>
           {WEEKDAYS.map((day) => (
-            <CheckboxField key={day} name="weekday" value={String(day)}>
+            <CheckboxField
+              key={day}
+              name="weekday"
+              value={String(day)}
+              defaultChecked={day === ownWeekday}
+              disabled={day === ownWeekday}
+            >
               {t(`editor.weekdays.${day}`)}
             </CheckboxField>
           ))}

@@ -55,6 +55,7 @@ import {
   transitionEventAction,
 } from "../../actions";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
+import { wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { ruleSentence } from "@/modules/events/ui/series-sentence";
 import { findEventTitle } from "@/modules/content/events/repository";
 
@@ -307,7 +308,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         <form action={repeatEventAction}>
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
-          <RepeatFields />
+          <RepeatFields ownWeekday={wallClockWeekday(event.startsAt, event.timezone)} />
           {live && (
             <Box sx={{ mt: 1 }}>
               <CheckboxField name="publish">{t("editor.repeatPublish")}</CheckboxField>

@@ -5914,3 +5914,66 @@ and so are the pages it should point at).
 `tests/unit/legal/inline.test.ts`. BR-REQ-053-01 criterion 9.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 128. Decided — the event's own day is always in its series (2026-09-19)
+
+**Context.** The owner made a Sunday run repeat and ticked Wednesday: nine dates — the
+Sunday, then only Wednesdays — and the card read "În fiecare miercuri și duminică", which
+is what the sentence infers from a Sunday followed by Wednesdays (§113). "These next
+occurrences are strange." §122's form took the ticked days as the whole rule, and the
+event's own day, unticked, made the source a one-off before a series of other days.
+
+**Decision.** A series always contains the event it starts from, on that event's weekday:
+the ticked days are *added* to it. `repeatEvent` unions the source's wall-clock weekday into
+the rule when any day is ticked (none ticked still means the event's own day at the chosen
+interval; monthly has no weekdays), so the stored rule says every day the series runs on. On
+the event page, where the date is known, `RepeatFields` shows that day ticked and locked and
+posts it from a hidden input (a disabled box posts nothing); on the creation form the date
+is not typed yet, and the service adds the day. The help text says so.
+
+*Rejected:* moving the event to the first ticked day, as Google Calendar does (a source may
+carry registrations, and its date is a fact the club published); refusing a rule without
+the event's day (a second click for what the club always means); leaving it as it was with
+a better sentence (the sentence was right about the dates and the dates were wrong).
+
+**Consequences.** `content/events/service.ts` (`repeatEvent`), `RepeatFields`
+(`ownWeekday`), `CheckboxField` (`disabled`), the event editor, the catalogues;
+`tests/integration/cms/repeat.test.ts`. BR-REQ-050-02 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 129. Decided — the calendar feed is fresh on every read, is called "🏃 BVR", and its place is the map link (2026-09-19)
+
+**Context.** The owner subscribed Google Calendar to the QA feed, moved a run from 19:00 to
+18:50, and Google kept 19:00 — even after removing the calendar and adding it back. The feed
+was not stale at Google: it was stale at our door. §107 gave the feed `Cache-Control:
+public, max-age=3600`, and Vercel's edge honours `max-age` — the copy Google fetched was
+the CDN's, made before the edit (`X-Vercel-Cache: HIT`, `Age: 413`). Three more asks from the
+same minute: the calendar should be called "BVR" with a runner emoji ("we love emojis"), the
+place should be the Google Maps location, and "is the iCal a live update?".
+
+**Decision.** Both `.ics` routes answer `Cache-Control: no-cache`: no copy at the edge, one
+database read per fetch — a subscriber's app asks a few times a day at most, and a stale hour
+is a runner at the wrong time. The feed's name is "🏃 BVR" in both languages, and its refresh
+hint is an hour (`REFRESH-INTERVAL`, `X-PUBLISHED-TTL`) — Outlook reads it; Google fetches
+on its own clock, about daily, and Apple as the subscriber set it, so the listing says so under
+the subscribe links ("a change shows on the next read"). `LOCATION` is the organizer's map
+link when the event has one (§61's `map_url`): one tap opens the map in every calendar,
+where a bare address is only a promise to geocode; the meeting point's name then opens the
+description as "📍 Aleea de sub Tâmpa". A programme row with its own place keeps the text;
+one without takes the event's link. Google's add-event link does the same. Folding now counts
+octets per code point — a four-octet emoji at the 70th character was cut in half by the old
+character slice.
+
+*Rejected:* purging the CDN on save (`revalidatePath` does not reach a route handler's
+`max-age` copy, and a purge that must be remembered at every write is a bug waiting);
+`s-maxage=60` (a minute is still a minute, and the read it saves costs nothing); both the
+name and the link in `LOCATION` (Google shows text with a link inside as text); a
+`X-APPLE-STRUCTURED-LOCATION` (needs coordinates, which §61 removed).
+
+**Consequences.** `events/ical.ts` (`calendarPlace`, `icalFold`, `mapUrl`, the hint),
+both `calendar.ics` routes, the events listing (`calendar.refreshNote`), the catalogues
+(`feedName`; the unused `subscribeLink` removed); `tests/unit/events/ical.test.ts`.
+BR-REQ-020-01 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.
