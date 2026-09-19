@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **The backoffice list's status chips say what they are**: "Publicat · 8 date" for a series, and the registration mode reads "Înscrieri pe site" / "Înscrieri la organizator" / "Fără înscrieri", with a hover title naming the setting. Still Romanian, by §35.
 - **The legal texts are called GDPR and Termeni de concurs / Racing TOS** everywhere their name shows — the backoffice list, the footer, the form; the declaration keeps its name. §136.
 - **"Editează" on the event page** for a signed-in Redactor or above — one press into the editor. §135.
 - **"Resend the invitation" is on every row that never signed in**, key or no key: without the key the answer says which key and where (To do → "Invite the team"), instead of a button that is not there. §123.

@@ -354,6 +354,7 @@
       "registrations": "Registrations",
       "columnTitle": "Event",
       "columnStatus": "Status",
+      "registrationModeTitle": "The registration mode, from the event's settings",
       "columnDate": "Date",
       "seriesDates": "The dates of this series",
       "seriesEdit": "Edit the next date",

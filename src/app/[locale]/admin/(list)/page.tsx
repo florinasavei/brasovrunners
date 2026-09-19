@@ -264,7 +264,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       key: "status",
       label: t("events.columnStatus"),
       render: ({ members, next }) => {
-        // One chip per state the series is in, with how many dates are in it; one event, one chip.
+        // One chip per state the series is in, with how many dates are in it ("Publicat · 8 date";
+        // the owner: "not sure what these statuses are"); one event, one chip. The registration
+        // mode is a chip of its own, with a title saying which setting it is.
         const byStatus = new Map<EditableEvent["editorialStatus"], number>();
         for (const member of members) byStatus.set(member.event.editorialStatus, (byStatus.get(member.event.editorialStatus) ?? 0) + 1);
         return (
@@ -274,13 +276,14 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 key={status}
                 size="small"
                 color={status === "PUBLISHED" ? "success" : "default"}
-                label={members.length > 1 ? `${EDITORIAL_STATUS_LABEL[status]} · ${count}` : EDITORIAL_STATUS_LABEL[status]}
+                label={members.length > 1 ? `${EDITORIAL_STATUS_LABEL[status]} · ${tEvent("series.count", { count })}` : EDITORIAL_STATUS_LABEL[status]}
               />
             ))}
             {next.event.registrationMode !== "NONE" && (
               <Chip
                 size="small"
                 variant="outlined"
+                title={t("events.registrationModeTitle")}
                 label={REGISTRATION_MODE_LABEL[next.event.registrationMode]}
               />
             )}
