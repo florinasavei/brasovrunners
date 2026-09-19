@@ -34,6 +34,8 @@ export const emailMessageType = pgEnum("email_message_type", [
   "EVENT_THANKS",
   /** Right after signing: the signed declaration as a PDF, the participant's own copy (§95). */
   "DECLARATION_SIGNED",
+  // The club's archive copy of the same PDF (§99): to `DECLARATIONS_ARCHIVE_TO`, no token.
+  "DECLARATION_ARCHIVE",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

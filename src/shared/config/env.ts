@@ -169,6 +169,13 @@ export const envSchema = z
      * Setting this to a mailbox the club actually reads is the whole of "people can reply".
      */
     EMAIL_REPLY_TO: z.email().optional(),
+    /**
+     * The club's archive mailbox for signed declarations (`DECISIONS.md` §99). Set, every
+     * signature — electronic or on paper at the desk — also queues `DECLARATION_ARCHIVE` to
+     * this address with the same PDF attached, so the archive builds itself; unset, the
+     * participant's copy and the per-event bundle on the event page are the archive.
+     */
+    DECLARATIONS_ARCHIVE_TO: z.email().optional(),
     // Verifies inbound Mailgun webhooks (AGENTS.md §16.5) — a separate secret from the API
     // key, since the two prove different things: one authenticates outbound calls this
     // application makes, the other authenticates inbound calls Mailgun makes to it.

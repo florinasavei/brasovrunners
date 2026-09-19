@@ -655,7 +655,9 @@ registration — and it lists registrations and never changes an address.
 9. Given a signature — by link or on paper — when it is recorded, then a `DECLARATION_SIGNED` message is queued to the participant with the signed declaration as an attached PDF (the merged text, the typed name in the signature face, the instant, the method, the version and the hash) and a link to the same PDF from the manage token; the confirmation carries the link too; the participant's manage page offers it.
 10. Given an Administrator, when they request an event's declarations, then every signed one of its real registrations is one PDF, one per page, oldest first, and one registration's is its own PDF; any staff role may print the event's blank form on the current approved text. All three are renderings of the stored rows, never files kept elsewhere; a registration and its acceptance are deleted three years after the event's start by the retention sweep (`jobs/retention.ts`).
 
-**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`; e2e `registration-form.spec.ts`
+11. Given `DECLARATIONS_ARCHIVE_TO` set to the club's mailbox, when a real registration's declaration is signed — by link or on paper — then a `DECLARATION_ARCHIVE` message is queued to that address with the same PDF attached, a subject naming the participant and the event, and no action link or token; unset, or for a test registration, no such message exists (`DECISIONS.md` §99).
+
+**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `registrations/declaration-archive.test.ts` (11), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`; e2e `registration-form.spec.ts`
 
 #### BR-REQ-033-03 — Staff cannot sign for a participant
 

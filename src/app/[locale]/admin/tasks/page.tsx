@@ -36,7 +36,7 @@ import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
 import {
   MAILGUN_FREE_DAILY_MESSAGES,
-  MESSAGES_PER_COMPLETED_REGISTRATION,
+  messagesPerCompletedRegistration,
   readEmailVolumeToday,
 } from "@/modules/notifications/volume";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -182,6 +182,7 @@ export default async function AdminTasksPage({ params }: Props) {
       roDomainBound,
       storageConfigured: isStorageConfigured(),
       botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
+      declarationArchiveConfigured: Boolean(env.DECLARATIONS_ARCHIVE_TO),
     }),
   );
 
@@ -197,7 +198,7 @@ export default async function AdminTasksPage({ params }: Props) {
     databaseStorageAllowanceBytes: NEON_FREE_STORAGE_BYTES,
     emailAllowance: MAILGUN_FREE_DAILY_MESSAGES,
     emailSentToday: volume.sentMessages,
-    messagesPerRegistration: MESSAGES_PER_COMPLETED_REGISTRATION,
+    messagesPerRegistration: messagesPerCompletedRegistration(Boolean(env.DECLARATIONS_ARCHIVE_TO)),
     hasPaidEvent,
     clubDomainBound,
     jobsHealthy,

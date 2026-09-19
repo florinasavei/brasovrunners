@@ -77,6 +77,8 @@ export type OwnerTaskInputs = {
   storageConfigured: boolean;
   /** Are both Turnstile keys set (`DECISIONS.md` §97)? Off, the honeypot and the timing check stand alone. */
   botCheckConfigured: boolean;
+  /** Is `DECLARATIONS_ARCHIVE_TO` set (§99)? Off, the club downloads the bundle per event. */
+  declarationArchiveConfigured: boolean;
   /**
    * Does this deployment answer on a `.ro` hostname?
    *
@@ -165,6 +167,14 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.botCheckConfigured ? "done" : "open",
   });
 
+  // Built (§99); open until the club names the mailbox, never blocking: the per-event bundle
+  // on the event page is the archive meanwhile.
+  tasks.push({
+    id: "declarationArchiveMail",
+    owner: "club",
+    state: input.declarationArchiveConfigured ? "done" : "open",
+  });
+
   // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.
   tasks.push({
     id: "roDomain",
@@ -187,7 +197,6 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 export const BACKLOG = [
   "minorsOnline",
   "scheduleStructured",
-  "declarationArchiveMail",
   "vercelUsage",
   "docsSimplify",
 ] as const;

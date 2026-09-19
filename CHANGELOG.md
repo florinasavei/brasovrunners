@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.
 - **The club is told when email stops.** `/api/health` carries an `email` block (deferred by the allowance, overdue, failed) and answers 503 for anything but `ok`; a third cron-job.org monitor with "notify on failure" is the notification; `/admin/tasks` and `/devs` show the same in red. §98.
 - **The public repository:** GitHub secret scanning and push protection on, Dependabot alerts on, `yarn secrets:check` inside `yarn check`; the audit of every file and the whole history found nothing to rotate. §98.
 - **CI keeps the Playwright report and traces** on failure; the task-board test scopes its locators to `#main` because React 19.2's deferred reveal and MUI's mount re-render leave a hidden streamed copy of the page for one frame on a slow machine. §98.

@@ -21,6 +21,7 @@ import {
   markEmailVerified,
 } from "@/modules/participants/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
+import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
@@ -714,21 +715,48 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       idempotencyKey: `registration:${confirmed.id}:confirmed:${now.toISOString()}`,
       now,
     });
-    // Their copy of what they signed, as a PDF attached (§95): its own message, so the
-    // confirmation stays what it is and the declaration is found by its subject.
-    await enqueueEmail(tx, {
-      participantId: confirmed.participantId,
-      registrationId: confirmed.id,
-      messageType: "DECLARATION_SIGNED",
-      locale: confirmed.locale,
-      recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
-      payload: {},
-      idempotencyKey: `registration:${confirmed.id}:declaration-signed:${now.toISOString()}`,
-      now,
-    });
+    await enqueueDeclarationCopies(tx, confirmed, now);
 
     return confirmed;
   });
+}
+
+/**
+ * The copies of a signed declaration (§95, §99): the participant's own, as a PDF attached —
+ * its own message, so the confirmation stays what it is and the declaration is found by its
+ * subject — and, when the club has named an archive mailbox, the club's, the same PDF to
+ * `DECLARATIONS_ARCHIVE_TO`. The archive copy carries no action link (a manage token in the
+ * club's mailbox would be a secret handed to the wrong person, §12.8) and is not sent for a
+ * test registration: a synthetic runner's declaration is not a record the club keeps.
+ */
+async function enqueueDeclarationCopies<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  confirmed: Registration,
+  now: Date,
+): Promise<void> {
+  await enqueueEmail(tx, {
+    participantId: confirmed.participantId,
+    registrationId: confirmed.id,
+    messageType: "DECLARATION_SIGNED",
+    locale: confirmed.locale,
+    recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
+    payload: {},
+    idempotencyKey: `registration:${confirmed.id}:declaration-signed:${now.toISOString()}`,
+    now,
+  });
+  if (env.DECLARATIONS_ARCHIVE_TO && confirmed.kind === "REAL") {
+    await enqueueEmail(tx, {
+      participantId: confirmed.participantId,
+      registrationId: confirmed.id,
+      messageType: "DECLARATION_ARCHIVE",
+      // The club reads Romanian; the message is bilingual regardless (§96).
+      locale: "ro",
+      recipientEmail: env.DECLARATIONS_ARCHIVE_TO,
+      payload: {},
+      idempotencyKey: `registration:${confirmed.id}:declaration-archive:${now.toISOString()}`,
+      now,
+    });
+  }
 }
 
 // --- §15.5 Self-unregistration, and offer decline (the same transition) ---------------------
@@ -804,16 +832,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
     now,
   });
   // The copy of the paper declaration's record, by email, as after an electronic signature (§95).
-  await enqueueEmail(tx, {
-    participantId: confirmed.participantId,
-    registrationId: confirmed.id,
-    messageType: "DECLARATION_SIGNED",
-    locale: confirmed.locale,
-    recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
-    payload: {},
-    idempotencyKey: `registration:${confirmed.id}:declaration-signed:${now.toISOString()}`,
-    now,
-  });
+  await enqueueDeclarationCopies(tx, confirmed, now);
   return confirmed;
 }
 

@@ -4957,3 +4957,37 @@ report and traces uploaded on failure; `tests/integration/notifications/email-he
 BR-REQ-080-02 criterion 6.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 99. Decided — the archive copy of every signed declaration, to the club's mailbox (2026-09-19)
+
+**Context.** §95 gave the runner a PDF of what they signed and gave the club one PDF per
+event, rendered from the rows on request; "where do the declarations live" was answered with
+"in the database, three years, and in every runner's inbox". The owner asked for the archive
+to build itself once the club had a mailbox, and the club has one since the evening of
+2026-09-18 (`SETUP.md` §35). This was the first of the developer rows on `/admin/tasks`.
+
+**Decision.** `DECLARATIONS_ARCHIVE_TO`, an email address, optional. Set, every signature —
+by link or on paper at the desk — queues a second message, `DECLARATION_ARCHIVE`, to that
+address with the same PDF the runner receives, a subject that names the participant and the
+event so the mailbox is searchable, a greeting for the club rather than the runner, and **no
+action link**: the runner's copy carries their manage token, and a manage token in the club's
+mailbox is a secret handed to the wrong person (§12.8). Not for a test registration: a
+synthetic runner's declaration is not a record the club keeps. Unset, nothing changes — the
+per-event bundle on the event page is the archive. One more message per registration on
+Mailgun's allowance, so `messagesPerCompletedRegistration(archive)` is what the projections
+and the task board now use; the constant stays the floor. The row on `/admin/tasks` is the
+club's switch: open until the variable is set, never blocking. The migration is one enum
+value, expand-only, as `0033` was.
+
+*Rejected:* a shared mailbox the platform reads or writes to (nothing reads incoming mail,
+§35), a Drive or Dropbox folder (another processor for a document that is already in two
+places), and reusing `DECLARATION_SIGNED` with a payload flag — the emails page lists every
+type by name, and "the club's copy" is a type.
+
+**Consequences.** `enqueueDeclarationCopies` in `registrations/service.ts` (both paths);
+`declarationArchive` in `templates.ts` (a subject and a greeting can be functions of the
+data now); the attachment in `render.ts`; migration `0036`; `.env.example`; `/devs`; the
+row's steps; `tests/integration/registrations/declaration-archive.test.ts`. BR-REQ-033-02
+criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.

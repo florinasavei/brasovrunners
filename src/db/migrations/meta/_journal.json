@@ -253,6 +253,13 @@
       "when": 1789759260919,
       "tag": "0035_event_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1789786237786,
+      "tag": "0036_declaration_archive",
+      "breakpoints": true
     }
   ]
 }

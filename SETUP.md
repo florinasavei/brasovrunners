@@ -1308,7 +1308,9 @@ mail, and storing people's messages at a third party for nothing is not a featur
 works because the `mail.` MX records point at Mailgun. **Several people can read it:** the
 Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@…`) and each gets a
 copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
-is right, because every email the site sends carries `Reply-To: contact@…`. When the club gets Google or Microsoft
+is right, because every email the site sends carries `Reply-To: contact@…`. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
+is set on the production project (`DECISIONS.md` §99): every signed declaration arrives there
+as a PDF at signing. One more message per registration on Mailgun's allowance. When the club gets Google or Microsoft
 mailboxes, those take the **apex** (`@brasovrunners.com`) and this subdomain is untouched; only
 the two reply-to values move — `EMAIL_REPLY_TO` here and the Zitadel SMTP provider's.
 

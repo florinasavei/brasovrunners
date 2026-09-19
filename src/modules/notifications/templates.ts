@@ -298,6 +298,15 @@ const T = {
       action: "Gestionează înscrierea",
       links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Declarația semnată (PDF)", url: d.declarationPdfUrl }] : []),
     },
+    declarationArchive: {
+      // Searchable in the mailbox by who and for what: the subject carries both.
+      subject: (d: TemplateData) => `Declarație semnată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) => [
+        `Atașată este declarația pe proprie răspundere semnată de ${d.participantName || "participant"} pentru ${d.eventTitle ?? "eveniment"}${d.signedAtFormatted ? `, la ${d.signedAtFormatted}` : ""}.`,
+        "Copia pentru arhiva clubului. Se păstrează 3 ani după eveniment, ca în nota de informare; același document este și în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice.",
+      ],
+    },
     registrationCancelled: {
       subject: "Înscrierea a fost anulată",
       body: (d: TemplateData) => [`Înscrierea ta la ${d.eventTitle ?? "eveniment"} a fost anulată.`],
@@ -398,6 +407,14 @@ const T = {
       action: "Manage your registration",
       links: (d: TemplateData) => (d.declarationPdfUrl ? [{ label: "Signed declaration (PDF)", url: d.declarationPdfUrl }] : []),
     },
+    declarationArchive: {
+      subject: (d: TemplateData) => `Signed declaration: ${d.participantName || "participant"} — ${d.eventTitle ?? "event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => [
+        `Attached is the declaration of own responsibility signed by ${d.participantName || "participant"} for ${d.eventTitle ?? "the event"}${d.signedAtFormatted ? `, on ${d.signedAtFormatted}` : ""}.`,
+        "The club's archive copy. Kept for 3 years after the event, as the privacy notice says; the same document is in the all-declarations PDF on the event's backoffice page.",
+      ],
+    },
     registrationConfirmed: {
       subject: "Your registration is confirmed",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -468,6 +485,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   EVENT_REMINDER: "eventReminder",
   EVENT_THANKS: "eventThanks",
   DECLARATION_SIGNED: "declarationSigned",
+  DECLARATION_ARCHIVE: "declarationArchive",
 };
 
 /**
@@ -487,8 +505,10 @@ export function buildTemplateContent(
   // TypeScript can't see that every key but "hi"/"closing" shares this shape; the
   // `KEY_BY_MESSAGE_TYPE` map is what actually guarantees it.
   const entry = copy[key] as {
-    subject: string;
+    subject: string | ((d: TemplateData) => string);
     body: (d: TemplateData) => string[];
+    /** The archive copy greets the club, not the participant whose name is in the subject. */
+    greeting?: (d: TemplateData) => string;
     action?: string;
     facts?: (d: TemplateData) => TemplateContent["facts"];
     image?: (d: TemplateData) => TemplateContent["image"];
@@ -496,8 +516,8 @@ export function buildTemplateContent(
   };
 
   return {
-    subject: entry.subject,
-    greeting: copy.hi(data.participantName),
+    subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
+    greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
     facts: entry.facts?.(data),
     paragraphs: entry.body(data),
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,

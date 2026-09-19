@@ -24,6 +24,7 @@ const LAUNCHED: OwnerTaskInputs = {
   roDomainBound: true,
   storageConfigured: true,
   botCheckConfigured: true,
+  declarationArchiveConfigured: true,
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -95,7 +96,10 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "mediaStorage")).toBe("done");
     // The queued work: developer-owned, always open, after the club's rows.
     const developer = ownerTasks(LAUNCHED).filter((task) => task.owner === "developer").map((task) => task.id);
-    expect(developer).toEqual(["scheduler", "minorsOnline", "scheduleStructured", "declarationArchiveMail", "vercelUsage", "docsSimplify"]);
+    expect(developer).toEqual(["scheduler", "minorsOnline", "scheduleStructured", "vercelUsage", "docsSimplify"]);
+    // The archive copy is built (§99); the row is the club's switch, open until the mailbox is named.
+    expect(stateOf({ ...LAUNCHED, declarationArchiveConfigured: false }, "declarationArchiveMail")).toBe("open");
+    expect(stateOf(LAUNCHED, "declarationArchiveMail")).toBe("done");
     // The bot check is a switch the club flips (§97): open without the keys, never blocking.
     expect(stateOf({ ...LAUNCHED, botCheckConfigured: false }, "botCheck")).toBe("open");
     expect(stateOf(LAUNCHED, "botCheck")).toBe("done");
@@ -110,6 +114,7 @@ describe("owner tasks", () => {
       "publishEvents",
       "mediaStorage",
       "botCheck",
+      "declarationArchiveMail",
       "roDomain",
     ]);
   });

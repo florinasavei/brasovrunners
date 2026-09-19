@@ -2,6 +2,7 @@ import { and, count, gte, sql } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
+import { env } from "@/shared/config/env";
 
 /**
  * How much email today is going to cost, before the day proves it (AGENTS.md §16, §19).
@@ -28,6 +29,15 @@ import type { Database } from "@/db/types";
  * wolf — which is the right direction for a number somebody uses to decide whether to upgrade.
  */
 export const MESSAGES_PER_COMPLETED_REGISTRATION = 5;
+
+/**
+ * Six when the club's archive mailbox is named (`DECLARATIONS_ARCHIVE_TO`, §99): the archive
+ * copy of the declaration is one more message on the same allowance. What the projections
+ * below and the task board use; the constant above is the floor without it.
+ */
+export function messagesPerCompletedRegistration(archiveConfigured: boolean): number {
+  return MESSAGES_PER_COMPLETED_REGISTRATION + (archiveConfigured ? 1 : 0);
+}
 
 /**
  * Mailgun Free: 100 messages a day (`docs/PLATFORM.md`, limit 1 of the four that bite).
@@ -113,7 +123,8 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     realRegistrations,
     testRegistrations,
     projectedMessages:
-      (realRegistrations + testRegistrations) * MESSAGES_PER_COMPLETED_REGISTRATION,
+      (realRegistrations + testRegistrations) *
+      messagesPerCompletedRegistration(Boolean(env.DECLARATIONS_ARCHIVE_TO)),
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
     sentMessages,

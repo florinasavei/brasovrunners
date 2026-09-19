@@ -736,7 +736,9 @@ On the event page: "Declarațiile semnate (PDF)" — every signed declaration, o
 columns). Keep both in the club's own archive with restricted access; they carry names and
 identity documents. The platform keeps the rows three years from the event and then removes
 them; the PDF can be regenerated at any time until then. Each participant already holds their
-own copy, sent by email at signing.
+own copy, sent by email at signing. With `DECLARATIONS_ARCHIVE_TO` set to the club's mailbox
+(`SETUP.md` §35), the club's copy arrives there at signing too, one email per declaration,
+subject "Declarație semnată: <name> — <event>" — the archive builds itself (`DECISIONS.md` §99).
 
 ### Sample versions, and why the first approved one is not version 1
 

@@ -735,12 +735,13 @@
           ]
         },
         "declarationArchiveMail": {
-          "title": "Declarațiile semnate trimise automat și în arhiva clubului",
-          "todo": "Fiecare participant primește declarația semnată pe email, iar clubul le descarcă pe toate dintr-un PDF de pe pagina evenimentului. Când clubul are căsuța lui, fiecare declarație semnată poate ajunge automat și acolo, ca atașament — arhiva se face singură.",
+          "title": "Declarațiile semnate ajung automat și în arhiva clubului",
+          "todo": "Fiecare participant primește declarația semnată pe email, iar clubul descarcă toate declarațiile unui eveniment ca un singur PDF din pagina evenimentului. Construit: când variabila DECLARATIONS_ARCHIVE_TO e setată, fiecare declarație semnată — electronic sau pe hârtie, la masă — ajunge automat și în căsuța clubului, ca atașament; arhiva se construiește singură. Costă un mesaj în plus pe înscriere din cele 100 pe zi.",
           "done": "Fiecare declarație semnată ajunge automat și în căsuța de arhivă a clubului.",
           "how": [
-            "Variabilă DECLARATIONS_ARCHIVE_TO (căsuța clubului). Când e setată, la semnare se pune în coadă un al doilea DECLARATION_SIGNED către ea, cu același PDF atașat.",
-            "Căsuța clubului există (brasovrunners@gmail.com, din 2026-09-18); DECLARATIONS_ARCHIVE_TO = ea."
+            "În Vercel → proiectul de producție → Settings → Environment Variables: DECLARATIONS_ARCHIVE_TO = brasovrunners@gmail.com (căsuța clubului, SETUP.md §35). Redeploy.",
+            "Pe QA, aceeași variabilă doar dacă vrei să vezi mesajul în teste — altfel lasă-l gol; QA trimite doar către adresele din lista de test.",
+            "Verifică: semnează o declarație (sau confirmă una pe hârtie la masă) — în căsuță apare „Declarație semnată: <nume> — <eveniment>” cu PDF-ul. Rândul devine verde. Înscrierile de test nu trimit copia."
           ]
         },
         "vercelUsage": {
@@ -1134,7 +1135,8 @@
         "REGISTRATION_STATE_NOTICE": "Starea înscrierii",
         "EVENT_REMINDER": "Reminder cu 48 de ore înainte",
         "EVENT_THANKS": "Mulțumim după cursă",
-        "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)"
+        "DECLARATION_SIGNED": "Declarația semnată (PDF atașat)",
+        "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1149,7 +1151,8 @@
         "REGISTRATION_STATE_NOTICE": "Retrimis de un organizator, când cineva întreabă unde a rămas.",
         "EVENT_REMINDER": "Automat, cu două zile înainte de start, tuturor celor confirmați, o singură dată.",
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
-        "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el."
+        "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el.",
+        "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune."
       }
     },
     "guide": {
@@ -1337,12 +1340,30 @@
     },
     "steps": {
       "title": "Cum funcționează înscrierea",
-      "form": { "title": "Completezi formularul", "body": "Numele, emailul, telefonul și contactul de urgență. Durează un minut." },
-      "email": { "title": "Confirmi adresa de email", "body": "Primești un link. Apasă-l în {hours} de ore — altfel înscrierea expiră și locul rămâne liber." },
-      "declaration": { "title": "Semnezi declarația", "body": "Din același email, citești declarația și îți scrii numele. Locul e ținut {minutes} de minute cât semnezi." },
-      "confirmed": { "title": "Ești înscris", "body": "Primești emailul de confirmare, cu codul QR și numărul de concurs. Cu două zile înainte îți trimitem un reminder." },
-      "raceDay": { "title": "În ziua cursei", "body": "Arăți codul QR (sau spui numele) la masa de înscrieri și îți iei numărul." },
-      "waitingList": { "title": "Dacă nu mai sunt locuri", "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offerHours} de ore să semnezi declarația." }
+      "form": {
+        "title": "Completezi formularul",
+        "body": "Numele, emailul, telefonul și contactul de urgență. Durează un minut."
+      },
+      "email": {
+        "title": "Confirmi adresa de email",
+        "body": "Primești un link. Apasă-l în {hours} de ore — altfel înscrierea expiră și locul rămâne liber."
+      },
+      "declaration": {
+        "title": "Semnezi declarația",
+        "body": "Din același email, citești declarația și îți scrii numele. Locul e ținut {minutes} de minute cât semnezi."
+      },
+      "confirmed": {
+        "title": "Ești înscris",
+        "body": "Primești emailul de confirmare, cu codul QR și numărul de concurs. Cu două zile înainte îți trimitem un reminder."
+      },
+      "raceDay": {
+        "title": "În ziua cursei",
+        "body": "Arăți codul QR (sau spui numele) la masa de înscrieri și îți iei numărul."
+      },
+      "waitingList": {
+        "title": "Dacă nu mai sunt locuri",
+        "body": "Intri pe lista de așteptare, în ordinea înscrierii. Când se eliberează un loc, primești un email cu oferta și ai {offerHours} de ore să semnezi declarația."
+      }
     },
     "journey": {
       "steps": {

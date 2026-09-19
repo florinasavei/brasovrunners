@@ -735,12 +735,13 @@
           ]
         },
         "declarationArchiveMail": {
-          "title": "Signed declarations sent automatically to the club's archive too",
-          "todo": "Every participant receives their signed declaration by email, and the club downloads all of them as one PDF from the event page. Once the club has its own mailbox, every signed declaration can reach it automatically too, as an attachment — the archive builds itself.",
+          "title": "Signed declarations reach the club's archive automatically too",
+          "todo": "Every participant receives their signed declaration by email, and the club downloads all of an event's declarations as one PDF from the event page. Built: when the DECLARATIONS_ARCHIVE_TO variable is set, every signed declaration — electronic or on paper at the desk — also reaches the club's mailbox automatically, as an attachment; the archive builds itself. One more message per registration on the 100 a day.",
           "done": "Every signed declaration also reaches the club's archive mailbox automatically.",
           "how": [
-            "A DECLARATIONS_ARCHIVE_TO variable (the club's mailbox). When set, signing queues a second DECLARATION_SIGNED to it, with the same PDF attached.",
-            "The club's mailbox exists (brasovrunners@gmail.com, since 2026-09-18); DECLARATIONS_ARCHIVE_TO = it."
+            "In Vercel → the production project → Settings → Environment Variables: DECLARATIONS_ARCHIVE_TO = brasovrunners@gmail.com (the club's mailbox, SETUP.md §35). Redeploy.",
+            "On QA, the same variable only if you want to see the message in a rehearsal — otherwise leave it empty; QA sends only to the test list.",
+            "Check: sign a declaration (or confirm one on paper at the desk) — the mailbox receives “Signed declaration: <name> — <event>” with the PDF. The row turns green. Test registrations send no copy."
           ]
         },
         "vercelUsage": {
@@ -1134,7 +1135,8 @@
         "REGISTRATION_STATE_NOTICE": "Registration status",
         "EVENT_REMINDER": "Reminder 48 hours before",
         "EVENT_THANKS": "Thank you after the race",
-        "DECLARATION_SIGNED": "Signed declaration (PDF attached)"
+        "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
+        "DECLARATION_ARCHIVE": "The club's archive copy (PDF attached)"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1149,7 +1151,8 @@
         "REGISTRATION_STATE_NOTICE": "Resent by an organizer when somebody asks where they stand.",
         "EVENT_REMINDER": "Automatic, two days before the start, to everyone confirmed, once.",
         "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
-        "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it."
+        "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it.",
+        "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link."
       }
     },
     "guide": {
@@ -1337,12 +1340,30 @@
     },
     "steps": {
       "title": "How registration works",
-      "form": { "title": "Fill in the form", "body": "Your name, email, phone and an emergency contact. It takes a minute." },
-      "email": { "title": "Confirm your email address", "body": "You get a link. Open it within {hours} hours — otherwise the registration expires and the place stays free." },
-      "declaration": { "title": "Sign the declaration", "body": "From that same email, read the declaration and type your name. Your place is held for {minutes} minutes while you sign." },
-      "confirmed": { "title": "You are in", "body": "You get the confirmation email, with your QR code and race number. Two days before, we send a reminder." },
-      "raceDay": { "title": "On race day", "body": "Show the QR code (or say your name) at the registration desk and collect your number." },
-      "waitingList": { "title": "If it is full", "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offerHours} hours to sign the declaration." }
+      "form": {
+        "title": "Fill in the form",
+        "body": "Your name, email, phone and an emergency contact. It takes a minute."
+      },
+      "email": {
+        "title": "Confirm your email address",
+        "body": "You get a link. Open it within {hours} hours — otherwise the registration expires and the place stays free."
+      },
+      "declaration": {
+        "title": "Sign the declaration",
+        "body": "From that same email, read the declaration and type your name. Your place is held for {minutes} minutes while you sign."
+      },
+      "confirmed": {
+        "title": "You are in",
+        "body": "You get the confirmation email, with your QR code and race number. Two days before, we send a reminder."
+      },
+      "raceDay": {
+        "title": "On race day",
+        "body": "Show the QR code (or say your name) at the registration desk and collect your number."
+      },
+      "waitingList": {
+        "title": "If it is full",
+        "body": "You join the waiting list, in order of registration. When a place frees up, you get an offer by email and {offerHours} hours to sign the declaration."
+      }
     },
     "journey": {
       "steps": {

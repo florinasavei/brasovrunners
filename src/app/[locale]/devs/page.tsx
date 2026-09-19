@@ -128,6 +128,7 @@ export default async function DevsPage({ params }: Props) {
     STAFF_AUTH_MODE: env.STAFF_AUTH_MODE ?? "disabled",
     FEATURE_DISPLAY_NAME: env.FEATURE_DISPLAY_NAME ? "true" : "false",
     TURNSTILE: env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY ? "on" : "off",
+    DECLARATIONS_ARCHIVE: env.DECLARATIONS_ARCHIVE_TO ? "on" : "off",
   };
 
   const severity = (status: string) =>

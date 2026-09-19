@@ -156,7 +156,7 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   // The signed declaration itself, rendered now from the rows and never stored as a file
   // (§95): a copy the participant keeps, in the language they signed in.
   let attachments: OutgoingEmail["attachments"];
-  if (row.messageType === "DECLARATION_SIGNED" && registration) {
+  if ((row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") && registration) {
     const signed = await findSignedDeclaration(db, registration.id);
     if (signed) {
       const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, declarationWords(signed.locale, now), now);
