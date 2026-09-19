@@ -89,11 +89,13 @@
     "meetingPoint": "Meeting point",
     "share": {
       "title": "Share:",
+      "native": "Share",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
-      "instagram": "Picture for Instagram",
+      "instagram": "Instagram",
+      "calendarTitle": "Add to calendar:",
       "googleCalendar": "Google Calendar",
-      "ics": "Add to calendar (.ics)"
+      "ics": ".ics file"
     },
     "rules": "Event rules",
     "schedule": "Event programme",

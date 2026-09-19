@@ -89,11 +89,13 @@
     "meetingPoint": "Punct de întâlnire",
     "share": {
       "title": "Dă mai departe:",
+      "native": "Distribuie",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
-      "instagram": "Poză pentru Instagram",
+      "instagram": "Instagram",
+      "calendarTitle": "Adaugă în calendar:",
       "googleCalendar": "Google Calendar",
-      "ics": "Adaugă în calendar (.ics)"
+      "ics": "Fișier .ics"
     },
     "rules": "Regulamentul evenimentului",
     "schedule": "Programul evenimentului",

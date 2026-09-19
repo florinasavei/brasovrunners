@@ -6250,3 +6250,24 @@ page is for.
 replace one in both catalogues. BR-REQ-041-01 criterion 7 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 140. Decided — sharing is buttons, the phone's own sheet first; the picture is "Instagram" (2026-09-19)
+
+**Context.** The owner: "the picture for Instagram should be just 'Instagram', and sharing on
+social media should look nicer." §90's row was five text links in a line.
+
+**Decision.** Two rows of 44-pixel pill buttons: "Dă mai departe" — the phone's own share
+sheet (`NativeShareButton`, rendered only where `navigator.share` exists, through
+`useSyncExternalStore` so the HTML and the first client render agree), Facebook, WhatsApp,
+"Instagram" (the square card to save, as before) — and "Adaugă în calendar" — Google
+Calendar, the `.ics`. The share sheet is the honest answer to "nicer on social media": on a
+phone it reaches Instagram stories, Messenger, Telegram and whatever else is installed, which
+no list of links can.
+
+*Rejected:* a script from a network (§90's reason stands); an Instagram deep link (there is
+none that takes a picture).
+
+**Consequences.** `events/ui/ShareLinks.tsx`, `events/ui/NativeShareButton.tsx` (new), two
+keys added and two reworded in both catalogues. BR-REQ-070-03 criterion 8 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
