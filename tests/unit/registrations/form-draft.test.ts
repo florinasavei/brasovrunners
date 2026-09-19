@@ -31,7 +31,10 @@ describe("BR-REQ-041-01 criterion 10 the form draft", () => {
     expect(openFormDraft(sealed as string, "secret-one")).toEqual({ firstName: "Ana", healthNotes: "Astm", sex: "FEMALE", clubMemberDeclared: "on" });
     expect(openFormDraft(sealed as string, "secret-two")).toBeNull();
     expect(openFormDraft("not-a-draft", "secret-one")).toBeNull();
-    expect(sealFormDraft({ a: "b" }, undefined)).toBeNull();
+    // No secret configured: a key drawn for the process, so a laptop still gets its draft back.
+    const local = sealFormDraft({ a: "b" });
+    expect(openFormDraft(local as string)).toEqual({ a: "b" });
+    expect(openFormDraft(local as string, "secret-one")).toBeNull();
   });
 
   it("drops a draft the cookie could not hold", () => {

@@ -29,6 +29,6 @@ test.describe("BR-REQ-050-02 the way into the editor from the event page", () =>
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
     await edit.click();
     await expect(page).toHaveURL(/\/ro\/admin\/events\/[0-9a-f-]{36}$/);
-    await expect(page.locator("#main")).toContainText("Tură pe Tâmpa");
+    await expect(page.locator('[name="translations.ro.title"]')).toHaveValue("Tură pe Tâmpa");
   });
 });

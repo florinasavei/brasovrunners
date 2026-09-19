@@ -26,12 +26,18 @@ const SKIPPED = new Set([TURNSTILE_FIELD, "honeypot", "renderedAt", "locale", "s
 
 export type FormDraft = Readonly<Record<string, string>>;
 
-function key(secret: string | undefined): Buffer | null {
-  return secret ? createHash("sha256").update(`form-draft:${secret}`).digest() : null;
+function key(secret: string): Buffer {
+  return createHash("sha256").update(`form-draft:${secret}`).digest();
 }
 
-/** The deployment's secret for the draft: the sign-in secret, or the job secret where there is no sign-in. */
-const deploymentSecret = () => env.AUTH_SECRET ?? env.JOB_SECRET;
+/**
+ * The deployment's secret for the draft: the sign-in secret, or the job secret where there is
+ * no sign-in — every deployment has one of the two. A laptop with neither gets a key drawn
+ * once per process: the draft works for as long as the server runs, which is what a laptop
+ * needs, and nothing sealed there is readable anywhere else.
+ */
+const PROCESS_SECRET = randomBytes(32).toString("base64url");
+const deploymentSecret = () => env.AUTH_SECRET ?? env.JOB_SECRET ?? PROCESS_SECRET;
 
 /** The values the cookie keeps: every posted string but the bot fields, the address and the consent to re-read. */
 export function draftValuesOf(form: FormData): FormDraft {
@@ -44,7 +50,6 @@ export function draftValuesOf(form: FormData): FormDraft {
 
 export function sealFormDraft(values: FormDraft, secret = deploymentSecret()): string | null {
   const k = key(secret);
-  if (!k) return null;
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", k, iv);
   const body = Buffer.concat([cipher.update(JSON.stringify(values), "utf8"), cipher.final()]);
@@ -54,7 +59,6 @@ export function sealFormDraft(values: FormDraft, secret = deploymentSecret()): s
 
 export function openFormDraft(sealed: string, secret = deploymentSecret()): FormDraft | null {
   const k = key(secret);
-  if (!k) return null;
   try {
     const raw = Buffer.from(sealed, "base64url");
     const decipher = createDecipheriv("aes-256-gcm", k, raw.subarray(0, 12));

@@ -207,6 +207,10 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await page.locator("#f-sex").click();
     await page.getByRole("option", { name: "Feminin" }).click();
     await page.locator('[name="healthNotes"]').fill("Astm");
+    // The browser would refuse "12" itself; the server's answer is what this proves.
+    await page.locator("form").evaluate((form) => {
+      (form as HTMLFormElement).noValidate = true;
+    });
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
 
     await page.waitForURL(/error=VALIDATION_ERROR/);
