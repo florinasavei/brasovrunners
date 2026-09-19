@@ -36,7 +36,7 @@
   },
   "Events": {
     "title": "Events",
-    "intro": "Runs, trail outings and training sessions organised by the club.",
+    "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
     "pastNotice": "This event has already taken place.",
@@ -53,9 +53,18 @@
       "next": "Next month",
       "today": "Today",
       "empty": "Nothing scheduled this month.",
-      "subscribe": "Every club event in your own calendar (Google, Apple, Outlook) — it updates by itself:",
-      "subscribeLink": "Subscribe",
-      "downloadLink": "or download the .ics"
+      "previousYear": "Previous year",
+      "nextYear": "Next year",
+      "viewMonth": "Month",
+      "viewYear": "Year",
+      "pickMonth": "Month",
+      "pickYear": "Year",
+      "yearEmpty": "Nothing scheduled this year.",
+      "subscribe": "Every club event in your own calendar, updating by itself — subscribe with:",
+      "subscribeGoogle": "Google Calendar",
+      "subscribeApple": "Apple / Outlook / phone",
+      "downloadLink": "download the .ics",
+      "subscribeLink": "Subscribe"
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -102,8 +111,11 @@
       "RACE": "Race",
       "HIKE": "Hike",
       "COFFEE": "Coffee",
-      "MEETUP": "Meetup"
+      "GEAR_TEST": "Equipment testing",
+      "MEETUP": "Other event",
+      "EXTERNAL": "External event"
     },
+    "coHost": "Together with",
     "surface": {
       "ASPHALT": "Asphalt",
       "TRAIL": "Trail",
@@ -147,6 +159,20 @@
       "PAID": "Paid"
     },
     "seeDetails": "See details",
+    "series": {
+      "weekly": "Every {days}",
+      "fortnightly": "Every other {days}",
+      "monthly": "Monthly, on the {day}",
+      "cancelledMark": "Cancelled",
+      "movedMark": "Not at the usual place: {place}",
+      "retimedMark": "Not at the usual time: {time}",
+      "atTime": "{sentence} at {time}",
+      "dates": "{count} dates, until {last}",
+      "count": "{count} dates",
+      "nextLabel": "Next",
+      "allDates": "All dates",
+      "moreInCalendar": "{count} more in the calendar"
+    },
     "route": "Route",
     "openRoute": "View the route",
     "video": {
@@ -328,6 +354,9 @@
       "columnTitle": "Event",
       "columnStatus": "Status",
       "columnDate": "Date",
+      "seriesDates": "The dates of this series",
+      "seriesEdit": "Edit the next date",
+      "seriesDeleteNote": "A series is deleted from the bar above the list: tick it, then “Delete the ticked ones”.",
       "deskCounts": "{confirmed} confirmed · {checkedIn} here",
       "columnEntries": "Registrations",
       "tableCaption": "The club's events, with their status, date and number of registrations",
@@ -340,9 +369,12 @@
       "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event instead.",
       "deleteBlockedShort": "{count} registrations",
       "eventsRepeated": "{created} editions created.",
-      "bulkTitle": "Publish or archive the ticked events",
-      "bulkHelp": "Tick events in the list. “Publish” sends them through review and publishes the ones complete in both languages — that is how a whole series goes live at once; “Archive” takes them off the site.",
+      "bulkSelectAll": "All",
+      "bulkSelected": "Ticked: {count}",
+      "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
       "bulkPublishAction": "Publish the ticked ones",
+      "bulkDeleteAction": "Delete the ticked ones",
+      "eventsDeleted": "{deleted} events deleted. {failed} could not be deleted — people have registered; archive those instead.",
       "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile)."
     },
     "confirm": {
@@ -351,6 +383,8 @@
       "duplicateBody": "A copy is created as a draft, with its own page addresses. It is not featured and it is not published.",
       "deleteTitle": "Delete this event?",
       "deleteBody": "Deleting is permanent. Only an event nobody has registered for can be deleted; for one that has happened, archive it instead.",
+      "bulkDeleteTitle": "Delete the ticked events?",
+      "bulkDeleteBody": "Deleting is permanent. Every ticked event nobody has registered for is removed, in both languages; the ones with registrations are left as they are and counted.",
       "archiveTitle": "Archive this event?",
       "archiveBody": "The event comes off the site, in both languages. You can bring it back later by sending it through review and publishing it again.",
       "removeTestTitle": "Remove the test registrations?",
@@ -424,10 +458,24 @@
       "create": "Create the event",
       "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
       "rulesEmpty": "(none yet — press to write)",
-      "scheduleHelp": "Optional. The programme by the hour: kit pickup (where, when), the briefing, the start, the cut-offs, the awards. Shown on the event page under “Programme”; the emails point there.",
+      "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
+      "programmeSection": "Programme",
+      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored.",
+      "programmeRows": {
+        "date": "Date",
+        "time": "Time",
+        "endTime": "Until",
+        "ro": "What (Romanian)",
+        "en": "What (English)",
+        "place": "Where",
+        "add": "Add a row",
+        "remove": "Remove row",
+        "empty": "No rows yet."
+      },
       "rulesHelp": "Optional. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
       "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email and the reminder.",
       "type": "Event type",
+      "typeHelp": "A group run is simply turned up to: no registration, no participants, no programme. A race has all of them; a hike, a coffee, an equipment test and another event may take registrations; an external event is somebody else's — its registration is on their page.",
       "surface": "Surface",
       "eventStatus": "Event status",
       "timezone": "Time zone",
@@ -471,7 +519,18 @@
       "routeUrl": "Route link",
       "routeUrlHelp": "Where the route can be seen — a Strava route or activity, or any other https:// link. Leave empty if there is not one.",
       "repeatSection": "Repeat the event",
-      "repeatHelp": "Create the next editions of this event at a fixed interval, with the same details and the time kept in the event's own zone. Each copy gets an address with its date (for example “sunday-run-2026-10-04”). Copies are drafts unless you tick publish.",
+      "repeatHelp": "Make this a standing series: the same details at a fixed interval, the time kept in the event's own zone, until a date or for ever. The next eight weeks are created now and the platform keeps creating the weeks that follow, each date its own event — cancel or move one without touching the rest. Each date gets an address with its day (“sunday-run-2026-10-04”). Dates are drafts unless you tick publish.",
+      "repeatUntil": "Until (optional)",
+      "repeatUntilHelp": "Leave empty for a series without an end.",
+      "repeatRuleTitle": "This event repeats",
+      "repeatRuleForever": "{sentence} — for ever. The next eight weeks are always created; the dates are in the list.",
+      "repeatRuleUntil": "{sentence} — until {until}. The dates are in the list.",
+      "repeatRuleEnded": "{sentence} — ended on {until}.",
+      "repeatStop": "Stop the series",
+      "repeatStopHelp": "No further dates are made; the ones that exist stay (tick them in the list to delete them).",
+      "repeatStopped": "The series is stopped: no further dates will be made.",
+      "repeatOfNote": "This is one date of the series “{title}”. Changes here — a cancellation, another place, another time — are this date's alone; the series repeats from its first event.",
+      "repeatOfLink": "Open the series",
       "repeatCadence": "Interval",
       "repeatCadences": {
         "NONE": "Does not repeat",
@@ -487,7 +546,7 @@
       "timeOfDay": "Time (24h)",
       "repeatWeeks": "How many weeks / editions",
       "repeatWeekdays": "On these days (optional):",
-      "repeatWeekdaysHelp": "Tick the days it happens on — Monday and Wednesday, say — and “how many weeks” above means weeks, counted from the event's own week; only days after it are made. Nothing ticked: the event's own day, at the chosen interval.",
+      "repeatWeekdaysHelp": "Tick the days it happens on — Monday and Wednesday, say; only days after this event are made. Nothing ticked: the event's own day, at the chosen interval.",
       "repeatOnCreateHelp": "Optional. The following editions are created too, as drafts, with the same details and an address carrying each date. Publish them all at once from the events list with “Publish the ticked ones”.",
       "weekdays": {
         "1": "Mo",
@@ -501,6 +560,9 @@
       "createdWithSeries": "The event and {created} editions were created, as drafts. Tick them in the events list and publish them together.",
       "durationMinutes": "Duration (minutes)",
       "durationMinutesHelp": "How long it lasts, in minutes — 90, say. The end is worked out from it. Leave empty if none was announced.",
+      "coHostName": "Co-host (another organization)",
+      "coHostUrl": "Co-host's page",
+      "coHostHelp": "Optional. When the event is held together with another organization — an NGO, a shop, a brand — its name here, and its page, if it has one. Shown as “Together with …” beside the club's name, and named as a second organizer to Google.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
       "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page under the short description.",
@@ -526,7 +588,14 @@
       "role": "Role",
       "preferredLocale": "Preferred language",
       "invite": "Add",
-      "inviteHelp": "No email is sent: the platform has no sending domain yet. Access begins at their first sign-in with this address.",
+      "inviteHelp": "This adds the address to the list of who is staff — no email or code is sent. The person also needs a Zitadel account with exactly this address (they create one at the sign-in page, or you do in the Zitadel console → Users), then signs in at /admin. Access begins at that first sign-in.",
+      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation with the link to choose a password. Then they sign in at /admin.",
+      "inviteSent": "Added, and the invitation is on its way to their mailbox.",
+      "inviteExists": "Added. They already have a sign-in account with this address — they can sign in at /admin right away.",
+      "inviteManual": "Added to the list. No invitation was sent: create their account in the Zitadel console (Users → New) with exactly this address, or let them create it at the sign-in page.",
+      "inviteFailed": "Added to the list, but the sign-in provider refused to create the account ({reason}). Create it in the Zitadel console (Users → New) with exactly this address.",
+      "resendInvite": "Resend the invitation",
+      "resendInvitePending": "Sending…",
       "pending": "Has not signed in yet",
       "you": "You",
       "changeRole": "Change role",
@@ -574,7 +643,12 @@
     },
     "legal": {
       "title": "Legal documents",
-      "intro": "The privacy notice, the terms, and the declaration participants sign. A version is written as a draft, approved, and from then on fixed; a change is the next version.",
+      "intro": "The three texts a participant accepts. An approved version never changes (people signed exactly that text); a correction is a new version.",
+      "whatIs": {
+        "PRIVACY_NOTICE": "GDPR: what data we take from participants, why and for how long. Ticked at registration.",
+        "TERMS": "The rules of the site and of registering (not the race rules — those are on the event's page). Ticked at registration.",
+        "EVENT_DECLARATION": "The declaration of own responsibility: health, risks, the identity document. Signed when the place is confirmed."
+      },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version, choose the document, paste the approved wording in both languages, save the draft, read it, approve it.",
       "document": "Document",
@@ -615,7 +689,7 @@
       "saveDraft": "Save draft",
       "titleField": "Title",
       "bodyField": "Text",
-      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading.",
+      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading. A link: [the words](https://…). A picture, on a line of its own: ![what it shows](https://…) — copy the address from Gallery → Pictures.",
       "keyLocked": "The document cannot change after creation.",
       "editorWarning": "This is the club’s legal text. Write or paste only wording the club has approved — never invent legal content.",
       "approveTitle": "Approve this version",
@@ -701,7 +775,7 @@
           "done": "The team has accounts.",
           "how": [
             "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
-            "The person creates a Zitadel account with exactly that address and verifies the email — or you create it for them in the Zitadel console → Users. Zitadel only proves who they are; the list here decides whether they are staff.",
+            "With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), “Add” also creates their Zitadel account and emails them the invitation — the link to choose a password. Without it, the person creates a Zitadel account with exactly that address, or you create it in the Zitadel console → Users. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
         },
@@ -729,23 +803,13 @@
         },
         "botCheck": {
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
-          "todo": "The registration form already has a trap field and a fill-time check, which stop the simple bots. Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest. It is off until the two keys exist; nothing changes meanwhile.",
+          "todo": "Done on 19 September 2026: the widget “brasovrunners-site” exists and both keys are on both Vercel projects — this row turns green on the next deployment. The registration form already has a trap field and a fill-time check, which stop the simple bots; Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest.",
           "done": "The registration form has the anti-bot check on.",
           "how": [
-            "Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
-            "Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
-            "In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
-            "Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
-          ]
-        },
-        "scheduleStructured": {
-          "title": "The event programme as data (times), not only text",
-          "todo": "The programme is free text per language (the page's “Programme” section). The calendar (.ics, subscription, Google Calendar) exists since §107 and carries the programme as text. Left: structured rows — the time, what happens, where — shown the same on the page, in the emails and as separate calendar entries.",
-          "done": "The programme has timed rows and can be added to the phone's calendar.",
-          "how": [
-            "Schema: an event_schedule_items table (event_id, starts_at, ends_at?, label per language, place) — or structured JSON on the event.",
-            "Editor: rows “time + text + place”, in order; the page shows them as a timed list; the reminder email sends them.",
-            "Calendar: from those rows, one VEVENT per row in the event's .ics (the file and the subscription exist: modules/events/ical.ts)."
+            "✓ Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
+            "✓ Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
+            "✓ In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
+            "✓ Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
           ]
         },
         "declarationArchiveMail": {
@@ -766,16 +830,6 @@
             "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
             "The project id: Vercel → the production project → Settings → General → Project ID (starts with prj_).",
             "In Vercel → the production project → Settings → Environment Variables: VERCEL_API_TOKEN and VERCEL_PROJECT_ID (QA the same, with the QA project id). Redeploy. The row turns green; /devs shows the figures. Bandwidth stays in the dashboard → Usage — the link is on /devs too."
-          ]
-        },
-        "docsSimplify": {
-          "title": "The documentation, shortened (SETUP, RUNBOOKS, CLAUDE)",
-          "todo": "CLAUDE.md is a map now: one line per thing, with the DECISIONS section that says why (§109). Left: SETUP.md — 1,800 lines where the still-valid procedures (numbered, with values) sit beside the history of every account opened — move the history to CHANGELOG/DECISIONS and keep only what is still to be done.",
-          "done": "Every document in the repository is short and says once what is to be done.",
-          "how": [
-            "SETUP.md: each numbered section stays only if it is a still-valid procedure with its values in sight; “done on date X” moves to a CHANGELOG line or to DECISIONS.",
-            "docs/RUNBOOKS.md: the same principle — one entry per situation, the steps, nothing about how we got here.",
-            "docs:check stays green; the README (the index) is updated."
           ]
         },
         "roDomain": {
@@ -1338,7 +1392,7 @@
       "summaryShort": "About the club",
       "summaryTail": ", contact and legal",
       "socialLabel": "The club on social media",
-      "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races.",
+      "description": "Brașov Runners is a small running club in Brașov: social runs and training meetups, community events and local races. Every club event is free.",
       "facebook": "Facebook",
       "instagram": "Instagram",
       "strava": "Strava",
@@ -1586,6 +1640,11 @@
     }
   },
   "Devs": {
+    "captured": {
+      "title": "Emails captured on this machine",
+      "intro": "Locally nothing leaves the machine: every message the platform would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
+      "empty": "Nothing captured yet. Register for an event and come back."
+    },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",
     "intro": "What is configured here and what is missing. Variable names and whether they have a value — never the value.",

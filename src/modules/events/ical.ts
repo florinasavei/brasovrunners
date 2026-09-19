@@ -1,4 +1,5 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
+import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 
 /**
  * Events as a calendar (`DECISIONS.md` §107; BR-REQ-020-01 criterion 7): one `.ics` per event for "add to
@@ -21,8 +22,12 @@ export type CalendarEvent = {
   locationName: string | null;
   /** The short description, plain. */
   excerpt: string | null;
-  /** The programme (§96), as a rich-text document or null; rendered as plain lines. */
+  /** The programme's text (§96), as a rich-text document or null; rendered as plain lines. */
   scheduleJson: unknown;
+  /** The programme's rows (§117), in the calendar's language: one VEVENT each, and lines in the description. */
+  programme?: readonly ProgrammeRow[];
+  /** The event's own zone, for the programme lines' clock. */
+  timezone?: string;
   /** The event's public page, absolute. */
   url: string;
   /** When the row last changed, for `DTSTAMP`/`LAST-MODIFIED`; the start when unknown. */
@@ -73,9 +78,14 @@ function uidHost(baseUrl: string): string {
   }
 }
 
-export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { programme: string }): string[] {
+export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { programme: string; locale?: "ro" | "en" }): string[] {
   const stamp = event.updatedAt ?? event.startsAt;
-  const programme = scheduleLines(event.scheduleJson);
+  const rows = event.programme ?? [];
+  // The rows first, then the text beneath them, under one heading — as the page shows them.
+  const programme = [
+    ...programmeLines(rows, event.timezone ?? "Europe/Bucharest", labels.locale ?? "ro"),
+    ...[scheduleLines(event.scheduleJson)].filter((text) => text.length > 0),
+  ].join("\n");
   const description = [event.excerpt?.trim() ?? "", programme ? `${labels.programme}:\n${programme}` : "", event.url]
     .filter((part) => part.length > 0)
     .join("\n\n");
@@ -92,6 +102,28 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: { pro
   ];
   if (event.locationName) lines.push(`LOCATION:${icalText(event.locationName)}`);
   lines.push("END:VEVENT");
+
+  /**
+   * One entry per programme row (§117): "Crosul aniversar — Kit pickup", at the row's own
+   * time and place, so the phone rings for the briefing and not only for the start. The UID
+   * carries the row's index after the event's id, stable across edits like the event's own.
+   */
+  rows.forEach((row, index) => {
+    lines.push(
+      "BEGIN:VEVENT",
+      `UID:${event.id}-${index + 1}@${uidHost(baseUrl)}`,
+      `DTSTAMP:${icalUtc(stamp)}`,
+      `LAST-MODIFIED:${icalUtc(stamp)}`,
+      `DTSTART:${icalUtc(row.startsAt)}`,
+      `DTEND:${icalUtc(row.endsAt ?? row.startsAt)}`,
+      `SUMMARY:${icalText(`${event.title} — ${row.label}`)}`,
+      `DESCRIPTION:${icalText(event.url)}`,
+      `URL:${event.url}`,
+    );
+    const place = row.place ?? event.locationName;
+    if (place) lines.push(`LOCATION:${icalText(place)}`);
+    lines.push("END:VEVENT");
+  });
   return lines;
 }
 
@@ -100,7 +132,7 @@ export function buildCalendar(params: {
   baseUrl: string;
   /** The calendar's own name, shown by the subscriber's app. */
   name: string;
-  labels: { programme: string };
+  labels: { programme: string; locale?: "ro" | "en" };
   /** The subscriber's refresh hint; a day is what the free calendars honour anyway. */
   refreshHours?: number;
 }): string {

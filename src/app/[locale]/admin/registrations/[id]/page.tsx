@@ -75,7 +75,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // §10.5 has no edge from PENDING_EMAIL_CONFIRMATION to CANCELLED: an unconfirmed address
   // lapses on its own and holds no place, so there is nothing to release and no form to show.
   const canCancel = canTransition(registration.status, "CANCELLED");
-  const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short" }) : null);
+  const dt = (value: Date | null) => (value ? format.dateTime(value, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }) : null);
   // The desk verbs (BR-REQ-037-07, -08), here too, so an Administrator at a laptop has them.
   const canConfirmNow =
     registration.status === "PENDING_EMAIL_CONFIRMATION" ||

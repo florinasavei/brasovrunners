@@ -5,9 +5,13 @@ import {
   groupByDay,
   monthGrid,
   monthParam,
+  groupByMonth,
   monthRange,
   parseMonth,
+  parseYear,
   shiftMonth,
+  yearRange,
+  yearsAround,
 } from "@/modules/events/domain/calendar";
 
 const TZ = "Europe/Bucharest";
@@ -23,6 +27,24 @@ describe("the events calendar", () => {
     // Two years either way and no further.
     expect(parseMonth("2030-01", now, TZ)).toEqual({ year: 2026, month: 9 });
     expect(parseMonth(["2026-11", "2026-12"], now, TZ)).toEqual({ year: 2026, month: 11 });
+  });
+
+  it("reads a year from the URL within two years either way, and offers those years (§116)", () => {
+    const now = new Date("2026-09-18T10:00:00Z");
+    expect(parseYear("2027", now, TZ)).toBe(2027);
+    expect(parseYear("2024", now, TZ)).toBe(2024);
+    expect(parseYear("2030", now, TZ)).toBeNull();
+    expect(parseYear(undefined, now, TZ)).toBeNull();
+    expect(parseYear("20x6", now, TZ)).toBeNull();
+    expect(yearsAround(now, TZ)).toEqual([2024, 2025, 2026, 2027, 2028]);
+    const { from, to } = yearRange(2026, TZ);
+    expect(from.toISOString()).toBe("2025-12-31T22:00:00.000Z"); // 1 Jan 00:00 EET
+    expect(to.toISOString()).toBe("2026-12-31T22:00:00.000Z"); // 1 Jan 2027 00:00 EET
+    const byMonth = groupByMonth([
+      { startsAt: new Date("2026-09-30T22:30:00Z"), timezone: TZ }, // 1 Oct in Brașov
+      { startsAt: new Date("2026-09-13T04:00:00Z"), timezone: TZ },
+    ]);
+    expect([...byMonth.keys()]).toEqual(["2026-10", "2026-09"]);
   });
 
   it("knows the month in Brașov, not in UTC", () => {

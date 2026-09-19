@@ -121,7 +121,7 @@ export default async function DeskRow({
                 color="success"
                 variant="outlined"
                 label={t("desk.checkedInAt", {
-                  time: format.dateTime(row.checkedInAt, { timeStyle: "short" }),
+                  time: format.dateTime(row.checkedInAt, { timeStyle: "short", hourCycle: "h23" }),
                   who: row.checkedInByName ?? t("desk.bySelf"),
                 })}
               />
@@ -130,7 +130,7 @@ export default async function DeskRow({
           {showEvent && (
             <Typography variant="body2" color="text.secondary">
               {row.eventTitle ?? row.eventId} ·{" "}
-              {format.dateTime(row.eventStartsAt, { dateStyle: "medium", timeStyle: "short" })}
+              {format.dateTime(row.eventStartsAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" })}
             </Typography>
           )}
           {row.checkinCode && (

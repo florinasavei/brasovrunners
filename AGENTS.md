@@ -1027,8 +1027,9 @@ answered 404 where `STAFF_AUTH_MODE=disabled`; signing in lands back in the back
 ### 10.1 Event
 
 ```ts
-// What the event is. One seven-value `EventKind` until migration 0023 (DECISIONS.md §61).
-type EventType = "GROUP_RUN" | "RACE" | "HIKE" | "COFFEE" | "MEETUP";
+// What the event is. One seven-value `EventKind` until migration 0023 (DECISIONS.md §61);
+// GEAR_TEST and EXTERNAL since migration 0044, and MEETUP is labelled "other event" (§121).
+type EventType = "GROUP_RUN" | "RACE" | "HIKE" | "COFFEE" | "GEAR_TEST" | "MEETUP" | "EXTERNAL";
 // What it is run on. Null on a coffee or a meetup.
 type EventSurface = "ASPHALT" | "TRAIL" | "MIXED";
 
@@ -1041,7 +1042,8 @@ Rules:
 
 - race is an event type, not a separate registration system;
 - the type and the surface are two questions, and the pace or the session shape is the title's
-  job — a shoe-testing evening is `MEETUP` with the theme in the title. Adding a value to either
+  job — a shoe-testing evening is `GEAR_TEST`, somebody else's race the club goes to is
+  `EXTERNAL`, and `MEETUP` ("other event") is what fits neither. Adding a value to either
   enum is a migration (`ALTER TYPE … ADD VALUE`) plus a label in both catalogues; the
   exhaustiveness test in `tests/unit/i18n/messages.test.ts` fails until the label exists;
 - one registration mode;

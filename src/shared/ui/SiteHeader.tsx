@@ -8,7 +8,6 @@ import { listPublishedPages } from "@/modules/content/pages/repository";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
-import ThemeModeToggle from "./ThemeModeToggle";
 import LogoLink from "./LogoLink";
 import SiteNav from "./SiteNav";
 
@@ -209,8 +208,8 @@ export default async function SiteHeader() {
           />
         </Box>
 
+        {/* The scheme switch left this row for the footer's bottom-left corner (§115). */}
         <Box sx={{ order: 3, ml: "auto", flexShrink: 0, display: "flex", alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
-          <ThemeModeToggle />
           <LocaleSwitcher />
         </Box>
       </Container>

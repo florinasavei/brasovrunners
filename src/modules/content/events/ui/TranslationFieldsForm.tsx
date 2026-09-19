@@ -8,7 +8,9 @@ import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
 import { Link } from "@/i18n/navigation";
+import { EVENT_TYPES, type EventType, hasProgramme } from "@/modules/events/domain/event-type";
 import type { EditableTranslation } from "../repository";
+import OnlyForType from "./OnlyForType";
 
 /**
  * One language's text, as inputs inside the editor's single form.
@@ -29,11 +31,14 @@ import type { EditableTranslation } from "../repository";
 export default async function TranslationFieldsForm({
   translation,
   eventId,
+  eventType,
   slugLocked,
   mayEdit,
 }: {
   translation: EditableTranslation;
   eventId: string;
+  /** What the event is: a group run has no programme to write (§111), so its editor is hidden. */
+  eventType: EventType;
   /** AGENTS.md §11.5: the page address is stable once the event has been published. */
   slugLocked: boolean;
   mayEdit: boolean;
@@ -116,19 +121,25 @@ export default async function TranslationFieldsForm({
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
             {t("editor.rulesHelp")}
           </Typography>
-          {/* The programme (§96): kit pickup, briefing, start, cut-offs — folded like the rules. */}
-          <LazyRichTextEditor
-            name={name("schedule")}
-            label={t("editor.fields.schedule")}
-            summary={t("editor.fields.schedule")}
-            emptyHint={t("editor.rulesEmpty")}
-            initialBody={translation.scheduleJson}
-            accessibleSuffix={translation.locale.toUpperCase()}
-            labels={richTextEditorLabels(rt)}
-          />
-          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
-            {t("editor.scheduleHelp")}
-          </Typography>
+          {/* The programme (§96): kit pickup, briefing, start, cut-offs — folded like the rules.
+              Not on a group run (§111): it follows the type select in Settings, and the service
+              stores no programme for one whatever this posts. */}
+          <OnlyForType type={EVENT_TYPES.filter(hasProgramme)} selectName="event.type" initialType={eventType}>
+            <Stack spacing={2}>
+              <LazyRichTextEditor
+                name={name("schedule")}
+                label={t("editor.fields.schedule")}
+                summary={t("editor.fields.schedule")}
+                emptyHint={t("editor.rulesEmpty")}
+                initialBody={translation.scheduleJson}
+                accessibleSuffix={translation.locale.toUpperCase()}
+                labels={richTextEditorLabels(rt)}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+                {t("editor.scheduleHelp")}
+              </Typography>
+            </Stack>
+          </OnlyForType>
           {/* "What to bring": one line on the confirmation and the reminder (§81). */}
           <TextField
             name={name("checklist")}

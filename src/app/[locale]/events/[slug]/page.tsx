@@ -14,7 +14,9 @@ import { routing } from "@/i18n/routing";
 import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventProgramme from "@/modules/events/ui/EventProgramme";
 import EventVideo from "@/modules/events/ui/EventVideo";
+import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -39,6 +41,16 @@ type Props = { params: Promise<{ locale: string; slug: string }> };
  */
 export const dynamic = "force-dynamic";
 
+
+function TypeGlyph({ type }: { type: keyof typeof TYPE_GLYPH }) {
+  const Icon = TYPE_GLYPH[type];
+  return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
+}
+
+function SurfaceGlyph({ surface }: { surface: keyof typeof SURFACE_GLYPH }) {
+  const Icon = SURFACE_GLYPH[surface];
+  return <Icon aria-hidden="true" sx={{ fontSize: 18 }} />;
+}
 
 /** Absolute URL for this event in a given locale, always derived from APP_BASE_URL. */
 function eventUrl(locale: "ro" | "en", slug: string): string {
@@ -111,10 +123,18 @@ export default async function EventDetailPage({ params }: Props) {
         </Alert>
       )}
 
-      {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61). */}
-      <Typography variant="overline" color="text.secondary">
+      {/* What it is, and — when the club has said — what it is run on (`DECISIONS.md` §61),
+          each with its glyph (§112); the words stay, the glyphs decorate. */}
+      <Typography variant="overline" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+        <TypeGlyph type={event.type} />
         {t(`type.${event.type}`)}
-        {event.surface && ` · ${t(`surface.${event.surface}`)}`}
+        {event.surface && (
+          <>
+            <span aria-hidden="true">·</span>
+            <SurfaceGlyph surface={event.surface} />
+            {t(`surface.${event.surface}`)}
+          </>
+        )}
       </Typography>
       <Typography variant="h1" gutterBottom>
         {event.title}
@@ -197,15 +217,8 @@ export default async function EventDetailPage({ params }: Props) {
         </Box>
       )}
 
-      {/* The programme (§96), under `#schedule`: kit pickup, briefing, start, cut-offs. */}
-      {!isRichTextEmpty(readRichText(event.scheduleJson)) && (
-        <Box component="section" id="schedule" sx={{ mt: 4 }}>
-          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("schedule")}
-          </Typography>
-          <RichText body={event.scheduleJson} />
-        </Box>
-      )}
+      {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
+      <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
       {/* The rules (§96), under `#rules` — the anchor the emails and the declaration point at. */}
       {!isRichTextEmpty(readRichText(event.rulesJson)) && (

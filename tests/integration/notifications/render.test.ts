@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
-import { events } from "@/db/schema/events";
+import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { renderOutboxMessage } from "@/modules/notifications/render";
@@ -104,6 +104,50 @@ describe("BR-REQ-080-01 outbox renderer", () => {
     const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
     expect(token.purpose).toBe("COMPLETE_DECLARATION");
     expect(token.expiresAt).toEqual(new Date(NOW.getTime() + 30 * 60_000)); // borrowed the hold's own deadline
+  });
+
+  it("repeats the programme's rows in the reminder, each half in its own language (§117)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    // The details come through the translation; the fixture above has none.
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+    await db
+      .update(events)
+      .set({
+        scheduleItems: [
+          { startsAt: "2026-10-01T06:30:00.000Z", endsAt: null, label: { ro: "Briefing", en: "Briefing" }, place: null },
+          { startsAt: "2026-10-01T06:00:00.000Z", endsAt: null, label: { ro: "Ridicarea numerelor", en: "Number pickup" }, place: "Cort" },
+        ],
+      })
+      .where(eq(events.id, event.id));
+
+    const message = await renderOutboxMessage(
+      {
+        id: "row-r",
+        participantId,
+        registrationId,
+        messageType: "EVENT_REMINDER",
+        locale: "ro",
+        recipientEmail: "ana@example.ro",
+        payloadJson: {},
+        idempotencyKey: "test:r",
+        requestedByStaffUserId: null,
+        isManualResend: false,
+        status: "PROCESSING",
+        attemptCount: 1,
+        nextAttemptAt: null,
+        lockedAt: NOW,
+        providerMessageId: null,
+        lastError: null,
+        createdAt: NOW,
+        sentAt: null,
+      },
+      db,
+      NOW,
+    );
+
+    // Sorted, at the event's wall clock (09:00 EEST), the Romanian half first and the English after.
+    expect(message.text).toContain("Programul: 09:00 — Ridicarea numerelor (Cort); 09:30 — Briefing.");
+    expect(message.text).toContain("The programme: 09:00 — Number pickup (Cort); 09:30 — Briefing.");
   });
 
   it("renders a message with no token and no action link", async () => {

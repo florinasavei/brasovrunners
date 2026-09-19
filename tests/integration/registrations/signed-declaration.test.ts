@@ -180,7 +180,7 @@ describe("the club's declaration (§95)", () => {
     expect(empty.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
   });
 
-  it("sends the signed declaration back by email, as its own message with the PDF attached", async () => {
+  it("sends the signed declaration back by email, attached to the confirmation (§126)", async () => {
     await approve(db, CLUB_DECLARATION);
     const event = await createEvent(db);
     const pending = await pendingRegistration(event);
@@ -189,16 +189,17 @@ describe("the club's declaration (§95)", () => {
     const queued = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, pending.id));
     const types = queued.map((row) => row.messageType);
     expect(types).toContain("REGISTRATION_CONFIRMED");
-    expect(types).toContain("DECLARATION_SIGNED");
+    // Since §126 the participant's copy rides on the confirmation, not as a message of its own.
+    expect(types).not.toContain("DECLARATION_SIGNED");
 
-    const row = queued.find((r) => r.messageType === "DECLARATION_SIGNED")!;
+    const row = queued.find((r) => r.messageType === "REGISTRATION_CONFIRMED")!;
     const message = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
-    expect(message.subject).toBe("Declarația ta semnată / Your signed declaration"); // bilingual, the registration's language first (§96)
+    expect(message.subject).toBe("Înscrierea este confirmată / Your registration is confirmed"); // bilingual, the registration's language first (§96)
     expect(message.attachments).toHaveLength(1);
     expect(message.attachments![0].filename).toBe("declaratie-semnata.pdf");
     expect(message.attachments![0].data.toString("latin1").startsWith("%PDF-1.")).toBe(true);
     // The same manage token serves the link to the PDF, for a client that strips attachments.
     expect(message.html).toMatch(/\/api\/registrations\/declaration\/[A-Za-z0-9_-]+/);
-    expect(message.text).toContain("Ana Popescu".length > 0 ? "Declarația semnată (PDF)" : "");
+    expect(message.text).toContain("Declarația pe care ai semnat-o (PDF)");
   });
 });

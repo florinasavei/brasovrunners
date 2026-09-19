@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import { Fragment } from "react";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
@@ -164,6 +165,20 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         <Typography variant="body2" color="text.secondary">
           {t("legal.intro")}
         </Typography>
+        {/* What each of the three is, in one line (the owner, 2026-09-19: "it is not clear what
+            these documents are — is the privacy notice GDPR? and what is the other one?"). */}
+        <Box component="dl" sx={{ m: 0, mt: 1, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "auto 1fr" }, columnGap: 2, rowGap: 0.5 }}>
+          {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key) => (
+            <Fragment key={key}>
+              <Typography component="dt" variant="body2" sx={{ fontWeight: 600 }}>
+                {t(`legal.keys.${key}`)}
+              </Typography>
+              <Typography component="dd" variant="body2" color="text.secondary" sx={{ m: 0 }}>
+                {t(`legal.whatIs.${key}`)}
+              </Typography>
+            </Fragment>
+          ))}
+        </Box>
       </Stack>
 
       {mayCreate && (
@@ -265,7 +280,6 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         />
       )}
 
-      <Alert severity="info">{t("legal.immutabilityNotice")}</Alert>
     </Stack>
   );
 }

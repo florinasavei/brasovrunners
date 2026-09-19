@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -11,7 +10,6 @@ import { routing } from "@/i18n/routing";
 import { isRepoDocName, REPO_DOCS, renderRepoDoc } from "@/modules/diagnostics/repo-docs";
 import { canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { PAGE_WIDTH } from "@/theme/brand";
 
 type Props = { params: Promise<{ locale: string; name: string }> };
 
@@ -37,8 +35,7 @@ export default async function RepoDocPage({ params }: Props) {
   if (!rendered) notFound();
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 5 } }}>
-      <Stack spacing={3}>
+    <Stack spacing={3}>
         <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 1 }}>
           <Typography variant="body2">
             <Link href="/devs">{t("docs.back")}</Link>
@@ -71,7 +68,6 @@ export default async function RepoDocPage({ params }: Props) {
             "& a": { color: "primary.main" },
           }}
         />
-      </Stack>
-    </Container>
+    </Stack>
   );
 }

@@ -86,8 +86,11 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
 
     await page.goto(`/ro/evenimente/${slug}`);
 
-    // The type and the surface, both as localized text, beside each other (BR-REQ-010-01).
-    await expect(page.getByText("Alergare de grup · Trail")).toBeVisible();
+    // The type and the surface, both as localized text, beside each other (BR-REQ-010-01) —
+    // each behind its glyph since §112, so the line is read as one element with both words.
+    const kind = page.locator("#main").getByText("Alergare de grup").first();
+    await expect(kind).toBeVisible();
+    await expect(kind).toContainText("Trail");
 
     // Its own labelled fact, not folded into the meeting point (`DECISIONS.md` §49).
     await expect(page.locator("dt").filter({ hasText: /^Traseu$/ })).toHaveCount(1);

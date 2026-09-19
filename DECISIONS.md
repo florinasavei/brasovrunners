@@ -5366,3 +5366,551 @@ provider hosts; `AGENTS.md` §11.3; `tests/unit/content/rich-text.test.ts`,
 `tests/e2e/pages.spec.ts`. BR-REQ-050-03 criterion 16.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 111. Decided — a group run is simply turned up to: no registration, no participants, no programme (2026-09-19)
+
+**Context.** The owner, reading the editor: "group runs don't have registrations or participants,
+and they don't have an event schedule … races are the most complex ones." Every event type
+offered the whole registration block — the mode, the capacity, the window, the participation
+window, the declaration, the public list, the external provider — and a programme editor per
+language, and an organizer who is not technical (the owner's word for the club's organizer)
+scrolled past all of it to publish Monday's run.
+
+**Decision.** `event-type.ts` names the types one turns up to — `GROUP_RUN`, one list — and two
+questions over it, `takesRegistrations` and `hasProgramme`. The editor's registration block
+and each language's programme editor follow the type select (`OnlyForType`, which now takes a
+list), with a sentence under the select saying which type has what. Hidden is not absent: a run
+that was once a race still posts INTERNAL and its programme, so the service normalizes a save
+of a turn-up type — `NONE`, no capacity, no window, no declaration, list `HIDDEN`, no external
+fields, no programme in either language — the same way it ignores a gun time on anything but a
+race (§71). Not a database CHECK: the tests and the seeds insert group runs with registrations
+directly to exercise the allocator, and the rule is about what an organizer is offered, not
+about what a row may hold. A hike, a coffee and a meetup keep both blocks until the club says
+otherwise; moving one is a one-word change to the list.
+
+*Rejected:* refusing the save (the organizer cannot see the field the refusal would name); a
+seventh type "race with registration" (the type already says it); clearing existing rows by
+migration (what is stored stays until the event is saved again, and the page shows what is
+stored).
+
+*Amended the same evening* (the owner: "group runs don't have registrations!"): the page and
+the card say nothing about registration on a group run — not even "none needed"; the
+question does not arise, and neither do test registrations, which the editor offers only on
+an event that takes registrations. Repeat sits right under Publication on the editor
+("repeating the event should be more on the top"), before the settings, the queue and the
+test data; and the Save bar is sticky at the bottom of the window, above the footer, while
+the long form scrolls ("this save button should be sticky at the bottom").
+
+**Consequences.** `event-type.ts` (`takesRegistrations`, `hasProgramme`), `OnlyForType`,
+`EventFieldsForm`, `TranslationFieldsForm` (`eventType`), `content/events/service.ts`
+(`normalizeForType`, `applyTranslationSave#eventType`), the catalogue (`editor.typeHelp`);
+`tests/integration/cms/turn-up-events.test.ts`. BR-REQ-050-02 criterion 10.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 112. Decided — a glyph beside every closed-set word: type, surface, difficulty, cost; the Instagram mark in its gradient (2026-09-19)
+
+**Context.** The owner, looking at the listing: "I also need icons for event type, surfaces,
+etc", then, pointing at the featured hero's chips, "these pills should have icons", and, at the
+footer, "the instagram icon should be colored." §90 brought `@mui/icons-material` for the admin
+tabs and the facts' three questions; the four closed sets an event is described with — what it
+is, what it is run on, how hard, whether it costs — were still bare words on chips.
+
+**Decision.** `events/ui/glyphs.ts` holds one glyph per value of the four sets, chosen as
+metaphors and written down there: a run, a chequered flag, a hiker, a cup, a group; the city,
+the mountain, the fork; one, two, three bars; a coin and a crossed-out coin — and a flat map of
+them by name (`type:RACE`, `surface:TRAIL`, …, `featured`). `EventKindChips` renders the type
+and surface chips, once, for the listing card and the hero — whose "Featured event" chip gets
+a star; the type filter carries them; the event page's overline shows them before the words;
+the facts show them before the difficulty and the cost. The word stays the label everywhere —
+BR-REQ-070-03 says nothing by colour alone, and nothing by shape alone follows — the glyph is
+`aria-hidden` and what the eye finds first. The Instagram mark is its gradient (yellow, pink,
+violet, corner to corner) as a `<defs>` in the same inline SVG, because one flat pink beside
+Facebook's blue disc and Strava's orange read as the odd one out.
+
+**What a chip's icon cannot be.** `icon={<StarIcon />}` from a Server Component typechecks,
+renders in the browser, and fails hydration on every chip: during server rendering the element
+reaches MUI's `Chip` as a lazy Flight reference, `React.isValidElement` says no, the icon is
+dropped from the HTML, and the browser then renders it. So `GlyphChip` is a client component
+that takes the glyph's *name* and makes the element on its own side of the boundary — the same
+rule as the filter chips' string `href` (`AGENTS.md`: a Server Component hands MUI strings,
+never component references, and now never elements either where MUI inspects them).
+
+*Rejected:* a glyph without the word (a riddle on a phone, and nothing for a screen reader);
+an icon element through a chip prop from a Server Component (above); Instagram's five-stop
+official gradient (three stops are the same picture at 22 pixels).
+
+**Consequences.** `events/ui/glyphs.ts` (`GLYPHS`, `GlyphName`), `events/ui/GlyphChip.tsx`,
+`events/ui/EventKindChips.tsx`, the listing, the hero, the event page, `EventFacts`,
+`shared/ui/SocialIcon.tsx`. BR-REQ-020-01 criterion 8.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 113. Decided — a repeated event is one line: the same title and type, grouped, on the listing and in the backoffice (2026-09-19)
+
+**Context.** The owner, at a listing with a Monday-and-Wednesday run made for the season
+(§64): "I hate that editions are duplicated … I want to see a single line for 'Running up that
+hill' like in Google Calendar." Fifty-two cards for one run, and fifty-two rows in the
+backoffice, is what Repeat produced; the month view (§89) was the one place the series read as
+a series.
+
+**Decision.** Occurrences stay rows — capacity, holds and the waiting list are per event — and
+the *display* groups them. The series is recognised, not recorded: `events/domain/series.ts`
+groups events of the same type with the same title (trimmed, case-folded, in the language
+shown), in the order the first occurrence had, and reads the recurrence off the dates on the
+wall clock — weekly or fortnightly on a set of weekdays with a shared time, or "N dates until
+…" for anything else. `series-sentence.ts` says it in the reader's words with `Intl`'s weekday
+names and list conjunction: "În fiecare luni și miercuri, la 18:30". On the listing a
+`SeriesCard` shows the title once as a link to the next occurrence, the sentence, the next
+occurrence's facts, and the coming dates as 44px chips, each its own page, the rest "in the
+calendar" — the month view keeps every date, like Google's grid. In the backoffice a series is
+one row: the title, a "N dates" chip, the sentence, the dates folded with each one's state and
+entries; the state column counts the states; the date column is the range; the tick selects
+every date (the refs joined by commas, which the bulk verbs split); Edit opens the next date;
+deleting a series is the bulk verb's job (§114). The type's glyph (§112) now stands before
+every title in the list.
+
+*Rejected:* a `series_id` set by Repeat (a migration and a backfill for what the title already
+says; a hand-made second edition would not carry it); grouping the month view (that is the one
+view where every date belongs); a card that is one big link (a card with date links inside
+cannot be a link itself — the title is the link).
+
+**Consequences.** `events/domain/series.ts`, `events/ui/series-sentence.ts`,
+`events/ui/SeriesCard.tsx`, `glyphs.ts` (`series`), the listing, the events list,
+`admin/actions.ts` (`selectedEventRefs`), the catalogues; `tests/unit/events/series.test.ts`.
+BR-REQ-020-01 criterion 9, BR-REQ-050-02 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 114. Decided — the bulk verbs in a bar above the list: all, N ticked, publish, archive, delete — and the ticks that never posted (2026-09-19)
+
+**Context.** The owner, at the events list: "these batches are strange … I should be able to
+batch delete all!" The bulk verbs were a fold *below* the table, out of sight of the ticks
+they acted on; there was no way to tick everything and no delete. And they were stranger than
+they looked: the row checkbox carried `form={BULK_FORM}` as a prop of MUI's `Checkbox`, which
+puts unknown props on its wrapping span, never on the `<input>` — so no tick belonged to the
+form, every bulk publish and archive posted nothing and answered "you did not tick any". Found
+by the e2e test written for the new bar, whose counter stayed at zero.
+
+**Decision.** `BulkBar`, a client island above the table, owns the form: a "select all"
+checkbox (indeterminate when some), "Ticked: N" (a template string filled on the client — a
+function cannot cross from a Server Component), and three submit buttons each with its own
+Server Action as `formAction`: publish and archive as before, and **delete**, Administrator
+only, with a dialog first; `requestSubmit(button)` names the submitter so the right action
+receives the ticks. `bulkDeleteEventsAction` refuses the whole batch for a role that may not
+delete, then takes each event through `deleteEvent`, which refuses one with a registration —
+counted and reported, never forced. The row checkbox's `form` moved to
+`slotProps.input`, where it reaches the `<input>`; a series row's tick is its dates' refs joined
+by commas (§113), so deleting a whole test series is one tick. Without JavaScript the buttons
+still post — the counter and "all" go quiet, and the server answers "nothing ticked".
+
+*Rejected:* buttons disabled at zero ticks (without JavaScript zero is all the bar knows);
+keeping the fold with a delete added (the fold was the strangeness); a confirmation on publish
+and archive (a click away from being undone).
+
+**Consequences.** `content/events/ui/BulkBar.tsx`, the events list (the bar, `slotProps.input.form`,
+the deleted alert), `admin/actions.ts` (`bulkDeleteEventsAction`), the catalogues;
+`tests/e2e/events-bulk.spec.ts`. BR-REQ-050-02 criterion 12.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 115. Decided — the light/dark switch in the bottom-left corner (2026-09-19)
+
+**Context.** The owner: "the theme switcher should be in the bottom left corner!" §93 put it in
+the header beside the language switcher — the header is what every visitor pays for, and a
+control used once sat on its most expensive line.
+
+**Decision.** `ThemeModeToggle` moves to the footer's one visible line, positioned in its
+left corner the way the social marks are positioned in its middle: the line is the summary's,
+and a flex row cannot hold a third thing between a summary and its panel. The summary starts
+after the switch; on a phone its label gives up the switch's width as well as the marks'. The
+bar grows from 40 to 44px: it was thinner than a tap target while it held a disclosure and
+three marks, and it holds a control now (BR-REQ-041-01). The header keeps the language
+switcher alone on its right.
+
+*Rejected:* a floating button fixed to the viewport corner (it would cover the summary on a
+phone and float away from the page's column on a wide screen); keeping a second switch in the
+header (one control, one place).
+
+**Consequences.** `shared/ui/SiteFooter.tsx` (`SWITCH_WIDTH`, `BAR_HEIGHT` 44),
+`shared/ui/SiteHeader.tsx`, `ThemeModeToggle`'s words. BR-REQ-041-01 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 116. Decided — the calendar picks a month or a year, and every entry wears its type's glyph (2026-09-19)
+
+**Context.** The owner: "the calendar should be smart, showing icons, and I should be able to
+select per month, or per year!" The month view (§89) stepped one month at a time with two
+arrows and "today", and each entry was a time and a title.
+
+**Decision.** Two native selects — the month and the year, two years either way, the same
+bound `parseMonth` had — go straight to the chosen month (`CalendarPicker`, the one island
+the calendar has; `useRouter().push`, so the listing's loading state shows rather than a blank
+page). A "Month | Year" pair of chips switches the view: `?year=2027` shows the whole year as
+the agenda of every month with something on it, each month a heading (a link to its month
+view) with its count, then the days — the same agenda the phone shows for a month, so the
+year view needs no second design. The arrows step a year in that view. *Amended the same
+evening* (the owner: "the year calendar is not boxed enough"): each month is a card — a
+bordered box with the month on a tinted band — in two columns from `sm` and three from `lg`,
+so the year reads as a shelf of months rather than one long list. Every entry, in the
+grid, the agenda and the year, carries the type's glyph (§112) before the time. The year wins
+when the address names both.
+
+*Rejected:* twelve mini-months (at 320px a mini-month is dots nobody can tap, and the club's
+year is a schedule to read, not a heat map); a range picker (two selects say it); a
+JavaScript-only calendar (every address here is a link a crawler follows).
+
+**Consequences.** `events/domain/calendar.ts` (`parseYear`, `yearsAround`, `yearRange`,
+`groupByMonth`, `YEARS_EITHER_WAY`), `events/ui/CalendarPicker.tsx`,
+`events/ui/EventCalendar.tsx` (`CalendarView`), the listing, the catalogues;
+`tests/unit/events/calendar.test.ts`. BR-REQ-020-01 criterion 10.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 117. Decided — the programme as data: timed rows on the event, a list on the page, in the reminder, one calendar entry each (2026-09-19)
+
+**Context.** The last developer row on `/admin/tasks` but one: since §96 the programme was
+free text per language, and §107's calendar carried it as text in the description. A trail
+race publishes kit pickup on Saturday, the briefing at 09:30, the start at 10:00, the cut-offs
+— rows with a time, and a runner wants the briefing in the phone's calendar, not only the
+start.
+
+**Decision.** `events.schedule_items` (migration `0043`, `jsonb`, null for none): `[{ startsAt,
+endsAt, label: { ro, en }, place }]`, instants as ISO strings. On the event rather than the
+translation because the time and the place are the same fact in either language (§36) and
+only the label is a translation — so the row carries both, and a save through the editor
+requires both, the way publication requires both languages (§28). `events/domain/schedule.ts`
+is the one reader (`readScheduleItems` drops what is not a row), the one localizer, the one
+shifter for a repeated event (§64: on the wall clock, so 09:30 stays 09:30 across the clock
+change) and the one line-writer for the plain places. The editor's rows
+(`ScheduleRowsEditor`, the settings' one island: add a row, remove one) post
+`event.schedule[i].<box>`; a blank row is the spare line and is dropped, a half row is refused
+with its number. The page shows the rows under `#schedule` as a list — the time, what, where,
+with a day heading when they span days — and the free text beneath (`EventProgramme`, shared
+with the preview). The reminder repeats them as one sentence per language. The `.ics` — the
+event's file and the club's feed — carries one VEVENT per row after the event's own, "Crosul
+aniversar — Kit pickup" at the row's time and place, UID `<event id>-<n>`, and the event's
+description lists the rows before the text. Not on a group run (§111).
+
+*Rejected:* a table (`event_schedule_items` — a join, an order column, ids to edit by, for
+rows that are saved with the event in one version-guarded write anyway); rows per
+translation (two lists that drift — the time is one fact); a label in one language with a
+fallback (a row on one page and not the other is what §28 exists to prevent); a rich-text
+table (the editor's allowlist has no table, and a table is not data).
+
+**Consequences.** `schema/events.ts`, migration `0043_event_schedule_items`,
+`events/domain/schedule.ts`, `content/events/fields.ts` (`scheduleRows`), `service.ts`
+(`resolveTimes`, `normalizeForType`, `copiedEventValues`, `repeatEvent`),
+`admin/actions.ts#eventFieldsFrom`, `ScheduleRowsEditor`, `EventFieldsForm`,
+`events/ui/EventProgramme.tsx`, the event page and the preview, `events/repository.ts`,
+`ical.ts` (`programme`), the two `.ics` routes, `notifications/render.ts` and `templates.ts`
+(`eventProgramme`), the catalogues, the `scheduleStructured` row retired; `tests/unit/events/schedule.test.ts`,
+`tests/unit/events/ical.test.ts`, `tests/integration/cms/programme-rows.test.ts`,
+`tests/integration/notifications/render.test.ts`. BR-REQ-020-01 criterion 11, BR-REQ-050-02
+criterion 13.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 118. Recorded — the build plan `SETUP.md` carried, and the bootstrap it opened with, retired from the setup document (2026-09-19)
+
+**Context.** The last developer row on `/admin/tasks`: "the documentation, shortened". §109
+made `CLAUDE.md` a map and left `SETUP.md` as it was — 1,831 lines in which the numbered
+procedures still valid (the topology, the accounts, the environment, Neon, Vercel, the
+domain, R2, the volunteers, the sending domain) sat beside the M1 build plan: "scaffold the
+application", "implement registration and capacity", nineteen sections and a ten-pull-request
+list describing code that has been on production since 2026-09-17. `docs/RUNBOOKS.md` opened
+with the repository's first push, step by step, and kept the first production deployment as a
+runbook beside the one every release follows.
+
+**Decision.** `SETUP.md` §6–§8 and §11–§24 are two tables — the section number, what it
+asked for, where that thing lives now — under headings that keep the numbers, so every
+`SETUP.md §19` in this document and the changelog still lands on a line that says where to
+look; §29's M1 list is one paragraph. 1,831 lines become 1,162, and nothing an operator still
+needs moved. `docs/RUNBOOKS.md` opens with "Repository settings" — what must still be true in
+Settings — instead of the bootstrap, and "The first production deployment" is the two things
+it added once and the one lesson, since the order is § Deploying to production's. 806 lines
+become 691. The full text is in the repository's history (`git show 7ecd060:SETUP.md`,
+`git show 7ecd060:docs/RUNBOOKS.md`); this section is the record of what the plan was.
+
+**What the plan was.** The bootstrap (2026-09-02): the repository created empty, the
+documentation baseline copied in with its dotfiles, `docs:check` run, one commit on `main`
+tagged `baseline/BR-V1.0`, `qa` branched and made the default, the two rulesets, the AI
+reviewer's read access, and deliberately no application code, no `.nvmrc`, no lockfile and no
+secrets in that push. Then M1 as ten vertical pull requests:
+
+| PR | Was to deliver |
+| --- | --- |
+| 1 Foundation | Root docs and `docs:check` in `yarn check`, the pre-commit hook, Next.js and MUI, the i18n shell, CI, `CODEOWNERS`, local PostgreSQL, environment validation, `.nvmrc` |
+| 2 Database | Drizzle, migrations, seeds, the M1 schema with the M2 footprints (`races`, `events.race_id`, results consent, `bib_number`) |
+| 3 Walking skeleton | One seeded event, the form with privacy acknowledgment and results consent, the capture outbox, a placeholder declaration, `CONFIRMED` reached on QA, clicked through by a person |
+| 4 Staff auth and backoffice | Auth.js with the `staff_users` allowlist, roles, the development switcher, event edit/publish, the registration list and timeline |
+| 5 Event pages | The public list and detail per locale, the exact free-place count, structured data, sitemap, robots, canonical and hreflang |
+| 6 Identity, tokens, legal documents | Canonical email, hashed scoped tokens, `legal_documents` with the runbook, acceptance evidence |
+| 7 Registration lifecycle | Verification, holds, the declaration, confirmed, unregistration, concurrency tests against real PostgreSQL |
+| 8 Waiting list and jobs | FIFO, offers, expiry, closure at the start, the maintenance and outbox jobs, `job_runs`, the scheduler, the health check |
+| 9 Live email | The Mailgun adapter, templates in both locales, delivery modes and the QA allowlist, webhooks, delivery history |
+| 10 Launch gate | Domain binding, the approved legal documents, backups with a tested restore, monitoring, one real registration on production |
+
+Sections 11–24 planned the same slices one module at a time — MUI, i18n, the database,
+canonical email first, staff auth, the mini CMS, action tokens, declarations, registration and
+capacity, the waiting list, the backoffice, runner profiles (M4, still not built), email and
+the outbox, R2 and media — and the tables in `SETUP.md` say where each one is.
+
+*Rejected:* renumbering the sections that stay (eighty references to §26 alone, and the
+history in this document cites the old numbers); moving the retired text into this document
+whole (seven hundred lines of a plan that the code superseded, when a table says the same);
+deleting the M2–M5 roadmap in §29 (it is still the plan for what is not built).
+
+**Consequences.** `SETUP.md`, `docs/RUNBOOKS.md`, the `docsSimplify` row retired from
+`/admin/tasks`; `CLAUDE.md`'s note on `SETUP.md`'s length.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 119. Decided — `/devs` wears the backoffice's chrome; the switch in the bar's own corner (2026-09-19)
+
+**Context.** The owner, testing: "the config page is missing the navbar" — the Configurație tab
+led to a page with no tabs to come back by, because `/devs` is its own route (BR-REQ-090-04)
+outside `/admin`'s layout, and the title, the signed-in line, sign out and the tabs were that
+layout's body. And, at the footer: "the theme switcher should be all the way to the left" —
+§115 had put it at the page column's edge, not the bar's.
+
+**Decision.** `BackofficeShell` (`staff-identity/ui`) is the chrome — the title, who is signed
+in, sign out, the tabs — and both `/admin`'s layout and a new `/devs` layout render it; the
+sign-out action is handed in, so the module never imports the app's actions. The `/devs` layout
+applies the same gate (sign in, or 404 where there is no sign-in) and the diagnostics
+threshold, which each page still asserts for itself. The three `/devs` pages drop their own
+`<main>` and title; their headings are section headings under the shell's. The scheme switch
+sits in the footer bar's corner (`left: 0` on the bar, not the column); the summary keeps
+clear of it below `xl`, where the column's own margin does.
+
+**Consequences.** `staff-identity/ui/BackofficeShell.tsx`, `admin/layout.tsx`,
+`devs/layout.tsx`, `devs/page.tsx`, `devs/theme/page.tsx`, `devs/docs/[name]/page.tsx`,
+`shared/ui/SiteFooter.tsx`. BR-REQ-090-04 criterion 7, BR-REQ-041-01 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 120. Decided — a 24-hour clock in English too; the meeting point is the map link (2026-09-19)
+
+**Context.** The owner, on the English listing: "in the calendar the time should be 24H
+format" — `en` formats through `Intl` as 12-hour ("06:30 PM") while §70 already decided a
+runner in Brașov reads a start time on a 24-hour clock. And, at a card: "this address should
+be a link if I set that in the console" — the meeting point was plain text, with a separate
+"Open the map" only on the full page.
+
+**Decision.** Every time the site formats — the calendar, the facts, the programme, the hero,
+the button, the share card, the backoffice lists, the participant's pages — carries
+`hourCycle: "h23"`, so both languages read 18:30. `next-intl` has no global switch for it and
+the routing locale must stay `en`, so the option sits at the calls (twenty, one `sed`). The
+meeting point is itself the map link wherever a link may sit — the page, the hero, a series
+card — and stays words inside an event card, which is one link itself (`EventFacts#links`);
+"Open the map" appears only when there is a link and no name to carry it.
+
+**Consequences.** the twenty call sites; `events/ui/EventFacts.tsx`, the listing's card.
+BR-REQ-020-01 criterion 12.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 121. Decided — two more types, "other event", a co-host, "always free", and glyphs in the editor's selects (2026-09-19)
+
+**Context.** The owner, testing the editor and the listing, in one evening: "on the event
+types I need an equipment testing type; meetup is a bit vague, and I need a special event
+type" — then "eveniment special e un pic ciudat, zi doar 'alt eveniment'" — "add the
+equipment testing type, co-host, external and special events"; "a co-host race — this year we
+had a featured co-host event with another ONG"; "state somewhere that Brașov Runners events
+are always free — this also helps us pass the Google verifications"; "these drop-downs should
+also have icons"; "I hate the asphalt icon, I need something like a road".
+
+**Decision.** Migration `0044`, expand-only: `GEAR_TEST` and `EXTERNAL` join `event_type`;
+`MEETUP` keeps its value (Postgres does not rename one) and is labelled *Alt eveniment* /
+*Other event*. `co_host_name` and `co_host_url` (https, checked) on the event: shown as
+"Împreună cu <name>", a link to its page, in the facts on the page, the hero and a series
+card; carried by a duplicate and a repeat (a series held with a partner is held with them
+every time); named as a second `organizer` in the JSON-LD after the club. Every club event
+not marked `PAID` says so to Google — `isAccessibleForFree` and an `Offer` at price 0 in
+lei, at the event's own page, valid from its publication — and the listing's intro and the
+footer's description say "always free" in words. The editor's four closed-set selects take
+their options' glyphs (`GlyphSelect`, a client component for the reason `GlyphChip` is). The
+asphalt glyph is a road drawn here (`RoadIcon`: two edges to the horizon, a dashed centre) —
+Material has none without a plus, a pencil or a minus on it — and `Glyph` is any component
+that takes `SvgIconProps`, so a drawn one sits beside Material's.
+
+*Rejected:* renaming `MEETUP` in the database (a migration with a lock for a label, §103's
+reasoning); removing `MEETUP` (every row keeps its value; a contract migration for a word); a
+co-host on the translation (a name is the same in both languages, §36); "free" only in words
+(Google reads the offer, not the sentence).
+
+**Consequences.** `schema/events.ts`, migration `0044_event_types_cohost_repeat` (which also
+carries §122's columns), `event-type.ts`, `glyphs.ts` (`Glyph`, `RoadIcon`), `GlyphSelect`,
+`EventFieldsForm`, `fields.ts`, `service.ts`, `actions.ts`, `repository.ts`, `EventFacts`
+("Together with"), `structured-data.ts`, the preview, the catalogues, `AGENTS.md` §10.1;
+`tests/unit/events/structured-data.test.ts`. BR-REQ-010-01, BR-REQ-052-02 criterion 9,
+BR-REQ-050-02 criterion 14.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 122. Decided — a standing series: until a date or for ever, kept eight weeks ahead by the job; a date unlike the others wears a mark (2026-09-19)
+
+**Context.** The owner, at the Repeat form: "I should basically have the repeated events
+indefinitely, not set how many weeks … so basically for a recurring event I need a start and
+end date, but I also need to update a certain edition — it might be cancelled or relocated!
+So I need a strikethrough for that status and a warning sign with tooltip." And: "all of
+this must be super DB efficient." §64's Repeat made N copies once; a season of Mondays was a
+number to guess, and a run that goes on for ever was a series to re-make every few months.
+
+**Decision.** The source event carries a rule — `repeat_rule`: cadence, weekdays, `until` (a
+date, or null for ever), publish — and every occurrence is still its own row, naming its
+source in `repeat_of`, so one date is cancelled or moved like any event and the rest stand.
+Repeat writes the rule and creates the next eight weeks at once; the maintenance job
+(`materializeStandingRepeats`, every quarter hour by day) brings every source with a rule up
+to the horizon — one read off a partial index for the sources, then per source the latest
+occurrence off `(repeat_of, starts_at)` and the slugs of the dates it would add, and on most
+runs no write. Every occurrence is a whole number of periods from the source, so two passes
+never disagree and a series stopped and started lands on the same dates; a date whose
+address exists is skipped, never duplicated. "Stop the series" clears the rule and leaves the
+dates (the bulk verbs remove them). The editor shows one of three things: on a date of a
+series, the note and the way to the source; on a source with a rule, the sentence ("În
+fiecare luni și miercuri, la 08:00 — la nesfârșit") and Stop; otherwise the form, whose
+"until" is a date or nothing. Cancelled and moved dates are *read*, not recorded: the
+series' usual place and time are the most common among the dates on view, and a date that
+differs — cancelled first, else another place, else another hour — is struck through and
+wears a mark with the sentence in a tooltip and as its name (`EditionMark`), on the series
+card, in the calendar and in the backoffice's folded dates.
+
+*Rejected:* one row with an RRULE and virtual occurrences (capacity, holds and the waiting
+list are per event, and a runner registers for a date); a "moved" flag set by hand (the
+organizer already changed the place; asking again is a second truth); creating the whole
+series to the end on day one (a year of Mondays is 52 rows nobody has looked at, and "for
+ever" has no end to create to); an unbounded horizon (eight weeks is what a runner plans and
+what a listing shows).
+
+**Consequences.** `events/domain/repeat.ts` (the rule, `occurrencesBetween`, `horizonEnd`),
+`schema/events.ts` (`repeat_rule`, `repeat_of`, two indexes; migration `0044`),
+`content/events/service.ts` (`repeatEvent`, `materializeSeries`,
+`materializeStandingRepeats`, `stopRepeat`), `registrations/maintenance.ts`, `admin/actions.ts`
+(`stopRepeatAction`), `RepeatFields` ("until"), the editor, `events/domain/series.ts`
+(`usualOf`, `editionDifference`), `EditionMark`, `SeriesDates`, `SeriesCard`,
+`EventCalendar`, the events list, `series-sentence.ts` (`ruleSentence`, `editionNote`), the
+catalogues; `tests/integration/cms/repeat.test.ts`. BR-REQ-050-02 criterion 7 (rewritten),
+BR-REQ-020-01 criterion 13.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 123. Decided — "Add" on Echipa creates the Zitadel account and Zitadel sends the invitation (2026-09-19)
+
+**Context.** The owner added himself on Echipa and waited: "I tried to invite someone
+(myself) and I did not receive the code … I should have seen that email in the Zitadel
+console!" Adding a person wrote the allowlist row and nothing else; the Zitadel account was
+theirs to create, and the page's sentence blamed a sending domain that has been live since
+§98. Zitadel's own mail goes through that domain (§35), and a test message from it arrived.
+
+**Decision.** With a Zitadel service user's personal access token on the deployment
+(`ZITADEL_MANAGEMENT_PAT`, `SETUP.md` §37; the role Org User Manager, `user.write` and no
+more), `inviteStaffAction` follows the allowlist row with two calls to Zitadel's User API v2
+(`staff-identity/zitadel-users.ts`): create the human user with the address marked verified —
+the invitation proves the mailbox — then an invite code that Zitadel sends, the link to choose
+a password. The outcome is said on the page: sent; the account already existed, sign in now;
+not configured, create it in the console; refused, with Zitadel's reason and the console as
+the way out. "Resend the invitation" on a row that has never signed in looks the account up
+by its login name and sends a new code, which replaces the old. Locally, where the switcher is
+the provider, nothing is sent. Nothing here decides who is staff: `staff_users` still does
+(`AGENTS.md` §13), and a Zitadel account without a row is refused as before.
+
+*Rejected:* the platform's own invitation email (a second link to the same door, and a
+password flow that is Zitadel's to run); creating the account through the console by hand as
+the documented way (it was, and the owner did not find it); the address unverified (a second
+mail to click before the invitation, for a mailbox the invitation itself proves).
+
+**Consequences.** `staff-identity/zitadel-users.ts`, `env.ts` (`ZITADEL_MANAGEMENT_PAT`),
+`admin/actions.ts` (`inviteStaffAction`, `resendStaffInviteAction`), the staff page, the
+catalogues, the "Invite the team" row, `SETUP.md` §37; `tests/unit/staff/zitadel-users.test.ts`.
+BR-REQ-060-01 criterion 10.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 124. Decided — the messages a local machine would have sent are shown on `/devs`, with their links (2026-09-19)
+
+**Context.** The owner, testing locally: "why did I not receive the email?" Locally nothing
+is sent — `EMAIL_DELIVERY_MODE=capture` keeps every message in memory (§37) — and the memory
+was the drain's own, gone with the request; there was no way to click the verification link
+without reading the database.
+
+**Decision.** One capture adapter for the process (`sender.ts#sharedCapture`), the last fifty
+messages kept, and a section on `/devs` — on `local` and `test` only — listing them newest
+first with the links found in their text, each clickable: the participant's journey can be
+walked on a laptop. Never on QA or production, where a captured message is one the allowlist
+held back and carries a live token.
+
+**Consequences.** `infrastructure/email/sender.ts` (`sharedCapture`, `capturedEmails`),
+`devs/page.tsx`, the catalogue; `tests/integration/notifications/modes.test.ts` clears the
+shared capture between tests. BR-REQ-090-04 criterion 8.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 125. Decided — `.nvmrc` names the major, `22`, not a patch (2026-09-19)
+
+**Context.** The owner: "Vercel is complaining about the fixed node version." `.nvmrc` said
+`22.14.0` exactly; Vercel runs a major line (`22.x`, as `engines.node` already said) and warns
+about a patch it will not honour, and every developer's `nvm use` failed the day a newer 22
+was installed.
+
+**Decision.** `.nvmrc` says `22`. CI (`node-version-file`) and a version manager take the
+latest 22; `engines.node` stays `22.x`. Nothing in the repository depends on a patch of 22.
+
+**Consequences.** `.nvmrc`, `README.md`, `docs/DEVELOPMENT.md`, `CLAUDE.md`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 126. Decided — fewer messages: the signed declaration rides on the confirmation, and no reminder to somebody confirmed yesterday (2026-09-19)
+
+**Context.** The owner: "we need to minimize the number of emails sent by the platform." A
+completed registration sent five — verify, sign, confirmed, the signed declaration, the
+reminder — and §96 had kept it at five on purpose. Two of them said what another already said.
+
+**Decision.** The signed declaration's PDF is attached to the confirmation — the one message
+a runner keeps, which already linked the PDF — and `DECLARATION_SIGNED` is no longer queued
+(the type stays, for a resend from the registration's page and for rows already queued). The
+reminder 48 hours before is not sent to a registration confirmed within the last 24 hours:
+that confirmation carries the same date, place, QR and number, and a copy an hour later is the
+mail people learn to ignore. Four messages on the common path; three when the runner
+registers on the eve. The club's archive copy (§99) is unchanged: it is the club's, and
+opt-in.
+
+*Rejected:* dropping the reminder altogether (a runner who registered a month ago wants it);
+folding the verification into the sign-in link (the address is proven before anything is
+held, §12.8); a "no more emails" switch per participant (unsubscribing from the mail that
+carries your race number is not a favour).
+
+**Consequences.** `registrations/service.ts#enqueueDeclarationCopies`,
+`notifications/render.ts` (the attachment on `REGISTRATION_CONFIRMED`),
+`notifications/event-mail.ts#queueEventReminders`; `tests/integration/registrations/
+signed-declaration.test.ts`, `declaration-archive.test.ts`, `notifications/event-mail.test.ts`.
+BR-REQ-033-02 criterion 9, BR-REQ-080-01 criteria 5 and 8.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 127. Decided — links and pictures in a legal text, as two marks in the plain text (2026-09-19)
+
+**Context.** The owner: "I must be able to put pictures and links in these documents." A
+legal body is plain paragraphs on purpose (§46, §53): what is hashed, signed and merged is
+text, and the editor is a textarea with `## ` for a heading and a blank line between
+paragraphs.
+
+**Decision.** Two marks inside a paragraph, read at render time and never stored as anything
+else: `[the words](https://…)` is a link — https, mailto or a path on this site; anything else
+stays words — and `![what it shows](https://…)` on a line of its own is a picture, https only,
+its words the caption. `LegalDocumentBody` renders them as an `<a>` and an `<img>` with the
+attributes the parser allowed and no markup; the two PDFs write the link as "the words
+(address)" and the picture as its words; the hash, the merge fields and the acceptance
+evidence see the text as typed. The form's help says the two marks and where a picture's
+address comes from (Gallery → Pictures).
+
+*Rejected:* the rich-text editor for legal texts (a document a person signs is hashed as
+text, the PDF is drawn from paragraphs, and §46 chose that deliberately); an image without
+an https address (a data URI is a file in a database column); http links (the site is https
+and so are the pages it should point at).
+
+**Consequences.** `legal-documents/domain/inline.ts`, `ui/LegalDocumentBody.tsx`,
+`legal-documents/pdf.ts`, `registrations/declaration-pdf.ts`, the catalogues;
+`tests/unit/legal/inline.test.ts`. BR-REQ-053-01 criterion 9.
+
+Baseline `BR-V1.38-2026-09-18`.

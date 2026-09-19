@@ -104,7 +104,7 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                 {format.dateTime(item.eventStartsAt, {
                   timeZone: item.eventTimezone,
                   dateStyle: "full",
-                  timeStyle: "short",
+                  timeStyle: "short", hourCycle: "h23",
                 })}
               </Typography>
 

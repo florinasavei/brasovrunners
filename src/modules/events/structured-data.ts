@@ -117,7 +117,32 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     // Criterion 4: a cancelled event keeps its block and states the status.
     eventStatus: EVENT_STATUS_URL[event.eventStatus],
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    organizer: { "@type": "SportsOrganization", "@id": clubId(), name: organizationName },
+    // The club, and the co-host when there is one (§121) — two organizers, the club first.
+    organizer: event.coHostName
+      ? [
+          { "@type": "SportsOrganization", "@id": clubId(), name: organizationName },
+          { "@type": "Organization", name: event.coHostName, ...(event.coHostUrl ? { url: event.coHostUrl } : {}) },
+        ]
+      : { "@type": "SportsOrganization", "@id": clubId(), name: organizationName },
+    /**
+     * Brașov Runners events are free (the owner, 2026-09-19: "state somewhere that Brașov
+     * Runners events are always free — this also helps us pass the Google verifications").
+     * Google's event result wants an offer with a price; a club event that has not been
+     * marked PAID is offered at zero, in lei, at its own page.
+     */
+    ...(event.costType !== "PAID"
+      ? {
+          isAccessibleForFree: true,
+          offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "RON",
+            url,
+            availability: "https://schema.org/InStock",
+            validFrom: toOffsetIsoString(event.publishedAt ?? event.startsAt, event.timezone),
+          },
+        }
+      : {}),
     location: {
       "@type": "Place",
       name: event.locationName,

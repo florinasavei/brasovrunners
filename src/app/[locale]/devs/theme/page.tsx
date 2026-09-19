@@ -1,4 +1,3 @@
-import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -8,7 +7,6 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { PAGE_WIDTH } from "@/theme/brand";
 import ThemeLabForm from "@/theme/ThemeLabForm";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -32,14 +30,13 @@ export default async function ThemeLabPage({ params }: Props) {
   const t = await getTranslations("Devs");
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 5 } }}>
-      <Stack spacing={3}>
-        <Typography variant="body2">
-          <Link href="/devs">{t("theme.back")}</Link>
-        </Typography>
-        <Typography variant="h1" sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }}>
-          {t("theme.title")}
-        </Typography>
+    <Stack spacing={3}>
+      <Typography variant="body2">
+        <Link href="/devs">{t("theme.back")}</Link>
+      </Typography>
+      <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
+        {t("theme.title")}
+      </Typography>
         <Typography color="text.secondary">{t("theme.intro")}</Typography>
         <ThemeLabForm
           homeHref={getPathname({ locale, href: "/" })}
@@ -52,7 +49,6 @@ export default async function ThemeLabPage({ params }: Props) {
             reset: t("theme.reset"),
           }}
         />
-      </Stack>
-    </Container>
+    </Stack>
   );
 }

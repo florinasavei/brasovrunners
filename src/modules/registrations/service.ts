@@ -732,28 +732,19 @@ export async function signDeclaration<T extends Record<string, unknown>>(
 }
 
 /**
- * The copies of a signed declaration (§95, §99): the participant's own, as a PDF attached —
- * its own message, so the confirmation stays what it is and the declaration is found by its
- * subject — and, when the club has named an archive mailbox, the club's, the same PDF to
- * `DECLARATIONS_ARCHIVE_TO`. The archive copy carries no action link (a manage token in the
- * club's mailbox would be a secret handed to the wrong person, §12.8) and is not sent for a
- * test registration: a synthetic runner's declaration is not a record the club keeps.
+ * The club's copy of a signed declaration (§99): when the club has named an archive mailbox,
+ * the same PDF to `DECLARATIONS_ARCHIVE_TO`. The participant's own copy rides on the
+ * confirmation since §126 — the PDF attached to the one message they keep — rather than as a
+ * message of its own (the owner: "we need to minimize the number of emails"). The archive
+ * copy carries no action link (a manage token in the club's mailbox would be a secret handed
+ * to the wrong person, §12.8) and is not sent for a test registration: a synthetic runner's
+ * declaration is not a record the club keeps.
  */
 async function enqueueDeclarationCopies<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   confirmed: Registration,
   now: Date,
 ): Promise<void> {
-  await enqueueEmail(tx, {
-    participantId: confirmed.participantId,
-    registrationId: confirmed.id,
-    messageType: "DECLARATION_SIGNED",
-    locale: confirmed.locale,
-    recipientEmail: await deliveryEmailOf(tx, confirmed.participantId),
-    payload: {},
-    idempotencyKey: `registration:${confirmed.id}:declaration-signed:${now.toISOString()}`,
-    now,
-  });
   if (env.DECLARATIONS_ARCHIVE_TO && confirmed.kind === "REAL") {
     await enqueueEmail(tx, {
       participantId: confirmed.participantId,

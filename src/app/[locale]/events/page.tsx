@@ -16,23 +16,27 @@ import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
+import SeriesCard from "@/modules/events/ui/SeriesCard";
+import { groupSeries } from "@/modules/events/domain/series";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
-import { monthRange, parseMonth } from "@/modules/events/domain/calendar";
+import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
-import EventCalendar from "@/modules/events/ui/EventCalendar";
+import EventCalendar, { type CalendarView } from "@/modules/events/ui/EventCalendar";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ month?: string | string[]; type?: string | string[] }>;
+  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[] }>;
 };
 
 /**
@@ -51,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam, type: typeParam } = await searchParams;
+  const { month: monthParam, year: yearParam, type: typeParam } = await searchParams;
   // The type filter (§89): one of the closed set, or everything.
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
@@ -71,10 +75,12 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // a broken site, so the last event that happened stands in, dated.
   const latestPast = upcoming.length === 0 ? await findLatestPastEvent(db, locale, now) : undefined;
   const events = upcoming.length > 0 ? upcoming : latestPast ? [latestPast] : [];
-  // The month view (`DECISIONS.md` §89): the month the URL names, or this one.
-  const month = parseMonth(monthParam, now, CLUB_TIME_ZONE);
-  const range = monthRange(month, CLUB_TIME_ZONE);
-  const inMonth = (await listPublishedEventsBetween(db, locale, range.from, range.to)).filter(
+  // The month view (`DECISIONS.md` §89): the month the URL names, or this one — or the whole
+  // year it names (§116). The year wins when both are given: it is the wider question.
+  const year = parseYear(yearParam, now, CLUB_TIME_ZONE);
+  const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
+  const range = view.kind === "year" ? yearRange(view.year, CLUB_TIME_ZONE) : monthRange(view.month, CLUB_TIME_ZONE);
+  const inRange = (await listPublishedEventsBetween(db, locale, range.from, range.to)).filter(
     (event) => !type || event.type === type,
   );
 
@@ -90,6 +96,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
   const listed = (featured ? events.filter((event) => event.id !== featured.id) : events).filter(
     (event) => !type || event.type === type,
   );
+  // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
+  // the order the first occurrence had; a single event is a card as before.
+  const cards = groupSeries(listed);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
@@ -122,18 +131,31 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", gap: 1, mt: 4 }}>
         {[undefined, ...EVENT_TYPES].map((candidate) => {
           const active = candidate === type;
-          return (
+          // A string href: a component reference cannot cross into MUI's client component —
+          // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
+          const href = getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } });
+          // 44px tall (BR-REQ-041-01 criterion 6): a filter is a tap target like any other link.
+          const sx = { height: 44, borderRadius: 22, px: 0.5, fontSize: "0.9375rem" };
+          return candidate ? (
+            <GlyphChip
+              key={candidate}
+              glyph={`type:${candidate}`}
+              href={href}
+              color={active ? "primary" : "default"}
+              variant={active ? "filled" : "outlined"}
+              label={tEvent(`type.${candidate}`)}
+              sx={sx}
+            />
+          ) : (
             <Chip
-              key={candidate ?? "all"}
+              key="all"
               component="a"
-              // A string href: a component reference cannot cross into MUI's client component.
-              href={getPathname({ locale, href: { pathname: "/events", query: candidate ? { type: candidate } : {} } })}
+              href={href}
               clickable
               color={active ? "primary" : "default"}
               variant={active ? "filled" : "outlined"}
-              label={candidate ? tEvent(`type.${candidate}`) : t("filter.all")}
-              // 44px tall (BR-REQ-041-01 criterion 6): a filter is a tap target like any other link.
-              sx={{ height: 44, borderRadius: 22, px: 0.5, fontSize: "0.9375rem" }}
+              label={t("filter.all")}
+              sx={sx}
             />
           );
         })}
@@ -142,15 +164,31 @@ export default async function EventsPage({ params, searchParams }: Props) {
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
       <Box sx={{ mt: 2, mb: 4 }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        {/* Three doors (the owner: "this subscription to calendar does not work" — a `webcal://`
+            link does nothing where no app claims the scheme, which on a desktop is most
+            browsers): Google Calendar's own "add by URL" address, `webcal://` for Apple,
+            Outlook and phones, and the plain address to paste anywhere else. */}
         {t("calendar.subscribe")}{" "}
+        <MuiLink
+          href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`))}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+        >
+          {t("calendar.subscribeGoogle")}
+        </MuiLink>
+        {" · "}
         <MuiLink href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-          {t("calendar.subscribeLink")}
-        </MuiLink>{" "}
+          {t("calendar.subscribeApple")}
+        </MuiLink>
+        {" · "}
         <MuiLink href={`/${locale}/events/calendar.ics`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
           {t("calendar.downloadLink")}
         </MuiLink>
+        {" · "}
+        <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
       </Typography>
-      <EventCalendar month={month} events={inMonth} now={now} query={query} />
+      <EventCalendar view={view} events={inRange} now={now} query={query} />
       </Box>
 
       {/*
@@ -166,7 +204,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       {featured && listed.length > 0 && (
         <Box
           component="details"
-          open={listed.length <= 4}
+          open={cards.length <= 4}
           data-testid="other-events"
           sx={{
             "& > summary": {
@@ -182,12 +220,16 @@ export default async function EventsPage({ params, searchParams }: Props) {
             variant="h2"
             sx={{ fontSize: "1.25rem", mb: 2, minHeight: 44, display: "flex", alignItems: "center" }}
           >
-            {t("othersCount", { count: listed.length })}
+            {t("othersCount", { count: cards.length })}
           </Typography>
           <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
-            {listed.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index} now={now} underHero />
-            ))}
+            {cards.map((series, index) =>
+              series.members.length > 1 ? (
+                <SeriesCard key={series.key} members={series.members} index={index} now={now} underHero />
+              ) : (
+                <EventCard key={series.key} event={series.members[0]} index={index} now={now} underHero />
+              ),
+            )}
           </Stack>
         </Box>
       )}
@@ -197,9 +239,13 @@ export default async function EventsPage({ params, searchParams }: Props) {
           <Alert severity="info">{t("empty")}</Alert>
         ) : (
           <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
-            {listed.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index} now={now} />
-            ))}
+            {cards.map((series, index) =>
+              series.members.length > 1 ? (
+                <SeriesCard key={series.key} members={series.members} index={index} now={now} />
+              ) : (
+                <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
+              ),
+            )}
           </Stack>
         ))}
     </Container>
@@ -228,9 +274,8 @@ async function EventCard({
       <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
         <CardContent>
           <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-            <Chip size="small" label={tEvent(`type.${event.type}`)} />
-            {/* The surface beside the type, only when the club has said. */}
-            {event.surface && <Chip size="small" variant="outlined" label={tEvent(`surface.${event.surface}`)} />}
+            {/* What it is and what it is run on, with their glyphs (§112). */}
+            <EventKindChips type={event.type} surface={event.surface} />
             {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
             {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
             {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}
@@ -246,7 +291,8 @@ async function EventCard({
             </Typography>
           )}
 
-          <EventFacts event={event} now={now} variant="compact" />
+          {/* No links inside: the card is the link. */}
+          <EventFacts event={event} now={now} variant="compact" links={false} />
 
           {/*
             The card has always been one big link (`CardLink`), and nothing said so. Text plus

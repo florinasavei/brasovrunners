@@ -198,7 +198,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       sortable: true,
       initialDir: "desc",
       hideBelow: "lg",
-      render: (row) => format.dateTime(row.submittedAt, { dateStyle: "medium", timeStyle: "short" }),
+      render: (row) => format.dateTime(row.submittedAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }),
     },
   ];
 
