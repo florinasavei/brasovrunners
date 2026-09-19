@@ -1442,7 +1442,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 8. Given a volunteer, a copywriter or an Editor, when they attempt to delete an event or to add or remove test registrations, then it is refused at the server; both are the Administrator's alone. Given a volunteer, when they open `/admin`, then they land on the desk, and the tabs offer the desk and the guide only; given any staff role, when they open `/admin/guide`, then their own role's sections come first and open (§103).
 9. Given `APP_ENV=production`, when a test registration is created by any path, then it is refused — at the feature's entrance and again at the statement that would write the row.
 
-**Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`; e2e `cms-publish.spec.ts`
+10. Given a Superadministrator adding a person on Echipa where Zitadel is the provider and `ZITADEL_MANAGEMENT_PAT` is set, when the row is added, then the person's Zitadel account is created with that address (verified) and Zitadel sends them the invitation to choose a password, and the page says so; an account that already exists is left as it is and reported; a missing key or a refusal by Zitadel still adds the row and says what to do in the console; a row that has never signed in offers "Resend the invitation" (2026-09-19, `DECISIONS.md` §123).
+
+**Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-070-01 — Participant data is never public
 

@@ -1176,3 +1176,23 @@ nobody redoes them (`/admin/tasks` reads the same facts from the deployment):
   email stops. Nine monitors in all: the two job pingers per environment (§26) and this one.
 - **Release #58** (`qa → main`, 2026-09-19) is live; the production schema is `0042`
   (`0043`, the programme rows, arrives with the next release and its gated migration run).
+
+## 37. Let "Add" on Echipa create the sign-in account and send the invitation
+
+Five minutes in the Zitadel console, once (`DECISIONS.md` §123). Without this, adding a
+colleague only allowlists them and the page says to create their account by hand.
+
+1. Zitadel console → **Users → Service Accounts → New**: user name `brasovrunners-invites`,
+   name "Brașov Runners — invitații", access token type **Bearer**. Create.
+2. **Organization → Members → Add**: the service account, role **Org User Manager** (it may
+   create users and send their invitation codes; nothing else).
+3. On the service account → **Personal Access Tokens → New**, expiry one year. Copy the token
+   — shown once — into the password manager.
+4. Vercel → the production project → Settings → Environment Variables:
+   `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
+   both.
+5. Check: Echipa → add yourself with a second address → the alert says the invitation is on
+   its way, and the mail arrives from `noreply@mail.<club domain>` (Zitadel's SMTP, §35). A
+   colleague who never signed in has "Resend the invitation" on their row.
+
+Locally the development switcher is the provider, so nothing is sent and the alert says so.

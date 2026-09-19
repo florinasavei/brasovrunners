@@ -30,6 +30,7 @@ import {
 import { canDeleteEvent, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
+import { inviteZitadelUser, resendZitadelInvite } from "@/modules/staff-identity/zitadel-users";
 import {
   changeStaffRole,
   inviteStaffUser,
@@ -629,22 +630,43 @@ export async function inviteStaffAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
 
-  let outcome: { error?: string; saved?: string };
+  let outcome: Record<string, string | undefined>;
   try {
     // The coarse gate first, so a non-Administrator never reaches the service; the service
     // asserts it again for callers that are not this action.
     const actor = await requireStaffRole("ADMIN");
-    await inviteStaffUser(getDb(), actor, {
+    const member = await inviteStaffUser(getDb(), actor, {
       email: text(form, "email"),
       displayName: text(form, "displayName"),
       role: text(form, "role") as StaffRole,
       preferredLocale: toLocale(form.get("preferredLocale")),
     });
-    outcome = { saved: "invited" };
+    // The allowlist row exists; now the account and its invitation, where Zitadel is the
+    // provider and a key is set (§123). Locally the switcher is the provider: nothing to send.
+    const invite =
+      env.STAFF_AUTH_MODE === "provider"
+        ? await inviteZitadelUser({ email: member.email, displayName: member.displayName, locale: member.preferredLocale as Locale })
+        : ({ kind: "unconfigured" } as const);
+    outcome = { saved: "invited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
   } catch (error) {
     outcome = outcomeOf(error);
   }
 
+  backTo(path, outcome);
+}
+
+/** The invitation again, for somebody whose first one is lost (§123). */
+export async function resendStaffInviteAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/staff" });
+  let outcome: Record<string, string | undefined>;
+  try {
+    await requireStaffRole("ADMIN");
+    const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(text(form, "email")) : ({ kind: "unconfigured" } as const);
+    outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
   backTo(path, outcome);
 }
 

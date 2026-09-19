@@ -5794,3 +5794,35 @@ catalogues; `tests/integration/cms/repeat.test.ts`. BR-REQ-050-02 criterion 7 (r
 BR-REQ-020-01 criterion 13.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 123. Decided — "Add" on Echipa creates the Zitadel account and Zitadel sends the invitation (2026-09-19)
+
+**Context.** The owner added himself on Echipa and waited: "I tried to invite someone
+(myself) and I did not receive the code … I should have seen that email in the Zitadel
+console!" Adding a person wrote the allowlist row and nothing else; the Zitadel account was
+theirs to create, and the page's sentence blamed a sending domain that has been live since
+§98. Zitadel's own mail goes through that domain (§35), and a test message from it arrived.
+
+**Decision.** With a Zitadel service user's personal access token on the deployment
+(`ZITADEL_MANAGEMENT_PAT`, `SETUP.md` §37; the role Org User Manager, `user.write` and no
+more), `inviteStaffAction` follows the allowlist row with two calls to Zitadel's User API v2
+(`staff-identity/zitadel-users.ts`): create the human user with the address marked verified —
+the invitation proves the mailbox — then an invite code that Zitadel sends, the link to choose
+a password. The outcome is said on the page: sent; the account already existed, sign in now;
+not configured, create it in the console; refused, with Zitadel's reason and the console as
+the way out. "Resend the invitation" on a row that has never signed in looks the account up
+by its login name and sends a new code, which replaces the old. Locally, where the switcher is
+the provider, nothing is sent. Nothing here decides who is staff: `staff_users` still does
+(`AGENTS.md` §13), and a Zitadel account without a row is refused as before.
+
+*Rejected:* the platform's own invitation email (a second link to the same door, and a
+password flow that is Zitadel's to run); creating the account through the console by hand as
+the documented way (it was, and the owner did not find it); the address unverified (a second
+mail to click before the invitation, for a mailbox the invitation itself proves).
+
+**Consequences.** `staff-identity/zitadel-users.ts`, `env.ts` (`ZITADEL_MANAGEMENT_PAT`),
+`admin/actions.ts` (`inviteStaffAction`, `resendStaffInviteAction`), the staff page, the
+catalogues, the "Invite the team" row, `SETUP.md` §37; `tests/unit/staff/zitadel-users.test.ts`.
+BR-REQ-060-01 criterion 10.
+
+Baseline `BR-V1.38-2026-09-18`.

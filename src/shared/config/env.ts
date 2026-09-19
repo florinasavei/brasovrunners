@@ -66,6 +66,13 @@ export const envSchema = z
     AUTH_ZITADEL_ID: z.string().min(1).optional(),
     AUTH_ZITADEL_SECRET: z.string().min(1).optional(),
     AUTH_ZITADEL_ISSUER: z.url().optional(),
+    /**
+     * A Zitadel service user's personal access token with `user.write` on the organization
+     * (`SETUP.md` §37): with it, adding a colleague on Echipa creates their Zitadel account and
+     * Zitadel emails the invitation (`DECISIONS.md` §123). Without it the row is still added
+     * and the page says to create the account in the console.
+     */
+    ZITADEL_MANAGEMENT_PAT: z.string().min(1).optional(),
 
     // Verifies job-endpoint callers (AGENTS.md §16.2) — a scheduler, not a staff session.
     JOB_SECRET: z.string().min(1).optional(),

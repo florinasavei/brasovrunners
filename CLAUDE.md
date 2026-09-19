@@ -248,6 +248,9 @@ evening; `/admin/tasks` shows the same list with the steps, read from the system
 9. ~~The health monitor~~ — done 2026-09-19: `GET /api/health` every 30 minutes with failure
    notifications on production and QA (`SETUP.md` §36). Release #58 is live; production is on
    schema `0042`.
+10. **The invitation key** — a Zitadel service user with Org User Manager and its token as
+    `ZITADEL_MANAGEMENT_PAT` on both Vercel projects (`SETUP.md` §37), so "Add" on Echipa
+    sends the invitation itself (§123).
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 
