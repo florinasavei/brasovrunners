@@ -10,6 +10,9 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **The three legal texts, approved in one press.** `/admin/legal` shows the club's facts it would write and a button that creates and approves version 1 of every missing document from the platform's text; a text in force is never replaced; the task-board row and the runbook say so. §132.
+- **The templates arrive with the club's facts written in.** "Start from the platform's text" fills the legal name, the CIF and the registered seat from `CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER`, `CLUB_REGISTERED_ADDRESS` (environment, never source — the repository is public) and the contact address from `EMAIL_REPLY_TO`; the page names whatever is still blank. §132.
+
 The evening's test on QA, and what it found.
 
 - **The editor says which date you are on.** Any date of a series opens under a header with the series' name, the date in words, "date 3 of 9", every date as a chip (the open one filled), and previous/next. §131.
@@ -23,7 +26,7 @@ The evening's test on QA, and what it found.
 - **"Add" on Echipa creates the sign-in account and sends the invitation** through Zitadel, when the club's Zitadel key is set (`SETUP.md` §37 — five minutes, once); the page says what happened, and a row that never signed in has "Resend the invitation". §123.
 - **A series repeats until a date or for ever.** "Repeat" takes an end date or none; the next eight weeks are created at once and the platform keeps every series eight weeks ahead by itself; each date stays its own event — "Stop the series" ends it; a cancelled or moved date is struck through with a warning mark and a tooltip on the card, in the calendar and in the backoffice. Calendar subscription offers Google Calendar's own link, the `webcal://` for Apple/Outlook/phones, and the address to copy. §122.
 - **Equipment testing and External event** join the types; Meetup reads "Other event"; a **co-host** (name and page) on an event, shown as "Together with …" and told to Google as a second organizer; every club event **says it is free** — in words on the listing and the footer, and as a zero offer in the structured data; the editor's selects show their glyphs; asphalt is a road. Migration `0044`. §121.
-- **24-hour clock everywhere**, English too; the meeting point is the map link on the page, the hero and a series card. §120.
+- **24-hour clock everywhere**, English too; the meeting point is the map link on the page, the hero and a series card. §132.
 - **`/devs` has the backoffice's tabs**, title and sign-out, from the one shell every staff page now shares; the light/dark switch sits in the footer bar's own corner. §119.
 - **Echipa says what "Add" does.** Adding an address sends no email and no code — it allowlists; the person needs a Zitadel account with that address and signs in at `/admin`. The sentence had blamed a missing sending domain, which is live since §98 (the owner, 2026-09-19: "I did not receive the code").
 - **The club's clicks of 2026-09-19, recorded:** Turnstile's widget and keys on both projects, the `/api/health` monitors on cron-job.org for both environments, release #58 live with schema `0042` (`SETUP.md` §36); the Turnstile row's steps are ticked.

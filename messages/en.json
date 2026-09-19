@@ -696,7 +696,7 @@
       "backToList": "Back to legal documents",
       "noTranslations": "This version has no text yet.",
       "newTitle": "New version",
-      "newFromTemplateIntro": "Prefilled with the platform's text: complete, with the club's four facts left in angle brackets <LIKE THIS>. Fill them in, read it all, save the draft, then approve it.",
+      "newFromTemplateIntro": "Prefilled with the platform's text, the club's legal name and the contact address already written in. Left to fill, in angle brackets, in both languages: {blanks}. Read it all, save the draft, then approve it from its page.",
       "templatesIntro": "Or start from the platform's text:",
       "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{idDocument}}' (the identity document typed at signing), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
@@ -722,7 +722,24 @@
       "deleteBody": "The draft and its text in both languages go permanently. Nobody has seen it: a draft is never public and nobody has signed it.",
       "deleteBlockedApproved": "Approved — cannot be deleted. What the club published stays on the record.",
       "deleteBlockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
-      "legalVersionDeleted": "The draft has been deleted."
+      "legalVersionDeleted": "The draft has been deleted.",
+      "newFromTemplateComplete": "Prefilled with the platform's text and the club's facts, complete. Read it all, save the draft, then approve it from its page.",
+      "platformApproved": "Done: {count} texts approved, with the club's facts. Registrations are open; the declaration is chosen on each event, under Registration (if not already).",
+      "platform": {
+        "title": "One step: approve the platform's texts with the club's facts",
+        "intro": "Not yet approved: {keys}. The button below creates and approves, in your name, version 1 of each from the platform's text, with the facts below written in. A text already approved is not touched.",
+        "facts": {
+          "legalName": "Legal name",
+          "registrationNumber": "CIF",
+          "registeredAddress": "Registered seat",
+          "contactEmail": "Contact email"
+        },
+        "missing": "not set",
+        "blocked": "Not yet possible: the variables {variables} are missing from the project's settings (Vercel → Settings → Environment Variables). Set them, redeploy, and the button appears here.",
+        "consequence": "Pressing it, you take responsibility for these texts as the club's representative: from that moment they are in force on the site, and a correction is a new version. You can read each text first, from the links below.",
+        "button": "Approve the three texts now",
+        "pending": "Approving…"
+      }
     },
     "tasks": {
       "title": "What is still to do",
@@ -752,11 +769,10 @@
           "todo": "A SAMPLE, unapproved text is on the site today. Until the club approves the privacy notice, the terms and the declaration, registration refuses everyone. The procedure is docs/RUNBOOKS.md § Legal document version.",
           "done": "The club’s approved wording is published.",
           "how": [
-            "Open /admin/legal and press “New version”. Pick the type: the privacy notice, the terms or the declaration.",
-            "Paste the text in Romanian and in English, in sections: a heading and its paragraphs. Save the draft.",
-            "Download the PDF from the version's page and give it to whoever has to read it. A draft can be rewritten as long as it is unapproved.",
-            "When it is right: tick “I have read it” and press “Approve”. From that moment the text is fixed — a correction is the next version, from here too.",
-            "Repeat for all three. The approved privacy notice is what unlocks registrations; the approved declaration is then chosen on each event, under Registration."
+            "The short way (§132): /admin/legal → the “One step” box → check the legal name, CIF, seat and email shown → “Approve the three texts now”. Done: the notice, the terms and the declaration are in force, with the club's facts written in.",
+            "To read first: under the box, “start from the platform's text” → open each, read, then press the button in the box.",
+            "The long way, for a change: “New version” → text → save the draft → PDF → “Approve”. An approved text never changes; a correction is the next version.",
+            "On each event, under Registration, pick the approved declaration (if not already)."
           ]
         },
         "liveEmail": {

@@ -696,7 +696,7 @@
       "backToList": "Înapoi la documentele legale",
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
-      "newFromTemplateIntro": "Precompletat cu textul platformei: complet, cu cele patru date ale clubului lăsate între paranteze unghiulare <AȘA>. Completează-le, citește tot, salvează ciorna, apoi aprob-o.",
+      "newFromTemplateIntro": "Precompletat cu textul platformei, cu denumirea clubului și adresa de contact deja scrise. Mai rămân de completat, între paranteze unghiulare, în ambele limbi: {blanks}. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
       "templatesIntro": "Sau pornește de la textul platformei:",
       "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{idDocument}}' (actul de identitate tastat la semnare), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
@@ -722,7 +722,24 @@
       "deleteBody": "Ciorna și textul ei în ambele limbi dispar definitiv. Nimeni nu a văzut-o: o ciornă nu apare public și nimeni nu a semnat-o.",
       "deleteBlockedApproved": "Aprobată — nu se poate șterge. Ce a publicat clubul rămâne în evidență.",
       "deleteBlockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
-      "legalVersionDeleted": "Ciorna a fost ștearsă."
+      "legalVersionDeleted": "Ciorna a fost ștearsă.",
+      "newFromTemplateComplete": "Precompletat cu textul platformei și cu datele clubului, complet. Citește tot, salvează ciorna, apoi aprob-o din pagina ei.",
+      "platformApproved": "Gata: {count} texte aprobate, cu datele clubului. Înscrierile sunt deschise; declarația se alege pe fiecare eveniment, la Înscrieri (dacă nu e deja).",
+      "platform": {
+        "title": "Într-un pas: aprobă textele platformei cu datele clubului",
+        "intro": "Lipsesc aprobate: {keys}. Butonul de mai jos creează și aprobă, pe numele tău, versiunea 1 a fiecăruia, din textul platformei, cu datele de mai jos scrise în el. Un text deja aprobat nu este atins.",
+        "facts": {
+          "legalName": "Denumirea juridică",
+          "registrationNumber": "CIF",
+          "registeredAddress": "Sediul",
+          "contactEmail": "Email de contact"
+        },
+        "missing": "nesetat",
+        "blocked": "Nu se poate încă: lipsesc variabilele {variables} din setările proiectului (Vercel → Settings → Environment Variables). După ce le pui și faci redeploy, butonul apare aici.",
+        "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
+        "button": "Aprobă cele trei texte acum",
+        "pending": "Se aprobă…"
+      }
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -752,11 +769,10 @@
           "todo": "Acum este afișat un text de EXEMPLU, neaprobat. Până când clubul aprobă nota de confidențialitate, termenii și declarația, înscrierea refuză pe toată lumea. Procedura: docs/RUNBOOKS.md § Legal document version.",
           "done": "Textele aprobate de club sunt publicate.",
           "how": [
-            "Deschide /admin/legal și apasă „Versiune nouă”. Alege tipul: nota de confidențialitate, termenii sau declarația.",
-            "Lipește textul în română și în engleză, pe secțiuni: un titlu și paragrafele lui. Salvează ciorna.",
-            "Descarcă PDF-ul de pe pagina versiunii și dă-l cui trebuie să-l citească. O ciornă se poate rescrie oricât timp nu e aprobată.",
-            "Când e bun: bifează „am citit” și apasă „Aprobă”. Din acel moment textul e fix — o corectură înseamnă versiunea următoare, tot de aici.",
-            "Repetă pentru toate trei. Nota de confidențialitate aprobată este cea care deblochează înscrierile; declarația aprobată se alege apoi pe fiecare eveniment, la Înscriere."
+            "Calea scurtă (§132): /admin/legal → caseta „Într-un pas” → verifică denumirea, CIF-ul, sediul și emailul afișate → „Aprobă cele trei texte acum”. Gata: nota, termenii și declarația sunt în vigoare, cu datele clubului scrise în ele.",
+            "Dacă vrei să citești mai întâi: sub casetă, „pornește de la textul platformei” → deschide fiecare, citește, apoi apasă butonul din casetă.",
+            "Calea lungă, pentru o modificare: „Versiune nouă” → text → salvează ciorna → PDF → „Aprobă”. Un text aprobat nu se mai schimbă; corectarea e versiunea următoare.",
+            "Pe fiecare eveniment, la Înscrieri, se alege declarația aprobată (dacă nu e deja)."
           ]
         },
         "liveEmail": {

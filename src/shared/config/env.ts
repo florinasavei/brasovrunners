@@ -182,6 +182,15 @@ export const envSchema = z
      */
     EMAIL_REPLY_TO: z.email().optional(),
     /**
+     * The club's legal identity, written into the legal templates before the club reads them
+     * (`DECISIONS.md` §132). Environment and not source, for the reason the club's domain is
+     * kept out of `src/` (§8): the repository is public, and a registered seat is somebody's
+     * address. The values live on the Vercel projects and in `.env.local`.
+     */
+    CLUB_LEGAL_NAME: z.string().trim().min(1).max(200).optional(),
+    CLUB_REGISTRATION_NUMBER: z.string().trim().min(1).max(60).optional(),
+    CLUB_REGISTERED_ADDRESS: z.string().trim().min(1).max(300).optional(),
+    /**
      * The club's archive mailbox for signed declarations (`DECISIONS.md` §99). Set, every
      * signature — electronic or on paper at the desk — also queues `DECLARATION_ARCHIVE` to
      * this address with the same PDF attached, so the archive builds itself; unset, the

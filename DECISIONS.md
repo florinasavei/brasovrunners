@@ -6045,3 +6045,50 @@ cancellation is undone).
 BR-REQ-050-02 criterion 16.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 132. Decided — the templates arrive with the club's facts written in, from the environment (2026-09-19)
+
+**Context.** Approving the three legal texts on production was the last step between the
+club and its first registration, and the owner's patience with "fill the four facts" ran out:
+"AI was supposed to do it all for me." He then shared the club's ANAF fiscal registration
+certificate — the legal name, the CIF and the registered seat — with two instructions:
+"remember this" and "remember the repo is public".
+
+**Decision.** The four facts reach the templates from the environment, never from source.
+`CLUB_LEGAL_NAME`, `CLUB_REGISTRATION_NUMBER` and `CLUB_REGISTERED_ADDRESS` are set on both
+Vercel projects and kept in `.env.local`; the contact address is `EMAIL_REPLY_TO`, which every
+email already says to reply to. `templates/club-facts.ts#fillClubFacts` writes whatever the
+deployment knows into a template body before the "start from the platform's text" page shows
+it, leaves an unknown fact's `<PLACEHOLDER>` standing, and the page's intro names what is
+still blank (`remainingPlaceholders`). With all four set, the intro says the draft is
+complete, and approving is: New version → start from the platform's text → read → save →
+approve, three times, no typing. The seed's sample texts keep every blank: a sample must not
+look approved. The same reasoning that keeps the club's domain out of `src/` (§8) keeps a
+registered seat — somebody's address — out of a public repository (§98), even though the
+approved privacy notice will show it on the site: the site is the club's to publish, the
+repository is everyone's to clone.
+
+**And one press.** "Do it for me" is not a thing a page can do for the person who must take
+responsibility, but it can be one act instead of fifteen: `approvePlatformTemplates` creates
+and approves version 1 of every document that has no approved version, from the platform's
+text with the facts written in, by the Superadministrator who presses — the same
+`createDraftVersion` and `approveVersion` the long way uses, so the number is derived, the
+hash is of what is stored, `effective_at` is the moment and the approver is on the row. A
+document already in force is left alone (§46, §53), a fact still unknown refuses the whole act
+naming the placeholder, and the page shows the facts it would write before the button, so a
+wrong CIF is caught on the backoffice and not on the public notice. The row on
+`/admin/tasks` and the runbook lead with it.
+
+*Rejected:* a constant in the source (the first cut of this decision, reversed within the
+hour on "the repo is public"); asking the club to type the facts (the point was not to);
+approving from a seed or a script (production is refused a seed by rule, §29, and the act
+must carry a person's name).
+
+**Consequences.** `env.ts` (three optional variables), `.env.example`, `club-facts.ts`,
+`admin/legal/new/page.tsx`, `service.ts#approvePlatformTemplates`, the action and the box on
+`/admin/legal`, the catalogue, the task row's steps, the runbook;
+`tests/unit/legal-documents/club-facts.test.ts`,
+`tests/integration/legal/platform-approve.test.ts`; the values on both Vercel projects.
+BR-REQ-053-02 criterion 10.
+
+Baseline `BR-V1.38-2026-09-18`.

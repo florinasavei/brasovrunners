@@ -608,6 +608,16 @@ An AI agent may draft the platform's templates (`src/modules/legal-documents/tem
 `DECISIONS.md` §95), format approved text and prepare the migration. It never marks a text
 approved and never fills in a club fact; the club reads and approves.
 
+### The shortest path: one press (2026-09-19, `DECISIONS.md` §132)
+
+`/admin/legal` as a Superadministrator: the box "Într-un pas" lists the club's legal name,
+CIF, seat and contact email as the deployment holds them (`CLUB_LEGAL_NAME`,
+`CLUB_REGISTRATION_NUMBER`, `CLUB_REGISTERED_ADDRESS`, `EMAIL_REPLY_TO`). Check them, press
+"Aprobă cele trei texte acum": version 1 of the privacy notice, the terms and the declaration
+is created from the platform's text with those facts written in and approved in your name.
+A document that already has an approved version is not touched. A missing variable shows in
+red and the button is withheld — set it in Vercel, redeploy, come back.
+
 ### The short path: start from the platform's text (2026-09-18)
 
 `/admin/legal` → "Versiune nouă" → the link for the document under "or start from the

@@ -2,11 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
+import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
+import { env } from "@/shared/config/env";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
 import {
+  approvePlatformTemplates,
   approveVersion,
   createDraftVersion,
   deleteDraftVersion,
@@ -93,6 +96,22 @@ export async function updateLegalVersionAction(form: FormData): Promise<void> {
     getPathname({ locale, href: { pathname: "/admin/legal/[id]", params: { id: versionId } } }),
     outcome,
   );
+}
+
+/** The three platform texts, with the club's facts, approved in one press (§132). Superadministrator. */
+export async function approvePlatformTemplatesAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+
+  let outcome: { error?: string; saved?: string; approved?: string };
+  try {
+    const actor = await requireStaffRole("SUPERADMIN");
+    const result = await approvePlatformTemplates(getDb(), actor, clubFactsFromEnv(env), new Date());
+    outcome = { saved: "platformApproved", approved: String(result.approved.length) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  backTo(getPathname({ locale, href: "/admin/legal" }), outcome);
 }
 
 export async function approveLegalVersionAction(form: FormData): Promise<void> {

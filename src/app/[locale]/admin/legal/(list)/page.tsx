@@ -9,6 +9,11 @@ import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
+import SubmitButton from "@/shared/ui/SubmitButton";
+import { env } from "@/shared/config/env";
+import { approvePlatformTemplatesAction } from "../actions";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
@@ -83,6 +88,27 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const t = await getTranslations("Admin");
   const format = await getFormatter();
   const versions = await listVersionsForBackoffice(getDb());
+  // The one press (§132): offered while any of the three has no approved version, with the
+  // facts it would write shown first — a wrong CIF is seen here, not on the public notice.
+  const facts = clubFactsFromEnv(env);
+  const now = new Date();
+  const missingKeys = (
+    await Promise.all(
+      (["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map(async (key) =>
+        (await findCurrentApprovedDocument(getDb(), key, "ro", now)) ? null : key,
+      ),
+    )
+  ).filter((key): key is "PRIVACY_NOTICE" | "TERMS" | "EVENT_DECLARATION" => key !== null);
+  const missingFacts = (
+    [
+      ["CLUB_LEGAL_NAME", facts.legalName],
+      ["CLUB_REGISTRATION_NUMBER", facts.registrationNumber],
+      ["CLUB_REGISTERED_ADDRESS", facts.registeredAddress],
+      ["EMAIL_REPLY_TO", facts.contactEmail],
+    ] as const
+  )
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
 
   const query = parseListQuery(current, {
     // Grouped by document, newest version first — the order the repository already returns and
@@ -155,8 +181,54 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         {saved === "legalVersionDeleted" && (
           <Alert severity="success">{t("legal.legalVersionDeleted")}</Alert>
         )}
-        {saved && saved !== "legalVersionDeleted" && <Alert severity="success">{t("saved")}</Alert>}
+        {saved === "platformApproved" && (
+          <Alert severity="success">{t("legal.platformApproved", { count: Number(current.approved ?? "0") })}</Alert>
+        )}
+        {saved && saved !== "legalVersionDeleted" && saved !== "platformApproved" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
+
+      {mayCreate && missingKeys.length > 0 && (
+        <Box sx={{ border: 2, borderColor: "primary.main", borderRadius: 1, p: 2 }} data-testid="platform-approve">
+          <Typography variant="h3" sx={{ fontSize: "1.05rem", mb: 0.5 }}>
+            {t("legal.platform.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t("legal.platform.intro", { keys: missingKeys.map((key) => t(`legal.keys.${key}`)).join(", ") })}
+          </Typography>
+          <Box component="dl" sx={{ m: 0, mb: 1.5, display: "grid", gridTemplateColumns: { xs: "1fr", sm: "auto 1fr" }, columnGap: 2, rowGap: 0.5 }}>
+            {(
+              [
+                ["legalName", facts.legalName],
+                ["registrationNumber", facts.registrationNumber],
+                ["registeredAddress", facts.registeredAddress],
+                ["contactEmail", facts.contactEmail],
+              ] as const
+            ).map(([fact, value]) => (
+              <Fragment key={fact}>
+                <Typography component="dt" variant="body2" sx={{ fontWeight: 600 }}>
+                  {t(`legal.platform.facts.${fact}`)}
+                </Typography>
+                <Typography component="dd" variant="body2" color={value ? "text.primary" : "error"} sx={{ m: 0 }}>
+                  {value ?? t("legal.platform.missing")}
+                </Typography>
+              </Fragment>
+            ))}
+          </Box>
+          {missingFacts.length > 0 ? (
+            <Alert severity="warning">{t("legal.platform.blocked", { variables: missingFacts.join(", ") })}</Alert>
+          ) : (
+            <form action={approvePlatformTemplatesAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <Stack spacing={1}>
+                <Typography variant="body2">{t("legal.platform.consequence")}</Typography>
+                <Box>
+                  <SubmitButton label={t("legal.platform.button")} pendingLabel={t("legal.platform.pending")} variant="contained" size="medium" />
+                </Box>
+              </Stack>
+            </form>
+          )}
+        </Box>
+      )}
 
       <Stack spacing={1}>
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
