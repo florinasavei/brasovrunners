@@ -2,7 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { repeatEvent } from "@/modules/content/events/service";
+import { materializeStandingRepeats, repeatEvent, stopRepeat } from "@/modules/content/events/service";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -67,12 +67,16 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     return event;
   }
 
-  const copiesOf = (sourceId: string) =>
-    db.select().from(events).where(eq(events.editorialStatus, "DRAFT")).orderBy(asc(events.startsAt)).then((rows) => rows.filter((row) => row.id !== sourceId));
+  const copiesOf = (sourceId: string) => db.select().from(events).where(eq(events.repeatOf, sourceId)).orderBy(asc(events.startsAt));
+
+  /** The day the series is made: the horizon (8 weeks) reaches 2026-11-14 from here. */
+  const NOW = new Date("2026-09-19T10:00:00.000Z");
+  const weekly = (until: string | null, weekdays: number[] = [], publish = false) => ({ cadence: "WEEKLY" as const, weekdays: weekdays as (1 | 2 | 3 | 4 | 5 | 6 | 7)[], until, publish });
 
   it("keeps the wall-clock time across the October clock change, and moves every time with it", async () => {
     const source = await seedRun();
-    const result = await repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count: 4, publish: false });
+    const result = await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly(null), now: NOW });
+    // For ever, so the horizon decides: four Sundays before 14 November.
     expect(result).toEqual({ created: 4, published: false });
 
     const copies = await copiesOf(source.id);
@@ -90,28 +94,24 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     expect(toWallTimeInput(third.endsAt, "Europe/Bucharest")).toBe("2026-11-01T09:30");
     expect(toWallTimeInput(third.registrationOpensAt, "Europe/Bucharest")).toBe("2026-10-25T08:00");
     expect(toWallTimeInput(third.registrationClosesAt, "Europe/Bucharest")).toBe("2026-11-01T07:00");
-    // Copied configuration; never the featured flag or the start list.
+    // Copied configuration; never the featured flag, the start list or the rule itself.
     expect(third.capacity).toBe(30);
     expect(third.featured).toBe(false);
     expect(third.participantListVisibility).toBe("HIDDEN");
+    expect(third.repeatOf).toBe(source.id);
+    expect(third.repeatRule).toBeNull();
+    // The source carries the rule.
+    expect((await db.select().from(events).where(eq(events.id, source.id)))[0].repeatRule).toEqual({ cadence: "WEEKLY", weekdays: [], until: null, publish: false });
   });
 
   /**
-   * "Every Monday and Wednesday" (criterion 7, 2026-09-18). The series covers `count` weeks
-   * counted from the source's own week, each chosen day at the source's wall time, never the
-   * source itself and never a day before it — so a Sunday source with Monday and Wednesday
-   * ticked contributes nothing from its own week, and three weeks are the two that follow.
+   * "Every Monday and Wednesday" until a date (criterion 7, §122): each chosen day at the
+   * source's wall time, never the source itself and never a day before it — so a Sunday source
+   * with Monday and Wednesday ticked contributes nothing from its own week.
    */
-  it("repeats on chosen weekdays, for a number of weeks, skipping days on or before the source", async () => {
+  it("repeats on chosen weekdays until a date, skipping days on or before the source", async () => {
     const source = await seedRun(); // Sunday 2026-10-11, 08:00
-    const result = await repeatEvent(db, {
-      actor: editor,
-      eventId: source.id,
-      cadence: "WEEKLY",
-      count: 3,
-      weekdays: [1, 3],
-      publish: false,
-    });
+    const result = await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("2026-10-24", [1, 3]), now: NOW });
     expect(result.created).toBe(4);
 
     const copies = await copiesOf(source.id);
@@ -123,20 +123,21 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     ]);
     const [ro] = await db.select().from(eventTranslations).where(and(eq(eventTranslations.eventId, copies[1].id), eq(eventTranslations.locale, "ro")));
     expect(ro.slug).toBe("alergare-de-duminica-2026-10-14");
+  });
 
-    // A Sunday run "every Sunday" for one week is the source alone: nothing to make.
-    await expect(
-      repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count: 1, weekdays: [7], publish: false }),
-    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
-    // Every day for a year is more than one press may make.
-    await expect(
-      repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count: 52, weekdays: [1, 2, 3, 4, 5, 6, 7], publish: false }),
-    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  it("makes nothing when the rule gives no date after the event, and refuses an end before it", async () => {
+    const source = await seedRun();
+    // A Sunday run "every Sunday" until the Saturday after: the source alone.
+    expect((await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("2026-10-17", [7]), now: NOW })).created).toBe(0);
+    const refused = await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("2026-10-01"), now: NOW }).catch((e: unknown) => e);
+    expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
+    const notADate = await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("soon"), now: NOW }).catch((e: unknown) => e);
+    expect(isDomainError(notADate) && notADate.code).toBe("VALIDATION_ERROR");
   });
 
   it("gives every occurrence a slug carrying its date, in both languages", async () => {
     const source = await seedRun();
-    await repeatEvent(db, { actor: editor, eventId: source.id, cadence: "FORTNIGHTLY", count: 2, publish: false });
+    await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "FORTNIGHTLY", weekdays: [], until: "2026-11-10", publish: false }, now: NOW });
 
     const slugs = await db.select({ locale: eventTranslations.locale, slug: eventTranslations.slug }).from(eventTranslations).orderBy(asc(eventTranslations.slug));
     expect(slugs.map((row) => row.slug).sort()).toEqual([
@@ -149,27 +150,37 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     ]);
   });
 
-  it("adds months on the calendar for a monthly series", async () => {
+  it("keeps a monthly series going as the horizon advances, and stops when told (§122)", async () => {
     const source = await seedRun();
-    await repeatEvent(db, { actor: editor, eventId: source.id, cadence: "MONTHLY", count: 3, publish: false });
-    const copies = await copiesOf(source.id);
-    expect(copies.map((copy) => toWallTimeInput(copy.startsAt, "Europe/Bucharest"))).toEqual([
+    // Made on 11 October: eight weeks reach 6 December, so one occurrence.
+    const made = await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "MONTHLY", weekdays: [], until: null, publish: false }, now: new Date("2026-10-11T10:00:00Z") });
+    expect(made.created).toBe(1);
+    // The job, five weeks later: the horizon now reaches 15 January, two more months.
+    const run = await materializeStandingRepeats(db, new Date("2026-11-20T10:00:00Z"));
+    expect(run).toEqual({ sources: 1, created: 2 });
+    // And again the same day: nothing new — two reads, no write.
+    expect((await materializeStandingRepeats(db, new Date("2026-11-20T11:00:00Z"))).created).toBe(0);
+    expect((await copiesOf(source.id)).map((copy) => toWallTimeInput(copy.startsAt, "Europe/Bucharest"))).toEqual([
       "2026-11-11T08:00",
       "2026-12-11T08:00",
       "2027-01-11T08:00",
     ]);
+
+    await stopRepeat(db, { actor: editor, eventId: source.id });
+    expect((await materializeStandingRepeats(db, new Date("2027-03-01T10:00:00Z"))).sources).toBe(0);
+    expect(await copiesOf(source.id)).toHaveLength(3);
   });
 
-  it("publishes the copies only when asked and only from a published source", async () => {
+  it("publishes the occurrences only when asked and only from a published source", async () => {
     const draftSource = await seedRun();
-    const fromDraft = await repeatEvent(db, { actor: editor, eventId: draftSource.id, cadence: "WEEKLY", count: 1, publish: true });
+    const fromDraft = await repeatEvent(db, { actor: editor, eventId: draftSource.id, rule: weekly("2026-10-20", [], true), now: NOW });
     // The flag is ignored, not refused: a draft's copies cannot be complete.
     expect(fromDraft.published).toBe(false);
 
     await resetTables(db);
     [editor] = await db.insert(staffUsers).values({ email: "m2@dev.test", displayName: "E", role: "MODERATOR" }).returning();
     const publishedSource = await seedRun({ published: true });
-    const fromPublished = await repeatEvent(db, { actor: editor, eventId: publishedSource.id, cadence: "WEEKLY", count: 2, publish: true });
+    const fromPublished = await repeatEvent(db, { actor: editor, eventId: publishedSource.id, rule: weekly("2026-10-26", [], true), now: NOW });
     expect(fromPublished.published).toBe(true);
 
     const live = await db.select().from(events).where(eq(events.editorialStatus, "PUBLISHED"));
@@ -177,25 +188,22 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     expect(live.every((row) => row.publishedAt !== null)).toBe(true);
   });
 
-  it("refuses a Contributor, and refuses to publish for anyone below the publishing role", async () => {
+  it("refuses a Contributor, and a series started from one of its own dates", async () => {
     const source = await seedRun({ published: true });
-    const refused = await repeatEvent(db, { actor: author, eventId: source.id, cadence: "WEEKLY", count: 1, publish: false }).catch((e: unknown) => e);
+    const refused = await repeatEvent(db, { actor: author, eventId: source.id, rule: weekly(null), now: NOW }).catch((e: unknown) => e);
     expect(isDomainError(refused) && refused.code).toBe("FORBIDDEN");
+    await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("2026-10-20"), now: NOW });
+    const [copy] = await copiesOf(source.id);
+    const fromCopy = await repeatEvent(db, { actor: editor, eventId: copy.id, rule: weekly(null), now: NOW }).catch((e: unknown) => e);
+    expect(isDomainError(fromCopy) && fromCopy.code).toBe("VALIDATION_ERROR");
   });
 
-  it("refuses a series that already exists, and writes nothing", async () => {
+  it("is idempotent: repeating again makes no second copy of a date", async () => {
     const source = await seedRun();
-    await repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count: 2, publish: false });
-    const again = await repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count: 3, publish: false }).catch((e: unknown) => e);
-    expect(isDomainError(again) && again.code).toBe("CONFLICT");
-    expect(await copiesOf(source.id)).toHaveLength(2);
-  });
-
-  it("bounds the count", async () => {
-    const source = await seedRun();
-    for (const count of [0, 53, 1.5]) {
-      const refused = await repeatEvent(db, { actor: editor, eventId: source.id, cadence: "WEEKLY", count, publish: false }).catch((e: unknown) => e);
-      expect(isDomainError(refused) && refused.code, String(count)).toBe("VALIDATION_ERROR");
-    }
+    await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("2026-10-26"), now: NOW });
+    const again = await repeatEvent(db, { actor: editor, eventId: source.id, rule: weekly("2026-11-02"), now: NOW });
+    // The rule now reaches a week further: one more date, the two that existed untouched.
+    expect(again.created).toBe(1);
+    expect(await copiesOf(source.id)).toHaveLength(3);
   });
 });

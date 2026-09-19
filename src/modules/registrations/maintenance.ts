@@ -1,6 +1,7 @@
 import type { Database } from "@/db/types";
 import { pruneExpiredRows, totalPruned } from "@/modules/jobs/retention";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
+import { materializeStandingRepeats } from "@/modules/content/events/service";
 import { sweepOrphanAssets } from "@/modules/media/references";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
 import * as repo from "./repository";
@@ -125,12 +126,25 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     errorCount += 1;
   }
 
+  /**
+   * The standing series (§122): every source with a rule is brought up to eight weeks ahead.
+   * One indexed read for the sources, two per source, and on most runs no write; caught on
+   * its own — a series that cannot be extended is a date missing from the list next month,
+   * not a hold that never expires.
+   */
+  let occurrencesCreated = 0;
+  try {
+    occurrencesCreated = (await materializeStandingRepeats(db, now)).created;
+  } catch {
+    errorCount += 1;
+  }
+
   await finishJobRun(
     db,
     jobRunId,
     {
       itemsProcessed:
-        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued,
+        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued + occurrencesCreated,
       errorCount,
     },
     new Date(),

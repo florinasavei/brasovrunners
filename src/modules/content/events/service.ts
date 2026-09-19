@@ -6,8 +6,19 @@ import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
 import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
+import {
+  horizonEnd,
+  occurrencesBetween,
+  readRepeatRule,
+  type RepeatCadence,
+  type RepeatRule,
+  repeatRuleSchema,
+  untilEnd,
+  WEEKDAYS,
+  type Weekday,
+} from "@/modules/events/domain/repeat";
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
-import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { addWallClockInterval, fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
@@ -910,6 +921,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     stravaEventUrl: null,
     coHostName: source.coHostName,
     coHostUrl: source.coHostUrl,
+    // Never the rule: a copy is one date, and only the source repeats (§122).
+    repeatRule: null,
+    repeatOf: null,
     locationName: source.locationName,
     locationAddress: source.locationAddress,
     difficulty: source.difficulty,
@@ -963,62 +977,27 @@ function copiedTranslationValues(
   };
 }
 
-/** How often a repeated event recurs. Three cadences, because three is what the club runs. */
-export const REPEAT_CADENCES = ["WEEKLY", "FORTNIGHTLY", "MONTHLY"] as const;
-export type RepeatCadence = (typeof REPEAT_CADENCES)[number];
-
-const CADENCE_INTERVAL: Record<RepeatCadence, { days?: number; months?: number }> = {
-  WEEKLY: { days: 7 },
-  FORTNIGHTLY: { days: 14 },
-  MONTHLY: { months: 1 },
-};
-
-/** At most a year of weekly copies in one go; a longer series is a second press. */
-export const REPEAT_MAX_COUNT = 52;
-/** Two a week for a year, with weekdays; a bigger series is a second press. */
-export const REPEAT_MAX_OCCURRENCES = 104;
-/** ISO weekdays, 1 = Monday … 7 = Sunday. */
-export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
-export type Weekday = (typeof WEEKDAYS)[number];
-
 export type RepeatEventInput = {
   actor: Actor;
   eventId: string;
-  cadence: RepeatCadence;
-  /**
-   * How many further occurrences to create after the source — or, with `weekdays`, how many
-   * weeks (fortnights) the series covers, the source's own week included.
-   */
-  count: number;
-  /**
-   * "Every Monday and Wednesday" (2026-09-18, `DECISIONS.md` §64): the days of the week the
-   * event happens on, ISO numbered. With WEEKLY or FORTNIGHTLY only; MONTHLY ignores it. The
-   * source's own day need not be in the set — a Sunday run "every Monday and Wednesday" starts
-   * the Monday after. Empty or absent means the source's own weekday, as before.
-   */
-  weekdays?: readonly Weekday[];
-  /** Publish the copies as they are made. Only honoured when the source is itself published. */
-  publish: boolean;
+  /** How it recurs, until when (null: for ever), and whether the occurrences go live as they are made. */
+  rule: { cadence: RepeatCadence; weekdays?: readonly Weekday[]; until: string | null; publish: boolean };
   now?: Date;
 };
 
 /**
- * The same event again, every week, fortnight or month — the weekly run, made once.
+ * The same event again, every week, fortnight or month — a standing series (`DECISIONS.md`
+ * §64, §122): "every Monday and Wednesday, until 20 December, or for ever".
  *
- * Each copy is the source shifted on the wall clock in its own zone (`addWallClockInterval`),
- * and everything that has a time moves with it — the end, the gun time, the registration
- * window — so the relationships the organizer set hold on every occurrence. The slug carries
- * the date (`alergare-de-duminica-2026-10-04`) rather than a `-2`, `-3` suffix: a URL that
- * says which Sunday it is, in both languages, and never collides with next year's series.
+ * The rule is written on the source, and the next eight weeks of occurrences are created at
+ * once; from then on the maintenance job creates each week as it comes into the horizon
+ * (`materializeStandingRepeats`). Each occurrence is the source shifted on the wall clock in
+ * its own zone (`addWallClockInterval`), everything with a time moving with it, the slug
+ * carrying the date (`alergare-de-duminica-2026-10-04`), and names the source in `repeat_of`.
  *
- * Copies are drafts unless `publish` is asked for **and** the source is published: a published
- * source is one whose both languages are complete (`transitionEvent` asserted that), so its
- * copies can go live without re-checking; a draft source cannot be, and the flag is ignored
- * rather than refused so a form with the box ticked still does something useful. Publishing
- * copies needs the role that publishes (`AGENTS.md` §10.2), like any other publication.
- *
- * One transaction: all the occurrences or none, so a collision on the ninth slug does not
- * leave eight events behind for somebody to find later.
+ * Occurrences are drafts unless `publish` is asked for **and** the source is published: a
+ * published source has both languages complete (`transitionEvent` asserted that), so its copies
+ * can go live without re-checking. Asking to publish needs the role that publishes.
  */
 export async function repeatEvent<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -1029,119 +1008,158 @@ export async function repeatEvent<T extends Record<string, unknown>>(
   if (!canCreateEvent(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not repeat an event`);
   }
-  if (!Number.isInteger(input.count) || input.count < 1 || input.count > REPEAT_MAX_COUNT) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `count: repeat an event between 1 and ${REPEAT_MAX_COUNT} times in one go`,
-    );
-  }
 
   const [source] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!source) throw new DomainError("NOT_FOUND", "no such event");
-  const sourceTranslations = await listTranslationsForEvent(db, input.eventId);
-
-  const publish = input.publish && source.editorialStatus === "PUBLISHED";
-  if (publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
-    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
+  if (source.repeatOf) {
+    throw new DomainError("VALIDATION_ERROR", "this date is part of a series already; the series repeats from its first event");
   }
 
-  const interval = CADENCE_INTERVAL[input.cadence];
-  const weekdays = input.cadence === "MONTHLY" ? [] : [...new Set(input.weekdays ?? [])].sort();
+  const weekdays = input.rule.cadence === "MONTHLY" ? [] : [...new Set(input.rule.weekdays ?? [])].sort((a, b) => a - b);
   if (weekdays.some((day) => !WEEKDAYS.includes(day))) {
     throw new DomainError("VALIDATION_ERROR", "weekdays: 1 (Monday) to 7 (Sunday)");
   }
-
-  /**
-   * How far each occurrence sits from the source, on the calendar. Without weekdays: one
-   * interval per occurrence, as before. With them: for each week the series covers, each
-   * chosen day at its offset from the source's own day — skipping anything on or before the
-   * source, so the source is never duplicated and a series never runs backwards.
-   */
-  const sourceWeekday = wallClockWeekday(source.startsAt, source.timezone);
-  const steps: Array<{ days?: number; months?: number }> =
-    weekdays.length === 0
-      ? Array.from({ length: input.count }, (_, index) => ({
-          days: (interval.days ?? 0) * (index + 1),
-          months: (interval.months ?? 0) * (index + 1),
-        }))
-      : Array.from({ length: input.count }, (_, week) =>
-          weekdays.map((day) => ({ days: day - sourceWeekday + (interval.days ?? 7) * week })),
-        )
-          .flat()
-          .filter((step) => (step.days ?? 0) > 0);
-  if (steps.length === 0) {
-    throw new DomainError("VALIDATION_ERROR", "the chosen days give no occurrence after this event");
+  const publish = input.rule.publish && source.editorialStatus === "PUBLISHED";
+  if (publish && !canTransition(input.actor.role, "IN_REVIEW", "PUBLISHED", false)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not publish`);
   }
-  if (steps.length > REPEAT_MAX_OCCURRENCES) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `that is ${steps.length} occurrences; at most ${REPEAT_MAX_OCCURRENCES} in one go`,
-    );
+  const rule = repeatRuleSchema.safeParse({ cadence: input.rule.cadence, weekdays, until: input.rule.until, publish });
+  if (!rule.success) throw new DomainError("VALIDATION_ERROR", "until: a date, or nothing for a series without an end");
+  const end = untilEnd(rule.data, source.timezone);
+  if (end && end.getTime() <= source.startsAt.getTime()) {
+    throw new DomainError("VALIDATION_ERROR", "until: the end must be after this event");
   }
-  const shift = (date: Date | null, step: { days?: number; months?: number }) =>
-    date === null ? null : addWallClockInterval(date, source.timezone, step);
 
-  // The slugs, all of them, checked before anything is written: the date suffix is what
-  // makes them distinct, and a series already made once collides on every one of them.
-  const occurrences = steps.map((step) => {
-    const startsAt = shift(source.startsAt, step) as Date;
-    const dateSuffix = startsAt.toISOString().slice(0, 10);
-    return {
-      step,
-      startsAt,
-      slugs: new Map(
-        sourceTranslations.map((translation) => [
-          translation.id,
-          `${translation.slug.replace(/-\d{4}-\d{2}-\d{2}$/, "")}-${dateSuffix}`,
-        ]),
-      ),
-    };
-  });
+  await db.update(events).set({ repeatRule: rule.data, updatedAt: now, updatedByStaffUserId: input.actor.id }).where(eq(events.id, source.id));
+  const created = await materializeSeries(db, { ...source, repeatRule: rule.data }, rule.data, input.actor, now);
+  return { created, published: publish };
+}
+
+/**
+ * The occurrences a source's rule still owes inside the horizon — from the latest one that
+ * exists (or the source itself) up to `horizonEnd` — created in one transaction. Idempotent:
+ * every occurrence is a whole number of periods from the source, and a date whose address
+ * already exists is skipped, never duplicated. Two indexed reads and usually no write, which
+ * is what lets the job run it every quarter hour.
+ */
+async function materializeSeries<T extends Record<string, unknown>>(
+  db: Database<T>,
+  source: EventRow,
+  rule: RepeatRule,
+  actor: Actor | null,
+  now: Date,
+): Promise<number> {
+  const [latest] = await db
+    .select({ startsAt: sql<Date | null>`max(${events.startsAt})` })
+    .from(events)
+    .where(eq(events.repeatOf, source.id));
+  const after = latest?.startsAt ? new Date(Math.max(new Date(latest.startsAt).getTime(), source.startsAt.getTime())) : source.startsAt;
+  const before = horizonEnd(rule, source.timezone, now);
+  const dates = occurrencesBetween(source, rule, after, before);
+  if (dates.length === 0) return 0;
+
+  const sourceTranslations = await listTranslationsForEvent(db, source.id);
+  const publish = rule.publish && source.editorialStatus === "PUBLISHED";
+
+  // The slugs, all of them, checked before anything is written; a taken address means that
+  // date exists — made by hand, or by a series stopped and started again — and is skipped.
+  const occurrences = dates.map((startsAt) => ({
+    startsAt,
+    step: { days: Math.round((startsAt.getTime() - source.startsAt.getTime()) / 86_400_000) },
+    slugs: new Map(
+      sourceTranslations.map((translation) => [
+        translation.id,
+        `${translation.slug.replace(/-\d{4}-\d{2}-\d{2}$/, "")}-${startsAt.toISOString().slice(0, 10)}`,
+      ]),
+    ),
+  }));
+  const taken = new Set<string>();
   for (const translation of sourceTranslations) {
     const wanted = occurrences.map((occurrence) => occurrence.slugs.get(translation.id) as string);
-    const taken = await findTakenSlugs(db, translation.locale, wanted);
-    const collision = wanted.find((slug) => taken.has(slug));
-    if (collision) {
-      throw new DomainError(
-        "CONFLICT",
-        `an event already has the address "${collision}" in ${translation.locale}; this series exists`,
-      );
-    }
+    for (const slug of await findTakenSlugs(db, translation.locale, wanted)) taken.add(`${translation.locale}:${slug}`);
   }
+  const fresh = occurrences.filter(
+    (occurrence) => !sourceTranslations.some((translation) => taken.has(`${translation.locale}:${occurrence.slugs.get(translation.id)}`)),
+  );
+  if (fresh.length === 0) return 0;
+
+  // The shift is on the wall clock: the same interval the start moved by, applied to every
+  // other time the source carries (§64), so an occurrence four weeks on keeps its 08:00 across
+  // the clock change even though the instants differ by 27 days and 23 hours.
+  const shift = (date: Date | null, occurrence: (typeof fresh)[number]) => {
+    if (date === null) return null;
+    const wallDays = occurrence.step.days;
+    return addWallClockInterval(date, source.timezone, { days: wallDays });
+  };
+  const by = actor?.id ?? source.createdByStaffUserId;
 
   await db.transaction(async (tx) => {
-    for (const occurrence of occurrences) {
+    for (const occurrence of fresh) {
       const [copy] = await tx
         .insert(events)
         .values({
-          ...copiedEventValues(source, input.actor, now),
+          ...copiedEventValues(source, { id: by ?? source.updatedByStaffUserId ?? "", role: "MODERATOR" }, now),
+          createdByStaffUserId: by,
+          updatedByStaffUserId: by,
+          repeatOf: source.id,
           startsAt: occurrence.startsAt,
-          endsAt: shift(source.endsAt, occurrence.step),
-          raceStartsAt: shift(source.raceStartsAt, occurrence.step),
+          endsAt: shift(source.endsAt, occurrence),
+          raceStartsAt: shift(source.raceStartsAt, occurrence),
           scheduleItems: source.scheduleItems
-            ? shiftScheduleItems(readScheduleItems(source.scheduleItems), source.timezone, occurrence.step)
+            ? shiftScheduleItems(readScheduleItems(source.scheduleItems), source.timezone, { days: occurrence.step.days })
             : null,
-          registrationOpensAt: shift(source.registrationOpensAt, occurrence.step),
-          registrationClosesAt: shift(source.registrationClosesAt, occurrence.step),
+          registrationOpensAt: shift(source.registrationOpensAt, occurrence),
+          registrationClosesAt: shift(source.registrationClosesAt, occurrence),
           ...(publish ? { editorialStatus: "PUBLISHED" as const, publishedAt: now } : {}),
         })
         .returning();
 
       await tx.insert(eventTranslations).values(
-        sourceTranslations.map((translation) =>
-          copiedTranslationValues(
-            translation,
-            copy.id,
-            occurrence.slugs.get(translation.id) as string,
-            input.actor,
-            now,
-          ),
-        ),
+        sourceTranslations.map((translation) => ({
+          ...copiedTranslationValues(translation, copy.id, occurrence.slugs.get(translation.id) as string, { id: by ?? "", role: "MODERATOR" }, now),
+          authorStaffUserId: by,
+        })),
       );
     }
   });
 
-  return { created: occurrences.length, published: publish };
+  return fresh.length;
+}
+
+/**
+ * Every standing series, brought up to the horizon (§122). Run by the maintenance job: one
+ * indexed read for the sources with a rule, then `materializeSeries` per source — which on
+ * most runs reads twice and writes nothing. A source whose rule is past its end keeps the rule
+ * (the editor shows it as ended) and creates nothing.
+ */
+export async function materializeStandingRepeats<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+): Promise<{ sources: number; created: number }> {
+  const sources = await db.select().from(events).where(sql`${events.repeatRule} IS NOT NULL`);
+  let created = 0;
+  for (const source of sources) {
+    const rule = readRepeatRule(source.repeatRule);
+    if (!rule) continue;
+    created += await materializeSeries(db, source, rule, null, now);
+  }
+  return { sources: sources.length, created };
+}
+
+/** Stop a series: no further occurrences are made; the ones that exist stay (the bulk verbs remove them). */
+export async function stopRepeat<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; eventId: string; now?: Date },
+): Promise<void> {
+  if (!canCreateEvent(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not change a series`);
+  }
+  const [source] = await db.select({ id: events.id }).from(events).where(eq(events.id, input.eventId)).limit(1);
+  if (!source) throw new DomainError("NOT_FOUND", "no such event");
+  await db
+    .update(events)
+    .set({ repeatRule: null, updatedAt: input.now ?? new Date(), updatedByStaffUserId: input.actor.id })
+    .where(eq(events.id, input.eventId));
 }
 
 /** `crosul-aniversar` → `crosul-aniversar-2`, or the first suffix nobody is using. */

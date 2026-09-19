@@ -164,13 +164,29 @@ export default async function EventsPage({ params, searchParams }: Props) {
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
       <Box sx={{ mt: 2, mb: 4 }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        {/* Three doors (the owner: "this subscription to calendar does not work" — a `webcal://`
+            link does nothing where no app claims the scheme, which on a desktop is most
+            browsers): Google Calendar's own "add by URL" address, `webcal://` for Apple,
+            Outlook and phones, and the plain address to paste anywhere else. */}
         {t("calendar.subscribe")}{" "}
+        <MuiLink
+          href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`))}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
+        >
+          {t("calendar.subscribeGoogle")}
+        </MuiLink>
+        {" · "}
         <MuiLink href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-          {t("calendar.subscribeLink")}
-        </MuiLink>{" "}
+          {t("calendar.subscribeApple")}
+        </MuiLink>
+        {" · "}
         <MuiLink href={`/${locale}/events/calendar.ics`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}>
           {t("calendar.downloadLink")}
         </MuiLink>
+        {" · "}
+        <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
       </Typography>
       <EventCalendar view={view} events={inRange} now={now} query={query} />
       </Box>

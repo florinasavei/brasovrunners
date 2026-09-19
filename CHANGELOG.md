@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **A series repeats until a date or for ever.** "Repeat" takes an end date or none; the next eight weeks are created at once and the platform keeps every series eight weeks ahead by itself; each date stays its own event — "Stop the series" ends it; a cancelled or moved date is struck through with a warning mark and a tooltip on the card, in the calendar and in the backoffice. Calendar subscription offers Google Calendar's own link, the `webcal://` for Apple/Outlook/phones, and the address to copy. §122.
 - **Equipment testing and External event** join the types; Meetup reads "Other event"; a **co-host** (name and page) on an event, shown as "Together with …" and told to Google as a second organizer; every club event **says it is free** — in words on the listing and the footer, and as a zero offer in the structured data; the editor's selects show their glyphs; asphalt is a road. Migration `0044`. §121.
 - **24-hour clock everywhere**, English too; the meeting point is the map link on the page, the hero and a series card. §120.
 - **`/devs` has the backoffice's tabs**, title and sign-out, from the one shell every staff page now shares; the light/dark switch sits in the footer bar's own corner. §119.

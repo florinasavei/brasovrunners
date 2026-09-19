@@ -1,4 +1,3 @@
-import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
@@ -8,11 +7,13 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { riseIn } from "@/theme/motion";
+import { editionDifference, usualOf } from "../domain/series";
 import type { PublicEvent } from "../repository";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
-import { recurrenceSentence } from "./series-sentence";
+import SeriesDates from "./SeriesDates";
+import { editionNote, recurrenceSentence } from "./series-sentence";
 
 /** How many dates the card lists before pointing at the month view for the rest. */
 const DATES_SHOWN = 6;
@@ -44,6 +45,16 @@ export default async function SeriesCard({
   const shown = members.slice(0, DATES_SHOWN);
   const rest = members.length - shown.length;
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
+  // A date unlike the others — cancelled, elsewhere, at another hour — wears its mark (§122).
+  const usual = usualOf(members);
+  const dates = await Promise.all(
+    shown.map(async (member) => ({
+      id: member.id,
+      href: pageOf(member.slug),
+      label: format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "short", day: "numeric", month: "short" }),
+      note: await editionNote(editionDifference(member, usual)),
+    })),
+  );
 
   return (
     <Card component="li" variant="outlined" sx={{ ...riseIn(index) }}>
@@ -80,24 +91,7 @@ export default async function SeriesCard({
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 0.5 }}>
           {t("series.allDates")}
         </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-          {shown.map((member) => (
-            <Chip
-              key={member.id}
-              component="a"
-              href={pageOf(member.slug)}
-              clickable
-              variant="outlined"
-              label={format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "short", day: "numeric", month: "short" })}
-              sx={{ height: 44, borderRadius: 22, px: 0.5, ...(member.eventStatus === "CANCELLED" ? { textDecoration: "line-through" } : {}) }}
-            />
-          ))}
-          {rest > 0 && (
-            <Typography variant="body2" color="text.secondary">
-              {t("series.moreInCalendar", { count: rest })}
-            </Typography>
-          )}
-        </Box>
+        <SeriesDates dates={dates} more={rest > 0 ? t("series.moreInCalendar", { count: rest }) : undefined} />
       </CardContent>
     </Card>
   );

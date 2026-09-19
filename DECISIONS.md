@@ -5747,3 +5747,50 @@ carries §122's columns), `event-type.ts`, `glyphs.ts` (`Glyph`, `RoadIcon`), `G
 BR-REQ-050-02 criterion 14.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 122. Decided — a standing series: until a date or for ever, kept eight weeks ahead by the job; a date unlike the others wears a mark (2026-09-19)
+
+**Context.** The owner, at the Repeat form: "I should basically have the repeated events
+indefinitely, not set how many weeks … so basically for a recurring event I need a start and
+end date, but I also need to update a certain edition — it might be cancelled or relocated!
+So I need a strikethrough for that status and a warning sign with tooltip." And: "all of
+this must be super DB efficient." §64's Repeat made N copies once; a season of Mondays was a
+number to guess, and a run that goes on for ever was a series to re-make every few months.
+
+**Decision.** The source event carries a rule — `repeat_rule`: cadence, weekdays, `until` (a
+date, or null for ever), publish — and every occurrence is still its own row, naming its
+source in `repeat_of`, so one date is cancelled or moved like any event and the rest stand.
+Repeat writes the rule and creates the next eight weeks at once; the maintenance job
+(`materializeStandingRepeats`, every quarter hour by day) brings every source with a rule up
+to the horizon — one read off a partial index for the sources, then per source the latest
+occurrence off `(repeat_of, starts_at)` and the slugs of the dates it would add, and on most
+runs no write. Every occurrence is a whole number of periods from the source, so two passes
+never disagree and a series stopped and started lands on the same dates; a date whose
+address exists is skipped, never duplicated. "Stop the series" clears the rule and leaves the
+dates (the bulk verbs remove them). The editor shows one of three things: on a date of a
+series, the note and the way to the source; on a source with a rule, the sentence ("În
+fiecare luni și miercuri, la 08:00 — la nesfârșit") and Stop; otherwise the form, whose
+"until" is a date or nothing. Cancelled and moved dates are *read*, not recorded: the
+series' usual place and time are the most common among the dates on view, and a date that
+differs — cancelled first, else another place, else another hour — is struck through and
+wears a mark with the sentence in a tooltip and as its name (`EditionMark`), on the series
+card, in the calendar and in the backoffice's folded dates.
+
+*Rejected:* one row with an RRULE and virtual occurrences (capacity, holds and the waiting
+list are per event, and a runner registers for a date); a "moved" flag set by hand (the
+organizer already changed the place; asking again is a second truth); creating the whole
+series to the end on day one (a year of Mondays is 52 rows nobody has looked at, and "for
+ever" has no end to create to); an unbounded horizon (eight weeks is what a runner plans and
+what a listing shows).
+
+**Consequences.** `events/domain/repeat.ts` (the rule, `occurrencesBetween`, `horizonEnd`),
+`schema/events.ts` (`repeat_rule`, `repeat_of`, two indexes; migration `0044`),
+`content/events/service.ts` (`repeatEvent`, `materializeSeries`,
+`materializeStandingRepeats`, `stopRepeat`), `registrations/maintenance.ts`, `admin/actions.ts`
+(`stopRepeatAction`), `RepeatFields` ("until"), the editor, `events/domain/series.ts`
+(`usualOf`, `editionDifference`), `EditionMark`, `SeriesDates`, `SeriesCard`,
+`EventCalendar`, the events list, `series-sentence.ts` (`ruleSentence`, `editionNote`), the
+catalogues; `tests/integration/cms/repeat.test.ts`. BR-REQ-050-02 criterion 7 (rewritten),
+BR-REQ-020-01 criterion 13.
+
+Baseline `BR-V1.38-2026-09-18`.

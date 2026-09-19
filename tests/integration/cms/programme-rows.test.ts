@@ -129,7 +129,7 @@ describe("BR-REQ-050-02 criterion 13 — the programme's rows", () => {
   it("carries the rows onto each repeated occurrence at the same wall time, across the clock change", async () => {
     const event = await createDraft();
     await save(event.id, event.version, { ...FIELDS, scheduleRows: ROWS });
-    await repeatEvent(db, { actor: organizer, eventId: event.id, cadence: "WEEKLY", count: 4, publish: false, now: NOW });
+    await repeatEvent(db, { actor: organizer, eventId: event.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-10", publish: false }, now: NOW });
     const copies = (await db.select().from(events).orderBy(events.startsAt)).filter((row) => row.id !== event.id);
     expect(copies).toHaveLength(4);
     // Four weeks on is 8 November, after the clocks went back: 10:00 EET is 08:00Z, not 07:00Z.

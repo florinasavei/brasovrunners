@@ -10,14 +10,12 @@ import {
   createEvent,
   deleteEvent,
   duplicateEvent,
-  REPEAT_CADENCES,
   repeatEvent,
-  type RepeatCadence,
   saveEventAndTranslations,
+  stopRepeat,
   transitionEvent,
-  type Weekday,
-  WEEKDAYS,
 } from "@/modules/content/events/service";
+import { REPEAT_CADENCES, type RepeatCadence, type Weekday, WEEKDAYS } from "@/modules/events/domain/repeat";
 import { eq } from "drizzle-orm";
 import { events } from "@/db/schema/events";
 import {
@@ -447,10 +445,7 @@ export async function createEventAction(form: FormData): Promise<void> {
       const result = await repeatEvent(getDb(), {
         actor,
         eventId: created.id,
-        cadence: cadence as RepeatCadence,
-        count: Number(text(form, "repeat.count")),
-        weekdays: weekdaysFrom(form),
-        publish: false,
+        rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "repeat.until") || null, publish: false },
       });
       repeated = result.created;
     }
@@ -486,12 +481,6 @@ export async function duplicateEventAction(form: FormData): Promise<void> {
   backTo(editorPath(locale, copyId as string), { saved: "duplicated" });
 }
 
-/**
- * The weekly run, made once: N further occurrences of this event, a cadence apart.
- *
- * Lands on the events list rather than on one of the copies — there may be fifty — with the
- * count in the outcome so the alert can say what was made.
- */
 /** The ticked days of the week, ISO numbered, from the repeat fields (`RepeatFields`). */
 function weekdaysFrom(form: FormData): Weekday[] {
   return form
@@ -514,17 +503,30 @@ export async function repeatEventAction(form: FormData): Promise<void> {
     const result = await repeatEvent(getDb(), {
       actor,
       eventId,
-      cadence: cadence as RepeatCadence,
-      count: Number(text(form, "count")),
-      weekdays: weekdaysFrom(form),
-      publish: form.get("publish") === "on",
+      rule: { cadence: cadence as RepeatCadence, weekdays: weekdaysFrom(form), until: text(form, "until") || null, publish: form.get("publish") === "on" },
     });
     outcome = { saved: "eventsRepeated", created: String(result.created) };
   } catch (error) {
     outcome = outcomeOf(error);
   }
 
-  backTo(outcome.error ? editorPath(locale, eventId) : getPathname({ locale, href: "/admin" }), outcome);
+  // Back to the source: it now says how it repeats, and the list has the dates.
+  backTo(editorPath(locale, eventId), outcome);
+}
+
+/** The series ends here: no further dates are made; the ones that exist stay (§122). */
+export async function stopRepeatAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await stopRepeat(getDb(), { actor, eventId });
+    outcome = { saved: "repeatStopped" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backTo(editorPath(locale, eventId), outcome);
 }
 
 /**

@@ -33,7 +33,9 @@ import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import BulkBar from "@/modules/content/events/ui/BulkBar";
 import EventRowMenu from "@/modules/content/events/ui/EventRowMenu";
-import { groupSeries } from "@/modules/events/domain/series";
+import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
+import EditionMark, { type EditionNote } from "@/modules/events/ui/EditionMark";
+import { editionNote } from "@/modules/events/ui/series-sentence";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
@@ -76,6 +78,8 @@ type ListRow = {
   members: EventRow[];
   next: EventRow;
   sentence: string | null;
+  /** The dates unlike the series' others (§122), by event id. */
+  notes: Map<string, EditionNote>;
 };
 
 const refOf = (event: EditableEvent) => `${event.id}:${event.version}`;
@@ -147,11 +151,18 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       async (series) => {
         const members = series.members.map((member) => member.row);
         const next = members.find((member) => member.event.startsAt.getTime() >= now.getTime()) ?? members[members.length - 1];
+        const usual = members.length > 1 ? usualOf(members.map((member) => member.event)) : { place: null, time: null };
+        const notes = new Map<string, EditionNote>();
+        for (const member of members) {
+          const note = await editionNote(editionDifference(member.event, usual));
+          if (note) notes.set(member.event.id, note);
+        }
         return {
           key: series.key,
           members,
           next,
           sentence: members.length > 1 ? await recurrenceSentence(members.map((member) => member.event), next.event.timezone, locale) : null,
+          notes,
         };
       },
     ),
@@ -176,7 +187,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       key: "title",
       label: t("events.columnTitle"),
       primary: true,
-      render: ({ members, next, sentence }) => {
+      render: ({ members, next, sentence, notes }) => {
         const { event, translations } = next;
         const TypeGlyph = TYPE_GLYPH[event.type];
         return (
@@ -208,9 +219,13 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 <Stack component="ul" spacing={0.5} sx={{ listStyle: "none", p: 0, m: 0, mt: 0.5 }}>
                   {members.map((member) => (
                     <Stack component="li" key={member.event.id} direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-                      <Link href={{ pathname: "/admin/events/[id]", params: { id: member.event.id } }}>
+                      <Link
+                        href={{ pathname: "/admin/events/[id]", params: { id: member.event.id } }}
+                        style={notes.get(member.event.id)?.kind === "cancelled" ? { textDecoration: "line-through" } : undefined}
+                      >
                         {format.dateTime(member.event.startsAt, { timeZone: member.event.timezone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
                       </Link>
+                      {notes.has(member.event.id) && <EditionMark note={notes.get(member.event.id) as EditionNote} size={16} />}
                       <Chip
                         size="small"
                         color={member.event.editorialStatus === "PUBLISHED" ? "success" : "default"}

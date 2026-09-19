@@ -21,8 +21,11 @@ import {
   yearsAround,
 } from "../domain/calendar";
 import type { PublicEvent } from "../repository";
+import { editionDifference, groupSeries, usualOf } from "../domain/series";
 import CalendarPicker from "./CalendarPicker";
+import EditionMark, { type EditionNote } from "./EditionMark";
 import { TYPE_GLYPH } from "./glyphs";
+import { editionNote } from "./series-sentence";
 
 /** What the calendar shows: one month (`?month=`) or one year (`?year=`, §116). */
 export type CalendarView = { kind: "month"; month: YearMonth } | { kind: "year"; year: number };
@@ -54,7 +57,6 @@ export default async function EventCalendar({
   query?: Record<string, string>;
 }) {
   const t = await getTranslations("Events");
-  const tEvent = await getTranslations("Event");
   const format = await getFormatter();
   const locale = (await getLocale()) as "ro" | "en";
 
@@ -72,6 +74,17 @@ export default async function EventCalendar({
 
   const time = (event: PublicEvent) =>
     format.dateTime(event.startsAt, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+  // A date unlike its series' others (§122) — read against the dates on view, which is the
+  // series as the reader sees it here; a lone cancelled event is marked too.
+  const notes = new Map<string, EditionNote>();
+  for (const series of groupSeries(events)) {
+    const usual = series.members.length > 1 ? usualOf(series.members) : { place: null, time: null };
+    for (const member of series.members) {
+      const note = await editionNote(editionDifference(member, usual));
+      if (note) notes.set(member.id, note);
+    }
+  }
 
   // Monday first, named in the reader's language from any Monday; the months from any year.
   const weekdayNames = Array.from({ length: 7 }, (_, i) =>
@@ -116,8 +129,8 @@ export default async function EventCalendar({
               {time(event)}
             </Box>
             {event.title}
-            {event.eventStatus === "CANCELLED" && ` · ${tEvent("cancelled")}`}
           </Box>
+          {notes.has(event.id) && <EditionMark note={notes.get(event.id) as EditionNote} size={dense ? 16 : 18} />}
         </Box>
       </Link>
     );

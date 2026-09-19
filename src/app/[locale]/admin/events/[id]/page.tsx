@@ -51,8 +51,12 @@ import {
   repeatEventAction,
   removeTestRegistrationsAction,
   saveEventAndTranslationsAction,
+  stopRepeatAction,
   transitionEventAction,
 } from "../../actions";
+import { readRepeatRule } from "@/modules/events/domain/repeat";
+import { ruleSentence } from "@/modules/events/ui/series-sentence";
+import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -157,6 +161,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const maySaveAnything =
     maySaveSettings || orderedTranslations.some((translation) => mayEditTranslation(translation));
 
+  // A standing series (§122): the rule on the source, or the source of this date.
+  const repeatRule = readRepeatRule(event.repeatRule);
+  const ruleWords = repeatRule ? await ruleSentence(repeatRule, event, event.timezone, locale) : null;
+  const ruleEnded = repeatRule?.until ? new Date(`${repeatRule.until}T23:59:59`).getTime() < now.getTime() : false;
+  const seriesTitle = event.repeatOf ? await findEventTitle(db, event.repeatOf, locale) : null;
+
   return (
     <Stack spacing={4}>
       <Box>
@@ -175,7 +185,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         {saved === "created" && created && (
           <Alert severity="success">{t("editor.createdWithSeries", { created })}</Alert>
         )}
-        {saved && saved !== "bibsAssigned" && !(saved === "created" && created) && (
+        {saved === "eventsRepeated" && (
+          <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
+        )}
+        {saved === "repeatStopped" && <Alert severity="success">{t("editor.repeatStopped")}</Alert>}
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped"].includes(saved) && !(saved === "created" && created) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -240,15 +254,50 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       {/*
         Repeat, right under publication (the owner: "repeating the event should be more on the
         top"): the weekly run is made once, and the person making it should not scroll past the
-        registrations, the queue and the test data to find the button.
+        registrations, the queue and the test data to find the button. Three states (§122): one
+        date of a series (a note and the way back), a source with a rule (how it repeats, and
+        stop), or the form that makes a series.
       */}
+      {event.repeatOf ? (
+        <Alert severity="info">
+          {t("editor.repeatOfNote", { title: seriesTitle ?? "…" })}{" "}
+          <Link href={{ pathname: "/admin/events/[id]", params: { id: event.repeatOf } }}>{t("editor.repeatOfLink")}</Link>
+        </Alert>
+      ) : repeatRule && ruleWords ? (
+        <Box component="section">
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("editor.repeatRuleTitle")}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1.5 }}>
+            {repeatRule.until
+              ? t(ruleEnded ? "editor.repeatRuleEnded" : "editor.repeatRuleUntil", {
+                  sentence: ruleWords,
+                  until: format.dateTime(new Date(`${repeatRule.until}T12:00:00Z`), { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" }),
+                })
+              : t("editor.repeatRuleForever", { sentence: ruleWords })}
+          </Typography>
+          {maySaveSettings && (
+            <form action={stopRepeatAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={event.id} />
+              <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+                <ConfirmSubmitButton
+                  label={t("editor.repeatStop")}
+                  title={t("editor.repeatStop")}
+                  body={t("editor.repeatStopHelp")}
+                  confirmLabel={t("editor.repeatStop")}
+                  cancelLabel={t("confirm.cancel")}
+                  color="warning"
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {t("editor.repeatStopHelp")}
+                </Typography>
+              </Stack>
+            </form>
+          )}
+        </Box>
+      ) : (
       <Box component="section">
-        {/*
-          The weekly run, made once. Its own form: it creates rows rather than editing this
-          one, and the count is the only thing to think about. Copies are drafts unless the
-          box is ticked and this event is itself published — then they go live as they are
-          made, because a published source is one whose both languages are complete.
-        */}
         <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
           {t("editor.repeatSection")}
         </Typography>
@@ -275,6 +324,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Box>
         </form>
       </Box>
+      )}
 
       {/* Settings and content: one form, one save. */}
       <form action={saveEventAndTranslationsAction}>

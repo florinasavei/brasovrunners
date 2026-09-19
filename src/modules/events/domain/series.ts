@@ -1,5 +1,6 @@
 import { toWallTimeInput, wallClockWeekday } from "./zoned-time";
 
+
 /**
  * A repeated event as one line (`DECISIONS.md` §113). The owner, looking at fifty-two Mondays
  * as fifty-two cards: "I hate that editions are duplicated — I want to see a single line for
@@ -85,4 +86,50 @@ export function recurrenceOf(members: readonly { startsAt: Date }[], timeZone: s
   if (gap !== 7 && gap !== 14) return { kind: "dates" };
 
   return { kind: gap === 7 ? "weekly" : "fortnightly", weekdays, time: times.size === 1 ? [...times][0] : null };
+}
+
+/**
+ * What a series usually is — the place and the wall-clock time most of its dates share — so a
+ * date that differs can say so (§122): cancelled, at another place, at another time. The
+ * organizer edits one date like any event; nothing is recorded as "moved", it is read.
+ */
+export type Usual = { place: string | null; time: string | null };
+
+const mode = <T,>(values: T[]): T | null => {
+  const counts = new Map<T, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  let best: T | null = null;
+  let bestCount = 0;
+  for (const [value, count] of counts) {
+    if (count > bestCount) {
+      best = value;
+      bestCount = count;
+    }
+  }
+  return best;
+};
+
+export function usualOf(members: readonly { startsAt: Date; timezone: string; locationName: string | null }[]): Usual {
+  return {
+    place: mode(members.map((member) => member.locationName)),
+    time: mode(members.map((member) => toWallTimeInput(member.startsAt, member.timezone).slice(11, 16))),
+  };
+}
+
+export type EditionDifference =
+  | { kind: "cancelled" }
+  | { kind: "moved"; place: string }
+  | { kind: "retimed"; time: string }
+  | null;
+
+/** Why this date is not like the series' others, or null when it is. Cancelled outranks the rest. */
+export function editionDifference(
+  member: { startsAt: Date; timezone: string; locationName: string | null; eventStatus: string },
+  usual: Usual,
+): EditionDifference {
+  if (member.eventStatus === "CANCELLED") return { kind: "cancelled" };
+  if (member.locationName && usual.place && member.locationName !== usual.place) return { kind: "moved", place: member.locationName };
+  const time = toWallTimeInput(member.startsAt, member.timezone).slice(11, 16);
+  if (usual.time && time !== usual.time) return { kind: "retimed", time };
+  return null;
 }
