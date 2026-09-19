@@ -47,7 +47,9 @@ export type AuditAction =
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
-  | "event.thanks_sent";
+  | "event.thanks_sent"
+  /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
+  | "email_plan.changed";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
@@ -55,7 +57,7 @@ export type RecordAuditInput = {
   action: AuditAction;
   // `event` for the one action that is about a whole event's registrations at once;
   // `email_outbox` for the one that is about the queue itself.
-  entityType: "registration" | "event" | "email_outbox";
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting";
   entityId: string;
   /**
    * The shape of the change, never a copy of what it was about. §12.12: no email body, no raw

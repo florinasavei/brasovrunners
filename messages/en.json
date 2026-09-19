@@ -185,10 +185,14 @@
       "guide": "Guide"
     },
     "outbox": {
-      "status": "Emails waiting: {waiting} · sent today: {sent} of {allowance} ({remaining} left)",
+      "status": {
+        "day": "Emails waiting: {waiting} · sent today: {sent} of {allowance} ({remaining} left)",
+        "month": "Emails waiting: {waiting} · sent this month: {sent} of {allowance} ({remaining} left; plan {plan}, no daily limit)",
+        "none": "Emails waiting: {waiting} · sent today: {sent} (plan {plan}, no limit)"
+      },
       "sendNow": "Send now",
       "nothingWaiting": "Nothing to send.",
-      "allowanceSpent": "The daily Mailgun allowance is spent; the rest goes out tomorrow.",
+      "allowanceSpent": "The Mailgun plan's limit is reached; the rest goes out after the reset.",
       "sending": "Sending…",
       "sendNowLong": "Send the queued emails now, without waiting for the monitor; stops at the daily allowance",
       "sentNow": "Emails sent just now: {count}."
@@ -779,7 +783,6 @@
         "freeButAtALimit": "Yes, but today's free emails are used up. Nothing is lost — they go out after midnight. If you open entries now, the confirmations arrive tomorrow morning.",
         "notFree": "Careful, though not necessarily a problem. A published event is marked as charging a fee. The provider's free plan does not care that we are a non-profit — that is not an exemption. What matters is how the money is asked for: a donation is explicitly allowed, a compulsory fee is not, even if it only covers costs. The site takes no money and has no way to — that helps, but it does not settle it on its own."
       },
-      "registrationsLeftToday": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
       "costTitle": "What it costs",
       "costToday": {
         "nothing": "Today the club pays nothing at all. Every service is on a free plan.",
@@ -835,7 +838,9 @@
           "ceiling": "The first limit: 100 emails a day, which is about 33 entries, because one complete entry takes three emails.",
           "whenCrossed": "Emails over the limit are not lost: they wait in the queue and go out after midnight. But a race whose confirmations only arrive the next morning is a bad race, so the paid plan is bought before entries open, not during them.",
           "closeMeasured": "{used} of {of} emails have gone out today — enough left for about {left} entries.",
-          "bumpBack": "Taken for the month of the race and stopped the month after. One month per race, not a long-term subscription."
+          "bumpBack": "Taken for the month of the race and stopped the month after. One month per race, not a long-term subscription.",
+          "closeMeasuredMonth": "This month {used} of {of} emails went out (plan {plan}) — enough for about {left} more registrations.",
+          "closeNone": "Plan {plan}, no message limit."
         },
         "vercel": {
           "name": "Vercel (where the site lives)",
@@ -890,6 +895,11 @@
           "open": "The free allowance covers about 33 entries a day. If a race expects more, the $15 for one month is paid before entries open rather than during them — otherwise confirmations arrive the next morning. By when: the day before entries open.",
           "answered": "The club no longer depends on the free daily limit."
         }
+      },
+      "registrationsLeft": {
+        "day": "{sent} of {allowance} messages have gone out today. That leaves room for roughly {count} complete registrations — a floor, not a ceiling, because somebody who lands on the waiting list costs more messages.",
+        "month": "This month {sent} of {allowance} messages went out (plan {plan}, no daily limit). Enough for about {count} more complete registrations — a floor, because somebody who lands on the waiting list costs more messages.",
+        "none": "Plan {plan} has no message limit. {sent} went out today."
       }
     },
     "richText": {
@@ -1153,6 +1163,32 @@
         "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
         "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it.",
         "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link."
+      },
+      "plan": {
+        "title": "The Mailgun plan, and how much we can still send",
+        "intro": "The platform cannot read from Mailgun which plan the account is on, so you say it here — and from here it computes what can still go out today, on /admin/tasks, on /devs and at “Send now”. When you pay for a month of Basic before a race, change it here; when you cancel, change it back.",
+        "status": {
+          "day": "Plan {plan}: {sent} of {allowance} messages sent today, {remaining} left; waiting: {waiting}.",
+          "month": "Plan {plan}: {sent} of {allowance} messages sent this month, {remaining} left; no daily limit; waiting: {waiting}.",
+          "none": "Plan {plan}: no limit. Sent today: {sent}; waiting: {waiting}."
+        },
+        "updatedAt": "Set on {when}. Note: {note}",
+        "field": "The plan the Mailgun account is on",
+        "fieldHelp": "Prices and limits from mailgun.com/pricing, checked on {checkedOn}. Basic covers a whole season.",
+        "option": "{name} — {ceiling}, {price}",
+        "perDay": "{count} messages a day",
+        "perMonth": "{count} messages a month",
+        "free": "free",
+        "month": "month",
+        "custom": "Something else — I type the limits below",
+        "dailyAllowance": "Daily limit (only for “Something else”)",
+        "monthlyAllowance": "Monthly limit (only for “Something else”)",
+        "customHelp": "Only for “Something else”: type what Mailgun shows under Account → Plan; leave empty what does not exist (both empty means no limit). The other plans take their numbers from the catalogue.",
+        "note": "Note (why, until when)",
+        "save": "Save the plan",
+        "saving": "Saving…",
+        "saved": "The plan is saved; the figures above and on /admin/tasks use it from now on.",
+        "unlimited": "no limit"
       }
     },
     "guide": {
@@ -1207,7 +1243,8 @@
             "“Staff” (Superadministrator): add people by email and role. The person must also exist in Zitadel (the sign-in console) to be able to log in.",
             "Volunteer accounts: create the user in Zitadel (email + password), then add them in “Staff” with the Contributor role. One account per volunteer, so the history says who pressed; if there is no time, one shared “Desk volunteer” account works — the history will say “Desk volunteer”.",
             "“To do”: what is still missing for the platform to take real registrations, read from the system, with the steps to follow.",
-            "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab."
+            "“Configuration” (/devs): job status, which variables are set, database consumption, the theme lab.",
+            "“Emails” → “The Mailgun plan”: tell the platform which plan the Mailgun account is on. On Free, 100 messages a day go out (≈ 20 registrations); when you pay for a month of Basic before a race, pick Basic here and the figures on “Tasks” and the “Send now” button follow it; when you cancel, put Free back."
           ]
         },
         {
@@ -1290,7 +1327,10 @@
     "city": "City",
     "preferredLocale": "The language for your emails and the declaration",
     "preferredLocaleHelp": "Emails come in both languages; this one first. You sign the declaration in the language you choose.",
-    "preferredLocaleOptions": { "ro": "Romanian", "en": "English" },
+    "preferredLocaleOptions": {
+      "ro": "Romanian",
+      "en": "English"
+    },
     "phone": "Phone",
     "phoneCountry": "Country",
     "phoneHelp": "The number without the country code — for example 0712 345 678.",
@@ -1541,7 +1581,11 @@
     "settingsIntro": "Every value each setting accepts, with the one this deployment uses highlighted. Read from the same list the process validates against, so it cannot drift.",
     "emailVolume": "Email volume today",
     "emailVolumeIntro": "Three messages per completed registration, against the provider's daily allowance. Check this before opening a registration window, not after. Counted from midnight UTC.",
-    "emailVolumeHeadroom": "{remaining} of {allowance} messages left today.",
+    "emailVolumeHeadroom": {
+      "day": "{remaining} of {allowance} messages left today (plan {plan}).",
+      "month": "{remaining} of {allowance} messages left this month (plan {plan}, no daily limit).",
+      "none": "Plan {plan}: no message limit."
+    },
     "emailHealth": {
       "ok": "Sending works: nothing deferred, overdue or failed. /api/health answers 200.",
       "stalled": "Sending has stopped — deferred by the daily allowance: {deferred}; overdue (the monitors are not running): {overdue}; failed in the last 7 days: {failed}. Last reason: “{reason}”. /api/health answers 503 until this clears, so the monitor can notify."
@@ -1646,7 +1690,9 @@
       "unavailable": "Not configured. Two minutes: (1) Neon → avatar → Account settings → API keys → Create API key, or `npx neonctl api-keys create --name devs --project-id <id>`; (2) the project id is in the console address (console.neon.tech/app/projects/<id>) or `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`, then redeploy. The figure appears here.",
       "failed": "Neon did not answer: {reason}",
       "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
-    }
+    },
+    "sentThisMonth": "Sent this month",
+    "emailPlanLabel": "Mailgun plan"
   },
   "Error": {
     "title": "Something went wrong",

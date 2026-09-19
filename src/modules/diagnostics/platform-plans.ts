@@ -135,9 +135,18 @@ export const RO_DOMAIN_PRICE_EUR_PER_YEAR = 12;
 export const VENDOR_PLANS_CHECKED_ON = "2026-09-05";
 
 export type PlatformFacts = {
-  /** Free-tier daily message allowance, and what today has already spent of it. */
-  emailAllowance: number;
+  /**
+   * The ceiling that binds on the plan the club is on (§100) — Free's hundred a day, a paid
+   * plan's month — and what has been spent of it over that period. Null when nothing binds.
+   */
+  emailAllowance: number | null;
   emailSentToday: number;
+  /** The plan's own name and monthly price, from `notifications/domain/email-plan.ts`. */
+  emailPlanName?: string;
+  emailPlanUsdPerMonth?: number;
+  emailPeriod?: "day" | "month" | "none";
+  /** The plan after this one, for the "next" column; null when there is none in the catalogue. */
+  emailNextPlan?: { name: string; usdPerMonth: number } | null;
   /** Messages this application sends for one registration that completes normally. */
   messagesPerRegistration: number;
   /** The database's size in bytes, read from Postgres (§88); null when it could not be read. */
@@ -167,11 +176,13 @@ export type PlatformFacts = {
  * lower than this and a club that plans against it has margin rather than a surprise.
  */
 export function registrationsLeftToday(input: {
-  emailAllowance: number;
+  emailAllowance: number | null;
   emailSentToday: number;
   messagesPerRegistration: number;
-}): number {
+}): number | null {
   if (input.messagesPerRegistration <= 0) return 0;
+  // No ceiling, no count: null, and the page prints the word for it rather than a big number.
+  if (input.emailAllowance === null) return null;
   const remaining = Math.max(0, input.emailAllowance - input.emailSentToday);
   return Math.floor(remaining / input.messagesPerRegistration);
 }
@@ -187,8 +198,9 @@ export function registrationsLeftToday(input: {
  * line with no free plan under it, then email, because it is the ceiling a race day meets.
  */
 export function platformServices(input: PlatformFacts): ServiceRow[] {
-  const remaining = Math.max(0, input.emailAllowance - input.emailSentToday);
+  const remaining = input.emailAllowance === null ? null : Math.max(0, input.emailAllowance - input.emailSentToday);
   const left = registrationsLeftToday(input);
+  const emailUsd = input.emailPlanUsdPerMonth ?? 0;
 
   return [
     {
@@ -211,19 +223,25 @@ export function platformServices(input: PlatformFacts): ServiceRow[] {
     },
     {
       id: "mailgun",
-      planToday: "Free",
-      costToday: { kind: "free" },
+      // The plan the club says it is on (§100): the name, and a year of its monthly price when
+      // it has one — a temporary month of Basic reads as a year's worth until it is switched back,
+      // which is the honest figure for "what does today's setup cost".
+      planToday: input.emailPlanName ?? "Free",
+      costToday: emailUsd > 0 ? { kind: "paid", amount: emailUsd * 12, currency: "USD", plusVat: true } : { kind: "free" },
       checkedOn: VENDOR_PLANS_CHECKED_ON,
       // The one ceiling on this page read from the deployment's own data rather than quoted.
-      headroom: {
-        kind: "measured",
-        used: input.emailSentToday,
-        of: input.emailAllowance,
-        state: remaining === 0 ? "reached" : left <= 5 ? "close" : "ok",
-      },
-      severity: remaining === 0 ? "act" : left <= 5 ? "watch" : "ok",
-      nextPlan: "Basic",
-      nextCost: "$15/mo",
+      headroom:
+        input.emailAllowance === null || remaining === null || left === null
+          ? { kind: "derived", reached: false }
+          : {
+              kind: "measured",
+              used: input.emailSentToday,
+              of: input.emailAllowance,
+              state: remaining === 0 ? "reached" : left <= 5 ? "close" : "ok",
+            },
+      severity: remaining === 0 ? "act" : left !== null && left <= 5 ? "watch" : "ok",
+      nextPlan: input.emailNextPlan === undefined ? "Basic" : (input.emailNextPlan?.name ?? null),
+      nextCost: input.emailNextPlan === undefined ? "$15/mo" : input.emailNextPlan ? `$${input.emailNextPlan.usdPerMonth}/mo` : null,
       bump: "temporary",
     },
     {

@@ -681,8 +681,11 @@ top (`DECISIONS.md` §98). Three causes, told apart by the same page:
 1. **Deferred by the allowance** — Mailgun Free's 100 messages a day are spent. Nothing is
    lost; the queue resumes at the time the alert names (the UTC reset, five minutes past).
    If it is registration day and people are waiting for confirmations: Mailgun → Billing →
-   Basic removes the daily limit the moment it is paid, and the next scheduler tick sends
-   everything. `docs/PLATFORM.md` has the price.
+   Basic removes the daily limit the moment it is paid; then `/admin/emails` → "The Mailgun
+   plan" → Basic → save, so the counters and "Trimite acum" stop counting against a hundred
+   (`DECISIONS.md` §100); the next scheduler tick — or "Trimite acum" — sends everything. When
+   the month is over and the plan is cancelled, set it back to Free there. `docs/PLATFORM.md`
+   has the price.
 2. **Overdue** — messages waited more than ninety minutes for a scheduler. cron-job.org →
    the two job monitors: paused, disabled after failures, or the `JOB_SECRET` changed. Run
    `yarn smoke` on the environment; `jobs[].status` names which one is stale. Pressing

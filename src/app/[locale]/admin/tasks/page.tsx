@@ -34,8 +34,9 @@ import {
 import { NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
 import { projectedNeonLaunchUsdPerMonth } from "@/modules/diagnostics/platform-plans";
+import { EMAIL_PLANS, emailCeilings, nextEmailPlan } from "@/modules/notifications/domain/email-plan";
+import { readEmailPlan } from "@/modules/notifications/email-plan";
 import {
-  MAILGUN_FREE_DAILY_MESSAGES,
   messagesPerCompletedRegistration,
   readEmailVolumeToday,
 } from "@/modules/notifications/volume";
@@ -127,6 +128,10 @@ export default async function AdminTasksPage({ params }: Props) {
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now);
+  // The plan the club says it is on (§100): its price is a row on the cost table below.
+  const emailPlan = await readEmailPlan(db);
+  const emailPlanCeilings = emailCeilings(emailPlan);
+  const emailNext = nextEmailPlan(emailPlan.plan);
   // One row is the Administrator inserted by hand; a second is somebody invited from
   // `/admin/staff`. The count is the whole of what "the team is invited" can mean here.
   const [{ staffCount }] = await db.select({ staffCount: count() }).from(staffUsers);
@@ -196,8 +201,13 @@ export default async function AdminTasksPage({ params }: Props) {
     neonCuHoursThisMonth: neon.ok ? neon.consumption.cuHours : null,
     neonHoursElapsed: neon.ok ? (now.getTime() - neon.consumption.periodStart.getTime()) / 3_600_000 : null,
     databaseStorageAllowanceBytes: NEON_FREE_STORAGE_BYTES,
-    emailAllowance: MAILGUN_FREE_DAILY_MESSAGES,
-    emailSentToday: volume.sentMessages,
+    emailAllowance: volume.allowance,
+    // Over the period that binds: today on Free, this month on a paid plan.
+    emailSentToday: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+    emailPlanName: volume.planName,
+    emailPlanUsdPerMonth: emailPlanCeilings.usdPerMonth,
+    emailPeriod: volume.period,
+    emailNextPlan: emailNext ? { name: EMAIL_PLANS[emailNext].name, usdPerMonth: EMAIL_PLANS[emailNext].usdPerMonth } : null,
     messagesPerRegistration: messagesPerCompletedRegistration(Boolean(env.DECLARATIONS_ARCHIVE_TO)),
     hasPaidEvent,
     clubDomainBound,
@@ -217,10 +227,11 @@ export default async function AdminTasksPage({ params }: Props) {
   const neonMonthly = projectedNeonLaunchUsdPerMonth(facts);
   const howClose = (row: ServiceRow) => {
     if (row.headroom.kind === "measured") {
-      const base = t(`services.${row.id}.closeMeasured`, {
+      const base = t(row.id === "mailgun" && volume.period === "month" ? "services.mailgun.closeMeasuredMonth" : `services.${row.id}.closeMeasured`, {
         used: row.headroom.used,
         of: row.headroom.of,
-        left: registrationsLeft,
+        left: registrationsLeft ?? 0,
+        plan: volume.planName,
       });
       // The monthly figure the owner asked for (§88): this month's pace on the next plan.
       if (row.id === "neon") {
@@ -231,6 +242,8 @@ export default async function AdminTasksPage({ params }: Props) {
       return base;
     }
     if (row.headroom.kind === "derived") {
+      // Mailgun with no ceiling at all (§100): the plan's name is the whole of the answer.
+      if (row.id === "mailgun") return t("services.mailgun.closeNone", { plan: volume.planName });
       return t(`services.${row.id}.${row.headroom.reached ? "closeYes" : "closeNo"}`);
     }
     return t(`services.${row.id}.closeUnknown`);
@@ -262,7 +275,7 @@ export default async function AdminTasksPage({ params }: Props) {
             <Typography variant="body2" sx={{ mt: 0.5 }}>
               {t("emailStalled.deferred", {
                 count: email.deferred,
-                allowance: MAILGUN_FREE_DAILY_MESSAGES,
+                allowance: volume.allowance ?? "—",
                 resumesAt: email.resumesAt
                   ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
                       dateStyle: "medium",
@@ -380,10 +393,11 @@ export default async function AdminTasksPage({ params }: Props) {
           {t(`freeVerdict.${verdict}`)}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t("registrationsLeftToday", {
-            count: registrationsLeft,
-            sent: volume.sentMessages,
-            allowance: MAILGUN_FREE_DAILY_MESSAGES,
+          {t(`registrationsLeft.${volume.period}`, {
+            count: registrationsLeft ?? "",
+            sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+            allowance: volume.allowance ?? "",
+            plan: volume.planName,
           })}
         </Typography>
         <Typography variant="body2" color="text.secondary">

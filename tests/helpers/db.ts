@@ -11,6 +11,7 @@ import { legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-doc
 import { galleryAlbums, galleryAlbumTranslations, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pages, pageTranslations } from "@/db/schema/pages";
 import { participants } from "@/db/schema/participants";
+import { platformSettings } from "@/db/schema/platform-settings";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -29,6 +30,7 @@ const schema = {
   declarationAcceptances,
   jobRuns,
   rateLimitBuckets,
+  platformSettings,
 };
 export type TestDatabase = PgliteDatabase<typeof schema>;
 
@@ -94,6 +96,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(participants);
   await db.delete(jobRuns);
   await db.delete(rateLimitBuckets);
+  await db.delete(platformSettings);
   // Last: events, translations and legal documents reference staff users, and although the
   // foreign keys are ON DELETE SET NULL, deleting the parents first keeps the order honest
   // about what owns what.

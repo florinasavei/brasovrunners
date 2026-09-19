@@ -4991,3 +4991,52 @@ row's steps; `tests/integration/registrations/declaration-archive.test.ts`. BR-R
 criterion 11.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 100. Decided — the Mailgun plan is a setting an Administrator changes, not a constant (2026-09-19)
+
+**Context.** `notifications/volume.ts` said, since `BR-V1.19`: "a constant and not
+configuration, deliberately … an environment variable would invite it being set to whatever
+makes the page look calm." The owner's request on 2026-09-19 — "I need to know the Mailgun
+SKU so I know the queue limit; this should be a setting on the admin side so I can change it
+dynamically when I temporarily enable Mailgun paid" — is the case that argument did not
+cover: the club *will* buy a month of Basic around a race (`docs/PLATFORM.md` has said so
+since limit 1 was written), and the day it does, every page that says "100 a day" is wrong
+until a developer deploys, "Trimite acum" stops at a hundred that no longer binds, and the
+cost table shows a free plan the club is paying for. Mailgun's API does not tell a domain
+sending key which plan the account is on, so the platform cannot read it; somebody has to
+say it.
+
+**Decision.** A `platform_settings` table — key, JSON value, when, by whom; not for secrets,
+ever — and its first key, `emailPlan`: one of Free, Basic, Foundation, Scale (the catalogue
+in `notifications/domain/email-plan.ts`, read from mailgun.com/pricing on 2026-09-19: $0
+with 100 a day; $15 with 10,000 a month; $35 with 50,000; $90 with 100,000; no daily ceiling
+on any paid plan) or `CUSTOM` with the ceilings typed from Mailgun's own Account → Plan page,
+both empty meaning none. An Administrator sets it on `/admin/emails`, above the messages,
+next to the day's and the month's counts that would expose a wrong answer; an audit row
+records who, from what, to what, and the note ("Basic for October's race, cancel on the
+20th"). A stored value this code can no longer read falls back to Free, the smallest ceiling.
+
+Every figure follows it. `readEmailVolumeToday` now returns the plan, the period that binds
+(day, month, none), the ceiling and what is left of it over that period — null when nothing
+binds, and the pages print the word rather than a big number. The outbox panel, `/devs`, the
+task board's Mailgun row (its price as a paid line in "what the club pays today", its "next"
+column from the catalogue) and the "send now" loop's stop all read the same answer. The worker
+itself is unchanged: Mailgun's 402/420 still defers a message to the reset (§40), whatever
+the setting says — the setting is the club's claim, the provider's refusal is the fact, and
+`/api/health` (§98) tells the club when the two disagree.
+
+*Rejected:* an environment variable (the original objection stands for a value nobody sees;
+this one is on the screen that sets it, with the counts beside it, and changes with the
+month, which a deploy should not have to); reading the plan from Mailgun (the sending key
+cannot); a dropdown of plans without `CUSTOM` (Mailgun's catalogue changes more often than
+this code).
+
+**Consequences.** `db/schema/platform-settings.ts` and migration `0037` (expand-only);
+`notifications/domain/email-plan.ts`, `notifications/email-plan.ts`, `EmailPlanPanel`,
+`admin/emails/actions.ts`; `volume.ts` (`allowance`/`remaining` nullable, `period`,
+`sentThisMonth`), `send-now.ts`, `platform-plans.ts` (`emailAllowance` nullable, the plan
+facts); the audit action `email_plan.changed` on entity `platform_setting`; the three pages;
+the guide; `tests/unit/notifications/email-plan.test.ts`,
+`tests/integration/notifications/email-plan.test.ts`. BR-REQ-080-02 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.

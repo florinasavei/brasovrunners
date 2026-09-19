@@ -363,7 +363,11 @@ absorb load that a limit should have refused is paying for abuse.
 
 This will happen: five messages per completed registration against 100 a day is 20
 registrations, and a race opening entries to a hundred people crosses it before lunch (limit 1).
-What happens then is now a decision rather than an accident.
+What happens then is now a decision rather than an accident. **Which plan the account is on is
+a setting since `DECISIONS.md` §100** — `/admin/emails`, Administrator, audited — and every
+figure on `/admin/tasks`, `/devs` and the outbox panel counts against that plan's ceiling over
+its own period: a day on Free, a month on Basic and above. The month of Basic before a race is
+therefore two clicks and no deploy: pay at Mailgun, set the plan; cancel, set it back.
 
 **The messages wait, and go out when the allowance resets.** Mailgun refuses a send whose
 allowance is spent, the adapter classifies that refusal as `throttled`, and the outbox leaves the

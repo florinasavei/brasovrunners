@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -9,10 +10,14 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
+import { getDb } from "@/db/client";
+import { readEmailPlan } from "@/modules/notifications/email-plan";
+import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
+import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
-type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string }> };
 
 /**
  * Every email the platform sends, rendered with sample data (`DECISIONS.md` §91; the owner:
@@ -30,8 +35,14 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   await requireStaff();
-  const { lang } = await searchParams;
+  const { lang, saved, error } = await searchParams;
   const emailLocale: EmailLocale = lang === "en" ? "en" : lang === "ro" ? "ro" : locale;
+
+  // The plan and the counts (§100), above the messages: what can still go out is the first
+  // thing anybody opening this page on race day wants to know.
+  const db = getDb();
+  const now = new Date();
+  const [plan, volume] = await Promise.all([readEmailPlan(db), readEmailVolumeToday(db, now)]);
 
   const t = await getTranslations("Admin");
   const tRo = emailLocale === "ro";
@@ -61,6 +72,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
 
   return (
     <Stack spacing={3}>
+      <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
+        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
+      </Box>
+
+      <EmailPlanPanel locale={locale} plan={plan} volume={volume} />
+
       <Box>
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("emails.title")}

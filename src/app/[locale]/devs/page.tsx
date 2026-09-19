@@ -311,15 +311,16 @@ export default async function DevsPage({ params }: Props) {
           severity={
             volume.remaining === 0
               ? "error"
-              : volume.projectedMessages > volume.remaining
+              : volume.remaining !== null && volume.projectedMessages > volume.remaining
                 ? "warning"
                 : "success"
           }
           sx={{ mb: 2 }}
         >
-          {t("emailVolumeHeadroom", {
-            remaining: volume.remaining,
-            allowance: volume.allowance,
+          {t(`emailVolumeHeadroom.${volume.period}`, {
+            remaining: volume.remaining ?? "",
+            allowance: volume.allowance ?? "",
+            plan: volume.planName,
           })}
         </Alert>
         {/* The stall the monitors are told about (§98): `/api/health` answers 503 while it lasts. */}
@@ -345,7 +346,9 @@ export default async function DevsPage({ params }: Props) {
             {t("queuedMessages")}: <strong>{volume.queuedMessages}</strong>
           </Typography>
           <Typography variant="body2">
-            {t("sentMessages")}: <strong>{volume.sentMessages}</strong> / {volume.allowance}
+            {t("sentMessages")}: <strong>{volume.sentMessages}</strong>
+            {volume.period === "day" ? ` / ${volume.allowance}` : ""} · {t("sentThisMonth")}: <strong>{volume.sentThisMonth}</strong>
+            {volume.period === "month" ? ` / ${volume.allowance}` : ""} · {t("emailPlanLabel")}: <strong>{volume.planName}</strong>
           </Typography>
         </Stack>
       </Box>

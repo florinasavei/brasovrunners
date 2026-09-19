@@ -185,10 +185,14 @@
       "guide": "Ghid"
     },
     "outbox": {
-      "status": "Emailuri în așteptare: {waiting} · trimise azi: {sent} din {allowance} (mai rămân {remaining})",
+      "status": {
+        "day": "Emailuri în așteptare: {waiting} · trimise azi: {sent} din {allowance} (mai rămân {remaining})",
+        "month": "Emailuri în așteptare: {waiting} · trimise luna aceasta: {sent} din {allowance} (mai rămân {remaining}; planul {plan}, fără limită zilnică)",
+        "none": "Emailuri în așteptare: {waiting} · trimise azi: {sent} (planul {plan}, fără limită)"
+      },
       "sendNow": "Trimite acum",
       "nothingWaiting": "Nimic de trimis.",
-      "allowanceSpent": "Limita zilnică Mailgun este atinsă; restul pleacă mâine.",
+      "allowanceSpent": "Limita planului Mailgun este atinsă; restul pleacă după resetare.",
       "sending": "Se trimit…",
       "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
       "sentNow": "Emailuri trimise acum: {count}."
@@ -779,7 +783,6 @@
         "freeButAtALimit": "Da, dar e-mailurile gratuite de azi s-au terminat. Nu se pierde nimic — pleacă după miezul nopții. Dacă deschizi înscrierile acum, confirmările ajung mâine dimineață.",
         "notFree": "Atenție, dar nu neapărat o problemă. Este publicat un eveniment cu taxă. Planul gratuit al furnizorului nu se uită la faptul că suntem ONG — asta nu este o scutire. Ce contează este cum sunt cerute banii: o donație este permisă explicit, o taxă obligatorie nu, chiar dacă acoperă strict costurile. Site-ul nu încasează bani și nu are cum să o facă — asta ajută, dar nu decide singură."
       },
-      "registrationsLeftToday": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
       "costTitle": "Cât costă",
       "costToday": {
         "nothing": "Astăzi clubul nu plătește nimic. Toate serviciile sunt pe planuri gratuite.",
@@ -835,7 +838,9 @@
           "ceiling": "Prima limită: 100 de e-mailuri pe zi, adică vreo 33 de înscrieri, pentru că o înscriere completă cere trei e-mailuri.",
           "whenCrossed": "E-mailurile de peste limită nu se pierd: rămân la coadă și pleacă după miezul nopții. Dar o cursă la care confirmările ajung abia a doua zi dimineață este o cursă proastă, așa că planul plătit se ia înainte de deschiderea înscrierilor, nu în timpul lor.",
           "closeMeasured": "Azi au plecat {used} din {of} e-mailuri — mai ajung pentru vreo {left} înscrieri.",
-          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung."
+          "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung.",
+          "closeMeasuredMonth": "Luna aceasta au plecat {used} din {of} e-mailuri (planul {plan}) — mai ajung pentru vreo {left} înscrieri.",
+          "closeNone": "Planul {plan}, fără limită de mesaje."
         },
         "vercel": {
           "name": "Vercel (locul unde stă site-ul)",
@@ -890,6 +895,11 @@
           "open": "Gratuit ajung vreo 33 de înscrieri pe zi. Dacă la o cursă sunt așteptați mai mulți, cei 15 dolari pe o lună se plătesc înainte de deschiderea înscrierilor, nu în timpul lor — altfel confirmările ajung a doua zi dimineață. Până când: cu o zi înainte să se deschidă înscrierile.",
           "answered": "Clubul nu mai depinde de limita zilnică gratuită."
         }
+      },
+      "registrationsLeft": {
+        "day": "Astăzi au plecat {sent} din {allowance} mesaje. Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
+        "month": "Luna aceasta au plecat {sent} din {allowance} mesaje (planul {plan}, fără limită zilnică). Mai ajung pentru aproximativ {count} înscrieri complete — este un minim, pentru că cine ajunge pe lista de așteptare costă mai multe mesaje.",
+        "none": "Planul {plan} nu are o limită de mesaje. Astăzi au plecat {sent}."
       }
     },
     "richText": {
@@ -1153,6 +1163,32 @@
         "EVENT_THANKS": "Manual, din pagina evenimentului, după ce evenimentul e marcat încheiat; celor prezenți.",
         "DECLARATION_SIGNED": "Imediat după semnarea declarației — electronic sau pe hârtie, la masă. Cu PDF-ul atașat și linkul către el.",
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune."
+      },
+      "plan": {
+        "title": "Planul Mailgun și cât mai putem trimite",
+        "intro": "Platforma nu poate citi de la Mailgun pe ce plan e contul, așa că îi spui tu aici — și de aici se calculează cât mai poate pleca azi, pe /admin/tasks, pe /devs și la „Trimite acum”. Când plătești o lună de Basic înainte de cursă, schimbi aici; când o anulezi, schimbi înapoi.",
+        "status": {
+          "day": "Planul {plan}: {sent} din {allowance} mesaje trimise azi, mai rămân {remaining}; în coadă: {waiting}.",
+          "month": "Planul {plan}: {sent} din {allowance} mesaje trimise luna aceasta, mai rămân {remaining}; fără limită zilnică; în coadă: {waiting}.",
+          "none": "Planul {plan}: fără limită. Trimise azi: {sent}; în coadă: {waiting}."
+        },
+        "updatedAt": "Setat la {when}. Notă: {note}",
+        "field": "Planul pe care e contul Mailgun",
+        "fieldHelp": "Prețurile și limitele de pe mailgun.com/pricing, verificate pe {checkedOn}. Basic ajunge pentru un sezon întreg.",
+        "option": "{name} — {ceiling}, {price}",
+        "perDay": "{count} mesaje pe zi",
+        "perMonth": "{count} mesaje pe lună",
+        "free": "gratuit",
+        "month": "lună",
+        "custom": "Altceva — scriu eu limitele de mai jos",
+        "dailyAllowance": "Limita zilnică (doar la „Altceva”)",
+        "monthlyAllowance": "Limita lunară (doar la „Altceva”)",
+        "customHelp": "Doar pentru „Altceva”: scrie ce arată Mailgun în Account → Plan; lasă gol ce nu există (amândouă goale înseamnă fără limită). La celelalte planuri numerele vin din catalog.",
+        "note": "Notă (de ce, până când)",
+        "save": "Salvează planul",
+        "saving": "Se salvează…",
+        "saved": "Planul a fost salvat; cifrele de mai sus și de pe /admin/tasks îl folosesc de acum.",
+        "unlimited": "fără limită"
       }
     },
     "guide": {
@@ -1207,7 +1243,8 @@
             "„Echipa” (Superadministrator): adaugi oameni după email și rol. Persoana trebuie să existe și în Zitadel (consola de autentificare) ca să se poată loga.",
             "Cont pentru voluntari: în Zitadel creezi utilizatorul (email + parolă), apoi în „Echipa” îl adaugi cu rolul Colaborator. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
-            "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă."
+            "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
+            "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc."
           ]
         },
         {
@@ -1290,7 +1327,10 @@
     "city": "Oraș",
     "preferredLocale": "Limba în care vrei emailurile și declarația",
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
-    "preferredLocaleOptions": { "ro": "Română", "en": "Engleză" },
+    "preferredLocaleOptions": {
+      "ro": "Română",
+      "en": "Engleză"
+    },
     "phone": "Telefon",
     "phoneCountry": "Țara",
     "phoneHelp": "Numărul fără prefixul țării — de exemplu 0712 345 678.",
@@ -1541,7 +1581,11 @@
     "settingsIntro": "Fiecare valoare acceptată de fiecare setare, cu cea folosită de acest mediu evidențiată. Citită din aceeași listă pe care o validează procesul, deci nu poate ajunge să difere.",
     "emailVolume": "Volum de e-mail astăzi",
     "emailVolumeIntro": "Trei mesaje pentru fiecare înscriere finalizată, raportat la alocația zilnică a furnizorului. Verifică asta înainte de a deschide înscrierile, nu după. Numărat de la miezul nopții UTC.",
-    "emailVolumeHeadroom": "Au mai rămas {remaining} din {allowance} mesaje astăzi.",
+    "emailVolumeHeadroom": {
+      "day": "Au mai rămas {remaining} din {allowance} mesaje astăzi (planul {plan}).",
+      "month": "Au mai rămas {remaining} din {allowance} mesaje luna aceasta (planul {plan}, fără limită zilnică).",
+      "none": "Planul {plan}: fără limită de mesaje."
+    },
     "emailHealth": {
       "ok": "Trimiterea funcționează: nimic amânat, întârziat sau eșuat. /api/health răspunde 200.",
       "stalled": "Trimiterea s-a oprit — amânate de limita zilnică: {deferred}; întârziate (monitoarele nu rulează): {overdue}; eșuate în ultimele 7 zile: {failed}. Ultimul motiv: „{reason}”. /api/health răspunde 503 până se rezolvă, ca monitorul să anunțe."
@@ -1646,7 +1690,9 @@
       "unavailable": "Nu este configurat. Două minute: (1) Neon → avatar → Account settings → API keys → Create API key, sau `npx neonctl api-keys create --name devs --project-id <id>`; (2) id-ul proiectului e în adresa consolei (console.neon.tech/app/projects/<id>) sau `npx neonctl projects list`; (3) `vercel env add NEON_API_KEY production` și `vercel env add NEON_PROJECT_ID production`, apoi redeploy. Consumul apare aici.",
       "failed": "Neon nu a răspuns: {reason}",
       "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
-    }
+    },
+    "sentThisMonth": "Trimise luna aceasta",
+    "emailPlanLabel": "Plan Mailgun"
   },
   "Error": {
     "title": "Ceva nu a funcționat",

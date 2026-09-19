@@ -3,6 +3,8 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { env } from "@/shared/config/env";
+import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
+import { readEmailPlan } from "./email-plan";
 
 /**
  * How much email today is going to cost, before the day proves it (AGENTS.md §16, §19).
@@ -42,13 +44,14 @@ export function messagesPerCompletedRegistration(archiveConfigured: boolean): nu
 /**
  * Mailgun Free: 100 messages a day (`docs/PLATFORM.md`, limit 1 of the four that bite).
  *
- * A constant and not configuration, deliberately. It is a fact about the plan the club is on,
- * it changes when somebody upgrades — at which point Basic removes the daily limit entirely and
- * this number stops meaning anything — and an environment variable would invite it being set to
- * whatever makes the page look calm. The day the club is on Basic, this becomes a decision to
- * record in `docs/PLATFORM.md` and not a value to edit in a dashboard.
+ * The floor, and the default. Until `DECISIONS.md` §100 this was "a constant and not
+ * configuration, deliberately", on the argument that a variable invites being set to whatever
+ * makes the page look calm. The owner's counter-argument won: the club *will* pay for a month
+ * of Basic around a race, and the day it does, every page that says "100 a day" is wrong until
+ * a developer deploys. The plan is a setting now (`email-plan.ts`), changed by an
+ * Administrator with an audit row, and shown next to the counts that would expose a wrong one.
  */
-export const MAILGUN_FREE_DAILY_MESSAGES = 100;
+export const MAILGUN_FREE_DAILY_MESSAGES = EMAIL_PLANS.FREE.dailyAllowance ?? 100;
 
 export type EmailVolumeToday = {
   /** Real registrations created today. The club's own number. */
@@ -70,10 +73,23 @@ export type EmailVolumeToday = {
   waitingMessages: number;
   /** Outbox rows actually transmitted today. What the allowance has actually paid for. */
   sentMessages: number;
-  allowance: number;
-  /** `allowance − sent`, never below zero. What is left of today. */
-  remaining: number;
+  /** Transmitted since the first of the month (UTC): what a monthly plan counts against. */
+  sentThisMonth: number;
+  /** The plan the club says it is on (§100), and its name for the pages. */
+  plan: EmailPlanId;
+  planName: string;
+  /** Which ceiling binds: Free's day, a paid plan's month, or none at all. */
+  period: "day" | "month" | "none";
+  /** The ceiling that binds, in messages; null when nothing does. */
+  allowance: number | null;
+  /** `allowance − sent` over the binding period, never below zero; null when nothing binds. */
+  remaining: number | null;
 };
+
+/** The first of the month, UTC, matching the day boundary below. */
+function startOfUtcMonth(now: Date): Date {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
 
 /** Midnight UTC, matching `nextAllowanceResetAt` in `domain/retry.ts`. */
 function startOfUtcDay(now: Date): Date {
@@ -115,9 +131,19 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     .from(emailOutbox)
     .where(sql`${emailOutbox.status} IN ('PENDING', 'PROCESSING')`);
 
+  const [sentMonth] = await db
+    .select({ value: count() })
+    .from(emailOutbox)
+    .where(and(gte(emailOutbox.sentAt, startOfUtcMonth(now)), sql`${emailOutbox.sentAt} IS NOT NULL`));
+
   const realRegistrations = registrationCounts?.real ?? 0;
   const testRegistrations = registrationCounts?.test ?? 0;
   const sentMessages = sent?.value ?? 0;
+  const sentThisMonth = sentMonth?.value ?? 0;
+
+  const setting = await readEmailPlan(db);
+  const ceilings = emailCeilings(setting);
+  const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
 
   return {
     realRegistrations,
@@ -128,7 +154,11 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
     sentMessages,
-    allowance: MAILGUN_FREE_DAILY_MESSAGES,
-    remaining: Math.max(0, MAILGUN_FREE_DAILY_MESSAGES - sentMessages),
+    sentThisMonth,
+    plan: setting.plan,
+    planName: ceilings.planName,
+    period: headroom.period,
+    allowance: headroom.allowance,
+    remaining: headroom.remaining,
   };
 }

@@ -1363,7 +1363,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 
 6. Given an outbox row deferred by the provider's allowance, one whose turn passed more than ninety minutes ago, or one that spent every attempt in the last seven days, when `/api/health` answers, then it reports `email.status = stalled`, an overall `degraded`, and HTTP 503 — every status but `ok` is a 503 — so an external monitor that notifies on a non-2xx tells the club that email has stopped through a channel that is not email; the same counts, the reason and the resume time are shown on `/admin/tasks` and `/devs`; a bounce alone is not a stall (`DECISIONS.md` §98).
 
-**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`; integration `notifications/email-health.test.ts`
+7. Given an Administrator on `/admin/emails`, when they set the Mailgun plan the account is on — Free, Basic, Foundation, Scale, or a custom one with the ceilings typed — then the setting is stored once (`platform_settings.emailPlan`) with an audit row naming who changed it from what; every figure that says how much can still be sent (the outbox panel, `/devs`, `/admin/tasks`, the "send now" stop) counts against that plan's ceiling over its own period — Free's day, a paid plan's month, none at all — and the cost table carries the plan's price; a Moderator is refused; an unreadable stored value reads as Free (`DECISIONS.md` §100).
+
+**Verification:** integration `notifications/outbox.test.ts`; integration `notifications/send-now.test.ts`; integration `notifications/email-health.test.ts`; integration `notifications/email-plan.test.ts` (7); unit `notifications/email-plan.test.ts`
 
 #### BR-REQ-080-03 — Environment-appropriate delivery
 
