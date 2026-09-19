@@ -297,6 +297,8 @@ const PROVIDER_HOSTS = [
   "i.ytimg.com",
   // Cloudflare Turnstile's widget and its verification endpoint (§97): fixed, Cloudflare's own.
   "challenges.cloudflare.com",
+  // Google's SMTP submission host, the default of CONTACT_SMTP_HOST (§149): Google's own, fixed, and overridable by the variable.
+  "smtp.gmail.com",
 ];
 
 async function checkHostnameLiterals() {

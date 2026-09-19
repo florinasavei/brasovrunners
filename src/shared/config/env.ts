@@ -199,6 +199,21 @@ export const envSchema = z
      * participant's copy and the per-event bundle on the event page are the archive.
      */
     DECLARATIONS_ARCHIVE_TO: z.email().optional(),
+    /**
+     * The contact form's own way out (`DECISIONS.md` §149; the owner: "a contact form that
+     * submits to the club's Gmail and bypasses Mailgun"). Plain SMTP with a Gmail app password
+     * — the one message the platform sends that never touches the outbox or the Mailgun
+     * allowance, because it is correspondence, not transactional mail. The host and port are
+     * Google's defaults and stay configuration (§8); `CONTACT_FORM_TO` is where the message
+     * lands — the club's Gmail and a colleague's Yahoo, comma-separated — because the club
+     * decides who reads its mail, not the code. Never validated as a set at startup: a
+     * deployment without them shows "write to us at …" instead of the form (`CONTACT_FORM_MODE`).
+     */
+    CONTACT_SMTP_HOST: z.string().trim().min(1).default("smtp.gmail.com"),
+    CONTACT_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(465),
+    CONTACT_SMTP_USER: z.email().optional(),
+    CONTACT_SMTP_PASSWORD: z.string().min(1).optional(),
+    CONTACT_FORM_TO: allowlist,
     // Verifies inbound Mailgun webhooks (AGENTS.md §16.5) — a separate secret from the API
     // key, since the two prove different things: one authenticates outbound calls this
     // application makes, the other authenticates inbound calls Mailgun makes to it.
@@ -296,6 +311,17 @@ export const envSchema = z
       }
     }
 
+    // Configuration typed by an operator, so the bad entry is named (the allowlist's reasoning).
+    for (const entry of value.CONTACT_FORM_TO) {
+      if (!isValidEmail(entry)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["CONTACT_FORM_TO"],
+          message: `CONTACT_FORM_TO entry is not a valid address: "${entry}".`,
+        });
+      }
+    }
+
     // A mode that can transmit needs credentials. Missing ones would surface as a failed send
     // per message rather than as a deployment that did not start.
     if (
@@ -355,6 +381,18 @@ export const envSchema = z
               value.R2_PUBLIC_BASE_URL
             ? ("r2" as const)
             : ("unconfigured" as const),
+    /**
+     * Derived like `STORAGE_MODE`: local and test never open a socket — the message is kept
+     * in memory for the developer and the tests to read (§149); a deployment sends over SMTP
+     * when the sender, its password and at least one recipient exist, and is `off` otherwise,
+     * which the contact page renders as "write to us at …" rather than a form that fails.
+     */
+    CONTACT_FORM_MODE:
+      value.APP_ENV === "local" || value.APP_ENV === "test"
+        ? ("capture" as const)
+        : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD && value.CONTACT_FORM_TO.length > 0
+          ? ("smtp" as const)
+          : ("off" as const),
   }));
 
 export type Env = z.infer<typeof envSchema>;

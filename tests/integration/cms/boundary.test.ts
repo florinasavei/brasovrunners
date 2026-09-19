@@ -193,6 +193,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/registrations/new",
       "/admin/staff",
       "/admin/tasks",
+      "/contact",
       "/devs",
       "/devs/docs/[name]",
       "/devs/theme",

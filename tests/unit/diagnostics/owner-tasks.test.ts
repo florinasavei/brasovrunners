@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  countTasks,
+  filterTasks,
+  isTaskKind,
+  isTaskOwner,
   ownerTasks,
   sortTasks,
+  TASK_KIND,
+  TASK_KINDS,
   type OwnerTaskInputs,
 } from "@/modules/diagnostics/owner-tasks";
 
@@ -26,6 +32,7 @@ const LAUNCHED: OwnerTaskInputs = {
   botCheckConfigured: true,
   declarationArchiveConfigured: true,
   vercelUsageConfigured: true,
+  contactFormConfigured: true,
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -107,6 +114,9 @@ describe("owner tasks", () => {
     // The bot check is a switch the club flips (§97): open without the keys, never blocking.
     expect(stateOf({ ...LAUNCHED, botCheckConfigured: false }, "botCheck")).toBe("open");
     expect(stateOf(LAUNCHED, "botCheck")).toBe("done");
+    // The contact form (§149): built; open until the Gmail app password and the recipients exist.
+    expect(stateOf({ ...LAUNCHED, contactFormConfigured: false }, "contactForm")).toBe("open");
+    expect(stateOf(LAUNCHED, "contactForm")).toBe("done");
   });
 
   it("leaves every task but the scheduler to the club", () => {
@@ -120,6 +130,7 @@ describe("owner tasks", () => {
       "botCheck",
       "declarationArchiveMail",
       "vercelUsage",
+      "contactForm",
       "roDomain",
     ]);
   });
@@ -139,6 +150,75 @@ describe("owner tasks", () => {
       }),
     );
     expect(sorted[0].state).toBe("blocking");
+  });
+});
+
+/**
+ * The counter and the two filters (§150; the owner: "show a counter of how many items are
+ * pending, and a filter by issue type and owner"). Pure over the list, so the page's chips
+ * and its "De făcut: N · Gata: M" line are tested here without a browser.
+ */
+describe("the counter and the filters", () => {
+  // A board where every state occurs: two blocking, three open, the rest done.
+  const MIXED: OwnerTaskInputs = {
+    ...LAUNCHED,
+    legalTextIsSample: true, // approveLegalText: blocking (club, text)
+    staleJobNames: ["email-outbox"], // scheduler: blocking (developer, check)
+    staffCount: 1, // inviteStaff: open (club, account)
+    roDomainBound: false, // roDomain: open (club, decision)
+    contactFormConfigured: false, // contactForm: open (club, account)
+  };
+
+  it("gives every task a kind from the closed set, and the map names every id the list produces", () => {
+    const tasks = ownerTasks(MIXED);
+    for (const task of tasks) {
+      expect(TASK_KINDS).toContain(task.kind);
+      expect(TASK_KIND[task.id]).toBe(task.kind);
+    }
+    // The four kinds are all in use; a kind nothing carries is a chip that filters to nothing.
+    expect(new Set(tasks.map((task) => task.kind)).size).toBe(TASK_KINDS.length);
+  });
+
+  it("counts what is pending — blocking counts as pending — and what is done", () => {
+    const tasks = ownerTasks(MIXED);
+    expect(countTasks(tasks)).toEqual({ pending: 5, done: tasks.length - 5 });
+    expect(countTasks(ownerTasks(LAUNCHED))).toEqual({ pending: 0, done: tasks.length });
+    expect(countTasks([])).toEqual({ pending: 0, done: 0 });
+  });
+
+  it("narrows by owner, by kind, and by both at once — and an empty filter keeps everything", () => {
+    const tasks = sortTasks(ownerTasks(MIXED));
+    expect(filterTasks(tasks, {})).toEqual(tasks);
+
+    const club = filterTasks(tasks, { owner: "club" });
+    expect(club.every((task) => task.owner === "club")).toBe(true);
+    expect(club.map((task) => task.id)).not.toContain("scheduler");
+
+    const accounts = filterTasks(tasks, { kind: "account" });
+    expect(accounts.every((task) => task.kind === "account")).toBe(true);
+    expect(accounts.map((task) => task.id)).toEqual(
+      expect.arrayContaining(["inviteStaff", "contactForm", "liveEmail"]),
+    );
+
+    // Both halves combine, and the sort order survives the narrowing.
+    const developerChecks = filterTasks(tasks, { owner: "developer", kind: "check" });
+    expect(developerChecks.map((task) => task.id)).toEqual(["scheduler"]);
+    expect(filterTasks(tasks, { owner: "developer", kind: "text" })).toEqual([]);
+    const clubOpen = filterTasks(tasks, { owner: "club" });
+    expect(clubOpen.map((task) => task.state)).toEqual(sortTasks(clubOpen).map((task) => task.state));
+
+    // The counter follows the filter: it counts the rows shown, not the board.
+    expect(countTasks(filterTasks(tasks, { kind: "decision" }))).toEqual({ pending: 1, done: 1 });
+  });
+
+  it("reads a query value only from the closed sets", () => {
+    expect(isTaskOwner("club")).toBe(true);
+    expect(isTaskOwner("developer")).toBe(true);
+    expect(isTaskOwner("CLUB")).toBe(false);
+    expect(isTaskOwner(undefined)).toBe(false);
+    expect(isTaskKind("account")).toBe(true);
+    expect(isTaskKind("cont")).toBe(false);
+    expect(isTaskKind("")).toBe(false);
   });
 });
 

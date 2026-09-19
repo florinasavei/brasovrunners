@@ -690,6 +690,8 @@ A public runner profile exposes only information the participant explicitly publ
 
 The platform collects only information needed by the active workflow. V1 normally needs name, email, language, registration state, declaration acceptance, transactional email state, and optional public profile fields.
 
+A visitor may write to the club through a contact form on the website; the message goes to the club's own mailbox as ordinary correspondence, is used only to answer, and is never stored by the platform.
+
 ### BR-BUS-071 — Participant exports
 
 Only an administrator may export participant data.

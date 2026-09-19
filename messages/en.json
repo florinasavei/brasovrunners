@@ -26,7 +26,8 @@
       "label": "Main navigation",
       "events": "Events",
       "gallery": "Gallery",
-      "more": "Menu"
+      "more": "Menu",
+      "contact": "Contact"
     }
   },
   "Home": {
@@ -797,6 +798,21 @@
       "intro": "What is missing before the platform can take real entries. Every line is read from the system, not ticked by hand.",
       "blockingSummary": "Blocking real registrations: {count}.",
       "nothingBlocking": "Nothing is blocking registrations. The rest are improvements.",
+      "summary": "To do: {pending} · Done: {done}",
+      "allDone": "Everything shown here is done.",
+      "noneMatch": "No row matches this filter.",
+      "listLabel": "The task list",
+      "filter": {
+        "who": "Who",
+        "kind": "Kind",
+        "all": "All"
+      },
+      "kind": {
+        "account": "Account",
+        "decision": "Decision",
+        "text": "Text",
+        "check": "Check"
+      },
       "emailStalled": {
         "title": "Emails are not going out.",
         "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves at {resumesAt} (Romania time); nothing is lost.",
@@ -922,6 +938,18 @@
             "In a year (September 2027), buy the .ro domain with the same name, at ROTLD or at the .com registrar.",
             "Run `yarn domain:bind production <name>.ro --alias-of {apex}`: it binds the domain to the Vercel project as a permanent redirect to the .com and prints the DNS records to create.",
             "Create the records at the registrar. This row turns green when the site answers on .ro."
+          ]
+        },
+        "contactForm": {
+          "title": "The contact form",
+          "todo": "The “Write to us” page is built: the visitor's name, address and message arrive as an ordinary email in the club's mailbox, straight through Gmail — not through Mailgun, so none of the 100 messages a day are spent. Until the three variables are set, the page shows the club's address instead of the form.",
+          "done": "The contact form sends to the club's mailbox.",
+          "how": [
+            "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
+            "Still under Security → App passwords → create one named “Brașov Runners site” → copy the 16 characters (shown once).",
+            "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters; CONTACT_FORM_TO = the addresses that receive the messages, comma-separated (the club's Gmail, Amalia's Yahoo).",
+            "Redeploy both projects.",
+            "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         }
       },
@@ -1483,7 +1511,8 @@
       "instagram": "Instagram",
       "strava": "Strava",
       "contact": "Write to us:"
-    }
+    },
+    "contactPage": "Write to us"
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
@@ -1729,7 +1758,8 @@
     "captured": {
       "title": "Emails captured on this machine",
       "intro": "Locally nothing leaves the machine: every message the platform would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
-      "empty": "Nothing captured yet. Register for an event and come back."
+      "empty": "Nothing captured yet. Register for an event and come back.",
+      "contact": "Through the contact form — would have reached the club’s mailbox:"
     },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",
@@ -1792,6 +1822,18 @@
       "webhook": {
         "title": "Mailgun webhook",
         "body": "How a bounce reaches the registration it belongs to. Without the signing key, requests are refused and delivery state stays unknown."
+      },
+      "contactFormCapture": {
+        "title": "Contact form",
+        "body": "Messages are kept in memory and go nowhere — the only mode locally and in tests; no SMTP connection is ever opened."
+      },
+      "contactFormSmtp": {
+        "title": "Contact form",
+        "body": "Sends over SMTP, straight from the club's Gmail, to CONTACT_FORM_TO — not through Mailgun and not through the email queue."
+      },
+      "contactFormOff": {
+        "title": "Contact form",
+        "body": "The “Write to us” page shows the club's address instead of the form. For the form: CONTACT_SMTP_USER (the Gmail address), CONTACT_SMTP_PASSWORD (the app password) and CONTACT_FORM_TO (the recipients, comma-separated)."
       }
     },
     "rateLimits": "Rate limits",
@@ -1942,5 +1984,47 @@
     "backToGallery": "← All albums",
     "photoCount": "{count} photos",
     "photoAlt": "Photo {n} of {total}: {title}"
+  },
+  "Contact": {
+    "title": "Write to us",
+    "intro": "A question about a run, a registration or the club? Write to us here — the message lands straight in the club's mailbox and we answer by email.",
+    "requiredLegend": "Fields marked with * are required.",
+    "name": "Your name",
+    "email": "Your email address",
+    "emailHelp": "We answer at this address.",
+    "message": "Message",
+    "messageHelp": "At most 2,000 characters.",
+    "privacy": "The message goes to the club's mailbox; the details are used for nothing else.",
+    "privacyDetails": "Details in the",
+    "privacyLinkLabel": "privacy notice",
+    "submit": "Send",
+    "submitting": "Sending…",
+    "incompleteHint": "Fill in your name, address and message to send.",
+    "sent": {
+      "title": "Your message is on its way.",
+      "bodyTo": "We will answer at {email}.",
+      "body": "We will answer at your email address."
+    },
+    "off": {
+      "writeTo": "Write to us at",
+      "none": "The contact form is not available at the moment."
+    },
+    "fieldNames": {
+      "name": "Name",
+      "email": "Email address",
+      "message": "Message",
+      "captcha": "Anti-bot check"
+    },
+    "errors": {
+      "title": "The message was not sent",
+      "fieldsIntro": "Check:",
+      "field": "Check this field.",
+      "generic": "The message could not be sent. Check what you filled in and try again.",
+      "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
+      "LIMITED": "Too many messages from this address in the last hour. Try again later — your message is still written below.",
+      "DELIVERY": "We could not send it. Write to us directly at",
+      "DELIVERY_NO_ADDRESS": "We could not send it. Try again in a few minutes.",
+      "UNAVAILABLE": "The contact form is not available on this site."
+    }
   }
 }

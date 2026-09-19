@@ -2709,6 +2709,16 @@ Complete Romanian/English HTML and text templates. Locale/timezone-aware dates a
 
 QA subject visibly marked. Startup rejects unsafe combination.
 
+**The contact form is the one message that does not go through the outbox** (BR-REQ-070-04,
+`DECISIONS.md` §149). It is a visitor's correspondence to the club, not transactional mail:
+no participant row depends on it, it carries no token, and the visitor is standing there to
+read a failure. It leaves over SMTP through the club's own mailbox account
+(`infrastructure/email/smtp-adapter.ts`, `CONTACT_SMTP_*`, `CONTACT_FORM_TO`), outside
+`EMAIL_DELIVERY_MODE` and its allowance, is never retried and never stored; local and test
+capture it in memory and open no socket, and QA marks its subject like the outbox marks
+every other. Nothing else may take this route — every message to a participant is an
+outbox row.
+
 ### 16.5 Webhooks
 
 - verify Mailgun signature;

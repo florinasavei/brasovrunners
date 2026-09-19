@@ -81,3 +81,44 @@ describe("staff authentication mode", () => {
     }
   });
 });
+
+/**
+ * BR-REQ-070-04 — the contact form's way out (`DECISIONS.md` §149) is derived, never typed.
+ *
+ * A laptop and the test suite must never open an SMTP socket, whatever is set; a deployment
+ * sends only with a sender, its password and somebody to send to; and `off` is a page that
+ * shows the address, not a process that refuses to start.
+ */
+describe("BR-REQ-070-04 contact form mode", () => {
+  const SMTP = {
+    CONTACT_SMTP_USER: "club@example.com",
+    CONTACT_SMTP_PASSWORD: "abcd efgh ijkl mnop",
+    CONTACT_FORM_TO: "club@example.com, colleague@example.org",
+  };
+
+  it("captures locally and in tests even with every SMTP variable set", () => {
+    for (const APP_ENV of ["local", "test"] as const) {
+      expect(envSchema.parse({ APP_ENV, ...SMTP }).CONTACT_FORM_MODE).toBe("capture");
+    }
+  });
+
+  it("sends on a deployment only with the sender, its password and a recipient", () => {
+    const parsed = envSchema.parse({ APP_ENV: "production", ...SMTP });
+    expect(parsed.CONTACT_FORM_MODE).toBe("smtp");
+    expect(parsed.CONTACT_FORM_TO).toEqual(["club@example.com", "colleague@example.org"]);
+    expect(parsed.CONTACT_SMTP_HOST).toBe("smtp.gmail.com");
+    expect(parsed.CONTACT_SMTP_PORT).toBe(465);
+
+    for (const missing of Object.keys(SMTP)) {
+      const partial = { ...SMTP, [missing]: undefined };
+      expect(envSchema.parse({ APP_ENV: "qa", ...partial }).CONTACT_FORM_MODE, missing).toBe("off");
+    }
+  });
+
+  it("names a recipient that is not an address, because the operator typed it", () => {
+    expect(() => envSchema.parse({ APP_ENV: "qa", ...SMTP, CONTACT_FORM_TO: "club@example.com; nope" })).toThrow(
+      /CONTACT_FORM_TO entry is not a valid address/,
+    );
+    expect(() => envSchema.parse({ APP_ENV: "qa", ...SMTP, CONTACT_SMTP_USER: "not-an-address" })).toThrow();
+  });
+});

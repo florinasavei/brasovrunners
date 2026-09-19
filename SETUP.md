@@ -311,6 +311,11 @@ AUTH_ZITADEL_SECRET      required when STAFF_AUTH_MODE=provider
 AUTH_ZITADEL_ISSUER      required when STAFF_AUTH_MODE=provider
 JOB_SECRET               verifies the two job endpoints (§16.2); a scheduler's secret, not a staff session
 PINGER_CADENCE_MINUTES   the day-time monitor's cadence in minutes; 15 on production, 60 on QA (§148)
+CONTACT_SMTP_USER        the club's Gmail address, the contact form's sender (§149, §38 below)
+CONTACT_SMTP_PASSWORD    its 16-character Google app password
+CONTACT_FORM_TO          who receives the form's messages, comma-separated (the Gmail, a Yahoo)
+CONTACT_SMTP_HOST        smtp.gmail.com unless the club leaves Google
+CONTACT_SMTP_PORT        465 unless the club leaves Google
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
 MAILGUN_API_KEY
@@ -1203,3 +1208,36 @@ it "Add" creates the account too and Zitadel sends the password link.
    signed in has "Resend the invitation" on their row.
 
 Locally the development switcher is the provider, so nothing is sent and the alert says so.
+
+## 38. The contact form — the club's Gmail lends it an app password
+
+Five minutes, once, in the club's Google account and on Vercel (`DECISIONS.md` §149). The
+"Scrie-ne" page is built and works on every laptop (the message is captured, nothing is
+sent); on a deployment it shows the club's address as a link until these are set, and the
+form itself once they are. Nothing here touches Mailgun or its 100 messages a day: the form
+sends through Google's own mail server, from the club's Gmail, to whichever mailboxes the
+club names — which is why a colleague's Yahoo can be on the list.
+
+1. The club's Google account → **Security → 2-Step Verification**: on. Google offers app
+   passwords only to accounts with it.
+2. Still under Security → **App passwords** → create one named "Brașov Runners site" → copy
+   the 16 characters (shown once) into the password manager.
+3. Vercel → the production project → Settings → Environment Variables (Production):
+   `CONTACT_SMTP_USER` = the club's Gmail address; `CONTACT_SMTP_PASSWORD` = the 16
+   characters (spaces or not, both work); `CONTACT_FORM_TO` = the addresses that receive
+   the messages, comma-separated — the club's Gmail and Amalia's Yahoo. The same on the QA
+   project (a QA message is a real email to the same mailboxes, its subject starting with
+   `[QA] ` so it is never mistaken for a real question; put a test address there if even
+   that is unwelcome).
+4. Redeploy both projects.
+5. Check: open `/ro/contact` on the deployment and send a message. The page says "Mesajul a
+   plecat. Îți răspundem pe …", the email arrives in every mailbox from the club's address
+   with "Reply" addressed to whoever wrote, and the "Formularul de contact" row on
+   `/admin/tasks` is green; `/devs` shows the form as `smtp`. A wrong password shows
+   "Nu am putut trimite. Scrie-ne direct la …" on the page and `smtp EAUTH` in the function
+   log — never the password. Those failed tries are not counted against the sender: once
+   the password is right, the same address sends at once.
+
+To take the form away, remove any one of the three variables and redeploy: the page goes
+back to the address. Google's own limit on an ordinary account is about 500 messages a day,
+which is more than a club receives; the form's own limit is five an hour per sender.

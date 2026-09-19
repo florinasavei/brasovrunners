@@ -26,7 +26,8 @@
       "label": "Navigare principală",
       "events": "Evenimente",
       "gallery": "Galerie",
-      "more": "Meniu"
+      "more": "Meniu",
+      "contact": "Contact"
     }
   },
   "Home": {
@@ -797,6 +798,21 @@
       "intro": "Ce lipsește ca platforma să poată primi înscrieri reale. Fiecare linie este citită din sistem, nu bifată de mână.",
       "blockingSummary": "Blochează înscrierile reale: {count}.",
       "nothingBlocking": "Nimic nu blochează înscrierile. Restul sunt îmbunătățiri.",
+      "summary": "De făcut: {pending} · Gata: {done}",
+      "allDone": "Tot ce se vede aici este rezolvat.",
+      "noneMatch": "Niciun rând pentru acest filtru.",
+      "listLabel": "Lista de sarcini",
+      "filter": {
+        "who": "Cine",
+        "kind": "Tip",
+        "all": "Toate"
+      },
+      "kind": {
+        "account": "Cont",
+        "decision": "Decizie",
+        "text": "Text",
+        "check": "Verificare"
+      },
       "emailStalled": {
         "title": "Emailurile nu pleacă.",
         "deferred": "Mesaje care așteaptă: {count}. Limita zilnică Mailgun ({allowance} de mesaje pe zi) s-a consumat. Pleacă singure la {resumesAt} (ora României); nimic nu s-a pierdut.",
@@ -922,6 +938,18 @@
             "Peste un an (septembrie 2027), cumpără domeniul .ro cu același nume, la ROTLD sau la registrarul .com.",
             "Rulează `yarn domain:bind production <numele>.ro --alias-of {apex}`: leagă domeniul de proiectul Vercel ca redirect permanent către .com și tipărește înregistrările DNS de creat.",
             "Creează înregistrările la registrar. Rândul acesta devine verde când site-ul răspunde pe .ro."
+          ]
+        },
+        "contactForm": {
+          "title": "Formularul de contact",
+          "todo": "Pagina „Scrie-ne” e construită: numele, adresa și mesajul vizitatorului ajung ca un e-mail obișnuit în căsuța clubului, direct prin Gmail — nu prin Mailgun, deci nu consumă din cele 100 de mesaje pe zi. Până setezi cele trei variabile, pagina arată adresa clubului în loc de formular.",
+          "done": "Formularul de contact trimite în căsuța clubului.",
+          "how": [
+            "Contul Google al clubului → Security → 2-Step Verification: pornită (fără ea Google nu dă parole de aplicație).",
+            "Tot în Security → App passwords → creează una cu numele „Brașov Runners site” → copiază cele 16 caractere (se arată o singură dată).",
+            "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere; CONTACT_FORM_TO = adresele care primesc mesajele, despărțite prin virgulă (Gmailul clubului, Yahoo-ul Amaliei).",
+            "Redeploy pe ambele proiecte.",
+            "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
         }
       },
@@ -1483,7 +1511,8 @@
       "instagram": "Instagram",
       "strava": "Strava",
       "contact": "Scrie-ne:"
-    }
+    },
+    "contactPage": "Scrie-ne"
   },
   "Legal": {
     "unavailable": "Acest document nu a fost încă publicat pentru acest mediu.",
@@ -1729,7 +1758,8 @@
     "captured": {
       "title": "Emailuri capturate pe această mașină",
       "intro": "Local nu pleacă nimic: fiecare mesaj pe care platforma l-ar fi trimis ajunge aici, cel mai nou primul, cu linkurile lui — apasă-le ca să parcurgi drumul participantului.",
-      "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino."
+      "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino.",
+      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:"
     },
     "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
     "title": "Configurația acestui mediu",
@@ -1792,6 +1822,18 @@
       "webhook": {
         "title": "Webhook Mailgun",
         "body": "Cum ajunge un bounce înapoi la înscriere. Fără cheia de semnătură, cererile sunt refuzate și starea livrării rămâne necunoscută."
+      },
+      "contactFormCapture": {
+        "title": "Formularul de contact",
+        "body": "Mesajele sunt păstrate în memorie și nu pleacă nicăieri — singurul mod local și în teste; nu se deschide nicio conexiune SMTP."
+      },
+      "contactFormSmtp": {
+        "title": "Formularul de contact",
+        "body": "Trimite prin SMTP, direct din Gmailul clubului, către CONTACT_FORM_TO — nu prin Mailgun și nu prin coada de e-mail."
+      },
+      "contactFormOff": {
+        "title": "Formularul de contact",
+        "body": "Pagina „Scrie-ne” arată adresa clubului în loc de formular. Pentru formular: CONTACT_SMTP_USER (adresa Gmail), CONTACT_SMTP_PASSWORD (parola de aplicație) și CONTACT_FORM_TO (destinatarii, cu virgulă)."
       }
     },
     "rateLimits": "Limite de frecvență",
@@ -1942,5 +1984,47 @@
     "backToGallery": "← Toate albumele",
     "photoCount": "{count} fotografii",
     "photoAlt": "Fotografia {n} din {total}: {title}"
+  },
+  "Contact": {
+    "title": "Scrie-ne",
+    "intro": "O întrebare despre o alergare, o înscriere sau club? Scrie-ne aici — mesajul ajunge direct în căsuța clubului și îți răspundem pe e-mail.",
+    "requiredLegend": "Câmpurile marcate cu * sunt obligatorii.",
+    "name": "Numele tău",
+    "email": "Adresa ta de e-mail",
+    "emailHelp": "Îți răspundem pe această adresă.",
+    "message": "Mesajul",
+    "messageHelp": "Cel mult 2000 de caractere.",
+    "privacy": "Mesajul ajunge în căsuța clubului; datele nu se folosesc pentru altceva.",
+    "privacyDetails": "Detalii în",
+    "privacyLinkLabel": "nota de confidențialitate",
+    "submit": "Trimite",
+    "submitting": "Se trimite…",
+    "incompleteHint": "Completează numele, adresa și mesajul ca să poți trimite.",
+    "sent": {
+      "title": "Mesajul a plecat.",
+      "bodyTo": "Îți răspundem pe {email}.",
+      "body": "Îți răspundem pe adresa ta de e-mail."
+    },
+    "off": {
+      "writeTo": "Scrie-ne la",
+      "none": "Formularul de contact nu este disponibil momentan."
+    },
+    "fieldNames": {
+      "name": "Numele",
+      "email": "Adresa de e-mail",
+      "message": "Mesajul",
+      "captcha": "Verificarea anti-bot"
+    },
+    "errors": {
+      "title": "Mesajul nu a plecat",
+      "fieldsIntro": "Verifică:",
+      "field": "Verifică acest câmp.",
+      "generic": "Mesajul nu a putut fi trimis. Verifică datele completate și încearcă din nou.",
+      "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
+      "LIMITED": "Prea multe mesaje de la această adresă în ultima oră. Încearcă mai târziu — mesajul tău a rămas scris mai jos.",
+      "DELIVERY": "Nu am putut trimite. Scrie-ne direct la",
+      "DELIVERY_NO_ADDRESS": "Nu am putut trimite. Încearcă din nou peste câteva minute.",
+      "UNAVAILABLE": "Formularul de contact nu este disponibil pe acest site."
+    }
   }
 }

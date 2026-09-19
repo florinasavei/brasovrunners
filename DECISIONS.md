@@ -6680,3 +6680,163 @@ not in the code, and the two have drifted once already); relaxing the threshold 
 project's variable takes effect on its next deployment — the release of PR #64.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 149. Decided — a contact form that reaches the club's Gmail without Mailgun (2026-09-19)
+
+**Context.** The owner: "Email communication must be minimal so we meet the quota. A
+contact form on the website that submits to the club's Gmail and bypasses Mailgun.
+Protected against bots. We configure as devs where the emails go, because Amalia has a
+Yahoo account too." The footer already showed `EMAIL_REPLY_TO` as a `mailto:`; on a phone
+without a mail app that is a dead end, and every message the platform sends today goes
+through Mailgun's 100 a day (§98, §100), which the registrations need. He chose Gmail SMTP
+with an app password over a second Mailgun route, and bot protection alone — no account,
+no login, no privacy-notice gate beyond the sentence on the form.
+
+**Decision.** `/contact` in both locales — "Scrie-ne" — a Server Component with the
+registration form's shape: name, email (validated like the form's, then canonicalized),
+message (2 000 characters — the longest the draft cookie hands back on a rejection, with the
+longest name and address; a unit test seals one), the honeypot, the fill-time check and
+Turnstile when its keys are set, a 44 px "Trimite", and one line — "Mesajul ajunge în căsuța
+clubului; datele nu se folosesc pentru altceva. Detalii în nota de confidențialitate." — the
+notice named as the registration form names it, not the footer's bare "GDPR". "Contact" in
+the header (one more entry for the priority+ fold, so the 320 px row is unchanged; offered,
+like the gallery's, only while the page has a form or an address to show) and "Scrie-ne" in
+the footer beside the legal links, each 44 px. The Server Action verifies Turnstile,
+validates, answers a bot with the same `?sent=1` and sends nothing, says "no way out" before
+anything is counted, counts the sender in `rate_limit_buckets` under `contact-message` (five
+an hour on a SHA-256 of the canonical email — the notice says no copy of the address is kept,
+and the row lives a day) and — unlike the form's silence — tells a person who hit it so,
+plainly, because a person is not a bot; then sends and redirects to `?sent=1`, "Mesajul a
+plecat. Îți răspundem pe <adresa>." A rejection is `?error=VALIDATION_ERROR&fields=…` with
+the typed values in the encrypted draft cookie (§142), never a value in the URL; a refused
+send is `?error=DELIVERY` with "Scrie-ne direct la <EMAIL_REPLY_TO>", its code (`smtp EAUTH`,
+`smtp ESOCKET` — never the password or the server's reply) in the function log, and the
+attempt given back to the sender (`refundRateLimit`): a message that reached nobody is not
+one of their five, so a wrong-password day never turns "we could not send" into "too many
+messages". After a send the cookie keeps the address alone, for that sentence.
+
+*The transport.* A second adapter beside Mailgun's, `infrastructure/email/smtp-adapter.ts`,
+over **nodemailer 10.0.10** (pinned; Node has no SMTP client, and a hand-written one over
+`node:tls` is the code that works until Google changes a greeting): host and port from
+`CONTACT_SMTP_HOST`/`CONTACT_SMTP_PORT` (defaults `smtp.gmail.com`, 465, implicit TLS;
+`smtp.gmail.com` joins `PROVIDER_HOSTS` in `docs:check` as Google's own fixed host), the
+account and its 16-character app password in `CONTACT_SMTP_USER`/`CONTACT_SMTP_PASSWORD`,
+the recipients in `CONTACT_FORM_TO` (comma-separated, each validated at startup). The
+message: from the account with the club's name, to every recipient, `Reply-To` the visitor
+with their name, subject "Mesaj de pe site: <name>" — `[QA] ` in front of it on QA, the
+outbox's own mark (AGENTS.md §16.4), because the club's real mailboxes are on both projects
+and a question typed on the public `qa.` host must not read as a real one — a plain-text
+body — name, address, the form's language, the page, the message — and an escaped HTML
+twin. Nodemailer's four waits are all bounded (DNS included; its default is thirty seconds
+on its own, longer than the function). It is **not** an
+`EmailAdapter`, goes through **neither the outbox nor `EMAIL_DELIVERY_MODE`**, and is
+never retried: it is correspondence, not transactional mail, and a failure is told to the
+visitor on the spot. `CONTACT_FORM_MODE` is derived like `STORAGE_MODE`: `capture` in
+local and test (in memory, readable, no socket ever), `smtp` on a deployment with the three
+variables, `off` otherwise — the page then shows "Scrie-ne la <EMAIL_REPLY_TO>" as a
+`mailto:`, and no startup refusal. Nothing is stored: the message is the email.
+
+*The rest.* `/admin/tasks` gets "Formularul de contact" (club, open until the three
+variables exist; `capture` counts, as the local media store does) with the Google → Vercel
+steps; `/devs` reports the mode and names the missing variables, never a value; the
+privacy-notice template says what the form collects, that it lands in the club's mailbox as
+ordinary correspondence, under art. 6(1)(f), and for nothing else; `SETUP.md` §38 is the
+procedure; AGENTS.md §16 records the one message that skips the outbox.
+
+*Rejected:* a Mailgun route with a tag (it is exactly the quota the owner wants spared, and
+it would make the club's inbound mail a transactional message with an outbox row); the outbox
+with a second adapter (retries and idempotency keys for a message whose failure the visitor
+is standing there to read); an SMTP client over `node:tls` by hand (§1.5 prefers the
+platform, but not a protocol implementation); a startup refusal when the variables are
+partial (a page that shows the address is the honest state of a deployment the club has not
+finished); silence for the throttled sender (the honeypot's silence is for scripts; a person
+told nothing writes again and again); the privacy-notice gate the interest box has (§146:
+the form collects an address to *answer* it, the sentence on the form says so, and the
+notice's paragraph is in the template for the approved text to carry); storing the message
+(a copy nobody reads is a copy to erase); a shorter nav label or footer-only on `xs` (the
+priority+ fold already answers a narrow row — measured, not guessed).
+
+**Consequences.** `package.json` (nodemailer 10.0.10); `env.ts` (`CONTACT_SMTP_HOST`,
+`CONTACT_SMTP_PORT`, `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`, `CONTACT_FORM_TO`,
+`CONTACT_FORM_MODE`), `.env.example`; `infrastructure/email/smtp-adapter.ts` (new);
+`modules/contact/{fields,message,service,delivery}.ts` (new); `app/[locale]/contact/{page,actions}.tsx`
+(new); `i18n/routing.ts` (`/contact`), `app/sitemap.ts`; `shared/ui/SiteNav.tsx`,
+`SiteFooter.tsx` (the links row is 44 px per link now); `rate-limit/service.ts`
+(`contact-message`, `refundRateLimit`); `diagnostics/owner-tasks.ts` (`contactForm`), `configuration.ts`
+(`contactFormMode`, the three variables), `admin/tasks/page.tsx`, `devs/page.tsx`;
+`legal-documents/templates/privacy-notice.ts` (§5's third paragraph, §6's sentence, both
+languages); `scripts/docs-check.mjs` (`smtp.gmail.com`); `Contact`, `Site.nav.contact`,
+`Footer.contactPage`, `Admin.tasks.items.contactForm`, `Devs.checks.contactForm*` in both
+catalogues; tests `unit/contact/{fields,message}.test.ts`, `integration/contact/service.test.ts`,
+`e2e/contact.spec.ts`, and the env, diagnostics fixtures. BR-REQ-070-04 (new) under
+BR-BUS-070; `SETUP.md` §38; AGENTS.md §16.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 150. Decided — the task board counts its rows and filters them by owner and by kind (2026-09-19)
+
+**Context.** The owner, on the evening's second pass: "on the TODOs show a counter of how
+many items are pending, and a filter by issue type and owner!" `/admin/tasks` was eleven
+boxed rows in state order with one figure above them — how many block a real registration —
+and no way to see only the club's rows, or only the accounts still to create, without reading
+every box. A task carried an owner and a state and nothing that said what *sort* of work it
+was.
+
+**Decision.** Three things on the to-do half, all server-rendered, no client code:
+
+*The counter.* Under the heading, "De făcut: N · Gata: M" — N every row not done (a blocking
+row is pending too, only more so), M the rest — and, when nothing is pending among the rows
+shown, "Tot ce se vede aici este rezolvat." beneath it — no figure in that sentence: the
+line above carries it, and "Toate 1 sunt rezolvate" is not Romanian (the catalogue carries no
+ICU plurals, `docs/VIBECODING.md`). **It counts the rows the list shows**: with a
+filter on, the counter describes the list under it, not the board; a counter that says four
+above a list of two is a counter to distrust. The amber "Blochează înscrierile reale: N" box
+stays over the whole board whatever the filter — what blocks a real registration is not a
+matter of view. **The tab's label does not carry the count.** `BackofficeShell` renders on
+every backoffice request and knows nothing today; the count needs the privacy notice, two
+job-health checks, the published events and the staff count — five reads on every admin
+page, for a figure on one tab. The page has it; the tab does not.
+
+*The kind.* A closed set of four on every task, `TaskKind`: **account** (an account or a key
+to create at a provider — Mailgun's domain, R2, Turnstile, Vercel's token, the Gmail app
+password, the team's accounts), **decision** (the archive mailbox, the `.ro`), **text** (the
+legal texts, the events to publish) and **check** (the monitors seen running). Each id's
+kind is one entry in `TASK_KIND: Record<TaskId, TaskKind>`, and `OwnerTask.id` is the
+`TaskId` union, so a task added without a kind does not compile; `ownerTasks` pushes every
+row through one helper that looks the kind up and never takes one as an argument. The kind
+is a third outlined chip on the row, the same word the filter uses. The ids are English in
+code and in the address (`?kind=account`), like every other query value; the Romanian —
+Cont, Decizie, Text, Verificare — is in the catalogue.
+
+*The filters.* Two rows of chips above the list, each a plain link with a string href from
+`getPathname` (the events listing's pattern, §133: a Server Component hands MUI's client
+chip a string and nothing else): "Cine: Toate · Clubul · Dezvoltatorul" and "Tip: Toate ·
+Cont · Decizie · Text · Verificare". Each link keeps the other row's choice, so the two
+combine (`?owner=club&kind=account`); the active chip is filled and `aria-current="page"`;
+each link is 44 px tall with a small chip inside. A value outside the closed sets — typed,
+stale, misspelt — reads as "all", checked by `isTaskOwner`/`isTaskKind` and never echoed. No
+state filter: it was not asked for, and the done rows already sit last. A combination with no
+row says "Niciun rând pentru acest filtru." The narrowing and the counting are two pure
+functions beside the list (`filterTasks`, `countTasks`), tested without a browser.
+
+*Rejected:* the count in the tab label (five reads on every backoffice page for one tab; if
+the club asks, the answer is a cheap counter table, not the page's reads in the shell); a
+`Badge` on the tab (the same cost, plus a component prop into a client island); a form with
+selects (the registrations list's shape is right for five fields with free text, wrong for
+two closed sets of two and four — a chip is one press and the address says what is on);
+counting the whole board under a filter, or "2 din 4 afișate" (the list and the figure
+above it must agree at a glance); Romanian ids in the address (`?kind=cont` beside
+`?type=RACE` on the listing); a state filter (not asked, and the order already answers it);
+a kind derived from the state or the owner (it is a third axis: the club's rows are of every
+kind).
+
+**Consequences.** `diagnostics/owner-tasks.ts` (`TaskKind`, `TASK_KINDS`, `TASK_OWNERS`,
+`TaskId`, `TASK_KIND`, `isTaskOwner`, `isTaskKind`, `filterTasks`, `countTasks`; `OwnerTask.kind`;
+`BACKLOG: readonly TaskId[]`); `admin/tasks/page.tsx` (`searchParams`, the counter, the two
+chip rows, the kind chip, `aria-label` on the list); `Admin.tasks.summary`, `allDone`,
+`noneMatch`, `listLabel`, `filter.*`, `kind.*` in both catalogues; tests
+`unit/diagnostics/owner-tasks.test.ts` (the kinds, the counts, the narrowing, the guards),
+`e2e/tasks.spec.ts` (the counter, the chips combining, no sideways scroll on the phone).
+BR-REQ-090-05 criteria 8–9. The cost half and `tasks-cost.spec.ts` are untouched.
+
+Baseline `BR-V1.38-2026-09-18`.

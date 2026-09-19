@@ -195,8 +195,9 @@ sections and in `CHANGELOG.md`.
   type, confirm on paper, give a place, a number, check in, walk-ins (§67); the desk row names
   a minor's parent (§108).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
-  monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro` — with the steps
-  under each row; the cost table with the Mailgun plan's price (§41, §97–§101). `/devs`: the
+  monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
+  form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
+  §97–§101, §149). `/devs`: the
   configuration, Neon's month, Vercel's deployments and build minutes, the outbox, the
   repository's documents at `/devs/docs/<name>` (§88, §101).
 
@@ -251,6 +252,10 @@ evening; `/admin/tasks` shows the same list with the steps, read from the system
 10. **The invitation key** — a Zitadel service user with Org User Manager and its token as
     `ZITADEL_MANAGEMENT_PAT` on both Vercel projects (`SETUP.md` §37), so "Add" on Echipa
     sends the invitation itself (§123).
+11. **The contact form's Gmail** — an app password on the club's Google account, then
+    `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both Vercel
+    projects (`SETUP.md` §38). Until then `/contact` shows the club's address instead of the
+    form (§149).
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 

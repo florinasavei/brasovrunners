@@ -120,11 +120,18 @@ export default async function SiteFooter() {
 
           {/* Indented to the summary's text, past the switch and its marker, so the panel reads as its body. */}
           <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: { xs: `${SWITCH_WIDTH + 20}px`, xl: 2.5 }, maxWidth: "40rem" }}>
-            <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+            {/* Each link a 44px target (BR-REQ-041-01 criterion 6): the panel is read on a phone too. */}
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ flexWrap: "wrap", "& > a": { display: "inline-flex", alignItems: "center", minHeight: 44 } }}
+            >
               <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
               <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
               {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
               <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
+              {/* "Scrie-ne" (BR-REQ-070-04): the form, beside the address below it. */}
+              <Link href="/contact">{footer("contactPage")}</Link>
             </Stack>
             <Typography variant="body2" color="text.secondary">
               {footer("about.description")}

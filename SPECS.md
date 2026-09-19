@@ -1490,6 +1490,27 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 
 **Verification:** e2e `seo.spec.ts`; accessibility audit in CI
 
+#### BR-REQ-070-04 — Contact form
+
+- **Source:** BR-BUS-070
+- **Implements:** AGENTS.md §16, §19.4
+- **Priority:** SHOULD
+- **Release:** M1
+- **Status:** built (`DECISIONS.md` §149). `/contact` in both locales; the message leaves by SMTP through the club's own mailbox account and never through the outbox or Mailgun.
+
+**Acceptance criteria**
+
+1. Given a visitor on `/<locale>/contact`, when the page renders, then it offers a name, an email address and a message (at most 2 000 characters — the longest a rejection can hand back in the draft cookie, proven by a unit test), the same bot defences as the registration form (trap field, fill-time check, Turnstile when configured), a 44 px submit control and a sentence linking the privacy notice; it is linked from the header (while the page has a form or the club's address to show — a deployment with neither has no entry, as the gallery has none without an album) and the footer in both locales, and is in the sitemap.
+2. Given a submission, when it is validated, then the address is validated like the registration form's and canonicalized; a rejection returns to the page with the field names only in the URL, the typed values kept in the encrypted draft cookie, and a focusable summary naming each box.
+3. Given a valid submission from a person, when it is sent, then one message reaches every address in `CONTACT_FORM_TO` — from the configured account with the club's name, `Reply-To` the visitor with their name, subject `Mesaj de pe site: <name>`, a plain-text body carrying the name, the address, the message and the page, and an HTML twin with the visitor's text escaped — over SMTP, not through the email outbox, not through `EMAIL_DELIVERY_MODE`, and never through Mailgun; on QA the subject carries the outbox's `[QA] ` mark (AGENTS.md §16.4); the platform stores no copy.
+4. Given a submission that trips the trap field or the fill-time check, when it is answered, then the answer is the same "sent" page and nothing is sent.
+5. Given more than five submissions in an hour from one canonical email identity, when the next arrives, then it is refused with a plain sentence saying so and the typed message is kept — never silently, because a person is not a bot; the counter is `rate_limit_buckets` scope `contact-message`, keyed on a hash of the canonical identity (the address itself is never stored), never on an IP; a deployment with no way out answers before anything is counted, and a send the SMTP server refused is given back, so a retry on a day the mailbox is down never turns into "too many messages".
+6. Given `APP_ENV` local or test, when a message is sent, then it is captured in memory and no SMTP connection is opened; given a deployment without `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD` and a non-empty `CONTACT_FORM_TO`, when the page renders, then it shows the club's contact address as a link instead of the form, and the process starts; given a send the SMTP server refuses, when the action answers, then the page says so and names the club's address to write to, and the function log carries the failure's code (`smtp EAUTH`, `smtp ESOCKET`) and never the password or the server's reply.
+7. Given `/admin/tasks` and `/devs`, when they render, then the contact form's state (SMTP, capture, off) is reported with the steps to configure it and the missing variables named, and no value of any variable is ever shown.
+8. Given the privacy-notice template, when it is read in either language, then it says what the form collects, that the message goes to the club's mailbox and stays there as ordinary correspondence, the legal basis (legitimate interest in answering the request, art. 6(1)(f) GDPR), and that the details are used for nothing else.
+
+**Verification:** unit `contact/fields.test.ts`, `contact/message.test.ts`, `config/env.test.ts`, `diagnostics/configuration.test.ts`, `diagnostics/owner-tasks.test.ts`; integration `contact/service.test.ts`; e2e `contact.spec.ts`
+
 #### BR-REQ-090-04 — A deployment can say what it is configured to do
 
 - **Source:** BR-BUS-090, BR-BUS-101
@@ -1533,6 +1554,10 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 5. Given every price on the page, when it renders, then it is a figure recorded in `docs/PLATFORM.md`, shown with the date those figures were last verified against the vendors, and a cost the club has not decided renders as "to be decided" rather than as a plausible number (`AGENTS.md` §1.2).
 6. Given each upgrade the page recommends, when it renders, then it names what triggers it, what it costs, and whether it is meant to be reversed — and at least one is marked as not reversible.
 7. Given an Author or an Editor, when `/admin/tasks` is requested, then the response is 404.
+8. Given the to-do half of the page, when it renders, then a line under the heading counts the rows shown — "De făcut: N · Gata: M", N every row not done (a blocking row is pending too) and M the rest — and says "Tot ce se vede aici este rezolvat." when nothing among them is pending — a sentence without the figure, because the figure is on the line above and a Romanian numeral in a sentence needs a form the catalogue does not carry (no ICU plurals); the count follows the filter in force, so it describes the list under it, while the "blocks real registrations" box counts the whole board whatever the filter; and the count is on the page alone, never in the section tab, because the tab renders on every backoffice request and the count would cost it five reads (2026-09-19, `DECISIONS.md` §150).
+9. Given the to-do half, when it renders, then every task carries a kind from a closed set of four — account, decision, text, check — typed so a task added without one does not compile; two rows of chip links above the list filter by owner ("Cine: Toate · Clubul · Dezvoltatorul") and by kind ("Tip: Toate · Cont · Decizie · Text · Verificare"), each link keeping the other row's choice so the two combine in the address (`?owner=club&kind=account`), the active chip marked `aria-current="page"`, each link 44 px tall, no client code; a query value outside the closed sets reads as "all"; a combination with no row says so; and the done rows still follow the open ones (2026-09-19, `DECISIONS.md` §150).
+
+**Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`; e2e `tasks-cost.spec.ts`, `tasks.spec.ts`
 
 #### BR-REQ-090-06 — The theme lab: the site with other type, in one browser
 
@@ -1567,8 +1592,6 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 4. Given `VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID`, when `/devs` renders, then it shows this month's deployments, today's against Hobby's 100 a day, and the build minutes against Hobby's 6,000 a month, warning at eighty percent of either, summed from Vercel's deployments list across its pages; without them it says how to set them; and it says that bandwidth and invocations are not in Vercel's API and links to the dashboard's Usage page (`DECISIONS.md` §101).
 
 **Verification:** unit `diagnostics/neon.test.ts`; unit `diagnostics/vercel.test.ts` (4); integration `jobs/health.test.ts`
-
-**Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`
 
 #### BR-REQ-100-01 — AI reviewer permission boundary
 
@@ -1702,7 +1725,7 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 | BR-BUS-052 | BR-REQ-052-01, BR-REQ-052-02, BR-REQ-070-03, BR-REQ-070-02 |
 | BR-BUS-053 | BR-REQ-053-01, BR-REQ-053-02, BR-REQ-033-02, BR-REQ-031-02 |
 | BR-BUS-060 | BR-REQ-060-01, BR-REQ-051-01 |
-| BR-BUS-070 | BR-REQ-070-01, BR-REQ-070-02, BR-REQ-070-03, BR-REQ-036-02, BR-REQ-038-01, BR-REQ-039-01, BR-REQ-041-01, BR-REQ-071-01, BR-REQ-072-01 |
+| BR-BUS-070 | BR-REQ-070-01, BR-REQ-070-02, BR-REQ-070-03, BR-REQ-070-04, BR-REQ-036-02, BR-REQ-038-01, BR-REQ-039-01, BR-REQ-041-01, BR-REQ-071-01, BR-REQ-072-01 |
 | BR-BUS-071 | BR-REQ-071-01 |
 | BR-BUS-072 | BR-REQ-072-01 |
 | BR-BUS-080 | BR-REQ-080-01, BR-REQ-080-02, BR-REQ-080-03, BR-REQ-080-04, BR-REQ-037-02 |
