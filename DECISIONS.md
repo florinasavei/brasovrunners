@@ -5393,6 +5393,11 @@ seventh type "race with registration" (the type already says it); clearing exist
 migration (what is stored stays until the event is saved again, and the page shows what is
 stored).
 
+*Amended the same evening* (the owner: "group runs don't have registrations!"): the page and
+the card say nothing about registration on a group run — not even "none needed"; the
+question does not arise. And Repeat sits right under Publication on the editor ("repeating
+the event should be more on the top"), before the settings, the queue and the test data.
+
 **Consequences.** `event-type.ts` (`takesRegistrations`, `hasProgramme`), `OnlyForType`,
 `EventFieldsForm`, `TranslationFieldsForm` (`eventType`), `content/events/service.ts`
 (`normalizeForType`, `applyTranslationSave#eventType`), the catalogue (`editor.typeHelp`);

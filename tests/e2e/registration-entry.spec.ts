@@ -102,12 +102,13 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
 
 test.describe("BR-REQ-030-01 criterion 1 an event that takes no registration", () => {
   test("offers no registration control at all", async ({ page }) => {
-    // The three other seeded events are `NONE`, and the page says the registration requirement
-    // in words in the facts list rather than offering a button that cannot work.
+    // The three other seeded events are `NONE` group runs: no button that cannot work, and —
+    // since §111 — not a word about registration either, because a group run is simply turned
+    // up to ("group runs don't have registrations!").
     await page.goto("/ro/evenimente/tura-pe-tampa");
 
     await expect(page.getByRole("link", { name: "Înscrie-te la eveniment" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Intră pe lista de așteptare" })).toHaveCount(0);
-    await expect(page.getByText("Nu este necesară înscrierea")).toBeVisible();
+    await expect(page.locator("#main").getByText(/înscriere/i)).toHaveCount(0);
   });
 });

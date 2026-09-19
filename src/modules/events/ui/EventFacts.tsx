@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import SocialIcon from "@/shared/ui/SocialIcon";
-import { distanceInKm, isStravaLink } from "../domain/event-type";
+import { distanceInKm, isStravaLink, takesRegistrations } from "../domain/event-type";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
 import { COST_GLYPH, DIFFICULTY_GLYPH } from "./glyphs";
@@ -129,9 +129,13 @@ export default async function EventFacts({
     <Icon aria-hidden="true" sx={{ fontSize: 18, color: "text.secondary", verticalAlign: "-3px", mr: 0.5 }} />
   );
 
+  // A group run says nothing about registration at all (§111; the owner: "group runs don't
+  // have registrations!") — not even "none needed": the question does not arise.
+  const mentionsRegistration = takesRegistrations(event.type);
+
   if (compact) {
     // Two plain lines on a card: no labels, the state of registration as the last piece.
-    const second = [...where, ...route, t(`registrationState.${state}`)];
+    const second = [...where, ...route, ...(mentionsRegistration ? [t(`registrationState.${state}`)] : [])];
     return (
       <Box>
         <Typography variant="body2">
@@ -151,7 +155,7 @@ export default async function EventFacts({
   ];
   if (where.length > 0) lines.push({ label: t("where"), icon: PlaceIcon, value: where });
   if (route.length > 0) lines.push({ label: t("route"), icon: RouteIcon, value: route });
-  if (state === "NOT_APPLICABLE") {
+  if (state === "NOT_APPLICABLE" && mentionsRegistration) {
     lines.push({ label: t("registration"), icon: HowToRegIcon, value: [t("registrationState.NOT_APPLICABLE")] });
   }
 

@@ -235,6 +235,45 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         )}
       </Box>
 
+      {/*
+        Repeat, right under publication (the owner: "repeating the event should be more on the
+        top"): the weekly run is made once, and the person making it should not scroll past the
+        registrations, the queue and the test data to find the button.
+      */}
+      <Box component="section">
+        {/*
+          The weekly run, made once. Its own form: it creates rows rather than editing this
+          one, and the count is the only thing to think about. Copies are drafts unless the
+          box is ticked and this event is itself published — then they go live as they are
+          made, because a published source is one whose both languages are complete.
+        */}
+        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+          {t("editor.repeatSection")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t("editor.repeatHelp")}
+        </Typography>
+        <form action={repeatEventAction}>
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="eventId" value={event.id} />
+          <RepeatFields />
+          {live && (
+            <Box sx={{ mt: 1 }}>
+              <CheckboxField name="publish">{t("editor.repeatPublish")}</CheckboxField>
+            </Box>
+          )}
+          <Box sx={{ mt: 2 }}>
+            <ConfirmSubmitButton
+              label={t("editor.repeat")}
+              title={t("confirm.repeatTitle")}
+              body={t("confirm.repeatBody")}
+              confirmLabel={t("editor.repeat")}
+              cancelLabel={t("confirm.cancel")}
+            />
+          </Box>
+        </form>
+      </Box>
+
       {/* Settings and content: one form, one save. */}
       <form action={saveEventAndTranslationsAction}>
         <input type="hidden" name="uiLocale" value={locale} />
@@ -577,38 +616,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           {t("editor.deleteHelp")}
         </Typography>
 
-        {/*
-          The weekly run, made once. Its own form: it creates rows rather than editing this
-          one, and the count is the only thing to think about. Copies are drafts unless the
-          box is ticked and this event is itself published — then they go live as they are
-          made, because a published source is one whose both languages are complete.
-        */}
-        <Divider sx={{ my: 3 }} />
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("editor.repeatSection")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("editor.repeatHelp")}
-        </Typography>
-        <form action={repeatEventAction}>
-          <input type="hidden" name="uiLocale" value={locale} />
-          <input type="hidden" name="eventId" value={event.id} />
-          <RepeatFields />
-          {live && (
-            <Box sx={{ mt: 1 }}>
-              <CheckboxField name="publish">{t("editor.repeatPublish")}</CheckboxField>
-            </Box>
-          )}
-          <Box sx={{ mt: 2 }}>
-            <ConfirmSubmitButton
-              label={t("editor.repeat")}
-              title={t("confirm.repeatTitle")}
-              body={t("confirm.repeatBody")}
-              confirmLabel={t("editor.repeat")}
-              cancelLabel={t("confirm.cancel")}
-            />
-          </Box>
-        </form>
       </Box>
     </Stack>
   );
