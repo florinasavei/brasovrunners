@@ -40,6 +40,9 @@ export type RegistrationCsvRow = {
    * the data actually is.
    */
   clubMemberDeclared: boolean;
+  /** The optional socials (§106), empty when not given. */
+  stravaUrl: string;
+  instagramHandle: string;
   submittedAt: string;
   confirmedAt: string;
   /** The race number, once assigned (BR-REQ-038-01); empty until then, never 0. */
@@ -58,6 +61,8 @@ const HEADER = [
   "Email",
   "Status",
   "Club member (declared)",
+  "Strava",
+  "Instagram",
   "Submitted",
   "Confirmed",
   "Bib",
@@ -80,6 +85,8 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.email,
         row.status,
         row.clubMemberDeclared ? "Yes" : "",
+        row.stravaUrl,
+        row.instagramHandle,
         row.submittedAt,
         row.confirmedAt,
         row.bibNumber ? String(row.bibNumber) : "",

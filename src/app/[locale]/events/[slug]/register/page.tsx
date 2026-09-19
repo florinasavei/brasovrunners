@@ -524,6 +524,36 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
 
+              {/* Socials, optional and folded (§106): the club follows back and tags; never
+                  published by the platform. Closed by default — it is the one section a
+                  person can skip without the form being any less complete. */}
+              <Box component="details" sx={disclosureSx}>
+                <Typography component="summary" variant="body2">
+                  {t("disclosure.socials")}
+                </Typography>
+                <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("socialsHelp")}
+                  </Typography>
+                  <TextField
+                    {...field("stravaUrl", t("stravaUrlHelp"))}
+                    label={t("stravaUrl")}
+                    placeholder="https://www.strava.com/athletes/12345"
+                    type="url"
+                    inputMode="url"
+                    autoComplete="url"
+                    slotProps={{ htmlInput: { maxLength: 200 } }}
+                  />
+                  <TextField
+                    {...field("instagramHandle", t("instagramHandleHelp"))}
+                    label={t("instagramHandle")}
+                    placeholder="@numele.tau"
+                    autoComplete="off"
+                    slotProps={{ htmlInput: { maxLength: 40 } }}
+                  />
+                </Stack>
+              </Box>
+
               {/*
                 BR-REQ-031-05. Health data is an Article 9 special category, so it gets its own
                 disclosure rather than a line inside the group above, its own consent, and

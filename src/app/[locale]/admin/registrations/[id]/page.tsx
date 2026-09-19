@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import MuiLink from "@mui/material/Link";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
@@ -131,6 +132,22 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
+      {/* The socials the person offered (§106): links to follow back, never published here. */}
+      {(registration.stravaUrl || registration.instagramHandle) && (
+        <Typography variant="body2" color="text.secondary">
+          {registration.stravaUrl && (
+            <MuiLink href={registration.stravaUrl} target="_blank" rel="noopener noreferrer nofollow">
+              Strava
+            </MuiLink>
+          )}
+          {registration.stravaUrl && registration.instagramHandle ? " · " : ""}
+          {registration.instagramHandle && (
+            <MuiLink href={`https://www.instagram.com/${encodeURIComponent(registration.instagramHandle)}/`} target="_blank" rel="noopener noreferrer nofollow">
+              @{registration.instagramHandle}
+            </MuiLink>
+          )}
+        </Typography>
+      )}
 
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
         <form action={resendRegistrationEmailAction}>

@@ -5215,3 +5215,29 @@ the `bibAssigned` template and the token map in `render.ts`; the registration's 
 catalogue; `tests/integration/registrations/race-day.test.ts`. BR-REQ-038-01 criterion 7.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 106. Decided — an optional "socials" section on the form: a Strava link and an Instagram username (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "optionally, when they sign up people can put their Strava
+link; make a 'socials' section (optional)." The club runs on Strava and posts on Instagram;
+following a new runner back and tagging them in the race's photos is how a club of this size
+keeps people. The form had no place for it and a member typed handles into the club field.
+
+**Decision.** Two columns on the registration (`strava_url`, `instagram_handle`; migration
+`0041`), a folded disclosure at the end of the optional block — closed by default, the one
+section a person skips without the form being less complete — and two rules on what they
+may hold: a Strava link is one of Strava's own addresses (a profile, or the app's share link)
+and nothing else, so the field cannot become a link to anywhere; a username is letters,
+digits, dots and underscores, stored without the `@` whichever way it was typed. Shown to
+Administrators on the registration's page as links and in the export as two columns; never
+on the public site, never in an email. The privacy notice template names them under the data
+we keep, with consent as the basis and deletion on request; retention is the registration's
+(§95). On the registration row rather than the participant: what somebody offers for one
+race is not a profile, and the M4 profile can lift it when it exists.
+
+**Consequences.** `fields.ts` (`STRAVA_URL`, `INSTAGRAM_HANDLE`), `form-mapping.ts`,
+`form-errors.ts`, `names.ts`, `repository.ts`, `service.ts`, the form, the registration's
+page, `admin-repository.ts`, `csv.ts` and the export route, the privacy-notice template, the
+catalogue; `tests/unit/registrations/socials.test.ts`, the CSV test. BR-REQ-031-04 criterion 8.
+
+Baseline `BR-V1.38-2026-09-18`.

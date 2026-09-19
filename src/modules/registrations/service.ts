@@ -477,6 +477,8 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     emergencyContactName: input.emergencyContactName ?? null,
     emergencyContactPhone: input.emergencyContactPhone ?? null,
     clubName: input.clubName ?? null,
+    stravaUrl: input.stravaUrl ?? null,
+    instagramHandle: input.instagramHandle ?? null,
     clubMemberDeclared: input.clubMemberDeclared,
     tshirtSize: input.tshirtSize,
     healthNotes,

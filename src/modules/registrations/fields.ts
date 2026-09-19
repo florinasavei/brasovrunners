@@ -12,6 +12,11 @@ import { E164_PHONE } from "./phone";
  * exactly like success (a generic "check your email" response), never with a validation error
  * that would tell a bot which defense it tripped.
  */
+/** Strava's own hosts only: a profile (`/athletes/<id>`) or the app's share link. */
+export const STRAVA_URL = /^https:\/\/(www\.)?strava\.com\/(athletes|pros)\/[A-Za-z0-9_-]+\/?$|^https:\/\/strava\.app\.link\/[A-Za-z0-9_-]+$/;
+/** Instagram usernames: letters, digits, dots and underscores, up to thirty, no leading `@`. */
+export const INSTAGRAM_HANDLE = /^[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+
 const submissionFields = z.object({
   /**
    * The legal name, in two parts (BR-REQ-031-04). Composed into `registered_name` at write
@@ -60,6 +65,27 @@ const submissionFields = z.object({
   emergencyContactPhone: z.string().regex(E164_PHONE, "a telephone number in international form"),
 
   clubName: z.string().trim().max(200).optional(),
+
+  /**
+   * Socials, optional (§106). A Strava link is one of Strava's own addresses — a profile, or
+   * the short link the app shares — and nothing else, so the field cannot become a link to
+   * anywhere; an Instagram handle is the username, with or without the `@`, which is stored
+   * without it. Empty is the common case and means "did not say".
+   */
+  stravaUrl: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .transform((value) => (value ? value : undefined))
+    .refine((value) => value === undefined || STRAVA_URL.test(value), "a Strava profile link, like https://www.strava.com/athletes/12345"),
+  instagramHandle: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .transform((value) => (value ? value.replace(/^@/, "") : undefined))
+    .refine((value) => value === undefined || INSTAGRAM_HANDLE.test(value), "an Instagram username, like @brasovrunners"),
 
   /**
    * "I am a Brașov Runners team member" (BR-REQ-031-06).

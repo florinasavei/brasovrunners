@@ -1420,7 +1420,9 @@
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
       "privacyAcknowledged": "Privacy notice",
-      "captcha": "The anti-bot check"
+      "captcha": "The anti-bot check",
+      "stravaUrl": "Strava profile",
+      "instagramHandle": "Instagram"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -1476,7 +1478,8 @@
     },
     "disclosure": {
       "race": "Brașov Runners member, club and t-shirt — optional",
-      "health": "Health information — optional"
+      "health": "Health information — optional",
+      "socials": "Socials — optional"
     },
     "clubMemberDeclared": "I am a Brașov Runners team member",
     "facts": {
@@ -1484,7 +1487,12 @@
       "rules": "The rules",
       "terms": "Terms and conditions",
       "privacy": "Privacy"
-    }
+    },
+    "socialsHelp": "If you want us to find you and tag you in the club's posts. Not published on the site, not given to anyone.",
+    "stravaUrl": "Your Strava profile (link)",
+    "stravaUrlHelp": "From the Strava app: Profile → Share → copy the link.",
+    "instagramHandle": "Instagram (username)",
+    "instagramHandleHelp": "With or without the @."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

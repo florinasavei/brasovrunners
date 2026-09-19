@@ -27,6 +27,7 @@ export const privacyNoticeRo: LegalDocumentBody = {
     {
       heading: "3. Declarația și actul de identitate",
       paragraphs: [
+        "Opțional, dacă le dai: un link către profilul tău de Strava și numele tău de Instagram — le folosim doar ca să te urmărim și să te etichetăm în postările clubului; nu le publicăm și nu le transmitem nimănui (art. 6(1)(a) GDPR, retractabile oricând, cerând ștergerea lor).",
         "Declarația pe proprie răspundere confirmă locul. Păstrăm numele scris ca semnătură, amprenta textului, momentul și felul semnării (e-mail sau hârtie, cu numele celui din echipă care a înregistrat-o), nu și adresa IP. Temei: art. 6(1)(b) GDPR; ca dovadă după eveniment, art. 6(1)(f).",
         "Este o semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024 privind utilizarea semnăturii electronice, a mărcii temporale și prestarea serviciilor de încredere bazate pe acestea, căreia nu i se poate refuza efectul juridic doar pentru că este electronică (art. 25(1) eIDAS).",
         "Dacă declarația o cere, îți cerem seria și numărul actului de identitate, niciodată o copie, doar ca declarația să te numească fără echivoc și ca să îți predăm kitul: art. 6(1)(b) GDPR, nu interes legitim, fiind un număr de identificare național (art. 2 lit. b) din Legea nr. 190/2018 privind măsuri de punere în aplicare a Regulamentului (UE) 2016/679). Obligatorii pentru declarație, nu pentru înscriere; le vede doar echipa și le ștergem la șapte zile după eveniment.",
@@ -110,6 +111,7 @@ export const privacyNoticeEn: LegalDocumentBody = {
     {
       heading: "3. Declaration and identity document",
       paragraphs: [
+        "Optional, if you give them: a link to your Strava profile and your Instagram username — used only to follow you and tag you in the club's posts; never published, never passed on (art. 6(1)(a) GDPR, withdrawable at any time by asking us to delete them).",
         "The declaration of own responsibility confirms your place. We keep the name typed as signature, the text's fingerprint, the moment and how you signed (email or paper, with the recording team member's name), not your IP address. Basis: art. 6(1)(b) GDPR; as evidence after the event, art. 6(1)(f).",
         "It is a simple electronic signature under Regulation (EU) No 910/2014 (eIDAS) and Romanian Law no. 214/2024 on the use of electronic signatures, time stamps and trust services, which cannot be denied legal effect only for being electronic (art. 25(1) eIDAS).",
         "Where the declaration asks, we take your identity document's series and number, never a copy, only so that it names you unambiguously and we can hand you your kit: art. 6(1)(b) GDPR, not legitimate interest, as it is a national identification number (art. 2(b) of Romanian Law no. 190/2018 on measures implementing Regulation (EU) 2016/679). Required for the declaration, not to register; only the team sees them, deleted seven days after the event.",

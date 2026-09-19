@@ -36,6 +36,9 @@ export type RegistrationListRow = {
   eventTitle: string | null;
   /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
   clubMemberDeclared: boolean;
+  /** The optional socials (§106), as typed; null when not given. */
+  stravaUrl: string | null;
+  instagramHandle: string | null;
   submittedAt: Date;
   confirmedAt: Date | null;
   /** The race number, once assigned (BR-REQ-038-01). */
@@ -225,6 +228,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      stravaUrl: registrations.stravaUrl,
+      instagramHandle: registrations.instagramHandle,
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
@@ -293,6 +298,9 @@ export type RegistrationDetail = {
   /** PUBLIC when the participant submitted it, STAFF when an organizer entered it for them. */
   source: RegistrationSource;
   registeredName: string;
+  /** The optional socials (§106), as typed; null when not given. */
+  stravaUrl: string | null;
+  instagramHandle: string | null;
   participantEmail: string;
   eventId: string;
   eventTitle: string | null;
@@ -349,6 +357,8 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      stravaUrl: registrations.stravaUrl,
+      instagramHandle: registrations.instagramHandle,
       submittedAt: registrations.submittedAt,
       emailConfirmedAt: registrations.emailConfirmedAt,
       waitlistedAt: registrations.waitlistedAt,

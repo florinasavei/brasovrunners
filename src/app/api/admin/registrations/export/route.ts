@@ -67,6 +67,8 @@ export async function GET(request: Request): Promise<Response> {
       email: row.participantEmail,
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,
+      stravaUrl: row.stravaUrl ?? "",
+      instagramHandle: row.instagramHandle ?? "",
       submittedAt: row.submittedAt.toISOString(),
       confirmedAt: row.confirmedAt?.toISOString() ?? "",
       bibNumber: row.bibNumber,

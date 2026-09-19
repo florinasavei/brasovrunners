@@ -445,7 +445,9 @@ trail, mixed — and may be absent, because a coffee is run on nothing.
 
 7. Given the public form, when it renders, then it offers the language of the emails and the declaration — Romanian or English, the page's language preselected — and the registration is kept in that language: the declaration is signed in it and it comes first in every message (2026-09-18, `DECISIONS.md` §97).
 
-**Verification:** integration `registrations/entry-details.test.ts`; e2e `registration-submit.spec.ts`
+8. Given the public form, when it renders, then a folded, optional "Socials" section offers a Strava profile link and an Instagram username; a link is accepted only on Strava's own hosts, a username is stored without its `@`, both may be empty; they are shown to Administrators on the registration's page and in the export, never published, and the privacy notice names them (`DECISIONS.md` §106).
+
+**Verification:** integration `registrations/entry-details.test.ts`; unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`
 
 #### BR-REQ-031-05 — Health information is consented separately and never published
 

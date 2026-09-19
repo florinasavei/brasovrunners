@@ -26,6 +26,9 @@ export type RegistrationEntryDetails = {
   emergencyContactName?: string | null;
   emergencyContactPhone?: string | null;
   clubName?: string | null;
+  /** The optional socials (§106): a Strava link and an Instagram username, or nothing. */
+  stravaUrl?: string | null;
+  instagramHandle?: string | null;
   /**
    * "I am a Brașov Runners team member", as claimed. Never verified — see the schema.
    *

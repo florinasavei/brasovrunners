@@ -285,6 +285,12 @@ const PROVIDER_HOSTS = [
   "vercel.com",
   // The API that lists deployments for the same page (§101).
   "api.vercel.com",
+  // Strava's own addresses, the only ones the form's "socials" field accepts (§106).
+  "www.strava.com",
+  "strava.com",
+  "strava.app.link",
+  // Instagram, for the link the backoffice builds from a username (§106).
+  "www.instagram.com",
   // Cloudflare Turnstile's widget and its verification endpoint (§97): fixed, Cloudflare's own.
   "challenges.cloudflare.com",
 ];

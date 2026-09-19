@@ -1420,7 +1420,9 @@
       "healthNotes": "Informații medicale",
       "healthConsent": "Acordul pentru informațiile medicale",
       "privacyAcknowledged": "Nota de confidențialitate",
-      "captcha": "Verificarea anti-bot"
+      "captcha": "Verificarea anti-bot",
+      "stravaUrl": "Profilul de Strava",
+      "instagramHandle": "Instagram"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1476,7 +1478,8 @@
     },
     "disclosure": {
       "race": "Membru Brașov Runners, club și tricou — opțional",
-      "health": "Informații medicale — opțional"
+      "health": "Informații medicale — opțional",
+      "socials": "Rețele sociale — opțional"
     },
     "clubMemberDeclared": "Sunt membru al echipei Brașov Runners",
     "facts": {
@@ -1484,7 +1487,12 @@
       "rules": "Regulamentul",
       "terms": "Termeni și condiții",
       "privacy": "Confidențialitate"
-    }
+    },
+    "socialsHelp": "Dacă vrei să te găsim și să te etichetăm în postările clubului. Nu le publicăm pe site și nu le dăm nimănui.",
+    "stravaUrl": "Profilul tău de Strava (link)",
+    "stravaUrlHelp": "Din aplicația Strava: Profil → Distribuie → copiază linkul.",
+    "instagramHandle": "Instagram (numele de utilizator)",
+    "instagramHandleHelp": "Cu sau fără @."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",
