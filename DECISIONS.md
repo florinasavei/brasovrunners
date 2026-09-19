@@ -6045,3 +6045,31 @@ cancellation is undone).
 BR-REQ-050-02 criterion 16.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 132. Decided — the templates arrive with the club's name and contact address written in (2026-09-19)
+
+**Context.** Approving the three legal texts on production was the last step between the
+club and its first registration, and the owner's patience with "fill the four facts" ran out:
+"AI was supposed to do it all for me." Two of the four facts were in hand — the legal name is
+on the club's own paper declaration ("Prin Organizator se înțelege Asociația Sportivă
+Alergători cu Jumătate de Normă"), and the contact address is `EMAIL_REPLY_TO`, which every
+email already says to reply to. The other two — the registered address and the registration
+number — are in no document the club handed over and not in this public repository (§98).
+
+**Decision.** `templates/club-facts.ts`: `CLUB_LEGAL_NAME`, and `fillClubFacts`, which
+writes the known facts into a template body before the "start from the platform's text" page
+shows it — the legal name and `env.EMAIL_REPLY_TO` — and leaves an unknown fact's
+`<PLACEHOLDER>` standing. The page's intro names what is still a blank
+(`remainingPlaceholders`), so the Administrator types two things rather than searching for
+four. The seed's sample texts keep every blank: a sample must not look approved. Approving is
+now: New version → start from the platform's text → type the address and the CUI in both
+tabs → save → approve, three times.
+
+*Rejected:* an environment variable for the legal name (a fact, not configuration, and the
+name is public); guessing the address and the number from a registry search (found nothing
+reliable, and a wrong CUI on a privacy notice is worse than a blank).
+
+**Consequences.** `club-facts.ts`; `admin/legal/new/page.tsx`; the catalogue's two intro
+strings; `tests/unit/legal-documents/club-facts.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.

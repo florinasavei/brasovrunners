@@ -11,6 +11,8 @@ import { routing } from "@/i18n/routing";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
 import { isLegalDocumentKey, LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import { CLUB_LEGAL_NAME, fillClubFacts, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
+import { env } from "@/shared/config/env";
 import LegalDocumentForm, {
   type LegalDocumentFormValues,
 } from "@/modules/legal-documents/ui/LegalDocumentForm";
@@ -69,15 +71,20 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
   // `?template=<key>` starts from the platform's own text (§95): the club reads, fills its
   // four facts and approves, rather than drafting a privacy notice from nothing.
   const fromTemplate = template && isLegalDocumentKey(template) ? LEGAL_TEMPLATES[template] : undefined;
+  // The facts the platform knows are written in before the club reads (§132): the legal name
+  // from the club's own paper declaration, the contact address every email already names.
+  const facts = { legalName: CLUB_LEGAL_NAME, contactEmail: env.EMAIL_REPLY_TO ?? null };
   const values: LegalDocumentFormValues | undefined = source
     ? { key: source.key, ro: pick(source.translations, "ro"), en: pick(source.translations, "en") }
     : fromTemplate && template && isLegalDocumentKey(template)
       ? {
           key: template,
-          ro: { title: fromTemplate.ro.title, body: fromTemplate.ro.body },
-          en: { title: fromTemplate.en.title, body: fromTemplate.en.body },
+          ro: { title: fromTemplate.ro.title, body: fillClubFacts(fromTemplate.ro.body, facts) },
+          en: { title: fromTemplate.en.title, body: fillClubFacts(fromTemplate.en.body, facts) },
         }
       : undefined;
+  // What is still a blank, named, so the Administrator types two things and not a search.
+  const blanks = values && fromTemplate ? remainingPlaceholders(values.ro.body) : [];
 
   return (
     <Stack spacing={3}>
@@ -87,7 +94,13 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
           {t("legal.newTitle")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {source ? t("legal.newFromIntro", { version: source.version }) : fromTemplate ? t("legal.newFromTemplateIntro") : t("legal.newIntro")}
+          {source
+            ? t("legal.newFromIntro", { version: source.version })
+            : fromTemplate
+              ? blanks.length > 0
+                ? t("legal.newFromTemplateIntro", { blanks: blanks.join(", ") })
+                : t("legal.newFromTemplateComplete")
+              : t("legal.newIntro")}
         </Typography>
       </Stack>
 

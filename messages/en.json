@@ -696,7 +696,7 @@
       "backToList": "Back to legal documents",
       "noTranslations": "This version has no text yet.",
       "newTitle": "New version",
-      "newFromTemplateIntro": "Prefilled with the platform's text: complete, with the club's four facts left in angle brackets <LIKE THIS>. Fill them in, read it all, save the draft, then approve it.",
+      "newFromTemplateIntro": "Prefilled with the platform's text, the club's legal name and the contact address already written in. Left to fill, in angle brackets, in both languages: {blanks}. Read it all, save the draft, then approve it from its page.",
       "templatesIntro": "Or start from the platform's text:",
       "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{idDocument}}' (the identity document typed at signing), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
@@ -722,7 +722,8 @@
       "deleteBody": "The draft and its text in both languages go permanently. Nobody has seen it: a draft is never public and nobody has signed it.",
       "deleteBlockedApproved": "Approved — cannot be deleted. What the club published stays on the record.",
       "deleteBlockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
-      "legalVersionDeleted": "The draft has been deleted."
+      "legalVersionDeleted": "The draft has been deleted.",
+      "newFromTemplateComplete": "Prefilled with the platform's text and the club's facts, complete. Read it all, save the draft, then approve it from its page."
     },
     "tasks": {
       "title": "What is still to do",
