@@ -21,7 +21,7 @@ under "Still owed" below, and it is also `/admin/tasks`, which reads it from the
 
 [`WEEKEND.md`](./WEEKEND.md) records the narrower pilot this replaced — Romanian event pages
 only, no registration, no email, no login — and is now a historical scope document rather than
-the current one. `SETUP.md` §29 is the original ten-pull-request M1 plan; most of it now exists.
+the current one. The original ten-pull-request M1 plan is a table in `DECISIONS.md` §118; it exists.
 
 ## Commands that exist right now
 
@@ -213,9 +213,9 @@ sections and in `CHANGELOG.md`.
   secret scanning and push protection on (§98).
 
 Not built: articles and what M2–M4 name (multi-distance races, results, runner profiles); a
-custom domain for the bucket. `SETUP.md` is long because it is the record of every account the club opened;
-the procedures still valid are the numbered sections, and `docs/VIBECODING.md` is the short
-way in.
+custom domain for the bucket. `SETUP.md` is the numbered procedures with their values, and the
+build plan it carried is two tables pointing at the code (§118); `docs/VIBECODING.md` is the
+short way in.
 
 **Two settings that cost an afternoon between them:** the Zitadel application needs
 **"Include user's profile info in the ID Token"**, or every sign-in is refused by the allowlist

@@ -5599,3 +5599,58 @@ table (the editor's allowlist has no table, and a table is not data).
 criterion 13.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 118. Recorded — the build plan `SETUP.md` carried, and the bootstrap it opened with, retired from the setup document (2026-09-19)
+
+**Context.** The last developer row on `/admin/tasks`: "the documentation, shortened". §109
+made `CLAUDE.md` a map and left `SETUP.md` as it was — 1,831 lines in which the numbered
+procedures still valid (the topology, the accounts, the environment, Neon, Vercel, the
+domain, R2, the volunteers, the sending domain) sat beside the M1 build plan: "scaffold the
+application", "implement registration and capacity", nineteen sections and a ten-pull-request
+list describing code that has been on production since 2026-09-17. `docs/RUNBOOKS.md` opened
+with the repository's first push, step by step, and kept the first production deployment as a
+runbook beside the one every release follows.
+
+**Decision.** `SETUP.md` §6–§8 and §11–§24 are two tables — the section number, what it
+asked for, where that thing lives now — under headings that keep the numbers, so every
+`SETUP.md §19` in this document and the changelog still lands on a line that says where to
+look; §29's M1 list is one paragraph. 1,831 lines become 1,162, and nothing an operator still
+needs moved. `docs/RUNBOOKS.md` opens with "Repository settings" — what must still be true in
+Settings — instead of the bootstrap, and "The first production deployment" is the two things
+it added once and the one lesson, since the order is § Deploying to production's. 806 lines
+become 691. The full text is in the repository's history (`git show 7ecd060:SETUP.md`,
+`git show 7ecd060:docs/RUNBOOKS.md`); this section is the record of what the plan was.
+
+**What the plan was.** The bootstrap (2026-09-02): the repository created empty, the
+documentation baseline copied in with its dotfiles, `docs:check` run, one commit on `main`
+tagged `baseline/BR-V1.0`, `qa` branched and made the default, the two rulesets, the AI
+reviewer's read access, and deliberately no application code, no `.nvmrc`, no lockfile and no
+secrets in that push. Then M1 as ten vertical pull requests:
+
+| PR | Was to deliver |
+| --- | --- |
+| 1 Foundation | Root docs and `docs:check` in `yarn check`, the pre-commit hook, Next.js and MUI, the i18n shell, CI, `CODEOWNERS`, local PostgreSQL, environment validation, `.nvmrc` |
+| 2 Database | Drizzle, migrations, seeds, the M1 schema with the M2 footprints (`races`, `events.race_id`, results consent, `bib_number`) |
+| 3 Walking skeleton | One seeded event, the form with privacy acknowledgment and results consent, the capture outbox, a placeholder declaration, `CONFIRMED` reached on QA, clicked through by a person |
+| 4 Staff auth and backoffice | Auth.js with the `staff_users` allowlist, roles, the development switcher, event edit/publish, the registration list and timeline |
+| 5 Event pages | The public list and detail per locale, the exact free-place count, structured data, sitemap, robots, canonical and hreflang |
+| 6 Identity, tokens, legal documents | Canonical email, hashed scoped tokens, `legal_documents` with the runbook, acceptance evidence |
+| 7 Registration lifecycle | Verification, holds, the declaration, confirmed, unregistration, concurrency tests against real PostgreSQL |
+| 8 Waiting list and jobs | FIFO, offers, expiry, closure at the start, the maintenance and outbox jobs, `job_runs`, the scheduler, the health check |
+| 9 Live email | The Mailgun adapter, templates in both locales, delivery modes and the QA allowlist, webhooks, delivery history |
+| 10 Launch gate | Domain binding, the approved legal documents, backups with a tested restore, monitoring, one real registration on production |
+
+Sections 11–24 planned the same slices one module at a time — MUI, i18n, the database,
+canonical email first, staff auth, the mini CMS, action tokens, declarations, registration and
+capacity, the waiting list, the backoffice, runner profiles (M4, still not built), email and
+the outbox, R2 and media — and the tables in `SETUP.md` say where each one is.
+
+*Rejected:* renumbering the sections that stay (eighty references to §26 alone, and the
+history in this document cites the old numbers); moving the retired text into this document
+whole (seven hundred lines of a plan that the code superseded, when a table says the same);
+deleting the M2–M5 roadmap in §29 (it is still the plan for what is not built).
+
+**Consequences.** `SETUP.md`, `docs/RUNBOOKS.md`, the `docsSimplify` row retired from
+`/admin/tasks`; `CLAUDE.md`'s note on `SETUP.md`'s length.
+
+Baseline `BR-V1.38-2026-09-18`.

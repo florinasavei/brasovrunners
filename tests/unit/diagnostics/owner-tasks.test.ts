@@ -97,7 +97,7 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "mediaStorage")).toBe("done");
     // The queued work: developer-owned, always open, after the club's rows.
     const developer = ownerTasks(LAUNCHED).filter((task) => task.owner === "developer").map((task) => task.id);
-    expect(developer).toEqual(["scheduler", "docsSimplify"]);
+    expect(developer).toEqual(["scheduler"]);
     // Vercel's figures (§101): the row is the club's switch — a token and a project id.
     expect(stateOf({ ...LAUNCHED, vercelUsageConfigured: false }, "vercelUsage")).toBe("open");
     expect(stateOf(LAUNCHED, "vercelUsage")).toBe("done");

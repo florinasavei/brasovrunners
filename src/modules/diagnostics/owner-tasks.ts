@@ -196,6 +196,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    * tomorrow"): what was asked and not built yet, or built without the last mile. Static and
    * open — nothing in the system can tell when they are done; whoever finishes one removes it
    * here and records it in `DECISIONS.md`. Developer-owned, so they sort after the club's.
+   * Empty since 2026-09-19 (§117, §118); the next ask goes here with its catalogue entry.
    */
   for (const id of BACKLOG) tasks.push({ id, owner: "developer", state: "open" });
 
@@ -203,9 +204,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 }
 
 /** In the order to take them. Each has its title, its "why" and its steps in `Admin.tasks.items`. */
-export const BACKLOG = [
-  "docsSimplify",
-] as const;
+export const BACKLOG: readonly string[] = [];
 
 /** Blocking first, then open, then done — the order somebody scanning the page needs. */
 export function sortTasks(tasks: OwnerTask[]): OwnerTask[] {

@@ -797,16 +797,6 @@
             "In Vercel → the production project → Settings → Environment Variables: VERCEL_API_TOKEN and VERCEL_PROJECT_ID (QA the same, with the QA project id). Redeploy. The row turns green; /devs shows the figures. Bandwidth stays in the dashboard → Usage — the link is on /devs too."
           ]
         },
-        "docsSimplify": {
-          "title": "The documentation, shortened (SETUP, RUNBOOKS, CLAUDE)",
-          "todo": "CLAUDE.md is a map now: one line per thing, with the DECISIONS section that says why (§109). Left: SETUP.md — 1,800 lines where the still-valid procedures (numbered, with values) sit beside the history of every account opened — move the history to CHANGELOG/DECISIONS and keep only what is still to be done.",
-          "done": "Every document in the repository is short and says once what is to be done.",
-          "how": [
-            "SETUP.md: each numbered section stays only if it is a still-valid procedure with its values in sight; “done on date X” moves to a CHANGELOG line or to DECISIONS.",
-            "docs/RUNBOOKS.md: the same principle — one entry per situation, the steps, nothing about how we got here.",
-            "docs:check stays green; the README (the index) is updated."
-          ]
-        },
         "roDomain": {
           "title": "The .ro domain, in a year",
           "todo": "Decided on 16 September 2026: the .com now, the .ro a year later, both alive at once (12 EUR + VAT a year at ROTLD). Blocks nothing; ticks itself when the site answers on .ro.",

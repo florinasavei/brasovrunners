@@ -7,7 +7,7 @@
 
 | Runbook | When |
 | --- | --- |
-| [Repository bootstrap](#repository-bootstrap) | Once, at the first push |
+| [Repository settings](#repository-settings) | When a branch rule or a repository setting is in question |
 | [Staff sign-in: Zitadel tenant](#staff-sign-in-zitadel-tenant) | Once per environment, before that environment's staff can sign in for real |
 | [Domain binding](#domain-binding) | Once, at the end of M1 before launch |
 | [Legal document version](#legal-document-version) | Whenever an approved privacy, terms, or declaration version changes |
@@ -16,113 +16,24 @@
 
 ---
 
-## Repository bootstrap
+## Repository settings
 
-For the first push of the documentation baseline to
-`https://github.com/florinasavei/brasovrunners`. Run once. The mechanics are in `SETUP.md`
-§4; this is the exact sequence for the clone-then-push flow.
+The repository was bootstrapped once (2026-09-02; `DECISIONS.md` §118 keeps the sequence).
+What still has to be true, and is checked in Settings when something looks wrong:
 
-Everything below assumes the extracted `brasov-runners-docs/` tree is on your machine and
-that `node` is installed.
-
-### Step 1 — Create the repository on GitHub
-
-- [ ] Name `brasovrunners`, under `florinasavei`.
-- [ ] **Do not** let GitHub add a README, `.gitignore`, or license. The tree already contains
-      the first two, and an initialised repository would force a merge on the first push.
-- [ ] Private or public is the club's call. Public is simpler for read access and is normal for
-      a club website; private needs a token for any reader. Either works with this runbook.
-- [ ] If public, add a `LICENSE` before the first push. That is an owner decision, not
-      something to pick by default; the code and the club's content may want different terms.
-
-### Step 2 — Clone and populate
-
-```bash
-git clone git@github.com:florinasavei/brasovrunners.git
-cd brasovrunners
-
-# the archive unzips to a versioned folder; copy its contents in, including dotfiles
-cp -r /path/to/brasovrunners-<baseline>/. .
-
-# confirm the hidden files arrived
-ls -la .github .gitignore .editorconfig .gitattributes package.json
-
-# the check must pass before anything is committed
-node scripts/docs-check.mjs
-```
-
-Expected: `docs:check passed (6 root documents).`
-
-### Step 3 — First commit on `main`
-
-```bash
-git add -A
-git status              # 20 files, nothing unexpected
-BASELINE=$(sed -n '1s/.*\(BR-V[0-9.]*-[0-9-]*\).*/\1/p' README.md)
-git commit -m "docs: baseline $BASELINE"
-git branch -M main
-git tag "baseline/$BASELINE"
-git push -u origin main --tags
-```
-
-### Step 4 — Create `qa` and make it the default
-
-```bash
-git switch -c qa
-git push -u origin qa
-```
-
-Then in the repository settings:
-
-- [ ] Default branch → `qa`.
-- [ ] Delete head branches after merge: on.
-- [ ] Squash merge: allowed. Merge commits: allowed. Rebase merge: off.
-- [ ] Secret scanning and Dependabot alerts: on.
-
-### Step 5 — Rulesets
-
-Both rulesets per `SETUP.md` §4.1 and §4.2, with one adjustment for a single maintainer:
-
-- [ ] `qa`: pull request required, `docs-check` required, direct and force pushes blocked,
-      deletion blocked.
-- [ ] `main`: the same, plus merge-commit only for the release pull request.
-- [ ] **Do not** require an approval or a code-owner review yet. With one maintainer, that
-      makes every pull request unmergeable. The required `docs-check` status is the gate.
-      Add approvals when a second person exists.
-
-`docs-check` appears as a selectable required check only after the workflow has run once,
-so open a trivial pull request against `qa` (a comment change is enough) before configuring
-the ruleset.
-
-### Step 6 — Verify
-
-- [ ] The Actions tab shows `docs-check` green on `main` and `qa`.
-- [ ] A test pull request into `qa` shows the `docs-check` status and the pull-request
-      template.
-- [ ] `CODEOWNERS` renders without a syntax warning in Settings.
-- [ ] `git log --oneline` shows exactly one commit.
-
-### Step 7 — Read access for the AI reviewer
-
-The reviewer needs to read code, pull requests, checks, and logs, and nothing else
-(`AGENTS.md` §22).
-
-- **Public repository:** nothing to do. Read access is implicit.
-- **Private repository:** a fine-grained personal access token scoped to this one repository
-  with `Contents: read` and `Metadata: read`, and an expiry. Do not paste a token into a chat
-  transcript; use a connector or a secret store instead, and revoke it when the reviewer
-  changes.
-
-Treat this as the reviewer boundary, not as write access. Pull requests come from the
-maintainer's own branches and credentials.
-
-### What is deliberately not in this push
-
-- No application code. That is PR 1 (`SETUP.md` §29).
-- No `.nvmrc`. Pin it in PR 1 after verifying the hosting runtime (`DECISIONS.md` §5).
-- No `yarn.lock`. There are no dependencies yet.
-- No secrets, no `.env`. `.env.example` arrives with PR 1.
-- No pinned action SHAs in the workflow. Pin them in PR 1 per `SETUP.md` §5 once verified.
+- **Branches:** `qa` is the default; `main` is production and accepts the `qa → main` release
+  pull request only. Head branches are deleted after merge; squash and merge commits allowed,
+  rebase merge off.
+- **Rulesets** (`SETUP.md` §4.1, §4.2): on both branches a pull request is required, the
+  `docs-check` status (`yarn check`) is required, direct and force pushes and deletion are
+  blocked; `main` takes merge commits only. No required approval while there is one
+  maintainer — it would make every pull request unmergeable; add it when a second person
+  exists.
+- **Security:** secret scanning, push protection and Dependabot alerts on (§98).
+- **The AI reviewer** reads code, pull requests, checks and logs, nothing else
+  (`AGENTS.md` §22). The repository is public, so read access is implicit; were it private, a
+  fine-grained token scoped to this repository with `Contents: read` and `Metadata: read`,
+  with an expiry, never pasted into a transcript.
 
 
 ---
@@ -613,40 +524,14 @@ half of it.
 
 ### The first production deployment
 
-**Done on 2026-09-17** (`qa → main` #45, `BR-V1.34`), and the second on 2026-09-18 (#47,
-`BR-V1.35`). Kept as the record of the order that made it safe, and because the same order is
-every release's. What #47 taught: the Vercel build waits at most twenty minutes for the
-migration run to be approved; approved later, the build had already failed and was redeployed
-by hand (`vercel redeploy <failed deployment>`), which is the documented recovery and costs
-nothing — the previous deployment served throughout.
+Done on 2026-09-17 (`qa → main` #45, `BR-V1.34`) and again on 2026-09-18 (#47, `BR-V1.35`),
+in the order § Deploying to production keeps. Two things it added, once: the first
+Administrator's `staff_users` row by hand (§ Staff sign-in — there is no other way in), and
+the scheduler's two repository secrets (`SETUP.md` §26) with the pinger monitors. What #47
+taught: the build waits at most twenty minutes for the migration run to be approved; approved
+later, the failed build is redeployed by hand (`vercel redeploy <deployment>`) and nothing was
+lost — the previous deployment served throughout.
 
-`main` had never carried the M1 code, so the first production deployment *was* the first release
-PR. In this order — the order matters more than any one step:
-
-1. **Prerequisites, all true since 2026-09-16 (`SETUP.md` §25–§26):** the production Vercel
-   project exists and tracks `main`; the production Neon project exists and its pooled URL is that
-   project's `DATABASE_URL`; its direct URL is the GitHub `production` environment's
-   `DATABASE_URL`; the environment has a required reviewer and a `main`-only branch policy.
-2. **Open and merge the `qa → main` release PR** (`AGENTS.md` §6.4, merge commit, never squash).
-   The push to `main` starts two things: the Vercel build, which waits for the database, and
-   the migrate run, which waits for you.
-3. **Approve the migrate run in the Actions tab** — the required reviewer is the owner. The run
-   prints the pending list (the whole chain, on a database that has never been migrated),
-   applies it, and smokes the provider hostname with `--allow-degraded`; the build then
-   proceeds on its own. If the release PR somehow landed without the workflow file, the manual
-   form still works: `gh workflow run migrate.yml --ref main -f environment=production`.
-4. **Insert the first Administrator's `staff_users` row by hand** (§ Staff sign-in above): one
-   row, the address lowercased, role `ADMIN`. There is no other way in.
-5. **Wire the scheduler:** the two repository secrets `PRODUCTION_APP_BASE_URL` and
-   `PRODUCTION_JOB_SECRET` (`SETUP.md` §26), and the two pinger monitors. Both jobs move from
-   `stale` to `ok` within five minutes.
-6. **Smoke:** `yarn smoke https://<production host>` — `degraded` until the first tick, `ok`
-   after. Then bind the domain (§ Domain binding) if it was not bound before this deployment, and
-   redeploy once more so `APP_BASE_URL` takes effect.
-7. Staff sign-in comes with the production Zitadel application (§ Staff sign-in); email to real
-   people with the sending domain (§ Domain binding, step 2). Production correctly refuses every
-   registration until the club's legal text is loaded (§ Legal document version) — that is the
-   rule working, not a defect.
 
 ### Applying a migration by hand
 

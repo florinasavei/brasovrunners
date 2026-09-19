@@ -797,16 +797,6 @@
             "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
           ]
         },
-        "docsSimplify": {
-          "title": "Documentația scurtată (SETUP, RUNBOOKS, CLAUDE)",
-          "todo": "CLAUDE.md e acum o hartă: un rând pe lucru, cu secțiunea din DECISIONS care spune de ce (§109). Rămâne SETUP.md: 1.800 de rânduri în care procedurile încă valabile (numerotate, cu valori) stau lângă istoria fiecărui cont deschis — de mutat istoria în CHANGELOG/DECISIONS și de păstrat doar ce mai e de făcut.",
-          "done": "Fiecare document din repo e scurt și spune o dată ce e de făcut.",
-          "how": [
-            "SETUP.md: fiecare secțiune numerotată rămâne doar dacă e o procedură încă valabilă, cu valorile la vedere; „făcut la data X” se mută într-o linie de CHANGELOG sau în DECISIONS.",
-            "docs/RUNBOOKS.md: același principiu — o intrare pe situație, pașii, nimic despre cum s-a ajuns aici.",
-            "docs:check rămâne verde; README-ul (indexul) se actualizează."
-          ]
-        },
         "roDomain": {
           "title": "Domeniul .ro, peste un an",
           "todo": "Hotărât pe 16 septembrie 2026: .com acum, .ro la un an, amândouă active în același timp (12 EUR + TVA pe an la ROTLD). Nu blochează nimic; se bifează singur când site-ul răspunde pe .ro.",
