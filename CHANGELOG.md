@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **A group run is simply turned up to.** The editor offers no registration block and no programme on one; a save writes it without either, whatever the hidden fields still held. Races, hikes, coffees and meetups keep both. §111.
 - **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.
 - **YouTube films in the editor.** A "YouTube" control on every rich-text field takes the film's address, keeps only its id, and the page shows it behind one press on the no-cookie host — like the event's own film. §110.
 - **`CLAUDE.md` is a map.** "What exists right now" — three hundred lines of prose — is now a page of pointers, one `DECISIONS.md` section per thing, checked against the old text for lost facts. `SETUP.md` keeps its numbered procedures; the shortening of its history is still owed (`/admin/tasks`). §109.

@@ -5366,3 +5366,36 @@ provider hosts; `AGENTS.md` §11.3; `tests/unit/content/rich-text.test.ts`,
 `tests/e2e/pages.spec.ts`. BR-REQ-050-03 criterion 16.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 111. Decided — a group run is simply turned up to: no registration, no participants, no programme (2026-09-19)
+
+**Context.** The owner, reading the editor: "group runs don't have registrations or participants,
+and they don't have an event schedule … races are the most complex ones." Every event type
+offered the whole registration block — the mode, the capacity, the window, the participation
+window, the declaration, the public list, the external provider — and a programme editor per
+language, and an organizer who is not technical (the owner's word for the club's organizer)
+scrolled past all of it to publish Monday's run.
+
+**Decision.** `event-type.ts` names the types one turns up to — `GROUP_RUN`, one list — and two
+questions over it, `takesRegistrations` and `hasProgramme`. The editor's registration block
+and each language's programme editor follow the type select (`OnlyForType`, which now takes a
+list), with a sentence under the select saying which type has what. Hidden is not absent: a run
+that was once a race still posts INTERNAL and its programme, so the service normalizes a save
+of a turn-up type — `NONE`, no capacity, no window, no declaration, list `HIDDEN`, no external
+fields, no programme in either language — the same way it ignores a gun time on anything but a
+race (§71). Not a database CHECK: the tests and the seeds insert group runs with registrations
+directly to exercise the allocator, and the rule is about what an organizer is offered, not
+about what a row may hold. A hike, a coffee and a meetup keep both blocks until the club says
+otherwise; moving one is a one-word change to the list.
+
+*Rejected:* refusing the save (the organizer cannot see the field the refusal would name); a
+seventh type "race with registration" (the type already says it); clearing existing rows by
+migration (what is stored stays until the event is saved again, and the page shows what is
+stored).
+
+**Consequences.** `event-type.ts` (`takesRegistrations`, `hasProgramme`), `OnlyForType`,
+`EventFieldsForm`, `TranslationFieldsForm` (`eventType`), `content/events/service.ts`
+(`normalizeForType`, `applyTranslationSave#eventType`), the catalogue (`editor.typeHelp`);
+`tests/integration/cms/turn-up-events.test.ts`. BR-REQ-050-02 criterion 10.
+
+Baseline `BR-V1.38-2026-09-18`.

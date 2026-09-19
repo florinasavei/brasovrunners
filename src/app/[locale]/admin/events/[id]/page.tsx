@@ -282,6 +282,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <TranslationFieldsForm
                     translation={translation}
                     eventId={event.id}
+                    eventType={event.type}
                     slugLocked={slugLocked}
                     mayEdit={mayEditTranslation(translation)}
                   />

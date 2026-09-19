@@ -5,7 +5,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
+import { EVENT_SURFACES, EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
 import OnlyForType from "./OnlyForType";
 import WallTimeField from "./WallTimeField";
 import {
@@ -64,6 +64,7 @@ export default async function EventFieldsForm({
           select
           name="event.type"
           label={t("editor.type")}
+          helperText={t("editor.typeHelp")}
           defaultValue={event?.type ?? "GROUP_RUN"}
           sx={{ flex: 1 }}
           required
@@ -282,139 +283,145 @@ export default async function EventFieldsForm({
       </Typography>
 
       {/* The registration block. The database refuses the combinations that do not go
-          together, and the service says which one in words before it gets there. */}
-      <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
-        {t("editor.registrationSection")}
-      </Typography>
+          together, and the service says which one in words before it gets there. Not on a
+          group run (§111): the whole block follows the type select, and the service writes
+          NONE for one whatever the hidden fields still post. */}
+      <OnlyForType type={EVENT_TYPES.filter(takesRegistrations)} selectName="event.type" initialType={event?.type ?? "GROUP_RUN"}>
+        <Stack spacing={2}>
+          <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
+            {t("editor.registrationSection")}
+          </Typography>
 
-      <TextField
-        select
-        name="event.registrationMode"
-        label={t("editor.registrationMode")}
-        helperText={t("editor.registrationModeHelp")}
-        defaultValue={event?.registrationMode ?? "NONE"}
-        required
-      >
-        {REGISTRATION_MODES.map((mode) => (
-          <MenuItem key={mode} value={mode}>
-            {REGISTRATION_MODE_LABEL[mode]}
-          </MenuItem>
-        ))}
-      </TextField>
+          <TextField
+            select
+            name="event.registrationMode"
+            label={t("editor.registrationMode")}
+            helperText={t("editor.registrationModeHelp")}
+            defaultValue={event?.registrationMode ?? "NONE"}
+            required
+          >
+            {REGISTRATION_MODES.map((mode) => (
+              <MenuItem key={mode} value={mode}>
+                {REGISTRATION_MODE_LABEL[mode]}
+              </MenuItem>
+            ))}
+          </TextField>
 
-      <TextField
-        name="event.capacity"
-        label={t("editor.capacity")}
-        helperText={t("editor.capacityHelp")}
-        defaultValue={event?.capacity ?? ""}
-        inputMode="numeric"
-      />
-
-      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-        <WallTimeField
-          name="event.registrationOpensAt"
-          label={t("editor.registrationOpensAt")}
-          timeLabel={t("editor.timeOfDay")}
-          value={event?.registrationOpensAt ?? null}
-          zone={zone}
-        />
-        <WallTimeField
-          name="event.registrationClosesAt"
-          label={t("editor.registrationClosesAt")}
-          timeLabel={t("editor.timeOfDay")}
-          value={event?.registrationClosesAt ?? null}
-          zone={zone}
-        />
-      </Stack>
-      <Typography variant="body2" color="text.secondary">
-        {t("editor.registrationWindowHelp")}
-      </Typography>
-
-      {/* The participation window (§104): asked a week before, owed two days before. */}
-      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-        <TextField
-          name="event.confirmationOpensDaysBefore"
-          label={t("editor.confirmationOpensDaysBefore")}
-          defaultValue={event?.confirmationOpensDaysBefore ?? 7}
-          inputMode="numeric"
-          fullWidth
-        />
-        <TextField
-          name="event.confirmationDeadlineDaysBefore"
-          label={t("editor.confirmationDeadlineDaysBefore")}
-          defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
-          inputMode="numeric"
-          fullWidth
-        />
-      </Stack>
-      <Typography variant="body2" color="text.secondary">
-        {t("editor.confirmationWindowHelp")}
-      </Typography>
-
-      {/*
-        A choice among approved versions, never an editor. AGENTS.md §11.1 keeps legal text out
-        of the CMS entirely: this select can point an event at a version, and nothing anywhere
-        in the backoffice can change a word of one.
-      */}
-      <TextField
-        select
-        name="event.declarationDocumentId"
-        label={t("editor.declarationDocument")}
-        helperText={
-          declarations.length === 0
-            ? t("editor.declarationNone")
-            : t("editor.declarationDocumentHelp")
-        }
-        defaultValue={event?.declarationDocumentId ?? ""}
-      >
-        <MenuItem value="">{t("editor.declarationUnset")}</MenuItem>
-        {declarations.map((document) => (
-          <MenuItem key={document.id} value={document.id}>
-            v{document.version} · {document.title}
-          </MenuItem>
-        ))}
-      </TextField>
-
-      {/*
-        The start list, off unless somebody deliberately turns it on (BR-REQ-039-01).
-
-        A checkbox rather than a select, because there are two values and one of them is a
-        disclosure: an unchecked box is `HIDDEN`, which is what an absent field must mean. The
-        help text says what turning it on actually publishes, in the words a participant would
-        read, because that is the decision being made here.
-      */}
-      <FormControlLabel
-        control={
-          <Checkbox
-            name="event.participantListVisibility"
-            defaultChecked={event?.participantListVisibility === "NAMES"}
+          <TextField
+            name="event.capacity"
+            label={t("editor.capacity")}
+            helperText={t("editor.capacityHelp")}
+            defaultValue={event?.capacity ?? ""}
+            inputMode="numeric"
           />
-        }
-        label={t("editor.participantList")}
-      />
-      <Typography variant="body2" color="text.secondary">
-        {t("editor.participantListHelp")}
-      </Typography>
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
-          name="event.externalProvider"
-          label={t("editor.externalProvider")}
-          defaultValue={event?.externalProvider ?? ""}
-          sx={{ flex: 1 }}
-        />
-        <TextField
-          name="event.externalRegistrationUrl"
-          type="url"
-          label={t("editor.externalRegistrationUrl")}
-          defaultValue={event?.externalRegistrationUrl ?? ""}
-          inputMode="url"
-          sx={{ flex: 1 }}
-        />
-      </Stack>
-      <Typography variant="body2" color="text.secondary">
-        {t("editor.externalHelp")}
-      </Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <WallTimeField
+              name="event.registrationOpensAt"
+              label={t("editor.registrationOpensAt")}
+              timeLabel={t("editor.timeOfDay")}
+              value={event?.registrationOpensAt ?? null}
+              zone={zone}
+            />
+            <WallTimeField
+              name="event.registrationClosesAt"
+              label={t("editor.registrationClosesAt")}
+              timeLabel={t("editor.timeOfDay")}
+              value={event?.registrationClosesAt ?? null}
+              zone={zone}
+            />
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {t("editor.registrationWindowHelp")}
+          </Typography>
+
+          {/* The participation window (§104): asked a week before, owed two days before. */}
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <TextField
+              name="event.confirmationOpensDaysBefore"
+              label={t("editor.confirmationOpensDaysBefore")}
+              defaultValue={event?.confirmationOpensDaysBefore ?? 7}
+              inputMode="numeric"
+              fullWidth
+            />
+            <TextField
+              name="event.confirmationDeadlineDaysBefore"
+              label={t("editor.confirmationDeadlineDaysBefore")}
+              defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
+              inputMode="numeric"
+              fullWidth
+            />
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {t("editor.confirmationWindowHelp")}
+          </Typography>
+
+          {/*
+            A choice among approved versions, never an editor. AGENTS.md §11.1 keeps legal text out
+            of the CMS entirely: this select can point an event at a version, and nothing anywhere
+            in the backoffice can change a word of one.
+          */}
+          <TextField
+            select
+            name="event.declarationDocumentId"
+            label={t("editor.declarationDocument")}
+            helperText={
+              declarations.length === 0
+                ? t("editor.declarationNone")
+                : t("editor.declarationDocumentHelp")
+            }
+            defaultValue={event?.declarationDocumentId ?? ""}
+          >
+            <MenuItem value="">{t("editor.declarationUnset")}</MenuItem>
+            {declarations.map((document) => (
+              <MenuItem key={document.id} value={document.id}>
+                v{document.version} · {document.title}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {/*
+            The start list, off unless somebody deliberately turns it on (BR-REQ-039-01).
+
+            A checkbox rather than a select, because there are two values and one of them is a
+            disclosure: an unchecked box is `HIDDEN`, which is what an absent field must mean. The
+            help text says what turning it on actually publishes, in the words a participant would
+            read, because that is the decision being made here.
+          */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="event.participantListVisibility"
+                defaultChecked={event?.participantListVisibility === "NAMES"}
+              />
+            }
+            label={t("editor.participantList")}
+          />
+          <Typography variant="body2" color="text.secondary">
+            {t("editor.participantListHelp")}
+          </Typography>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              name="event.externalProvider"
+              label={t("editor.externalProvider")}
+              defaultValue={event?.externalProvider ?? ""}
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              name="event.externalRegistrationUrl"
+              type="url"
+              label={t("editor.externalRegistrationUrl")}
+              defaultValue={event?.externalRegistrationUrl ?? ""}
+              inputMode="url"
+              sx={{ flex: 1 }}
+            />
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {t("editor.externalHelp")}
+          </Typography>
+        </Stack>
+      </OnlyForType>
     </Stack>
   );
 }

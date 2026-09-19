@@ -428,6 +428,7 @@
       "rulesHelp": "Opțional. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
       "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare și în reminder.",
       "type": "Tip eveniment",
+      "typeHelp": "La o alergare de grup se vine pur și simplu: fără înscriere, fără participanți, fără program. O cursă le are pe toate; o drumeție, o cafea și o întâlnire pot avea înscriere.",
       "surface": "Suprafață",
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",

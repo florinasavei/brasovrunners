@@ -5,6 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
+import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
@@ -299,6 +300,28 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
   };
 }
 
+/**
+ * A group run takes no registrations (`DECISIONS.md` §111): whatever the form posted for the
+ * block it does not show — the fields stay in the document, hidden, so a run that was once a
+ * race still posts INTERNAL — the row is written as an event one simply turns up to. The same
+ * shape as the gun time on anything but a race (§71): ignored, not refused, because the
+ * organizer cannot see the field a refusal would name.
+ */
+function normalizeForType<T extends EventFieldsInput>(fields: T): T {
+  if (takesRegistrations(fields.type)) return fields;
+  return {
+    ...fields,
+    registrationMode: "NONE",
+    capacity: null,
+    declarationDocumentId: null,
+    registrationOpensAtWallTime: "",
+    registrationClosesAtWallTime: "",
+    participantListVisibility: "HIDDEN",
+    externalProvider: null,
+    externalRegistrationUrl: null,
+  };
+}
+
 function parseOrThrow<Out>(schema: z.ZodType<Out>, value: unknown): Out {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
@@ -358,6 +381,8 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
     expectedVersion: number;
     fields: unknown;
     acknowledgeLiveEdit?: boolean;
+    /** The type the event has after this save — the form's, when the settings are saved too. */
+    eventType: EditableEvent["type"];
     now: Date;
   },
 ): Promise<EditableTranslation> {
@@ -403,7 +428,9 @@ async function applyTranslationSave<T extends Record<string, unknown>>(
       excerptJson,
       bodyJson: body,
       rulesJson: hasRichTextContent(rules) ? rules : null,
-      scheduleJson: hasRichTextContent(schedule) ? schedule : null,
+      // A group run has no programme (§111): the editor hides the field, and this is what
+      // holds when the type changed in the same save or the hidden field still posted text.
+      scheduleJson: hasProgramme(input.eventType) && hasRichTextContent(schedule) ? schedule : null,
       // A row nobody has claimed becomes the saver's — the seeded rows have no author, and
       // "their own drafts" needs one for the rule to mean anything. An existing author is
       // never overwritten: an Editor fixing a typo does not take the piece.
@@ -429,6 +456,7 @@ export async function saveEventTranslation<T extends Record<string, unknown>>(
     expectedVersion: input.expectedVersion,
     fields: input.fields,
     acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+    eventType: record.event.type,
     now,
   });
 }
@@ -575,7 +603,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
   if (!current) throw new DomainError("NOT_FOUND", "no such event");
 
-  const fields = parseOrThrow(eventFieldsSchema, input.fields);
+  const fields = normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
   assertCoherentRegistrationBlock(fields);
   const times = resolveTimes(fields);
 
@@ -657,7 +685,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   // Parsed and checked before the transaction opens, so a malformed form never holds a row lock
   // while the organizer's browser is told what is wrong with it.
   const parsedEventFields =
-    input.fields === undefined ? undefined : parseOrThrow(eventFieldsSchema, input.fields);
+    input.fields === undefined ? undefined : normalizeForType(parseOrThrow(eventFieldsSchema, input.fields));
   if (parsedEventFields) {
     if (!canEditEventFields(input.actor.role)) {
       throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit event details`);
@@ -705,6 +733,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
         expectedVersion: submitted.expectedVersion,
         fields: submitted.fields,
         acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+        eventType: parsedEventFields?.type ?? current.type,
         now,
       });
     }
@@ -734,7 +763,7 @@ export async function createEvent<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not create an event`);
   }
 
-  const parsed = parseOrThrow(newEventSchema, input.fields);
+  const parsed = normalizeForType(parseOrThrow(newEventSchema, input.fields));
   assertCoherentRegistrationBlock(parsed);
   const times = resolveTimes(parsed);
 

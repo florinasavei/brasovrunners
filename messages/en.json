@@ -428,6 +428,7 @@
       "rulesHelp": "Optional. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
       "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email and the reminder.",
       "type": "Event type",
+      "typeHelp": "A group run is simply turned up to: no registration, no participants, no programme. A race has all of them; a hike, a coffee and a meetup may take registrations.",
       "surface": "Surface",
       "eventStatus": "Event status",
       "timezone": "Time zone",

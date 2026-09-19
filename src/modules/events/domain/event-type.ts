@@ -52,3 +52,25 @@ export function isStravaLink(url: string): boolean {
     return false;
   }
 }
+
+/**
+ * The types that are simply turned up to — no registration, no participants, no programme.
+ *
+ * The owner, 2026-09-19: "group runs don't have registrations or participants, and they don't
+ * have an event schedule; races are the most complex ones" (`DECISIONS.md` §111). The editor
+ * offers neither block for one of these, a save through it writes `registration_mode = NONE`
+ * and no programme whatever the form posted, and the public page says "no registration
+ * needed". One list, so the day a hike needs a bus and a capacity it leaves this list and
+ * nothing else changes. A hike, a coffee and a meetup keep both until the club says otherwise.
+ */
+const TURN_UP_TYPES: readonly EventType[] = ["GROUP_RUN"];
+
+/** Whether the editor offers the registration block — capacity, the window, the declaration, the list. */
+export function takesRegistrations(type: EventType): boolean {
+  return !TURN_UP_TYPES.includes(type);
+}
+
+/** Whether the editor offers a programme — the timed rows and the text under `#schedule`. */
+export function hasProgramme(type: EventType): boolean {
+  return !TURN_UP_TYPES.includes(type);
+}
