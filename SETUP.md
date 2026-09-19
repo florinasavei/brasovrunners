@@ -1160,3 +1160,19 @@ set (`env.ts` defaults both); `EMAIL_REPLY_TO` is set only when a club mailbox e
 
 Sandbox afterwards: leave it; QA can keep the club domain in allowlist mode (step 6), which
 frees it from the sandbox's five-recipient limit.
+
+## 36. The anti-bot check and the health monitors — done (2026-09-19)
+
+Both were the club's clicks, done outside the repository on 2026-09-19 and recorded here so
+nobody redoes them (`/admin/tasks` reads the same facts from the deployment):
+
+- **Cloudflare Turnstile** (`DECISIONS.md` §97): the widget `brasovrunners-site` exists in
+  the club's Cloudflare account (Managed mode, the `.com` and its `qa.` subdomain as
+  hostnames); `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are set on **both** Vercel
+  projects (Production environment) and the "Verify you are human" box shows on the QA form.
+  The "Anti-bot check" row on `/admin/tasks` turns green on each project's next deployment.
+- **The health monitors** (`DECISIONS.md` §98): cron-job.org has `GET /api/health` every
+  30 minutes with "notify on failure" on production and on QA — the club is emailed when
+  email stops. Nine monitors in all: the two job pingers per environment (§26) and this one.
+- **Release #58** (`qa → main`, 2026-09-19) is live; the production schema is `0042`
+  (`0043`, the programme rows, arrives with the next release and its gated migration run).

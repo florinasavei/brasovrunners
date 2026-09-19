@@ -768,13 +768,13 @@
         },
         "botCheck": {
           "title": "The anti-bot check on registration (Cloudflare Turnstile)",
-          "todo": "The registration form already has a trap field and a fill-time check, which stop the simple bots. Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest. It is off until the two keys exist; nothing changes meanwhile.",
+          "todo": "Done on 19 September 2026: the widget “brasovrunners-site” exists and both keys are on both Vercel projects — this row turns green on the next deployment. The registration form already has a trap field and a fill-time check, which stop the simple bots; Turnstile — Cloudflare's captcha, free, usually with no puzzle at all — stops the rest.",
           "done": "The registration form has the anti-bot check on.",
           "how": [
-            "Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
-            "Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
-            "In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
-            "Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
+            "✓ Cloudflare (the same account as for the photos) → left menu → Turnstile → Add widget.",
+            "✓ Name “brasovrunners-site”; hostnames: the club's domain and the qa subdomain; Widget mode “Managed”. Save: you get a Site key and a Secret key.",
+            "✓ In Vercel → the production project (and QA, same keys) → Settings → Environment Variables: TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY. Redeploy.",
+            "✓ Open the registration form: the “Verify you are human” box appears under the fields; a test registration goes through. This row turns green."
           ]
         },
         "declarationArchiveMail": {
