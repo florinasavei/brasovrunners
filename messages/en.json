@@ -172,9 +172,10 @@
       "atTime": "{sentence} at {time}",
       "dates": "{count} dates, until {last}",
       "count": "{count} dates",
+      "weeklyChip": "Weekly",
+      "fortnightlyChip": "Every two weeks",
       "nextLabel": "Next",
-      "allDates": "All dates",
-      "moreInCalendar": "{count} more in the calendar"
+      "allDates": "All dates"
     },
     "route": "Route",
     "openRoute": "View the route",

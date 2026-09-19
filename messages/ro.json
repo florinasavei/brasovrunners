@@ -172,9 +172,10 @@
       "atTime": "{sentence}, la {time}",
       "dates": "{count} date, până pe {last}",
       "count": "{count} date",
+      "weeklyChip": "Săptămânal",
+      "fortnightlyChip": "La două săptămâni",
       "nextLabel": "Următoarea",
-      "allDates": "Toate datele",
-      "moreInCalendar": "încă {count} în calendar"
+      "allDates": "Toate datele"
     },
     "route": "Traseu",
     "openRoute": "Vezi traseul",

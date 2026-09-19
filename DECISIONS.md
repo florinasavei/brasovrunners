@@ -6216,3 +6216,18 @@ remembering the choice in a cookie (a link says it, and a link can be shared).
 `tests/e2e/event-pages.spec.ts`. BR-REQ-041-01 criterion 5 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 138. Decided — a series card says "Săptămânal", and shows every date (2026-09-19)
+
+**Context.** The owner, on the listing: "8 dates here is redundant, just show weekly", and
+"'2 more in the calendar' does not mean anything".
+
+**Decision.** The card's chip says the rhythm the dates have — "Săptămânal", "La două
+săptămâni" — and only a set with no rhythm keeps "N date". Every coming date is a chip; the
+six-and-a-count of §113 is gone, because a series is made eight weeks ahead (§122) and
+eight chips wrap fine. The backoffice list keeps "8 date": there the number is the point.
+
+**Consequences.** `events/ui/SeriesCard.tsx`, two keys added and one removed in both
+catalogues. BR-REQ-041-01 criterion 9 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
