@@ -565,7 +565,7 @@
       "role": "Rol",
       "preferredLocale": "Limbă preferată",
       "invite": "Adaugă",
-      "inviteHelp": "Nu se trimite niciun email: platforma nu are încă domeniul de expediere. Persoana capătă acces la prima autentificare cu această adresă.",
+      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă — nu se trimite niciun email și niciun cod. Persoana are nevoie și de un cont Zitadel cu exact această adresă (și-l face din pagina de autentificare, sau i-l faci tu în consola Zitadel → Users), apoi se autentifică la /admin. Accesul începe la prima autentificare.",
       "pending": "Nu s-a autentificat încă",
       "you": "Tu",
       "changeRole": "Schimbă rolul",

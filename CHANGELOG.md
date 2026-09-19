@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **Echipa says what "Add" does.** Adding an address sends no email and no code — it allowlists; the person needs a Zitadel account with that address and signs in at `/admin`. The sentence had blamed a missing sending domain, which is live since §98 (the owner, 2026-09-19: "I did not receive the code").
 - **The club's clicks of 2026-09-19, recorded:** Turnstile's widget and keys on both projects, the `/api/health` monitors on cron-job.org for both environments, release #58 live with schema `0042` (`SETUP.md` §36); the Turnstile row's steps are ticked.
 - **`SETUP.md` and the runbooks, shortened.** The M1 build plan (§6–§8, §11–§24, §29's list) is two tables saying where each thing lives, the numbers kept; the runbooks open with the repository's settings, not its first push. 1,831 → 1,162 and 806 → 691 lines; the plan itself is recorded in §118. The last developer row on `/admin/tasks` is done.
 - **The programme as timed rows.** On every event but a group run, the editor takes rows — date, time, until, what in both languages, where — shown as a list under "Programme" on the page, repeated in the reminder, and each its own entry in the `.ics` and the feed; the free text stays beneath. Migration `0043`. The last-but-one developer row on `/admin/tasks` is done. §117.

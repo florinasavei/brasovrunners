@@ -565,7 +565,7 @@
       "role": "Role",
       "preferredLocale": "Preferred language",
       "invite": "Add",
-      "inviteHelp": "No email is sent: the platform has no sending domain yet. Access begins at their first sign-in with this address.",
+      "inviteHelp": "This adds the address to the list of who is staff — no email or code is sent. The person also needs a Zitadel account with exactly this address (they create one at the sign-in page, or you do in the Zitadel console → Users), then signs in at /admin. Access begins at that first sign-in.",
       "pending": "Has not signed in yet",
       "you": "You",
       "changeRole": "Change role",
