@@ -689,7 +689,7 @@
       "saveDraft": "Save draft",
       "titleField": "Title",
       "bodyField": "Text",
-      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading.",
+      "bodyHelp": "A blank line separates paragraphs. A line starting with ## is a section heading. A link: [the words](https://…). A picture, on a line of its own: ![what it shows](https://…) — copy the address from Gallery → Pictures.",
       "keyLocked": "The document cannot change after creation.",
       "editorWarning": "This is the club’s legal text. Write or paste only wording the club has approved — never invent legal content.",
       "approveTitle": "Approve this version",

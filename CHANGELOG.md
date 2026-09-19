@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **Links and pictures in legal texts**: `[the words](https://…)` and `![what it shows](https://…)` in a paragraph render on the page; the PDFs write the words and the address. §127.
 - **Fewer emails.** The signed declaration's PDF rides on the confirmation instead of a message of its own, and the 48-hour reminder skips anyone confirmed in the last day. Four messages on the common path, three on the eve. §126.
 - **`.nvmrc` says `22`**, the major, which is what Vercel runs; no more warning about a pinned patch. §125.
 - **Captured emails on `/devs`**, locally: every message the platform would have sent, with its links, so the journey can be clicked through on a laptop. §124.

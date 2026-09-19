@@ -1294,7 +1294,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 7. Given `APP_ENV=production`, when the sample text is seeded, then it is refused outright rather than skipped quietly; the club's approved wording is written in the backoffice (BR-REQ-053-02) or, where a migration is preferred, per `docs/RUNBOOKS.md` § Legal document version.
 8. Given a sample document, when it is read, then every club-specific fact — the controller's legal name, address and contact, any representative, retention periods, and the lawful basis for each purpose — is an obvious placeholder rather than an invented value.
 
-**Verification:** integration `legal/versions.test.ts`; e2e `legal-pages.spec.ts`
+9. Given a legal text, when a paragraph carries `[the words](https://…)` or `![what it shows](https://…)` on a line of its own, then the page renders a link (https, mailto or a path on this site; anything else stays words) and a picture (https only, lazy, at most the column's width, its words as the caption); the PDFs render the link as "the words (address)" and the picture as its words; the stored body, its hash and the merge fields are the plain text as typed (2026-09-19, `DECISIONS.md` §127).
+
+**Verification:** integration `legal/versions.test.ts`; unit `legal/inline.test.ts`; e2e `legal-pages.spec.ts`
 
 #### BR-REQ-053-02 — The club writes its own legal text
 

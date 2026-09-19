@@ -5884,6 +5884,33 @@ carries your race number is not a favour).
 `notifications/render.ts` (the attachment on `REGISTRATION_CONFIRMED`),
 `notifications/event-mail.ts#queueEventReminders`; `tests/integration/registrations/
 signed-declaration.test.ts`, `declaration-archive.test.ts`, `notifications/event-mail.test.ts`.
-BR-REQ-036-02 criterion 9, BR-REQ-080-01 criteria 5 and 8.
+BR-REQ-033-02 criterion 9, BR-REQ-080-01 criteria 5 and 8.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 127. Decided — links and pictures in a legal text, as two marks in the plain text (2026-09-19)
+
+**Context.** The owner: "I must be able to put pictures and links in these documents." A
+legal body is plain paragraphs on purpose (§46, §53): what is hashed, signed and merged is
+text, and the editor is a textarea with `## ` for a heading and a blank line between
+paragraphs.
+
+**Decision.** Two marks inside a paragraph, read at render time and never stored as anything
+else: `[the words](https://…)` is a link — https, mailto or a path on this site; anything else
+stays words — and `![what it shows](https://…)` on a line of its own is a picture, https only,
+its words the caption. `LegalDocumentBody` renders them as an `<a>` and an `<img>` with the
+attributes the parser allowed and no markup; the two PDFs write the link as "the words
+(address)" and the picture as its words; the hash, the merge fields and the acceptance
+evidence see the text as typed. The form's help says the two marks and where a picture's
+address comes from (Gallery → Pictures).
+
+*Rejected:* the rich-text editor for legal texts (a document a person signs is hashed as
+text, the PDF is drawn from paragraphs, and §46 chose that deliberately); an image without
+an https address (a data URI is a file in a database column); http links (the site is https
+and so are the pages it should point at).
+
+**Consequences.** `legal-documents/domain/inline.ts`, `ui/LegalDocumentBody.tsx`,
+`legal-documents/pdf.ts`, `registrations/declaration-pdf.ts`, the catalogues;
+`tests/unit/legal/inline.test.ts`. BR-REQ-053-01 criterion 9.
 
 Baseline `BR-V1.38-2026-09-18`.
