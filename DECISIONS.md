@@ -6268,6 +6268,6 @@ no list of links can.
 none that takes a picture).
 
 **Consequences.** `events/ui/ShareLinks.tsx`, `events/ui/NativeShareButton.tsx` (new), two
-keys added and two reworded in both catalogues. BR-REQ-070-03 criterion 8 amended.
+keys added and two reworded in both catalogues. BR-REQ-052-02 criterion 8 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
