@@ -6144,3 +6144,26 @@ both catalogues; `tests/integration/cms/series-edit.test.ts`, `tests/e2e/series-
 BR-REQ-050-02 criterion 17.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 135. Decided — the event page offers its editor to a signed-in staff member (2026-09-19)
+
+**Context.** The owner: "when I am signed in as an admin or editor and I have the rights, I
+should be able to edit events from the event page!" The way was the backoffice list, then
+the row, then Edit.
+
+**Decision.** The public event page reads the staff session — it is rendered per request
+already (`dynamic = "force-dynamic"`), so this costs nothing — and, for a role that may edit
+the words (`canEditTexts`: Redactor and above), shows an "Editează" button beside "back to
+events", 44 pixels tall, leading to `/admin/events/<id>`. Nothing else changes for a
+visitor: no session, no button, and where `STAFF_AUTH_MODE` is `disabled` the session is not
+even asked for. The editor asserts the role for itself (BR-REQ-060-01); the button is a
+door, not a permission.
+
+*Rejected:* a client island that asks `/api/…` who is signed in (worth it only when the page
+stops being per-request — see the caching decision, when it comes); showing the button to a
+volunteer with the editor refusing (a door that does not open is a bug report).
+
+**Consequences.** `app/[locale]/events/[slug]/page.tsx`, one key in both catalogues;
+`tests/e2e/event-edit-link.spec.ts`. BR-REQ-050-02 criterion 18.
+
+Baseline `BR-V1.38-2026-09-18`.

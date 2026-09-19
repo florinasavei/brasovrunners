@@ -74,6 +74,7 @@
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
+    "editInBackoffice": "Editează",
     "date": "Data",
     "startTime": "Ora de start",
     "gatheringTime": "Ora de întâlnire",

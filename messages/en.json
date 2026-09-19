@@ -74,6 +74,7 @@
   },
   "Event": {
     "backToEvents": "Back to events",
+    "editInBackoffice": "Edit",
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
