@@ -6020,3 +6020,28 @@ editor (the radios, the banner), `shared/ui/RadioField`, the catalogues;
 `tests/integration/cms/series-edit.test.ts`. BR-REQ-050-02 criterion 15.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 131. Decided — the editor of a date says which date it is, and shows the others one press away (2026-09-19)
+
+**Context.** The owner, editing a Wednesday of a series: "it must be clear which edition I am
+editing; the recurring ones must be easier to edit." The editor opened on a date of a series
+with a blue note — "this is one date of the series …, open the series" — and the date itself
+was a field far down the settings form. Eight Wednesdays meant eight trips through the list.
+
+**Decision.** Any event in a series — a date or the source — opens under a framed header:
+the series' title as a kicker, "Editing the date Wednesday 23 September 2026, 18:50" as the
+heading, "date 3 of 9", every date of the series as a chip (this one filled and
+`aria-current`, a cancelled or moved one marked and struck as on the public card, §122),
+and "previous date" / "next date" links with the full date, plus the way to the source from
+a date. The chips are `SeriesDates`, the public card's own component, with a `currentId`;
+the dates come from one read (`listSeriesDates`: the source and every row naming it).
+
+*Rejected:* a select of dates (a chip row shows the whole series and its marks at a glance,
+and is what the card already taught); hiding past dates (a past date is where last week's
+cancellation is undone).
+
+**Consequences.** `content/events/repository.ts` (`listSeriesDates`), `SeriesDates`
+(`currentId`), the event editor, the catalogues (`editor.series.*`, `repeatOfNote`).
+BR-REQ-050-02 criterion 16.
+
+Baseline `BR-V1.38-2026-09-18`.
