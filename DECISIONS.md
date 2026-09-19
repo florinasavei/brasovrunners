@@ -5437,3 +5437,39 @@ official gradient (three stops are the same picture at 22 pixels).
 `shared/ui/SocialIcon.tsx`. BR-REQ-020-01 criterion 8.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 113. Decided — a repeated event is one line: the same title and type, grouped, on the listing and in the backoffice (2026-09-19)
+
+**Context.** The owner, at a listing with a Monday-and-Wednesday run made for the season
+(§64): "I hate that editions are duplicated … I want to see a single line for 'Running up that
+hill' like in Google Calendar." Fifty-two cards for one run, and fifty-two rows in the
+backoffice, is what Repeat produced; the month view (§89) was the one place the series read as
+a series.
+
+**Decision.** Occurrences stay rows — capacity, holds and the waiting list are per event — and
+the *display* groups them. The series is recognised, not recorded: `events/domain/series.ts`
+groups events of the same type with the same title (trimmed, case-folded, in the language
+shown), in the order the first occurrence had, and reads the recurrence off the dates on the
+wall clock — weekly or fortnightly on a set of weekdays with a shared time, or "N dates until
+…" for anything else. `series-sentence.ts` says it in the reader's words with `Intl`'s weekday
+names and list conjunction: "În fiecare luni și miercuri, la 18:30". On the listing a
+`SeriesCard` shows the title once as a link to the next occurrence, the sentence, the next
+occurrence's facts, and the coming dates as 44px chips, each its own page, the rest "in the
+calendar" — the month view keeps every date, like Google's grid. In the backoffice a series is
+one row: the title, a "N dates" chip, the sentence, the dates folded with each one's state and
+entries; the state column counts the states; the date column is the range; the tick selects
+every date (the refs joined by commas, which the bulk verbs split); Edit opens the next date;
+deleting a series is the bulk verb's job (§114). The type's glyph (§112) now stands before
+every title in the list.
+
+*Rejected:* a `series_id` set by Repeat (a migration and a backfill for what the title already
+says; a hand-made second edition would not carry it); grouping the month view (that is the one
+view where every date belongs); a card that is one big link (a card with date links inside
+cannot be a link itself — the title is the link).
+
+**Consequences.** `events/domain/series.ts`, `events/ui/series-sentence.ts`,
+`events/ui/SeriesCard.tsx`, `glyphs.ts` (`series`), the listing, the events list,
+`admin/actions.ts` (`selectedEventRefs`), the catalogues; `tests/unit/events/series.test.ts`.
+BR-REQ-020-01 criterion 9, BR-REQ-050-02 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -180,6 +180,23 @@ function translationFieldsFrom(form: FormData, locale: Locale) {
   };
 }
 
+/**
+ * The ticked rows of the events list: `id:version` each, and a series row ticks all its dates
+ * as one value joined by commas (`DECISIONS.md` §113). The version travels with the tick so a
+ * bulk verb still meets the version guard (§11.5).
+ */
+function selectedEventRefs(form: FormData): Array<{ eventId: string; expectedVersion: number }> {
+  return form
+    .getAll("eventRef")
+    .filter((value): value is string => typeof value === "string")
+    .flatMap((value) => value.split(","))
+    .filter((reference) => reference.includes(":"))
+    .map((reference) => {
+      const separator = reference.lastIndexOf(":");
+      return { eventId: reference.slice(0, separator), expectedVersion: Number(reference.slice(separator + 1)) };
+    });
+}
+
 /** Publication is per event now, so this moves the event and not one of its languages. */
 export async function transitionEventAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
@@ -224,9 +241,7 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin" });
 
-  const selected = form
-    .getAll("eventRef")
-    .filter((value): value is string => typeof value === "string" && value.includes(":"));
+  const selected = selectedEventRefs(form);
 
   if (selected.length === 0) {
     backTo(listPath, { error: "NOTHING_SELECTED" });
@@ -238,11 +253,7 @@ export async function bulkArchiveEventsAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     const db = getDb();
 
-    for (const reference of selected) {
-      const separator = reference.lastIndexOf(":");
-      const eventId = reference.slice(0, separator);
-      const expectedVersion = Number(reference.slice(separator + 1));
-
+    for (const { eventId, expectedVersion } of selected) {
       try {
         await transitionEvent(db, { actor, eventId, expectedVersion, to: "ARCHIVED" });
         archived += 1;
@@ -270,9 +281,7 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const listPath = getPathname({ locale, href: "/admin" });
 
-  const selected = form
-    .getAll("eventRef")
-    .filter((value): value is string => typeof value === "string" && value.includes(":"));
+  const selected = selectedEventRefs(form);
   if (selected.length === 0) backTo(listPath, { error: "NOTHING_SELECTED" });
 
   let published = 0;
@@ -281,10 +290,8 @@ export async function bulkPublishEventsAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     const db = getDb();
 
-    for (const reference of selected) {
-      const separator = reference.lastIndexOf(":");
-      const eventId = reference.slice(0, separator);
-      let expectedVersion = Number(reference.slice(separator + 1));
+    for (const { eventId, expectedVersion: loadedVersion } of selected) {
+      let expectedVersion = loadedVersion;
       try {
         const [current] = await db.select({ status: events.editorialStatus }).from(events).where(eq(events.id, eventId)).limit(1);
         if (!current) throw new DomainError("NOT_FOUND", "no such event");

@@ -19,6 +19,8 @@ import EventFacts from "@/modules/events/ui/EventFacts";
 import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
+import SeriesCard from "@/modules/events/ui/SeriesCard";
+import { groupSeries } from "@/modules/events/domain/series";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import JsonLd from "@/shared/ui/JsonLd";
@@ -92,6 +94,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
   const listed = (featured ? events.filter((event) => event.id !== featured.id) : events).filter(
     (event) => !type || event.type === type,
   );
+  // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
+  // the order the first occurrence had; a single event is a card as before.
+  const cards = groupSeries(listed);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
@@ -181,7 +186,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       {featured && listed.length > 0 && (
         <Box
           component="details"
-          open={listed.length <= 4}
+          open={cards.length <= 4}
           data-testid="other-events"
           sx={{
             "& > summary": {
@@ -197,12 +202,16 @@ export default async function EventsPage({ params, searchParams }: Props) {
             variant="h2"
             sx={{ fontSize: "1.25rem", mb: 2, minHeight: 44, display: "flex", alignItems: "center" }}
           >
-            {t("othersCount", { count: listed.length })}
+            {t("othersCount", { count: cards.length })}
           </Typography>
           <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
-            {listed.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index} now={now} underHero />
-            ))}
+            {cards.map((series, index) =>
+              series.members.length > 1 ? (
+                <SeriesCard key={series.key} members={series.members} index={index} now={now} underHero />
+              ) : (
+                <EventCard key={series.key} event={series.members[0]} index={index} now={now} underHero />
+              ),
+            )}
           </Stack>
         </Box>
       )}
@@ -212,9 +221,13 @@ export default async function EventsPage({ params, searchParams }: Props) {
           <Alert severity="info">{t("empty")}</Alert>
         ) : (
           <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
-            {listed.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index} now={now} />
-            ))}
+            {cards.map((series, index) =>
+              series.members.length > 1 ? (
+                <SeriesCard key={series.key} members={series.members} index={index} now={now} />
+              ) : (
+                <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
+              ),
+            )}
           </Stack>
         ))}
     </Container>

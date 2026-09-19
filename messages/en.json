@@ -147,6 +147,16 @@
       "PAID": "Paid"
     },
     "seeDetails": "See details",
+    "series": {
+      "weekly": "Every {days}",
+      "fortnightly": "Every other {days}",
+      "atTime": "{sentence} at {time}",
+      "dates": "{count} dates, until {last}",
+      "count": "{count} dates",
+      "nextLabel": "Next",
+      "allDates": "All dates",
+      "moreInCalendar": "{count} more in the calendar"
+    },
     "route": "Route",
     "openRoute": "View the route",
     "video": {
@@ -328,6 +338,9 @@
       "columnTitle": "Event",
       "columnStatus": "Status",
       "columnDate": "Date",
+      "seriesDates": "The dates of this series",
+      "seriesEdit": "Edit the next date",
+      "seriesDeleteNote": "A series is deleted from the bulk actions below: tick it, then “Delete”.",
       "deskCounts": "{confirmed} confirmed · {checkedIn} here",
       "columnEntries": "Registrations",
       "tableCaption": "The club's events, with their status, date and number of registrations",

@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **A repeated event is one line.** The same title and type, grouped: on the listing one card with "every Monday and Wednesday at 18:30", the next date's facts and the coming dates as links; in the backoffice one row with the dates folded inside, ticked together for the bulk verbs. The month view keeps every date. §113.
 - **Glyphs on the closed sets.** Event type, surface, difficulty and cost carry an icon before the word on the listing's filter and cards, the featured hero (its "Featured event" chip has a star), the event page and the facts; the Instagram mark in the footer is its gradient. §112.
 - **A group run is simply turned up to.** The editor offers no registration block and no programme on one; a save writes it without either, whatever the hidden fields still held. Races, hikes, coffees and meetups keep both. §111.
 - **The archive builds itself.** With `DECLARATIONS_ARCHIVE_TO` set, every signed declaration also reaches the club's mailbox as a PDF (`DECLARATION_ARCHIVE`, no token, not for test registrations); the task board row is the club's switch. §99.

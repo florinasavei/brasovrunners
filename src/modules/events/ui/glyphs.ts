@@ -1,5 +1,6 @@
 import AltRouteIcon from "@mui/icons-material/AltRoute";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
+import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HikingIcon from "@mui/icons-material/Hiking";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
@@ -56,7 +57,8 @@ export const COST_GLYPH: Record<"FREE" | "PAID", Glyph> = {
 
 /**
  * Every glyph by a name a Server Component can hand to `GlyphChip`: `type:RACE`,
- * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`, and `featured` for the hero's star.
+ * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`, `featured` for the hero's star and
+ * `series` for a repeated event's count (§113).
  */
 export const GLYPHS = {
   ...prefixed("type", TYPE_GLYPH),
@@ -64,6 +66,7 @@ export const GLYPHS = {
   ...prefixed("difficulty", DIFFICULTY_GLYPH),
   ...prefixed("cost", COST_GLYPH),
   featured: StarIcon,
+  series: EventRepeatIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

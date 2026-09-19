@@ -147,6 +147,16 @@
       "PAID": "Cu taxă"
     },
     "seeDetails": "Vezi detaliile",
+    "series": {
+      "weekly": "În fiecare {days}",
+      "fortnightly": "O dată la două săptămâni, {days}",
+      "atTime": "{sentence}, la {time}",
+      "dates": "{count} date, până pe {last}",
+      "count": "{count} date",
+      "nextLabel": "Următoarea",
+      "allDates": "Toate datele",
+      "moreInCalendar": "încă {count} în calendar"
+    },
     "route": "Traseu",
     "openRoute": "Vezi traseul",
     "video": {
@@ -328,6 +338,9 @@
       "columnTitle": "Evenimentul",
       "columnStatus": "Stare",
       "columnDate": "Data",
+      "seriesDates": "Datele acestei serii",
+      "seriesEdit": "Editează următoarea dată",
+      "seriesDeleteNote": "O serie se șterge din acțiunile pe mai multe de mai jos: bifeaz-o, apoi „Șterge”.",
       "deskCounts": "{confirmed} confirmate · {checkedIn} prezente",
       "columnEntries": "Înscrieri",
       "tableCaption": "Evenimentele clubului, cu starea, data și numărul de înscrieri",
