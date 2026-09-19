@@ -188,6 +188,7 @@ export default async function AdminTasksPage({ params }: Props) {
       storageConfigured: isStorageConfigured(),
       botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
       declarationArchiveConfigured: Boolean(env.DECLARATIONS_ARCHIVE_TO),
+      vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
     }),
   );
 

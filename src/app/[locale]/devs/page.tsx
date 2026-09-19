@@ -23,6 +23,7 @@ import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { NEON_FREE_CU_HOURS, readNeonConsumption } from "@/modules/diagnostics/neon";
+import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
 import MuiLink from "@mui/material/Link";
 import { Link } from "@/i18n/navigation";
@@ -77,6 +78,8 @@ export default async function DevsPage({ params }: Props) {
   const format = await getFormatter();
   const now = new Date();
   const neon = await readNeonConsumption(env);
+  // This month's deployments and build minutes (§101): the two Hobby ceilings a token can read.
+  const vercel = await readVercelMonth(env, now);
 
   /**
    * The whole of the secret handling on this page: presence, computed here, values discarded.
@@ -434,8 +437,33 @@ export default async function DevsPage({ params }: Props) {
             {t("vercel.notOnVercel")}
           </Typography>
         )}
+        {vercel.ok ? (
+          <Alert
+            severity={
+              vercel.month.buildMinutes >= VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH * 0.8 ||
+              vercel.month.deploymentsToday >= VERCEL_HOBBY_DEPLOYMENTS_PER_DAY * 0.8
+                ? "warning"
+                : "success"
+            }
+            sx={{ mb: 1 }}
+          >
+            {t("vercel.month", {
+              deployments: vercel.month.deployments,
+              today: vercel.month.deploymentsToday,
+              perDay: VERCEL_HOBBY_DEPLOYMENTS_PER_DAY,
+              minutes: Math.round(vercel.month.buildMinutes),
+              of: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
+              percent: Math.round((vercel.month.buildMinutes / VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH) * 100),
+              errored: vercel.month.errored,
+            })}
+          </Alert>
+        ) : (
+          <Alert severity={vercel.reason === "unconfigured" ? "info" : "warning"} sx={{ mb: 1 }}>
+            {vercel.reason === "unconfigured" ? t("vercel.unavailable") : t("vercel.failed", { reason: vercel.reason })}
+          </Alert>
+        )}
         <Typography variant="body2" color="text.secondary">
-          {t("neon.vercel")}{" "}
+          {t("vercel.notInApi")} {t("neon.vercel")}{" "}
           <MuiLink href="https://vercel.com/dashboard/usage" target="_blank" rel="noopener noreferrer">
             {t("vercel.usageLink")}
           </MuiLink>

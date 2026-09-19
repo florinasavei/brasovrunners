@@ -5040,3 +5040,36 @@ the guide; `tests/unit/notifications/email-plan.test.ts`,
 `tests/integration/notifications/email-plan.test.ts`. BR-REQ-080-02 criterion 7.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 101. Decided — Vercel's month on `/devs`, as far as Vercel's API allows (2026-09-19)
+
+**Context.** §88 put the database's month on `/devs` from Neon's API. The owner asked for
+Vercel's figures beside it ("as a dev I should also see the DB usage and Vercel usage, if
+possible"), and the row on `/admin/tasks` promised "a call to the usage API, with the same
+thresholds as Neon's". There is no such API: Vercel's public REST endpoint index (read
+2026-09-19) has deployments, projects, domains, billing charges for paid teams — and nothing
+that returns bandwidth, invocations or CPU for an account. Those exist on the dashboard's
+Usage page and nowhere a token can reach.
+
+**Decision.** Read what a token can read — the deployments list, `GET /v6/deployments` for the
+project since the first of the month, paged by `until` — and derive the two Hobby ceilings a
+club can actually meet: deployments a day (100) and build minutes a month (6,000, summed from
+each deployment's `buildingAt` → `ready`), plus how many builds failed and when the last one
+finished. Warning at eighty percent of either, as the Neon card does. The card says in plain
+words that bandwidth and invocations are not in the API and links to the dashboard for them,
+because a figure a page cannot show should be named as missing rather than left out. Three
+optional variables: `VERCEL_API_TOKEN` (an account token, read-only in effect since nothing
+here writes), `VERCEL_PROJECT_ID`, `VERCEL_TEAM_ID` for a team account. The row on
+`/admin/tasks` is the club's switch, done when the first two exist; `secrets:check` refuses a
+token with a value in a tracked file.
+
+*Rejected:* scraping the dashboard (a session cookie in the environment, and a page that
+changes), the observability endpoints (Pro), and dropping the row as impossible — the two
+ceilings above are the ones an evening of pushes spends, and a vibecoder deploying forty
+times is exactly who reads this page.
+
+**Consequences.** `diagnostics/vercel.ts`; the three variables in `env.ts` and
+`.env.example`; the card on `/devs`; the row and its steps; `SETUP.md` §33;
+`tests/unit/diagnostics/vercel.test.ts`. BR-REQ-090-07 criterion 4.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -1714,6 +1714,15 @@ it: CU-hours used against 100, hours awake against hours elapsed, and when the p
    with the production project's values; the same for QA with QA's project id. Redeploy.
 4. `/devs` → "Database (Neon)" shows the figures; red past 80%. Nothing else reads the key.
 
+**The same for Vercel, as far as Vercel allows (`DECISIONS.md` §101).** Vercel's public API
+has no usage endpoint — bandwidth and invocations are on the dashboard's Usage page only — but
+it lists deployments, and from those `/devs` shows the month's deployments, today's against
+Hobby's 100 a day and the build minutes against Hobby's 6,000 a month. Vercel → avatar →
+**Account Settings** → **Tokens** → Create (`brasovrunners-devs`, scope the account, one year);
+the project id from the project's **Settings → General → Project ID** (`prj_…`); then
+`VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID` on each project (QA with its own id;
+`VERCEL_TEAM_ID` only on a team account). Redeploy. `/admin/tasks` carries the same steps.
+
 ## 34. Volunteer accounts for race day
 
 Every desk verb (BR-REQ-037-08) is open to the lowest role, so a volunteer is a **Contributor**.

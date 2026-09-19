@@ -283,6 +283,8 @@ const PROVIDER_HOSTS = [
   "wa.me",
   // The hosting dashboard's usage page, linked from /devs (§95): the one place the figure lives.
   "vercel.com",
+  // The API that lists deployments for the same page (§101).
+  "api.vercel.com",
   // Cloudflare Turnstile's widget and its verification endpoint (§97): fixed, Cloudflare's own.
   "challenges.cloudflare.com",
 ];

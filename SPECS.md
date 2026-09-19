@@ -1524,7 +1524,9 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 2. Given eighty percent of the allowance used, when the figure renders, then it is shown as a warning.
 3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence in production is fifteen minutes by day and hourly by night (23:00–07:00 `Europe/Bucharest`, `jobs/quiet-hours.ts`), the health threshold is twice the cadence in force plus five minutes, and the compute sleeps between runs.
 
-**Verification:** unit `diagnostics/neon.test.ts`; integration `jobs/health.test.ts`
+4. Given `VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID`, when `/devs` renders, then it shows this month's deployments, today's against Hobby's 100 a day, and the build minutes against Hobby's 6,000 a month, warning at eighty percent of either, summed from Vercel's deployments list across its pages; without them it says how to set them; and it says that bandwidth and invocations are not in Vercel's API and links to the dashboard's Usage page (`DECISIONS.md` §101).
+
+**Verification:** unit `diagnostics/neon.test.ts`; unit `diagnostics/vercel.test.ts` (4); integration `jobs/health.test.ts`
 
 **Verification:** unit `diagnostics/platform-plans.test.ts`; unit `diagnostics/owner-tasks.test.ts`
 

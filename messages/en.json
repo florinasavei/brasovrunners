@@ -750,11 +750,12 @@
         },
         "vercelUsage": {
           "title": "Vercel usage in figures, on /devs",
-          "todo": "/devs shows the current deployment and links to the Vercel dashboard → Usage; the figure cannot be read by the application on the Hobby plan without an account token. When worth it: a read-only Vercel token in the variables and a call to the usage API, with the same thresholds as Neon's.",
-          "done": "/devs shows the month's Vercel usage, with a warning threshold.",
+          "todo": "Built, as far as Vercel allows: their public API does not expose bandwidth or invocations (those live only in the dashboard → Usage), but it does expose the list of deployments — from which /devs shows the month's deployments, today's out of 100 a day, and the build minutes out of the Hobby plan's 6,000 a month. On when a read token and the project id exist.",
+          "done": "/devs shows the month's deployments and build minutes, with a warning threshold.",
           "how": [
-            "Vercel → Account → Tokens → a read-only token; VERCEL_API_TOKEN + VERCEL_TEAM_ID in the variables.",
-            "diagnostics/vercel.ts after the pattern of neon.ts; a row on /devs and on /admin/tasks (§ platform-plans)."
+            "Vercel → avatar → Account Settings → Tokens → Create: name “brasovrunners-devs”, scope your account, expiry 1 year. Copy the token (shown once).",
+            "The project id: Vercel → the production project → Settings → General → Project ID (starts with prj_).",
+            "In Vercel → the production project → Settings → Environment Variables: VERCEL_API_TOKEN and VERCEL_PROJECT_ID (QA the same, with the QA project id). Redeploy. The row turns green; /devs shows the figures. Bandwidth stays in the dashboard → Usage — the link is on /devs too."
           ]
         },
         "docsSimplify": {
@@ -1677,7 +1678,11 @@
       "deployment": "Current deployment: {env} · region {region} · commit {commit} on {branch}.",
       "id": "Deployment id: {id}",
       "notOnVercel": "Not running on Vercel (local or test).",
-      "usageLink": "Open Vercel → Usage."
+      "usageLink": "Open Vercel → Usage.",
+      "month": "This month: {deployments} deployments ({today} today, of {perDay} a day), {minutes} build minutes of {of} ({percent}%), {errored} failed.",
+      "unavailable": "Not configured. Two minutes: Vercel → Account Settings → Tokens → Create (scope: the account, 1 year); the Project ID from the project → Settings → General; then VERCEL_API_TOKEN and VERCEL_PROJECT_ID in the project's variables. The steps are on /admin/tasks too.",
+      "failed": "Vercel did not answer: {reason}.",
+      "notInApi": "Bandwidth and invocations are not exposed by Vercel's API; they are only on the dashboard."
     },
     "neon": {
       "title": "Database (Neon)",

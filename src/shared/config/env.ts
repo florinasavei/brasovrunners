@@ -73,6 +73,11 @@ export const envSchema = z
     // Read-only, for `/devs` to show the database's CU-hours against the plan (SETUP.md §33).
     NEON_API_KEY: z.string().min(1).optional(),
     NEON_PROJECT_ID: z.string().min(1).optional(),
+    // Read-only, for `/devs` to show this month's deployments and build minutes (§101). The
+    // project id is under the Vercel project's Settings → General; the team id only on a team.
+    VERCEL_API_TOKEN: z.string().min(1).optional(),
+    VERCEL_PROJECT_ID: z.string().min(1).optional(),
+    VERCEL_TEAM_ID: z.string().min(1).optional(),
 
     /**
      * The club's real site, for the "this is not the real site" banner to link to (§7.5).

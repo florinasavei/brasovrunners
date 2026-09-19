@@ -79,6 +79,8 @@ export type OwnerTaskInputs = {
   botCheckConfigured: boolean;
   /** Is `DECLARATIONS_ARCHIVE_TO` set (§99)? Off, the club downloads the bundle per event. */
   declarationArchiveConfigured: boolean;
+  /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
+  vercelUsageConfigured: boolean;
   /**
    * Does this deployment answer on a `.ro` hostname?
    *
@@ -175,6 +177,13 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.declarationArchiveConfigured ? "done" : "open",
   });
 
+  // Built (§101), as far as Vercel's API allows; open until the token exists, never blocking.
+  tasks.push({
+    id: "vercelUsage",
+    owner: "club",
+    state: input.vercelUsageConfigured ? "done" : "open",
+  });
+
   // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.
   tasks.push({
     id: "roDomain",
@@ -197,7 +206,6 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 export const BACKLOG = [
   "minorsOnline",
   "scheduleStructured",
-  "vercelUsage",
   "docsSimplify",
 ] as const;
 

@@ -25,6 +25,7 @@ const LAUNCHED: OwnerTaskInputs = {
   storageConfigured: true,
   botCheckConfigured: true,
   declarationArchiveConfigured: true,
+  vercelUsageConfigured: true,
 };
 
 const stateOf = (input: OwnerTaskInputs, id: string) =>
@@ -96,7 +97,10 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "mediaStorage")).toBe("done");
     // The queued work: developer-owned, always open, after the club's rows.
     const developer = ownerTasks(LAUNCHED).filter((task) => task.owner === "developer").map((task) => task.id);
-    expect(developer).toEqual(["scheduler", "minorsOnline", "scheduleStructured", "vercelUsage", "docsSimplify"]);
+    expect(developer).toEqual(["scheduler", "minorsOnline", "scheduleStructured", "docsSimplify"]);
+    // Vercel's figures (§101): the row is the club's switch — a token and a project id.
+    expect(stateOf({ ...LAUNCHED, vercelUsageConfigured: false }, "vercelUsage")).toBe("open");
+    expect(stateOf(LAUNCHED, "vercelUsage")).toBe("done");
     // The archive copy is built (§99); the row is the club's switch, open until the mailbox is named.
     expect(stateOf({ ...LAUNCHED, declarationArchiveConfigured: false }, "declarationArchiveMail")).toBe("open");
     expect(stateOf(LAUNCHED, "declarationArchiveMail")).toBe("done");
@@ -115,6 +119,7 @@ describe("owner tasks", () => {
       "mediaStorage",
       "botCheck",
       "declarationArchiveMail",
+      "vercelUsage",
       "roDomain",
     ]);
   });

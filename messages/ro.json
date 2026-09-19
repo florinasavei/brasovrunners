@@ -750,11 +750,12 @@
         },
         "vercelUsage": {
           "title": "Consumul Vercel în cifre, pe /devs",
-          "todo": "/devs arată deploy-ul curent și trimite la panoul Vercel → Usage; cifra nu poate fi citită de aplicație pe planul Hobby fără un token al contului. De făcut când merită: un token Vercel (read-only) în variabile și un apel la API-ul de usage, cu aceleași praguri ca la Neon.",
-          "done": "/devs arată consumul Vercel al lunii, cu prag de avertizare.",
+          "todo": "Construit, atât cât permite Vercel: API-ul lor public nu expune traficul și invocările (acelea sunt doar în dashboard → Usage), dar expune lista de deploy-uri — de unde /devs arată deploy-urile lunii, cele de azi din 100 pe zi și minutele de build din cele 6.000 pe lună ale planului Hobby. Pornit când există un token de citire și id-ul proiectului.",
+          "done": "/devs arată deploy-urile și minutele de build ale lunii, cu prag de avertizare.",
           "how": [
-            "Vercel → Account → Tokens → token read-only; VERCEL_API_TOKEN + VERCEL_TEAM_ID în variabile.",
-            "diagnostics/vercel.ts după modelul neon.ts; rând pe /devs și pe /admin/tasks (§ platform-plans)."
+            "Vercel → avatar → Account Settings → Tokens → Create: nume „brasovrunners-devs”, scope contul tău, expirare 1 an. Copiază tokenul (se arată o singură dată).",
+            "Id-ul proiectului: Vercel → proiectul de producție → Settings → General → Project ID (începe cu prj_).",
+            "În Vercel → proiectul de producție → Settings → Environment Variables: VERCEL_API_TOKEN și VERCEL_PROJECT_ID (pe QA la fel, cu id-ul proiectului QA). Redeploy. Rândul devine verde; /devs arată cifrele. Traficul rămâne în dashboard → Usage — linkul e tot pe /devs."
           ]
         },
         "docsSimplify": {
@@ -1677,7 +1678,11 @@
       "deployment": "Deploy-ul curent: {env} · regiunea {region} · commit {commit} pe {branch}.",
       "id": "Id deploy: {id}",
       "notOnVercel": "Nu rulează pe Vercel (local sau test).",
-      "usageLink": "Deschide Vercel → Usage."
+      "usageLink": "Deschide Vercel → Usage.",
+      "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build din {of} ({percent}%), {errored} eșuate.",
+      "unavailable": "Nu este configurat. Două minute: Vercel → Account Settings → Tokens → Create (scope: contul, 1 an); Project ID din proiect → Settings → General; apoi VERCEL_API_TOKEN și VERCEL_PROJECT_ID în variabilele proiectului. Pașii sunt și pe /admin/tasks.",
+      "failed": "Vercel nu a răspuns: {reason}.",
+      "notInApi": "Traficul și invocările nu sunt expuse de API-ul Vercel; se văd doar în dashboard."
     },
     "neon": {
       "title": "Baza de date (Neon)",
