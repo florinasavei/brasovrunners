@@ -137,6 +137,8 @@ function eventFieldsFrom(form: FormData) {
     featured: form.get("event.featured") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
+    confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
+    confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),
     registrationClosesAtWallTime: wallTime("registrationClosesAt"),
     declarationDocumentId: value("declarationDocumentId"),

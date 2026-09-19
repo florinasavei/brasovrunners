@@ -28,13 +28,26 @@ const STEPS = [
  * allocator does not keep. Each step has a glyph, because the same five appear in the emails
  * and at the desk and a reader should recognise where they are.
  */
-export default async function RegistrationSteps({ folded = false }: { folded?: boolean }) {
+type Props = {
+  folded?: boolean;
+  /**
+   * The event's participation window (§104), when it has one that is still ahead: the third
+   * step then says "confirm a week before" rather than "sign within thirty minutes".
+   */
+  window?: { opensDays: number; deadlineDays: number } | null;
+};
+
+export default async function RegistrationSteps({ folded = false, window = null }: Props) {
   const t = await getTranslations("Registration");
   const values = {
     hours: EMAIL_CONFIRMATION_HOLD_HOURS,
     minutes: DECLARATION_HOLD_MINUTES,
     offerHours: WAITLIST_OFFER_HOLD_HOURS,
+    opensDays: window?.opensDays ?? 0,
+    deadlineDays: window?.deadlineDays ?? 0,
   };
+  const stepBody = (key: string) =>
+    key === "declaration" && window ? t("steps.declaration.bodyLater", values) : t(`steps.${key}.body`, values);
 
   const list = (
     <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
@@ -60,7 +73,7 @@ export default async function RegistrationSteps({ folded = false }: { folded?: b
               {index + 1}. {t(`steps.${key}.title`)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {t(`steps.${key}.body`, values)}
+              {stepBody(key)}
             </Typography>
           </Box>
         </Box>

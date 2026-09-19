@@ -191,6 +191,10 @@ export type TemplateData = {
   eventRulesUrl?: string;
   /** The programme on that page, when there is one (§96). */
   eventScheduleUrl?: string;
+  /** When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`. */
+  holdExpiresAtFormatted?: string;
+  /** True when the hold is the participation window's (§104), not the thirty minutes. */
+  confirmLater?: boolean;
   manageUrl?: string;
 };
 
@@ -217,10 +221,19 @@ const T = {
       action: "Confirmă adresa de email",
     },
     completeDeclaration: {
-      subject: "Un loc te așteaptă — semnează declarația",
-      body: (d: TemplateData) => [
-        `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Pentru a finaliza înscrierea, citește și semnează declarația pe proprie răspundere.`,
-      ],
+      subject: (d: TemplateData) =>
+        d.confirmLater
+          ? `Ești înscris — confirmă participarea până la ${d.holdExpiresAtFormatted ?? "termen"}`
+          : "Un loc te așteaptă — semnează declarația",
+      body: (d: TemplateData) =>
+        d.confirmLater
+          ? [
+              `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația pe proprie răspundere până la ${d.holdExpiresAtFormatted ?? "termenul din pagina înscrierii"}. Poți acum, din linkul de mai jos, sau când îți reamintim cu o săptămână înainte de start.`,
+              "Fără semnătură până la termen, locul se eliberează pentru cei de pe lista de așteptare — nu-l pierzi din alt motiv.",
+            ]
+          : [
+              `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine${d.holdExpiresAtFormatted ? ` până la ${d.holdExpiresAtFormatted}` : ""}. Pentru a finaliza înscrierea, citește și semnează declarația pe proprie răspundere.`,
+            ],
       action: "Semnează declarația",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
     },
@@ -350,10 +363,19 @@ const T = {
       action: "Confirm your email",
     },
     completeDeclaration: {
-      subject: "A place is waiting — sign the declaration",
-      body: (d: TemplateData) => [
-        `A place at ${d.eventTitle ?? "the event"} is held for you. To finish registering, read and sign the event declaration.`,
-      ],
+      subject: (d: TemplateData) =>
+        d.confirmLater
+          ? `You are registered — confirm your participation by ${d.holdExpiresAtFormatted ?? "the deadline"}`
+          : "A place is waiting — sign the declaration",
+      body: (d: TemplateData) =>
+        d.confirmLater
+          ? [
+              `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: sign the declaration of own responsibility by ${d.holdExpiresAtFormatted ?? "the deadline on your registration page"}. You can now, from the link below, or when we remind you a week before the start.`,
+              "Without a signature by the deadline, the place is released to the waiting list — you lose it for no other reason.",
+            ]
+          : [
+              `A place at ${d.eventTitle ?? "the event"} is held for you${d.holdExpiresAtFormatted ? ` until ${d.holdExpiresAtFormatted}` : ""}. To finish registering, read and sign the event declaration.`,
+            ],
       action: "Sign the declaration",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
     },

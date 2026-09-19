@@ -24,7 +24,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
-import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry } from "./domain/hold-deadlines";
+import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
 import { deriveAllowedResendMessageType } from "./domain/resend";
 import { allowedFromStatuses, isActiveStatus } from "./domain/state-machine";
 import {
@@ -72,6 +72,9 @@ export type EventForRegistration = {
   capacity: number | null;
   raceId: string | null;
   publishedAt: Date | null;
+  /** The participation window (§104); absent on a partial row means the thirty-minute hold. */
+  confirmationOpensDaysBefore?: number | null;
+  confirmationDeadlineDaysBefore?: number | null;
 };
 
 function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDesk = false): void {
@@ -141,6 +144,8 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
             now,
             registrationClosesAt: event.registrationClosesAt,
             eventStartsAt: event.startsAt,
+            // A week-before confirmation for a race still far off (§104); thirty minutes otherwise.
+            window: confirmationWindow(event),
           }),
         },
         now,

@@ -635,7 +635,9 @@ registration — and it lists registrations and never changes an address.
 4. Given a hold that would extend past registration close or event start, when it is created, then it is capped at the earlier of the two.
 5. Given a registration that has not reached `CONFIRMED`, when the participant list is inspected, then that person is not counted as attending.
 
-**Verification:** integration `registrations/lifecycle.test.ts`; e2e `registration-happy-path.spec.ts`
+6. Given an event further away than its participation window (`confirmation_opens_days_before`, default 7; deadline `confirmation_deadline_days_before`, default 2 — both per event, zero switches the window off), when a registration clears email verification, then its hold lasts until the deadline rather than 30 minutes and is not capped by registration close; the declaration email says the deadline and that the signature is the confirmation of participation; when the window opens the maintenance job queues that email once more per waiting registration; a signature at any point confirms; an unsigned hold lapses at the deadline through criterion 3. Inside the window, and on an event without one, criterion 3's thirty minutes stand. The wizard's third step says which applies (`DECISIONS.md` §104).
+
+**Verification:** integration `registrations/lifecycle.test.ts`, `registrations/confirmation-window.test.ts` (6); unit `registrations/hold-deadlines.test.ts`; e2e `registration-happy-path.spec.ts`
 
 #### BR-REQ-033-02 — Declaration acceptance evidence
 

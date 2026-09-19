@@ -495,7 +495,10 @@
       "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
-      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă."
+      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă.",
+      "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
+      "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
+      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -546,7 +549,7 @@
       "holds": "Rezervate",
       "free": "Libere",
       "waiting": "În așteptare",
-      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
+      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
       "lineTitle": "Lista de așteptare ({count})",
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
       "test": "test",
@@ -1160,7 +1163,7 @@
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
-        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Locul e ținut 30 de minute.",
+        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut 30 de minute.",
         "WAITLIST_JOINED": "După confirmarea adresei, când nu mai sunt locuri.",
         "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. 24 de ore să semneze.",
         "REGISTRATION_CONFIRMED": "Imediat după semnarea declarației — sau la masă, pe hârtie.",
@@ -1438,7 +1441,8 @@
       },
       "declaration": {
         "title": "Semnezi declarația",
-        "body": "Din același email, citești declarația și îți scrii numele. Locul e ținut {minutes} de minute cât semnezi."
+        "body": "Din același email, citești declarația și îți scrii numele. Locul e ținut {minutes} de minute cât semnezi.",
+        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opensDays} zile înainte de start primești un email și semnezi declarația pe proprie răspundere, până cel târziu cu {deadlineDays} zile înainte. Poți semna și mai devreme, din emailul de înscriere. Fără semnătură până la termen, locul trece la lista de așteptare."
       },
       "confirmed": {
         "title": "Ești înscris",

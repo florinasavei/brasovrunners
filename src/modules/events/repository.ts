@@ -46,6 +46,8 @@ const PUBLIC_COLUMNS = {
   registrationMode: events.registrationMode,
   registrationOpensAt: events.registrationOpensAt,
   registrationClosesAt: events.registrationClosesAt,
+  confirmationOpensDaysBefore: events.confirmationOpensDaysBefore,
+  confirmationDeadlineDaysBefore: events.confirmationDeadlineDaysBefore,
   externalRegistrationUrl: events.externalRegistrationUrl,
   externalProvider: events.externalProvider,
   // Whether this event publishes a start list at all (BR-REQ-039-01). The names themselves are

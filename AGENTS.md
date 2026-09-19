@@ -871,6 +871,15 @@ WAITLIST_OFFER_TTL_HOURS = 24
 PARTICIPANT_ACTION_SESSION_MINUTES = 30
 ```
 
+The thirty-minute direct hold applies inside an event's **participation window** and on an
+event without one (`DECISIONS.md` §104). For an event further away than
+`events.confirmation_opens_days_before` (default 7), a registration that clears email
+verification keeps its place until `confirmation_deadline_days_before` the start (default 2):
+the declaration — the confirmation of participation — is asked at once and again when the
+window opens, and owed by the deadline, after which the ordinary hold expiry releases the
+place. `registrations/domain/hold-deadlines.ts#confirmationWindow` is the one place that says
+so; both numbers are the organizer's, per event, and zero switches the window off.
+
 All deadlines are capped by registration close and event start. Changing these defaults updates business/spec docs when behavior changes.
 
 ---

@@ -16,6 +16,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { registrationState } from "@/modules/events/domain/registration-window";
+import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
@@ -164,6 +165,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     timeZone: event.timezone,
   }).format(event.startsAt);
   const hasRules = !isRichTextEmpty(readRichText(event.rulesJson));
+  // The third step of the wizard (§104): "confirm a week before" only while that week is ahead.
+  const window = confirmationWindow(event);
+  const stepsWindow =
+    window && window.opensAt.getTime() > now.getTime()
+      ? { opensDays: event.confirmationOpensDaysBefore, deadlineDays: event.confirmationDeadlineDaysBefore }
+      : null;
   const factLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight, marginRight: 16 } as const;
 
   return (
@@ -203,7 +210,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           this says the whole of it (`DECISIONS.md` §91). */}
       {!submitted && (
         <Box sx={{ mb: 3 }}>
-          <RegistrationSteps folded />
+          <RegistrationSteps folded window={stepsWindow} />
         </Box>
       )}
 

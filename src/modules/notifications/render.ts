@@ -96,6 +96,16 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       : undefined,
   };
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
+  // The hold's deadline on the declaration email (§104), and whether it is the window's — a
+  // deadline more than a day away is the week-before confirmation, not the thirty minutes.
+  if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt) {
+    data.holdExpiresAtFormatted = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: eventDetails?.timezone ?? "Europe/Bucharest",
+    }).format(registration.holdExpiresAt);
+    data.confirmLater = registration.holdExpiresAt.getTime() - now.getTime() > 24 * 60 * 60_000;
+  }
   if (data.eventUrl && eventDetails?.hasSchedule) data.eventScheduleUrl = `${data.eventUrl}#schedule`;
   // The thank-you's optional link (§82) rides in the payload; it is the action, and not a token.
   let payloadActionUrl: string | undefined;

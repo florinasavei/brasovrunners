@@ -5143,3 +5143,51 @@ BR-REQ-050-03 criterion 9, BR-REQ-060-01 criterion 8; `tests/unit/staff/roles.te
 `tests/integration/cms/{workflow,one-save,pages}.test.ts`, `tests/e2e/cms-publish.spec.ts`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 104. Decided — a free race is confirmed a week before: the participation window (2026-09-19)
+
+**Context.** The owner, 2026-09-19: "Before the race people need to confirm their
+participation (since it is free); this will be the same step as signing the declaration, one
+week before the race; this needs to be clear from the sign-up wizard." The pilot's rule
+(§10.5, BR-REQ-033-01): email verified → a place held thirty minutes → the declaration
+signed → confirmed. Right for a Wednesday run announced on Monday. Wrong for a race
+published in June: everyone who clicks in June is confirmed in June, and the club learns
+who is actually coming on the morning of the race.
+
+**Decision.** Two integers on the event, the organizer's: `confirmation_opens_days_before`
+(default 7) and `confirmation_deadline_days_before` (default 2); zero on the first switches
+the window off, and a deadline at or after the opening is no window. For an event further
+away than the opening, a registration that clears email verification enters
+`PENDING_DECLARATION` with its hold at the **deadline** — not thirty minutes, and not capped
+by registration close, because closing entries ten days out while confirmations are owed two
+days out is exactly the shape a race wants. The declaration email goes at once, says the
+deadline and that the signature is the confirmation ("the race is free, so we ask for a
+confirmation"), and the maintenance job queues it again, once per registration, when the
+window opens (`queueParticipationConfirmations`, key `registration:<id>:confirm-participation`).
+A signature at any point confirms. An unsigned hold lapses at the deadline through the hold
+expiry that has always existed, and the place goes to the front of the waiting list with the
+ordinary twenty-four-hour offer. Inside the window, and on an event without one — every
+weekly run — the thirty minutes stand untouched: the person is present and the place is
+scarce now. The wizard's third step reads "confirm a week before" only while that week is
+still ahead; otherwise its old sentence.
+
+Nothing in the allocator changed but the number a hold is given. `kind` still appears in no
+condition; the capacity formula still counts unexpired holds; the desk still confirms on
+paper; a waiting-list offer is still a signature within a day. The two columns have defaults,
+so every existing event carries the window from the migration on.
+
+*Rejected:* a second "I am coming" click separate from the declaration (two confirmations
+for one fact, and the owner named them the same step); a declaration window on the waiting
+list's offers (an offered place is wanted now); reading the window from the club's calendar
+rather than the event (a race and a run differ, and the organizer knows which is which).
+
+**Consequences.** Migration `0039` (expand-only, defaults 7 and 2);
+`hold-deadlines.ts` (`confirmationWindow`, the `window` on `computeDeclarationHoldExpiry`);
+`EventForRegistration` and every full-row construction of it; the `COMPLETE_DECLARATION`
+template and `render.ts`; `queueParticipationConfirmations` on the maintenance job;
+`RegistrationSteps` with a `window`; the editor's two fields; the catalogue; `AGENTS.md`
+timing defaults, `BUSINESS.md`; BR-REQ-033-01 criterion 6;
+`tests/unit/registrations/hold-deadlines.test.ts`,
+`tests/integration/registrations/confirmation-window.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.

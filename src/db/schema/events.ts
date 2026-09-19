@@ -265,6 +265,16 @@ export const events = pgTable(
     featured: boolean("featured").notNull().default(false),
 
     capacity: integer("capacity"),
+    /**
+     * The participation window (`DECISIONS.md` §104): for an event further away than
+     * `confirmation_opens_days_before`, a registration that clears email verification keeps its
+     * place until `confirmation_deadline_days_before` the start, and the declaration — the
+     * confirmation — is signed inside that window rather than within thirty minutes. Zero
+     * "opens" switches the window off (sign at once, the pilot's rule); the deadline is days
+     * before the start. Defaults 7 and 2.
+     */
+    confirmationOpensDaysBefore: integer("confirmation_opens_days_before").notNull().default(7),
+    confirmationDeadlineDaysBefore: integer("confirmation_deadline_days_before").notNull().default(2),
 
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),

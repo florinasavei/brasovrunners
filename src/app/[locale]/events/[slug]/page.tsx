@@ -23,6 +23,7 @@ import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import ShareLinks from "@/modules/events/ui/ShareLinks";
 import StartList from "@/modules/events/ui/StartList";
 import { registrationState } from "@/modules/events/domain/registration-window";
+import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
@@ -129,7 +130,18 @@ export default async function EventDetailPage({ params }: Props) {
       {/* The whole journey in five steps, folded — for the person deciding whether to press (§91). */}
       {event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN" && (
         <Box sx={{ mt: 2 }}>
-          <RegistrationSteps folded />
+          <RegistrationSteps
+            folded
+            window={
+              (() => {
+                // "Confirm a week before" only while that week is ahead (§104).
+                const w = confirmationWindow(event);
+                return w && w.opensAt.getTime() > now.getTime()
+                  ? { opensDays: event.confirmationOpensDaysBefore, deadlineDays: event.confirmationDeadlineDaysBefore }
+                  : null;
+              })()
+            }
+          />
         </Box>
       )}
 

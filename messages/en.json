@@ -495,7 +495,10 @@
       "durationMinutesHelp": "How long it lasts, in minutes — 90, say. The end is worked out from it. Leave empty if none was announced.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
-      "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page under the short description."
+      "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page under the short description.",
+      "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
+      "confirmationDeadlineDaysBefore": "…and due how many days before",
+      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -546,7 +549,7 @@
       "holds": "Held",
       "free": "Free",
       "waiting": "Waiting",
-      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes) or answers a waiting-list offer (24 hours). Free = places − confirmed − held, exactly the formula the public sees.",
+      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). Free = places − confirmed − held, exactly the formula the public sees.",
       "lineTitle": "Waiting list ({count})",
       "lineEmpty": "Nobody is waiting. The list fills once the places are gone.",
       "test": "test",
@@ -1160,7 +1163,7 @@
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
-        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. The place is held 30 minutes.",
+        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. For an event further away than the confirmation window (7 days by default), the place is held until the deadline (2 days before by default) and the same email goes again when the window opens; otherwise the place is held 30 minutes.",
         "WAITLIST_JOINED": "After the address is confirmed, when the event is full.",
         "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. 24 hours to sign.",
         "REGISTRATION_CONFIRMED": "Right after the declaration is signed — or at the desk, on paper.",
@@ -1438,7 +1441,8 @@
       },
       "declaration": {
         "title": "Sign the declaration",
-        "body": "From that same email, read the declaration and type your name. Your place is held for {minutes} minutes while you sign."
+        "body": "From that same email, read the declaration and type your name. Your place is held for {minutes} minutes while you sign.",
+        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opensDays} days before the start you get an email and sign the declaration of own responsibility, at the latest {deadlineDays} days before. You can sign earlier, from the registration email. Without a signature by the deadline, the place goes to the waiting list."
       },
       "confirmed": {
         "title": "You are in",

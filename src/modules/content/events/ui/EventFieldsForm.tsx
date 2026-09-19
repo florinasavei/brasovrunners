@@ -330,6 +330,27 @@ export default async function EventFieldsForm({
         {t("editor.registrationWindowHelp")}
       </Typography>
 
+      {/* The participation window (§104): asked a week before, owed two days before. */}
+      <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+        <TextField
+          name="event.confirmationOpensDaysBefore"
+          label={t("editor.confirmationOpensDaysBefore")}
+          defaultValue={event?.confirmationOpensDaysBefore ?? 7}
+          inputMode="numeric"
+          fullWidth
+        />
+        <TextField
+          name="event.confirmationDeadlineDaysBefore"
+          label={t("editor.confirmationDeadlineDaysBefore")}
+          defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
+          inputMode="numeric"
+          fullWidth
+        />
+      </Stack>
+      <Typography variant="body2" color="text.secondary">
+        {t("editor.confirmationWindowHelp")}
+      </Typography>
+
       {/*
         A choice among approved versions, never an editor. AGENTS.md §11.1 keeps legal text out
         of the CMS entirely: this select can point an event at a version, and nothing anywhere

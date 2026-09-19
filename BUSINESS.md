@@ -318,7 +318,7 @@ For a capped event:
 - every capacity-changing action promotes eligible waiting participants before allocating a direct place to a later registrant;
 - concurrent actions must never exceed capacity or let a later registrant jump the queue.
 
-The initial direct declaration hold is 30 minutes. This is a configurable application setting and is always capped by registration closing and event start.
+The initial direct declaration hold is 30 minutes, capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104).
 
 For an event without a capacity limit, the page shows that registration is open without displaying a fabricated number of places.
 
