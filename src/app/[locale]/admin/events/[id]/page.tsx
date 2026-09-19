@@ -41,6 +41,7 @@ import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
+import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
@@ -61,7 +62,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -103,7 +104,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, created } = await searchParams;
+  const { error, saved, assigned, total, created, applied } = await searchParams;
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -167,6 +168,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const ruleWords = repeatRule ? await ruleSentence(repeatRule, event, event.timezone, locale) : null;
   const ruleEnded = repeatRule?.until ? new Date(`${repeatRule.until}T23:59:59`).getTime() < now.getTime() : false;
   const seriesTitle = event.repeatOf ? await findEventTitle(db, event.repeatOf, locale) : null;
+  const inSeries = event.repeatOf !== null || repeatRule !== null;
 
   return (
     <Stack spacing={4}>
@@ -190,7 +192,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
         )}
         {saved === "repeatStopped" && <Alert severity="success">{t("editor.repeatStopped")}</Alert>}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped"].includes(saved) && !(saved === "created" && created) && (
+        {saved === "eventSeries" && <Alert severity="success">{t("editor.savedSeries", { applied: applied ?? "0" })}</Alert>}
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries"].includes(saved) && !(saved === "created" && created) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -413,6 +416,25 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <CheckboxField name="acknowledgeLiveEdit" required>
                     {t("editor.acknowledgeLive")}
                   </CheckboxField>
+                </Box>
+              )}
+              {/* A date of a series (§130): as Google Calendar asks — this date, this and the
+                  following, or all. Only what changed travels; the service says how. */}
+              {inSeries && maySaveSettings && (
+                <Box sx={{ mb: 1.5 }}>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    {t("editor.scope.title")}
+                  </Typography>
+                  <Stack direction={{ xs: "column", sm: "row" }} sx={{ columnGap: 1 }}>
+                    <RadioField name="scope" value="this" defaultChecked>
+                      {t("editor.scope.this")}
+                    </RadioField>
+                    <RadioField name="scope" value="following">{t("editor.scope.following")}</RadioField>
+                    <RadioField name="scope" value="all">{t("editor.scope.all")}</RadioField>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    {t("editor.scope.help")}
+                  </Typography>
                 </Box>
               )}
               <SubmitButton

@@ -5977,3 +5977,46 @@ both `calendar.ics` routes, the events listing (`calendar.refreshNote`), the cat
 BR-REQ-020-01 criterion 7.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 130. Decided — a save on one date of a series reaches the following dates or all of them, and only what changed travels (2026-09-19)
+
+**Context.** The owner, on a series of Wednesdays: "how do I edit just one occurrence instead
+of all? This needs to be more like Google Calendar edits." §122 made every date its own row so
+one could be cancelled or moved on its own, and that half was there: open the date, edit it,
+save. The other half was not — the run moved to 18:50 had to be moved on eight Wednesdays,
+one page each, and the source's new description reached only dates not yet made.
+
+**Decision.** The editor of any event in a series — a date, or the source with the rule —
+carries three radios above Save, Google Calendar's question in its words: this date only
+(the default), this and the following dates, all dates of the series. The save writes the one
+event as before, and then, in the same transaction, applies to the chosen dates *the
+difference* this save made: every row column an organizer sets and every word of every
+language posted, compared before and after, and only the columns that changed are written to
+the others. So a date moved to another place on its own keeps that place unless the place is
+what was edited, and a cancelled date stays cancelled unless the status is. An instant that
+changed lands at the same wall-clock time on each date's own day — the day offset each date
+had from this one — so 18:50 is 18:50 on every Wednesday across the clock change; the
+programme's rows are shifted by the same days, as when the date was made. What never travels:
+the featured flag (one event is featured), the rule and `repeat_of` (the series' own
+bookkeeping), the publication state and date (publishing is a transition, per event), a film
+and a Strava event (one edition's), and a slug (a public address carrying its own date). A
+capacity that travels is checked against each date's own places taken, and one date too full
+refuses the whole save naming its day — nothing is written, not even this date. "Following" is
+by the day this date had before the save, so moving a date does not change which dates follow.
+Every touched row takes a new version; the acknowledgement of a live edit given for this
+date covers the others. Only a role that edits event settings may reach the series. The banner
+says how many other dates were written. Dates the job has not yet made still start from the
+source, which is what "all" and "following" from the source update.
+
+*Rejected:* one row with exceptions (§122's reasons stand: capacity, holds and a runner's
+registration are per date); copying every field to the other dates (a save of the title would
+have un-cancelled a cancelled date and moved a moved one back); a dialog after Save as Google
+has (a radio needs no script and is read before pressing, not after); "following" by the new
+date (a date pulled a week earlier would have dragged its old neighbour along).
+
+**Consequences.** `content/events/service.ts` (`applyToSeries`, `SERIES_EDIT_SCOPES`,
+`saveEventAndTranslations` returns how many), `admin/actions.ts` (`scope`), the event
+editor (the radios, the banner), `shared/ui/RadioField`, the catalogues;
+`tests/integration/cms/series-edit.test.ts`. BR-REQ-050-02 criterion 15.
+
+Baseline `BR-V1.38-2026-09-18`.

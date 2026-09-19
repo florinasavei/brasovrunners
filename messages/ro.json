@@ -529,6 +529,14 @@
       "repeatStop": "Oprește seria",
       "repeatStopHelp": "Nu se mai creează date noi; cele existente rămân (bifează-le în listă ca să le ștergi).",
       "repeatStopped": "Seria e oprită: nu se mai creează date noi.",
+      "savedSeries": "Salvat — și pe încă {applied} date ale seriei.",
+      "scope": {
+        "title": "Salvează pentru:",
+        "this": "Doar această dată",
+        "following": "Această dată și următoarele",
+        "all": "Toate datele seriei",
+        "help": "Ca în Google Calendar: doar ce ai schimbat aici ajunge și pe celelalte date — o oră nouă, la aceeași oră în ziua fiecăreia; o dată mutată sau anulată separat rămâne așa dacă nu schimbi chiar locul sau starea. Adresa paginii fiecărei date nu se schimbă."
+      },
       "repeatOfNote": "Aceasta e o dată din seria „{title}”. Ce schimbi aici — o anulare, alt loc, altă oră — privește doar această dată; seria se repetă de la primul ei eveniment.",
       "repeatOfLink": "Deschide seria",
       "repeatCadence": "Interval",

@@ -12,6 +12,8 @@ import {
   duplicateEvent,
   repeatEvent,
   saveEventAndTranslations,
+  SERIES_EDIT_SCOPES,
+  type SeriesEditScope,
   stopRepeat,
   transitionEvent,
 } from "@/modules/content/events/service";
@@ -384,12 +386,14 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string };
+  let outcome: { error?: string; saved?: string; applied?: string };
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
+    // Which dates of the series (§130): the radio on a date of a series; absent elsewhere.
+    const scope = text(form, "scope");
 
-    await saveEventAndTranslations(getDb(), {
+    const { appliedTo } = await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
       fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -398,8 +402,9 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
         .map((contentLocale) => translationFieldsFrom(form, contentLocale))
         .filter((entry) => entry !== undefined),
       acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
+      scope: SERIES_EDIT_SCOPES.includes(scope as SeriesEditScope) ? (scope as SeriesEditScope) : "this",
     });
-    outcome = { saved: "event" };
+    outcome = appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" };
   } catch (error) {
     outcome = outcomeOf(error);
   }

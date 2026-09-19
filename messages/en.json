@@ -529,6 +529,14 @@
       "repeatStop": "Stop the series",
       "repeatStopHelp": "No further dates are made; the ones that exist stay (tick them in the list to delete them).",
       "repeatStopped": "The series is stopped: no further dates will be made.",
+      "savedSeries": "Saved — and on {applied} more dates of the series.",
+      "scope": {
+        "title": "Save for:",
+        "this": "This date only",
+        "following": "This and the following dates",
+        "all": "All dates of the series",
+        "help": "As in Google Calendar: only what you changed here reaches the other dates — a new time lands at that time on each date's own day; a date moved or cancelled on its own stays so unless the place or the status is what you changed. Each date's page address stays."
+      },
       "repeatOfNote": "This is one date of the series “{title}”. Changes here — a cancellation, another place, another time — are this date's alone; the series repeats from its first event.",
       "repeatOfLink": "Open the series",
       "repeatCadence": "Interval",

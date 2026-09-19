@@ -1,4 +1,4 @@
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, gt, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -18,7 +18,7 @@ import {
   type Weekday,
 } from "@/modules/events/domain/repeat";
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
-import { addWallClockInterval, fromWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
@@ -694,8 +694,177 @@ export type SaveEventAndTranslationsInput = {
   /** One entry per language the actor may edit; a read-only language posts nothing. */
   translations: ReadonlyArray<{ translationId: string; expectedVersion: number; fields: unknown }>;
   acknowledgeLiveEdit?: boolean;
+  /** Which dates of the series this save reaches (§130); "this" — the default — is the one event. */
+  scope?: SeriesEditScope;
   now?: Date;
 };
+
+/** As Google Calendar asks: this date, this and the following ones, or every date of the series. */
+export const SERIES_EDIT_SCOPES = ["this", "following", "all"] as const;
+export type SeriesEditScope = (typeof SERIES_EDIT_SCOPES)[number];
+
+/** The row's columns a series edit carries to its other dates — every one an organizer sets, minus the ones below. */
+const SERIES_COLUMNS = [
+  "type",
+  "surface",
+  "eventStatus",
+  "timezone",
+  "mapUrl",
+  "routeUrl",
+  "coHostName",
+  "coHostUrl",
+  "locationName",
+  "locationAddress",
+  "difficulty",
+  "costType",
+  "distanceMeters",
+  "elevationGainMeters",
+  "registrationMode",
+  "capacity",
+  "confirmationOpensDaysBefore",
+  "confirmationDeadlineDaysBefore",
+  "declarationDocumentId",
+  "participantListVisibility",
+  "externalProvider",
+  "externalRegistrationUrl",
+] as const;
+/** The instants: carried at the same wall-clock time on each date's own day. */
+const SERIES_TIME_COLUMNS = ["startsAt", "endsAt", "raceStartsAt", "registrationOpensAt", "registrationClosesAt"] as const;
+/** A translation's words; never the slug, which is a public address carrying its own date. */
+const SERIES_TRANSLATION_COLUMNS = [
+  "title",
+  "excerpt",
+  "excerptJson",
+  "bodyJson",
+  "rulesJson",
+  "scheduleJson",
+  "checklist",
+  "coverAltText",
+  "seoTitle",
+  "seoDescription",
+] as const;
+
+/** Equal as stored: dates by their instant, JSON by its text, null by null. */
+const sameValue = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+/** The calendar day of an instant on the wall clock of `zone`, as a UTC midnight, for counting days between two. */
+function wallDay(date: Date, zone: string): number {
+  const wall = toWallTimeInput(date, zone);
+  return Date.UTC(Number(wall.slice(0, 4)), Number(wall.slice(5, 7)) - 1, Number(wall.slice(8, 10)));
+}
+
+/**
+ * The series edit (`DECISIONS.md` §130): what this save *changed* on one date, applied to the
+ * other dates of its series — the following ones or all of them — the way Google Calendar's
+ * "this and following events" does. Only the difference travels: a date moved to another place
+ * on its own keeps that place unless the place is what was edited; a cancelled date stays
+ * cancelled unless the status is what was edited. An instant lands at the same wall-clock time
+ * on each date's own day (the run moved to 18:50 is at 18:50 every Wednesday), the programme's
+ * rows shifted by the same days as when the date was made; the featured flag, the rule, the
+ * publication state, a film and a Strava event are one date's own and never travel; a slug is
+ * a public address and never changes. Capacity is checked against each date's own places
+ * taken, and one date too full refuses the whole save, naming its day. Every touched row takes
+ * a new version, in the caller's transaction.
+ */
+async function applyToSeries<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  input: {
+    actor: Actor;
+    scope: SeriesEditScope;
+    before: EditableEvent;
+    after: EditableEvent;
+    translationsBefore: readonly EditableTranslation[];
+    translationsAfter: readonly EditableTranslation[];
+    now: Date;
+  },
+): Promise<number> {
+  const { before, after, now } = input;
+  const sourceId = before.repeatOf ?? (before.repeatRule ? before.id : null);
+  if (!sourceId) return 0;
+  if (!canEditEventFields(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit a series`);
+  }
+
+  const rowChanges: Partial<Record<(typeof SERIES_COLUMNS)[number], unknown>> = {};
+  for (const column of SERIES_COLUMNS) {
+    if (!sameValue(before[column], after[column])) rowChanges[column] = after[column];
+  }
+  const timeChanges = SERIES_TIME_COLUMNS.filter((column) => !sameValue(before[column], after[column]));
+  const scheduleChanged = !sameValue(before.scheduleItems, after.scheduleItems);
+  const translationChanges = input.translationsAfter.flatMap((saved) => {
+    const was = input.translationsBefore.find((row) => row.id === saved.id);
+    if (!was) return [];
+    const changes: Partial<Record<(typeof SERIES_TRANSLATION_COLUMNS)[number], unknown>> = {};
+    for (const column of SERIES_TRANSLATION_COLUMNS) {
+      if (!sameValue(was[column], saved[column])) changes[column] = saved[column];
+    }
+    return Object.keys(changes).length > 0 ? [{ locale: saved.locale, changes }] : [];
+  });
+  if (Object.keys(rowChanges).length === 0 && timeChanges.length === 0 && !scheduleChanged && translationChanges.length === 0) {
+    return 0;
+  }
+
+  // The series is the source and every date made from it; "following" is by the day this
+  // date had before the save, so moving it does not change which dates follow.
+  const members = await tx
+    .select()
+    .from(events)
+    .where(
+      and(
+        or(eq(events.id, sourceId), eq(events.repeatOf, sourceId)),
+        ne(events.id, before.id),
+        input.scope === "following" ? gt(events.startsAt, before.startsAt) : undefined,
+      ),
+    );
+
+  const zone = after.timezone;
+  let applied = 0;
+  for (const member of members) {
+    const days = Math.round((wallDay(member.startsAt, zone) - wallDay(before.startsAt, zone)) / 86_400_000);
+    const shift = (date: Date | null) => (date ? addWallClockInterval(date, zone, { days }) : null);
+    const changes: Partial<typeof events.$inferInsert> = { ...(rowChanges as Partial<typeof events.$inferInsert>) };
+    for (const column of timeChanges) {
+      if (column === "startsAt") changes.startsAt = addWallClockInterval(after.startsAt, zone, { days });
+      else changes[column] = shift(after[column]);
+    }
+    if (scheduleChanged) {
+      changes.scheduleItems = after.scheduleItems ? shiftScheduleItems(readScheduleItems(after.scheduleItems), zone, { days }) : null;
+    }
+
+    if (typeof changes.capacity === "number") {
+      const occupied = computeOccupied(await countOccupied(tx, member.id, now));
+      if (changes.capacity < occupied) {
+        throw new DomainError(
+          "VALIDATION_ERROR",
+          `capacity: ${occupied} places are already taken on ${toWallTimeInput(member.startsAt, zone).slice(0, 10)}; capacity cannot be lowered below that`,
+        );
+      }
+    }
+
+    let touched = false;
+    if (Object.keys(changes).length > 0) {
+      await tx
+        .update(events)
+        .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
+        .where(eq(events.id, member.id));
+      touched = true;
+    }
+    if (translationChanges.length > 0) {
+      const memberTranslations = await listTranslationsForEvent(tx, member.id);
+      for (const { locale, changes: words } of translationChanges) {
+        const target = memberTranslations.find((row) => row.locale === locale);
+        if (!target) continue;
+        await tx
+          .update(eventTranslations)
+          .set({ ...(words as Partial<typeof eventTranslations.$inferInsert>), version: sql`${eventTranslations.version} + 1`, updatedAt: now })
+          .where(eq(eventTranslations.id, target.id));
+        touched = true;
+      }
+    }
+    if (touched) applied += 1;
+  }
+  return applied;
+}
 
 /**
  * The editor's single save: the event row and every language, in one transaction
@@ -716,7 +885,7 @@ export type SaveEventAndTranslationsInput = {
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: SaveEventAndTranslationsInput,
-): Promise<void> {
+): Promise<{ appliedTo: number }> {
   const now = input.now ?? new Date();
 
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
@@ -736,7 +905,9 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
   }
   const times = parsedEventFields ? resolveTimes(parsedEventFields) : undefined;
 
-  await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
+    let savedEvent: EditableEvent = current;
+    const savedTranslations: EditableTranslation[] = [];
     if (parsedEventFields && times) {
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
@@ -755,7 +926,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
 
       if (parsedEventFields.featured) await clearFeaturedExcept(tx, input.eventId, now);
 
-      await updateEventWithVersionGuard(
+      savedEvent = await updateEventWithVersionGuard(
         tx,
         input.eventId,
         input.expectedVersion as number,
@@ -768,17 +939,36 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       const existing = existingTranslations.find((row) => row.id === submitted.translationId);
       if (!existing) throw new DomainError("NOT_FOUND", "no such event translation");
 
-      await applyTranslationSave(tx, {
-        actor: input.actor,
-        event: current,
-        current: existing,
-        expectedVersion: submitted.expectedVersion,
-        fields: submitted.fields,
-        acknowledgeLiveEdit: input.acknowledgeLiveEdit,
-        eventType: parsedEventFields?.type ?? current.type,
-        now,
-      });
+      savedTranslations.push(
+        await applyTranslationSave(tx, {
+          actor: input.actor,
+          event: current,
+          current: existing,
+          expectedVersion: submitted.expectedVersion,
+          fields: submitted.fields,
+          acknowledgeLiveEdit: input.acknowledgeLiveEdit,
+          eventType: parsedEventFields?.type ?? current.type,
+          now,
+        }),
+      );
     }
+
+    // The other dates of the series, when asked (§130) — after this one, so what travels is
+    // exactly what was written, and inside the transaction, so a refused date undoes it all.
+    const scope = input.scope ?? "this";
+    const appliedTo =
+      scope === "this"
+        ? 0
+        : await applyToSeries(tx, {
+            actor: input.actor,
+            scope,
+            before: current,
+            after: savedEvent,
+            translationsBefore: existingTranslations,
+            translationsAfter: savedTranslations,
+            now,
+          });
+    return { appliedTo };
   });
 }
 
