@@ -10,8 +10,9 @@ import { env } from "@/shared/config/env";
 /**
  * The club's calendar feed (`DECISIONS.md` §107): every published event from a month ago to
  * a year ahead, as one `.ics` that Google Calendar ("From URL"), Apple and Outlook subscribe
- * to and refresh on their own. Public. An hour of cache, because a subscriber's app asks at
- * most a few times a day and a run announced in the morning should be on phones by lunch.
+ * to and refresh on their own. Public. Never cached (§129): the CDN's hour of cache served a
+ * time the organizer had changed, and a subscriber's app asks a few times a day at most — one
+ * read per ask is nothing, a stale copy is a runner at the wrong hour.
  */
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `inline; filename="brasov-runners-${known}.ics"`,
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "no-cache",
     },
   });
 }

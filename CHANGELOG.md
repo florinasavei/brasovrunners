@@ -12,6 +12,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The evening's test on QA, and what it found.
 
+- **The calendar feed is live**: every read is the current data (the edge had kept a copy for an hour, which is why Google showed 19:00 after the change to 18:50); it is called "🏃 BVR"; the place is the map link, one tap to open, with the meeting point's name in the description; the listing says when each app re-reads it. §129.
 - **A series keeps its first event's day.** Ticking Wednesday on a Sunday run makes Sundays and Wednesdays, not a Sunday followed by Wednesdays; the editor shows the event's own day ticked and locked. §128.
 - **Links and pictures in legal texts**: `[the words](https://…)` and `![what it shows](https://…)` in a paragraph render on the page; the PDFs write the words and the address. §127.
 - **Fewer emails.** The signed declaration's PDF rides on the confirmation instead of a message of its own, and the 48-hour reminder skips anyone confirmed in the last day. Four messages on the common path, three on the eve. §126.

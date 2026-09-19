@@ -187,6 +187,11 @@ export default async function EventsPage({ params, searchParams }: Props) {
         </MuiLink>
         {" · "}
         <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
+        {/* The feed is fresh on every read (§129); when the phone shows a change is the app's
+            clock, and the owner asked why Google still showed the old hour. */}
+        <Box component="span" sx={{ display: "block", mt: 0.5 }}>
+          {t("calendar.refreshNote")}
+        </Box>
       </Typography>
       <EventCalendar view={view} events={inRange} now={now} query={query} />
       </Box>

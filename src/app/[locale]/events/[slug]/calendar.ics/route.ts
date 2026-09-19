@@ -31,7 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": `attachment; filename="${slug}.ics"`,
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "no-cache",
     },
   });
 }

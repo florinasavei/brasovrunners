@@ -64,7 +64,7 @@
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / telefon",
       "downloadLink": "descarcă .ics",
-      "subscribeLink": "Abonează-te"
+      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare."
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -183,7 +183,7 @@
     "stravaEvent": "Pe Strava",
     "openStravaEvent": "Evenimentul pe Strava",
     "calendar": {
-      "feedName": "Brașov Runners — evenimente"
+      "feedName": "🏃 BVR"
     }
   },
   "Admin": {

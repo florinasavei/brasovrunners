@@ -5941,3 +5941,39 @@ a better sentence (the sentence was right about the dates and the dates were wro
 `tests/integration/cms/repeat.test.ts`. BR-REQ-050-02 criterion 7.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 129. Decided — the calendar feed is fresh on every read, is called "🏃 BVR", and its place is the map link (2026-09-19)
+
+**Context.** The owner subscribed Google Calendar to the QA feed, moved a run from 19:00 to
+18:50, and Google kept 19:00 — even after removing the calendar and adding it back. The feed
+was not stale at Google: it was stale at our door. §107 gave the feed `Cache-Control:
+public, max-age=3600`, and Vercel's edge honours `max-age` — the copy Google fetched was
+the CDN's, made before the edit (`X-Vercel-Cache: HIT`, `Age: 413`). Three more asks from the
+same minute: the calendar should be called "BVR" with a runner emoji ("we love emojis"), the
+place should be the Google Maps location, and "is the iCal a live update?".
+
+**Decision.** Both `.ics` routes answer `Cache-Control: no-cache`: no copy at the edge, one
+database read per fetch — a subscriber's app asks a few times a day at most, and a stale hour
+is a runner at the wrong time. The feed's name is "🏃 BVR" in both languages, and its refresh
+hint is an hour (`REFRESH-INTERVAL`, `X-PUBLISHED-TTL`) — Outlook reads it; Google fetches
+on its own clock, about daily, and Apple as the subscriber set it, so the listing says so under
+the subscribe links ("a change shows on the next read"). `LOCATION` is the organizer's map
+link when the event has one (§61's `map_url`): one tap opens the map in every calendar,
+where a bare address is only a promise to geocode; the meeting point's name then opens the
+description as "📍 Aleea de sub Tâmpa". A programme row with its own place keeps the text;
+one without takes the event's link. Google's add-event link does the same. Folding now counts
+octets per code point — a four-octet emoji at the 70th character was cut in half by the old
+character slice.
+
+*Rejected:* purging the CDN on save (`revalidatePath` does not reach a route handler's
+`max-age` copy, and a purge that must be remembered at every write is a bug waiting);
+`s-maxage=60` (a minute is still a minute, and the read it saves costs nothing); both the
+name and the link in `LOCATION` (Google shows text with a link inside as text); a
+`X-APPLE-STRUCTURED-LOCATION` (needs coordinates, which §61 removed).
+
+**Consequences.** `events/ical.ts` (`calendarPlace`, `icalFold`, `mapUrl`, the hint),
+both `calendar.ics` routes, the events listing (`calendar.refreshNote`), the catalogues
+(`feedName`; the unused `subscribeLink` removed); `tests/unit/events/ical.test.ts`.
+BR-REQ-020-01 criterion 7.
+
+Baseline `BR-V1.38-2026-09-18`.

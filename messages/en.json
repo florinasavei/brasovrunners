@@ -64,7 +64,7 @@
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / phone",
       "downloadLink": "download the .ics",
-      "subscribeLink": "Subscribe"
+      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read."
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -183,7 +183,7 @@
     "stravaEvent": "On Strava",
     "openStravaEvent": "The event on Strava",
     "calendar": {
-      "feedName": "Brașov Runners — events"
+      "feedName": "🏃 BVR"
     }
   },
   "Admin": {
