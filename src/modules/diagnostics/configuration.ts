@@ -37,6 +37,9 @@ import type {
 /** Derived in `env.ts` like `STORAGE_MODE`; restated as a type here because it is not an enum anybody sets. */
 export type ContactFormMode = "smtp" | "capture" | "off";
 
+/** Which half of the resolution order answered for the recipients (§164, `contact/domain/recipients.ts`). */
+export type ContactRecipientsSource = "setting" | "environment" | "none";
+
 /** Every variable this report can speak about. Names only — never a value. */
 export type ConfigurableVariable =
   | "MAILGUN_API_KEY"
@@ -60,8 +63,13 @@ export type ConfigurationFacts = {
   appEnv: AppEnvironment;
   emailDeliveryMode: EmailDeliveryMode;
   staffAuthMode: StaffAuthMode | undefined;
-  /** The contact form's way out (`env.ts`, `CONTACT_FORM_MODE`; §149). */
+  /** The contact form's way out (`env.ts`, `CONTACT_FORM_MODE`; §149) — the transport alone. */
   contactFormMode: ContactFormMode;
+  /**
+   * And who it reaches (§164): the club's own list on `/admin/emails`, `CONTACT_FORM_TO`
+   * behind it, or nobody — which is as good as no transport, and says so on the page.
+   */
+  contactRecipientsSource: ContactRecipientsSource;
   /** How many addresses `EMAIL_ALLOWLIST` parsed to. The addresses themselves stay out. */
   allowlistCount: number;
   /** Whether each variable has a non-empty value. Never the value. */
@@ -187,21 +195,40 @@ function webhookCheck(facts: ConfigurationFacts): ConfigurationCheck {
 }
 
 /**
- * The contact form (§149): the one message that leaves by SMTP rather than the outbox.
+ * The contact form (§149, §164): the one message that leaves by SMTP rather than the outbox.
  *
- * `capture` is correct on a laptop and impossible on a deployment (`env.ts` derives it from
- * `APP_ENV`); `off` on a deployment is *limited* rather than blocked — the page shows the
- * club's address instead of the form — and the three variables it is waiting for are named.
+ * Two halves, and the page needs both. The *transport* is the environment's — `capture` is
+ * correct on a laptop and impossible on a deployment (`env.ts` derives it from `APP_ENV`),
+ * and `off` means the Gmail account or its app password is missing. The *recipients* are the
+ * club's, set on `/admin/emails`, with `CONTACT_FORM_TO` behind them; a deployment that can
+ * send but has nobody to send to is its own answer, because the fix is a screen and not a
+ * redeploy. Either gap is *limited* rather than blocked: the page shows the club's address.
  */
 function contactFormCheck(facts: ConfigurationFacts): ConfigurationCheck {
   if (facts.contactFormMode === "capture") {
     return { key: "contactFormCapture", status: "ok", state: "capture", requires: [] };
   }
-  const needed = requirements(facts, ["CONTACT_SMTP_USER", "CONTACT_SMTP_PASSWORD", "CONTACT_FORM_TO"]);
-  if (facts.contactFormMode === "smtp") {
-    return { key: "contactFormSmtp", status: "ok", state: "smtp", requires: needed };
+  // The transport's two, and only those: since §164 `CONTACT_FORM_TO` is a fallback and not a
+  // requirement, so a deployment whose club typed the addresses on `/admin/emails` must not be
+  // shown a red `✗ CONTACT_FORM_TO` under a green row that has just said the screen answered.
+  const transport = requirements(facts, ["CONTACT_SMTP_USER", "CONTACT_SMTP_PASSWORD"]);
+  if (facts.contactFormMode !== "smtp") {
+    return { key: "contactFormOff", status: "limited", state: "off", requires: transport };
   }
-  return { key: "contactFormOff", status: "limited", state: "off", requires: needed };
+  if (facts.contactRecipientsSource === "none") {
+    // Here it genuinely is one of the two ways out — the other is the screen, which has no
+    // variable to name — so the variable is listed on this branch alone.
+    return {
+      key: "contactFormNoRecipients",
+      status: "limited",
+      state: "smtp/nobody",
+      requires: requirements(facts, ["CONTACT_SMTP_USER", "CONTACT_SMTP_PASSWORD", "CONTACT_FORM_TO"]),
+    };
+  }
+  // The state names the half that answered, because "smtp" alone hid the question the owner
+  // kept asking: is it reading the screen I typed into, or the variable I set last month?
+  const state = facts.contactRecipientsSource === "setting" ? "smtp/setting" : "smtp/env";
+  return { key: "contactFormSmtp", status: "ok", state, requires: transport };
 }
 
 export function describeConfiguration(facts: ConfigurationFacts): ConfigurationCheck[] {

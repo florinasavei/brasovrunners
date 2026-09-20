@@ -41,10 +41,14 @@ const PUBLIC_COLUMNS = {
   // The club's Strava group event for this occurrence (criterion 10).
   stravaEventUrl: events.stravaEventUrl,
   facebookEventUrl: events.facebookEventUrl,
-  // The other organization the event is held with, when there is one (§121).
+  // The organizations the event is held with (§168), the list and the two columns it
+  // replaced — read together, and only ever through `readCoHosts`.
+  coHosts: events.coHosts,
   coHostName: events.coHostName,
   coHostUrl: events.coHostUrl,
   featured: events.featured,
+  // A special edition (§168): a badge on the card and the page, and a tie-break below.
+  isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
   registrationMode: events.registrationMode,
@@ -176,7 +180,21 @@ const RACES_FIRST = desc(sql`${events.type} = 'RACE'`);
 const FEATURED_FIRST = desc(events.featured);
 
 /**
- * Published events that have not happened yet: the featured one, then races, then soonest.
+ * A special edition leads its own band (`DECISIONS.md` §168).
+ *
+ * Third in the ordering, and third deliberately: the hero is decided by `FEATURED_FIRST`
+ * alone — `listingSections` reads the first row's `featured` flag and nothing else, so no
+ * number of special events can change which event the page leads with — and races still
+ * outrank everything that is not the lead, because that trade is older than this flag and was
+ * argued on its own terms above. What is left for "special" is the order *within* a band: the
+ * anniversary cross above the ordinary races, the Wednesday the club joins another club's
+ * race above the ordinary Wednesdays. The date is still the last word.
+ */
+const SPECIAL_FIRST = desc(events.isSpecial);
+
+/**
+ * Published events that have not happened yet: the featured one, then races, then the
+ * special editions within each band, then soonest.
  *
  * The listing shows these rather than everything: a page whose first card is last month's run
  * reads as abandoned, which for a club whose events are its whole purpose is the worst thing
@@ -189,7 +207,7 @@ export async function listUpcomingEvents(db: Database, locale: Locale, now: Date
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
     .where(and(publishedIn(locale), gte(eventEndsAt, now)))
-    .orderBy(FEATURED_FIRST, RACES_FIRST, asc(events.startsAt));
+    .orderBy(FEATURED_FIRST, RACES_FIRST, SPECIAL_FIRST, asc(events.startsAt));
 }
 
 /**

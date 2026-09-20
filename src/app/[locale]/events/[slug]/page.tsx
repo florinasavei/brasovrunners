@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { findPublishedEventBySlug, findPublishedTranslations } from "@/modules/events/repository";
 import { sportsEventJsonLd } from "@/modules/events/structured-data";
 import EventFacts from "@/modules/events/ui/EventFacts";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
 import EventVideo from "@/modules/events/ui/EventVideo";
 import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
@@ -170,6 +171,14 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           </>
         )}
       </Typography>
+      {/* An edition apart (§168): the same badge the card and the hero wear, above the
+          title where the overline already says what kind of event this is. */}
+      {event.isSpecial && (
+        <Box sx={{ mt: 1 }}>
+          <GlyphChip glyph="special" color="secondary" label={t("special")} />
+        </Box>
+      )}
+
       <Typography variant="h1" gutterBottom>
         {event.title}
       </Typography>
@@ -180,7 +189,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {isRichTextEmpty(readRichText(event.bodyJson)) && <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />}
 
       <Divider sx={{ my: 3 }} />
-      <EventFacts event={event} now={now} />
+      {/* One fact per line here (§168): the page is where they are read one at a time. */}
+      <EventFacts event={event} now={now} stacked />
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       <RegistrationCta event={event} now={now} />

@@ -1224,13 +1224,19 @@ club names — which is why a colleague's Yahoo can be on the list.
    the 16 characters (shown once) into the password manager.
 3. Vercel → the production project → Settings → Environment Variables (Production):
    `CONTACT_SMTP_USER` = the club's Gmail address; `CONTACT_SMTP_PASSWORD` = the 16
-   characters (spaces or not, both work); `CONTACT_FORM_TO` = the addresses that receive
-   the messages, comma-separated — the club's Gmail and Amalia's Yahoo. The same on the QA
-   project (a QA message is a real email to the same mailboxes, its subject starting with
-   `[QA] ` so it is never mistaken for a real question; put a test address there if even
-   that is unwelcome).
+   characters (spaces or not, both work). The same on the QA project (a QA message is a real
+   email to the same mailboxes, its subject starting with `[QA] ` so it is never mistaken
+   for a real question; put a test address there if even that is unwelcome).
+   `CONTACT_FORM_TO` is **optional since `DECISIONS.md` §164**: it is the fallback list, read
+   only while the club has named nobody in the app, and there is no `CONTACT_CC` variable at
+   all. Set it if you want the form to work before anybody opens the backoffice.
 4. Redeploy both projects.
-5. Check: open `/ro/contact` on the deployment and send a message. The page says "Mesajul a
+5. In the app — the part the club owns, and the part that changes without a developer:
+   `/admin/emails` → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
+   receive each message, comma-separated; **Copie (Cc)** = anybody who should get a copy and
+   be visible to the others (Amalia's Yahoo, say) → Salvează. The sentence above the boxes
+   says which list is in force — the app's or `CONTACT_FORM_TO` — so there is no guessing.
+6. Check: open `/ro/contact` on the deployment and send a message. The page says "Mesajul a
    plecat. Îți răspundem pe …", the email arrives in every mailbox from the club's address
    with "Reply" addressed to whoever wrote, and the "Formularul de contact" row on
    `/admin/tasks` is green; `/devs` shows the form as `smtp`. A wrong password shows
@@ -1238,6 +1244,7 @@ club names — which is why a colleague's Yahoo can be on the list.
    log — never the password. Those failed tries are not counted against the sender: once
    the password is right, the same address sends at once.
 
-To take the form away, remove any one of the three variables and redeploy: the page goes
-back to the address. Google's own limit on an ordinary account is about 500 messages a day,
+To take the form away, clear the recipients on `/admin/emails` and leave `CONTACT_FORM_TO`
+empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
+back to the address either way. Google's own limit on an ordinary account is about 500 messages a day,
 which is more than a club receives; the form's own limit is five an hour per sender.

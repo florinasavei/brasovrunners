@@ -16,6 +16,7 @@ import { findTranslationForPreview } from "@/modules/content/events/repository";
 import type { PublicEvent } from "@/modules/events/repository";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventProgramme from "@/modules/events/ui/EventProgramme";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import EventExcerpt from "@/modules/events/ui/EventExcerpt";
@@ -71,6 +72,8 @@ export default async function PreviewEventPage({ params }: Props) {
   const { event, translation } = record;
 
   const t = await getTranslations("Admin");
+  // The public badge is the public catalogue’s word, not the editor’s box (§169).
+  const tEvent = await getTranslations("Event");
   const now = new Date();
 
   /**
@@ -121,8 +124,10 @@ export default async function PreviewEventPage({ params }: Props) {
     scheduleJson: translation.scheduleJson,
     checklist: translation.checklist,
     scheduleItems: event.scheduleItems,
+    coHosts: event.coHosts,
     coHostName: event.coHostName,
     coHostUrl: event.coHostUrl,
+    isSpecial: event.isSpecial,
     seoTitle: translation.seoTitle,
     seoDescription: translation.seoDescription,
     publishedAt: event.publishedAt,
@@ -140,6 +145,14 @@ export default async function PreviewEventPage({ params }: Props) {
         </Link>
       </Typography>
 
+      {/* As on the public page (§168, §169): the preview is the only way to read a draft
+          before it is published, so a box the organizer has just ticked has to show here. */}
+      {preview.isSpecial && (
+        <Box sx={{ mb: 1 }}>
+          <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />
+        </Box>
+      )}
+
       <Typography variant="h1" gutterBottom>
         {preview.title}
       </Typography>
@@ -148,7 +161,7 @@ export default async function PreviewEventPage({ params }: Props) {
       {isRichTextEmpty(readRichText(preview.bodyJson)) && <EventExcerpt excerptJson={preview.excerptJson} excerpt={preview.excerpt} />}
 
       <Divider sx={{ my: 3 }} />
-      <EventFacts event={preview} now={now} />
+      <EventFacts event={preview} now={now} stacked />
 
       {/* The description proper, as the public page shows it (§71). */}
       {!isRichTextEmpty(readRichText(preview.bodyJson)) && (

@@ -2732,11 +2732,18 @@ QA subject visibly marked. Startup rejects unsafe combination.
 `DECISIONS.md` §149). It is a visitor's correspondence to the club, not transactional mail:
 no participant row depends on it, it carries no token, and the visitor is standing there to
 read a failure. It leaves over SMTP through the club's own mailbox account
-(`infrastructure/email/smtp-adapter.ts`, `CONTACT_SMTP_*`, `CONTACT_FORM_TO`), outside
-`EMAIL_DELIVERY_MODE` and its allowance, is never retried and never stored; local and test
-capture it in memory and open no socket, and QA marks its subject like the outbox marks
-every other. Nothing else may take this route — every message to a participant is an
-outbox row.
+(`infrastructure/email/smtp-adapter.ts`, `CONTACT_SMTP_*`), outside `EMAIL_DELIVERY_MODE`
+and its allowance, is never retried and never stored; local and test capture it in memory
+and open no socket, and QA marks its subject like the outbox marks every other. Nothing
+else may take this route — every message to a participant is an outbox row.
+
+**Who receives it is the club's, not the deployment's** (`DECISIONS.md` §164). The "to" and
+"cc" lists live in `platform_settings.contactRecipients`, edited by an Administrator on
+`/admin/emails`; `CONTACT_FORM_TO` is only the fallback, read when the setting names nobody,
+and there is no `CONTACT_FORM_CC`. The order is setting → environment → the form is off, and
+`CONTACT_FORM_MODE` therefore answers for the transport alone. The account it sends *from*
+stays in the environment and only there: `CONTACT_SMTP_USER` and `CONTACT_SMTP_PASSWORD`
+never move into a table the backoffice can read (§14.5), and no screen shows the password.
 
 ### 16.5 Webhooks
 

@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -189,6 +189,74 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     expect((await save(await reload(source.id), "this", { fields: { capacity: "45" } })).appliedTo).toBe(0);
     expect((await reload(oct18.id)).capacity).toBe(40);
     expect((await save(await reload(source.id), "all", {})).appliedTo).toBe(0);
+  });
+
+  it("carries the partners to every date and leaves the special mark on the one date that has it (§168)", async () => {
+    const { source, dates } = await seedSeries();
+    const [oct18] = dates;
+
+    // A partner is the series': the club holds every Sunday with them. The special mark is
+    // one date's own — the owner: "some dates can be special events where we overlap with,
+    // say, Brașov Marathon on the same Wednesday".
+    await save(await reload(source.id), "all", {
+      fields: {
+        coHosts: [
+          { name: "Brașov Marathon", url: "https://example.test/bm" },
+          { name: "Salvamont", url: "" },
+        ],
+        isSpecial: true,
+      },
+    });
+
+    const carried = await reload(oct18.id);
+    expect(carried.coHosts).toEqual([
+      { name: "Brașov Marathon", url: "https://example.test/bm" },
+      { name: "Salvamont", url: null },
+    ]);
+    expect(carried.isSpecial).toBe(false);
+    expect((await reload(source.id)).isSpecial).toBe(true);
+    // Expand only (`AGENTS.md` §7.6): the two columns the list replaced are not written by a
+    // save and not read by anything, so they stay exactly as the row had them.
+    expect(carried.coHostName).toBeNull();
+    expect((await reload(source.id)).coHostName).toBeNull();
+  });
+
+  it("says nothing about the partners of a row nobody has saved since the list existed (§169)", async () => {
+    const { source, dates } = await seedSeries();
+    const ids = [source.id, ...dates.map((row) => row.id)];
+
+    // One save settles what a fixture inserted by hand leaves unwritten; every assertion
+    // below is about the saves after it, where nothing but the partners is in question.
+    await save(await reload(source.id), "all", {});
+    await db.update(events).set({ coHosts: null, coHostName: null, coHostUrl: null }).where(inArray(events.id, ids));
+
+    // Every row in production before migration `0048`: `co_hosts` null and no partner at all.
+    // The club opens the series, picks "toate datele", changes nothing and saves — the editor
+    // posts its (empty) partner boxes, and `[]` must not read as a change from null.
+    expect((await save(await reload(source.id), "all", { fields: { coHosts: [] } })).appliedTo).toBe(0);
+    expect((await reload(dates[0].id)).coHosts).toBeNull();
+
+    // The same series, this time with the one partner the two old columns hold.
+    await db
+      .update(events)
+      .set({ coHosts: null, coHostName: "Salvamont", coHostUrl: "https://salvamont.example.test" })
+      .where(inArray(events.id, ids));
+
+    // A caller with no partner boxes at all — a script, a fixture, a form from before §168 —
+    // says nothing about them, so nothing is written and the partner survives on every date.
+    expect((await save(await reload(source.id), "all", {})).appliedTo).toBe(0);
+    for (const id of ids) {
+      expect((await reload(id)).coHosts).toBeNull();
+      expect((await reload(id)).coHostName).toBe("Salvamont");
+    }
+
+    // Removing that partner in the editor *is* a change, and it travels: every date gets the
+    // empty list, and the two old columns stay exactly as they were (expand only, §7.6).
+    expect((await save(await reload(source.id), "all", { fields: { coHosts: [] } })).appliedTo).toBe(4);
+    for (const id of ids) {
+      expect((await reload(id)).coHosts).toEqual([]);
+      expect((await reload(id)).coHostName).toBe("Salvamont");
+    }
   });
 
   it("refuses the whole save when one date has more places taken than the new capacity, naming its day", async () => {

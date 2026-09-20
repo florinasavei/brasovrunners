@@ -16,6 +16,8 @@ import {
   describeConfiguration,
   worstStatus,
 } from "@/modules/diagnostics/configuration";
+import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
+import { readContactRecipients } from "@/modules/contact/recipients";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { megabytes, NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
@@ -94,6 +96,8 @@ export default async function DevsPage({ params }: Props) {
     emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
     staffAuthMode: env.STAFF_AUTH_MODE,
     contactFormMode: env.CONTACT_FORM_MODE,
+    // Where the recipients come from (§164) — the source, never an address.
+    contactRecipientsSource: resolveContactRecipients(await readContactRecipients(getDb()), env.CONTACT_FORM_TO).source,
     allowlistCount: env.EMAIL_ALLOWLIST.length,
     present: {
       MAILGUN_API_KEY: Boolean(env.MAILGUN_API_KEY),

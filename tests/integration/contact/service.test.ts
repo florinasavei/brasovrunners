@@ -132,23 +132,66 @@ describe("BR-REQ-070-04 the contact form", () => {
       CONTACT_FORM_TO: [] as string[],
       EMAIL_FROM_NAME: "Brașov Runners",
     };
-    expect(contactDeliveryFor({ ...base, CONTACT_FORM_MODE: "off" })).toBeNull();
+    expect(contactDeliveryFor({ ...base, CONTACT_FORM_MODE: "off" }, null)).toBeNull();
 
-    const captured = contactDeliveryFor({ ...base, CONTACT_FORM_MODE: "capture" });
+    const captured = contactDeliveryFor({ ...base, CONTACT_FORM_MODE: "capture" }, null);
     expect(captured?.transport.name).toBe("capture");
     await submitContactMessage(db, captured, { ...PERSON, message: "În memorie." }, NOW, PAGE);
     expect(capturedContactMessages()[0]?.text).toContain("În memorie.");
 
     // SMTP is only ever constructed — never connected — here: the socket opens on the first send.
-    const smtp = contactDeliveryFor({
-      ...base,
-      CONTACT_FORM_MODE: "smtp",
-      CONTACT_SMTP_USER: "club@example.com",
-      CONTACT_SMTP_PASSWORD: "abcd efgh ijkl mnop",
-      CONTACT_FORM_TO: ["club@example.com"],
-    });
+    const smtp = contactDeliveryFor(
+      {
+        ...base,
+        CONTACT_FORM_MODE: "smtp",
+        CONTACT_SMTP_USER: "club@example.com",
+        CONTACT_SMTP_PASSWORD: "abcd efgh ijkl mnop",
+        CONTACT_FORM_TO: ["club@example.com"],
+      },
+      null,
+    );
     expect(smtp?.transport.name).toBe("smtp");
     expect(smtp?.from).toEqual({ name: "Brașov Runners", address: "club@example.com" });
     expect(smtp?.appEnv).toBe("qa");
+  });
+
+  /**
+   * §164 — the club's own recipients, the copy list among them (the owner: "I wanna allow CC
+   * on the contact form so that Amalia can receive emails"). The setting wins over
+   * `CONTACT_FORM_TO`, the copy list applies whichever of the two answered, and a deployment
+   * that can send but has nobody to send to is as unavailable as one with no transport.
+   */
+  it("sends to the club's own list, with the Cc it set, and says so through the whole path", async () => {
+    const base = {
+      APP_ENV: "production" as const,
+      CONTACT_FORM_MODE: "capture" as const,
+      CONTACT_SMTP_HOST: "smtp.gmail.com",
+      CONTACT_SMTP_PORT: 465,
+      CONTACT_SMTP_USER: "club@example.com",
+      CONTACT_SMTP_PASSWORD: "abcd efgh ijkl mnop",
+      CONTACT_FORM_TO: ["old@example.com"],
+      EMAIL_FROM_NAME: "Brașov Runners",
+    };
+
+    const configured = contactDeliveryFor(base, { to: ["club@example.com"], cc: ["amalia@example.org"] });
+    expect(configured?.to).toEqual(["club@example.com"]);
+    expect(configured?.cc).toEqual(["amalia@example.org"]);
+
+    await submitContactMessage(db, configured, PERSON, NOW, PAGE);
+    const [sent] = capturedContactMessages();
+    expect(sent?.to).toEqual(["club@example.com"]);
+    expect(sent?.cc).toEqual(["amalia@example.org"]);
+    // The visitor still answers "Reply", whoever else was copied.
+    expect(sent?.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
+
+    // No "to" in the setting: the environment answers, and the copy list still applies.
+    const fallback = contactDeliveryFor(base, { to: [], cc: ["amalia@example.org"] });
+    expect(fallback?.to).toEqual(["old@example.com"]);
+    expect(fallback?.cc).toEqual(["amalia@example.org"]);
+
+    // Neither, on a deployment: nobody to send to is the same answer as no way to send.
+    const nobody = contactDeliveryFor({ ...base, CONTACT_FORM_MODE: "smtp", CONTACT_FORM_TO: [] }, { to: [], cc: [] });
+    expect(nobody).toBeNull();
+    expect(await submitContactMessage(db, nobody, PERSON, NOW, PAGE)).toEqual({ outcome: "unavailable" });
   });
 });

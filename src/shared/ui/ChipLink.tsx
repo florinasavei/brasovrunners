@@ -1,5 +1,8 @@
+"use client";
+
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Link from "next/link";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import type { GlyphName } from "@/modules/events/ui/glyphs";
 
@@ -9,6 +12,17 @@ import type { GlyphName } from "@/modules/events/ui/glyphs";
  * the e2e suite measures (BR-REQ-041-01 criterion 6); the pill is MUI's small size. Rendered
  * from Server Components: a string href, a string label, a glyph by name — nothing that
  * cannot cross into MUI's client components (`AGENTS.md` §14.1).
+ *
+ * A client island since §166, for the flicker: these pills — "Lună", "An", "Calendar",
+ * "Listă", every kind on the filter — were a plain `<a>`, which throws the document away and
+ * repaints it white before the new one arrives. Over `next/link` the press replaces only what
+ * changed, and the calendar's body streams into a skeleton while it does. `component={Link}`
+ * has to be written on this side of the boundary, which is why the whole component moved
+ * rather than gaining a wrapper (`ButtonLink`, `CardLink`, same reason).
+ *
+ * `next/link` and not the locale-aware one: every caller builds the href with `getPathname`,
+ * so it already carries its locale prefix, and prefixing it again would give `/ro/ro/…`. What
+ * is rendered is still an ordinary `<a href="…">` with the whole query in it.
  */
 export default function ChipLink({
   href,
@@ -34,7 +48,7 @@ export default function ChipLink({
   const sx = strike ? { textDecoration: "line-through", color: "text.secondary" } : undefined;
   return (
     <Box
-      component="a"
+      component={Link}
       href={href}
       aria-current={current}
       title={title}

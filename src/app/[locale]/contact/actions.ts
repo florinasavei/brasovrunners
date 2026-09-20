@@ -7,6 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { contactDelivery } from "@/modules/contact/delivery";
 import { CONTACT_ERROR_SUMMARY_ID } from "@/modules/contact/fields";
+import { readContactRecipients } from "@/modules/contact/recipients";
 import { submitContactMessage } from "@/modules/contact/service";
 import { stashFormDraft } from "@/modules/registrations/form-draft";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
@@ -40,11 +41,19 @@ export async function submitContactAction(form: FormData): Promise<void> {
     redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${CONTACT_ERROR_SUMMARY_ID}`);
   }
 
+  // Who receives, as the club set it (§164), with `CONTACT_FORM_TO` behind it; read here
+  // rather than inside the delivery so the module that knows the transport stays pure over
+  // its inputs and the tests can hand it a list.
+  const db = getDb();
+  // A database that is not answering hands the question to `CONTACT_FORM_TO` rather than
+  // throwing here; the send itself still needs the database, and says so in its own sentence.
+  const recipients = await readContactRecipients(db).catch(() => null);
+
   let outcome: Awaited<ReturnType<typeof submitContactMessage>>;
   try {
     outcome = await submitContactMessage(
-      getDb(),
-      contactDelivery(),
+      db,
+      contactDelivery(recipients),
       {
         name: text(form, "name"),
         email: text(form, "email"),

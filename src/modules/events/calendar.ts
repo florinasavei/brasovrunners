@@ -1,5 +1,6 @@
 import { getPathname } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
+import { readCoHosts } from "./domain/co-hosts";
 import { localizedSchedule, readScheduleItems } from "./domain/schedule";
 import { type CalendarEvent, calendarRegistration, calendarStamp } from "./ical";
 import type { PublicEvent } from "./repository";
@@ -18,6 +19,9 @@ export function toCalendarEvent(event: PublicEvent, locale: Locale, now: Date): 
     ...event,
     url: `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } })}`,
     programme: localizedSchedule(readScheduleItems(event.scheduleItems), locale),
+    // The partners, resolved here so the feed, the file and Google's link all read the row
+    // the same way the page does (§168).
+    coHosts: readCoHosts(event),
     registration: calendarRegistration(
       event,
       `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: event.slug } } })}`,

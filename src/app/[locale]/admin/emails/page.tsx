@@ -11,6 +11,9 @@ import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 import { getDb } from "@/db/client";
+import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
+import { readContactRecipients } from "@/modules/contact/recipients";
+import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
 import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -18,6 +21,14 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string }> };
+
+/**
+ * Reads the session, the plan and the contact recipients, and is returned to straight after
+ * a save — so it may never be served from a cache. Without this the panel showed the values
+ * it had before the press (found on 2026-09-20: clearing the recipients wrote the row and the
+ * page went on saying the old addresses).
+ */
+export const dynamic = "force-dynamic";
 
 /**
  * Every email the platform sends, rendered with sample data (`DECISIONS.md` §91; the owner:
@@ -42,7 +53,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // thing anybody opening this page on race day wants to know.
   const db = getDb();
   const now = new Date();
-  const [plan, volume] = await Promise.all([readEmailPlan(db), readEmailVolumeToday(db, now)]);
+  const [plan, volume, recipients] = await Promise.all([
+    readEmailPlan(db),
+    readEmailVolumeToday(db, now),
+    // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
+    readContactRecipients(db),
+  ]);
+  const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
   const t = await getTranslations("Admin");
   const tRo = emailLocale === "ro";
@@ -80,9 +97,12 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
+        {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
       </Box>
 
       <EmailPlanPanel locale={locale} plan={plan} volume={volume} />
+
+      <ContactRecipientsPanel locale={locale} recipients={recipients} resolved={resolvedRecipients} />
 
       <Box>
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>

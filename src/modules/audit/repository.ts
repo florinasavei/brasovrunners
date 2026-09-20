@@ -49,7 +49,8 @@ export type AuditAction =
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
   | "event.thanks_sent"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
-  | "email_plan.changed";
+  | "email_plan.changed"
+  | "contact_recipients.changed";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;

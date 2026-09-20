@@ -208,6 +208,11 @@ export const envSchema = z
      * lands — the club's Gmail and a colleague's Yahoo, comma-separated — because the club
      * decides who reads its mail, not the code. Never validated as a set at startup: a
      * deployment without them shows "write to us at …" instead of the form (`CONTACT_FORM_MODE`).
+     *
+     * Since §164 `CONTACT_FORM_TO` is the *fallback*: the club edits the recipients and the
+     * copy list on `/admin/emails`, and that list answers only while the setting names
+     * nobody. There is no `CONTACT_FORM_CC` and there will not be one — a copy for a
+     * colleague is a club decision, made in the app, not a redeploy.
      */
     CONTACT_SMTP_HOST: z.string().trim().min(1).default("smtp.gmail.com"),
     CONTACT_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(465),
@@ -398,13 +403,19 @@ export const envSchema = z
     /**
      * Derived like `STORAGE_MODE`: local and test never open a socket — the message is kept
      * in memory for the developer and the tests to read (§149); a deployment sends over SMTP
-     * when the sender, its password and at least one recipient exist, and is `off` otherwise,
-     * which the contact page renders as "write to us at …" rather than a form that fails.
+     * when the sender and its password exist, and is `off` otherwise, which the contact page
+     * renders as "write to us at …" rather than a form that fails.
+     *
+     * The recipients are deliberately not part of this since §164: they live in
+     * `platform_settings.contactRecipients`, which a startup-time derivation cannot see, and
+     * `CONTACT_FORM_TO` is only their fallback. So this says whether the deployment can send
+     * at all, and `contact/delivery.ts` says whether there is anybody to send to — a form
+     * needs both, and either one missing shows the club's address instead.
      */
     CONTACT_FORM_MODE:
       value.APP_ENV === "local" || value.APP_ENV === "test"
         ? ("capture" as const)
-        : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD && value.CONTACT_FORM_TO.length > 0
+        : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD
           ? ("smtp" as const)
           : ("off" as const),
   }));

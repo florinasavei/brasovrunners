@@ -10,6 +10,7 @@ import { webcalUrl } from "@/modules/events/ical";
 import { env } from "@/shared/config/env";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { hasLocale } from "next-intl";
@@ -18,22 +19,28 @@ import { routing } from "@/i18n/routing";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
+import GlyphChip from "@/modules/events/ui/GlyphChip";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
+import { calendarBoundaryKey, listingSections, presentEventTypes } from "@/modules/events/domain/listing";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import ChipLink from "@/shared/ui/ChipLink";
+import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import InfoTip from "@/shared/ui/InfoTip";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
+import { CalendarBodySkeleton, EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
 import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
-import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
-import { EVENT_TYPES } from "@/modules/events/domain/event-type";
+import { monthGrid, monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
+import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
+import CalendarHeader from "@/modules/events/ui/CalendarHeader";
 import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
+import { headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -54,6 +61,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: t("title"), description: t("intro") };
 }
 
+/** The database handle and the locale, exactly as the repository spells them. */
+type Db = Parameters<typeof listUpcomingEvents>[0];
+type EventLocale = Parameters<typeof listUpcomingEvents>[1];
+
+/**
+ * The events the page leads with: everything still to come, or — between seasons, where an
+ * empty page reads as a broken site — the last one that happened, dated.
+ *
+ * One function and therefore one promise, because two regions of the page need the same rows
+ * and must not ask twice: the lead (the hero and the filter) and the list below the calendar
+ * each `await` this, and the second one gets the settled value.
+ */
+async function loadListing(db: Db, locale: EventLocale, now: Date) {
+  const upcoming = await listUpcomingEvents(db, locale, now);
+  if (upcoming.length > 0) return { events: upcoming, hasUpcoming: true };
+  const latestPast = await findLatestPastEvent(db, locale, now);
+  return { events: latestPast ? [latestPast] : [], hasUpcoming: false };
+}
+
+type Listing = Awaited<ReturnType<typeof loadListing>>;
+
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const { month: monthParam, year: yearParam, type: typeParam, view: viewParam } = await searchParams;
@@ -67,44 +95,34 @@ export default async function EventsPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("Events");
-  const tEvent = await getTranslations("Event");
   const tSite = await getTranslations("Site");
   // One timestamp for the whole page, so two cards cannot disagree about whether
   // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
   const db = getDb();
-  const upcoming = await listUpcomingEvents(db, locale, now);
-  // Only asked for when there is nothing to lead with: between seasons an empty page reads as
-  // a broken site, so the last event that happened stands in, dated.
-  const latestPast = upcoming.length === 0 ? await findLatestPastEvent(db, locale, now) : undefined;
-  const events = upcoming.length > 0 ? upcoming : latestPast ? [latestPast] : [];
   // The month view (`DECISIONS.md` §89): the month the URL names, or this one — or the whole
   // year it names (§116). The year wins when both are given: it is the wider question.
   const year = parseYear(yearParam, now, CLUB_TIME_ZONE);
   const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
   const range = view.kind === "year" ? yearRange(view.year, CLUB_TIME_ZONE) : monthRange(view.month, CLUB_TIME_ZONE);
-  const inRange = (await listPublishedEventsBetween(db, locale, range.from, range.to)).filter(
-    (event) => !type || event.type === type,
-  );
 
   /**
-   * The club's lead event, shown in full above the list.
+   * Both queries are **started here and awaited nowhere in this function** (§166).
    *
-   * Taken from the rows already fetched rather than queried again: `listUpcomingEvents` orders
-   * featured first, so if there is one it is the first row. It is then dropped from the list
-   * below — the same event as both the hero and the first card reads as a duplicate, not as
-   * emphasis.
+   * That is the whole fix for the owner's "there is flickering when changing calendars". The
+   * page body itself now touches no database, so Next can send the header, the wordmark, the
+   * heading and every calendar control to the browser the instant the request arrives, and
+   * each region below fills in when its own query answers. A press on "next month" replaces
+   * one grid; nothing else on the page so much as repaints.
+   *
+   * Passing a promise down to a Server Component is the supported shape for this — the child
+   * awaits it inside a `<Suspense>` boundary, and the two children that share `listing` share
+   * one query between them.
    */
-  const featured = upcoming.length > 0 && upcoming[0].featured ? upcoming[0] : undefined;
-  // The kinds on the calendar (§133): a chip for a kind the club has no event of filters
-  // nothing, so it is not offered — the one in the address stays, so the page can say so.
-  const presentTypes = EVENT_TYPES.filter((candidate) => candidate === type || [...events, ...inRange].some((event) => event.type === candidate));
-  const listed = (featured ? events.filter((event) => event.id !== featured.id) : events).filter(
-    (event) => !type || event.type === type,
+  const listing = loadListing(db, locale, now);
+  const inRange = listPublishedEventsBetween(db, locale, range.from, range.to).then((rows) =>
+    rows.filter((event) => !type || event.type === type),
   );
-  // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
-  // the order the first occurrence had; a single event is a card as before.
-  const cards = groupSeries(listed);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
@@ -118,43 +136,47 @@ export default async function EventsPage({ params, searchParams }: Props) {
       {/* The kit-face wordmark, here and nowhere else — the owner moved it out of the header. */}
       <Wordmark />
 
-      <Typography variant="h1" gutterBottom sx={{ mt: 2 }}>
+      {/* The gradient rule under the heading says where a section starts (§166). */}
+      <Typography variant="h1" gutterBottom sx={{ mt: 2, ...headingRule }}>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
         {t("intro")}
       </Typography>
 
-      {upcoming.length === 0 && latestPast && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          {t("noUpcoming")}
-        </Alert>
-      )}
-
-      {featured && <FeaturedEventHero event={featured} now={now} />}
-
-      {/* What kind: one small chip per type the club actually has on the calendar, a link
-          each, kept by the month links (§89, §133). Fewer than two kinds is nothing to filter. */}
-      {presentTypes.length > 1 && (
-        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: 3 }}>
-          {[undefined, ...presentTypes].map((candidate) => {
-            const active = candidate === type;
-            // A string href: a component reference cannot cross into MUI's client component —
-            // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
-            const href = getPathname({ locale, href: { pathname: "/events", query: { ...(candidate ? { type: candidate } : {}), ...(layout === "list" ? { view: "list" } : {}) } } });
-            // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
-            return candidate ? (
-              <ChipLink key={candidate} href={href} label={tEvent(`type.${candidate}`)} glyph={`type:${candidate}`} active={active} current={active ? "page" : undefined} />
-            ) : (
-              <ChipLink key="all" href={href} label={t("filter.all")} active={active} current={active ? "page" : undefined} />
-            );
-          })}
-        </Stack>
-      )}
+      <Suspense fallback={<ListingLeadSkeleton label={t("loading")} />}>
+        <ListingLead listing={listing} type={type} layout={layout} locale={locale} now={now} />
+      </Suspense>
 
       {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
       <Box sx={{ mt: 2, mb: 4 }}>
-        <EventCalendar view={view} events={inRange} now={now} query={query} layout={layout} />
+        {/*
+          The controls stay; only the grid streams (§166). `CalendarHeader` reads the address
+          and never the database, so it renders with the shell and stays pressable while the
+          month below it is being fetched — three quick presses on "next" are three presses on
+          the same button. The `key` is what asks for the skeleton: React keeps the content of
+          a boundary that updates and shows the fallback for one that is new, so the key names
+          exactly what the query depends on and nothing else.
+        */}
+        <Box component="section" aria-labelledby="calendar-title" id="calendar">
+          <CalendarHeader view={view} now={now} query={query} layout={layout} />
+          <Suspense
+            key={calendarBoundaryKey(view, layout, type)}
+            fallback={
+              <CalendarBodySkeleton
+                label={t("loading")}
+                kind={view.kind}
+                layout={layout}
+                // As many week rows as the month actually spans, four to six (§167): pure
+                // arithmetic on the address, so the skeleton is the grid's exact height and
+                // the swap moves nothing under it.
+                weeks={view.kind === "month" ? monthGrid(view.month).length : 6}
+              />
+            }
+          >
+            <EventCalendar view={view} events={inRange} now={now} query={query} layout={layout} />
+          </Suspense>
+        </Box>
 
         {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
             calendar does not work" — a `webcal://` link does nothing where no app claims the
@@ -187,71 +209,164 @@ export default async function EventsPage({ params, searchParams }: Props) {
             </Button>
             <InfoTip text={t("calendar.refreshNote")} />
           </Stack>
-          <Box component="details" sx={{ mt: 0.5, "& > summary": { cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center", fontSize: "0.8125rem", color: "text.secondary" } }}>
+          {/* A fold looks like a fold (§164): the marker back, the pointer, an underline on
+              hover and on focus. It had been a flex box, which removes the triangle in
+              Chrome and Safari — the owner: "it's not clear that this is expandable". */}
+          <Box component="details" sx={{ mt: 0.5, ...DISCLOSURE_SX, "& > summary": { ...DISCLOSURE_SUMMARY_SX, fontSize: "0.8125rem", color: "text.secondary" } }}>
             <summary>{t("calendar.feedAddress")}</summary>
             <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
           </Box>
         </Box>
       </Box>
 
-      {/*
-        Under a hero, the rest is "other events": a heading and denser cards — no excerpt,
-        the facts and the title are what a reader scans for the next Sunday.
+      <Suspense fallback={<EventListSkeleton label={t("loading")} />}>
+        <ListingBody listing={listing} type={type} now={now} />
+      </Suspense>
+    </Container>
+  );
+}
 
-        On a phone the heading is a native disclosure (`DECISIONS.md` §78): open when there
-        are four or fewer, folded when there are more, so the lead event is not followed by a
-        scroll of cards. On a wide screen the same element is always open — the browser's
-        `::details-content` is told to stay visible and the marker is hidden — because a wide
-        screen has room, and a reader there cannot tell a heading from a control.
-      */}
-      {featured && listed.length > 0 && (
-        <Box
-          component="details"
-          open={cards.length <= 4}
-          data-testid="other-events"
-          sx={{
-            "& > summary": {
-              cursor: { xs: "pointer", sm: "default" },
-              listStyle: { xs: "revert", sm: "none" },
-              pointerEvents: { xs: "auto", sm: "none" },
-            },
-            "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } },
-          }}
-        >
-          <Typography
-            component="summary"
-            variant="h2"
-            sx={{ fontSize: "1.25rem", mb: 2, minHeight: 44, display: "flex", alignItems: "center" }}
-          >
-            {t("othersCount", { count: cards.length })}
-          </Typography>
-          <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
-            {cards.map((series, index) =>
-              series.members.length > 1 ? (
-                <SeriesCard key={series.key} members={series.members} index={index} now={now} underHero />
-              ) : (
-                <EventCard key={series.key} event={series.members[0]} index={index} now={now} underHero />
-              ),
-            )}
-          </Stack>
-        </Box>
+/**
+ * The lead event and the filter above the calendar.
+ *
+ * Streamed, because it is the first thing that costs a query and the last thing that should
+ * hold up the page around it. On a month change this boundary is *not* re-keyed, so React
+ * keeps the hero that is already on screen rather than blinking it — the club's next race
+ * does not change because somebody looked at December.
+ */
+async function ListingLead({
+  listing,
+  type,
+  layout,
+  locale,
+  now,
+}: {
+  listing: Promise<Listing>;
+  type?: EventType;
+  layout: CalendarLayout;
+  locale: "ro" | "en";
+  now: Date;
+}) {
+  const { events, hasUpcoming } = await listing;
+  const t = await getTranslations("Events");
+  const tEvent = await getTranslations("Event");
+  // `hasUpcoming` is what keeps a *past* race out of the hero (§167): between seasons the
+  // page is handed the club's last event so it is not blank, and that row still carries the
+  // featured flag it had when it was next. It belongs under the notice as an ordinary card.
+  const { featured } = listingSections(events, type, hasUpcoming);
+  // The kinds the club has something of (§133, §166): a chip for a kind it has none of would
+  // filter nothing, so it is not offered — the one in the address stays, so the page can say so.
+  const presentTypes = presentEventTypes(events, type);
+
+  return (
+    <>
+      {!hasUpcoming && events.length > 0 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {t("noUpcoming")}
+        </Alert>
       )}
 
-      {!featured &&
-        (listed.length === 0 ? (
-          <Alert severity="info">{t("empty")}</Alert>
+      {featured && <FeaturedEventHero event={featured} now={now} />}
+
+      {/* What kind: one small chip per type, a link each, kept by the month links (§89, §133).
+          Fewer than two kinds is nothing to filter. */}
+      {presentTypes.length > 1 && (
+        <Stack component="nav" aria-label={t("filter.label")} direction="row" sx={{ flexWrap: "wrap", columnGap: 0.5, mt: 3 }}>
+          {[undefined, ...presentTypes].map((candidate) => {
+            const active = candidate === type;
+            // A string href: a component reference cannot cross into MUI's client component —
+            // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
+            const href = getPathname({ locale, href: { pathname: "/events", query: { ...(candidate ? { type: candidate } : {}), ...(layout === "list" ? { view: "list" } : {}) } } });
+            // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
+            return candidate ? (
+              <ChipLink key={candidate} href={href} label={tEvent(`type.${candidate}`)} glyph={`type:${candidate}`} active={active} current={active ? "page" : undefined} />
+            ) : (
+              <ChipLink key="all" href={href} label={t("filter.all")} active={active} current={active ? "page" : undefined} />
+            );
+          })}
+        </Stack>
+      )}
+    </>
+  );
+}
+
+/**
+ * Everything that is not the lead event.
+ *
+ * Under a hero, the rest is "other events": a heading and denser cards — no excerpt, the
+ * facts and the title are what a reader scans for the next Sunday.
+ *
+ * On a phone the heading is a native disclosure (`DECISIONS.md` §78): open when there are
+ * four or fewer, folded when there are more, so the lead event is not followed by a scroll of
+ * cards. On a wide screen the same element is always open — the browser's
+ * `::details-content` is told to stay visible and the marker is hidden — because a wide
+ * screen has room, and a reader there cannot tell a heading from a control.
+ */
+async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; type?: EventType; now: Date }) {
+  const { events, hasUpcoming } = await listing;
+  const t = await getTranslations("Events");
+  // The same division the lead made, and it has to be given the same third argument or the
+  // two disagree: a past event the lead refused to hero must appear in the list (§167).
+  const { featured, listed } = listingSections(events, type, hasUpcoming);
+  // A repeated event is one card (`DECISIONS.md` §113): the same title and type, grouped, in
+  // the order the first occurrence had; a single event is a card as before.
+  const cards = groupSeries(listed);
+
+  if (featured) {
+    if (listed.length === 0) return null;
+    return (
+      <Box
+        component="details"
+        open={cards.length <= 4}
+        data-testid="other-events"
+        sx={{
+          "&::details-content": { display: { sm: "block" }, contentVisibility: { sm: "visible" } },
+        }}
+      >
+        {/* The shared fold affordance (§164, §167): the biggest fold on the listing had kept
+            `display: flex` for its 44 pixels, and a flex `<summary>` has no marker in Chrome
+            or Safari — so the one fold a phone most needs a triangle on was the one without
+            one. The height comes from `DISCLOSURE_SUMMARY_SX`'s padding instead. From `sm`
+            up it is always open and is not a control, which is the documented exception. */}
+        <Typography
+          component="summary"
+          variant="h2"
+          sx={{
+            ...DISCLOSURE_SUMMARY_SX,
+            fontSize: "1.25rem",
+            mb: 2,
+            cursor: { xs: "pointer", sm: "default" },
+            listStyle: { xs: "revert", sm: "none" },
+            pointerEvents: { xs: "auto", sm: "none" },
+          }}
+        >
+          {t("othersCount", { count: cards.length })}
+        </Typography>
+        <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+          {cards.map((series, index) =>
+            series.members.length > 1 ? (
+              <SeriesCard key={series.key} members={series.members} index={index} now={now} underHero />
+            ) : (
+              <EventCard key={series.key} event={series.members[0]} index={index} now={now} underHero />
+            ),
+          )}
+        </Stack>
+      </Box>
+    );
+  }
+
+  if (listed.length === 0) return <Alert severity="info">{t("empty")}</Alert>;
+
+  return (
+    <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
+      {cards.map((series, index) =>
+        series.members.length > 1 ? (
+          <SeriesCard key={series.key} members={series.members} index={index} now={now} />
         ) : (
-          <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
-            {cards.map((series, index) =>
-              series.members.length > 1 ? (
-                <SeriesCard key={series.key} members={series.members} index={index} now={now} />
-              ) : (
-                <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
-              ),
-            )}
-          </Stack>
-        ))}
-    </Container>
+          <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
+        ),
+      )}
+    </Stack>
   );
 }
 
@@ -279,6 +394,9 @@ async function EventCard({
           <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
             {/* What it is and what it is run on, with their glyphs (§112). */}
             <EventKindChips type={event.type} surface={event.surface} />
+            {/* An edition apart (§168): an anniversary, a charity run, a date the club joins
+                somebody else's race. Any number of events may wear it. */}
+            {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
             {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
             {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
             {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}

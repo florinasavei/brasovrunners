@@ -1,4 +1,5 @@
 import { isRichTextEmpty, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
+import type { CoHost } from "./domain/co-hosts";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
@@ -73,8 +74,13 @@ export type CalendarEvent = {
   facebookEventUrl?: string | null;
   /** "What to bring", the translation's one line (§81). */
   checklist?: string | null;
-  coHostName?: string | null;
-  coHostUrl?: string | null;
+  /**
+   * The organizations the event is held with (§168), in the club's own order: one line each,
+   * the first carrying the label, every one carrying its own page. `toCalendarEvent` reads
+   * them through `readCoHosts`, so a row saved before the list existed still says its
+   * partner here.
+   */
+  coHosts?: readonly CoHost[];
   /**
    * Where registration stands, with the link to the form (§159) — `calendarRegistration`
    * decides from the window and the clock, so a feed built from the public row must set it.
@@ -336,7 +342,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
   const excerpt = event.excerpt?.trim() ?? "";
   const body = cutText(richTextLines(event.bodyJson), BODY_CHARS);
   const checklist = event.checklist?.trim() ?? "";
-  const coHost = event.coHostName?.trim() ?? "";
+  const coHosts = (event.coHosts ?? []).filter((host) => host.name.trim() !== "");
   return [
     notice ? [{ text: notice }] : [],
     place.lines,
@@ -347,7 +353,13 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     links,
     programme.length > 0 ? [{ text: `${t("schedule")}:` }, ...programme.map((text) => ({ text }))] : [],
     checklist ? [{ text: `${t("calendar.checklist")}: ${checklist}` }] : [],
-    coHost ? [{ text: `${t("coHost")} ${coHost}`, url: event.coHostUrl ?? undefined, separator: " — " }] : [],
+    // "Împreună cu A", then the other partners on their own lines: the label is said once,
+    // and each partner keeps its own link, which a joined sentence could not carry (§168).
+    coHosts.map((host, index) => ({
+      text: index === 0 ? `${t("coHost")} ${host.name.trim()}` : host.name.trim(),
+      url: host.url ?? undefined,
+      separator: " — ",
+    })),
   ].filter((group) => group.length > 0);
 }
 

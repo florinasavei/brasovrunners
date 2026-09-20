@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { riseIn } from "@/theme/motion";
 import { editionDifference, recurrenceOf, usualOf } from "../domain/series";
 import type { PublicEvent } from "../repository";
@@ -48,6 +49,7 @@ export default async function SeriesCard({
   const recurrence = recurrenceOf(members, next.timezone);
   const rhythm =
     recurrence.kind === "weekly" ? t("series.weeklyChip") : recurrence.kind === "fortnightly" ? t("series.fortnightlyChip") : t("series.count", { count: members.length });
+  const special = members.some((member) => member.isSpecial);
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // A date unlike the others — cancelled, elsewhere, at another hour — wears its mark (§122).
   const usual = usualOf(members);
@@ -66,6 +68,13 @@ export default async function SeriesCard({
         <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
           <EventKindChips type={next.type} surface={next.surface} />
           <GlyphChip glyph="series" variant="outlined" label={rhythm} />
+          {/* An edition apart on *any* of the dates (§168, §169). A repeated event is one card
+              (§113), so the badge the single-event card wears would otherwise be shown nowhere
+              for the owner's own case — "some dates can be special events where we overlap
+              with, say, Brașov Marathon on the same Wednesday" — and the lift `SPECIAL_FIRST`
+              gives the line would have no visible cause. Which date it is, is the mark in the
+              folded list below. */}
+          {special && <GlyphChip glyph="special" color="secondary" label={t("special")} />}
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Stack>
 
@@ -94,7 +103,7 @@ export default async function SeriesCard({
         {/* Every coming date, each a link to its own page — folded (§154; the owner: "these
             date pills take too much space"): the card is the next date and the rhythm, the
             rest is one press away. A native disclosure, 44px, no JavaScript. */}
-        <Box component="details" sx={{ mt: 1.5, "& > summary": { cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center", listStyle: "revert" } }}>
+        <Box component="details" sx={{ mt: 1.5, ...DISCLOSURE_SX }}>
           <Typography component="summary" variant="body2" color="text.secondary">
             {t("series.allDatesCount", { count: members.length })}
           </Typography>

@@ -9,7 +9,10 @@ import nodemailer from "nodemailer";
  * every one of them would otherwise spend a unit of the Mailgun allowance the registrations
  * need (the owner: "email communication must be minimal so we meet the quota"). So it leaves
  * through the club's own Gmail — an app password, port 465, TLS from the first byte — and
- * lands in whichever mailboxes `CONTACT_FORM_TO` names, with the visitor as `Reply-To`.
+ * lands in whichever mailboxes the club named, with the visitor as `Reply-To`. *Which*
+ * mailboxes is not this module's question and not the environment's either since §164: the
+ * resolution order is `platform_settings.contactRecipients` first and `CONTACT_FORM_TO`
+ * behind it, in `modules/contact/domain/recipients.ts`; here they arrive already resolved.
  *
  * This is deliberately NOT an `EmailAdapter` (`adapter.ts`): that contract is the outbox's —
  * one recipient, an idempotency key, a locale tag, a classified failure the job retries. A
@@ -27,6 +30,8 @@ export type SmtpAddress = { name: string; address: string };
 export type SmtpMessage = {
   from: SmtpAddress;
   to: readonly string[];
+  /** The club's own copy list (`DECISIONS.md` §164): everybody on it sees everybody else, which is what a club wants. */
+  cc?: readonly string[];
   replyTo: SmtpAddress;
   subject: string;
   text: string;
@@ -94,6 +99,7 @@ export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
         const info = await transporter.sendMail({
           from: message.from,
           to: [...message.to],
+          ...(message.cc && message.cc.length > 0 ? { cc: [...message.cc] } : {}),
           replyTo: message.replyTo,
           subject: message.subject,
           text: message.text,
@@ -101,6 +107,9 @@ export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
         });
         // Gmail accepts for every address it relays; a recipient it refuses outright is a
         // failure the visitor should hear about rather than a "sent" that reached nobody.
+        // Deliberately "every recipient", `cc` included: a copy that arrived is a message the
+        // club has, and telling the visitor "we could not send" would be a second, wrong
+        // message on top of a delivered one. A refused address shows in the function log.
         if (info.accepted.length === 0) return { outcome: "failed", error: "smtp rejected every recipient" };
         return { outcome: "sent", providerMessageId: info.messageId };
       } catch (error) {

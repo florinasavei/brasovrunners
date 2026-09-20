@@ -1,27 +1,33 @@
 "use client";
 
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Tooltip from "@mui/material/Tooltip";
 
-export type EditionNote = { kind: "cancelled" | "moved" | "retimed"; text: string };
+export type EditionNote = { kind: "cancelled" | "special" | "moved" | "retimed"; text: string };
 
 /**
  * The mark on a date of a series that is not like the others (`DECISIONS.md` §122; the
  * owner: "a strikethrough for that status and a warning sign with tooltip"): a crossed
- * calendar for a cancelled date, an amber warning for one at another place or time, the
- * sentence in a tooltip and as the accessible name. A client island because `Tooltip` needs
- * a ref on its child and the element is made here, never handed across the boundary.
+ * calendar for a cancelled date, the sparkle in the club's orange for a special edition
+ * (§168, §169 — the same glyph the badge wears), an amber warning for one at another place
+ * or time, the sentence in a tooltip and as the accessible name. A client island because
+ * `Tooltip` needs a ref on its child and the element is made here, never handed across the
+ * boundary.
  */
+const MARK = {
+  cancelled: { Icon: EventBusyIcon, color: "error.main" },
+  special: { Icon: AutoAwesomeIcon, color: "secondary.main" },
+  moved: { Icon: WarningAmberIcon, color: "warning.main" },
+  retimed: { Icon: WarningAmberIcon, color: "warning.main" },
+} as const;
+
 export default function EditionMark({ note, size = 18 }: { note: EditionNote; size?: number }) {
-  const Icon = note.kind === "cancelled" ? EventBusyIcon : WarningAmberIcon;
+  const { Icon, color } = MARK[note.kind];
   return (
     <Tooltip title={note.text} arrow enterTouchDelay={0}>
-      <Icon
-        role="img"
-        aria-label={note.text}
-        sx={{ fontSize: size, color: note.kind === "cancelled" ? "error.main" : "warning.main", flexShrink: 0, verticalAlign: "-4px" }}
-      />
+      <Icon role="img" aria-label={note.text} sx={{ fontSize: size, color, flexShrink: 0, verticalAlign: "-4px" }} />
     </Tooltip>
   );
 }

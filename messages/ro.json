@@ -37,6 +37,7 @@
   },
   "Events": {
     "title": "Evenimente",
+    "loading": "Se încarcă…",
     "intro": "Alergări, ture pe munte și antrenamente organizate de club — întotdeauna gratuite.",
     "empty": "Nu sunt evenimente publicate momentan. Revino în curând.",
     "noUpcoming": "Nu sunt evenimente viitoare programate. Cel mai recent eveniment al clubului:",
@@ -84,6 +85,7 @@
     "gatheringTime": "Ora de întâlnire",
     "gatheringAt": "întâlnire la {time}",
     "raceStartAt": "start la {time}",
+    "startAt": "începe la {time}",
     "when": "Când",
     "where": "Unde",
     "raceStartTime": "Startul cursei",
@@ -123,6 +125,7 @@
       "EXTERNAL": "Eveniment extern"
     },
     "coHost": "Împreună cu",
+    "special": "Ediție specială",
     "surface": {
       "ASPHALT": "Asfalt",
       "TRAIL": "Trail",
@@ -172,6 +175,7 @@
       "fortnightly": "O dată la două săptămâni, {days}",
       "monthly": "Lunar, pe {day}",
       "cancelledMark": "Anulată",
+      "specialMark": "Ediție specială",
       "movedMark": "Nu în locul obișnuit: {place}",
       "retimedMark": "Nu la ora obișnuită: {time}",
       "atTime": "{sentence}, la {time}",
@@ -180,7 +184,7 @@
       "weeklyChip": "Săptămânal",
       "fortnightlyChip": "La două săptămâni",
       "nextLabel": "Următoarea",
-      "allDatesCount": "Toate datele ({count})"
+      "allDatesCount": "Următoarele date ({count})"
     },
     "route": "Traseu",
     "openRoute": "Vezi traseul",
@@ -457,6 +461,8 @@
       "locationHelp": "Locul, cum i-ai spune unui prieten: un nume, o stradă sau amândouă. La fel în ambele limbi, completat o dată.",
       "featured": "Evenimentul principal al site-ului",
       "featuredHelp": "Un singur eveniment poate fi principal. Cel marcat anterior își pierde automat marcajul.",
+      "special": "Ediție specială",
+      "specialHelp": "O ediție aparte — aniversară, caritabilă, o cursă la care ne alăturăm altcuiva. Apare cu un marcaj pe card și pe pagină. Oricâte evenimente pot fi speciale, inclusiv o singură ediție dintr-o serie; marcajul rămâne pe data aceea și nu se copiază pe celelalte.",
       "saveEvent": "Salvează detaliile evenimentului",
       "eventFieldsReadOnly": "Doar un editor sau un administrator poate modifica orele, harta și evenimentul principal.",
       "translationSection": "Conținut ({locale})",
@@ -623,9 +629,14 @@
       "createdWithSeries": "Evenimentul și {created} ediții au fost create, ca ciorne. Din lista de evenimente le bifezi și le publici deodată.",
       "durationMinutes": "Durata (minute)",
       "durationMinutesHelp": "Cât durează, în minute — de exemplu 90. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
-      "coHostName": "Co-organizator (altă organizație)",
-      "coHostUrl": "Pagina co-organizatorului",
-      "coHostHelp": "Opțional. Când evenimentul e organizat împreună cu altă organizație — un ONG, un magazin, un brand — numele ei aici și pagina, dacă are una. Apare ca „Împreună cu …” lângă numele clubului și e trecută ca al doilea organizator pentru Google.",
+      "coHostSection": "Parteneri",
+      "coHostName": "Partener (altă organizație)",
+      "coHostUrl": "Pagina partenerului",
+      "coHostRows": {
+        "add": "Adaugă un partener",
+        "remove": "Șterge partenerul"
+      },
+      "coHostHelp": "Opțional. Organizațiile alături de care ține clubul evenimentul — un ONG, un magazin, un brand, alt club — una pe rând, cu pagina lor dacă au una. Apar ca „Împreună cu A, B și C” pe pagină și pe card, și sunt trecute ca organizatori după club pentru Google. Partenerii se copiază pe toate datele unei serii.",
       "stravaEventUrl": "Link către evenimentul Strava",
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
       "facebookEventUrl": "Link către evenimentul Facebook",
@@ -946,13 +957,14 @@
         },
         "contactForm": {
           "title": "Formularul de contact",
-          "todo": "Pagina „Scrie-ne” e construită: numele, adresa și mesajul vizitatorului ajung ca un e-mail obișnuit în căsuța clubului, direct prin Gmail — nu prin Mailgun, deci nu consumă din cele 100 de mesaje pe zi. Până setezi cele trei variabile, pagina arată adresa clubului în loc de formular.",
+          "todo": "Pagina „Scrie-ne” e construită: numele, adresa și mesajul vizitatorului ajung ca un e-mail obișnuit în căsuța clubului, direct prin Gmail — nu prin Mailgun, deci nu consumă din cele 100 de mesaje pe zi. Până când contul de trimitere are adresă și parolă de aplicație, pagina arată adresa clubului în loc de formular; cine primește mesajele se scrie în aplicație, pe /admin/emails.",
           "done": "Formularul de contact trimite în căsuța clubului.",
           "how": [
             "Contul Google al clubului → Security → 2-Step Verification: pornită (fără ea Google nu dă parole de aplicație).",
             "Tot în Security → App passwords → creează una cu numele „Brașov Runners site” → copiază cele 16 caractere (se arată o singură dată).",
-            "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere; CONTACT_FORM_TO = adresele care primesc mesajele, despărțite prin virgulă (Gmailul clubului, Yahoo-ul Amaliei).",
+            "Vercel → proiectul de producție (și QA) → Settings → Environment Variables: CONTACT_SMTP_USER = adresa Gmail a clubului; CONTACT_SMTP_PASSWORD = cele 16 caractere. (CONTACT_FORM_TO nu mai e obligatorie — e doar rezerva pentru destinatari.)",
             "Redeploy pe ambele proiecte.",
+            "În aplicație: /admin/emails → „Cine primește mesajele de contact” → scrie adresele la „Către” și, dacă vrei o copie pentru cineva, la „Copie (Cc)” → Salvează. De aici se schimbă oricând, fără redeploy.",
             "Deschide {baseUrl}/ro/contact și trimite un mesaj de probă: „Mesajul a plecat.” pe pagină și e-mailul în căsuță, cu „Reply” către cine a scris. Rândul acesta devine verde."
           ]
         }
@@ -1013,12 +1025,12 @@
         },
         "mailgun": {
           "name": "Mailgun (trimiterea e-mailurilor)",
-          "freeGives": "Gratuit: 100 de e-mailuri pe zi. Până când clubul are domeniul lui, e-mailurile pot pleca doar către cinci adrese de test.",
+          "freeGives": "Gratuit: 100 de e-mailuri pe zi — pe un singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Până când clubul are domeniul lui, e-mailurile pot pleca doar către cinci adrese de test.",
           "ceiling": "Prima limită: 100 de e-mailuri pe zi, adică vreo 33 de înscrieri, pentru că o înscriere completă cere trei e-mailuri.",
           "whenCrossed": "E-mailurile de peste limită nu se pierd: rămân la coadă și pleacă după miezul nopții. Dar o cursă la care confirmările ajung abia a doua zi dimineață este o cursă proastă, așa că planul plătit se ia înainte de deschiderea înscrierilor, nu în timpul lor.",
-          "closeMeasured": "Azi au plecat {used} din {of} e-mailuri — mai ajung pentru vreo {left} înscrieri.",
+          "closeMeasured": "Azi au plecat {used} din {of} e-mailuri — mai ajung pentru vreo {left} înscrieri. Numărate din mesajele acestui mediu; limita e a unui singur cont Mailgun, împărțit cu celălalt mediu.",
           "bumpBack": "Se ia pentru luna cursei și se oprește luna următoare. O lună per cursă, nu un abonament pe termen lung.",
-          "closeMeasuredMonth": "Luna aceasta au plecat {used} din {of} e-mailuri (planul {plan}) — mai ajung pentru vreo {left} înscrieri.",
+          "closeMeasuredMonth": "Luna aceasta au plecat {used} din {of} e-mailuri (planul {plan}) — mai ajung pentru vreo {left} înscrieri. Numărate din mesajele acestui mediu; limita e a unui singur cont Mailgun, împărțit cu celălalt mediu.",
           "closeNone": "Planul {plan}, fără limită de mesaje."
         },
         "vercel": {
@@ -1382,7 +1394,26 @@
         "save": "Salvează planul",
         "saving": "Se salvează…",
         "saved": "Planul a fost salvat; cifrele de mai sus și de pe /admin/tasks îl folosesc de acum.",
-        "unlimited": "fără limită"
+        "unlimited": "fără limită",
+        "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită."
+      },
+      "contacts": {
+        "title": "Cine primește mesajele de contact",
+        "intro": "Mesajele de pe „Scrie-ne” pleacă prin contul Google al clubului, nu prin Mailgun, și nu consumă din cele 100 pe zi. Aici scrii cine le primește: „Către” sunt destinatarii, „Copie (Cc)” sunt cei care primesc o copie și se văd unul pe altul. Se salvează aici, fără redeploy.",
+        "source": {
+          "setting": "Acum ajung la: {to}. Copie: {cc}. Scrise aici, în aplicație.",
+          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}.",
+          "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
+        },
+        "updatedAt": "Setat la {when}.",
+        "to": "Către (adrese despărțite prin virgulă)",
+        "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
+        "cc": "Copie – Cc (adrese despărțite prin virgulă)",
+        "ccHelp": "Primesc o copie la fiecare mesaj trimis din formular, pe „Cc”, deci se văd unul pe altul. Gol înseamnă fără copii.",
+        "save": "Salvează destinatarii",
+        "saving": "Se salvează…",
+        "saved": "Destinatarii formularului de contact au fost salvați.",
+        "sender": "Contul din care pleacă mesajele nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
       }
     },
     "guide": {
@@ -1834,11 +1865,15 @@
       },
       "contactFormSmtp": {
         "title": "Formularul de contact",
-        "body": "Trimite prin SMTP, direct din Gmailul clubului, către CONTACT_FORM_TO — nu prin Mailgun și nu prin coada de e-mail."
+        "body": "Trimite prin SMTP, direct din Gmailul clubului — nu prin Mailgun și nu prin coada de e-mail. Destinatarii vin din /admin/emails, iar dacă acolo nu e nimeni, din CONTACT_FORM_TO; eticheta de alături spune care dintre ele a răspuns."
+      },
+      "contactFormNoRecipients": {
+        "title": "Formularul de contact",
+        "body": "Poate trimite, dar nu are către cine: nici lista din /admin/emails, nici CONTACT_FORM_TO nu au vreo adresă. Pagina „Scrie-ne” arată adresa clubului până când cineva scrie un destinatar pe /admin/emails — fără redeploy."
       },
       "contactFormOff": {
         "title": "Formularul de contact",
-        "body": "Pagina „Scrie-ne” arată adresa clubului în loc de formular. Pentru formular: CONTACT_SMTP_USER (adresa Gmail), CONTACT_SMTP_PASSWORD (parola de aplicație) și CONTACT_FORM_TO (destinatarii, cu virgulă)."
+        "body": "Pagina „Scrie-ne” arată adresa clubului în loc de formular. Lipsește contul din care pleacă: CONTACT_SMTP_USER (adresa Gmail) și CONTACT_SMTP_PASSWORD (parola de aplicație). Destinatarii se scriu în aplicație, pe /admin/emails; CONTACT_FORM_TO e doar rezerva."
       }
     },
     "rateLimits": "Limite de frecvență",
@@ -1984,6 +2019,7 @@
   },
   "Gallery": {
     "title": "Galerie",
+    "loading": "Se încarcă…",
     "intro": "Fotografii de la alergările, concursurile și întâlnirile clubului.",
     "empty": "Nu există încă albume publicate.",
     "backToGallery": "← Toate albumele",

@@ -7173,3 +7173,550 @@ club's shared Mailgun allowance** — one account, 100 messages a day, QA and pr
 together (§100).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 164. Decided — the club says who reads its mail, in the app; the platform says how it leaves (2026-09-20)
+
+**Context.** Three things the owner said this morning, and they are one thing. „I wanna
+allow CC on the contact form so that Amalia can receive emails”; then, when told it was an
+environment variable, „I need these CC's to be configurable in the app”; and, of the number
+on `/admin/emails`, „please note Mailgun is shared by QA and PROD”. The contact form's
+recipients were `CONTACT_FORM_TO` on two Vercel projects (§149), so adding a colleague meant a
+developer, two environment writes and two redeploys — and there was no copy list at all. The
+same page said „99 din 100 mesaje” as though the allowance were this deployment's, when it is
+one Mailgun account both environments spend from (§100, and since §163 QA spends it freely).
+
+**Decision.** Who receives is the club's; how it leaves is the platform's.
+
+The “to” and “cc” lists move into `platform_settings.contactRecipients` — the Mailgun plan's
+own shape (§100): one row, one fixed audit entity id (`…e002`), an Administrator's gate
+asserted by the service as well as the action, an audit row naming who changed it from what.
+They are edited on `/admin/emails`, under the plan, because both answer „what does the club's
+email do”. Each address is validated by the platform's own canonicalizer, the same one a
+participant's address meets.
+
+The reading order is **the setting when it names at least one “to”, otherwise
+`CONTACT_FORM_TO`, otherwise the form is off** — so a deployment never loses its way out
+because somebody saved the screen empty, and a fresh environment works before anybody signs
+in. The cc list is app-only: there is no `CONTACT_FORM_CC` and there will not be one, and it
+applies whichever half answered for the “to” list. It is a real `Cc` header, not a second
+`To`: a colleague should see she was copied, and „Reply all” should keep the club together
+on the thread. `Reply-To` is still the visitor — that is the whole workflow.
+
+`CONTACT_FORM_MODE` consequently stops asking about recipients, which a startup-time
+derivation cannot see anyway, and answers for the transport alone: `capture` locally,
+`smtp` with the Gmail account and its app password, `off` without them. „Can it send” and
+„is there anybody to send to” are two questions now, and the page, `/devs` and `/admin/tasks`
+ask both — `/devs` naming which half answered (`smtp/setting`, `smtp/env`), and carrying a
+fourth state for the deployment that can send and has nobody to send to, whose fix is a
+screen and not a redeploy. **The sending account does not follow the recipients into the
+database**: `CONTACT_SMTP_USER` and `CONTACT_SMTP_PASSWORD` stay environment variables, named
+on the page and shown nowhere, because a value in `platform_settings` is read by every page
+that needs it and printed on the screen that sets it (AGENTS.md §14.5).
+
+And the allowance says what it is: one Mailgun account, shared by QA and production, counted
+here from this environment's own outbox rows — on `/admin/emails` under the plan's figures,
+and in the cost table's Mailgun row on `/admin/tasks`. Wording only; there is no second
+query, and none is possible — Mailgun's API does not tell a domain sending key what the
+account has spent.
+
+**The fold, while the page was open.** „Adresa pentru alte aplicații” (§139) did not look
+expandable, and the reason was already written down in this repository: a `<summary>` with
+`display: flex` loses its disclosure triangle in Chrome and Safari, which the registration
+page's `disclosureSx` says in a comment and the calendar fold did anyway. So the affordance
+becomes one shared thing — `shared/ui/disclosure.ts`: the marker back (`listStyle: revert`),
+height from padding and never from a flex box, the pointer, an underline on hover and on
+keyboard focus, and the 44-pixel rule carried along. Used by the calendar feed's address, the
+footer's „Despre club” and the series card's „Toate datele”, so a fold looks like a fold
+everywhere. The listing's „other events” heading keeps its deliberate exception: on a wide
+screen it is always open and is not a control.
+
+*Rejected:* keeping the recipients in the environment and letting the app add only a cc (it
+answers „CC” and not „configurable in the app”, and leaves the main list a redeploy away);
+`Bcc` for the copy (a club is not a blind list — the people copied should see one another);
+putting `CONTACT_SMTP_PASSWORD` on the same screen for symmetry (a password in a table the
+backoffice reads is the one thing §14.5 forbids, symmetry or not); reading Mailgun's own
+usage to make the shared count exact (the sending key cannot ask, and a wrong exact number
+is worse than an honest sentence); a per-fold fix on the calendar alone (the same flaw sat
+in three other places, and would have come back in the fifth).
+
+**Consequences.** `modules/contact/domain/recipients.ts` (new — the schema, the typed-line
+parser, `resolveContactRecipients`), `modules/contact/recipients.ts` (new — read/update with
+the audit row), `modules/contact/ui/ContactRecipientsPanel.tsx` (new), `shared/ui/disclosure.ts`
+(new), `modules/contact/{delivery,message,service}.ts`, `infrastructure/email/smtp-adapter.ts`
+(`cc` on `SmtpMessage`), `shared/config/env.ts`, `modules/audit/repository.ts`
+(`contact_recipients.changed`), `modules/diagnostics/{configuration,owner-tasks}.ts`, the
+`/admin/emails`, `/contact`, `/admin/tasks` and `/devs` pages, `modules/notifications/ui/EmailPlanPanel.tsx`,
+`modules/events/ui/SeriesCard.tsx`, `shared/ui/SiteFooter.tsx`, the events listing, both
+catalogues. No migration: `platform_settings` is one row per key. AGENTS.md §16.4; SPECS.md
+BR-REQ-070-04 criteria 3, 6, 7 and 9, BR-REQ-080-02 criterion 8; SETUP.md §38. Tests: unit
+`contact/recipients.test.ts`, `contact/message.test.ts`, `config/env.test.ts`,
+`diagnostics/configuration.test.ts`; integration `contact/recipients.test.ts`,
+`contact/service.test.ts`; e2e `email-plan.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 165. Decided — the menu asks what the page asks, and the fallback works when nothing else does (2026-09-20)
+
+**Context.** The review of §164, the same morning. Splitting "can this deployment send" from
+"has it anybody to send to" left four places still holding the old, single question, and two
+of them were the ones a visitor meets first. `SiteHeader` gated „Contact” on
+`CONTACT_FORM_MODE !== "off"`, which used to imply a recipient and since §164 does not — so
+the configuration SETUP §38 now steers to (the Gmail account set, `CONTACT_FORM_TO` dropped,
+nobody typed on `/admin/emails` yet) put an entry in the menu leading to a page that says
+there is no address, which BR-REQ-070-04 criterion 1 forbids in as many words. `/devs` still
+listed `CONTACT_FORM_TO` as a requirement on every branch, so a club that had done exactly
+what the new copy instructs read „e citită din aplicație” above a red `✗ CONTACT_FORM_TO`.
+`/contact` gained an unguarded database read — on the page whose whole job is to show the
+club's address when something is broken, and on a free Neon plan whose compute suspends once
+the month's 100 CU-hours are spent (§68). And nothing compared the two address lists, so the
+club Gmail typed into both boxes — the obvious thing to type — would have been a second
+`RCPT TO` and a name in two headers.
+
+**Decision.** The question is asked in one shape, wherever it is asked.
+
+`contactFormReaches(env, recipients)` is that shape, and the header now calls it too: one
+primary-key read on `platform_settings`, beside the two the header already makes for the
+navigation and the gallery, guarded exactly as those are. The guard is
+`readContactRecipientsOrNull()`, one function used by the header, the page and the action:
+a `try` around `getDb()` *and* the await, because `getDb()` throws synchronously as an
+argument, and `null` as the answer — which `resolveContactRecipients` reads as "the club has
+named nobody" and hands to `CONTACT_FORM_TO`, which is precisely how the deployment behaved
+before §164. A database that is not answering therefore costs the club nothing it had.
+
+`/devs` names what is actually missing: the transport's two variables on the branches about
+the transport, and `CONTACT_FORM_TO` on the one branch where it is genuinely one of the two
+ways out — the deployment that can send and has nobody to send to, whose other way out is a
+screen with no variable to name. A green row never prints a red cross again.
+
+The same mailbox is written once. Deduplication is by spelling, lower-cased, within each
+list and of the copy list against the resolved „to” — the environment's included — and not
+through the canonicalizer, because `a.b@gmail.com` and `ab@gmail.com` are two addresses by
+§74 and a club that typed both meant both. `CONTACT_FORM_TO`'s own entries now go through
+`headerSafe` like the copy list's: the setting's addresses met the canonicalizer, an
+operator's typed variable met nothing.
+
+And the fold: it sat in five places, not four. The backoffice's series-dates fold and the
+task board's „Cum fac asta” take the shared affordance too, at the backoffice's own 36-pixel
+density — the height from padding, never from a flex box, which is what removes the triangle.
+
+*Rejected:* leaving the header on the environment alone and relaxing criterion 1 instead (the
+criterion is the promise — a menu entry that leads nowhere is the bug, and the read is one
+indexed lookup on a page that already makes two); caching the recipients in module scope to
+avoid it (a setting the club changes and a serverless process that outlives the change is the
+class of bug §100 was careful to avoid); deduplicating through `canonicalizeEmail` (§74 says
+those are different mailboxes, and silently dropping one would be worse than sending twice);
+`test.describe.serial` for the e2e that writes the recipients row (serial orders a worker,
+and the two viewport projects are two workers against one database — the row is global, so
+the test runs on one project, and `contact.spec.ts` still walks the visitor's journey on
+both).
+
+**Consequences.** `shared/ui/SiteHeader.tsx`, `modules/contact/recipients.ts`
+(`readContactRecipientsOrNull`), `modules/contact/domain/recipients.ts` (deduplication),
+`modules/contact/message.ts` (`headerSafe` on „to”), `modules/diagnostics/configuration.ts`,
+`infrastructure/email/smtp-adapter.ts` (the header comment), the `/contact` page and its
+action, `/admin/tasks` and the backoffice events list (the two folds). No migration, no new
+message key, no new variable. SPECS.md BR-REQ-070-04 criteria 1 and 9, BR-REQ-080-02's
+verification line; SETUP.md §38 (the steps are numbered `1`–`6` — `4b` was not a list marker
+and rendered as part of step 4). Tests: unit `contact/recipients.test.ts`,
+`contact/message.test.ts`, `diagnostics/configuration.test.ts`; e2e `email-plan.spec.ts`
+(the shared-allowance sentence, and the recipients test in its own block).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 166. Decided — the calendar changes month without the page blinking (2026-09-20)
+
+**Context.** The owner, this morning: "There is flickering when changing calendars! I need
+skeletons and loading screens! I need more animations, I need a runner showing as a loader!
+And I need more gradients and shiny Front-End stuff!"
+
+The flicker was two separate faults wearing one coat. The month arrows were
+`IconButton component="a"` and the pills were `Box component="a"` — both plain anchors, both
+written that way because a component reference cannot cross from a Server Component into a
+MUI client component (`GlyphChip` records the hydration failure that rule came from). A plain
+anchor is a **document** navigation: the browser tears the page down, paints white, and
+rebuilds it, header and all. And the listing was one server render that awaited three queries
+in its own body before returning a single character, so even the soft navigations that did
+exist — the two selects, "Azi" — held the old page for the length of the slowest query with
+nothing to say. `CalendarPicker` had carried a comment since §116 promising that
+`router.push` would let "the listing's `loading.tsx`" show. There was no `loading.tsx`.
+
+**Decision.** The page stops being one render, and the controls stop being anchors.
+
+*The shell owes the database nothing.* `events/page.tsx` now awaits no query at all. It starts
+two — the upcoming events and the month on view — and hands the promises down, so Next sends
+the header, the wordmark, the heading and every calendar control the instant the request
+arrives. Three regions fill in behind `<Suspense>`: the lead (hero and filter chips), the
+calendar's body, and the list of other events. The two that need the same rows share one
+promise, so streaming costs no extra query. The gallery is the same shape, one boundary.
+
+*Only the grid is replaced.* `EventCalendar` was split: `CalendarHeader` is the title, the two
+selects, the arrows and the pills, and it reads the address and never the database, so it
+renders with the shell and stays where a thumb last found it. Pressing "next" three times
+quickly is three presses on the same button. The body is what costs a query and the body is
+what the boundary wraps.
+
+*The boundary is keyed.* React will not hide already-revealed content during a transition, so
+an unkeyed boundary would leave last month's grid on screen until the new one landed. The key
+is `calendarBoundaryKey(view, layout)` and it names exactly what the query and the drawing
+depend on — the period and the layout, never the type filter, which narrows the list and not
+the calendar. The lead and the list are deliberately **not** keyed: the club's next race does
+not change because somebody looked at December, so those two keep their content and never
+blink.
+
+*The wait is a shape.* `shared/ui/PublicSkeleton.tsx` holds the fallbacks, and each is built
+from the same boxes as the thing it stands in for — the calendar's seven columns and its
+`minHeight: { xs: 56, sm: 80 }` cells, six week rows because `monthGrid` always returns six,
+the card's outlined box, the gallery's 4:3 covers. Same box, so nothing reflows; the e2e
+measures the grid's width across a month change rather than trying to catch the fallback
+mid-flight. `AdminSkeleton` keeps the shapes it had and joins the same vocabulary.
+
+*The runner.* `shared/ui/RunnerLoader.tsx` is `DirectionsRunIcon` — already
+`TYPE_GLYPH.GROUP_RUN`, so the figure that means "a run" on every chip is the figure that
+means "a run is being fetched". Inline SVG from one icon file, no library, no image. It bobs
+and leans on the spot for 900ms a cycle: longer than anything else on the site because it is
+the one animation that repeats and a 250ms loop is a twitch rather than a stride. It appears
+once per boundary, beside words, never once per shape.
+
+*Reduced motion, without exception.* Every new rule sits inside `MOTION_OK`, the opt-*in*
+guard `theme/motion.ts` already uses, so the static state is what a browser renders when it
+evaluates nothing. MUI's skeleton wave is the one animation this site does not own, so it
+gets the guard added the other way round (`shimmerOffForReducedMotion`). A reader who asked
+for less motion gets a still figure and still shapes — and never less information, because
+the movement is never the only signal: every fallback carries `role="status"` and an
+`aria-label` that says the page is loading, in the reader's language.
+
+*The gradients.* Three, and that is the budget: past three a page stops having a lead surface
+and becomes a paint chart. `SURFACE_GRADIENT` in `brand.ts` names them — the hero's surface,
+the accent under a pointer, the bar under a section heading — and `theme/surfaces.ts` turns
+each into a plain `sx` fragment a Server Component can spread. Plain, because
+`theme.applyStyles` is a function and a function cannot cross into a MUI client component; the
+dark variant is selected by the valueless `data-dark` attribute MUI already writes onto
+`<html>`. Two new hexes in the whole change, both in `brand.ts`, both a step from a card
+colour towards the club's blue and no further: body text, muted text and the countdown are
+asserted against **both stops of both ramps** in `tests/unit/theme/brand.test.ts`, and the
+CSS strings are asserted to be made of palette tokens so a stop typed by hand cannot hide in
+one.
+
+*Rejected:* a `loading.tsx` on the listing — twice over. §54 forbids a loading boundary above
+a `notFound()`, and `events/loading.tsx` would sit above `[slug]` and `[slug]/register`,
+turning three 404 assertions in `event-pages.spec.ts` into 200s; an `events/(list)/` route
+group would dodge that and still be the wrong instrument, because `loading.tsx` replaces the
+*whole page* — hero, chips and all — for a change to one grid. Adding one to the remaining
+`/admin` routes that stream without one was rejected for the first reason alone: every one of
+them (`gallery/pictures`, `emails`, `checkin`, `guide`) refuses a role with `notFound()` in
+the page itself, so no boundary can sit above it and no route group helps. A motion library,
+or MUI's `Fade`/`Grow`: every animation here is CSS emitted with the page, and none of this
+is worth a client island (`AGENTS.md` §18.3). Animation on every card: `riseIn` already
+staggers the first five and stops, for the reason it always did. `prefetch` on the
+neighbouring months: Next skips prefetching a dynamic route by design, forcing it would buy a
+database query per link in the viewport, and Neon's free plan is 100 CU-hours a month (§68) —
+the shell now arrives before the query either way, which is the part a reader feels. Keying
+the lead and the list boundaries as well: that is the flicker, reintroduced by hand. A
+fourth gradient on the backoffice’s page header: the one shared heading there
+(`BackofficeShell`) has its subtitle directly beneath it — who you are signed in as, and with
+which address — and a rule between a title and its own caption separates the two rather than
+marking a section. The backoffice joins the change through the runner and the shimmer in
+`AdminSkeleton` instead, which is the part of it a reader there actually waits on.
+
+**Consequences.** `theme/brand.ts` (`GRADIENT.heroTint`, `heroTintDark`, `SURFACE_GRADIENT`),
+`theme/surfaces.ts` (new), `theme/motion.ts` (`KEYFRAMES.run`, `fadeInSoft`, `runInPlace`,
+`shimmerOffForReducedMotion`), `theme/theme.ts` (the `br-run` keyframes),
+`shared/ui/RunnerLoader.tsx` and `shared/ui/PublicSkeleton.tsx` (new), `shared/ui/ChipLink.tsx`
+(now a client island over `next/link`), `shared/ui/SubmitButton.tsx` (the runner in place of
+`CircularProgress`), `modules/events/ui/CalendarHeader.tsx` and `CalendarStepLink.tsx` (new),
+`EventCalendar.tsx` (body only; `events` may now be a promise), `FeaturedEventHero.tsx` and
+`RegistrationCta.tsx` (the two gradients), `modules/events/domain/listing.ts` (new),
+`modules/staff-identity/ui/AdminSkeleton.tsx`, the events listing and the gallery pages. New
+message key `loading` in the `Events` and `Gallery` namespaces, both catalogues. No migration,
+no new variable, no new dependency. SPECS.md BR-REQ-041-01 criterion 12. Tests: unit
+`events/listing.test.ts` (new) and `theme/brand.test.ts` (the gradients at both ends); e2e
+`event-pages.spec.ts` — the controls do not move and the grid does not reflow across a month
+change.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 167. Decided — the review's pass over the loading states (2026-09-20)
+
+**Context.** §166 shipped the listing's streamed regions, the skeletons, the runner and the
+three gradients, and a review of it found nine things wrong before the owner pressed
+anything. Four of them were the mechanism contradicting its own comment, which is the worst
+kind: a later reader trusts the sentence and not the CSS.
+
+**Decision.** Each one fixed where it is, and the sentence that was wrong corrected rather
+than quietly deleted.
+
+*A past race is never the hero.* Between seasons the listing is handed the club's last event
+so the page is not blank, and that row still carries the `featured` flag it had while it was
+next. §166 moved the division into `listingSections`, which looks only at `events[0].featured`
+— so the finished race became a full hero, two-pixel border, "Recomandat" chip and an entry
+button, under a notice saying there is nothing upcoming; and because a hero with an empty
+list renders nothing, its own card vanished. `listingSections` now takes `hasUpcoming` as its
+third argument and both regions pass it. The page advertises a race it is going to run, and
+nothing else.
+
+*The skeleton is the grid's own height.* `monthGrid` emits as many week rows as the month
+spans — four, five or six — and the fallback drew six always, so in ten months of twelve
+everything below the calendar jumped up a row or two when the real grid landed. The row count
+is handed in now, `monthGrid(view.month).length`, which is arithmetic on the address and costs
+no query.
+
+*A fallback may only reserve what the region is certain to need.* The lead's fallback drew the
+hero's own bordered box, and the hero is the one region of the listing that may not exist: at
+most one event can be featured, none is by default, and between seasons there is none by rule.
+A club without one saw a 230-pixel box appear and collapse — the reflow the skeletons exist to
+prevent, on the page every visitor lands on. It is the loading band and a row of chip shapes
+now, and the list's fallback is one card rather than three. Both are smaller than the smallest
+real case, so the page only ever grows into them, which nobody reads as a fault.
+
+*The calendar's key names the kind filter.* §166 wrote that the filter is not in the key
+"because the calendar shows every kind". The calendar does not: `events/page.tsx` has narrowed
+the month's rows by kind since §89, so the filter is an input of the very query the boundary
+suspends on. Pressing "Cursă" changed the grid's contents while the key stood still, and React
+kept the previous kind's grid on screen for the whole round-trip — the "too coarse" failure the
+same comment names. The key is `kind:period:layout:type` now, and the comment, the test's
+rationale and this paragraph say the true thing.
+
+*Two gradients that were not doing what they said.* `heroSurface` used the `background`
+shorthand, which resets `background-color`, so the `bgcolor` beneath it that the hero's comment
+called "the fallback" was being erased rather than kept; it is `backgroundImage` now, and the
+comment is true. `accentOnHover` declared `transition: background-image 150ms` — dead twice
+over: `background-image` has a discrete animation type, so no browser ever ran the curve, and
+`transition` in an `sx` fragment is the whole shorthand, so it replaced the four properties
+MUI's own Button fades and made *those* snap instead. The line is gone; MUI's transition is
+left intact and the gradient arrives at once, as it always did.
+
+*The biggest fold on the listing gets its triangle.* §164 gave every fold the shared
+affordance and "Alte evenimente (N)" kept `display: flex` for its 44 pixels — and a flex
+`<summary>` has no marker in Chrome or Safari, which is the exact fault §164 was written to
+fix. Its height comes from the shared padding now. The wide-screen exception, where it is
+always open and is not a control, stays.
+
+*The month arrow says the press landed.* Next holds a soft navigation to a dynamic route until
+the server answers when the route carries no `loading.tsx`, and the two unkeyed boundaries then
+keep React from committing the shell early — they suspend on a fresh promise every navigation
+and React will not hide already-revealed content. So between the press and the new month the
+page is correct, still, and silent for the length of the slowest query. `useLinkStatus` is
+Next's documented answer to exactly that case; the club's runner takes the chevron's place
+inside the same 44-pixel button while the press is travelling. Same box, so nothing moves; the
+button keeps its `aria-label`, so the control never loses its name.
+
+*And the test that could not fail.* The new e2e measured the arrow and the grid, clicked, and
+measured again — but `toBeVisible()` on the grid passes on the first poll, because a soft
+navigation keeps the old one mounted. Every assertion compared a render with itself. It waits
+for the month in the address, for the title to change and for no `role="status"` to be left
+under `main` before either measurement now, which is what gives the geometry its teeth.
+
+*Rejected:* a `loading.tsx` for the listing, again, and for the same reason §166 gave — an
+`events/(list)/` route group would dodge the `notFound()` rule of §54, and it would still
+replace the whole page, hero and chips and all, for a change to one grid, which is a bigger
+blink than the one being removed. Keying the lead and the list so the commit is not held: that
+re-introduces the flicker by hand. `useLinkStatus` on every `ChipLink` as well: the hook must
+be a descendant of the link, so each pill would need a wrapper component, and the pills are
+already the whole site's chips — the arrows are the control the owner pressed and the control
+the report named. Restoring the month-on-view kinds to `presentEventTypes`: the chip row sits
+above the streamed calendar, so recomputing it per month would blink the row on every arrow
+press; the loss stands as §166 recorded it, and is now stated here so it is not found by
+surprise.
+
+**Consequences.** `modules/events/domain/listing.ts` (`listingSections` takes `hasUpcoming`,
+`calendarBoundaryKey` takes the kind), the events listing page (both call sites, the week
+count, the "other events" summary), `shared/ui/PublicSkeleton.tsx` (`weeks`, a smaller lead
+fallback, one card by default), `theme/surfaces.ts` (`backgroundImage`, no `transition`),
+`modules/events/ui/CalendarStepLink.tsx` (`useLinkStatus` and the runner) and
+`CalendarPicker.tsx` (the comment that promised a `loading.tsx` that never existed). No
+migration, no new variable, no new dependency, no new message key. SPECS.md BR-REQ-041-01
+criterion 14 and BR-REQ-011-01 criterion 14. Tests: unit `events/listing.test.ts` (a past featured row, the kind in the
+key); e2e `event-pages.spec.ts` — the month change is waited for before it is measured.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 168. Decided — a special edition, several partners, and the facts one under another (2026-09-20)
+
+**Context.** Four things the owner asked for on the same pass over QA. "I need to define
+special events as well" — asked what he meant by one, he chose "a 'special' mark on any event
+— a badge on the card and the page, and the listing can lead with it, separate from featured",
+and gave the case: "some dates can be special events where we overlap with, say, Brașov
+Marathon on the same Wednesday". Then the co-host, which §121 built as one name and one link:
+he wants "any number of partners on one event, each with a name and an optional link". Then
+the series card, whose fold says "Toate datele (8)" over a list that holds only the coming
+ones. And a screenshot of an event page on a phone, where "Când — sâmbătă, 21 noiembrie 2026 ·
+întâlnire la 09:00 · start la 10:00" wraps into a run-on line: he wants bullet points, one
+under another.
+
+**Decision.**
+
+*A special mark on any event.* `events.is_special`, a boolean beside `featured` in the editor
+with a helper saying what it is for, a chip with a sparkle on the card, the hero and the event
+page, and one clause in the listing's order. It is deliberately **not** a second featured
+flag, and every difference follows from that: no unique index, because any number of editions
+may be apart; no clearing of anybody else's mark when one is ticked; and no effect on which
+event the page leads with — `listingSections` reads `events[0].featured` and nothing else, and
+`SPECIAL_FIRST` sits third in the ordering, behind the featured flag and behind races, so it
+decides the order *within* a band and never the hero. The calendar entry and the Open Graph
+card say nothing new: a badge is a thing to see on the page, not a fact to carry into
+somebody's calendar. And the mark does not travel: it joins the film, the Strava event and the
+featured flag in what §130 leaves alone when a save reaches the other dates of a series, and a
+duplicate or a repeated occurrence starts ordinary — which is exactly the owner's Wednesday,
+special once because another club's race is passing through.
+
+*Several partners.* A jsonb `events.co_hosts` holding `[{ name, url }]` in the club's own
+order, at most eight, validated at the form (a name, 1–200 characters; a page https and at
+most 2 000) and again when it is read. `co_host_name` and `co_host_url` stay exactly where
+they are, unwritten and unread — this release expands only, and dropping them is a later
+contraction (`AGENTS.md` §7.6). One function decides what a row means, `readCoHosts`: an
+array is the answer, **including an empty one**, and only a null column falls back to the two
+old columns as the one co-host they always were. That asymmetry is the whole of the migration
+— a save writes `[]` when the club removes every partner, and falling back there would put
+the deleted name back on the page. The editor is a repeated group modelled on
+`ScheduleRowsEditor`, the same island with the same two reasons to exist and no state beyond
+them. The page and the card say "Împreună cu A, B și C" through `format.list`, so the join is
+the reader's language's own and each partner is still its own link inside the sentence; the
+structured data names every one as an `Organization` after the club, and keeps a bare object
+rather than a list of one when the club hosts alone; the calendar writes one line per partner,
+the first carrying the label, so each keeps its link. A partner is the series', not one date's,
+so it travels where the single co-host travelled.
+
+*"Următoarele date (8)".* The fold holds the coming dates and said "all" of them. Two words in
+both catalogues, no key renamed, no code touched.
+
+*The facts one under another.* On the event page only, each row of the `<dl>` renders its
+pieces as a real `<ul>`, one line each with a bullet the screen reader does not hear, instead
+of a row separated by middle dots. A row with a single piece is not a list of one — it is just
+the fact. Nothing about the words changes, the `<dt>`/`<dd>` structure two e2e specs read is
+untouched, and the links keep their 44 pixels. The hero and the cards keep the one-line form:
+they are summaries above the fold, and stacking the hero's facts would push the button the
+hero exists for off a phone's screen.
+
+*Rejected:* a `co_hosts` child table — a partner has no identity of its own, is never queried
+across events and never ordered by anything but the club's own hand, so a row per partner buys
+a join and a migration for nothing; the list is exactly what `schedule_items` is, and is read
+the same way. Dropping `co_host_name` in this release: it is a contraction, and
+`migrations:check` is right to refuse it in the same change that adds the column replacing it.
+Writing the first partner back into `co_host_name` for a rollback's sake: two places holding
+the same fact is how they disagree, and a rollback that shows one of three partners is not a
+better failure than a rollback that shows none. A second unique index or a "clear the others"
+transaction for the special mark: there is nothing to keep unique. Stacking the facts
+everywhere: the cards would double in height for no question anybody asks of a card. Renaming
+`Event.series.allDatesCount`: the key's name is not the words it holds, and moving it would
+touch a call site to change a sentence.
+
+**Consequences.** Migration `0048` (`events.co_hosts`, `events.is_special`); the schema, the
+public columns and the listing's order (`modules/events/repository.ts`); a new
+`modules/events/domain/co-hosts.ts` that everything reading a partner goes through — the facts
+block, the structured data, `calendar.ts` for the feed, and the editor; the form fields and the
+service (`coHosts` and `isSpecial` written, `coHosts` in `SERIES_COLUMNS` and carried by a
+copy — a partner is the series'; `isSpecial` carried by neither, because a copy is a different
+edition); `admin/actions.ts` gathers the rows by index as it gathers the programme's;
+`CoHostRowsEditor.tsx` is new and `EventFieldsForm` has two checkboxes where it had one;
+`GlyphChip` accepts the club's orange, `glyphs.ts` gains `special`; `EventFacts` gains
+`stacked`, which the event page and the preview pass. Eleven message keys, both catalogues.
+SPECS.md BR-REQ-011-01 criteria 15 and 16, BR-REQ-041-01 criterion 15, BR-REQ-050-01
+criterion 14 and BR-REQ-052-02 criterion 9. Tests: unit `events/co-hosts.test.ts`,
+`content/event-co-hosts-field.test.ts`, `events/structured-data.test.ts`; integration
+`events/configuration.test.ts` (the order, and no limit on how many are special),
+`cms/series-edit.test.ts` (the partners travel, the mark does not, the old columns are
+untouched).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 169. Decided — the review's pass over the special edition and the partners (2026-09-20)
+
+**Context.** The review of §168 found nine things, and four of them are the same thing seen
+from four sides: the badge the decision promises is rendered on every surface except the one
+the owner's own example lands on. §113 folds a repeated event into **one** card, and that card
+is `SeriesCard`, which wears the kind chips, the rhythm chip and the cancelled chip and
+nothing else — so an organizer who ticks "Ediție specială" on one Wednesday, having read a
+helper that says a badge will show on the card, sees nothing on the listing at all. Worse, the
+new `SPECIAL_FIRST` clause lifts that whole series line above the ordinary lines of its band,
+so the card moves for a reason the reader cannot see and still advertises the soonest,
+ordinary date. The draft preview carries `isSpecial` into its synthetic event and never renders
+it. Then the smaller ones: `coHostSchema.strict()` makes a stored partner all-or-nothing;
+`coHosts` defaulting to `[]` lets a caller that never mentioned the partners erase one;
+`sameValue(null, [])` makes the first series save of every legacy event report a change nobody
+made; `list-style: none` on the stacked facts takes the list semantics away in WebKit, which
+is the one platform the stacking was done for; a bare "• 09:00" on its own bullet; a partner
+on a series card that is words where the meeting point beside it is a link; the Romanian chip
+reading "Special" where everything else calls it "o ediție specială"; and the English helper
+quoting a join that `Intl.ListFormat` does not produce.
+
+**Decision.**
+
+*The badge goes where the card is.* `SeriesCard` wears the special badge whenever **any** of
+its dates is special, and `editionDifference` gains a fourth kind, `special`, so the folded
+"Următoarele date" list says *which* date it is, with the same sparkle in the club's orange
+that the badge wears. The marks are ranked — cancelled, special, the place, the hour — and the
+ranking is written down: cancelled outranks everything because there is nothing to come to, and
+a special edition outranks "elsewhere" and "at another hour" because it is the reason those
+differ and it is the one difference the organizer *stated* rather than the reader inferring it.
+With both marks the lift `SPECIAL_FIRST` gives the line is legible, so the lift stays and
+`groupSeries`' comment stops describing an ordering that no longer exists. The preview renders
+the badge exactly as the public page does, because the preview is the only way to read a draft.
+
+*A stored partner is read leniently.* `coHostSchema` drops `.strict()` — an unknown key is
+stripped, never a reason to drop the partner, so the day a later release adds a logo or an id
+the other deployment still running today's code reads those rows as having their partners
+rather than none — and a page that is not https falls back to `null` instead of taking the
+name down with it. That is exactly what the two old columns have always done: the club loses
+the link, never the partner. A name is still required; a partner without one is nothing to
+render.
+
+*"Say nothing" and "no partners" are two different answers.* `eventFieldsSchema.coHosts` loses
+its `[]` default and is simply optional, and `eventColumnsFrom` writes no column when it is
+absent. The editor always posts its boxes, so an empty list from it still means the club
+removed every partner and is still written as `[]` — which is what `readCoHosts` needs. But a
+caller that never mentioned the partners (a script, a fixture, a form from before §168) may
+not erase one, and on a row saved before the list existed `[]` would have erased the partner
+its two old columns still hold — through the whole series, since `coHosts` is in
+`SERIES_COLUMNS`. And the series comparison asks `readCoHosts` what the rows *mean* rather than
+comparing the raw columns, so `null` and `[]` on an event with no partners are one value and
+the first series save of a legacy event no longer reports and applies a change nobody made.
+
+*The stacked facts are a list on the phone they were made for.* `role="list"` and
+`role="listitem"` are stated although `<ul>` and `<li>` already mean them: WebKit drops the
+implicit roles from a list whose computed `list-style-type` is `none` with no marker of its
+own, and `display: flex` on the item drops `display: list-item` with it, so on iOS Safari
+VoiceOver would have read three unrelated lines. And on the page the lone time of a non-race
+gets a name — "începe la 09:00" — because on its own bullet under "Când" a bare number is a
+second, unnamed fact; on one line, where the date stands right before it, it stays as it was.
+
+*The words.* The public chip is "Ediție specială" in Romanian, agreeing with the noun the whole
+feature is named after and with the box the organizer ticks, and "Special edition" in English.
+The Romanian helper says "o singură ediție dintr-o serie" rather than "o singură dată", which
+reads as "only once", and says "marcaj" throughout rather than "insignă". The English partners
+helper quotes "Together with A, B, and C", which is what `Intl.ListFormat` produces for `en`.
+And a partner on a series card is a link again: the compact facts go through the same
+`coHostSentence` the page does, which already falls back to plain words where the card is
+itself one link (`EventCard`).
+
+*Rejected:* excluding series members from `SPECIAL_FIRST`, or sorting the grouped lines by
+each series' soonest date — the lift is what §168 decided ("a special edition stands above the
+ordinary ones of its own band"), a line holding a special edition is such a line, and the
+answer to "the reader cannot see why" is to show them, not to hide the order. Combining marks
+on one date ("specială, în alt loc") — one date is one chip with one tooltip, and the date's
+own page says the rest. Labelling the single time everywhere, on the cards and the hero too:
+a card has no room for a word it does not need, and "sâm, 21 nov · 09:00" was never ambiguous.
+Writing the first partner back into `co_host_name` so that "say nothing" could be safe — §168
+already rejected two places holding one fact. A new e2e for any of it: the suite is not run in
+this pass, and a spec written blind is worse than the gap it closes; the coverage added is
+unit and integration, and the e2e gap is named here so the next pass over `event-pages.spec.ts`
+can close it with a seeded special event and two partners.
+
+**Consequences.** `modules/events/domain/series.ts` (`EditionDifference` gains `special`,
+`editionDifference` takes `isSpecial` and ranks the marks, `groupSeries`' comment),
+`ui/EditionMark.tsx` (a table of icon and colour, the sparkle in `secondary.main`),
+`ui/series-sentence.ts`, `ui/SeriesCard.tsx`, `ui/EventFacts.tsx` (the roles, the named start
+time, the compact partners through `coHostSentence`), `preview/events/[id]/page.tsx`,
+`domain/co-hosts.ts`, `content/events/fields.ts` and `content/events/service.ts` (the absent
+column, the comparison through `readCoHosts`). Four message strings change (`Event.special` and
+one helper in each catalogue) and two keys are new — `Event.startAt`, `Event.series.specialMark`
+— in both catalogues. No migration, no new variable,
+no new dependency. §168's Consequences paragraph said `coHosts` was not carried by a copy,
+which the code and SPECS both contradict; it is corrected there. SPECS.md BR-REQ-011-01
+criteria 15 and 16, BR-REQ-020-01 criterion 13, BR-REQ-041-01 criterion 15. Tests: unit
+`events/series.test.ts` (the fourth mark and the ranking), `events/co-hosts.test.ts` (the
+lenient read), `events/ical.test.ts` (several partners, the label said once),
+`content/event-co-hosts-field.test.ts` (absent is not `[]`); integration
+`cms/series-edit.test.ts` (a row nobody has saved since keeps its partner, and an empty list
+on it is no change).
+
+Baseline `BR-V1.38-2026-09-18`.

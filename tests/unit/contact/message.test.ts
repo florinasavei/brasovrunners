@@ -28,6 +28,26 @@ describe("BR-REQ-070-04 the message the club receives", () => {
     expect(message.to).toEqual(["club@example.com", "colleague@example.org"]);
     expect(message.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
     expect(message.subject).toBe("Mesaj de pe site: Ana Popescu");
+    // No copy list configured, no `Cc` header at all — not an empty one (§164).
+    expect(message.cc).toBeUndefined();
+  });
+
+  it("carries the club's copy list as a real Cc, one line each (§164)", () => {
+    const copied = renderContactMessage(INPUT, { ...ROUTE, cc: ["amalia@example.org", "board@example.org"] });
+    expect(copied.to).toEqual(["club@example.com", "colleague@example.org"]);
+    expect(copied.cc).toEqual(["amalia@example.org", "board@example.org"]);
+    // "Reply" still answers the visitor, whoever else was copied — the whole of the workflow.
+    expect(copied.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
+
+    // A header may not fold, whatever a setting or a variable once held — the "to" list is
+    // `CONTACT_FORM_TO`'s when the club has typed nobody, and nothing validates that at startup.
+    expect(renderContactMessage(INPUT, { ...ROUTE, cc: ["a@example.org\r\nBcc: x@example.com"] }).cc).toEqual([
+      "a@example.org Bcc: x@example.com",
+    ]);
+    expect(renderContactMessage(INPUT, { ...ROUTE, to: ["club@example.com\r\nBcc: x@example.com"] }).to).toEqual([
+      "club@example.com Bcc: x@example.com",
+    ]);
+    expect(renderContactMessage(INPUT, { ...ROUTE, cc: [] }).cc).toBeUndefined();
   });
 
   it("marks the subject on QA and nowhere else (AGENTS.md §16.4)", () => {
