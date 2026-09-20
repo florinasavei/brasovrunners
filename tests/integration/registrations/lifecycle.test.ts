@@ -100,6 +100,7 @@ function submissionInput(overrides: Partial<Record<string, unknown>> = {}) {
     email: "ana@example.ro",
     locale: "ro",
     privacyAcknowledged: true,
+    fitnessDeclared: true,
     resultsNameConsent: true,
     listOptOut: false,
     honeypot: "",

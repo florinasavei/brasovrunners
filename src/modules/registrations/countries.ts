@@ -39,3 +39,21 @@ export function countryOptions(locale: "ro" | "en", name: (code: string) => stri
 
   return [{ code: "RO", label: name("RO") }, ...rest];
 }
+
+/**
+ * The flag for a country code (§171; the owner: "și la cetățenie pune steaguri man").
+ *
+ * Two regional indicator symbols — `RO` becomes 🇷🇴 — which is the platform's own answer and
+ * costs nothing: no icon package, no 249 SVGs to ship, no hostname to fetch from. Every code in
+ * `COUNTRY_CODES` is two ASCII letters, so the arithmetic is total.
+ *
+ * **It degrades to letters on Windows**, which draws the two indicators as boxed capitals
+ * instead of a flag, and that is accepted: the country's name is the label and this is the mark
+ * beside it, so the row reads correctly either way. Shipping flag images to fix a rendering
+ * choice one desktop platform makes is not worth a megabyte on every phone.
+ */
+export function countryFlag(code: string): string {
+  if (!/^[A-Za-z]{2}$/.test(code)) return "";
+  const BASE = 0x1f1e6; // 🇦, the regional indicator for "A"
+  return String.fromCodePoint(...[...code.toUpperCase()].map((letter) => BASE + letter.charCodeAt(0) - 65));
+}

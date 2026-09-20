@@ -7845,3 +7845,97 @@ Tests: `tests/e2e/series-edit.spec.ts` (the repeat tick), `tests/unit/i18n/messa
 derivation the reordered panel now makes obvious).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 171. Decided — the whole account workflow, and a form that says where its answers go (2026-09-20)
+
+**Context.** Two clusters from the same walkthrough, and they meet in the same place: a screen
+that knows something it does not say, and a workflow that stops one step short of being usable.
+
+*The accounts.* The owner: "but the zitadel workflow is not complete… I need to invite users to
+create accounts man! and set passwords and stuff", then "I must invite users and stuff, and I
+can also deactivate, send password resets, etc". What existed was half of it — create the human
+user, ask Zitadel for an invite code — with three holes. An account that already existed
+returned 409 and the story ended there: the row joined the allowlist, the screen said "they
+already have an account", and **nobody ever sent them the link that sets a password**, which is
+the common case rather than the rare one. There was no way to send a password reset to somebody
+who had signed in before and could not now. And there was no way to switch an account off at
+the provider — "Retrage accesul" removes the `staff_users` row, which is what stops the
+*backoffice* letting somebody in, and says nothing about whether they can still sign in at all.
+
+*The form.* "La formularul de înscriere trebuie să fie clar ce date sunt publice și ce date sunt
+confidențiale"; "nu e clar cu informațiile medicale, trebuie să bifeze doar «declar că sunt
+apt»"; "pune iconițe chiar și la sex"; "și la cetățenie pune steaguri man". The registration
+form asks for a birth date, a phone number, a next of kin and a health note, and said nothing
+anywhere about where any of it goes — while the answer is unusually good and worth saying. The
+medical block asked for free text first with a consent under it, which reads as "tell us your
+conditions", so the one thing the club actually needs from everybody — that they consider
+themselves fit — was nowhere and the Article 9 box was everywhere.
+
+**Decision.**
+
+*An existing account is invited, not skipped.* A 409 on create falls through to the same
+invitation a new account gets, so the person receives the link that sets their password either
+way. The outcome still reports `exists`, because the screen should say "they already had an
+account" rather than claim one was made.
+
+*Two more verbs, each its own button.* **"Trimite resetare de parolă"** asks Zitadel to email a
+reset link (`POST /v2/users/{id}/password_reset` with `sendLink`) — offered only to somebody who
+has signed in at least once, because before that the invitation is the right email and it sets
+the first password anyway. **"Dezactivează contul"** deactivates at the provider
+(`/deactivate`, with `/reactivate` behind the same function). It is deliberately *not* folded
+into "Retrage accesul": they answer two different questions — "may they use the backoffice" and
+"may they sign in at all" — and a colleague who changed job inside the club wants the first
+without the second. Nothing here ever holds a password or a code; Zitadel sends, Zitadel owns.
+
+*Every lookup is by email.* One `findZitadelUserId`, shared by all three verbs, because each is
+"find the person, then do one thing to them" and a lookup that disagreed between two of them
+would be the same defect twice. It searches `emailQuery` first and `loginNameQuery` second —
+the fix §170 made for the resend, now the only implementation there is.
+
+*The form says where its answers go.* One sentence above the first field, in two versions: the
+ordinary one ("nothing you write here appears anywhere on the site") and the one for an event
+that publishes a start list, which names the single exception and says what is *not* published
+even then. Each block of fields carries its own marker underneath — "Confidențial. Nu se
+publică." — so somebody who skipped the banner still meets the answer beside the question.
+
+*The medical block becomes a statement and a note.* **"Declar pe propria răspundere că sunt apt
+medical să particip"** is a required tick among the consents, stored as `fitness_declared_at`.
+It is **not health data**: no condition, no diagnosis, nothing Article 9 covers — which is
+exactly why it can be required where `health_notes` cannot, and why it needs no separate
+consent. The free text and its own consent stay, folded and closed, under a sentence saying it
+is optional, what it is for and that it is deleted seven days after the event. A test
+registration ticks it like everything else (§30); a staff entry and a desk walk-in do not —
+there the paper declaration carries it, and no staff member declares fitness on somebody's
+behalf (`AGENTS.md` §15.11).
+
+*Glyphs on the closed sets.* Female, male and person beside the three answers for sex; the
+country's flag before its name, built from the code itself with two regional indicator symbols.
+Both as **children** of the menu item, never as an element-valued prop — the defect
+`CheckboxField` documents. The flags degrade to boxed letters on Windows, which is accepted:
+the country's name is the label and this is the mark beside it.
+
+**Rejected.** *Making the fitness statement part of the privacy acknowledgment.* They are
+different things — one is "I have read what you do with my data", the other is "I am fit to run"
+— and a single box covering both would let a refusal of either be read as agreement to the
+other.
+
+*Shipping flag images.* 249 SVGs, or a package, to fix a rendering choice one desktop platform
+makes, on a page every phone loads. The name is the label; the flag is decoration.
+
+*Deactivating the account inside "Retrage accesul".* It would make the common case (somebody
+moving between roles) destructive, and the destructive case is one extra press away.
+
+**Consequences.** Migration `0049_fitness_declared` adds one nullable column — expand only,
+null for every row taken before it existed. `registrationSubmissionSchema` gains a
+`z.literal(true)`, so every fixture that builds a valid public submission carries it, and
+`REGISTRATION_FORM_FIELDS` carries it too, because an unticked literal is a rejection the error
+summary must be able to name and link to. The CSV export gains a "Medically fit (declared)"
+column. `zitadel-users.ts` goes from two exported functions to four, over one connection helper
+and one lookup.
+
+Tests: `tests/unit/staff/zitadel-users.test.ts` (an existing account is invited; the reset asks
+for a link and never a code; deactivate and reactivate; each verb without the key),
+`tests/unit/registrations/*` and `tests/integration/registrations/*` (the new required tick, and
+that a test registration makes it like a real one).
+
+Baseline `BR-V1.38-2026-09-18`.

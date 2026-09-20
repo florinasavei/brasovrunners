@@ -715,7 +715,17 @@
         "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
         "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
       },
-      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă."
+      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
+      "passwordReset": "Trimite resetare de parolă",
+      "passwordResetPending": "Se trimite…",
+      "passwordResetSent": "Gata. I-am trimis pe email linkul cu care își pune o parolă nouă.",
+      "deactivateAccount": "Dezactivează contul",
+      "deactivateAccountPending": "Se dezactivează…",
+      "accountDeactivated": "Contul de autentificare a fost dezactivat: nu se mai poate autentifica nicăieri. Rândul din echipă rămâne — ca să-i iei și accesul, folosește „Retrage accesul”.",
+      "accountReactivated": "Contul de autentificare a fost reactivat.",
+      "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
+      "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (To do → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
+      "accountFailed": "Furnizorul de autentificare a refuzat ({reason})."
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -1659,7 +1669,8 @@
       "captcha": "Verificarea anti-bot",
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
-      "guardianName": "Părinte / tutore"
+      "guardianName": "Părinte / tutore",
+      "fitnessDeclared": "Declarația că ești apt medical"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1733,7 +1744,13 @@
     "instagramHandleHelp": "Cu sau fără @.",
     "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Pentru un adult, lasă secțiunea goală.",
     "guardianName": "Numele complet al părintelui / tutorelui",
-    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar."
+    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
+    "privacyBanner": "Datele tale nu apar nicăieri pe site. Le vede doar echipa care organizează, pentru această cursă, iar declarația și emailurile merg doar la tine.",
+    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar numele tău apare acolo doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii.",
+    "confidentialNote": "Confidențial. Nu se publică.",
+    "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
+    "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
+    "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

@@ -40,8 +40,10 @@ function filledForm(overrides: Record<string, string> = {}): FormData {
   };
 
   for (const [name, value] of Object.entries(values)) form.set(name, value);
-  // A checkbox is absent unless ticked; ticked, it is the string "on".
+  // A checkbox is absent unless ticked; ticked, it is the string "on". Both required ones:
+  // the privacy acknowledgment and the fitness statement (§171).
   form.set("privacyAcknowledged", "on");
+  form.set("fitnessDeclared", "on");
   return form;
 }
 

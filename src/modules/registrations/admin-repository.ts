@@ -36,6 +36,8 @@ export type RegistrationListRow = {
   eventTitle: string | null;
   /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
   clubMemberDeclared: boolean;
+  /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
+  fitnessDeclaredAt: Date | null;
   /** The optional socials (§106), as typed; null when not given. */
   stravaUrl: string | null;
   instagramHandle: string | null;
@@ -261,6 +263,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
@@ -409,6 +412,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,

@@ -32,7 +32,12 @@ import {
 import { canDeleteEvent, type EditorialStatus, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { sendEventThanks } from "@/modules/notifications/event-mail";
 import { DEV_STAFF_COOKIE, requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
-import { inviteZitadelUser, resendZitadelInvite } from "@/modules/staff-identity/zitadel-users";
+import {
+  inviteZitadelUser,
+  resendZitadelInvite,
+  sendZitadelPasswordReset,
+  setZitadelUserActive,
+} from "@/modules/staff-identity/zitadel-users";
 import {
   changeStaffRole,
   inviteStaffUser,
@@ -724,6 +729,58 @@ export async function resendStaffInviteAction(form: FormData): Promise<void> {
     const member = await resendStaffInvitation(getDb(), actor, text(form, "email"));
     const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
     outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backTo(path, outcome);
+}
+
+/**
+ * The password link, for somebody who has signed in before and cannot now (§171).
+ *
+ * Zitadel sends the mail and owns the code. Nothing here reads, sets or transports a password,
+ * and the allowlist is untouched: this is about the account, not about who is staff.
+ */
+export async function sendStaffPasswordResetAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/staff" });
+  let outcome: Record<string, string | undefined>;
+  try {
+    await requireStaffRole("ADMIN");
+    const result =
+      env.STAFF_AUTH_MODE === "provider"
+        ? await sendZitadelPasswordReset(text(form, "email"))
+        : ({ kind: "unconfigured" } as const);
+    outcome = { saved: "passwordReset", account: result.kind, ...(result.kind === "failed" ? { reason: result.reason.slice(0, 120) } : {}) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backTo(path, outcome);
+}
+
+/**
+ * The account at the provider, off or on (§171).
+ *
+ * Deliberately not folded into "withdraw access": that removes the `staff_users` row, which is
+ * what stops the backoffice letting somebody in (`AGENTS.md` §13), and it is the right verb for
+ * a colleague who changed job inside the club. This one is for a colleague who left.
+ */
+export async function setStaffAccountActiveAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/staff" });
+  let outcome: Record<string, string | undefined>;
+  try {
+    await requireStaffRole("ADMIN");
+    const active = form.get("active") === "1";
+    const result =
+      env.STAFF_AUTH_MODE === "provider"
+        ? await setZitadelUserActive(text(form, "email"), active)
+        : ({ kind: "unconfigured" } as const);
+    outcome = {
+      saved: active ? "accountReactivated" : "accountDeactivated",
+      account: result.kind,
+      ...(result.kind === "failed" ? { reason: result.reason.slice(0, 120) } : {}),
+    };
   } catch (error) {
     outcome = outcomeOf(error);
   }

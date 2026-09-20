@@ -42,6 +42,8 @@ export type RegistrationEntryDetails = {
   healthNotes?: string | null;
   healthConsentVersion?: number | null;
   healthConsentAt?: Date | null;
+  /** When "I am medically fit to take part" was ticked (§171); null on a desk or phone entry. */
+  fitnessDeclaredAt?: Date | null;
 };
 
 const collapse = (value: string | null | undefined): string => (value ?? "").replace(/\s+/g, " ").trim();

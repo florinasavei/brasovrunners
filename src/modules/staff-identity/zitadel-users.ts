@@ -22,11 +22,30 @@ export type InviteOutcome =
   | { kind: "unconfigured" }
   | { kind: "failed"; reason: string };
 
+/** What the other three verbs answer (§171): done, nothing to act on, no key, or a reason. */
+export type AccountOutcome =
+  | { kind: "done" }
+  | { kind: "missing" }
+  | { kind: "unconfigured" }
+  | { kind: "failed"; reason: string };
+
 type Deps = {
   fetch?: typeof fetch;
   issuer?: string;
   token?: string;
 };
+
+/** The issuer and the key, or nothing — every call below starts here. */
+function connection(deps: Deps): { issuer: string; headers: Record<string, string>; call: typeof fetch } | null {
+  const issuer = (deps.issuer ?? env.AUTH_ZITADEL_ISSUER ?? "").replace(/\/$/, "");
+  const token = deps.token ?? env.ZITADEL_MANAGEMENT_PAT;
+  if (!issuer || !token) return null;
+  return {
+    issuer,
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+    call: deps.fetch ?? fetch,
+  };
+}
 
 export function isZitadelInviteConfigured(): boolean {
   return Boolean(env.ZITADEL_MANAGEMENT_PAT && env.AUTH_ZITADEL_ISSUER);
@@ -36,11 +55,9 @@ export async function inviteZitadelUser(
   person: { email: string; displayName: string; locale: Locale },
   deps: Deps = {},
 ): Promise<InviteOutcome> {
-  const issuer = (deps.issuer ?? env.AUTH_ZITADEL_ISSUER ?? "").replace(/\/$/, "");
-  const token = deps.token ?? env.ZITADEL_MANAGEMENT_PAT;
-  if (!issuer || !token) return { kind: "unconfigured" };
-  const call = deps.fetch ?? fetch;
-  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" };
+  const connected = connection(deps);
+  if (!connected) return { kind: "unconfigured" };
+  const { issuer, headers, call } = connected;
 
   const [givenName, ...rest] = person.displayName.trim().split(/\s+/);
   const familyName = rest.join(" ") || givenName;
@@ -55,7 +72,21 @@ export async function inviteZitadelUser(
     }),
   });
 
-  if (created.status === 409) return { kind: "exists" };
+  /**
+   * An account that is already there still needs its invitation (§171; the owner: "I need to
+   * invite users to create accounts man! and set passwords and stuff").
+   *
+   * A 409 used to end the story: the row joined the allowlist, the screen said "they already
+   * have an account", and nobody ever sent them the link that lets them set a password. That is
+   * the common case, not the rare one — the same person is added, removed and added again, or
+   * was created in the Zitadel console by hand. So an existing account falls through to the
+   * same invitation the new one gets, and the outcome still says "exists" so the screen can
+   * word it honestly.
+   */
+  if (created.status === 409) {
+    const again = await resendZitadelInvite(person.email, deps);
+    return again.kind === "invited" ? { kind: "exists" } : again;
+  }
   if (!created.ok) return { kind: "failed", reason: await reasonOf(created) };
   const { userId } = (await created.json()) as { userId: string };
 
@@ -68,13 +99,16 @@ export async function inviteZitadelUser(
   return { kind: "invited" };
 }
 
-/** Send the invitation again to an account that exists — the previous code is replaced. */
-export async function resendZitadelInvite(email: string, deps: Deps = {}): Promise<InviteOutcome> {
-  const issuer = (deps.issuer ?? env.AUTH_ZITADEL_ISSUER ?? "").replace(/\/$/, "");
-  const token = deps.token ?? env.ZITADEL_MANAGEMENT_PAT;
-  if (!issuer || !token) return { kind: "unconfigured" };
-  const call = deps.fetch ?? fetch;
-  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" };
+/**
+ * The account behind an address, or nothing (§171).
+ *
+ * Shared by every verb below, because each of them is "find the person, then do one thing to
+ * them", and a lookup that disagreed between two of them would be the same defect twice.
+ */
+async function findZitadelUserId(email: string, deps: Deps = {}): Promise<string | undefined> {
+  const connected = connection(deps);
+  if (!connected) return undefined;
+  const { issuer, headers, call } = connected;
 
   /**
    * By **email**, then by login name (§170; the owner: "uite ce pățesc când încerc să adaug un
@@ -101,10 +135,23 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
     return result?.[0]?.userId;
   };
 
-  const userId =
+  return (
     (await search({ emailQuery: { emailAddress: email, method: "TEXT_QUERY_METHOD_EQUALS_IGNORE_CASE" } })) ??
-    (await search({ loginNameQuery: { loginName: email, method: "TEXT_QUERY_METHOD_EQUALS_IGNORE_CASE" } }));
-  if (!userId) return { kind: "failed", reason: "no account with this address at the identity provider" };
+    (await search({ loginNameQuery: { loginName: email, method: "TEXT_QUERY_METHOD_EQUALS_IGNORE_CASE" } })) ??
+    undefined
+  );
+}
+
+const NO_ACCOUNT = "no account with this address at the identity provider";
+
+/** Send the invitation again to an account that exists — the previous code is replaced. */
+export async function resendZitadelInvite(email: string, deps: Deps = {}): Promise<InviteOutcome> {
+  const connected = connection(deps);
+  if (!connected) return { kind: "unconfigured" };
+  const { issuer, headers, call } = connected;
+
+  const userId = await findZitadelUserId(email, deps);
+  if (!userId) return { kind: "failed", reason: NO_ACCOUNT };
 
   const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
     method: "POST",
@@ -113,6 +160,64 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
   });
   if (!invited.ok) return { kind: "failed", reason: await reasonOf(invited) };
   return { kind: "invited" };
+}
+
+/**
+ * "Send them a password reset" (§171; the owner: "I can also deactivate, send password resets,
+ * etc").
+ *
+ * Zitadel emails the link and owns the code; nothing about the password is ever handled here.
+ * Distinct from the invitation, which is for somebody who has never signed in: this is for
+ * somebody who has and cannot get back in, and an invitation would be the wrong words in their
+ * inbox.
+ */
+export async function sendZitadelPasswordReset(email: string, deps: Deps = {}): Promise<AccountOutcome> {
+  const connected = connection(deps);
+  if (!connected) return { kind: "unconfigured" };
+  const { issuer, headers, call } = connected;
+
+  const userId = await findZitadelUserId(email, deps);
+  if (!userId) return { kind: "missing" };
+
+  const sent = await call(`${issuer}/v2/users/${userId}/password_reset`, {
+    method: "POST",
+    headers,
+    // `sendLink` with no template: Zitadel's own hosted login page receives the code, which is
+    // where the password is set. A template would point at a page this platform does not have.
+    body: JSON.stringify({ sendLink: { notificationType: "NOTIFICATION_TYPE_Email" } }),
+  });
+  if (!sent.ok) return { kind: "failed", reason: await reasonOf(sent) };
+  return { kind: "done" };
+}
+
+/**
+ * Switch the sign-in itself off, or back on (§171).
+ *
+ * Withdrawing access removes the `staff_users` row, and that alone is what stops the backoffice
+ * letting somebody in — `AGENTS.md` §13, and it stays true. This is the second half the owner
+ * asked for: the account at the provider, which outlives the row and can still sign in
+ * *somewhere* until it is deactivated. Two separate verbs on the screen, because they answer
+ * two different questions: "may they use the backoffice" and "may they sign in at all".
+ */
+export async function setZitadelUserActive(
+  email: string,
+  active: boolean,
+  deps: Deps = {},
+): Promise<AccountOutcome> {
+  const connected = connection(deps);
+  if (!connected) return { kind: "unconfigured" };
+  const { issuer, headers, call } = connected;
+
+  const userId = await findZitadelUserId(email, deps);
+  if (!userId) return { kind: "missing" };
+
+  const changed = await call(`${issuer}/v2/users/${userId}/${active ? "reactivate" : "deactivate"}`, {
+    method: "POST",
+    headers,
+    body: "{}",
+  });
+  if (!changed.ok) return { kind: "failed", reason: await reasonOf(changed) };
+  return { kind: "done" };
 }
 
 async function reasonOf(response: Response): Promise<string> {

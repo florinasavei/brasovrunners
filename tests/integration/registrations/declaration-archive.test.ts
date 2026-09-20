@@ -76,6 +76,7 @@ const submission = {
   email: "ana@example.ro",
   locale: "ro",
   privacyAcknowledged: true,
+  fitnessDeclared: true,
   resultsNameConsent: false,
   listOptOut: false,
   honeypot: "",
