@@ -561,7 +561,13 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         .set({ ...carriedFields, updatedAt: now })
         .where(eq(registrations.id, existing.id));
 
-      const allocated = await allocateOrWaitlist(tx, event, existing.id, now);
+      // The event row first, like every other allocation (rule 1 above, §10.6): a verified
+      // participant's restart used to allocate against the capacity the page had read, with
+      // no lock — the one door into the allocator that skipped the serialization point
+      // (`DECISIONS.md` §151).
+      const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+      if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+      const allocated = await allocateOrWaitlist(tx, withLockedCapacity(event, lockedEvent), existing.id, now);
       await enqueueEmail(tx, {
         participantId: participant.id,
         registrationId: allocated.id,

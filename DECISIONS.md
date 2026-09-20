@@ -6840,3 +6840,21 @@ chip rows, the kind chip, `aria-label` on the list); `Admin.tasks.summary`, `all
 BR-REQ-090-05 criteria 8–9. The cost half and `tasks-cost.spec.ts` are untouched.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 151. Decided — a verified participant's restart locks the event row like every other allocation (2026-09-19)
+
+**Context.** A reviewer of §147 noticed, in passing, that `submitRegistration`'s restart
+branch — a participant whose address is already verified coming back after a cancelled or
+expired registration — called `allocateOrWaitlist` without `lockEventForCapacity`, against
+the capacity the page had read. Every other door into the allocator locks first (rule 1 of
+the module, §10.6). Under the two-connection suite the door held only by luck.
+
+**Decision.** The restart locks the event row first and allocates against the locked
+capacity, exactly as `confirmEmail` does. The concurrency suite gains the case: twenty
+verified people restarting cancelled rows at once on a one-place event, one hold, nineteen
+waiting. No behaviour changes for anyone but the two people who would have shared a place.
+
+**Consequences.** `registrations/service.ts`; `tests/concurrency/capacity.test.ts`.
+BR-REQ-034-02 criterion 1.
+
+Baseline `BR-V1.38-2026-09-18`.

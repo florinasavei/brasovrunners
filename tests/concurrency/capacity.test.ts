@@ -11,6 +11,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import {
   confirmEmail,
   type EventForRegistration,
+  submitRegistration,
   unregister,
 } from "@/modules/registrations/service";
 
@@ -204,6 +205,73 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
       expect(byId.get(waiting.id)).toBe("WAITLIST_OFFERED");
       // The newcomer joins the end of the queue rather than leapfrogging into the freed place.
       expect(byId.get(newcomer.id)).toBe("WAITLISTED");
+    },
+    30_000,
+  );
+
+  it(
+    "BR-REQ-034-02 criterion 1, the restart door (`DECISIONS.md` §151): twenty verified participants restarting cancelled rows at once win one place",
+    async () => {
+      const event = await createInternalEvent(1);
+      // Twenty people who registered once, cancelled, and come back — verified, so the restart
+      // skips the email step and allocates straight away: the one path that used to allocate
+      // without the event lock.
+      const cancelled = await Promise.all(
+        Array.from({ length: 20 }, (_, i) => createPendingRegistration(event.id, `again${i}`)),
+      );
+      await db
+        .update(registrations)
+        .set({ status: "CANCELLED", cancelledAt: NOW, cancellationSource: "PARTICIPANT" })
+        .where(
+          inArray(
+            registrations.id,
+            cancelled.map((row) => row.id),
+          ),
+        );
+      const people = await db
+        .select({ id: participants.id, email: participants.deliveryEmail })
+        .from(participants)
+        .where(
+          inArray(
+            participants.id,
+            cancelled.map((row) => row.participantId),
+          ),
+        );
+
+      // Real time: the approved privacy notice the seed left in this database is effective
+      // from the day it was seeded, and the event starts in December 2026 either way.
+      const later = new Date();
+      await Promise.all(
+        people.map((person) =>
+          submitRegistration(
+            db,
+            event,
+            {
+              firstName: "Ana",
+              lastName: "Pop",
+              birthDate: "1990-05-17",
+              sex: "UNSPECIFIED",
+              nationality: "RO",
+              city: "Brașov",
+              phone: "+40711111111",
+              emergencyContactName: "Contact Urgență",
+              emergencyContactPhone: "+40722222222",
+              email: person.email,
+              locale: "ro",
+              privacyAcknowledged: true,
+              resultsNameConsent: false,
+              listOptOut: true,
+              honeypot: "",
+              renderedAt: new Date(later.getTime() - 10_000).toISOString(),
+            },
+            later,
+          ),
+        ),
+      );
+
+      const rows = await statusesFor(event.id);
+      expect(rows.filter((r) => r.status === "PENDING_DECLARATION")).toHaveLength(1);
+      expect(rows.filter((r) => r.status === "WAITLISTED")).toHaveLength(19);
     },
     30_000,
   );

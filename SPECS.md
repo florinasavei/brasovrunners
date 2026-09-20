@@ -324,7 +324,7 @@ coffee is run on nothing.
 
 **Acceptance criteria**
 
-1. Given a capped event with 1 free place, when 20 confirmations are attempted concurrently, then exactly 1 succeeds and the rest are waitlisted or rejected, and the final occupied count equals capacity.
+1. Given a capped event with 1 free place, when 20 confirmations — or 20 restarts of cancelled registrations by verified participants (2026-09-19, `DECISIONS.md` §151) — are attempted concurrently, then exactly 1 succeeds and the rest are waitlisted or rejected, and the final occupied count equals capacity.
 2. Given any capacity-changing transaction, when it runs, then it locks the event row or an equivalent serialization point.
 3. Given an attempt to lower capacity below the current occupied count, when it is submitted, then it is rejected with a clear message.
 4. Given capacity is increased, when the transaction commits, then existing waiting-list entries are allocated before any later direct registration.
