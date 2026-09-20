@@ -8344,3 +8344,59 @@ also found their worktrees had been cut from an old `main`, which is recorded he
 run checks its base before it writes a line.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 178. Decided — the registrations list gets verbs, not a status select (2026-09-20)
+
+**Context.** The owner, of the registrations screen: "trebe sa pot face management de inscrieri
+mai eficient!", "CRUD participants", "and statuses should be drop-down", and separately "aș vrea
+să filtrez by default după evenimentul principal (pt că ar trebui să existe doar unul la un
+moment dat)".
+
+Everything he is asking for already exists as a verb — confirm on paper, give a place, check in,
+undo, resend, cancel — on the registration's *own* page, one at a time, behind a click into the
+row and a click back. Eighty registrations on race morning is eighty round trips. What the list
+offered was a resend button and nothing else.
+
+The sentence that needed a decision is "statuses should be drop-down".
+
+**Decision.** *The drop-down is a menu of verbs, never a status select.* Picking a state and
+saving would be a second write path into `registrations`, and it would go past three things at
+once: the allocator that hands out places while holding the event row (`AGENTS.md` §10.6), the
+approved declaration a confirmation requires (§10.8), and §15.11's closed list of what staff may
+do, which ends "there is no fourth". A free select could confirm somebody who never signed
+anything — quietly, with no audit row naming who did it and no place taken from the queue in the
+proper order. So each row carries a "⋮" holding the verbs that apply to *that* row, each one
+submitting a hidden form the Server Component already rendered, each reaching the same Server
+Action and the same service as the registration's own page, each authorized there again
+(BR-REQ-060-01).
+
+*Which verbs appear is one pure function.* `rowVerbsFor(status, role, {checkedIn})` — tested
+against `state-machine.ts` rather than against a list copied into a test. The assertion that
+matters: it never offers to confirm a registration the state machine cannot move to CONFIRMED,
+which is precisely how "no confirmation without a signed declaration" survives a new surface.
+Spread across JSX, that property would have been something a reader had to reconstruct.
+
+*The list is about the featured event unless told otherwise.* `defaultEventFilter` is pure and
+shared by the page and the export link, because a filter applied on screen but not in the
+download hands the club a spreadsheet of a different set than it was looking at (§15.10). "Toate
+evenimentele" is the literal `all`, one press away — a default that cannot be escaped is not a
+default. An id no longer in the list falls back rather than showing an empty page filtered by
+something the select cannot display.
+
+**Rejected.** *A status select, as asked.* See above. The owner's underlying complaint —
+too many clicks — is answered without it.
+
+*Inline editing of a participant's details in the row.* The detail page owns the name correction
+and its audit trail; a second editor for the same field is a second place for it to be wrong.
+
+**Consequences.** `listEventsWithRegistrations` returns `featured` so the default can be
+derived without a second query. The row's actions cell grows one icon button; the resend button
+stays where it was, because on race week it is the one verb pressed most and a menu would cost it
+a click.
+
+Tests: `tests/unit/registrations/row-verbs.test.ts` (never a verb the state machine refuses;
+never confirm before the declaration; check-in only for confirmed; the destructive verbs withheld
+from a role that may not manage registrations; resend exactly where a message exists) and
+`tests/unit/registrations/default-event-filter.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.

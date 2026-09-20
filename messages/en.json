@@ -330,7 +330,7 @@
       "deleteAction": "Delete permanently",
       "deleteConfirm": "I confirm this deletion is permanent",
       "registrationDeleted": "The registration was permanently deleted.",
-      "rowActions": "Actions",
+      "rowActions": "Actions for {name}",
       "clubMemberLabel": "Brașov Runners members",
       "bouncedLabel": "Email",
       "bouncedOnly": "Email bounced only",
@@ -386,7 +386,11 @@
       },
       "exportExcel": "Export to Excel",
       "columnBib": "Bib",
-      "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed."
+      "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
+      "openRow": "Open the registration",
+      "cancel": "Cancel the registration",
+      "cancelBody": "The place is released through the allocator and offered at once to the first person waiting. An audit row records who cancelled. It cannot be undone: if they change their mind, they register again.",
+      "confirmOnPaperBody": "You are confirming that the participant signed the declaration on paper, at the desk. They get the place and a race number, and the audit row names you as the person who recorded the signature. Use it only with the signed paper in front of you."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1371,7 +1375,8 @@
         "checkinUndone": "Check-in undone."
       },
       "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused.",
-      "guardian": "Minor — parent/guardian: {name}"
+      "guardian": "Minor — parent/guardian: {name}",
+      "confirmOnPaper": "Confirm on paper"
     },
     "emails": {
       "title": "The emails participants receive",

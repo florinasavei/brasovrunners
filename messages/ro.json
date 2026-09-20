@@ -330,7 +330,7 @@
       "deleteAction": "Șterge definitiv",
       "deleteConfirm": "Confirm că această ștergere este definitivă",
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
-      "rowActions": "Acțiuni",
+      "rowActions": "Acțiuni pentru {name}",
       "clubMemberLabel": "Membri Brașov Runners",
       "bouncedLabel": "Email",
       "bouncedOnly": "Doar email respins",
@@ -386,7 +386,11 @@
       },
       "exportExcel": "Exportă Excel",
       "columnBib": "Număr",
-      "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit."
+      "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
+      "openRow": "Deschide înscrierea",
+      "cancel": "Anulează înscrierea",
+      "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
+      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul de concurs, iar în jurnal rămâi tu ca cel care a înregistrat semnătura. Se folosește doar când ai hârtia semnată în față."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1371,7 +1375,8 @@
         "checkinUndone": "Prezența a fost anulată."
       },
       "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
-      "guardian": "Minor — părinte/tutore: {name}"
+      "guardian": "Minor — părinte/tutore: {name}",
+      "confirmOnPaper": "Confirmă pe hârtie"
     },
     "emails": {
       "title": "Emailurile trimise participanților",

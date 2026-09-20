@@ -936,6 +936,7 @@ registration — and it lists registrations and never changes an address.
 5. Given an address that already holds an active registration for that event, when an Administrator enters it, then they are told so plainly rather than receiving the public form's generic answer.
 6. Given an Author or an Editor, when any of this is attempted, then it is refused.
 7. Given any of these changes, when it completes, then an `audit_logs` row records the actor, the action, the entity and the time.
+8. Given the registrations list, when a row renders, then it offers the verbs that apply to its status and the reader role — open, resend, confirm on paper, give a place, check in or undo, cancel — as a menu of the existing actions and never as a free status select, so no transition bypasses the allocator, the signed declaration or the audit row; and given no event in the query, then the list and its export are both filtered to the featured event, with every event one press away (2026-09-20, DECISIONS.md section 178).
 
 **Verification:** integration `registrations/staff-crud.test.ts`
 
