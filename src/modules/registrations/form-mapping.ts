@@ -90,6 +90,7 @@ export function readRegistrationForm(
     healthConsent: checked(form, "healthConsent"),
     // "Declar că sunt apt" (§171) — required on the public form, absent on a staff entry.
     fitnessDeclared: checked(form, "fitnessDeclared"),
+    rulesAcknowledged: checked(form, "rulesAcknowledged"),
 
     // The language of the emails and the declaration (§97): chosen on the form, the page's
     // language until chosen — a runner on the Romanian site may still want English.

@@ -20,6 +20,8 @@ import {
 } from "@/modules/events/domain/repeat";
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
+import { recordAuditEvent } from "@/modules/audit/repository";
+import { eraseAllRegistrationsOfEvent } from "@/modules/registrations/admin-service";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
 import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
 import { areTestRegistrationsAvailable, removeTestRegistrations } from "@/modules/registrations/test-registrations";
@@ -28,6 +30,7 @@ import {
   canCreateEvent,
   canDeleteEvent,
   canEditEventFields,
+  canHardDeleteEvent,
   canEditTranslation,
   canTransition,
   type EditorialStatus,
@@ -49,6 +52,7 @@ import {
   findTranslationById,
   findTranslationWithEventById,
   listTranslationsForEvent,
+  readEventErasurePlan,
 } from "./repository";
 
 /**
@@ -1549,4 +1553,111 @@ export async function deleteEvent<T extends Record<string, unknown>>(
   // `event_translations` cascades from the event; nothing else references an event with no
   // registrations against it.
   await db.delete(events).where(eq(events.id, input.eventId));
+}
+
+export type HardDeleteEventInput = {
+  actor: Actor;
+  eventId: string;
+  /** The event's title, as the person typed it. Anything else refuses. */
+  typedTitle: string;
+  /** Why — kept in the audit row, which is all that survives. */
+  reason: string;
+  now?: Date;
+};
+
+/**
+ * Erase an event **and everyone registered for it** — the hard delete.
+ *
+ * `deleteEvent` above refuses an event that has registrations, and refusing was right for as
+ * long as the only thing behind the refusal was "archive it instead". It is not the only thing:
+ * the club's own data controller had an archived event carrying two registrations he had
+ * entered himself, and no way at all to remove either. "We cannot delete this" is not an answer
+ * a controller can be given about his own records, and the same argument that produced
+ * `deleteRegistrationByStaff` (BR-REQ-037-06 — somebody exercising their right to erasure)
+ * produces this: the safe verb stays the default, and the destructive one exists, named
+ * differently, behind a confirmation nobody presses by accident.
+ *
+ * **It is allowed in production**, and that is a decision rather than an oversight. `DECISIONS.md`
+ * §30 forbids *test registrations* in production because a synthetic row would corrupt the
+ * club's own counts; it says nothing about erasure, and erasure is the opposite case — the
+ * environment where the club's real mistakes and its real erasure requests live is production,
+ * so a verb that worked only on QA would be a verb that never worked. The environment is not
+ * the guard here. The guard is: a role that may already erase each of these rows one at a time,
+ * a title typed by hand, a reason, an audit row per person, an audit row for the event, and no
+ * bulk control anywhere that can reach it.
+ *
+ * **One transaction.** The audit row for the event is written first, then every registration is
+ * erased through `eraseAllRegistrationsOfEvent` — the same path a single erasure takes, so each
+ * one releases its place through the allocator, takes its declaration acceptance with it, and
+ * leaves its own audit row — and the event row goes last. If anything fails, nothing happened:
+ * `registrations.event_id` has no `ON DELETE` clause, so a half-done version of this could not
+ * commit even if it wanted to.
+ *
+ * **What the audit rows say, and what they do not.** The event's row carries the title, the
+ * date and the counts; each registration's row carries the status it was in and the reason.
+ * Not one of them carries a name, an address or an identity document — §12.12, and the whole
+ * reason the verb is called erasure.
+ */
+export async function hardDeleteEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: HardDeleteEventInput,
+): Promise<{ registrationsErased: number }> {
+  // The role first, before the screen's own inputs are even looked at: an organizer who may not
+  // do this is told that, rather than being told their reason was too short (BR-REQ-060-01).
+  if (!canHardDeleteEvent(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not erase an event and its registrations`);
+  }
+
+  const plan = await readEventErasurePlan(db, input.eventId);
+  if (!plan) throw new DomainError("NOT_FOUND", "no such event");
+
+  const reason = input.reason.trim();
+  if (reason.length < 3) {
+    throw new DomainError("VALIDATION_ERROR", "an erasure needs a reason; it is the only thing that survives it");
+  }
+
+  /**
+   * The typed confirmation. Either language's title is accepted — the organizer types the one
+   * on the screen in front of them — and an event with no title at all (a draft nobody has
+   * named) is confirmed by its id, which is what the screen then shows. Compared trimmed and
+   * exactly: a case-insensitive match would accept a title somebody half-remembered, and the
+   * whole purpose of this field is to be impossible to satisfy by accident.
+   */
+  const accepted = plan.titles.length > 0 ? plan.titles.map((entry) => entry.title) : [plan.eventId];
+  if (!accepted.some((title) => title.trim() === input.typedTitle.trim())) {
+    throw new DomainError("VALIDATION_ERROR", "the typed title does not match this event's title");
+  }
+
+  const now = input.now ?? new Date();
+
+  return db.transaction(async (tx) => {
+    // First, inside the transaction: the row that says this happened. It outlives the event —
+    // `audit_logs.entity_id` carries no foreign key — and it is written before anything is
+    // destroyed so that there is no ordering in which the destruction has no record.
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: "event.hard_deleted",
+      entityType: "event",
+      entityId: plan.eventId,
+      metadata: {
+        title: accepted[0].slice(0, 200),
+        startsAt: plan.startsAt.toISOString(),
+        registrations: plan.total,
+        confirmed: plan.confirmed,
+        real: plan.real,
+        test: plan.test,
+        reason: reason.slice(0, 500),
+      },
+      now,
+    });
+
+    const registrationsErased = await eraseAllRegistrationsOfEvent(tx, input.actor, plan.eventId, reason, now);
+
+    // `event_translations` and `registration_interests` cascade; a gallery album's `event_id`
+    // and a later edition's `repeat_of` are set to null. The registrations are gone above,
+    // which is the only reference that would have refused this.
+    await tx.delete(events).where(eq(events.id, plan.eventId));
+
+    return { registrationsErased };
+  });
 }

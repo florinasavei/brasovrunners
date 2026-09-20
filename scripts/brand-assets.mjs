@@ -33,8 +33,27 @@ const OUTPUTS = [
     source: "public/brand/logo-white.svg",
     target: "public/brand/logo-white-email.png",
     width: 720,
-    // The email's header band is the club's blue, and the lockup sits on it.
+    // Kept for any message that still wants a blue band; the card's own header is white
+    // since §189.
     background: "#1a1aff",
+  },
+  {
+    source: "public/brand/logo.svg",
+    target: "public/brand/logo-email.png",
+    width: 720,
+    /*
+      The lockup in its own colours, on white — the email card's header since §189.
+
+      The band was the club's blue with the white lockup on it, and the owner, looking at a
+      confirmation: "nu îmi place headerul ăsta albastru, nu se potrivește cu logo-ul BVR". He is
+      right about what it looks like: the lockup already contains a blue field, so a blue band
+      around a blue field reads as a sticker stuck on a wall rather than as a letterhead. White is
+      what the site's own header does with the same lockup.
+
+      No alpha, like the PDF's above: several mail clients composite a transparent PNG onto
+      whatever they please, which on a dark theme is a dark field under a dark-blue logo.
+    */
+    background: "#ffffff",
   },
   {
     source: "public/brand/logo-white.svg",

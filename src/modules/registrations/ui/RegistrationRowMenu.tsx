@@ -1,6 +1,7 @@
 "use client";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
@@ -9,6 +10,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
+import Divider from "@mui/material/Divider";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
@@ -37,7 +39,15 @@ import { useState } from "react";
  * `requestSubmit()` on the one that was chosen. Nothing about authorization lives here; what
  * lives here is which form to post and whether to ask first.
  */
-export type RegistrationMenuIcon = "open" | "resend" | "confirm" | "place" | "checkIn" | "undo" | "cancel";
+export type RegistrationMenuIcon =
+  | "open"
+  | "resend"
+  | "confirm"
+  | "place"
+  | "checkIn"
+  | "undo"
+  | "cancel"
+  | "erase";
 
 const ICONS: Record<RegistrationMenuIcon, typeof MoreVertIcon> = {
   open: VisibilityIcon,
@@ -47,11 +57,25 @@ const ICONS: Record<RegistrationMenuIcon, typeof MoreVertIcon> = {
   checkIn: HowToRegIcon,
   undo: UndoIcon,
   cancel: RemoveCircleIcon,
+  // Not the same glyph as cancel, and deliberately so: a menu where "anulează" and "șterge" wear
+  // the same icon in the same colour is a menu somebody picks the wrong line out of.
+  erase: DeleteForeverIcon,
 };
 
+/**
+ * Drawn above the item, with a gap, to break the run of verbs (§180).
+ *
+ * The registration's own page makes the same separation in the way a page can — erasure sits in
+ * its own bordered `<details>`, below cancel, behind a summary somebody has to open. A menu has
+ * no room for that, so what carries it here is a rule, a gap and the error colour: everything
+ * above the line puts a registration into another state, and the one thing below it removes the
+ * registration altogether.
+ */
+type MenuSeparation = { separated?: boolean };
+
 export type RegistrationMenuItem =
-  | { kind: "link"; label: string; href: string; icon: RegistrationMenuIcon }
-  | {
+  | ({ kind: "link"; label: string; href: string; icon: RegistrationMenuIcon; color?: "error" } & MenuSeparation)
+  | ({
       kind: "submit";
       label: string;
       icon: RegistrationMenuIcon;
@@ -60,7 +84,7 @@ export type RegistrationMenuItem =
       color?: "primary" | "error" | "warning";
       /** Present for a verb that is hard to undo; absent for one that is a press away from being reversed. */
       confirm?: { title: string; body: string; confirmLabel: string };
-    };
+    } & MenuSeparation);
 
 export default function RegistrationRowMenu({
   ariaLabel,
@@ -86,34 +110,52 @@ export default function RegistrationRowMenu({
         <MoreVertIcon />
       </IconButton>
       <Menu anchorEl={anchor} open={anchor !== null} onClose={() => setAnchor(null)}>
-        {items.map((item) => {
+        {/*
+          `flatMap`, not `map`: a separated item contributes two children — the rule and itself —
+          and they have to arrive as siblings of every other item. A `<Fragment>` around the pair
+          would render identically and break the keyboard: MUI walks the children it was handed
+          to decide what the arrow keys move between, and it does not descend into a fragment, so
+          the erase item would stop being reachable from the keyboard the moment it gained a
+          rule. React flattens a nested array here, and `<Divider>` is skipped by that walk
+          already, which is exactly what is wanted.
+        */}
+        {items.flatMap((item) => {
           const Icon = ICONS[item.icon];
-          if (item.kind === "link") {
-            return (
-              <MenuItem key={item.label} component="a" href={item.href} onClick={() => setAnchor(null)} sx={{ minHeight: 44 }}>
-                <ListItemIcon>
+          const tint = item.color === "error" ? { color: "error.main" } : undefined;
+          const rule = item.separated ? <Divider key={`${item.label}-rule`} sx={{ my: 0.5 }} /> : null;
+
+          const entry =
+            item.kind === "link" ? (
+              <MenuItem
+                key={item.label}
+                component="a"
+                href={item.href}
+                onClick={() => setAnchor(null)}
+                sx={{ minHeight: 44, ...tint }}
+              >
+                <ListItemIcon sx={tint}>
+                  <Icon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>{item.label}</ListItemText>
+              </MenuItem>
+            ) : (
+              <MenuItem
+                key={item.label}
+                onClick={() => {
+                  setAnchor(null);
+                  if (item.confirm) setConfirming(item);
+                  else submit(item.formId);
+                }}
+                sx={{ minHeight: 44, ...tint }}
+              >
+                <ListItemIcon sx={tint}>
                   <Icon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>{item.label}</ListItemText>
               </MenuItem>
             );
-          }
-          return (
-            <MenuItem
-              key={item.label}
-              onClick={() => {
-                setAnchor(null);
-                if (item.confirm) setConfirming(item);
-                else submit(item.formId);
-              }}
-              sx={{ minHeight: 44, ...(item.color === "error" ? { color: "error.main" } : {}) }}
-            >
-              <ListItemIcon sx={item.color === "error" ? { color: "error.main" } : undefined}>
-                <Icon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>{item.label}</ListItemText>
-            </MenuItem>
-          );
+
+          return rule ? [rule, entry] : [entry];
         })}
       </Menu>
 

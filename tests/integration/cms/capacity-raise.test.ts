@@ -140,6 +140,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
         locale: "ro",
         privacyAcknowledged: true,
         fitnessDeclared: true,
+        rulesAcknowledged: true,
         resultsNameConsent: true,
         listOptOut: false,
         honeypot: "",

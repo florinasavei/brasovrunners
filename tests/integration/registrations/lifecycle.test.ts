@@ -101,6 +101,7 @@ function submissionInput(overrides: Partial<Record<string, unknown>> = {}) {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    rulesAcknowledged: true,
     resultsNameConsent: true,
     listOptOut: false,
     honeypot: "",
@@ -402,7 +403,7 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     );
   });
 
-  it("answers a honeypot-tripped or too-fast submission exactly like success, and creates nothing", async () => {
+  it("answers a honeypot-tripped submission exactly like success, and creates nothing", async () => {
     const event = await createInternalEvent(db);
 
     const spamResult = await submitRegistration(
@@ -413,13 +414,27 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     );
     expect(spamResult).toEqual({ ok: true });
 
-    const tooFastResult = await submitRegistration(
-      db,
-      event,
-      submissionInput({ renderedAt: new Date(NOW.getTime() - 500).toISOString() }),
-      NOW,
-    );
-    expect(tooFastResult).toEqual({ ok: true });
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(rows).toHaveLength(0);
+  });
+
+  it("asks a too-fast submission again instead of discarding it (§194)", async () => {
+    /*
+      This is the case that cost a real participant: he had autofill, the form went back under
+      three seconds, and the old rule answered him with the confirmation page while creating
+      nothing. A guess about a person is now a question, not a silent refusal — and the field
+      marker is what puts a sentence on the form he can act on.
+    */
+    const event = await createInternalEvent(db);
+
+    await expect(
+      submitRegistration(
+        db,
+        event,
+        submissionInput({ renderedAt: new Date(NOW.getTime() - 500).toISOString() }),
+        NOW,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["tooFast"] });
 
     const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(rows).toHaveLength(0);

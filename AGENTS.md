@@ -1456,8 +1456,9 @@ server — a node type it has no case for cannot reach a page whatever is stored
 `ui/RichTextEditor.tsx` is the one client island, which switches off everything StarterKit ships
 beyond the list above. Bodies written before it existed are read through the same module and need
 no migration. **Events write it too since 2026-09-18** (`DECISIONS.md` §71): each language's
-"full description" is the same editor and the same allowlist, rendered on the event page under
-the short description — the day's schedule, what to bring, where to park — and validated as
+"full description" is the same editor and the same allowlist, rendered on the event page in the
+short description's own slot, directly under the title — the summary stands there only while the
+full description has no words (§187) — the day's schedule, what to bring, where to park — and validated as
 `body` in `translationFieldsSchema` on the way in. Legal documents keep the
 plain-text shape, because `content_sha256` is published under a version number and computed over
 it (§12.5).
@@ -2351,7 +2352,16 @@ the answer travels in a URL that every proxy in between logs (§14.5). The names
 against the form's own list on the way back in — the parameter is a string anybody can type —
 and the page is entered at the error summary rather than at the top (§18.2). Nothing past step
 3 is ever reported that way: from canonicalization onward the response is the generic one
-whatever the address turns out to mean, honeypot, timing check and throttle included.
+whatever the address turns out to mean, honeypot and throttle included.
+
+**The timing check is the one exception, since §194.** The honeypot is tripped by a machine and
+by nothing else, so it keeps the generic answer and creates nothing. The three-second floor is a
+*guess* about a person, and it was wrong about a real participant who had autofill: he was shown
+"we have sent you a confirmation link" while no registration, no outbox row and no log line were
+written anywhere. It now refuses with a field marker, the form returns with every answer still in
+it, and one sentence asks for another press — a script that posts instantly reads the same
+sentence and still has to wait, which is all a timing check ever bought. Both verdicts are logged
+by event and reason, never by address.
 
 ### 15.2 Email confirmation
 

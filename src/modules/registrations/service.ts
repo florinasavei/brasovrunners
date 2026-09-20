@@ -320,18 +320,43 @@ export async function readPublicAvailability<T extends Record<string, unknown>>(
 
 // --- Spam defenses (AGENTS.md §19.4, WEEKEND.md) ---------------------------------------------
 
-/** Below this, a submission is answered as if it never happened at all — never with a distinct
- * error, which would tell a bot which check it tripped. */
+/** Below this, a submission is treated as automated. */
 const MIN_SUBMISSION_SECONDS = 3;
 
-/** Shared with the interest form (`interest.ts`, §146): one rule for every public form. */
-export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string }, now: Date): boolean {
-  if ((input.honeypot ?? "") !== "") return true;
-  // An absent value parses to `Invalid Date`, which the guard below rejects — a public
-  // submission that lost its timestamp is treated as a bot rather than waved through.
+/**
+ * What the two public-form defences actually found (§194).
+ *
+ * They used to answer one question — "is this a bot" — and both answers were discarded in the
+ * same silence. That cost a real participant: somebody registered on QA, saw "we have sent you a
+ * confirmation link", and afterwards no registration, no outbox row and no log line existed
+ * anywhere. Nothing recorded which check had fired, so nothing could be diagnosed; the only way
+ * to find it was to read the code and eliminate every other path.
+ *
+ * They are separated because they are not equally certain:
+ *
+ * - `trap` — the hidden field was filled. Only a machine does that, so the silence is right and
+ *   stays: a distinct error here tells a script exactly what to stop doing (BR-REQ-031-01 c3).
+ * - `too-fast` — the form was posted less than three seconds after it was rendered, or arrived
+ *   with no render time at all. That is a *guess*, and a wrong guess about a person who typed
+ *   quickly, used autofill, or came back to a cached page. It is no longer answered with silence.
+ */
+export type SubmissionVerdict = "ok" | "trap" | "too-fast";
+
+export function classifySubmission(
+  input: { honeypot?: string; renderedAt?: string },
+  now: Date,
+): SubmissionVerdict {
+  if ((input.honeypot ?? "") !== "") return "trap";
+  // An absent value parses to `Invalid Date`: a submission that lost its timestamp is suspected
+  // rather than waved through — but suspected, now, means asked again rather than discarded.
   const renderedAt = new Date(input.renderedAt ?? "");
-  if (Number.isNaN(renderedAt.getTime())) return true;
-  return now.getTime() - renderedAt.getTime() < MIN_SUBMISSION_SECONDS * 1000;
+  if (Number.isNaN(renderedAt.getTime())) return "too-fast";
+  return now.getTime() - renderedAt.getTime() < MIN_SUBMISSION_SECONDS * 1000 ? "too-fast" : "ok";
+}
+
+/** Shared with the contact and interest forms (§146, §149), which keep the older, single answer. */
+export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string }, now: Date): boolean {
+  return classifySubmission(input, now) !== "ok";
 }
 
 // --- §15.1 Registration submission ------------------------------------------------------------
@@ -498,7 +523,28 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   // Only the public form is defended this way. A staff-entered registration has no rendered
   // page behind it to have timed and no hidden field for a bot to fill, and the person typing
   // it has already been authenticated and authorized as an Administrator.
-  if (origin.source === "PUBLIC" && looksLikeSpam(input, now)) return { ok: true };
+  if (origin.source === "PUBLIC") {
+    const verdict = classifySubmission(input, now);
+    /*
+      The trap keeps its silence: a filled hidden field is a machine, and an error would tell it
+      which check to stop tripping. It is logged, because a drop nobody can see is what made the
+      last one take a database query to find — the event and the verdict, never the address.
+    */
+    if (verdict === "trap") {
+      console.warn(`[registration] dropped as automated: trap, event ${event.id}`);
+      return { ok: true };
+    }
+    /*
+      A submission that merely looked quick is asked again rather than thrown away (§194). A
+      person reads one sentence and presses again — their answers come back with them — and a
+      script that posts instantly gets the same sentence and still has to wait, which is the whole
+      of what a timing check buys. What it no longer buys is a silently vanished participant.
+    */
+    if (verdict === "too-fast") {
+      console.warn(`[registration] asked again: too fast, event ${event.id}`);
+      throw new DomainError("VALIDATION_ERROR", "the form was submitted too quickly", ["tooFast"]);
+    }
+  }
 
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!privacyNotice) {
@@ -563,6 +609,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     // The statement itself, with the moment it was made (§171). A staff entry leaves it null:
     // the paper declaration at the desk carries it, and nobody declares it on another's behalf.
     fitnessDeclaredAt: input.fitnessDeclared ? now : null,
+    rulesAcknowledgedAt: input.rulesAcknowledged ? now : null,
   };
 
   await db.transaction(async (tx) => {

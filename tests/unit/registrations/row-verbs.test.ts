@@ -70,6 +70,63 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
       expect(verbs, status).not.toContain("cancel");
       expect(verbs, status).not.toContain("givePlace");
       expect(verbs, status).not.toContain("confirmOnPaper");
+      expect(verbs, status).not.toContain("erase");
+    }
+  });
+
+  /**
+   * BR-REQ-037-06, §180 — erasure from the list.
+   *
+   * The owner, three times: "vreau sa pot sterge si participantii". The list had no erase at
+   * all, so clearing eighty test rows meant eighty trips into eighty detail pages.
+   *
+   * The first test below is the §179 defect, restated for the list. Erasure used to live inside
+   * the cancel section of the registration's own page, which is drawn only while a row can still
+   * be cancelled — so a CANCELLED or EXPIRED registration could never be erased, and that is
+   * precisely the row somebody asks to have removed. Erase must therefore be offered in *every*
+   * state, which makes it the one verb here that is not gated on the state machine.
+   */
+  it("offers erase in every state a registration can be in, cancelled and expired included", () => {
+    for (const status of ALL) {
+      expect(rowVerbsFor(status, "ADMIN", { checkedIn: false }), status).toContain("erase");
+      expect(rowVerbsFor(status, "ADMIN", { checkedIn: true }), status).toContain("erase");
+    }
+    // Named, so the §179 defect cannot come back quietly under a passing loop.
+    for (const status of ["CANCELLED", "EXPIRED"] as const) {
+      expect(rowVerbsFor(status, "ADMIN", { checkedIn: false })).toContain("erase");
+    }
+  });
+
+  /**
+   * Last, always. The menu draws a rule above the final item and tints it, which is how a list
+   * row carries the separation the registration's own page makes with a bordered `<details>`
+   * below cancel. If erase were to drift into the middle of the run it would sit a line away
+   * from "anulează" with nothing between them.
+   */
+  it("puts erase last, below every other verb", () => {
+    for (const status of ALL) {
+      for (const checkedIn of [false, true]) {
+        const verbs = rowVerbsFor(status, "ADMIN", { checkedIn });
+        expect(verbs.at(-1), `${status}/${checkedIn}`).toBe("erase");
+      }
+    }
+  });
+
+  /**
+   * Erase and cancel are deliberately asymmetric, and this is the statement of it: cancelling a
+   * cancelled registration is meaningless, erasing one is the commonest case there is. So there
+   * are states that offer erase and not cancel, and none that offer cancel without erase.
+   */
+  it("offers erase wherever cancel is offered, and in states where cancel is not", () => {
+    const eraseOnly = ALL.filter((status) => {
+      const verbs = rowVerbsFor(status, "ADMIN", { checkedIn: false });
+      return verbs.includes("erase") && !verbs.includes("cancel");
+    });
+    expect(eraseOnly.length).toBeGreaterThan(0);
+
+    for (const status of ALL) {
+      const verbs = rowVerbsFor(status, "ADMIN", { checkedIn: false });
+      if (verbs.includes("cancel")) expect(verbs, status).toContain("erase");
     }
   });
 

@@ -133,9 +133,19 @@ const blockquoteNode = z.object({
  * everybody. `width`/`height` are the variant's, so the page reserves the space before the
  * bytes arrive; `widthPercent` is how much of the text column the picture takes on a wide
  * screen — one of four sizes, never a free number, and always the full width on a phone.
+ *
+ * `align` is where the picture sits in that column: `block` is a band across it, the way every
+ * picture written before 2026-09-20 sits and the way every picture sits on a phone, and `left`
+ * or `right` floats it so the paragraphs beside it wrap around (the owner: "vreau sa pot seta
+ * imaginile ca si «inline» ca sa pot scrie text in stanga sau dreapta lor"). A closed set of
+ * three words, exactly as `widthPercent` is a closed set of four numbers: the attribute names a
+ * rendering the renderer knows, never a CSS value somebody typed. Absent — every stored document
+ * — it reads as `block`, so nothing written before this renders differently.
  */
 export const IMAGE_WIDTH_PERCENTS = [100, 75, 50, 33] as const;
 export type ImageWidthPercent = (typeof IMAGE_WIDTH_PERCENTS)[number];
+export const IMAGE_ALIGNMENTS = ["block", "left", "right"] as const;
+export type ImageAlignment = (typeof IMAGE_ALIGNMENTS)[number];
 const imageSrc = z
   .string()
   .trim()
@@ -160,6 +170,11 @@ const imageNode = z.object({
       .nullable()
       .optional()
       .transform((value) => value ?? 100),
+    align: z
+      .union([z.literal("block"), z.literal("left"), z.literal("right")])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? "block"),
   }),
 });
 

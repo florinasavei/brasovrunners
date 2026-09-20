@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isMinorOn } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -132,6 +133,15 @@ const submissionFields = z.object({
    */
   fitnessDeclared: z.literal(true),
 
+  /**
+   * "I have read the race's conditions" (§195). Required on the public form, like the statement
+   * above and for the same reason: it is a thing the entrant says, not a thing the club checks.
+   * The screen makes it hard to say without reading — the text opens in a panel and the box is
+   * dead until it has been scrolled to the end — but the screen is not the guarantee, and this
+   * schema does not pretend otherwise. At the desk the paper declaration carries the sentence.
+   */
+  rulesAcknowledged: z.literal(true),
+
   email: z.email().max(320),
   locale: z.enum(["ro", "en"]),
   privacyAcknowledged: z.literal(true),
@@ -167,12 +177,12 @@ const submissionFields = z.object({
  * text quietly dropped, because dropping it would leave somebody believing an organizer
  * knows about their asthma.
  */
-/** Eighteen on the day, by calendar years — the same arithmetic a desk uses on an ID card. */
-export function isMinorOn(birthDate: string, on: Date): boolean {
-  const birth = new Date(`${birthDate}T00:00:00Z`);
-  const eighteenth = new Date(Date.UTC(birth.getUTCFullYear() + 18, birth.getUTCMonth(), birth.getUTCDate()));
-  return on.getTime() < eighteenth.getTime();
-}
+/**
+ * Eighteen on the day, by calendar years. It moved to `domain/age.ts` so the browser can read it
+ * without this file's Zod schema coming with it (§188); re-exported here because everything that
+ * validates a registration already imports it from this module.
+ */
+export { isMinorOn } from "./domain/age";
 
 /**
  * A minor is registered by a parent or legal guardian (§108; the terms and the declaration
@@ -234,6 +244,9 @@ export const staffRegistrationSubmissionSchema = submissionFields
     // The fitness statement is made on the paper declaration at the desk (§171), not by a
     // staff member ticking a box on somebody else's behalf — `AGENTS.md` §15.11.
     fitnessDeclared: true,
+    // The same, for the race's conditions (§195): the paper the participant signs says they
+    // read them, and a staff member does not say it for them.
+    rulesAcknowledged: true,
   })
   .superRefine(healthConsentRule)
   .superRefine(guardianRule);

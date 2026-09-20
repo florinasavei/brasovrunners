@@ -44,6 +44,7 @@ import {
   cancelRegistrationAction,
   checkInAction,
   confirmRegistrationNowAction,
+  eraseRegistrationFromListAction,
   promoteRegistrationAction,
 } from "../actions";
 import { ALL_EVENTS, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
@@ -96,7 +97,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canManageRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent, erase } = current;
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -161,6 +162,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
   const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
+
+  /*
+    Where the erase panel opens, and where it closes back to (§180).
+
+    `page` is patched in explicitly on both, because `buildListHref` drops it by default — right
+    for a filter or a sort, which should land you on the first page of the new list, and wrong
+    here: erasing the third row of page four must come back to page four, not to page one.
+  */
+  const eraseHref = (registrationId: string): string =>
+    `${buildListHref(basePath, listParams, { erase: registrationId, page: current.page })}#erase-panel`;
+  const eraseReturnQuery = buildListHref("", listParams, { page: current.page }).replace(/^\?/, "");
+
+  /*
+    The row the panel is about — found among the rows already fetched, never fetched by id.
+
+    That is the whole guard on the query parameter, and it is enough: a row that is not on the
+    page in front of you cannot be named, so `?erase=<some other id>` opens nothing, and the
+    name the panel asks to have typed is a name that is genuinely on screen. `requireStaffRole`
+    in the action is what actually refuses the erasure (BR-REQ-060-01); this decides only what
+    is drawn.
+  */
+  const eraseTarget = erase ? (rows.find((row) => row.id === erase) ?? null) : null;
+  const mayErase = canManageRegistrations(actor.role);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -286,10 +310,92 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         {saved === "outboxSent" && (
           <Alert severity="success">{t("outbox.sentNow", { count: Number(sent ?? "0") })}</Alert>
         )}
-        {saved && saved !== "registrationsCancelled" && saved !== "outboxSent" && (
-          <Alert severity="success">{t("saved")}</Alert>
+        {saved === "registrationDeleted" && (
+          <Alert severity="success">{t("registrations.registrationDeleted")}</Alert>
         )}
+        {saved &&
+          saved !== "registrationsCancelled" &&
+          saved !== "outboxSent" &&
+          saved !== "registrationDeleted" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
+
+      {/*
+        The erase panel (§180). The owner, three times: "vreau sa pot sterge si participantii".
+
+        Why it is a panel on the page and not a dialog in the row menu. Erasing is the one verb
+        here that cannot be undone — it takes the declaration, the address and, when this was
+        their last registration, the participant. A dialog with a button is answered yes by
+        reflex, and in a list where the row you meant and the row above it are one line apart,
+        the reflex is how the wrong person gets erased. So the confirmation is a transcription:
+        the name on the row, typed. You cannot type it by reflex and you cannot type it while
+        looking at the wrong row.
+
+        And why it is a *page*, reached by a plain link with the row's id in the query, rather
+        than state inside the client island. With JavaScript off the "⋮" menu never opens, so a
+        dialog inside it would make erasure unreachable — the rule is that a form works without
+        JavaScript, and a confirmation is part of the form. This is a link, a server-rendered
+        form and a redirect: identical with JavaScript and without it. The `<noscript>` link in
+        the row is only there because the *menu* needs JavaScript to open; the panel it leads to
+        never did.
+      */}
+      {mayErase && eraseTarget && (
+        <Box
+          component="section"
+          id="erase-panel"
+          tabIndex={-1}
+          sx={{ border: 1, borderColor: "error.main", borderRadius: 1, px: 2, py: 2, scrollMarginTop: 16 }}
+        >
+          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1, color: "error.main" }}>
+            {t("registrations.eraseTitle", { name: eraseTarget.registeredName })}
+          </Typography>
+          <Box component="form" action={eraseRegistrationFromListAction}>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="registrationId" value={eraseTarget.id} />
+            {/* Only the query, never a path: `actions.ts` rebuilds the path from `getPathname`,
+                so this field can choose which rows come back and nothing else. */}
+            <input type="hidden" name="listQuery" value={eraseReturnQuery} />
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                {t("registrations.deleteHelp")}
+              </Typography>
+              <TextField
+                name="reason"
+                label={t("registrations.deleteReason")}
+                required
+                size="small"
+                sx={{ maxWidth: 480 }}
+              />
+              <TextField
+                name="confirmName"
+                label={t("registrations.eraseTypeName")}
+                helperText={t("registrations.eraseTypeNameHelp", { name: eraseTarget.registeredName })}
+                required
+                size="small"
+                autoComplete="off"
+                sx={{ maxWidth: 480 }}
+              />
+              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+                <SubmitButton
+                  label={t("registrations.eraseAction")}
+                  pendingLabel={t("registrations.erasePending")}
+                  color="error"
+                  variant="contained"
+                />
+                {/* A link, not a button: leaving the panel is a navigation, and it must work
+                    for the same reader the panel itself was built for. */}
+                <Button
+                  component="a"
+                  href={buildListHref(basePath, listParams, { erase: undefined, page: current.page })}
+                  variant="text"
+                  sx={TAP_TARGET}
+                >
+                  {t("confirm.cancel")}
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Box>
+      )}
 
       <Stack
         direction="row"
@@ -584,6 +690,23 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   },
                 });
               }
+              /*
+                Last, below a rule, in the error colour (§180). A link and not a submit: there is
+                no hidden form to post, because erasing asks for two things nobody can put in a
+                hidden field — a reason and the row's name, typed. It opens the panel at the top
+                of this page instead, which is a plain server-rendered form and therefore the
+                same experience with JavaScript and without it.
+              */
+              if (verbs.includes("erase")) {
+                items.push({
+                  kind: "link",
+                  icon: "erase",
+                  label: t("registrations.erase"),
+                  href: eraseHref(row.id),
+                  color: "error",
+                  separated: true,
+                });
+              }
               return (
                 <>
                   {verbs.includes("confirmOnPaper") && (
@@ -612,6 +735,32 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                     cancelLabel={t("confirm.cancel")}
                     items={items}
                   />
+                  {/*
+                    Erasing is the one verb on this row that has to survive JavaScript being off,
+                    because it is the one the owner reached for and could not find. The "⋮" menu
+                    is a client island: with no JavaScript it never opens, and every verb inside
+                    it is reachable instead from the registration's own page — every verb except
+                    this one, which is the point of the work.
+
+                    `<noscript>` is markup the server already sent, so this costs no bytes of
+                    JavaScript and nothing at all when JavaScript is on, where the browser does
+                    not render it. It points at the same href the menu item does, and the panel
+                    it opens is the same panel. Nothing is duplicated but the way in.
+
+                    An element inside `<noscript>` is safe here, which is worth writing down
+                    because it does not look it: with scripting enabled a browser parses the
+                    contents of `<noscript>` as plain text rather than as DOM, which is the shape
+                    a hydration mismatch is usually made of. React 19 handles it deliberately —
+                    `shouldSetTextContent` is true for `noscript`, so `beginWork` reconciles it
+                    with `null` children and never builds fibers for what is inside, and the
+                    hydration-diff warning is skipped for the same elements. The server renders
+                    the real `<a>`, checked, and the client never looks at it.
+                  */}
+                  {verbs.includes("erase") && (
+                    <noscript>
+                      <a href={eraseHref(row.id)}>{t("registrations.erase")}</a>
+                    </noscript>
+                  )}
                 </>
               );
             })()}

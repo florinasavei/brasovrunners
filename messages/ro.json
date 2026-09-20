@@ -107,7 +107,7 @@
     "distance": "Distanță",
     "distanceKm": "{km} km",
     "elevation": "Diferență de nivel",
-    "elevationM": "{m} m urcare",
+    "elevationM": "{m} m diferență de nivel",
     "difficulty": "Dificultate",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -393,7 +393,13 @@
       "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul de concurs, iar în jurnal rămâi tu ca cel care a înregistrat semnătura. Se folosește doar când ai hârtia semnată în față.",
       "downloadBib": "Descarcă numărul de concurs (BIB)",
-      "notOnPublicList": "Nu apare public"
+      "notOnPublicList": "Nu apare public",
+      "erase": "Șterge definitiv",
+      "eraseTitle": "Ștergi definitiv înscrierea lui {name}?",
+      "eraseTypeName": "Scrie numele înscrisului",
+      "eraseTypeNameHelp": "Scrie exact „{name}”, ca să fim siguri că este rândul pe care îl vrei. Majusculele și diacriticele nu contează.",
+      "eraseAction": "Șterge definitiv",
+      "erasePending": "Se șterge…"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -421,7 +427,7 @@
       "bulkArchiveAction": "Arhivează cele bifate",
       "bulkArchivePending": "Se arhivează…",
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
-      "deleteBlocked": "Nu se poate șterge: {count} înscrieri reale. Arhivează evenimentul, sau — dacă sunt înscrieri făcute de tine la teste — deschide-le din „Înscrieri”, șterge-le una câte una (jos de tot, „Șterge înscrierea”, cu motiv), apoi șterge evenimentul.",
+      "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeated": "{created} ediții create.",
       "bulkSelectAll": "Toate",
@@ -429,8 +435,10 @@
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
       "bulkDeleteAction": "Șterge cele bifate",
-      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge: au înscrieri reale. Arhivează-le, sau șterge întâi înscrierile din „Înscrieri” (fiecare, cu motiv) dacă sunt de la teste.",
-      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate)."
+      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate).",
+      "hardDelete": "Ștergere definitivă…",
+      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
     },
     "confirm": {
       "cancel": "Renunță",
@@ -458,7 +466,8 @@
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
       "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
-      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris."
+      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
+      "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -497,7 +506,7 @@
         "difficulty": "Dificultate",
         "costType": "Cost",
         "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
-        "body": "Conținut — apare pe pagina evenimentului",
+        "body": "Conținut — apare pe pagina evenimentului, sub titlu",
         "rules": "Regulamentul evenimentului",
         "schedule": "Programul evenimentului"
       },
@@ -513,7 +522,7 @@
       "newTitle": "Eveniment nou",
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
-      "excerptHelp": "Una-două fraze: ce se vede pe cardul din listă (și pe pagină doar cât nu există descriere completă). Obligatorie înainte de publicare.",
+      "excerptHelp": "Una-două fraze: ce se vede pe cardul din listă și în distribuiri (și pe pagină, în același loc, cât timp descrierea completă n-are cuvinte). Obligatorie înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",
@@ -651,7 +660,7 @@
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
       "facebookEventUrl": "Link către evenimentul Facebook",
       "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Doar pentru această ediție; nu se copiază.",
-      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului — descrierea scurtă rămâne pe card.",
+      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
       "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
@@ -875,7 +884,25 @@
       "withdrawnNotice": "Versiunea a fost retrasă la {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
       "showWithdrawn": "Arată și versiunile retrase ({count})",
       "hideWithdrawn": "Ascunde versiunile retrase",
-      "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri."
+      "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
+      "startFrom": {
+        "title": "Pornește de la textul platformei",
+        "intro": "Alege documentul și primești textul complet, cu denumirea clubului, CIF-ul, sediul și adresa de contact deja scrise. Îl citești, îl schimbi cât vrei, apoi îl aprobi.",
+        "orBlank": "Sau scrie de la zero în formularul de mai jos."
+      },
+      "tokens": {
+        "title": "Câmpurile care se completează singure",
+        "intro": "Numai în declarație. Le lași exact așa cum sunt în text — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
+        "inText": "în text",
+        "participant": "Numele cu care s-a înscris participantul",
+        "declarant": "Cine semnează: participantul, sau părintele ori tutorele, pentru un minor",
+        "guardian": "Părintele sau tutorele, când participantul e minor; altfel o liniuță",
+        "idDocument": "Actul de identitate tastat la semnare — nu se scanează niciodată",
+        "event": "Titlul evenimentului",
+        "eventDate": "Data evenimentului, în fusul lui",
+        "eventLocation": "Locul de întâlnire",
+        "signedAt": "Momentul semnării"
+      }
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -1199,7 +1226,12 @@
       "youtubeApply": "Adaugă filmul",
       "youtubeInvalid": "Nu e o adresă de YouTube. Copiază linkul din bara browserului sau din „Distribuie” (youtube.com/watch?v=… sau youtu.be/…).",
       "youtubeCaption": "Legendă (sub film)",
-      "youtubeRemove": "Scoate filmul"
+      "youtubeRemove": "Scoate filmul",
+      "imageAlign": "Poziția în text",
+      "imageAlignBlock": "În flux",
+      "imageAlignLeft": "Stânga",
+      "imageAlignRight": "Dreapta",
+      "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea."
     },
     "pages": {
       "title": "Pagini",
@@ -1337,7 +1369,8 @@
       "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
       "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
-      "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii."
+      "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
+      "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat"
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -1605,6 +1638,20 @@
         }
       ],
       "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor."
+    },
+    "erase": {
+      "backToEvent": "Înapoi la eveniment",
+      "title": "Ștergere definitivă: {event}",
+      "whatGoes": "Se șterge definitiv evenimentul „{event}” din {date}, în ambele limbi, împreună cu cele {count} înscrieri ale lui și cu datele persoanelor din spatele lor.",
+      "breakdown": "Dintre ele: {confirmed} confirmate, {real} reale, {test} de test.",
+      "realPeople": "{count} dintre înscrieri sunt ale unor persoane reale. Dispar cu tot cu declarațiile semnate și cu adresele lor, și nu se pot recupera.",
+      "noRealPeople": "Nicio înscriere reală: nimeni nu pierde un loc.",
+      "alternative": "Dacă evenimentul a avut loc, arhivează-l în locul ștergerii: rămâne în evidențe și dispare de pe site. Ștergerea definitivă este pentru un eveniment care nu ar fi trebuit să existe.",
+      "typeTitleLabel": "Scrie titlul evenimentului",
+      "typeTitleHelp": "Scrie exact „{title}”, ca să confirmi. Orice altceva oprește ștergerea.",
+      "reasonLabel": "Motivul",
+      "reasonHelp": "Rămâne în jurnalul de audit. Este singurul lucru care supraviețuiește ștergerii; numele celor șterși nu se păstrează nicăieri.",
+      "action": "Șterge definitiv evenimentul și înscrierile"
     }
   },
   "NotFound": {
@@ -1647,7 +1694,9 @@
       "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
-      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
+      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
+      "tooFastTitle": "Mai încearcă o dată",
+      "tooFast": "Formularul a plecat foarte repede după ce s-a deschis pagina, iar noi verificăm asta ca să ținem roboții afară. Datele tale sunt toate aici — apasă din nou „Trimite înscrierea” și gata."
     },
     "sections": {
       "about": "Despre tine",
@@ -1713,7 +1762,8 @@
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
       "guardianName": "Părinte / tutore",
-      "fitnessDeclared": "Declarația că ești apt medical"
+      "fitnessDeclared": "Declarația că ești apt medical",
+      "rulesAcknowledged": "condițiile concursului"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1773,7 +1823,7 @@
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"
     },
-    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners",
+    "clubMemberDeclared": "Sunt membru al grupului Brașov Runners",
     "facts": {
       "details": "Detaliile evenimentului",
       "rules": "Regulamentul",
@@ -1794,7 +1844,17 @@
     "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
     "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
     "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip.",
-    "isMinor": "Participantul are sub 18 ani"
+    "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an.",
+    "rules": {
+      "open": "Citește condițiile concursului",
+      "reading": "Apasă butonul de mai sus. Se deschid aici, le citești până la capăt, și abia apoi poți confirma.",
+      "panelTitle": "Condițiile concursului — {event}",
+      "keepReading": "Derulează până la sfârșit ca să poți confirma.",
+      "agreeButton": "Am citit și sunt de acord",
+      "close": "Închide",
+      "agreed": "Ai citit condițiile concursului și ești de acord cu ele.",
+      "plain": "Am citit și sunt de acord cu condițiile concursului:"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

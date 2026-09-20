@@ -103,6 +103,7 @@ function submissionInput(email: string) {
     locale: "ro",
     privacyAcknowledged: true,
     fitnessDeclared: true,
+    rulesAcknowledged: true,
     resultsNameConsent: true,
     listOptOut: false,
     honeypot: "",

@@ -107,7 +107,7 @@
     "distance": "Distance",
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
-    "elevationM": "{m} m climb",
+    "elevationM": "{m} m elevation gain",
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",
@@ -393,7 +393,13 @@
       "cancelBody": "The place is released through the allocator and offered at once to the first person waiting. An audit row records who cancelled. It cannot be undone: if they change their mind, they register again.",
       "confirmOnPaperBody": "You are confirming that the participant signed the declaration on paper, at the desk. They get the place and a race number, and the audit row names you as the person who recorded the signature. Use it only with the signed paper in front of you.",
       "downloadBib": "Download the race number (BIB)",
-      "notOnPublicList": "Not shown publicly"
+      "notOnPublicList": "Not shown publicly",
+      "erase": "Erase permanently",
+      "eraseTitle": "Erase {name}'s registration for good?",
+      "eraseTypeName": "Type the participant's name",
+      "eraseTypeNameHelp": "Type “{name}” exactly, so we know this is the row you meant. Capitals and diacritics do not matter.",
+      "eraseAction": "Erase permanently",
+      "erasePending": "Erasing…"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -421,7 +427,7 @@
       "bulkArchiveAction": "Archive the ticked ones",
       "bulkArchivePending": "Archiving…",
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
-      "deleteBlocked": "Cannot be deleted: {count} real registrations. Archive the event, or — if these are entries you made while testing — open them from “Înscrieri”, erase them one by one (at the bottom, “Erase the registration”, with a reason), then delete the event.",
+      "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
       "eventsRepeated": "{created} editions created.",
       "bulkSelectAll": "All",
@@ -429,8 +435,10 @@
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
       "bulkPublishAction": "Publish the ticked ones",
       "bulkDeleteAction": "Delete the ticked ones",
-      "eventsDeleted": "{deleted} events deleted. {failed} could not be: they have real registrations. Archive those, or erase the registrations first from “Înscrieri” (each one, with a reason) if they came from testing.",
-      "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile)."
+      "eventsDeleted": "{deleted} events deleted. {failed} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
+      "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile).",
+      "hardDelete": "Permanent deletion…",
+      "eventErased": "Event permanently deleted, together with {erased} registrations."
     },
     "confirm": {
       "cancel": "Never mind",
@@ -458,7 +466,8 @@
       "FORBIDDEN": "Your role does not allow this.",
       "NOT_FOUND": "That record no longer exists.",
       "VALIDATION_ERROR": "Check what you entered; something is not valid.",
-      "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten."
+      "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
+      "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it."
     },
     "editor": {
       "eventSection": "Event details",
@@ -497,7 +506,7 @@
         "difficulty": "Difficulty",
         "costType": "Cost",
         "checklist": "What to bring (one line, in the emails and the calendar)",
-        "body": "Content — shown on the event page",
+        "body": "Content — shown on the event page, under the title",
         "rules": "Event rules",
         "schedule": "Event programme"
       },
@@ -513,7 +522,7 @@
       "newTitle": "New event",
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
-      "excerptHelp": "One or two sentences: what the listing card shows (and the page, only while there is no full description). Required before the event can be published.",
+      "excerptHelp": "One or two sentences: what the listing card and the shares carry (and the page, in the same slot, for as long as the full description has no words). Required before publication.",
       "rulesEmpty": "(none yet — press to write)",
       "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
       "programmeSection": "Programme",
@@ -651,7 +660,7 @@
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
       "facebookEventUrl": "Link to the Facebook event",
       "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. This edition only; never copied.",
-      "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page — the short description stays on the card.",
+      "bodyHelp": "The full description, with headings, lists and links — the day's programme, what to bring, where to park. It appears at the top of the event page, directly under the title; the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
       "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway.",
@@ -875,7 +884,25 @@
       "withdrawnNotice": "This version was withdrawn on {date}. Its text stays here, on the record, with its number, but it no longer appears publicly and can no longer be chosen on an event.",
       "showWithdrawn": "Show withdrawn versions too ({count})",
       "hideWithdrawn": "Hide withdrawn versions",
-      "legalVersionWithdrawn": "The version has been withdrawn. It stays on the record, with its number, but is no longer offered anywhere."
+      "legalVersionWithdrawn": "The version has been withdrawn. It stays on the record, with its number, but is no longer offered anywhere.",
+      "startFrom": {
+        "title": "Start from the platform's text",
+        "intro": "Pick the document and you get the complete text, with the club's legal name, registration number, registered address and contact address already written in. Read it, change what you like, then approve it.",
+        "orBlank": "Or write from nothing, in the form below."
+      },
+      "tokens": {
+        "title": "The fields that fill themselves in",
+        "intro": "In the declaration only. Leave them exactly as they are in the text — they are replaced at signing, for each person and each race. The club's own facts are not here: those are already written into the text.",
+        "inText": "in this text",
+        "participant": "The name the participant registered under",
+        "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
+        "guardian": "The parent or guardian when the participant is a minor; a dash otherwise",
+        "idDocument": "The identity document typed at signing — never scanned",
+        "event": "The event's title",
+        "eventDate": "The event's date, in its own zone",
+        "eventLocation": "The meeting point",
+        "signedAt": "When it was signed"
+      }
     },
     "tasks": {
       "title": "What is still to do",
@@ -1199,7 +1226,12 @@
       "youtubeApply": "Add the film",
       "youtubeInvalid": "Not a YouTube address. Copy the link from the browser bar or from “Share” (youtube.com/watch?v=… or youtu.be/…).",
       "youtubeCaption": "Caption (under the film)",
-      "youtubeRemove": "Remove the film"
+      "youtubeRemove": "Remove the film",
+      "imageAlign": "Where it sits in the text",
+      "imageAlignBlock": "In the flow",
+      "imageAlignLeft": "Left",
+      "imageAlignRight": "Right",
+      "imageAlignHelp": "\"In the flow\" gives the picture the whole column. \"Left\" or \"right\" moves it to one side and the text wraps around it — on a phone it is the full width either way."
     },
     "pages": {
       "title": "Pages",
@@ -1337,7 +1369,8 @@
       "downloadOnePerPage": "One per page",
       "page": "Page {n} of {total}",
       "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
-      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page."
+      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
+      "downloadAll": "Download every number ({count}) — a PDF to print"
     },
     "desk": {
       "title": "Number pickup desk",
@@ -1605,6 +1638,20 @@
         }
       ],
       "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'."
+    },
+    "erase": {
+      "backToEvent": "Back to the event",
+      "title": "Permanent deletion: {event}",
+      "whatGoes": "This permanently deletes the event “{event}” of {date}, in both languages, together with its {count} registrations and the personal data behind them.",
+      "breakdown": "Of those: {confirmed} confirmed, {real} real, {test} test.",
+      "realPeople": "{count} of the registrations belong to real people. They go with their signed declarations and their addresses, and nothing can be recovered.",
+      "noRealPeople": "No real registration: nobody loses a place.",
+      "alternative": "If the event took place, archive it instead: it stays in the records and disappears from the site. Permanent deletion is for an event that should never have existed.",
+      "typeTitleLabel": "Type the event's title",
+      "typeTitleHelp": "Type “{title}” exactly, to confirm. Anything else stops the deletion.",
+      "reasonLabel": "Reason",
+      "reasonHelp": "It is kept in the audit trail. It is the only thing that survives the deletion; the names of the people erased are kept nowhere.",
+      "action": "Permanently delete the event and its registrations"
     }
   },
   "NotFound": {
@@ -1647,7 +1694,9 @@
       "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
-      "generic": "The registration could not be submitted. Check what you entered and try again."
+      "generic": "The registration could not be submitted. Check what you entered and try again.",
+      "tooFastTitle": "Please try once more",
+      "tooFast": "The form was submitted very soon after the page opened, and we check for that to keep bots out. Everything you typed is still here — press “Send the registration” again and that is all."
     },
     "sections": {
       "about": "About you",
@@ -1713,7 +1762,8 @@
       "stravaUrl": "Strava profile",
       "instagramHandle": "Instagram",
       "guardianName": "Parent / guardian",
-      "fitnessDeclared": "The statement that you are medically fit"
+      "fitnessDeclared": "The statement that you are medically fit",
+      "rulesAcknowledged": "the race conditions"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -1773,7 +1823,7 @@
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"
     },
-    "clubMemberDeclared": "I am a Brașov Runners team member",
+    "clubMemberDeclared": "I am a member of the Brașov Runners group",
     "facts": {
       "details": "Event details",
       "rules": "The rules",
@@ -1794,7 +1844,17 @@
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
     "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
-    "isMinor": "The participant is under 18"
+    "clubMemberHint": "I have been to at least 3 group runs in the past year.",
+    "rules": {
+      "open": "Read the race conditions",
+      "reading": "Press the button above. They open here, you read to the end, and only then can you confirm.",
+      "panelTitle": "Race conditions — {event}",
+      "keepReading": "Scroll to the end to be able to confirm.",
+      "agreeButton": "I have read them and I agree",
+      "close": "Close",
+      "agreed": "You have read the race conditions and agree to them.",
+      "plain": "I have read and agree to the race conditions:"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

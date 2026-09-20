@@ -29,7 +29,12 @@ const ICONS: Record<EventRowMenuIcon, typeof MoreVertIcon> = {
 };
 
 export type EventRowMenuItem =
-  | { kind: "link"; label: string; href: string; icon?: EventRowMenuIcon }
+  /**
+   * `color` on a link, for the one link that is a destructive verb's front door: the hard
+   * delete opens a screen rather than submitting a form (it has a typed confirmation to ask
+   * for), and a menu entry that looks like "Preview" is the wrong preparation for it.
+   */
+  | { kind: "link"; label: string; href: string; icon?: EventRowMenuIcon; color?: "error" }
   | {
       kind: "submit";
       label: string;
@@ -96,7 +101,13 @@ export default function EventRowMenu({
         {items.map((item, index) => {
           if (item.kind === "link") {
             return (
-              <MenuItem key={index} component="a" href={item.href} onClick={() => setAnchor(null)}>
+              <MenuItem
+                key={index}
+                component="a"
+                href={item.href}
+                onClick={() => setAnchor(null)}
+                sx={item.color === "error" ? { color: "error.main" } : undefined}
+              >
                 {glyph(item.icon)}
                 <ListItemText>{item.label}</ListItemText>
               </MenuItem>

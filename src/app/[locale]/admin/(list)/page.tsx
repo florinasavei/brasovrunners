@@ -22,6 +22,7 @@ import {
   canCreateEvent,
   canDeleteEvent,
   canEditTexts,
+  canHardDeleteEvent,
   canManageRegistrations,
 } from "@/modules/staff-identity/domain/roles";
 import {
@@ -119,7 +120,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   // of events they may neither write nor configure. The tabs offer them the same two sections.
   if (!canEditTexts(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
   const current = await searchParams;
-  const { error, saved, archived, failed, created, published, deleted } = current;
+  const { error, saved, archived, failed, created, published, deleted, erased } = current;
 
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
@@ -368,7 +369,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {t("events.eventsDeleted", { deleted: deleted ?? "0", failed: failed ?? "0" })}
           </Alert>
         )}
-        {saved && !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted"].includes(saved) && (
+        {saved === "eventErased" && (
+          <Alert severity="success">{t("events.eventErased", { erased: erased ?? "0" })}</Alert>
+        )}
+        {saved &&
+          !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted", "eventErased"].includes(saved) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -567,6 +572,32 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                               },
                             },
                           ]
+                      : []),
+                    /*
+                      The hard delete, and it is deliberately the last item and a *link* rather
+                      than a verb: it opens a screen that says what would be destroyed and asks
+                      for the event's title to be typed (BR-REQ-037-06). It sits directly under
+                      the note above, so the organizer who has just been told "2 people have
+                      registered" has the one answer to that on the same menu, instead of no
+                      answer at all — which is where this started.
+
+                      Not offered for a series: this erases one date, and a ⋮ that belongs to a
+                      folded group of dates could not say which. Not in the bulk bar either, at
+                      any count: a bulk hard delete is how somebody loses a season.
+                    */
+                    ...(canHardDeleteEvent(staffUser.role) && !isSeries
+                      ? [
+                          {
+                            kind: "link" as const,
+                            icon: "delete" as const,
+                            color: "error" as const,
+                            label: t("events.hardDelete"),
+                            href: getPathname({
+                              locale,
+                              href: { pathname: "/admin/events/[id]/erase", params: { id: event.id } },
+                            }),
+                          },
+                        ]
                       : []),
                   ]}
                 />

@@ -107,6 +107,12 @@ export const routing = defineRouting({
     "/admin/events/[id]": "/admin/events/[id]",
     /** Every bib of the event as a picture (`DECISIONS.md` §94). */
     "/admin/events/[id]/bibs": "/admin/events/[id]/bibs",
+    /**
+     * The hard delete's own screen: what would be destroyed, and the typed confirmation
+     * (BR-REQ-037-06). A page rather than a dialog, so it works with JavaScript switched off
+     * and so the refusal has somewhere to land.
+     */
+    "/admin/events/[id]/erase": "/admin/events/[id]/erase",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
     "/admin/tasks": "/admin/tasks",

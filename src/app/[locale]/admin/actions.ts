@@ -10,6 +10,7 @@ import {
   createEvent,
   deleteEvent,
   duplicateEvent,
+  hardDeleteEvent,
   repeatEvent,
   saveEventAndTranslations,
   SERIES_EDIT_SCOPES,
@@ -629,6 +630,47 @@ export async function deleteEventAction(form: FormData): Promise<void> {
   // Deleted or not, the event list is where there is something to look at — the editor for a
   // deleted event is a 404.
   backTo(getPathname({ locale, href: "/admin" }), outcome);
+}
+
+/**
+ * The hard delete (`/admin/events/[id]/erase`): the event **and everyone registered for it**.
+ *
+ * A separate action from `deleteEventAction` on purpose, and not reachable from the bulk bar:
+ * "delete the ticked events" that could also erase participants is how somebody loses a season
+ * in one click. Everything that makes this safe is in the service — the role, the typed title,
+ * the reason, the audit rows, the single transaction — and nothing here repeats it, because a
+ * check written in an action is a check a replayed POST walks past.
+ *
+ * On a refusal the browser goes back to the erase page with the code, so the screen that
+ * explains what would be destroyed is what the organizer reads the refusal on. On success
+ * there is no event to go back to, so the list is where it lands.
+ */
+export async function hardDeleteEventAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const erasePath = getPathname({
+    locale,
+    href: { pathname: "/admin/events/[id]/erase", params: { id: eventId } },
+  });
+
+  let erased = 0;
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    const result = await hardDeleteEvent(getDb(), {
+      actor,
+      eventId,
+      typedTitle: text(form, "typedTitle"),
+      reason: text(form, "reason"),
+      now: new Date(),
+    });
+    erased = result.registrationsErased;
+  } catch (error) {
+    backTo(erasePath, outcomeOf(error));
+  }
+
+  redirect(
+    `${getPathname({ locale, href: "/admin" })}?saved=eventErased&erased=${erased}#admin-alert`,
+  );
 }
 
 export async function addTestRegistrationsAction(form: FormData): Promise<void> {

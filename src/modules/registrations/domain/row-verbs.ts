@@ -32,7 +32,22 @@ export type RowVerb =
   | "givePlace"
   | "checkIn"
   | "undoCheckIn"
-  | "cancel";
+  | "cancel"
+  /**
+   * Erase the registration, and the person behind it when it was their last (BR-REQ-037-06, §180).
+   *
+   * Last, always, and the only verb here that offers itself in *every* state. That is the point
+   * §179 made on the registration's own page: erasure used to sit inside the cancel section,
+   * which is shown only while a row can still be cancelled, so a cancelled or expired row could
+   * never be erased — and that is exactly the row somebody asks to have removed. The list had
+   * the same hole differently: no erase at all, so eighty test rows meant eighty trips into
+   * eighty detail pages.
+   *
+   * It is not a one-press verb. What the menu opens is a panel that asks for a reason and for
+   * the row's own name, typed (`erase-confirmation.ts`); the server refuses the erasure without
+   * it.
+   */
+  | "erase";
 
 export function rowVerbsFor(
   status: RegistrationStatus,
@@ -63,6 +78,18 @@ export function rowVerbsFor(
 
   // Cancelling releases the place through the allocator and leaves an audit row (§67, §88).
   if (mayManage && canTransition(status, "CANCELLED")) verbs.push("cancel");
+
+  /*
+    Erase: every state, and last (§180). Note the deliberate asymmetry with `cancel` on the line
+    above — cancel is gated on `canTransition(status, "CANCELLED")` because cancelling an
+    already-cancelled registration is meaningless, while erasing one is the commonest case there
+    is. `deleteRegistrationByStaff` has always handled both: it releases a place only when there
+    is a place to release, so a lapsed row erases cleanly and takes nothing from the queue.
+
+    `mayManage` keeps it Administrator-only, and the service asserts that again
+    (BR-REQ-060-01) — this line decides what is *shown*, never what may be done.
+  */
+  if (mayManage) verbs.push("erase");
 
   return verbs;
 }

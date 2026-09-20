@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   allowedTransitions,
   canCreatePage,
+  canDeleteEvent,
   canEditEventFields,
   canEditTexts,
   canEditTranslation,
+  canHardDeleteEvent,
+  canManageRegistrations,
   canManageStaff,
   canTransition,
   EDITORIAL_STATUSES,
@@ -132,6 +135,29 @@ describe("BR-REQ-060-01 what each role may reach", () => {
     expect(canManageStaff("MODERATOR")).toBe(false);
     expect(canManageStaff("COPYWRITER")).toBe(false);
     expect(canManageStaff("CONTRIBUTOR")).toBe(false);
+  });
+
+  it("reserves the hard delete — an event and everyone on it — to the Administrator, and no higher", () => {
+    // Both halves of it, because it is the conjunction of two powers: deleting club content
+    // and destroying participant data. The interesting assertion is the SUPERADMIN one — the
+    // temptation is to reserve the most destructive verb to the highest role, and that would be
+    // wrong: SUPERADMIN is defined by staff administration, not by danger, and an Administrator
+    // may already erase each of these registrations one at a time. The gate that protects the
+    // data is the typed title, the reason and the audit rows, not a rank.
+    expect(canHardDeleteEvent("SUPERADMIN")).toBe(true);
+    expect(canHardDeleteEvent("ADMIN")).toBe(true);
+    // DEV is the boundary worth naming: above MODERATOR, and still on the wrong side of the
+    // personal-data line this verb crosses.
+    expect(canHardDeleteEvent("DEV")).toBe(false);
+    expect(canHardDeleteEvent("MODERATOR")).toBe(false);
+    expect(canHardDeleteEvent("COPYWRITER")).toBe(false);
+    expect(canHardDeleteEvent("CONTRIBUTOR")).toBe(false);
+
+    // And it never grants more than the two verbs it is built from: a role that may not delete
+    // an event, or may not touch registrations, may not do both at once either.
+    for (const role of STAFF_ROLES) {
+      expect(canHardDeleteEvent(role), role).toBe(canDeleteEvent(role) && canManageRegistrations(role));
+    }
   });
 
   it("reserves the event row — times, map link, featured — to editorial roles", () => {

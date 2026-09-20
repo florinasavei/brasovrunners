@@ -15,8 +15,9 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import ReadAndAgree from "@/modules/registrations/ui/ReadAndAgree";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
@@ -34,7 +35,9 @@ import {
   SELECT_WITH_GLYPHS_SX,
 } from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import Flag from "@/shared/ui/Flag";
+import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -149,6 +152,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * against the one literal it may be — anybody can type into a URL.
    */
   const captchaFailed = (fields ?? "").split(",").includes("captcha");
+  /**
+   * The timing check asked again rather than discarding the submission (§194). Like the captcha
+   * above it is a rejection about nothing the person typed, so it is read from the raw parameter
+   * and matched against the one literal it may be.
+   */
+  const tooFast = (fields ?? "").split(",").includes("tooFast");
 
   // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
   const latestBirthDate = now.toISOString().slice(0, 10);
@@ -610,6 +619,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   */}
                   <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={typed("clubMemberDeclared") === "on"}>
                     {t("clubMemberDeclared")}
+                    {/* What the claim means, where it is claimed (§189): "grup" rather than
+                        "echipă", because the club is a group somebody runs with and not a squad
+                        somebody is selected for, and the tooltip says where the line is. */}
+                    <Hint text={t("clubMemberHint")} />
                   </CheckboxField>
 
                   <TextField
@@ -635,36 +648,22 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Box>
 
               {/*
-                A minor's parent or guardian (§108, §185): a tick, and the name only underneath it.
+                A minor's parent or guardian (§108, §185, §188): shown when the birth date says so.
 
                 It was a fold — "Părinte sau tutore" — and the owner read an opened fold as a
-                question he now had to answer: "mă disperă faza cu tutorele! aparent dacă expandez
-                acel câmp deja trebe să completez!!! vreau să fie o bifă acolo man". He was right
-                about the shape even though the field was never required by the browser: a fold
-                asks "is there more here", and the actual question is "is the runner under
-                eighteen" — which has an answer, and the answer decides whether anything below it
-                applies at all.
+                question he now had to answer: "mă disperă faza cu tutorele!". He was right about
+                the shape. §185 made it a tick, which was the right shape and the wrong question:
+                the form already asks for the birth date, and the birth date is the answer, so
+                asking twice only invites the two answers to disagree — and the server would then
+                refuse an unticked minor over a field nobody had been shown.
 
-                The tick reveals the name with CSS alone: `:has()` on the container, no client
-                island, works with JavaScript switched off. The *rule* stays where it was — the
-                server requires a guardian when the birth date gives under eighteen, whatever this
-                box says, because a legal requirement cannot be untickable. So the tick is checked
-                for them when a rejection names the field, which is how somebody who is a minor
-                and did not tick gets shown the box they have to fill.
+                The rule has not moved: the server requires a guardian when the birth date gives
+                under eighteen, whatever the browser drew. `forceOpen` is that verdict coming
+                back — a rejection naming the field opens the block whatever the date box now
+                holds, so an error never points at something invisible.
               */}
-              <Box
-                sx={{
-                  "& .guardian-fields": { display: "none" },
-                  "&:has(input[name='isMinor']:checked) .guardian-fields": { display: "block" },
-                }}
-              >
-                <CheckboxField
-                  name="isMinor"
-                  defaultChecked={typed("isMinor") === "on" || invalid.has("guardianName")}
-                >
-                  {t("isMinor")}
-                </CheckboxField>
-                <Stack spacing={2} className="guardian-fields" sx={{ pt: 1 }}>
+              <GuardianForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("guardianName")}>
+                <Stack spacing={2}>
                   <Typography variant="body2" color="text.secondary">
                     {t("guardianHelp")}
                   </Typography>
@@ -675,7 +674,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     slotProps={{ htmlInput: { maxLength: 200 } }}
                   />
                 </Stack>
-              </Box>
+              </GuardianForMinor>
 
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a
@@ -766,6 +765,33 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 be insisted on where the note above cannot. The declaration signed later says
                 the same thing at length; this is it asked at the moment of entering.
               */}
+              {/*
+                The race's own conditions, read before they can be agreed to (§195).
+
+                Only when this event wrote any. An event with no rules of its own has nothing to
+                open, so the tick points at the club's terms as a plain link — the requirement is
+                the same, the panel would just be an empty box.
+              */}
+              {hasRules ? (
+                <ReadAndAgree
+                  name="rulesAcknowledged"
+                  fieldId={fieldId("rulesAcknowledged")}
+                  title={t("rules.panelTitle", { event: event.title })}
+                  openLabel={t("rules.open")}
+                  readingLabel={t("rules.reading")}
+                  agreedLabel={t("rules.agreed")}
+                  agreeButtonLabel={t("rules.agreeButton")}
+                  keepReadingLabel={t("rules.keepReading")}
+                  closeLabel={t("rules.close")}
+                  plainLabel={t("rules.plain")}
+                  href={`${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}#rules`}
+                  document={event.rulesJson}
+                />
+              ) : (
+                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required>
+                  {t("rules.plain")} <Link href="/legal/terms">{t("facts.terms")}</Link>
+                </CheckboxField>
+              )}
               <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
                 {t("fitnessDeclared")}
               </CheckboxField>
@@ -826,6 +852,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     </Typography>
                   )}
                 </Box>
+              )}
+              {/* Said where the press happened, in the plain second person: the form is whole, the
+                  answers are still in it, and pressing again is all there is to do (§194). */}
+              {tooFast && (
+                <Alert severity="warning">
+                  <AlertTitle>{t("errors.tooFastTitle")}</AlertTitle>
+                  {t("errors.tooFast")}
+                </Alert>
               )}
               <SubmitButton
                 label={t("submit")}

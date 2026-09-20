@@ -234,7 +234,27 @@ export default async function EventsPage({ params, searchParams }: Props) {
               Chrome and Safari — the owner: "it's not clear that this is expandable". */}
           <Box component="details" sx={{ mt: 0.5, ...DISCLOSURE_SX, "& > summary": { ...DISCLOSURE_SUMMARY_SX, fontSize: "0.8125rem", color: "text.secondary" } }}>
             <summary>{t("calendar.feedAddress")}</summary>
-            <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
+            {/*
+              A link, not only a string to copy (§195; the owner, of the address: "ăsta trebuia
+              să fie link"). It is still selected whole by one click — `userSelect: all` — for
+              the calendar apps that want it pasted, and it is now also pressable for the ones
+              that subscribe from the browser. `webcal://` rather than `https://` on the anchor:
+              the same address handed to the operating system as a subscription rather than as a
+              file to download once, which is the difference between a calendar that updates and
+              a snapshot of today.
+            */}
+            <Box
+              component="a"
+              href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)}
+              sx={{
+                display: "inline-block",
+                fontFamily: "monospace",
+                fontSize: "0.8125rem",
+                userSelect: "all",
+                wordBreak: "break-all",
+                minHeight: 44,
+              }}
+            >{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
           </Box>
         </Box>
       </Box>

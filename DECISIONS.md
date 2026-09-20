@@ -8621,3 +8621,356 @@ somebody who knows the field, and §32 puts the participant's refusal ahead of t
 symmetry. The platform holds their name; the page does not have to.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 187. Decided — one description slot, under the title, on the page and in its preview (2026-09-20)
+
+**Context.** The owner, straight out of the editor he had just asked for: "pagina de edit event și
+main e diferită… rezumatul apare înainte descrierii full! Fi consistent man!"
+
+Four readers went over every surface that renders either field — the page, the preview, the
+listing and its hero, the cards, the Open Graph description, the JSON-LD, the calendar feed, the
+emails — and three reviewers were asked to refute what they concluded. All three refuted the first
+proposal, on file and line; what survived is smaller than what was proposed and is recorded here.
+Three separate things were true at once, and one edit answers all three.
+
+**1. The order contradicted the editor.** §170 put *Conținut* first and *Rezumat* under it, because
+asking somebody to summarise what they have not written yet is what left summaries empty — and an
+empty summary is what refuses publication. The page kept the summary's slot under the title and
+rendered the long description eighty lines and six rendered blocks lower: after the divider, the
+facts, the registration call to action, the interest box, the five-step panel, the share and
+calendar row and the street address.
+
+**2. The one description moved half a page depending on which field was filled.** With only a
+summary, the page's prose sat under the title. With a long description, it sat below the address.
+Same editorial role, two positions — and the more an organizer wrote, the further down the reader
+had to scroll to find any prose at all.
+
+**3. A long description that was only a picture or only a film was silently dropped.** The page
+guarded *both* of its slots with `isRichTextEmpty`, which is defined over the plain text;
+`EventExcerpt` has always guarded itself with `hasRichTextContent`, which counts a picture. So a
+picture-only *Conținut* was "empty": it did not render, and the *Rezumat* rendered in its place.
+That is the owner's sentence exactly — the summary where the full description should have been.
+
+**Decision.** *One slot, directly under the title, shared by one component.* `EventDescription`
+renders it and the page and the preview both call it, because the preview is the only way to read
+a draft before publication and it had been showing the body five blocks higher than the live page
+did — an organizer checked one layout and shipped another.
+
+*The rule takes two predicates, and that is the point.* `planEventDescription` is pure and
+tested: `hasRichTextContent` decides whether the long description renders at all,
+`isRichTextEmpty` decides whether it contributed any **words**, and the summary stands in when it
+did not. So a picture-only *Conținut* now renders *under* its summary rather than instead of it —
+the page keeps its prose and the organizer keeps his picture. Reading one question with one
+predicate is what produced defect 3, so the pair lives in a function with a test rather than in
+two JSX guards eighty lines apart.
+
+*The editor's order stands; the page moves to meet it.* §170 is one day old and has a reason
+behind it. The page's order was never decided — it is where the body block happened to sit when
+§71 added it. Reversing the editor would restore the empty-summary trap §170 removed, and it would
+not even answer the complaint, because the *Conținut* would still render below the address.
+
+**Rejected.** *Changing the calendar entry.* The `.ics` carries the summary and then the long
+description's first six hundred characters, which is the owner's sentence in a file the page's own
+button hands him — but §159 decided that deliberately, and the change breaks three golden-string
+tests whose fixtures the first proposal had not read. It is a separate decision with a separate
+cost, and it is named here so it is not lost rather than folded in quietly.
+
+*Changing the structured data to prefer `seoDescription`.* §156 says the metadata, the Open Graph
+card, the structured data and the emails keep the short one. They do.
+
+*Using `hasRichTextContent` for both questions.* That is what loses the summary: an event with a
+sentence in *Rezumat* and a picture in *Conținut* would render the picture and no words at all,
+while its own card, hero, search result and share preview all carried the sentence.
+
+**Consequences.** `AGENTS.md` §11.3 said the full description is "rendered on the event page
+under the short description" — stale since §156 and wrong after this; amended. `SPECS.md`
+BR-REQ-011-01 criterion 11 now states the position and the words-not-content distinction. The
+long description now pushes the facts and the registration button down the page: on a phone a
+long one puts "Înscrie-te" below the prose. That is the one visible trade, and it is the order the
+editor implies. Publication is untouched — `REQUIRED_PUBLIC_TRANSLATION_FIELDS` is still title,
+slug and excerpt, and `bodyJson` is still optional.
+
+Test: `tests/unit/events/event-description.test.ts` — including the property that there is no
+document for which the page renders neither field.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 188. Decided — the guardian's name appears when the birth date says minor (2026-09-20)
+
+**Context.** §185 had turned a fold into a tick, because the fold read as a demand. The owner,
+the same evening: "aș vrea ca asta cu «Participantul are sub 18 ani» să apară doar când data
+nașterii indică faptul că e minor… sau să fie ceva bifă doar atunci."
+
+**Decision.** *No tick. The birth date is the answer.* The form already asks for it, and asking
+the same question twice only invites the two answers to disagree — with the server then refusing
+an unticked minor over a field nobody had been shown. `GuardianForMinor` subscribes to the
+birth-date input and opens when it gives under eighteen.
+
+*The rule does not move.* The server still requires a guardian when the birth date says so,
+whatever the browser drew, and `forceOpen` is that verdict coming back: a rejection naming the
+field opens the block whatever the date box now holds, so an error never points at something
+invisible.
+
+*Without JavaScript the field is simply always there.* A `<noscript>` rule forces it open. The
+alternative — hidden and unreachable — would lock out exactly the person who has to fill it, and
+`AGENTS.md` §1.5 says this form works with JavaScript off.
+
+*It subscribes to the input rather than owning it.* `useSyncExternalStore`, not an effect
+writing state: the date field is a Server Component's MUI `TextField` carrying native validation
+(`min`, `max`, `required`), and lifting it into the island would trade all of that for
+hand-written validation on the one form that has to work everywhere.
+
+**Consequences.** `isMinorOn` moved to `registrations/domain/age.ts`, which imports nothing, so
+the browser gets four lines of date arithmetic instead of the form's whole Zod schema — the
+reasoning of `media/limits.ts` in §178. `fields.ts` re-exports it, so nothing else moved.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 189. Decided — three small things the owner asked for, and why each is where it is (2026-09-20)
+
+**The claim is about a group, and it says where its line is.** "Sunt membru al echipei Brașov
+Runners" became "…al **grupului**…", with a "?" beside it reading "Am fost la cel puțin 3 alergări
+de grup în ultimul an." The club is a group somebody runs with, not a squad somebody is selected
+for; and the claim decides nothing on its own (§48) but the club reads it, so it needs a
+definition. A definition printed under every tick would lengthen the form whose length is the
+thing people complain about, so it is a tooltip: `shared/ui/Hint`, which opens on hover, on
+focus and — `enterTouchDelay={0}` — on a tap, because a `title` attribute does none of those on
+a phone. The icon is imported inside the island; a Server Component passing `<Icon />` as a prop
+is the defect `CheckboxField` documents.
+
+**The whole field's numbers download from the page that shows the whole field.** The link already
+existed, several folds down in the event's editor, and the owner — standing on the bib page,
+looking at every number he wanted to print — asked for it again: "vreau să pot exporta toate
+BID-urile!". A verb belongs where its object is. A plain link to the same route, so it works with
+JavaScript off.
+
+**The race number is bold, and the email's header is white.** "În mail, numărul de concurs trebuie
+făcut bold, e super important!" — it is the one line a runner reads on a phone at the desk. The
+card's paragraphs are escaped plain strings, so bold arrives as `**like this**` converted
+**after** escaping: the marker can therefore only ever wrap text this codebase wrote, and a
+participant whose name contains asterisks or angle brackets gets asterisks and angle brackets.
+The plain-text half strips the markers rather than printing them.
+
+"Nu îmi place headerul ăsta albastru, nu se potrivește cu logo-ul BVR." He is right about what it
+looked like: the lockup already contains a blue field, so a blue band around a blue field reads as
+a sticker on a wall rather than as a letterhead. The band is white now, with the lockup in its own
+colours — which is what the site's own header does — and `scripts/brand-assets.mjs` grows the
+matching `logo-email.png`, without alpha, because several mail clients composite a transparent
+PNG onto whatever they please.
+
+Tests: `tests/unit/notifications/emphasis.test.ts`, including the assertion that nothing a
+participant typed can ask for bold.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 191. Decided — an event can be erased with everyone on it, once its title is typed (2026-09-20)
+
+**Context.** Three times, an hour apart: "tot nu pot sterge evenimente!" The club's own data
+controller had an archived event carrying two registrations he had entered himself, and no way to
+remove either. "It cannot be deleted" is not an answer a controller can be given about his own
+records.
+
+**Decision.** *A second verb, not the same one made permissive.* `deleteEvent` still refuses an
+event with registrations against it; `hardDeleteEvent` takes the event **and** everyone on it,
+and it is a different button in a different place with a different colour.
+
+*Administrator, not Superadministrator.* `canHardDeleteEvent` is `canDeleteEvent &&
+canManageRegistrations`. The hierarchy's line is personal data and that line is ADMIN — an
+Administrator may already erase each of these rows one at a time, so the gate answers "may this
+person erase participants", which is the question actually being asked.
+
+*The confirmation is the event's exact title, typed, plus a reason.* Checked on the server, no
+`window.confirm`, and the screen works with JavaScript off. A dialog with a button is answered
+yes by reflex; a transcription cannot be.
+
+*Every registration leaves through the path a single erasure takes.* `eraseRegistration` is
+factored out of `deleteRegistrationByStaff` rather than copied — the place released through the
+allocator, the declaration acceptance with the row, one audit row each naming who and why and
+never who was erased — plus one audit row for the event carrying its title, its date and the
+counts, written first, all in one transaction. Two implementations of "remove a person from the
+system" is how one of them forgets the audit row.
+
+*The screen says what will be destroyed before anything is pressed*: how many registrations, how
+many confirmed, and how many are real people rather than test rows.
+
+**Rejected.** *A bulk hard delete over ticked rows.* That is how somebody loses a season.
+
+Tests: `tests/integration/events/hard-delete.test.ts` (11).
+
+## 192. Decided — erase from the registrations list, with the name typed (2026-09-20)
+
+**Context.** "Vreau să pot șterge și participanții!", also three times. Erasing existed only on a
+registration's own page, so clearing eighty test rows meant eighty round trips through a list that
+re-sorts underneath you.
+
+**Decision.** Erase is the last verb on the row menu, below a rule, in the error colour,
+Administrator-only. *It is not a one-press verb*: it opens a panel at the top of the list asking
+for a reason and for that row's name, typed. In a list where the row you meant and the row above
+it are one line apart, a confirm dialog is answered by reflex — and the reflex is how the wrong
+person gets erased.
+
+*One erase path, not two.* `deleteRegistrationByStaff` does exactly what it did and gains one
+optional argument, the typed name, checked against the row the deletion is already built on rather
+than against a second fetch. The panel is a link, a server-rendered form and a redirect, so it
+behaves the same with JavaScript and without; a `<noscript>` link covers the only part that
+needs JavaScript, which is opening the menu.
+
+## 193. Decided — a picture the text flows around, reversing "never floated" (2026-09-20)
+
+**Context.** "Vreau să pot seta imaginile ca și «inline» ca să pot scrie text în stânga sau
+dreapta lor! Adică vreau un rich text editor mai smart!" §73 decided the opposite in as many
+words: four widths, "and a picture is a block in the flow, **never floated**, so two pictures are
+never side by side."
+
+**Decision.** The image node gains `align`: `block` (the default), `left`, `right` — a closed
+set of three literals in the allowlist, exactly as `widthPercent` is a closed set of four
+numbers, so the attribute names a rendering the renderer knows rather than a CSS value somebody
+typed. Absent means `block`, so every stored document renders unchanged and no migration is
+needed.
+
+Three fences keep the reversal from becoming the layout tool §72 refused:
+
+1. **A phone never floats.** The float is a media query from `sm` up. 320 pixels is a hard target
+   here, and a third of 320 beside a paragraph is two words a line.
+2. **Two pictures are never side by side.** Every figure in a body that floats anything also
+   clears, so a second picture drops below the first instead of forming a row. §73's invariant
+   survives its own reversal.
+3. **The float ends with the body.** One clearing element after the last block, so a float never
+   reaches the registration panel or the programme — and a body that floats nothing emits no
+   clearing rules at all, not rules that happen to be no-ops.
+
+*What is left of "never floated" is a habit.* §73's argument was about narrow columns, which is
+now a breakpoint rather than a ban on everybody; its consequence was two pictures in a row, which
+is now `clear` rather than never floating at all.
+
+*The listing card puts every picture back in the flow* — a card has one column and a cropped,
+capped picture, so a float there is two words a line, and a float at the end of an excerpt would
+reach into the date beneath it.
+
+Tests: `tests/unit/content/rich-text-image-layout.test.ts`, `rich-text.test.ts`,
+`card-excerpt.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 194. Decided — a guess about a person is a question, not a silent refusal (2026-09-20)
+
+**Context.** Somebody the owner had asked to test QA registered, saw "Ți-am trimis un email cu un
+link de confirmare", and nothing arrived. He did not appear in the registrations list either. The
+owner reported it as an email problem — "Dani nu a primit mail", and then, reasonably, "so Yahoo
+doesn't receive registrations but Gmail does".
+
+It was not an email problem. A query against QA's `email_outbox` returned **zero rows** for his
+address: nothing had ever been queued for him, because no registration had ever been created. The
+only path in the codebase that produces exactly that — the confirmation page, and nothing written
+anywhere — is `service.ts`'s answer to a suspected bot: `if (origin.source === "PUBLIC" &&
+looksLikeSpam(input, now)) return { ok: true };`
+
+He has autofill. The form went back in under three seconds. He was classified as a script and
+discarded, silently, and the club was told he had been sent a link.
+
+**What made it expensive** was not the rule but its silence: no registration, no outbox row, no
+log line, nothing on any screen. Which of the two checks had fired could not be established from
+the data at all — it had to be reasoned out of the source by eliminating every other path.
+
+**Decision.** *The two defences answer separately, because they are not equally certain.*
+
+- **The trap keeps its silence.** A hidden field is filled by a machine and by nothing else, so a
+  distinct error would only tell a script what to stop doing (BR-REQ-031-01 criterion 3). It now
+  writes a log line naming the event and the verdict — never the address.
+- **The timing check asks again.** Under three seconds, or with no render time at all, is a
+  *guess* about a person — one that is wrong about anybody who types quickly, uses autofill, or
+  comes back to a cached page. The submission is refused with a field marker rather than
+  swallowed, the form comes back whole with every answer in it (§142), and one sentence says to
+  press again. A script that posts instantly gets the same sentence and still has to wait, which
+  is the entire benefit a timing check ever offered. What it no longer buys is a vanished
+  participant.
+
+**Rejected.** *Loading screens*, which the owner suggested and which would change nothing: the
+three seconds are measured from when the page rendered to when it was posted, so a spinner after
+the press is on the wrong side of the measurement.
+
+*Dropping the timing check.* It is cheap and it works on the submissions it was written for; what
+was wrong was the penalty, not the test.
+
+*Recording the dropped submission's address so the club could recover the person.* That would
+store personal data from a submission the platform decided not to accept. The log line carries the
+event and the verdict, and the participant is now told to press again, which recovers them without
+keeping anything.
+
+**Consequences.** `classifySubmission` replaces `looksLikeSpam` at the registration form;
+`looksLikeSpam` stays as a wrapper for the contact and interest forms (§146, §149), which keep
+the older single answer. `AGENTS.md` §19.4's "answered exactly like success" now describes the
+trap alone.
+
+Tests: `tests/unit/registrations/submission-verdict.test.ts` (6, including the boundary at
+exactly three seconds), and `lifecycle.test.ts`, whose single test became two — the trap still
+answers like success and creates nothing; the quick submission is refused and creates nothing.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 195. Decided — the race's conditions are opened before they can be agreed to (2026-09-20)
+
+**Context.** The owner: "oamenii trebuie să deschidă condițiile concursului într-un pop-up, să dea
+scroll până jos și să confirme, **dar fă safe!** Adică unii oameni nu sunt așa tech-savvy
+(afișează «dă click aici») mai întâi, ca să poată bifa că sunt de acord."
+
+Two requirements in one sentence, and the second is the harder one. A gate that keeps somebody
+out of a race because a script did not load is a worse failure than the one it prevents.
+
+**Decision.** *Before anything is read there is a button, not a box.* A checkbox beside a link
+asks somebody to notice the link, decide to follow it, come back, and then tick — four steps,
+three of them skippable, and every one invisible to a person who does not already know how forms
+work. "Citește condițiile concursului" is one step with one meaning. The box appears in its
+place, already ticked, once the text has been read to its end.
+
+*The gate is an enhancement, never a requirement.* `ReadAndAgree` renders the **plain, tickable
+checkbox** on the server and on the first client render, and takes over only after React has
+hydrated. No JavaScript, a script that failed to load, a browser the dialog does not suit — the
+entrant gets an ordinary required checkbox and an ordinary link, and registers. This is the whole
+of "fă safe", and it is the reason the island uses `useSyncExternalStore` rather than an effect:
+the server's own markup has to be the usable one.
+
+*The scroll rule is a pure function with its own test* (`domain/read-gate.ts`), because the
+interesting case is not scrolling to the end — it is the two ways the measurement can be wrong.
+A short set of rules on a tall screen has nothing to scroll, so the button opens at once; a gate
+waiting for a gesture that cannot happen is a gate nobody passes. And the last pixel is forgiven
+by eight, because zoom, device pixel ratio and an overlay scrollbar each land
+`scrollTop + clientHeight` a little short of `scrollHeight` while the reader is looking at the
+final line.
+
+*What is recorded is a timestamp, and it claims only what it can.* `rules_acknowledged_at`
+(migration 0052, expand-only) says the person was shown the text and said they had read it, at
+that moment. Scrolling is a measurement of a browser and is not evidence of reading; the column
+does not pretend otherwise. It is the same thing a paper form records, and it is what lets the
+club answer "was this person shown the conditions" with a row rather than a recollection.
+
+*Required on the public path only.* Like §171's fitness statement, and for the same reason: at
+the desk the participant signs a paper declaration that already says they have read the rules
+(§67, `AGENTS.md` §15.11), and a staff member does not make the statement on somebody's behalf.
+
+*An event with no rules of its own gets the plain checkbox and a link to the club's terms.* There
+is nothing to open, and a panel containing an empty document would be worse than a link.
+
+**Rejected.** *Enforcing the reading server-side.* It cannot be done — nothing in an HTTP request
+distinguishes a page that was read from one that was scrolled past — and a check that cannot be
+performed should not be implied by the record it writes.
+
+*Disabling the checkbox until the panel is closed.* A disabled input posts nothing, so a browser
+that never ran the script would post nothing either, and the refusal would be silent. The input
+exists from the start, unticked: the browser's own validation refuses the form and names the
+control, with no JavaScript involved in producing the refusal.
+
+**Consequences.** Every fixture that builds a public submission learnt the new tick — the same
+sweep §171 needed, fifteen test files and the synthetic-registration generator.
+`form-errors.ts` names it, so a rejection can point at it, and both catalogues carry the name.
+
+Tests: `tests/unit/registrations/read-gate.test.ts` (6),
+`tests/integration/registrations/rules-acknowledgement.test.ts` (3).
+
+**Also, from the same sitting:** the calendar feed's address on the listing is a link now, not
+only a string to copy ("ăsta trebuia să fie link"). It is still selected whole by one click for
+the applications that want it pasted, and the anchor is `webcal://` — the same address handed to
+the operating system as a subscription rather than as a file downloaded once, which is the
+difference between a calendar that keeps up and a snapshot of today.
+
+Baseline `BR-V1.38-2026-09-18`.
