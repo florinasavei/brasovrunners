@@ -7,6 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useRef, useState } from "react";
+import { ACTION_ICONS, type ActionIconName } from "./action-icons";
 
 type Props = {
   label: string;
@@ -17,6 +18,8 @@ type Props = {
   color?: "primary" | "error" | "warning";
   variant?: "text" | "outlined" | "contained";
   size?: "small" | "medium";
+  /** A glyph before the verb, by name — never as an element (`action-icons.ts`). */
+  icon?: ActionIconName;
 };
 
 /**
@@ -42,9 +45,11 @@ export default function ConfirmSubmitButton({
   color = "primary",
   variant = "outlined",
   size = "small",
+  icon,
 }: Props) {
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
+  const Icon = icon ? ACTION_ICONS[icon] : null;
 
   return (
     <>
@@ -60,6 +65,7 @@ export default function ConfirmSubmitButton({
         color={color}
         size={size}
         sx={{ minHeight: 44 }}
+        startIcon={Icon ? <Icon fontSize="small" /> : undefined}
         onClick={(event) => {
           event.preventDefault();
           setOpen(true);

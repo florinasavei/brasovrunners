@@ -19,15 +19,16 @@ import { REPEAT_CADENCES, WEEKDAYS } from "@/modules/events/domain/repeat";
  * (§128): on the event page, where it is known, its box is ticked and locked and a hidden
  * input posts it (a disabled input posts nothing); on the creation form the date is not
  * typed yet, and the service adds the day itself.
+ *
+ * There is no "does not repeat" cadence any more (§170): `RepeatToggle`'s checkbox is what
+ * says whether the event repeats at all, and these fields are not shown until it is ticked.
+ * The enum value stays in the domain for the rows that carry it.
  */
 export default async function RepeatFields({
   prefix = "",
-  withNone = false,
   ownWeekday,
 }: {
   prefix?: string;
-  /** Offer "does not repeat" as the default, for the creation form. */
-  withNone?: boolean;
   /** The event's own ISO weekday, when the event exists: ticked and locked. */
   ownWeekday?: number;
 }) {
@@ -41,12 +42,11 @@ export default async function RepeatFields({
           select
           name={name("cadence")}
           label={t("editor.repeatCadence")}
-          defaultValue={withNone ? "NONE" : "WEEKLY"}
+          defaultValue="WEEKLY"
           size="small"
           slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
           sx={{ minWidth: 200 }}
         >
-          {withNone && <option value="NONE">{t("editor.repeatCadences.NONE")}</option>}
           {REPEAT_CADENCES.map((cadence) => (
             <option key={cadence} value={cadence}>
               {t(`editor.repeatCadences.${cadence}`)}

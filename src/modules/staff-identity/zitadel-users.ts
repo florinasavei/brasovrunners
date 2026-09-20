@@ -76,15 +76,35 @@ export async function resendZitadelInvite(email: string, deps: Deps = {}): Promi
   const call = deps.fetch ?? fetch;
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" };
 
-  const found = await call(`${issuer}/v2/users`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ query: { limit: 1 }, queries: [{ loginNameQuery: { loginName: email, method: "TEXT_QUERY_METHOD_EQUALS_IGNORE_CASE" } }] }),
-  });
-  if (!found.ok) return { kind: "failed", reason: await reasonOf(found) };
-  const { result } = (await found.json()) as { result?: Array<{ userId: string }> };
-  const userId = result?.[0]?.userId;
-  if (!userId) return { kind: "failed", reason: "no Zitadel account with this address" };
+  /**
+   * By **email**, then by login name (§170; the owner: "uite ce pățesc când încerc să adaug un
+   * coleg", against a row whose account exists).
+   *
+   * The search was by login name alone, and a login name is not an email address: Zitadel
+   * scopes it to the organization's primary domain unless that org has "username must be
+   * unique across the instance" turned off, so a colleague created as `name@gmail.com` has the
+   * login name `name@gmail.com@<org>.zitadel.cloud` and an equality match on the address finds
+   * nobody. The account was there the whole time; the screen said there was no account.
+   *
+   * `emailQuery` matches what was actually stored (`ListUsers`, User Service v2). The login
+   * name query stays as the second attempt, because a service account or a person created by
+   * hand with a username that is not their address is found by that and not by this.
+   */
+  const search = async (query: Record<string, unknown>): Promise<string | undefined | null> => {
+    const found = await call(`${issuer}/v2/users`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ query: { limit: 1 }, queries: [query] }),
+    });
+    if (!found.ok) return null;
+    const { result } = (await found.json()) as { result?: Array<{ userId: string }> };
+    return result?.[0]?.userId;
+  };
+
+  const userId =
+    (await search({ emailQuery: { emailAddress: email, method: "TEXT_QUERY_METHOD_EQUALS_IGNORE_CASE" } })) ??
+    (await search({ loginNameQuery: { loginName: email, method: "TEXT_QUERY_METHOD_EQUALS_IGNORE_CASE" } }));
+  if (!userId) return { kind: "failed", reason: "no account with this address at the identity provider" };
 
   const invited = await call(`${issuer}/v2/users/${userId}/invite_code`, {
     method: "POST",

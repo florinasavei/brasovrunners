@@ -23,7 +23,8 @@ export default function NativeShareButton({ url, title, text, label }: { url: st
     <Button
       variant="contained"
       size="small"
-      sx={{ minHeight: 44, gap: 0.75 }}
+      // The same two sizes as the pills beside it (§170): a finger's 44, a pointer's 32.
+      sx={{ minHeight: { xs: 44, sm: 32 }, gap: 0.5, px: { xs: 1.5, sm: 1.25 }, fontSize: { sm: "0.78rem" } }}
       onClick={() => {
         navigator.share({ url, title, text }).catch(() => {
           /* the person closed the sheet; nothing to say */

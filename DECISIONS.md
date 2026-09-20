@@ -7720,3 +7720,128 @@ lenient read), `events/ical.test.ts` (several partners, the label said once),
 on it is no change).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 170. Decided — the editor reads like an editor, and every refusal names what it wants (2026-09-20)
+
+**Context.** The owner asked for a WordPress-like event editor on 2026-09-20 and the work
+never happened — the run that was to do it stopped on a credit limit. What was there instead
+was a single column of roughly forty inputs under two headings, in the order the columns had
+been added to the `events` table, with publication at the very top and the words the organizer
+came to write about two screens below it. The same session's walkthrough turned up the rest,
+and they are not separate complaints: "aparent nu pot publica un eveniment" (the alert reads
+`Lipsesc: RO: excerpt` — a *column* name, for a box labelled "Rezumat" that sits under nothing
+and above the long description that dwarfs it); "aparent nu pot șterge evenimente" (the button
+fires and `VALIDATION_ERROR` comes back, where the list has explained the same refusal with a
+count since §114); "textul ăsta trebuie să fie collapsed" (six lines describing all seven event
+types, under every type); "repetă evenimentul trebuie să fie o bifă și abia apoi pot să setez
+frecvența"; "am nevoie de iconițe și aici" on the publication row; "și butoanele astea au
+nevoie de iconițe și trebe să fie active doar dacă selectez ceva" on the bulk bar; "this part
+should be sticky" on the language tabs; "aceste butoane sunt mult prea mari" on the share
+pills; and "«Deschide la masă» e confusing? ce e asta? e gen check-in?".
+
+Every one of them is the same defect in a different place: **the screen knows something it
+does not say.** It knows which field is missing and says a column name; it knows the event has
+three registrations and says nothing until you press; it knows you are choosing a type and
+explains the other six; it knows nothing is ticked and offers three live buttons.
+
+**Decision.**
+
+*The words first, the settings in named panels, publication in its own column.* The editor is
+two columns from `md` up and one on a phone. The main column is the single save form it has
+been since §28 — one `<form>`, one button, one transaction — and inside it the **content**
+panel comes first, then four settings panels: "Când și unde", "Înscrieri", "Traseu și detalii",
+"Film". The second column is "Publicare": the state and version chips, the live-edit warning,
+what is still missing, the transition buttons, the series header with its date chips, and
+repeat. On a phone that column is **first**, because on a phone it is what somebody opened the
+page to check. The two are siblings and never nested: the save is one form and every
+publication verb is a form of its own, and a form inside a form is not a thing HTML has.
+
+Nothing was renamed. Every field posts the name it posted before, so `eventFieldsFrom` and
+`translationFieldsFrom` read exactly what they read yesterday and every end-to-end locator
+still finds what it looked for. This is a rearrangement, and it is written down as one so that
+the next person does not go looking for the migration.
+
+*Within a language: the order somebody writes in.* Title, then the long description
+("Conținut — apare pe pagina evenimentului"), then the summary under it ("Rezumat — apare pe
+card și în distribuiri"), then rules, programme, what to bring. The page address and the two
+search-engine fields are folded at the bottom: set once, never looked at again. The summary
+was **above** the description, which asked for a one-sentence summary of something not yet
+written — and an empty summary is precisely what refuses publication. The labels now say where
+each one shows up, because "Descriere scurtă" and "Descriere completă" differ by one adjective
+and nothing about what they are for.
+
+*A refusal names the field on the screen, not the column in the table.* "Not ready to publish"
+maps every key `missingPublicFields` and `missingPublicEventFields` return through
+`editor.fields.*`, and names the language in its own endonym: `Română: Rezumat — apare pe card
+și în distribuiri`, not `RO: excerpt`. The service's own message keeps the column names; it is
+a developer's log line, and this is the sentence a person reads.
+
+*Delete explains itself before it is pressed.* The editor counts the registrations against the
+event and replaces the button with the reason, exactly as the list has. When every row in the
+way is test data it says so and points at the button that clears them, one section above,
+because "three registrations" on a QA event the organizer filled themselves is a dead end and
+"three registrations, all of them test data" is a next step.
+
+*Race numbers say why there are none.* A queue made entirely of test registrations gets no
+numbers and never will (§30, `AGENTS.md` §12.6). The screen said "no numbers yet", which reads
+as a broken button. It now says the rule and names the way to rehearse: a walk-in at the desk,
+which writes a real row.
+
+*The type note is about the type you chose.* One sentence for the chosen type, under the
+select; the comparison of all seven folded beside it. A comparison is for choosing and belongs
+one press away; the description of six types you did not choose is noise on every event.
+
+*Recurrence is a tick.* "Repetă evenimentul" is a checkbox, and the cadence, the weekdays, the
+end date and the button appear under it once it is ticked. The `NONE` cadence existed only
+because the control was always shown; the creation form and the event page both read the tick
+now, and both actions refuse a series without it. The fields are hidden, never unmounted, so a
+date typed and then unticked is still there when the box goes back on.
+
+*Glyphs on the verbs, dimmed when there is nothing to act on.* One registry,
+`shared/ui/action-icons.ts`, keyed by name — because an icon passed from a Server Component as
+an element-valued prop is the defect `CheckboxField` documents, and the fix is the same: the
+name crosses, the client makes the element. The bulk bar's three buttons dim while nothing is
+ticked, and the test for "this island is running" is `total > 0`: without JavaScript the count
+is never taken, the buttons stay live, and the server answers "nothing ticked" as it always
+did. No guard moved to the client.
+
+*The language tabs stay put.* The content panel is the tallest thing on the page, and by the
+bottom of the Romanian text the way to the English one was a page and a half above.
+
+*Two sizes for a pill.* The share and calendar buttons are 44 pixels on a touch screen and 32
+from `sm` up. A finger needs the 44; a pointer does not, and eight finger-sized pills across a
+desktop row are the loudest thing on a page where they are the least important. 32 is still
+well over the 24 WCAG 2.2 asks for.
+
+*A link says where it goes.* "Deschide la masă" is "Deschide la masa din ziua cursei
+(check-in)".
+
+**Rejected.** *Folding the settings panels.* A `<details>` would hide a required field from
+somebody who has never seen this screen, and the whole of this section is about a publication
+refusal naming a field nobody was shown. The panels are boxes, not folds; the folds are for
+what is genuinely optional — SEO, the type comparison, how a series works.
+
+*Showing the type help only for `RACE`*, which is the literal reading of "trebuie să apară
+doar la concurs, nu la toate". It would hide the explanation of what a race is from somebody
+sitting on `GROUP_RUN` wondering which to pick. The substance of the ask — do not show me six
+paragraphs about types I did not choose — is met by the one-line note, and the comparison stays
+reachable.
+
+*Moving the featured and special marks into "Publicare"*, where they belong by meaning. They
+are `event.*` columns and post with the save form; the publication column holds the transition
+forms, which are separate forms. Putting them there would have meant either a form inside a
+form or a second save, and both are worse than a mark at the bottom of "Traseu și detalii".
+
+**Consequences.** `EventFieldsForm` returns four `EditorPanel`s instead of one `Stack`;
+`TranslationFieldsForm` is reordered and gains a fold; the event page's `return` is a grid with
+two children. `RepeatFields` loses `withNone` and both actions gain a tick to read, so a form
+posted by an older cached page creates no series — which is the safe direction. Two message
+keys change wording (`editor.fields.body`, `editor.fields.excerpt`) and one link does
+(`registrations.openDesk`); the rest are additions. `tests/e2e/series-edit.spec.ts` ticks the
+new box before it fills the cadence.
+
+Tests: `tests/e2e/series-edit.spec.ts` (the repeat tick), `tests/unit/i18n/messages.test.ts`
+(both catalogues carry every new key), `tests/integration/cms/workflow.test.ts` (the excerpt
+derivation the reordered panel now makes obvious).
+
+Baseline `BR-V1.38-2026-09-18`.

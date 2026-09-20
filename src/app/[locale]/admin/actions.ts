@@ -467,7 +467,9 @@ export async function createEventAction(form: FormData): Promise<void> {
     // Recurrence, asked for on the creation form (`DECISIONS.md` §64): the same series the
     // event page offers, made right away, as drafts — a new event is a draft, and copies of a
     // draft are drafts. The list's "publish the ticked ones" takes the whole series live.
-    const cadence = text(form, "repeat.cadence");
+    // The tick decides whether this event repeats at all (§170); the cadence only says how.
+    // Without it the recurrence fields are hidden, and a hidden field's value means nothing.
+    const cadence = form.get("repeat.on") === "on" ? text(form, "repeat.cadence") : "";
     if (cadence && cadence !== "NONE") {
       if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
         throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");
@@ -526,6 +528,11 @@ export async function repeatEventAction(form: FormData): Promise<void> {
   let outcome: { error?: string; saved?: string; created?: string };
   try {
     const actor = await requireStaff();
+    // The tick is the answer to "does this repeat" (§170). The button that posts this form is
+    // hidden until it is ticked, and this is the same rule asserted where it decides.
+    if (form.get("repeatOn") !== "on") {
+      throw new DomainError("VALIDATION_ERROR", "tick 'repeat this event' before creating a series");
+    }
     const cadence = text(form, "cadence");
     if (!REPEAT_CADENCES.includes(cadence as RepeatCadence)) {
       throw new DomainError("VALIDATION_ERROR", "cadence: choose one of the listed cadences");

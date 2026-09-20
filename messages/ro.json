@@ -361,7 +361,7 @@
       "checkinCode": "Cod de ridicare",
       "checkinCodeHelp": "Codul din emailul de confirmare; QR-ul de mai jos îl conține. Se folosește la masa de ridicare a numerelor.",
       "qrAlt": "Cod QR {code}",
-      "openDesk": "Deschide la masă",
+      "openDesk": "Deschide la masa din ziua cursei (check-in)",
       "notCheckedIn": "Nu a fost marcat prezent.",
       "checkedIn": "Prezent: {time} · {who}",
       "idDocument": "Act de identitate",
@@ -479,7 +479,7 @@
       "fields": {
         "title": "Titlu",
         "slug": "Adresa paginii",
-        "excerpt": "Descriere scurtă",
+        "excerpt": "Rezumat — apare pe card și în distribuiri",
         "locationName": "Punct de întâlnire",
         "locationAddress": "Adresă",
         "seoTitle": "Titlu pentru motoarele de căutare",
@@ -487,7 +487,7 @@
         "difficulty": "Dificultate",
         "costType": "Cost",
         "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
-        "body": "Descriere completă",
+        "body": "Conținut — apare pe pagina evenimentului",
         "rules": "Regulamentul evenimentului",
         "schedule": "Programul evenimentului"
       },
@@ -644,7 +644,29 @@
       "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului — descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
-      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână."
+      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
+      "panels": {
+        "when": "Când și unde",
+        "registration": "Înscrieri",
+        "details": "Traseu și detalii",
+        "video": "Film"
+      },
+      "seoSection": "Adresa paginii și motoarele de căutare",
+      "typeHelpSummary": "Ce înseamnă fiecare tip?",
+      "typeNotes": {
+        "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
+        "RACE": "Cursă: înscriere, declarație, numere de concurs și program al zilei.",
+        "HIKE": "Drumeție: poate avea înscriere și program, dacă locurile sunt limitate.",
+        "COFFEE": "Cafea: poate avea înscriere, pentru rezervarea mesei. Fără program.",
+        "GEAR_TEST": "Testare de echipament: poate avea înscriere și program.",
+        "MEETUP": "Eveniment special: ediția aparte, cu un partener sau cu o ocazie. Poate avea înscriere și program.",
+        "EXTERNAL": "Eveniment extern: e al altcuiva, iar înscrierea se face pe pagina organizatorului."
+      },
+      "repeatOn": "Repetă evenimentul",
+      "repeatHelpSummary": "Cum funcționează o serie",
+      "tabMissing": "textul întreg",
+      "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
+      "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -692,7 +714,8 @@
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
         "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
         "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
-      }
+      },
+      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă."
     },
     "queue": {
       "title": "Coada de înscrieri",

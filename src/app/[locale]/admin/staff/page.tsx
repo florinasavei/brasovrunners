@@ -122,8 +122,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved === "invited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
         {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
         {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
-        {(saved === "invited" || saved === "reinvited") && invite === "failed" && (
+        {/* Two different failures, and they were wearing one sentence (§170): adding says the
+            row is on the list and the account was refused; resending says the row is on the
+            list and there is no account to send to. "A refuzat să creeze contul" under a
+            person who has been on the list for a week explains nothing. */}
+        {saved === "invited" && invite === "failed" && (
           <Alert severity="warning">{t("staff.inviteFailed", { reason: reason ?? "" })}</Alert>
+        )}
+        {saved === "reinvited" && invite === "failed" && (
+          <Alert severity="warning">{t("staff.resendFailed", { reason: reason ?? "" })}</Alert>
         )}
         {saved === "reinvited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
         {saved === "reinvited" && invite === "unconfigured" && <Alert severity="info">{t("staff.inviteManual")}</Alert>}

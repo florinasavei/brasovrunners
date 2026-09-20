@@ -140,6 +140,27 @@ export async function countRegistrationsForEvent<T extends Record<string, unknow
   return row?.count ?? 0;
 }
 
+/**
+ * How many of those are test rows (§170).
+ *
+ * The refusal to delete an event counts every registration, test ones included — the foreign
+ * key does not care what kind they are. The editor says so in words, and the number that makes
+ * the sentence actionable is this one: "three registrations, all of them test data" has a
+ * button beside it ("Șterge înscrierile de test"), where "three registrations" alone reads as
+ * a dead end. `AGENTS.md` §12.6 keeps this out of every count the *club* is given; this is the
+ * count the person deleting the row is given, which is a different question.
+ */
+export async function countTestRegistrationsForEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "TEST")));
+  return row?.count ?? 0;
+}
+
 export type InsertPendingRegistrationInput = {
   id?: string;
   eventId: string;

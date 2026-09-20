@@ -21,8 +21,10 @@ import {
   describeIncompleteLocales,
   missingPublicEventFields,
 } from "@/modules/content/events/service";
+import EditorPanel from "@/modules/content/events/ui/EditorPanel";
 import EventFieldsForm from "@/modules/content/events/ui/EventFieldsForm";
 import LocaleTabPanels from "@/modules/content/events/ui/LocaleTabPanels";
+import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import TranslationFieldsForm from "@/modules/content/events/ui/TranslationFieldsForm";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { areTestRegistrationsAvailable } from "@/modules/registrations/test-registrations";
@@ -41,10 +43,13 @@ import {
 } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
+import SubmitIconButton from "@/shared/ui/SubmitIconButton";
+import type { ActionIconName } from "@/shared/ui/action-icons";
+import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
 import { countInterests } from "@/modules/registrations/interest";
-import { countEligibleWaitlisted } from "@/modules/registrations/repository";
+import { countEligibleWaitlisted, countRegistrationsForEvent, countTestRegistrationsForEvent } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
@@ -72,6 +77,18 @@ type Props = {
 };
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The glyph on each publication verb (§170), by name — an element may not cross the
+ * server/client boundary as a prop (`shared/ui/action-icons.ts`). Keyed on the state the
+ * transition leads to, which is what the button is named after.
+ */
+const TRANSITION_ICON: Record<string, ActionIconName> = {
+  DRAFT: "draft",
+  IN_REVIEW: "review",
+  PUBLISHED: "publish",
+  ARCHIVED: "archive",
+};
 
 /**
  * The one editing screen (BR-REQ-050-01, BR-REQ-051-01), in three parts and one save.
@@ -165,6 +182,33 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       : 0;
 
   /**
+   * Why Delete is, or is not, offered (§170; the owner: "aparent nu pot șterge evenimente").
+   *
+   * The list has explained this for a while — "eleven people have registered" replaces the
+   * button — and the editor did not: it offered the button and let the service's refusal arrive
+   * afterwards as `VALIDATION_ERROR`, a code that names nothing. The same count, in the same
+   * words, and the test rows counted separately because those have a button of their own.
+   */
+  const registered = canDeleteEvent(staffUser.role)
+    ? {
+        total: await countRegistrationsForEvent(db, event.id),
+        test: await countTestRegistrationsForEvent(db, event.id),
+      }
+    : null;
+
+  /**
+   * "Not ready to publish", in the words on the screen (§170; the owner: "aparent nu pot
+   * publica un eveniment").
+   *
+   * The alert said `Lipsesc: RO: excerpt · EN: excerpt` — a column name, for a box labelled
+   * "Rezumat" that the organizer had never been shown. Every key these two functions return is
+   * a field in `editor.fields`, so the label is simply looked up; a language that has no row at
+   * all says so instead.
+   */
+  const fieldLabel = (field: string) =>
+    field === "translation" ? t("editor.tabMissing") : t(`editor.fields.${field}`);
+
+  /**
    * Romanian first, then English — `routing.locales` order, which is the order the club works
    * in, rather than whatever order the database returned the rows in.
    */
@@ -244,13 +288,130 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         )}
       </Box>
 
+      {/*
+        Two columns from `md` up (§170; the owner: "Publicare + repeat + the series chips in a
+        'Publicare' panel — top on a phone, right-hand column from md up"): the words and the
+        settings on the left, everything about whether this event is live on the right. On a
+        phone the order is reversed — publication first, because on a phone it is the thing you
+        came to check, and a column of forty fields above it is a scroll nobody makes.
+
+        The two are **siblings**, never nested: the save is one `<form>` and every publication
+        verb is a form of its own, and a form inside a form is not a thing HTML has.
+      */}
+      <Box
+        sx={{
+          display: "grid",
+          gap: { xs: 3, md: 4 },
+          gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) minmax(260px, 340px)" },
+          alignItems: "start",
+        }}
+      >
+      <Box sx={{ order: { xs: 2, md: 1 }, minWidth: 0 }}>
+      {/* Settings and content: one form, one save. */}
+      <form action={saveEventAndTranslationsAction}>
+        <input type="hidden" name="uiLocale" value={locale} />
+        <input type="hidden" name="eventId" value={event.id} />
+        {/*
+          The event row's version, and its presence is also the signal that this save touches the
+          event row at all: an Author sees no settings panel, so this field is absent and the
+          service writes no event row rather than assuming a version it was never given.
+        */}
+        {maySaveSettings && (
+          <input type="hidden" name="event.expectedVersion" value={event.version} />
+        )}
+
+        <Stack spacing={3}>
+          {/* The words first (§170): this is what somebody opened the editor to write. */}
+          <EditorPanel
+            title={t("editor.contentSection")}
+            help={t("editor.contentHelp")}
+            headingId="panel-content"
+          >
+            <LocaleTabPanels
+              panels={orderedTranslations.map((translation) => ({
+                locale: translation.locale,
+                label: tSite(`languageName.${translation.locale}`),
+                incompleteLabel: incomplete.some((entry) => entry.locale === translation.locale)
+                  ? t("editor.tabIncomplete")
+                  : undefined,
+                content: (
+                  <TranslationFieldsForm
+                    translation={translation}
+                    eventId={event.id}
+                    eventType={event.type}
+                    slugLocked={slugLocked}
+                    mayEdit={mayEditTranslation(translation)}
+                  />
+                ),
+              }))}
+            />
+          </EditorPanel>
+
+          {maySaveSettings ? (
+            <EventFieldsForm event={event} declarations={declarations} waiting={waiting} />
+          ) : (
+            <Alert severity="info">{t("editor.eventFieldsReadOnly")}</Alert>
+          )}
+
+          {maySaveAnything && (
+            <Box component="section">
+              {/* BR-REQ-051-01 criterion 4, once for the whole save now that there is one save.
+                  Binding three times over: `required`, so the browser refuses the submit and
+                  names the box; the dimmed button with its sentence, so the organizer sees why
+                  before pressing; and the service, which refuses a save of a published event
+                  without it whatever the browser did ("I shouldn't be able to save without
+                  ticking it" — the owner, 2026-09-17). In the flow, not in the sticky bar
+                  (§152): on a phone the bar had grown to a third of the screen. */}
+              {live && (
+                <Box sx={{ mb: 2 }}>
+                  <CheckboxField name="acknowledgeLiveEdit" required>
+                    {t("editor.acknowledgeLive")}
+                  </CheckboxField>
+                </Box>
+              )}
+              {/* A date of a series (§130, §134): the dates ticked in the header, said in words,
+                  with the three presets — this date, this and the following, all — as one
+                  exclusive control. Only what changed travels; the service says how. */}
+              {inSeries && maySaveSettings && (
+                <Box sx={{ mb: 2 }}>
+                  <SeriesScopeBox />
+                </Box>
+              )}
+              {/*
+                Only the button is sticky at the bottom of the window while the long form
+                scrolls (the owner: "this save button should be sticky at the bottom", then
+                "the bottom save footer takes too much space on mobile"), above the footer's
+                own 44px bar; it settles into place once the end of the form is in view.
+              */}
+              <Box
+                sx={{
+                  position: "sticky",
+                  bottom: 44,
+                  zIndex: 2,
+                  bgcolor: "background.default",
+                  py: 1,
+                  borderTop: 1,
+                  borderColor: "divider",
+                }}
+              >
+                <SubmitButton
+                  label={t("editor.save")}
+                  pendingLabel={t("editor.saving")}
+                  incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
+                  size="medium"
+                />
+              </Box>
+            </Box>
+          )}
+        </Stack>
+      </form>
+      </Box>
+
+      <Stack spacing={3} sx={{ order: { xs: 1, md: 2 }, minWidth: 0, position: { md: "sticky" }, top: { md: 16 } }}>
       {/* Publication, for the whole event. Its own forms: a transition is not an edit, and it
           carries only the event's version. */}
-      <Box component="section">
+      <EditorPanel title={t("editor.publicationSection")} headingId="panel-publication">
         <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}>
-          <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
-            {t("editor.publicationSection")}
-          </Typography>
           <Chip size="small" label={EDITORIAL_STATUS_LABEL[event.editorialStatus]} />
           <Chip size="small" variant="outlined" label={t("editor.version", { version: event.version })} />
         </Stack>
@@ -261,9 +422,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           <Alert severity="info" sx={{ mb: 2 }}>
             {t("editor.incompleteForPublication", {
               detail: [
-                ...missingOnEvent.map((field) => `${t("editor.settingsSection")}: ${field}`),
+                ...missingOnEvent.map((field) => `${t("editor.panels.when")}: ${fieldLabel(field)}`),
                 ...incomplete.map(
-                  (entry) => `${entry.locale.toUpperCase()}: ${entry.missing.join(", ")}`,
+                  (entry) =>
+                    `${tSite(`languageName.${entry.locale as "ro" | "en"}`)}: ${entry.missing.map(fieldLabel).join(", ")}`,
                 ),
               ].join(" · "),
             })}
@@ -279,19 +441,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 <input type="hidden" name="expectedVersion" value={event.version} />
                 <input type="hidden" name="to" value={to} />
                 {/* Archiving takes the event off the public site in both languages; the other
-                    transitions are a click away from being undone. */}
+                    transitions are a click away from being undone. Each wears its verb's glyph
+                    (§170), by name — a Server Component may not hand an element across. */}
                 {to === "ARCHIVED" ? (
                   <ConfirmSubmitButton
                     label={EDITORIAL_TRANSITION_LABEL[to]}
+                    icon={TRANSITION_ICON[to]}
                     title={t("confirm.archiveTitle")}
                     body={t("confirm.archiveBody")}
                     confirmLabel={EDITORIAL_TRANSITION_LABEL[to]}
                     cancelLabel={t("confirm.cancel")}
                   />
                 ) : (
-                  <Button type="submit" size="small" variant="outlined" sx={{ minHeight: 44 }}>
-                    {EDITORIAL_TRANSITION_LABEL[to]}
-                  </Button>
+                  <SubmitIconButton label={EDITORIAL_TRANSITION_LABEL[to]} icon={TRANSITION_ICON[to]} />
                 )}
               </form>
             ))}
@@ -299,7 +461,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         ) : (
           <Alert severity="info">{t("editor.noTransitions")}</Alert>
         )}
-      </Box>
+      </EditorPanel>
 
       {/*
         Repeat, right under publication (the owner: "repeating the event should be more on the
@@ -372,143 +534,45 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           )}
         </Box>
       ) : (
-      <Box component="section">
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("editor.repeatSection")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("editor.repeatHelp")}
-        </Typography>
+      <EditorPanel title={t("editor.repeatSection")} headingId="panel-repeat">
         <form action={repeatEventAction}>
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="eventId" value={event.id} />
-          <RepeatFields ownWeekday={wallClockWeekday(event.startsAt, event.timezone)} />
-          {live && (
-            <Box sx={{ mt: 1 }}>
-              <CheckboxField name="publish">{t("editor.repeatPublish")}</CheckboxField>
+          {/* The tick first, the frequency after it (§170; the owner: "repetă evenimentul
+              trebuie să fie o bifă și abia apoi pot să setez frecvența"). What the series
+              actually does is folded under it: six lines of explanation open on every event
+              was six lines of explanation about something most events are not. */}
+          <RepeatToggle name="repeatOn" label={t("editor.repeatOn")}>
+            <Box component="details" sx={{ ...DISCLOSURE_SX, mb: 1 }}>
+              <Typography component="summary" variant="body2">
+                {t("editor.repeatHelpSummary")}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ pb: 1 }}>
+                {t("editor.repeatHelp")}
+              </Typography>
             </Box>
-          )}
-          <Box sx={{ mt: 2 }}>
-            <ConfirmSubmitButton
-              label={t("editor.repeat")}
-              title={t("confirm.repeatTitle")}
-              body={t("confirm.repeatBody")}
-              confirmLabel={t("editor.repeat")}
-              cancelLabel={t("confirm.cancel")}
-            />
-          </Box>
-        </form>
-      </Box>
-      )}
-
-      {/* Settings and content: one form, one save. */}
-      <form action={saveEventAndTranslationsAction}>
-        <input type="hidden" name="uiLocale" value={locale} />
-        <input type="hidden" name="eventId" value={event.id} />
-        {/*
-          The event row's version, and its presence is also the signal that this save touches the
-          event row at all: an Author sees no settings panel, so this field is absent and the
-          service writes no event row rather than assuming a version it was never given.
-        */}
-        {maySaveSettings && (
-          <input type="hidden" name="event.expectedVersion" value={event.version} />
-        )}
-
-        <Stack spacing={4}>
-          <Box component="section">
-            <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
-              {t("editor.settingsSection")}
-            </Typography>
-
-            {maySaveSettings ? (
-              <EventFieldsForm event={event} declarations={declarations} waiting={waiting} />
-            ) : (
-              <Alert severity="info">{t("editor.eventFieldsReadOnly")}</Alert>
-            )}
-          </Box>
-
-          <Box component="section">
-            <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-              {t("editor.contentSection")}
-            </Typography>
-            {/* What the two tabs are, and what they are not: the same event, in two languages,
-                and only the words differ — everything factual is in Settings above. */}
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t("editor.contentHelp")}
-            </Typography>
-
-            <LocaleTabPanels
-              panels={orderedTranslations.map((translation) => ({
-                locale: translation.locale,
-                label: tSite(`languageName.${translation.locale}`),
-                incompleteLabel: incomplete.some((entry) => entry.locale === translation.locale)
-                  ? t("editor.tabIncomplete")
-                  : undefined,
-                content: (
-                  <TranslationFieldsForm
-                    translation={translation}
-                    eventId={event.id}
-                    eventType={event.type}
-                    slugLocked={slugLocked}
-                    mayEdit={mayEditTranslation(translation)}
-                  />
-                ),
-              }))}
-            />
-          </Box>
-
-          {maySaveAnything && (
-            <Box component="section">
-              {/* BR-REQ-051-01 criterion 4, once for the whole save now that there is one save.
-                  Binding three times over: `required`, so the browser refuses the submit and
-                  names the box; the dimmed button with its sentence, so the organizer sees why
-                  before pressing; and the service, which refuses a save of a published event
-                  without it whatever the browser did ("I shouldn't be able to save without
-                  ticking it" — the owner, 2026-09-17). In the flow, not in the sticky bar
-                  (§152): on a phone the bar had grown to a third of the screen. */}
-              {live && (
-                <Box sx={{ mb: 2 }}>
-                  <CheckboxField name="acknowledgeLiveEdit" required>
-                    {t("editor.acknowledgeLive")}
-                  </CheckboxField>
-                </Box>
-              )}
-              {/* A date of a series (§130, §134): the dates ticked in the header, said in words,
-                  with the three presets — this date, this and the following, all — as one
-                  exclusive control. Only what changed travels; the service says how. */}
-              {inSeries && maySaveSettings && (
-                <Box sx={{ mb: 2 }}>
-                  <SeriesScopeBox />
-                </Box>
-              )}
-              {/*
-                Only the button is sticky at the bottom of the window while the long form
-                scrolls (the owner: "this save button should be sticky at the bottom", then
-                "the bottom save footer takes too much space on mobile"), above the footer's
-                own 44px bar; it settles into place once the end of the form is in view.
-              */}
-              <Box
-                sx={{
-                  position: "sticky",
-                  bottom: 44,
-                  zIndex: 2,
-                  bgcolor: "background.default",
-                  py: 1,
-                  borderTop: 1,
-                  borderColor: "divider",
-                }}
-              >
-                <SubmitButton
-                  label={t("editor.save")}
-                  pendingLabel={t("editor.saving")}
-                  incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
-                  size="medium"
-                />
+            <RepeatFields ownWeekday={wallClockWeekday(event.startsAt, event.timezone)} />
+            {live && (
+              <Box sx={{ mt: 1 }}>
+                <CheckboxField name="publish">{t("editor.repeatPublish")}</CheckboxField>
               </Box>
+            )}
+            <Box sx={{ mt: 2 }}>
+              <ConfirmSubmitButton
+                label={t("editor.repeat")}
+                icon="repeat"
+                title={t("confirm.repeatTitle")}
+                body={t("confirm.repeatBody")}
+                confirmLabel={t("editor.repeat")}
+                cancelLabel={t("confirm.cancel")}
+              />
             </Box>
-          )}
-        </Stack>
-      </form>
+          </RepeatToggle>
+        </form>
+      </EditorPanel>
+      )}
+      </Stack>
+      </Box>
 
       {/* The other way in to BR-REQ-037-05, from the event somebody is actually looking at.
           Only for an event with a queue to put anybody in, and only for the role that may. */}
@@ -566,7 +630,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             {t("bibs.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            {bibs.length === 0 ? t("bibs.helpNone") : t("bibs.helpSome", { total: bibs.length })}
+            {/* Why there is nothing here (§170; the owner: "partea cu numerele de concurs nu
+                prea funcționează"). A queue made entirely of test rows gets no numbers and
+                never will — `AGENTS.md` §12.6 — and the screen said only "no numbers yet",
+                which reads as a broken button rather than a rule. */}
+            {bibs.length === 0
+              ? registered && registered.total > 0 && registered.test === registered.total
+                ? t("editor.bibsOnlyTest")
+                : t("bibs.helpNone")
+              : t("bibs.helpSome", { total: bibs.length })}
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
             <form action={assignBibNumbersAction}>
@@ -762,6 +834,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             <input type="hidden" name="eventId" value={event.id} />
             <ConfirmSubmitButton
               label={t("editor.duplicate")}
+              icon="duplicate"
               title={t("confirm.duplicateTitle")}
               body={t("confirm.duplicateBody")}
               confirmLabel={t("editor.duplicate")}
@@ -769,22 +842,38 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             />
           </form>
 
-          {/* Deletion is the Administrator's alone, and the service refuses any event that has
-              a registration against it — archive is the answer for an event that happened. */}
-          {canDeleteEvent(staffUser.role) && (
-            <form action={deleteEventAction}>
-              <input type="hidden" name="uiLocale" value={locale} />
-              <input type="hidden" name="eventId" value={event.id} />
-              <ConfirmSubmitButton
-                label={t("editor.delete")}
-                title={t("confirm.deleteTitle")}
-                body={t("confirm.deleteBody")}
-                confirmLabel={t("editor.delete")}
-                cancelLabel={t("confirm.cancel")}
-                color="error"
-              />
-            </form>
-          )}
+          {/*
+            Deletion is the Administrator's alone, and the service refuses any event that has a
+            registration against it — archive is the answer for an event that happened.
+
+            The count replaces the button rather than the refusal arriving afterwards as an
+            error code (§170): the list has explained it this way since §114, and this screen
+            offered the button and let `VALIDATION_ERROR` explain nothing. When every row in the
+            way is test data, the sentence says so and the button that clears them is one
+            section above.
+          */}
+          {canDeleteEvent(staffUser.role) &&
+            (registered && registered.total > 0 ? (
+              <Alert severity="info" sx={{ flex: "1 1 320px" }}>
+                {registered.test === registered.total
+                  ? t("editor.deleteBlockedByTest", { count: registered.total })
+                  : t("events.deleteBlocked", { count: registered.total })}
+              </Alert>
+            ) : (
+              <form action={deleteEventAction}>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="eventId" value={event.id} />
+                <ConfirmSubmitButton
+                  label={t("editor.delete")}
+                  icon="delete"
+                  title={t("confirm.deleteTitle")}
+                  body={t("confirm.deleteBody")}
+                  confirmLabel={t("editor.delete")}
+                  cancelLabel={t("confirm.cancel")}
+                  color="error"
+                />
+              </form>
+            ))}
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {t("editor.deleteHelp")}

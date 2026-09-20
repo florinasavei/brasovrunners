@@ -35,14 +35,30 @@ export default async function ShareLinks({ url, title, imageHref, calendar }: Pr
       download={download ? true : undefined}
       variant="outlined"
       size="small"
-      sx={{ minHeight: 44, gap: 0.75, borderRadius: 22, px: 1.5 }}
+      /*
+        Full 44 pixels on a touch screen, and smaller from `sm` up (§170; the owner: "aceste
+        butoane sunt mult prea mari"). A finger needs the 44; a pointer does not, and eight
+        pills at finger size across a desktop row read as the loudest thing on the page when
+        they are the least important. 32 is still well over the 24 WCAG 2.2 asks for.
+      */
+      sx={{
+        minHeight: { xs: 44, sm: 32 },
+        gap: 0.5,
+        borderRadius: 22,
+        px: { xs: 1.5, sm: 1.25 },
+        fontSize: { sm: "0.78rem" },
+      }}
     >
       {icon}
       {label}
     </Button>
   );
   const label = (text: string) => (
-    <Typography variant="body2" color="text.secondary" sx={{ minHeight: 44, display: "inline-flex", alignItems: "center", mr: 0.5 }}>
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{ minHeight: { xs: 44, sm: 32 }, display: "inline-flex", alignItems: "center", mr: 0.5 }}
+    >
       {text}
     </Typography>
   );

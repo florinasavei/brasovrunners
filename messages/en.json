@@ -361,7 +361,7 @@
       "checkinCode": "Pickup code",
       "checkinCodeHelp": "The code from the confirmation email; the QR below encodes it. Used at the number pickup desk.",
       "qrAlt": "QR code {code}",
-      "openDesk": "Open at the desk",
+      "openDesk": "Open at the race-day desk (check-in)",
       "notCheckedIn": "Not marked as here.",
       "checkedIn": "Here: {time} · {who}",
       "idDocument": "Identity document",
@@ -479,7 +479,7 @@
       "fields": {
         "title": "Title",
         "slug": "Page address",
-        "excerpt": "Short description",
+        "excerpt": "Summary — shown on the card and in shares",
         "locationName": "Meeting point",
         "locationAddress": "Address",
         "seoTitle": "Search engine title",
@@ -487,7 +487,7 @@
         "difficulty": "Difficulty",
         "costType": "Cost",
         "checklist": "What to bring (one line, in the emails and the calendar)",
-        "body": "Full description",
+        "body": "Content — shown on the event page",
         "rules": "Event rules",
         "schedule": "Event programme"
       },
@@ -644,7 +644,29 @@
       "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page — the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
-      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway."
+      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway.",
+      "panels": {
+        "when": "When and where",
+        "registration": "Registration",
+        "details": "Route and details",
+        "video": "Film"
+      },
+      "seoSection": "Page address and search engines",
+      "typeHelpSummary": "What each type means",
+      "typeNotes": {
+        "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
+        "RACE": "Race: registration, a declaration, race numbers and a programme for the day.",
+        "HIKE": "Hike: may take registrations and have a programme, when places are limited.",
+        "COFFEE": "Coffee: may take registrations, to book the table. No programme.",
+        "GEAR_TEST": "Gear test: may take registrations and have a programme.",
+        "MEETUP": "Special event: the one-off, with a partner or for an occasion. May take registrations and have a programme.",
+        "EXTERNAL": "External event: it is somebody else's, and registration happens on the organizer's own page."
+      },
+      "repeatOn": "Repeat this event",
+      "repeatHelpSummary": "How a series works",
+      "tabMissing": "the whole text",
+      "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
+      "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -692,7 +714,8 @@
         "DEV": "plus the technical page /devs. No participant data.",
         "ADMIN": "plus registrations, the export, the legal texts, the emails, the tasks.",
         "SUPERADMIN": "plus the team: who has access and with which role."
-      }
+      },
+      "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one."
     },
     "queue": {
       "title": "The registration queue",
