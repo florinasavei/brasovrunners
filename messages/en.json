@@ -672,8 +672,17 @@
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
-      "bibColour": "Number colour",
-      "bibColourHelp": "The band under the number, on the printed sheet."
+      "bibColour": "Colour of the numbers",
+      "bibColourHelp": "The band under the number on the printed sheet. “The club's colour” unless you want a specific one.",
+      "bibColours": {
+        "club": "The club's colour",
+        "green": "Green",
+        "red": "Red",
+        "orange": "Orange",
+        "purple": "Purple",
+        "teal": "Teal",
+        "black": "Black"
+      }
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -1754,7 +1763,7 @@
     "guardianName": "Full name of the parent / guardian",
     "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer.",
     "privacyBanner": "Nothing you write here appears anywhere on the site. Only the team organizing this event sees it, and the declaration and the emails go to you alone.",
-    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name goes on it only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth.",
+    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name and the club you wrote go on it, only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth.",
     "confidentialNote": "Confidential. Never published.",
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
     "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",

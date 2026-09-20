@@ -8309,3 +8309,38 @@ Tests: `tests/integration/cms/crud.test.ts` (an event with only test rows is del
 one real row still refuses, and nothing is cleared on the way to being refused).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 177. Decided — the review's pass over the band, the banner and the message count (2026-09-20)
+
+**Context.** An adversarial survey of the day's work, run before the next batch, found three
+things the tests had not.
+
+*The band never reached the row.* §173 added `bib_start_number` and `bib_colour` to the event,
+the editor's two controls, the zod fields and the migration — and `eventColumnsFrom`, the one
+place the event's columns are written, was not touched. Both values were parsed, validated and
+dropped. SPECS BR-REQ-038-01 criterion 12 ("both are stored on the event") was false on the
+day it was written; the integration test that would have caught it inserted the column by hand.
+
+*The banner lied by omission.* §171's "Nimic altceva nu se publică: nici emailul, nici telefonul,
+nici data nașterii" on the registration form — while `club_name` has been on the public start
+list since §85. The tick was consent to one field where two are published.
+
+*The message count was one too many.* `MESSAGES_PER_COMPLETED_REGISTRATION = 5` counted
+`DECLARATION_SIGNED`, which nothing has enqueued since §126 folded the PDF into the
+confirmation (§171 confirmed it). Every headroom and cost figure on `/devs` and
+`/admin/tasks` over-projected by a quarter.
+
+**Decision.** Both band columns are written by `eventColumnsFrom` and carried by a series save
+(`SERIES_COLUMNS`): one race, one band, on every date. The colour control becomes a **palette**
+rather than `<input type="color">`, which has no empty state — every save would have written a
+colour whether or not the organizer chose one, and null, §173's "the club's own", would have
+been unreachable. Six print-safe colours plus the club's own; a stored colour outside the palette
+is kept as its own option so a save never silently changes it. The banner names the club. The
+constant is four, and its comment says why.
+
+**Consequences.** `tests/integration/cms/one-save.test.ts` saves the band and reads it back, and
+saves it empty and reads null. The next batch's builders start from this commit — the review
+also found their worktrees had been cut from an old `main`, which is recorded here so the next
+run checks its base before it writes a line.
+
+Baseline `BR-V1.38-2026-09-18`.

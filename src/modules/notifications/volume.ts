@@ -23,14 +23,17 @@ import { readEmailPlan } from "./email-plan";
  * Four, from §16.3's message list, for a registration that completes normally and is
  * reminded: `VERIFY_REGISTRATION_EMAIL`, `COMPLETE_DECLARATION`, `REGISTRATION_CONFIRMED`,
  * and `EVENT_REMINDER` two days before the start (`DECISIONS.md` §81) — three since
- * 2026-09-18, the reminder made it four, and `DECLARATION_SIGNED` (§95) five.
+ * 2026-09-18, and the reminder made it four. `DECLARATION_SIGNED` was counted as a fifth, but
+ * since §126 the signed PDF rides on the confirmation and nothing enqueues that type (§171), so
+ * five over-projected every headroom and cost figure on `/devs` and `/admin/tasks` by a quarter
+ * (§177).
  *
  * An entrant who lands on the waiting list costs more (`WAITLIST_JOINED`, then
  * `WAITLIST_SPOT_OFFER`), and one who cancels costs another. So four is the *floor* for a
  * completed registration and the projection below understates a busy day rather than crying
  * wolf — which is the right direction for a number somebody uses to decide whether to upgrade.
  */
-export const MESSAGES_PER_COMPLETED_REGISTRATION = 5;
+export const MESSAGES_PER_COMPLETED_REGISTRATION = 4;
 
 /**
  * Six when the club's archive mailbox is named (`DECLARATIONS_ARCHIVE_TO`, §99): the archive

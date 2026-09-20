@@ -341,6 +341,11 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
+    // The race's band (§173): where its numbers start and what colour they print. Both were
+    // parsed and validated by `fields.ts` from the day they were added and then dropped here,
+    // so the editor's two controls posted into nothing — caught by review (§177).
+    bibStartNumber: fields.bibStartNumber,
+    bibColour: fields.bibColour,
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
     registrationOpensAt: times.registrationOpensAt,
@@ -737,6 +742,9 @@ const SERIES_COLUMNS = [
   "elevationGainMeters",
   "registrationMode",
   "capacity",
+  // One race, one band: a series is the same event on several dates (§173, §177).
+  "bibStartNumber",
+  "bibColour",
   "confirmationOpensDaysBefore",
   "confirmationDeadlineDaysBefore",
   "declarationDocumentId",
