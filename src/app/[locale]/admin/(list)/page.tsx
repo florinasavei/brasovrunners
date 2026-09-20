@@ -64,6 +64,8 @@ type EventRow = {
   event: EditableEvent;
   translations: EditableTranslation[];
   entries: number;
+  /** How many of those are test rows (§176): an event blocked only by those is deleted with them. */
+  testEntries: number;
   /** Confirmed and here, shown on race day (§83): the desk's own two numbers. */
   desk: { confirmed: number; checkedIn: number } | null;
 };
@@ -135,7 +137,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const DAY = 24 * 60 * 60_000;
   const rows: EventRow[] = events.map((row) => ({
     ...row,
-    entries: entriesByEvent.get(row.event.id) ?? 0,
+    entries: entriesByEvent.get(row.event.id)?.total ?? 0,
+    testEntries: entriesByEvent.get(row.event.id)?.test ?? 0,
     desk:
       Math.abs(row.event.startsAt.getTime() - now.getTime()) <= DAY && row.event.registrationMode === "INTERNAL"
         ? (deskByEvent.get(row.event.id) ?? { confirmed: 0, checkedIn: 0 })
@@ -442,6 +445,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         rowActions={({ members, next }) => {
           const { event, translations } = next;
           const entries = members.reduce((sum, member) => sum + member.entries, 0);
+          const testEntries = members.reduce((sum, member) => sum + member.testEntries, 0);
           const isSeries = members.length > 1;
           return (
           <Stack
@@ -507,7 +511,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="eventId" value={event.id} />
                 </form>
-                {canDeleteEvent(staffUser.role) && entries === 0 && !isSeries && (
+                {canDeleteEvent(staffUser.role) && (entries === 0 || entries === testEntries) && !isSeries && (
                   <form id={`delete-${event.id}`} action={deleteEventAction} hidden>
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="eventId" value={event.id} />
@@ -547,8 +551,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                     ...(canDeleteEvent(staffUser.role)
                       ? isSeries
                         ? [{ kind: "note" as const, label: t("events.seriesDeleteNote") }]
-                        : entries > 0
-                        ? [{ kind: "note" as const, label: t("events.deleteBlocked", { count: entries }) }]
+                        : entries > testEntries
+                        ? [{ kind: "note" as const, label: t("events.deleteBlocked", { count: entries - testEntries }) }]
                         : [
                             {
                               kind: "submit" as const,

@@ -55,13 +55,19 @@ export async function listEventsForBackoffice<T extends Record<string, unknown>>
  */
 export async function countRegistrationsByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
-): Promise<Map<string, number>> {
+): Promise<Map<string, { total: number; test: number }>> {
   const rows = await db
-    .select({ eventId: registrations.eventId, total: count() })
+    .select({
+      eventId: registrations.eventId,
+      total: count(),
+      // Split out since §176: an event blocked only by test rows is deleted with them, and the
+      // row must say that rather than "archive it instead" to somebody who already has.
+      test: sql<number>`count(*) FILTER (WHERE ${registrations.kind} = 'TEST')`.mapWith(Number),
+    })
     .from(registrations)
     .groupBy(registrations.eventId);
 
-  return new Map(rows.map((row) => [row.eventId, row.total]));
+  return new Map(rows.map((row) => [row.eventId, { total: row.total, test: row.test }]));
 }
 
 /**

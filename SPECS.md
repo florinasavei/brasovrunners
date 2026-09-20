@@ -471,6 +471,7 @@ coffee is run on nothing.
 8. Given the public form, when it renders, then a folded, optional "Socials" section offers a Strava profile link and an Instagram username; a link is accepted only on Strava's own hosts, a username is stored without its `@`, both may be empty; they are shown to Administrators on the registration's page and in the export, never published, and the privacy notice names them (`DECISIONS.md` §106).
 
 9. Given a birth date under eighteen years before today, when the public form is submitted without a parent or legal guardian's name, then it is refused naming `guardianName`; given the name, then it is kept on the registration, shown at the desk and on the registration's page and in the export, and the declaration's `{{declarant}}` reads "<guardian> (parent/legal guardian of the minor <participant>)" in the text's language — the signer's own identity document beside it — while an adult's entry in the field is dropped (`DECISIONS.md` §108).
+10. Given a submission refused by the anti-bot check, when the form renders again, then it says so in its own words — naming the check, not the data — both in the summary at the top and beside the widget; the check itself is unchanged and an unconfirmed token is still refused in every environment (2026-09-20, `DECISIONS.md` §176).
 
 **Verification:** integration `registrations/entry-details.test.ts`, `registrations/minors.test.ts` (9); unit `registrations/socials.test.ts` (8); e2e `registration-submit.spec.ts`
 
@@ -1117,6 +1118,7 @@ way through every step, and none of them is a way around the allocator.
 1. Given the CMS, when it is used, then it can edit articles, event editorial fields, the fixed static page keys, and gallery text, and nothing else.
 2. Given the CMS, when a new route or page layout is attempted, then no interface offers it.
 3. Given editorial content, when it is stored, then the canonical body is validated Tiptap JSON and arbitrary HTML is rejected.
+4. Given an event whose every registration is a test row, when an Administrator deletes it outside production, then those rows are removed with it and the event goes; given one real registration among them, then the delete is refused, nothing is cleared, and the count shown names the real registrations only (2026-09-20, `DECISIONS.md` §176).
 
 **Verification:** integration `cms/boundary.test.ts`
 
@@ -1208,6 +1210,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 6. Given a photo or an album that is removed, when the removal completes, then its rows are gone first and its objects are deleted from storage afterwards — an object without a row is a cost nobody notices, a row without an object is a broken image somebody does.
 7. Given a deployed environment without the five `R2_*` variables, when it boots, then it boots; albums can be created, uploads are refused with a sentence, `/admin/tasks` shows the storage task open with the steps, and the site's public gallery is simply empty. Locally photos live under `.media/` and in tests in memory, so neither needs a bucket.
 8. Given the images the site serves, when they are loaded, then they come from `R2_PUBLIC_BASE_URL` (Cloudflare, egress free) and never through a function; a hostname appears nowhere in `src/` — the S3 endpoint and the public base are configuration.
+9. Given a photograph uploaded through the editor or the gallery, when it is stored, then it has been encoded lossily once and not twice — the browser sends the original whenever the server will accept it — and the web variant is 2400px at quality 88, which is what a full-width picture needs on a 2× screen (2026-09-20, `DECISIONS.md` §176).
 
 **Verification:** unit `media/images.test.ts`; integration `cms/gallery.test.ts`; e2e `gallery.spec.ts`
 

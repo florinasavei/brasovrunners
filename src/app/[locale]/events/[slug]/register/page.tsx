@@ -137,6 +137,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const rejected = parseInvalidFields(fields);
   const invalid = new Set<string>(rejected);
+  /**
+   * The anti-bot check is a rejection about nothing the person typed (§176), so it is not one
+   * of the form's fields and `parseInvalidFields` drops it. Read from the raw parameter, matched
+   * against the one literal it may be — anybody can type into a URL.
+   */
+  const captchaFailed = (fields ?? "").split(",").includes("captcha");
 
   // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
   const latestBirthDate = now.toISOString().slice(0, 10);
@@ -264,7 +270,21 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               sx={{ mb: 2 }}
             >
               <AlertTitle>{t("errors.title")}</AlertTitle>
-              {rejected.length > 0 ? (
+              {/*
+                The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
+                înscrie man!").
+
+                A token Cloudflare does not confirm — a widget that never rendered, a challenge
+                that timed out while somebody filled a long form, a bad minute on the network —
+                comes back as `fields=captcha`. `captcha` is not one of the form's fields, so
+                the summary filtered it out and fell through to "verifică datele completate",
+                which sends a person hunting through twenty inputs that are all correct. It is
+                the one rejection that is about nothing they typed, so it is said first and on
+                its own, and the catalogue already had the sentence for it.
+              */}
+              {captchaFailed ? (
+                t("errors.captcha")
+              ) : rejected.length > 0 ? (
                 <>
                   {t("errors.fieldsIntro")}
                   <Box component="ul" sx={{ m: 0, mt: 1, pl: 3 }}>
@@ -744,7 +764,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {turnstileSiteKey() && (
                 <Box id={fieldId("captcha")}>
                   <div className="cf-turnstile" data-sitekey={turnstileSiteKey()} data-language={locale} />
-                  {invalid.has("captcha") && (
+                  {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}
                     </Typography>

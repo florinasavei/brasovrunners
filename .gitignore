@@ -47,3 +47,6 @@ npm-debug.log*
 .vercel
 .env*
 .media/
+
+# Agent worktrees (Claude Code workflows) — never part of the repository
+.claude/worktrees/

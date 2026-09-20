@@ -49,6 +49,20 @@ import type { EditableEvent } from "../repository";
 const EVENT_STATUSES = ["SCHEDULED", "CANCELLED", "COMPLETED"] as const;
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
 
+/**
+ * The colours a race's numbers may print in (§173, §177): six that stay apart from each other
+ * on paper and from the club's blue, which is the empty choice. Hex triplets, because that is
+ * what `events.bib_colour` checks for and what the sheet paints.
+ */
+const BIB_COLOURS = [
+  { key: "green", hex: "#1b8a3a" },
+  { key: "red", hex: "#c62828" },
+  { key: "orange", hex: "#ef6c00" },
+  { key: "purple", hex: "#6a1b9a" },
+  { key: "teal", hex: "#00838f" },
+  { key: "black", hex: "#212121" },
+] as const;
+
 /** The club's own zone. Offered as the default rather than the browser's, which on a phone in
  * an airport is not where the race is. */
 const DEFAULT_TIMEZONE = "Europe/Bucharest";
@@ -364,15 +378,34 @@ export default async function EventFieldsForm({
                 inputMode="numeric"
                 sx={{ width: { sm: 220 } }}
               />
+              {/*
+                A palette, not a colour picker (§177). `<input type="color">` has no empty state,
+                so every save would have written a colour whether or not the organizer touched
+                it, and "the club's own" — §173's meaning of null — became unreachable. Six
+                print-safe colours a race director actually uses to tell distances apart, and
+                the club's own as the empty choice. A stored colour outside the palette (set by
+                hand, or by a later release) is kept as its own option so the save does not
+                silently change it.
+              */}
               <TextField
+                select
                 name="event.bibColour"
-                type="color"
                 label={t("editor.bibColour")}
                 helperText={t("editor.bibColourHelp")}
-                defaultValue={event?.bibColour ?? "#1a4fd6"}
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ width: { sm: 160 } }}
-              />
+                defaultValue={event?.bibColour ?? ""}
+                slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                sx={{ width: { sm: 220 } }}
+              >
+                <option value="">{t("editor.bibColours.club")}</option>
+                {BIB_COLOURS.map((choice) => (
+                  <option key={choice.hex} value={choice.hex}>
+                    {t(`editor.bibColours.${choice.key}`)}
+                  </option>
+                ))}
+                {event?.bibColour && !BIB_COLOURS.some((choice) => choice.hex === event.bibColour) && (
+                  <option value={event.bibColour}>{event.bibColour}</option>
+                )}
+              </TextField>
             </Stack>
 
             {/*

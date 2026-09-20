@@ -10,6 +10,11 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **The race's band is actually saved.** Where the numbers start and what colour they print were validated and then dropped on the way to the row; both reach it now, a series carries them to every date, and the colour is a palette with the club's own as the empty choice. The registration banner names the club beside the name, and the email projection stops counting a message nothing sends. §177.
+- **The registration form says when the anti-bot check refused it.** It was answering "verifică datele completate" on forms where every field was correct: the rejection carries `fields=captcha`, which the summary filtered out. The check is unchanged; what changed is that the person is told. §176.
+- **An event takes its own test registrations with it.** Deleting was refused with "arhivează-l" to somebody looking at an event that was already archived, over rows he had created to rehearse with. A single real registration still blocks it, and the count now names the real ones only. §176.
+- **Pictures are encoded once, not twice, and at a size a screen has.** Every upload was re-encoded in the browser and again on the server — two lossy generations — then stored at 1600px, which a 2× screen upscales. The original is sent untouched when it fits, and the stored width is 2400 at quality 88. Re-upload to see it. §176.
+- **Echipa says why an invitation cannot create an account** — the Zitadel key — instead of telling the colleague to make one on a sign-in page that offers no such thing. §176.
 - **Smaller controls where a pointer uses them.** A rule between "lună / an" and "calendar / listă", which are two questions and read as one set of four answers; the three add-to-calendar buttons at a pointer size with a glyph each, 44 pixels still on a touch screen. §175.
 - **The desk stops offering a control that always refuses.** A confirmed runner's number is settled, so the box that would change it is gone from the race-day desk and the registration page — the number is shown instead, and the field appears only where there is a gap to fill. §173.
 - **Real flags on citizenship**, from the set the build already copies into `public/flags/`, rather than the regional-indicator emoji Windows draws as two boxed letters. §171.
