@@ -7,7 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
-import { findEventNotificationDetails } from "@/modules/events/repository";
+import { findEventNotificationDetails, findEventStartsAt } from "@/modules/events/repository";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
@@ -102,8 +102,9 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   };
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   // The hold's deadline on the declaration email (§104), and whether it is the window's — a
-  // deadline more than a day away is the week-before confirmation, not the thirty minutes.
-  if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt) {
+  // deadline more than a day away is the week-before confirmation, not the thirty minutes. A
+  // deadline already behind us (a resend after it) is not named: the place is being kept (§160).
+  if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
     data.holdExpiresAtFormatted = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
       dateStyle: "long",
       timeStyle: "short",
@@ -168,13 +169,24 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   if (purpose && row.participantId) {
     const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
-    // Borrow the registration's own hold deadline so the token dies exactly when the hold
-    // does — but only while that deadline is still ahead of `now`. A hold can lapse between
-    // this message being queued and a delayed batch actually rendering it; issuing a token
-    // that expires in the past would fail outright, and the registration's own status guard
-    // is what correctly refuses a stale click regardless of how long the token stays valid.
+    // Borrow the registration's own deadline so the token dies when the place does — but only
+    // while that deadline is still ahead of `now`. A hold can lapse between this message being
+    // queued and a delayed batch actually rendering it; issuing a token that expires in the
+    // past would fail outright, and the registration's own status guard is what correctly
+    // refuses a stale click regardless of how long the token stays valid. For the declaration
+    // that deadline is the event's start, not the hold's (§160): a hold past its deadline is
+    // kept while nobody waits, and the link in the email must still open the declaration then.
+    //
+    // The start is read from the event's own row rather than from `eventDetails`, which is a
+    // join through `event_translations`: how long a secret lives must not depend on whether
+    // somebody has written the event's text in a locale (AGENTS.md §12.8).
     const holdExpiresAt = registration?.holdExpiresAt;
-    const expiresAt = holdExpiresAt && holdExpiresAt.getTime() > now.getTime() ? holdExpiresAt : defaultExpiresAt;
+    const eventStartsAt =
+      purpose === "COMPLETE_DECLARATION" && eventId
+        ? (eventDetails?.startsAt ?? (await findEventStartsAt(db, eventId)))
+        : undefined;
+    const placeUntil = purpose === "COMPLETE_DECLARATION" ? (eventStartsAt ?? holdExpiresAt) : holdExpiresAt;
+    const expiresAt = placeUntil && placeUntil.getTime() > now.getTime() ? placeUntil : defaultExpiresAt;
     const issued = await issueActionToken(db, {
       participantId: row.participantId,
       registrationId: row.registrationId,

@@ -204,8 +204,11 @@
       "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend."
     },
     "calendar": {
-      "registrationOpens": "Registration from {date}",
-      "feedName": "🏃 BVR"
+      "feedName": "🏃 BVR",
+      "page": "Event page",
+      "rules": "Rules",
+      "programme": "Programme",
+      "checklist": "What to bring"
     }
   },
   "Admin": {
@@ -366,6 +369,7 @@
       "journey": {
         "title": "The registration's journey",
         "held": "until {until}",
+        "heldKept": "deadline passed, the place is kept while nobody waits",
         "offered": "place offered, until {until}",
         "waitlisted": "on the waiting list",
         "bib": "no. {number}",
@@ -476,7 +480,7 @@
         "seoDescription": "Search engine description",
         "difficulty": "Difficulty",
         "costType": "Cost",
-        "checklist": "What to bring (one line, in the emails)",
+        "checklist": "What to bring (one line, in the emails and the calendar)",
         "body": "Full description",
         "rules": "Event rules",
         "schedule": "Event programme"
@@ -510,7 +514,7 @@
         "empty": "No rows yet."
       },
       "rulesHelp": "Optional. The race rules — what is allowed, what is not, how the kit is collected, the deadlines. Shown on the event page under “Rules”; the declaration and the emails point there.",
-      "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email and the reminder.",
+      "checklistHelp": "Optional, at most 300 characters: “race number, water, a jacket”. It goes in the confirmation email, the reminder and the calendar entry.",
       "type": "Event type",
       "typeHelp": "A group run is simply turned up to: no registration, no participants, no programme. A race has all of them; a hike, a coffee, an equipment test and another event may take registrations; an external event is somebody else's — its registration is on their page.",
       "surface": "Surface",
@@ -687,7 +691,7 @@
       "holds": "Held",
       "free": "Free",
       "waiting": "Waiting",
-      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). Free = places − confirmed − held, exactly the formula the public sees.",
+      "holdsHelp": "“Held” are the places kept while somebody signs the declaration (30 minutes, or until the confirmation deadline for events more than a week away) or answers a waiting-list offer (24 hours). A hold past its deadline stays the person's — they can sign online any time, or on paper at the desk — and is released only when somebody is waiting for a place or the event starts. Free = places − confirmed − held, exactly the formula the public sees.",
       "lineTitle": "Waiting list ({count})",
       "lineEmpty": "Nobody is waiting. The list fills once the places are gone.",
       "test": "test",
@@ -1337,7 +1341,7 @@
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
-        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. For an event further away than the confirmation window (7 days by default), the place is held until the deadline (2 days before by default) and the same email goes again when the window opens; otherwise the place is held 30 minutes.",
+        "COMPLETE_DECLARATION": "Right after the address is confirmed, when there is a place. For an event further away than the confirmation window (7 days by default), the place is held until the deadline (2 days before by default) and the same email goes again when the window opens; otherwise the place is held 30 minutes. The deadline counts only when somebody is waiting: otherwise the place stays the person's until the start, and the declaration is signed online or on paper at the desk. Two days before the start it goes one last time, to whoever has not signed.",
         "WAITLIST_JOINED": "After the address is confirmed, when the event is full.",
         "WAITLIST_SPOT_OFFER": "When a place frees and this person is first in line. 24 hours to sign.",
         "REGISTRATION_CONFIRMED": "Right after the declaration is signed — or at the desk, on paper.",
@@ -1408,10 +1412,10 @@
           "title": "Participant — what it looks like from their side",
           "who": "No account. Everything by email.",
           "steps": [
-            "They register from the event page and get a verification email; they press the link (and have 30 minutes for the next step).",
-            "They read and sign the declaration online, typing their name. The registration becomes “confirmed” and they get the confirmation email with the QR code.",
+            "They register from the event page and get a verification email; they press the link and the place is held (30 minutes, or until the confirmation deadline for an event more than a week away). The deadline applies only if somebody is waiting for a place by then; otherwise the place stays theirs until the start.",
+            "They read and sign the declaration online, typing their name — or on paper, at the desk, on race day, before picking up their number. The registration becomes “confirmed” and they get the confirmation email with the QR code.",
             "The same email has a “Manage your registration” link: from there they can withdraw, see their code and, from the day before the start, press “I have arrived”.",
-            "Event full: they join the waiting list and get an email when a place frees up, with 30 minutes to sign the declaration.",
+            "Event full: they join the waiting list and get an email when a place frees up, with 24 hours to sign the declaration.",
             "No email arrived: on “Did not get the email?” (/registrations/resend) they ask for the link again. Or they come to the desk and a volunteer confirms them on the spot.",
             "In their calendar: every event has “Google Calendar” and “Add to calendar (.ics)”; on the events page, “Subscribe” puts the club's whole calendar on the phone and it updates by itself when you publish something new."
           ],
@@ -1626,8 +1630,8 @@
       },
       "declaration": {
         "title": "Sign the declaration",
-        "body": "From that same email, read the declaration and type your name. Your place is held for {minutes} minutes while you sign.",
-        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opensDays} days before the start you get an email and sign the declaration of own responsibility, at the latest {deadlineDays} days before. You can sign earlier, from the registration email. Without a signature by the deadline, the place goes to the waiting list."
+        "body": "From that same email, read the declaration and type your name — online, or on paper at the registration desk on race day. The registration is complete only with the signed declaration. Your place is held for {minutes} minutes; if a waiting list forms, after that it goes to the next in line.",
+        "bodyLater": "The place is yours, but the race is free, so we ask for a confirmation: {opensDays} days before the start you get an email and sign the declaration of own responsibility — online, or on paper at the registration desk on race day. You can sign earlier, from the registration email. If a waiting list forms, the place is held for you until {deadlineDays} days before the start; after that it goes to the next in line."
       },
       "confirmed": {
         "title": "You are in",
@@ -1651,7 +1655,7 @@
       "now": {
         "details": "Fill in the form. We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link. It can take up to 5 minutes to arrive — check your spam folder before registering again.",
-        "declare": "One step left: read and sign the declaration. Your place is held for 30 minutes.",
+        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held.",
         "done": "Your registration is confirmed. See you at the start!"
       }
     },
@@ -1696,7 +1700,8 @@
       "doneWaitlisted": "The place was no longer available; you have been added to the waiting list.",
       "doneTitle": "Your declaration is signed",
       "event": "For the event: {event}",
-      "deadline": "Your place is held until {deadline}.",
+      "deadline": "Your place is held until {deadline}. With no waiting list it stays yours after that, until the start — but the registration is complete only with the signed declaration.",
+      "deadlinePassed": "The {deadline} deadline has passed, but the place is still yours: sign now and the registration is complete.",
       "idDocument": "Identity document (series and number)",
       "idDocumentHelp": "Your identity card — for example “BV 123456” — or your passport if you are from abroad. It goes into the declaration; the kit is collected against it.",
       "idDocumentPlaceholder": "BV 123456",

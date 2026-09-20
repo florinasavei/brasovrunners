@@ -37,7 +37,7 @@ export default async function QueuePanel<T extends Record<string, unknown>>({
   const occupied = computeOccupied(counts);
   const rows = await listQueueForEvent(db, event.id);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
-  const holds = counts.unexpiredPendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds;
+  const holds = counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds;
   const line = rows.filter((row) => row.status === "WAITLISTED" || row.status === "WAITLIST_OFFERED");
 
   const figure = (label: string, value: string | number) => (

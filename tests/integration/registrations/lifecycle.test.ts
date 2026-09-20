@@ -9,6 +9,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import {
   confirmEmail,
   type EventForRegistration,
+  readPublicAvailability,
   signDeclaration,
   submitRegistration,
   unregister,
@@ -218,15 +219,13 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     expect(confirmed.holdExpiresAt).toEqual(new Date(NOW.getTime() + 30 * 60_000));
   });
 
-  it("expires the declaration hold after 30 minutes with the right reason", async () => {
+  it("keeps the declaration hold past its 30 minutes while nobody waits, and a late signature confirms it (§160)", async () => {
     const event = await createInternalEvent(db, { capacity: 10 });
     await submitRegistration(db, event, submissionInput(), NOW);
     const pending = await findOneRegistration(db, event.id);
     await confirmEmail(db, event, pending.id, NOW);
 
     const past31Minutes = new Date(NOW.getTime() + 31 * 60_000);
-    // Signing after the deadline re-runs allocation rather than confirming a lapsed hold —
-    // with capacity still free, a fresh hold is granted rather than a refusal.
     const resigned = await signDeclaration(
       db,
       event,
@@ -235,6 +234,35 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
       past31Minutes,
     );
     expect(resigned.status).toBe("CONFIRMED");
+    expect(resigned.expiryReason).toBeNull();
+  });
+
+  it("a kept hold still occupies its place; the first to wait for it is offered it at once (§160)", async () => {
+    const event = await createInternalEvent(db, { capacity: 1 });
+    await submitRegistration(db, event, submissionInput({ email: "first@example.ro" }), NOW);
+    const first = await findOneRegistration(db, event.id);
+    await confirmEmail(db, event, first.id, NOW);
+
+    // Lapsed, nobody waiting: the count still says full — the place is the person's.
+    const past31Minutes = new Date(NOW.getTime() + 31 * 60_000);
+    expect(await readPublicAvailability(db, event, past31Minutes)).toBe(0);
+
+    // Somebody joins the waiting list. The queue exists now, so the lapsed hold is released
+    // to it — in the same transaction — and the newcomer, alone in line, is offered the place.
+    await submitRegistration(db, event, submissionInput({ email: "second@example.ro" }), past31Minutes);
+    const all = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    const second = all.find((row) => row.id !== first.id)!;
+    const outcome = await confirmEmail(db, event, second.id, past31Minutes);
+    expect(outcome.status).toBe("WAITLIST_OFFERED");
+    expect(outcome.holdExpiresAt).toEqual(new Date(past31Minutes.getTime() + 24 * 60 * 60_000));
+
+    const [lapsed] = await db.select().from(registrations).where(eq(registrations.id, first.id));
+    expect(lapsed.status).toBe("EXPIRED");
+    expect(lapsed.expiryReason).toBe("DECLARATION_HOLD_LAPSED");
+
+    // One message for the newcomer: the offer, not "you are on the waiting list" as well.
+    const mail = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, second.id));
+    expect(mail.map((row) => row.messageType).filter((type) => type !== "VERIFY_REGISTRATION_EMAIL")).toEqual(["WAITLIST_SPOT_OFFER"]);
   });
 
   it("signing the declaration confirms and records an immutable acceptance", async () => {

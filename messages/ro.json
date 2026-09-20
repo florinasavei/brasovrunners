@@ -204,8 +204,11 @@
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite."
     },
     "calendar": {
-      "registrationOpens": "Înscrieri din {date}",
-      "feedName": "🏃 BVR"
+      "feedName": "🏃 BVR",
+      "page": "Pagina evenimentului",
+      "rules": "Regulament",
+      "programme": "Program",
+      "checklist": "Ce să aduci"
     }
   },
   "Admin": {
@@ -366,6 +369,7 @@
       "journey": {
         "title": "Parcursul înscrierii",
         "held": "până la {until}",
+        "heldKept": "termen depășit, locul se ține cât nu așteaptă nimeni",
         "offered": "loc oferit, până la {until}",
         "waitlisted": "pe lista de așteptare",
         "bib": "nr. {number}",
@@ -476,7 +480,7 @@
         "seoDescription": "Descriere pentru motoarele de căutare",
         "difficulty": "Dificultate",
         "costType": "Cost",
-        "checklist": "Ce să aduci (o linie, în emailuri)",
+        "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
         "body": "Descriere completă",
         "rules": "Regulamentul evenimentului",
         "schedule": "Programul evenimentului"
@@ -510,7 +514,7 @@
         "empty": "Niciun rând încă."
       },
       "rulesHelp": "Opțional. Regulile cursei — ce e permis, ce nu, cum se ridică kitul, termenele. Apar pe pagina evenimentului la secțiunea „Regulament”, iar declarația și emailurile trimit acolo.",
-      "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare și în reminder.",
+      "checklistHelp": "Opțional, cel mult 300 de caractere: „număr de concurs, apă, jachetă”. Apare în emailul de confirmare, în reminder și în intrarea din calendar.",
       "type": "Tip eveniment",
       "typeHelp": "La o alergare de grup se vine pur și simplu: fără înscriere, fără participanți, fără program. O cursă le are pe toate; o drumeție, o cafea, o testare de echipament și un alt eveniment pot avea înscriere; un eveniment extern e al altcuiva — înscrierea e pe pagina lor.",
       "surface": "Suprafață",
@@ -687,7 +691,7 @@
       "holds": "Rezervate",
       "free": "Libere",
       "waiting": "În așteptare",
-      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
+      "holdsHelp": "„Rezervate” sunt locurile ținute cât cineva semnează declarația (30 de minute, sau până la termenul de confirmare pentru evenimentele mai departe de o săptămână) sau răspunde la o ofertă de pe lista de așteptare (24 de ore). O rezervare cu termenul depășit rămâne a persoanei — poate semna online oricând sau pe hârtie la masă — și se eliberează doar când cineva așteaptă un loc sau când începe evenimentul. Libere = locuri − confirmate − rezervate, exact formula pe care o vede publicul.",
       "lineTitle": "Lista de așteptare ({count})",
       "lineEmpty": "Nimeni nu așteaptă. Lista se umple când locurile s-au terminat.",
       "test": "test",
@@ -1337,7 +1341,7 @@
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
-        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut 30 de minute.",
+        "COMPLETE_DECLARATION": "Imediat după confirmarea adresei, când există loc. Pentru un eveniment mai departe de fereastra de confirmare (implicit 7 zile), locul e ținut până la termen (implicit cu 2 zile înainte) și același email pleacă din nou când se deschide fereastra; altfel locul e ținut 30 de minute. Termenul contează doar dacă așteaptă cineva: altfel locul rămâne al persoanei până la start, iar declarația se semnează online sau pe hârtie la masă. Cu două zile înainte de start pleacă o ultimă dată, către cine încă nu a semnat.",
         "WAITLIST_JOINED": "După confirmarea adresei, când nu mai sunt locuri.",
         "WAITLIST_SPOT_OFFER": "Când se eliberează un loc și persoana e prima pe listă. 24 de ore să semneze.",
         "REGISTRATION_CONFIRMED": "Imediat după semnarea declarației — sau la masă, pe hârtie.",
@@ -1408,10 +1412,10 @@
           "title": "Participant — cum arată din partea lui",
           "who": "Fără cont. Totul prin email.",
           "steps": [
-            "Se înscrie de pe pagina evenimentului. Primește un email de verificare; apasă linkul (are 30 de minute pentru pasul următor).",
-            "Citește și semnează declarația online, cu numele tastat. Înscrierea devine „confirmată” și primește emailul de confirmare cu codul QR.",
+            "Se înscrie de pe pagina evenimentului. Primește un email de verificare; apasă linkul și locul e rezervat (30 de minute, sau până la termenul de confirmare pentru un eveniment mai departe de o săptămână). Termenul se aplică doar dacă între timp așteaptă cineva un loc; altfel locul rămâne al lui până la start.",
+            "Citește și semnează declarația online, cu numele tastat — sau pe hârtie, la masă, în ziua cursei, înainte să-și ridice numărul. Înscrierea devine „confirmată” și primește emailul de confirmare cu codul QR.",
             "Din același email are un link „Gestionează înscrierea”: de acolo se poate retrage, își vede codul și, din ziua dinaintea startului, poate apăsa „Am ajuns”.",
-            "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are 30 de minute să semneze declarația.",
+            "Evenimentul plin: intră pe lista de așteptare și primește un email când se eliberează un loc; are 24 de ore să semneze declarația.",
             "Nu a primit emailul: pe pagina „Nu ai primit emailul?” (/inscrieri/retrimite) cere din nou linkul. Sau vine la masă și un voluntar îl confirmă pe loc.",
             "În calendarul lui: pe fiecare eveniment sunt „Google Calendar” și „Adaugă în calendar (.ics)”; pe pagina de evenimente, „Abonează-te” pune tot calendarul clubului în telefon și se actualizează singur când publicați ceva nou."
           ],
@@ -1626,8 +1630,8 @@
       },
       "declaration": {
         "title": "Semnezi declarația",
-        "body": "Din același email, citești declarația și îți scrii numele. Locul e ținut {minutes} de minute cât semnezi.",
-        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opensDays} zile înainte de start primești un email și semnezi declarația pe proprie răspundere, până cel târziu cu {deadlineDays} zile înainte. Poți semna și mai devreme, din emailul de înscriere. Fără semnătură până la termen, locul trece la lista de așteptare."
+        "body": "Din același email, citești declarația și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei. Înscrierea e completă doar cu declarația semnată. Locul e ținut {minutes} de minute; dacă se formează listă de așteptare, după acest termen trece la următorul.",
+        "bodyLater": "Locul e al tău, dar cursa e gratuită, așa că îți cerem o confirmare: cu {opensDays} zile înainte de start primești un email și semnezi declarația pe proprie răspundere — online, sau pe hârtie la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere. Dacă se formează listă de așteptare, locul îți este ținut până cu {deadlineDays} zile înainte de start; după, trece la următorul."
       },
       "confirmed": {
         "title": "Ești înscris",
@@ -1651,7 +1655,7 @@
       "now": {
         "details": "Completează formularul. După trimitere îți scriem pe email ca să confirmi adresa.",
         "confirm": "Ți-am trimis un email cu un link de confirmare. Poate dura până la 5 minute să ajungă — verifică și folderul de spam înainte să te înscrii din nou.",
-        "declare": "Mai rămâne un pas: citește și semnează declarația. Locul tău este rezervat 30 de minute.",
+        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat.",
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
     },
@@ -1696,7 +1700,8 @@
       "doneWaitlisted": "Locul nu mai era disponibil; ai fost adăugat pe lista de așteptare.",
       "doneTitle": "Declarația a fost semnată",
       "event": "Pentru evenimentul: {event}",
-      "deadline": "Locul tău este rezervat până la {deadline}.",
+      "deadline": "Locul tău este rezervat până la {deadline}. Fără listă de așteptare rămâne al tău și după, până la start — dar înscrierea e completă doar cu declarația semnată.",
+      "deadlinePassed": "Termenul de {deadline} a trecut, dar locul este încă al tău: semnează acum și înscrierea e completă.",
       "typedNameHelp": "Scrie numele complet cu care te-ai înscris. Apare ca o semnătură.",
       "idDocument": "Act de identitate (seria și numărul)",
       "idDocumentHelp": "Cartea de identitate — de exemplu „BV 123456” — sau pașaportul, pentru cetățeni străini. Intră în declarație; kitul se ridică pe baza lui.",

@@ -119,6 +119,7 @@ export default async function PreviewEventPage({ params }: Props) {
     bodyJson: translation.bodyJson,
     rulesJson: translation.rulesJson,
     scheduleJson: translation.scheduleJson,
+    checklist: translation.checklist,
     scheduleItems: event.scheduleItems,
     coHostName: event.coHostName,
     coHostUrl: event.coHostUrl,

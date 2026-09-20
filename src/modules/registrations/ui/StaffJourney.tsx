@@ -34,12 +34,22 @@ export default async function StaffJourney({ journey, bibNumber, variant }: Prop
 
   const label = JOURNEY_STEP_LABEL;
   const when = (value: Date | null | undefined) => (value ? format.dateTime(value, DATE) : null);
+  const now = new Date();
 
   /** The words a step adds beside its name; null when it has nothing to add. */
   const detailOf = (step: JourneyStep): string | null => {
     switch (step.detail) {
       case "held":
-        return step.until ? t("registrations.journey.held", { until: when(step.until) ?? "" }) : null;
+        if (!step.until) return null;
+        /**
+         * A hold past its deadline on a registration still waiting for its declaration is
+         * being kept (§160) — "până la <yesterday>" would read as an expiry that has not
+         * happened. The words carry the condition rather than a promise: whether *this* hold
+         * survives the next allocator visit depends on the event's queue, which this
+         * component — rendered once per row of a list that spans many events — does not read.
+         */
+        if (!journey.outcome && step.until <= now) return t("registrations.journey.heldKept");
+        return t("registrations.journey.held", { until: when(step.until) ?? "" });
       case "offered":
         return step.until ? t("registrations.journey.offered", { until: when(step.until) ?? "" }) : null;
       case "waitlisted":

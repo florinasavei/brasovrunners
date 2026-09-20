@@ -1,14 +1,16 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, eventTranslations } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
+import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
-import { confirmEmail, type EventForRegistration, signDeclaration, submitRegistration } from "@/modules/registrations/service";
+import { confirmByStaff, confirmEmail, type EventForRegistration, readPublicAvailability, signDeclaration, submitRegistration } from "@/modules/registrations/service";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -17,8 +19,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  *
  * A registration for a race five weeks away keeps its place until two days before the start,
  * gets the declaration email at once and again when the window opens, is confirmed by the
- * signature whenever it comes, and loses the place at the deadline if it never does — through
- * the same hold expiry that has always released a lapsed thirty-minute hold.
+ * signature whenever it comes, and loses the place at the deadline when somebody is waiting
+ * for it — through the same hold expiry that releases a lapsed thirty-minute hold; with
+ * nobody waiting the place stays theirs until the start (§160).
  */
 const NOW = new Date("2026-09-04T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
@@ -111,7 +114,8 @@ describe("the participation window (§104)", () => {
     const message = await renderOutboxMessage({ ...queued, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(message.subject).toMatch(/^Ești înscris — confirmă participarea până la 9 octombrie 2026/);
     expect(message.text).toContain("Cursa e gratuită");
-    expect(message.text).toContain("lista de așteptare");
+    expect(message.text).toContain("pe hârtie la masa de înscrieri");
+    expect(message.text).toContain("Dacă se formează lista de așteptare, locul îți este ținut până la 9 octombrie 2026");
   });
 
   it("keeps the thirty minutes inside the window, on a weekly run, and when the window is switched off", async () => {
@@ -154,6 +158,25 @@ describe("the participation window (§104)", () => {
     expect(confirmed.status).toBe("CONFIRMED");
   });
 
+  it("keeps an unsigned place past the deadline while nobody waits, and the desk confirms it on paper (§160)", async () => {
+    await approve(db);
+    const event = await createEvent(db); // capacity 1
+    const held = await verified(event, "late@example.ro");
+
+    const afterDeadline = new Date(START.getTime() - 2 * DAY + 60_000);
+    expect((await runRegistrationMaintenance(db, afterDeadline)).eventsProcessed).toBe(0);
+    const [kept] = await db.select().from(registrations).where(eq(registrations.id, held.id));
+    expect(kept.status).toBe("PENDING_DECLARATION");
+    expect(await readPublicAvailability(db, event, afterDeadline)).toBe(0);
+
+    const [volunteer] = await db.insert(staffUsers).values({ email: "volunteer@dev.test", displayName: "Volunteer", role: "CONTRIBUTOR" }).returning();
+    const raceMorning = new Date(START.getTime() - 60 * 60_000);
+    const onPaper = await confirmByStaff(db, event, held.id, { id: volunteer.id }, raceMorning);
+    expect(onPaper.status).toBe("CONFIRMED");
+    const [acceptance] = await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, held.id));
+    expect(acceptance.method).toBe("PAPER");
+  });
+
   it("lets the deadline release an unsigned place to the waiting list", async () => {
     await approve(db);
     const event = await createEvent(db); // capacity 1
@@ -168,5 +191,37 @@ describe("the participation window (§104)", () => {
     expect(lapsed.status).toBe("EXPIRED");
     const [offered] = await db.select().from(registrations).where(eq(registrations.id, second.id));
     expect(offered.status).toBe("WAITLIST_OFFERED");
+  });
+
+  it("refuses the late signature when somebody is waiting, and signs nothing (§160)", async () => {
+    await approve(db);
+    const event = await createEvent(db); // capacity 1
+    const first = await verified(event, "first@example.ro");
+    const second = await verified(event, "second@example.ro");
+    expect(second.status).toBe("WAITLISTED");
+
+    // The deadline is behind and a queue exists, so the hold is not kept: signing re-runs
+    // allocation (§15.3 step 7) and finds the place is the queue's, not this person's.
+    const afterDeadline = new Date(START.getTime() - 2 * DAY + 60_000);
+    const outcome = await signDeclaration(db, event, first.id, await signingInput(db, afterDeadline, "Ana Popescu"), afterDeadline);
+    expect(outcome.status).toBe("WAITLISTED");
+    expect(await db.select().from(declarationAcceptances).where(eq(declarationAcceptances.registrationId, first.id))).toEqual([]);
+
+    // And the place that was released went to the person who was waiting for it.
+    const [promoted] = await db.select().from(registrations).where(eq(registrations.id, second.id));
+    expect(promoted.status).toBe("WAITLIST_OFFERED");
+  });
+
+  it("refuses a declaration signed against a cancelled race", async () => {
+    await approve(db);
+    const event = await createEvent(db);
+    const held = await verified(event, "ana@example.ro");
+    await db.update(events).set({ eventStatus: "CANCELLED" }).where(eq(events.id, event.id));
+
+    const later = new Date(NOW.getTime() + DAY);
+    await expect(signDeclaration(db, event, held.id, await signingInput(db, later, "Ana Popescu"), later)).rejects.toThrow(/CANCELLED/);
+    const [unchanged] = await db.select().from(registrations).where(eq(registrations.id, held.id));
+    expect(unchanged.status).toBe("PENDING_DECLARATION");
+    expect(unchanged.bibNumber).toBeNull();
   });
 });

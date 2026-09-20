@@ -71,6 +71,8 @@ const PUBLIC_COLUMNS = {
   bodyJson: eventTranslations.bodyJson,
   rulesJson: eventTranslations.rulesJson,
   scheduleJson: eventTranslations.scheduleJson,
+  // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
+  checklist: eventTranslations.checklist,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`.
   scheduleItems: events.scheduleItems,
   /** When the event row last changed — the calendar feed's `DTSTAMP` (§107). */
@@ -231,6 +233,23 @@ export async function findLatestPastEvent(db: Database, locale: Locale, now: Dat
 export async function findEventForRegistrationById(db: Database, eventId: string) {
   const [row] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
   return row;
+}
+
+/**
+ * When an event starts, and nothing else — the event's own row, with no join through
+ * `event_translations`.
+ *
+ * `findEventNotificationDetails` below is that join, and an event whose text nobody has
+ * written yet returns nothing from it. The declaration link's lifetime is the event's start
+ * since `DECISIONS.md` §160, and how long a secret lives must not depend on whether a
+ * translation row happens to exist (AGENTS.md §12.8).
+ */
+export async function findEventStartsAt<T extends Record<string, unknown>>(
+  db: GenericDatabase<T>,
+  eventId: string,
+): Promise<Date | undefined> {
+  const [row] = await db.select({ startsAt: events.startsAt }).from(events).where(eq(events.id, eventId)).limit(1);
+  return row?.startsAt;
 }
 
 /**

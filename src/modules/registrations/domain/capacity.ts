@@ -7,15 +7,18 @@
 
 export type OccupiedCounts = {
   confirmed: number;
-  /** PENDING_DECLARATION rows whose hold_expires_at is still in the future. */
-  unexpiredPendingDeclarationHolds: number;
+  /**
+   * PENDING_DECLARATION rows, deadline or no deadline: a lapsed hold is kept, and keeps its
+   * place, until somebody waits for it or the event starts (`DECISIONS.md` §160).
+   */
+  pendingDeclarationHolds: number;
   /** WAITLIST_OFFERED rows whose hold_expires_at is still in the future. */
   unexpiredWaitlistOfferedHolds: number;
 };
 
 export function computeOccupied(counts: OccupiedCounts): number {
   return (
-    counts.confirmed + counts.unexpiredPendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds
+    counts.confirmed + counts.pendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds
   );
 }
 

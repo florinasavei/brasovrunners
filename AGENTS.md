@@ -1193,7 +1193,7 @@ Core invariants:
 2. unique database constraint;
 3. no place consumed before email confirmation;
 4. declaration required before Confirmed;
-5. Confirmed plus unexpired holds consume capacity;
+5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is cancelled (`DECISIONS.md` §160); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
@@ -1236,6 +1236,15 @@ land directly on `CONFIRMED`.
 `WAITLISTED -> EXPIRED` is performed by registration maintenance once the event has
 started, with `expiry_reason = EVENT_STARTED`. No message is sent for it.
 
+`PENDING_DECLARATION -> EXPIRED` with `expiry_reason = DECLARATION_HOLD_LAPSED` happens only
+when the place is wanted, and to as many holds as are wanted: `wanted = waiting - free`
+places, released oldest deadline first, or every hold once the event has started or been
+cancelled (`DECISIONS.md` §160). Otherwise the hold outlives its deadline and the declaration
+is signed online, or on paper at the desk, at any time before the start; a row the start
+expired is re-allocated by `confirmByStaff` rather than refused, so the desk still confirms
+it while a place is free. `WAITLIST_OFFERED -> EXPIRED` happens at the offer's deadline
+regardless — an offer is a promise to the queue.
+
 Any other transition requires explicit reviewed rule.
 
 ### 10.6 Capacity
@@ -1245,7 +1254,7 @@ For `capacity IS NOT NULL`:
 ```text
 occupied =
   confirmed registrations
-  + unexpired PENDING_DECLARATION holds
+  + PENDING_DECLARATION holds (kept past their deadline while nobody waits — §160)
   + unexpired WAITLIST_OFFERED holds
 
 publicDirectAvailability =
@@ -1255,7 +1264,7 @@ publicDirectAvailability =
 Rules:
 
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
-- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration;
+- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or been cancelled (`DECISIONS.md` §160), and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
@@ -1263,7 +1272,8 @@ Rules:
 - decreasing capacity below occupied places is rejected;
 - no cached free count is a source of truth;
 - no capacity or queue decision may depend on the maintenance job having run; every read
-  and every capacity-changing transaction evaluates hold expiry against the current time;
+  and every capacity-changing transaction evaluates offer expiry against the current time, and
+  a declaration hold by its status — the allocator is what releases one (§160);
 - DB integration tests prove no overbooking and no queue leapfrogging.
 
 ### 10.7 Waiting list
@@ -2369,9 +2379,12 @@ On explicit POST with valid token/action session:
    the current version's — a signature against any other text is refused with CONFLICT inside
    the transaction, so the token is not spent and the participant re-reads the current text
    (BR-REQ-033-02 criterion 6, `DECISIONS.md` §57);
-4. begin transaction and lock event/registration;
-5. expire stale holds;
-6. verify current hold still active;
+4. begin transaction and lock event/registration, and refuse a non-`SCHEDULED` event on the
+   locked row's own status — a declaration link now lives until the start (§160), so a race
+   called off in between must not still be signed into;
+5. expire stale holds (a lapsed declaration hold is stale only as far as the queue wants its
+   place, or once the event has started or been cancelled, §160);
+6. verify current hold still active — a hold past its deadline that nothing wants is;
 7. if expired, allocate older eligible waiting entries first, then renew the hold only if direct capacity remains; otherwise move this participant to Waitlisted at the queue tail and stop;
 8. insert immutable acceptance;
 9. transition Confirmed, clear hold;
@@ -2595,8 +2608,12 @@ Require verified scheduler identity or a scoped `JOB_SECRET`. Job correctness MU
 Registration maintenance:
 
 - expire pending email tokens/registrations where policy applies;
-- expire declaration holds;
+- expire declaration holds — only as many as the queue wants places for, oldest deadline
+  first, or all of them on an event that has started or been cancelled (`DECISIONS.md`
+  §160); a lapsed hold nothing wants is kept, and its event is not even selected;
 - expire waiting-list offers;
+- queue the reminder two days before an event, and with it the declaration once more to
+  whoever still owes a signature (`DECISIONS.md` §160);
 - close remaining waiting-list entries for events that have started, with
   `expiry_reason = EVENT_STARTED`;
 - call fill available spots;
@@ -2704,7 +2721,9 @@ Complete Romanian/English HTML and text templates. Locale/timezone-aware dates a
 ### 16.4 Modes
 
 - capture: local/test;
-- capture or allowlist: QA;
+- capture or allowlist: QA; the allowlist may be the single entry `*`, which authorizes every
+  recipient (`DECISIONS.md` §163) — the mode stays `allowlist`, so the subject keeps its `[QA]`
+  mark and production is unaffected;
 - live: production.
 
 QA subject visibly marked. Startup rejects unsafe combination.
