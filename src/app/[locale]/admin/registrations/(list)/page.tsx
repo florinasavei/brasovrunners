@@ -40,6 +40,15 @@ import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { bulkCancelRegistrationsAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
+import {
+  cancelRegistrationAction,
+  checkInAction,
+  confirmRegistrationNowAction,
+  promoteRegistrationAction,
+} from "../actions";
+import { ALL_EVENTS, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
+import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -96,8 +105,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     defaultDir: "desc",
   });
 
-  const filters = {
-    eventId: eventId || undefined,
+  const filters: {
+    eventId?: string;
+    status?: RegistrationStatus;
+    clubMemberDeclared?: true;
+    emailBounced?: true;
+    search?: string;
+  } = {
     status: isRegistrationStatus(status) ? status : undefined,
     // One-way: it narrows to the people who ticked the box and never to the ones who did not
     // (`admin-repository.ts` says why).
@@ -107,8 +121,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   };
 
   const db = getDb();
-  const volume = await readEmailVolumeToday(db, new Date());
-  const [rows, total, events] = await Promise.all([
+  /*
+    The events come first now, because the default filter is derived from them (§178): with no
+    eventId in the query the list is about the club's featured event, which is the one anybody
+    opening this page is asking about. "Toate evenimentele" stays one press away as `all`.
+  */
+  const [volume, events] = await Promise.all([
+    readEmailVolumeToday(db, new Date()),
+    listEventsWithRegistrations(db),
+  ]);
+  const eventFilter = defaultEventFilter(eventId, events);
+  filters.eventId = eventFilter.eventId;
+
+  const [rows, total] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -116,7 +141,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       dir: query.dir,
     }),
     countRegistrationsForAdmin(db, filters),
-    listEventsWithRegistrations(db),
   ]);
 
   const t = await getTranslations("Admin");
@@ -125,7 +149,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
   const listParams = {
-    eventId,
+    eventId: eventFilter.selected,
     status,
     clubMember,
     bounced,
@@ -368,10 +392,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             select
             name="eventId"
             label={t("nav.events")}
-            defaultValue={eventId ?? ""}
+            defaultValue={eventFilter.selected}
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
+            <MenuItem value={ALL_EVENTS}>{t("registrations.filterAll")}</MenuItem>
             {events.map((event) => (
               <MenuItem key={event.id} value={event.id}>
                 {event.title ?? event.id}
@@ -489,6 +513,96 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 />
               </Box>
             )}
+            {/*
+              The rest of the verbs behind "⋮" (§178). Each is a hidden form the Server Component
+              renders, already carrying its action and its fields; the menu only decides which one
+              to submit. Which verbs appear is `rowVerbsFor`, a pure function tested against the
+              state machine — and every one of them is authorized again in its own service, so
+              this is a courtesy and not a gate (BR-REQ-060-01).
+            */}
+            {(() => {
+              const verbs = rowVerbsFor(row.status, actor.role, { checkedIn: row.checkedInAt !== null });
+              const hidden = (
+                <>
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="registrationId" value={row.id} />
+                </>
+              );
+              const items: RegistrationMenuItem[] = [
+                {
+                  kind: "link",
+                  icon: "open",
+                  label: t("registrations.openRow"),
+                  href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } }),
+                },
+              ];
+              if (verbs.includes("confirmOnPaper")) {
+                items.push({
+                  kind: "submit",
+                  icon: "confirm",
+                  label: t("desk.confirmOnPaper"),
+                  formId: `confirm-${row.id}`,
+                  confirm: {
+                    title: t("desk.confirmOnPaper"),
+                    body: t("registrations.confirmOnPaperBody"),
+                    confirmLabel: t("desk.confirmOnPaper"),
+                  },
+                });
+              }
+              if (verbs.includes("givePlace")) {
+                items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}` });
+              }
+              if (verbs.includes("checkIn")) {
+                items.push({ kind: "submit", icon: "checkIn", label: t("desk.checkIn"), formId: `checkin-${row.id}` });
+              }
+              if (verbs.includes("undoCheckIn")) {
+                items.push({ kind: "submit", icon: "undo", label: t("desk.undoCheckIn"), formId: `checkin-${row.id}` });
+              }
+              if (verbs.includes("cancel")) {
+                items.push({
+                  kind: "submit",
+                  icon: "cancel",
+                  label: t("registrations.cancel"),
+                  formId: `cancel-${row.id}`,
+                  color: "error",
+                  confirm: {
+                    title: t("registrations.cancel"),
+                    body: t("registrations.cancelBody"),
+                    confirmLabel: t("registrations.cancel"),
+                  },
+                });
+              }
+              return (
+                <>
+                  {verbs.includes("confirmOnPaper") && (
+                    <Box component="form" id={`confirm-${row.id}`} action={confirmRegistrationNowAction} sx={{ display: "none" }}>
+                      {hidden}
+                    </Box>
+                  )}
+                  {verbs.includes("givePlace") && (
+                    <Box component="form" id={`place-${row.id}`} action={promoteRegistrationAction} sx={{ display: "none" }}>
+                      {hidden}
+                    </Box>
+                  )}
+                  {(verbs.includes("checkIn") || verbs.includes("undoCheckIn")) && (
+                    <Box component="form" id={`checkin-${row.id}`} action={checkInAction} sx={{ display: "none" }}>
+                      {hidden}
+                      <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
+                    </Box>
+                  )}
+                  {verbs.includes("cancel") && (
+                    <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationAction} sx={{ display: "none" }}>
+                      {hidden}
+                    </Box>
+                  )}
+                  <RegistrationRowMenu
+                    ariaLabel={t("registrations.rowActions", { name: row.registeredName })}
+                    cancelLabel={t("confirm.cancel")}
+                    items={items}
+                  />
+                </>
+              );
+            })()}
           </Stack>
         )}
       />

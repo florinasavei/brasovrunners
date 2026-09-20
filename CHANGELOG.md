@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **Registrations are managed from the list.** Each row carries a “⋮” with the verbs that apply to it — open, resend, confirm on paper, give a place, check in or undo, cancel — each the same action the registration's own page runs, each still authorised on the server. Not a status select: that would write past the allocator and past the signed declaration. The list opens on the featured event, and the export carries the same filter. §178.
 - **The race's band is actually saved.** Where the numbers start and what colour they print were validated and then dropped on the way to the row; both reach it now, a series carries them to every date, and the colour is a palette with the club's own as the empty choice. The registration banner names the club beside the name, and the email projection stops counting a message nothing sends. §177.
 - **The registration form says when the anti-bot check refused it.** It was answering "verifică datele completate" on forms where every field was correct: the rejection carries `fields=captcha`, which the summary filtered out. The check is unchanged; what changed is that the person is told. §176.
 - **An event takes its own test registrations with it.** Deleting was refused with "arhivează-l" to somebody looking at an event that was already archived, over rows he had created to rehearse with. A single real registration still blocks it, and the count now names the real ones only. §176.

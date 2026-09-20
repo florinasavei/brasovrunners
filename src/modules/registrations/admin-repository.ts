@@ -623,9 +623,9 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
  * see events nobody has registered for on this screen; the CMS already lists all of them. */
 export async function listEventsWithRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
-): Promise<Array<{ id: string; title: string | null }>> {
+): Promise<Array<{ id: string; title: string | null; featured: boolean }>> {
   return db
-    .selectDistinct({ id: events.id, title: eventTranslations.title })
+    .selectDistinct({ id: events.id, title: eventTranslations.title, featured: events.featured })
     .from(events)
     .innerJoin(registrations, eq(registrations.eventId, events.id))
     .leftJoin(
