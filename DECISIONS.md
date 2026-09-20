@@ -6858,3 +6858,19 @@ waiting. No behaviour changes for anyone but the two people who would have share
 BR-REQ-034-02 criterion 1.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 152. Decided — only the Save button is sticky in the editor (2026-09-19)
+
+**Context.** The owner, on a phone: "I do not like how the bottom save footer keeps showing
+on mobile, it takes too much space." Since §130 and §134 the sticky bar held the
+"I understand I am editing published content" box, the folded "Salvează pentru" box and the
+button — a third of the screen, pinned.
+
+**Decision.** The box and the fold sit in the flow at the end of the form; only the button
+is sticky, above the footer's bar, with less padding. The button's own hint ("tick the box
+to save") still names the box, which is now right above it when the end of the form is in
+view.
+
+**Consequences.** `app/[locale]/admin/events/[id]/page.tsx`.
+
+Baseline `BR-V1.38-2026-09-18`.
