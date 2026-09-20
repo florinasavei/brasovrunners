@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { signIn } from "./support/featured-event";
+import { signIn, hydrated } from "./support/featured-event";
 
 /**
  * BR-REQ-080-02 criterion 7 (`DECISIONS.md` §100) — the Mailgun plan is set from the
@@ -7,6 +7,13 @@ import { signIn } from "./support/featured-event";
  * sentence above the form each time, because the sentence is the whole point of the setting.
  */
 test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
+  // One `platform_settings` row, two projects against one database: run these on desktop only,
+  // as the contact-recipients block below already does, or the two runs overwrite each other's
+  // plan mid-assertion.
+  test.beforeEach(() => {
+    test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
+  });
+
   test("an Administrator sets the plan and the counter changes period", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/emails");
@@ -16,7 +23,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     // The default: Free, counted by the day.
     await expect(main.getByText(/Planul Free: \d+ din 100 mesaje trimise azi/)).toBeVisible();
     // Criterion 8: and the figure says whose allowance it is — one account, two deployments.
-    await expect(main.getByText(/un singur cont Mailgun/)).toBeVisible();
+    await expect(main.getByText(/unui singur cont Mailgun/)).toBeVisible();
 
     await main.getByLabel("Planul pe care e contul Mailgun").selectOption("BASIC");
     await main.getByLabel("Notă (de ce, până când)").fill("Basic pentru cursa din octombrie");
@@ -38,10 +45,14 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
     await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin/emails");
     const main = page.locator("#main");
+    // Whatever the plan reads when this test starts — the tests above share one settings row
+    // and both projects run against one database — a Moderator's press must leave it there.
+    const status = main.getByText(/^Planul (Free|Basic|Foundation|Scale)/);
+    const before = await status.innerText();
     await main.getByLabel("Planul pe care e contul Mailgun").selectOption("BASIC");
     await main.getByRole("button", { name: "Salvează planul" }).click();
     await expect(page.locator("#admin-alert").getByRole("alert")).toBeVisible();
-    await expect(main.getByText(/Planul Free: \d+ din 100 mesaje trimise azi/)).toBeVisible();
+    await expect(status).toHaveText(before);
   });
 });
 
@@ -84,6 +95,9 @@ test.describe("BR-REQ-070-04 who receives the contact messages", () => {
     await main.getByLabel("Către (adrese despărțite prin virgulă)").fill("nope");
     await main.getByRole("button", { name: "Salvează destinatarii" }).click();
     await expect(page.locator("#admin-alert").getByRole("alert")).toBeVisible();
+    // A refusal is a fresh page: press again before it has hydrated and the press is lost
+    // (`docs/VIBECODING.md`); the clear below is the press that was being dropped.
+    await hydrated(page);
     await expect(main.getByText(/Acum ajung la: club@example\.com/)).toBeVisible();
 
     // And back to nobody in the app, which hands the question to `CONTACT_FORM_TO`: this

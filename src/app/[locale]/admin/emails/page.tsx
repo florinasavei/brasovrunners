@@ -23,6 +23,14 @@ import { env } from "@/shared/config/env";
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string }> };
 
 /**
+ * Reads the session, the plan and the contact recipients, and is returned to straight after
+ * a save — so it may never be served from a cache. Without this the panel showed the values
+ * it had before the press (found on 2026-09-20: clearing the recipients wrote the row and the
+ * page went on saying the old addresses).
+ */
+export const dynamic = "force-dynamic";
+
+/**
  * Every email the platform sends, rendered with sample data (`DECISIONS.md` §91; the owner:
  * "I must be able to see the email templates that get sent to them").
  *

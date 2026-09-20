@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
@@ -51,6 +52,10 @@ export async function updateEmailPlanAction(form: FormData): Promise<void> {
     if (!isDomainError(error)) throw error;
     outcome = `error=${error.code}`;
   }
+  // The action and the render that follows are one request, and the router keeps the payload
+  // it already has for this path: without this the page comes back saying what it said before
+  // the press (found on 2026-09-20 — a saved plan and a cleared recipient list both).
+  revalidatePath(path);
   redirect(`${path}?${outcome}#admin-alert`);
 }
 
@@ -74,5 +79,9 @@ export async function updateContactRecipientsAction(form: FormData): Promise<voi
     if (!isDomainError(error)) throw error;
     outcome = `error=${error.code}`;
   }
+  // The action and the render that follows are one request, and the router keeps the payload
+  // it already has for this path: without this the page comes back saying what it said before
+  // the press (found on 2026-09-20 — a saved plan and a cleared recipient list both).
+  revalidatePath(path);
   redirect(`${path}?${outcome}#admin-alert`);
 }
