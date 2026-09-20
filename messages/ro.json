@@ -383,7 +383,8 @@
         "expiredAt": "Expirată la {date}",
         "progress": "{done} din {total} pași",
         "next": "urmează: {step}",
-        "complete": "Toți pașii parcurși"
+        "complete": "Toți pașii parcurși",
+        "legend": "Cei șase pași ai unei înscrieri: 1 formularul trimis · 2 emailul confirmat · 3 locul rezervat · 4 declarația semnată · 5 locul confirmat · 6 numărul ridicat la masă. Cifra arată la care a ajuns persoana."
       },
       "exportExcel": "Exportă Excel",
       "columnBib": "Număr de concurs (BIB)",
@@ -1860,7 +1861,9 @@
       "close": "Închide",
       "agreed": "Ai citit condițiile concursului și ești de acord cu ele.",
       "plain": "Am citit și sunt de acord cu condițiile concursului:"
-    }
+    },
+    "opensInNewTab": "se deschide într-o filă nouă",
+    "phoneInvalid": "Numărul nu pare complet pentru țara aleasă — verifică cifrele."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

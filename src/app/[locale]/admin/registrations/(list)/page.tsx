@@ -243,6 +243,8 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       // Not sortable — the status column beside it is the ordered one.
       key: "journey",
       label: t("registrations.columnJourney"),
+      // "3/6" cannot say what the six are (§200).
+      hint: t("registrations.journey.legend"),
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={row.bibNumber} variant="compact" />,
     },
     {

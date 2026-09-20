@@ -16,6 +16,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
+import LegalLink from "@/shared/ui/LegalLink";
 import { routing } from "@/i18n/routing";
 import ReadAndAgree from "@/modules/registrations/ui/ReadAndAgree";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
@@ -226,12 +227,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {t("facts.rules")}
             </Link>
           )}
-          <Link href="/legal/terms" style={factLink}>
+          {/* The two reference texts open in a tab of their own (§197): a half-filled form
+               must not depend on the browser restoring it after a Back. */}
+          <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")} style={factLink}>
             {t("facts.terms")}
-          </Link>
-          <Link href="/legal/privacy" style={factLink}>
+          </LegalLink>
+          <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")} style={factLink}>
             {t("facts.privacy")}
-          </Link>
+          </LegalLink>
         </Box>
       </Box>
 
@@ -525,6 +528,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               />
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
+                invalidLabel={t("phoneInvalid")}
                 name="phone"
                 draft={draft ? { country: draft.phoneCountry, national: draft.phone } : undefined}
                 id={fieldId("phone")}
@@ -551,6 +555,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   autoComplete="off"
                 />
                 <PhoneField
+                  invalidLabel={t("phoneInvalid")}
                   name="emergencyContactPhone"
                   draft={draft ? { country: draft.emergencyContactPhoneCountry, national: draft.emergencyContactPhone } : undefined}
                   id={fieldId("emergencyContactPhone")}
@@ -789,14 +794,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               ) : (
                 <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required>
-                  {t("rules.plain")} <Link href="/legal/terms">{t("facts.terms")}</Link>
+                  {t("rules.plain")}{" "}
+                  <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
+                    {t("facts.terms")}
+                  </LegalLink>
                 </CheckboxField>
               )}
               <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
                 {t("fitnessDeclared")}
               </CheckboxField>
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
-                {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
+                {t("privacyPrefix")}{" "}
+                <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
+                  {t("privacyLinkLabel")}
+                </LegalLink>
               </CheckboxField>
               <CheckboxField name="resultsNameConsent" defaultChecked={typed("resultsNameConsent") === "on"}>
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}

@@ -383,7 +383,8 @@
         "expiredAt": "Expired on {date}",
         "progress": "{done} of {total} steps",
         "next": "next: {step}",
-        "complete": "Every step done"
+        "complete": "Every step done",
+        "legend": "The six steps of a registration: 1 form submitted · 2 email confirmed · 3 place held · 4 declaration signed · 5 place confirmed · 6 number collected at the desk. The figure says which one they have reached."
       },
       "exportExcel": "Export to Excel",
       "columnBib": "Race number (BIB)",
@@ -1860,7 +1861,9 @@
       "close": "Close",
       "agreed": "You have read the race conditions and agree to them.",
       "plain": "I have read and agree to the race conditions:"
-    }
+    },
+    "opensInNewTab": "opens in a new tab",
+    "phoneInvalid": "That does not look like a complete number for the country chosen — check the digits."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

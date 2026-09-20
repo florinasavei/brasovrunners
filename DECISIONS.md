@@ -9026,3 +9026,76 @@ table, an empty row, a span that is not a small positive number — and the asse
 written before tables existed parses to exactly itself.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 197. Decided — the two legal texts open in a tab of their own (2026-09-20)
+
+**Context.** "Termenii de concurs și nota de confidențialitate trebe să se deschidă în ceva pop-up
+sau new tab (iconiță diferită pt new tab)."
+
+**Decision.** *A new tab, marked as one.* Both links sit in the middle of a registration form
+somebody has half filled in, and a privacy notice is a long text — the platform's own runs to a
+dozen sections. A reader who follows it in the same tab and presses Back is relying on the browser
+to restore a form it never stored. The race's **conditions** do open in a panel (§195), and that is
+right *there*: they are short, they are about this race, and reading them is a step in the flow.
+These two are reference texts, read out of order and sometimes at length, so they get a place of
+their own and the form stays exactly as it was left.
+
+*The icon is the honest part.* A link that opens a new tab without saying so is a small trap:
+somebody presses Back, finds the page unchanged, and presses again. The accessible name carries
+the same fact in words — an `aria-label`, not a `title`, because a title attribute is invisible
+on a touch screen, which is most of this form's traffic. `rel="noreferrer"` keeps the new tab
+from reaching back through `window.opener`.
+
+## 198. Decided — a telephone number is judged as it is typed, by the server's own rule (2026-09-20)
+
+**Context.** "Faptul că telefonul nu e valid trebuie să fie vizibil instant."
+
+**Decision.** `PhoneField` becomes a client island that runs `composePhone` — *the function the
+server validates with* — on every keystroke. It was a Server Component with a `pattern`
+attribute, so the browser said nothing until submission, and the pattern is not the real rule
+anyway: `composePhone` strips the separators people type, handles a `00` prefix and a repeated
+country code, drops a trunk zero everywhere except Italy, and then insists on four to fourteen
+digits. A pattern loose enough to admit all of that cannot tell somebody their number is too short.
+
+*One rule, imported, never a second one approximated in a regular expression* — which is how the
+two drift and a form starts refusing what the server accepts.
+
+*Before hydration and without JavaScript, nothing changes.* The same markup with the same
+`pattern`, `minLength` and `required`; the live verdict is consulted only once hydrated, so the
+server renders what it always rendered and nothing shifts under somebody already typing.
+
+*The message waits until the field is left, or until six digits have been typed.* Turning a box
+red on the first digit of a number that is obviously unfinished is scolding somebody for typing.
+
+## 199. Decided — filling the form again always sends something to the address (2026-09-20)
+
+**Context.** "De asemenea trebuie să verificăm dacă acel email a mai fost folosit pt înscrieri."
+
+**Decision.** *Not on the screen.* Telling a visitor "this address is already registered" turns
+the public form into a way to ask who is entered, which is the oracle `AGENTS.md` §19.4 exists to
+refuse. The screen's answer stays the one everybody gets.
+
+*In the inbox, which only its owner reads* — and now for every state, not one. A second submission
+used to re-send the verification link **only** while the first registration was still waiting for
+it; everybody past that point got "we have sent you a confirmation link" and no message at all.
+Somebody who confirmed a month ago, forgot, and filled the form again saw exactly what a failure
+looks like — and so did every re-entered test registration, which is what the owner kept hitting.
+
+It now sends whatever the state can offer, through the same `deriveAllowedResendMessageType` the
+backoffice's "send it again" uses: the verification link, the declaration, the waiting-list offer,
+or the confirmation with its QR. A state with nothing to resend still sends nothing. The throttle
+in front of the form is what keeps this from being a mailer.
+
+Tests: `tests/integration/registrations/resubmitted.test.ts` (3).
+
+## 200. Decided — a column whose values are shorthand explains itself (2026-09-20)
+
+**Context.** Of "3/6 · Loc rezervat" in the registrations list: "de asemenea trebuie să fie clar
+un pic ce sunt acești pași 3/6".
+
+**Decision.** `AdminColumn` takes an optional `hint`, shown behind a "?" beside the heading
+(`shared/ui/Hint`, §189). A heading cannot say what six steps are, and a legend above the table
+is a legend nobody reads twice — where the reader's question is, the answer is one press away and
+out of the way otherwise.
+
+Baseline `BR-V1.38-2026-09-18`.

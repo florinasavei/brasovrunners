@@ -10,6 +10,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **The terms and the privacy notice open in a tab of their own**, marked with an icon — they sit in the middle of a half-filled form, and Back does not restore a form the browser never stored. §197.
+- **A telephone number is judged as it is typed**, by the same function the server validates with rather than by a looser pattern that could not tell somebody their number was too short. §198.
+- **Filling the form again always sends something to the address.** It used to re-send the confirmation link only while the first registration was still waiting for one; everybody past that point saw “we have sent you a link” and got nothing, which is what a failure looks like. §199.
+- **“3/6” says what the six steps are**, behind a “?” beside the column heading. §200.
 - **Tables in the editor** — a schedule of waves, a price list, a table of cut-offs. No table inside a table, no column widths chosen on somebody's laptop, and on a phone the table keeps its shape while the box around it scrolls. One dependency, the platform's own, with none of its own. §196.
 - **The race's conditions are opened before they can be agreed to.** A button that says “read the race conditions”, the text in a panel, and the agreement dead until it has been scrolled to the end — then the tick appears in the button's place, already ticked. With JavaScript off it is an ordinary required checkbox and an ordinary link, because a gate that keeps somebody out of a race over a script that did not load is the worse failure. The moment they said they had read it is kept on the registration. §195.
 - **The calendar feed's address is a link**, not only a string to copy — still selected whole by one click, and now also a `webcal://` subscription for the applications that take one. §195.
