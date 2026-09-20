@@ -1,4 +1,6 @@
 import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -6,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findVersionWithTranslations } from "@/modules/legal-documents/repository";
@@ -108,6 +110,46 @@ export default async function NewLegalVersionPage({ params, searchParams }: Prop
         <Alert id="admin-alert" severity="error">
           {t(`errors.${error}`)}
         </Alert>
+      )}
+
+      {/*
+        Start from the platform's text, offered above the blank form rather than as small print
+        under it (§190).
+
+        The owner, having pressed "Versiune nouă" and been handed an empty textarea: "când fac
+        versiune nouă dă-mi un template de la care să plec!" The three links existed — under the
+        button, phrased as an alternative to the thing he had already pressed. Nobody writes a
+        privacy notice from nothing, so the template is the path and the blank form is the
+        exception, which is what this panel says by standing above it.
+
+        Only while nothing has been chosen: once `?template=` or `?from=` has filled the form,
+        the panel would be offering to discard what the reader is looking at.
+      */}
+      {!values && (
+        <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+            {t("legal.startFrom.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("legal.startFrom.intro")}
+          </Typography>
+          <Stack direction={{ xs: "column", sm: "row" }} sx={{ flexWrap: "wrap", gap: 1 }}>
+            {(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((documentKey) => (
+              <Button
+                key={documentKey}
+                component="a"
+                href={`${getPathname({ locale, href: "/admin/legal/new" })}?template=${documentKey}`}
+                variant="outlined"
+                sx={{ minHeight: 44 }}
+              >
+                {t(`legal.keys.${documentKey}`)}
+              </Button>
+            ))}
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            {t("legal.startFrom.orBlank")}
+          </Typography>
+        </Paper>
       )}
 
       <LegalDocumentForm

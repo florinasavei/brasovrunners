@@ -875,7 +875,25 @@
       "withdrawnNotice": "This version was withdrawn on {date}. Its text stays here, on the record, with its number, but it no longer appears publicly and can no longer be chosen on an event.",
       "showWithdrawn": "Show withdrawn versions too ({count})",
       "hideWithdrawn": "Hide withdrawn versions",
-      "legalVersionWithdrawn": "The version has been withdrawn. It stays on the record, with its number, but is no longer offered anywhere."
+      "legalVersionWithdrawn": "The version has been withdrawn. It stays on the record, with its number, but is no longer offered anywhere.",
+      "startFrom": {
+        "title": "Start from the platform's text",
+        "intro": "Pick the document and you get the complete text, with the club's legal name, registration number, registered address and contact address already written in. Read it, change what you like, then approve it.",
+        "orBlank": "Or write from nothing, in the form below."
+      },
+      "tokens": {
+        "title": "The fields that fill themselves in",
+        "intro": "In the declaration only. Leave them exactly as they are in the text — they are replaced at signing, for each person and each race. The club's own facts are not here: those are already written into the text.",
+        "inText": "in this text",
+        "participant": "The name the participant registered under",
+        "declarant": "Whoever signs: the participant, or the parent or guardian for a minor",
+        "guardian": "The parent or guardian when the participant is a minor; a dash otherwise",
+        "idDocument": "The identity document typed at signing — never scanned",
+        "event": "The event's title",
+        "eventDate": "The event's date, in its own zone",
+        "eventLocation": "The meeting point",
+        "signedAt": "When it was signed"
+      }
     },
     "tasks": {
       "title": "What is still to do",

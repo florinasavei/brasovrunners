@@ -875,7 +875,25 @@
       "withdrawnNotice": "Versiunea a fost retrasă la {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
       "showWithdrawn": "Arată și versiunile retrase ({count})",
       "hideWithdrawn": "Ascunde versiunile retrase",
-      "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri."
+      "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
+      "startFrom": {
+        "title": "Pornește de la textul platformei",
+        "intro": "Alege documentul și primești textul complet, cu denumirea clubului, CIF-ul, sediul și adresa de contact deja scrise. Îl citești, îl schimbi cât vrei, apoi îl aprobi.",
+        "orBlank": "Sau scrie de la zero în formularul de mai jos."
+      },
+      "tokens": {
+        "title": "Câmpurile care se completează singure",
+        "intro": "Numai în declarație. Le lași exact așa cum sunt în text — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
+        "inText": "în text",
+        "participant": "Numele cu care s-a înscris participantul",
+        "declarant": "Cine semnează: participantul, sau părintele ori tutorele, pentru un minor",
+        "guardian": "Părintele sau tutorele, când participantul e minor; altfel o liniuță",
+        "idDocument": "Actul de identitate tastat la semnare — nu se scanează niciodată",
+        "event": "Titlul evenimentului",
+        "eventDate": "Data evenimentului, în fusul lui",
+        "eventLocation": "Locul de întâlnire",
+        "signedAt": "Momentul semnării"
+      }
     },
     "tasks": {
       "title": "Ce mai este de făcut",
