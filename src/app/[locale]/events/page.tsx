@@ -18,11 +18,11 @@ import { routing } from "@/i18n/routing";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
+import ChipLink from "@/shared/ui/ChipLink";
 import InfoTip from "@/shared/ui/InfoTip";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
@@ -142,12 +142,11 @@ export default async function EventsPage({ params, searchParams }: Props) {
             // A string href: a component reference cannot cross into MUI's client component —
             // and neither can an icon element (`GlyphChip`), so the type's chip takes a name.
             const href = getPathname({ locale, href: { pathname: "/events", query: { ...(candidate ? { type: candidate } : {}), ...(layout === "list" ? { view: "list" } : {}) } } });
-            const look = { color: active ? ("primary" as const) : ("default" as const), variant: active ? ("filled" as const) : ("outlined" as const) };
             // The link is 44px tall (BR-REQ-041-01 criterion 6) — the chip inside it is small.
-            return (
-              <Box key={candidate ?? "all"} component="a" href={href} aria-current={active ? "page" : undefined} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}>
-                {candidate ? <GlyphChip glyph={`type:${candidate}`} label={tEvent(`type.${candidate}`)} {...look} /> : <Chip size="small" label={t("filter.all")} {...look} />}
-              </Box>
+            return candidate ? (
+              <ChipLink key={candidate} href={href} label={tEvent(`type.${candidate}`)} glyph={`type:${candidate}`} active={active} current={active ? "page" : undefined} />
+            ) : (
+              <ChipLink key="all" href={href} label={t("filter.all")} active={active} current={active ? "page" : undefined} />
             );
           })}
         </Stack>

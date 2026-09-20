@@ -205,4 +205,11 @@ describe("BR-REQ-052-02 the meeting point as a map link", () => {
     const block = parsed(sportsEventJsonLd(baseEvent({ mapUrl }), URL, "Brașov Runners"));
     expect(block.location.hasMap).toBe(mapUrl);
   });
+
+  // `DECISIONS.md` §155: the two cards the page draws are the result's pictures; none is claimed when none is given.
+  it("lists the event's cards as its images, and no image when it has none", () => {
+    const pictures = [`${URL}/opengraph-image`, `${URL}/share-image`];
+    expect(parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners", pictures)).image).toEqual(pictures);
+    expect(parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners")).image).toBeUndefined();
+  });
 });

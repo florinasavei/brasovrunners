@@ -196,7 +196,10 @@ export type TemplateData = {
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
-  /** When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`. */
+  /**
+   * When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`,
+   * and only while it is ahead — past it the place is kept for as long as nobody waits (§160).
+   */
   holdExpiresAtFormatted?: string;
   /** True when the hold is the participation window's (§104), not the thirty minutes. */
   confirmLater?: boolean;
@@ -235,15 +238,12 @@ const T = {
         d.confirmLater
           ? `Ești înscris — confirmă participarea până la ${d.holdExpiresAtFormatted ?? "termen"}`
           : "Un loc te așteaptă — semnează declarația",
-      body: (d: TemplateData) =>
+      body: (d: TemplateData) => [
         d.confirmLater
-          ? [
-              `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația pe proprie răspundere până la ${d.holdExpiresAtFormatted ?? "termenul din pagina înscrierii"}. Poți acum, din linkul de mai jos, sau când îți reamintim cu o săptămână înainte de start.`,
-              "Fără semnătură până la termen, locul se eliberează pentru cei de pe lista de așteptare — nu-l pierzi din alt motiv.",
-            ]
-          : [
-              `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine${d.holdExpiresAtFormatted ? ` până la ${d.holdExpiresAtFormatted}` : ""}. Pentru a finaliza înscrierea, citește și semnează declarația pe proprie răspundere.`,
-            ],
+          ? `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim cu o săptămână înainte de start.`
+          : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
+        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
+      ],
       action: "Semnează declarația",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
     },
@@ -415,15 +415,12 @@ const T = {
         d.confirmLater
           ? `You are registered — confirm your participation by ${d.holdExpiresAtFormatted ?? "the deadline"}`
           : "A place is waiting — sign the declaration",
-      body: (d: TemplateData) =>
+      body: (d: TemplateData) => [
         d.confirmLater
-          ? [
-              `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: sign the declaration of own responsibility by ${d.holdExpiresAtFormatted ?? "the deadline on your registration page"}. You can now, from the link below, or when we remind you a week before the start.`,
-              "Without a signature by the deadline, the place is released to the waiting list — you lose it for no other reason.",
-            ]
-          : [
-              `A place at ${d.eventTitle ?? "the event"} is held for you${d.holdExpiresAtFormatted ? ` until ${d.holdExpiresAtFormatted}` : ""}. To finish registering, read and sign the event declaration.`,
-            ],
+          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. You can sign now, from the link below, or when we remind you a week before the start.`
+          : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the signed declaration of own responsibility — read and sign it from the link below.`,
+        `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until ${d.holdExpiresAtFormatted}; sign before then.` : ""}`,
+      ],
       action: "Sign the declaration",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
     },

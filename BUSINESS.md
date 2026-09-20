@@ -292,7 +292,7 @@ For internal registration, the normal sequence is:
 1. participant submits name and email and acknowledges the privacy notice;
 2. participant confirms the email address within 48 hours;
 3. if a place is available, the platform temporarily holds it;
-4. participant reads and signs the approved declaration;
+4. participant reads and signs the approved declaration — online, or on paper at the desk on race day before picking up the number;
 5. registration becomes confirmed;
 6. a confirmation email containing a secure management/unregistration link is sent.
 
@@ -310,15 +310,15 @@ For a capped event:
 
 - the public event page shows the exact number of places immediately available to a new registrant;
 - confirmed registrations consume places;
-- an unexpired temporary hold while a participant signs the declaration or accepts a waiting-list offer also consumes a place;
+- a temporary hold while a participant signs the declaration, and an unexpired hold while one accepts a waiting-list offer, also consume a place;
 - ordinary waiting-list entries do not consume a place, but they have priority over later registrations;
 - the displayed free-place number therefore respects both occupied places and existing waiting-list priority;
 - pending email confirmations do not consume places;
-- cancellations and expired holds release places;
+- cancellations and expired holds release places; a declaration hold past its deadline expires only as far as the queue wants its place — one person waiting releases one hold, the one whose deadline passed first — or once the event has started or been cancelled (`DECISIONS.md` §160); otherwise the place stays the participant's until the start, and the declaration may still be signed online or on paper at the desk;
 - every capacity-changing action promotes eligible waiting participants before allocating a direct place to a later registrant;
 - concurrent actions must never exceed capacity or let a later registrant jump the queue.
 
-The initial direct declaration hold is 30 minutes, capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104).
+The initial direct declaration hold is 30 minutes, capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 
 For an event without a capacity limit, the page shows that registration is open without displaying a fabricated number of places.
 
@@ -337,7 +337,7 @@ Rules:
 - an offered place is temporarily held and therefore reduces the public free-place count;
 - the participant becomes confirmed only after signing the declaration;
 - declining or cancelling the offer releases the place immediately;
-- an expired offer leaves the active queue; the participant may rejoin at the end while registration remains open;
+- an expired offer leaves the active queue; the participant may rejoin at the end while registration remains open — an offer's deadline is always enforced, because it was a promise made to the queue;
 - when the event starts, any remaining waiting-list entries are closed; the participant receives no further message about that event;
 - an administrator may exceptionally promote a different participant only with a recorded reason.
 

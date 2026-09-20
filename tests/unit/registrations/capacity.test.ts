@@ -7,11 +7,11 @@ import {
 
 /** AGENTS.md §10.6 — the capacity formula. BR-REQ-034-01. */
 describe("capacity formula", () => {
-  it("occupied is confirmed plus both kinds of unexpired hold", () => {
+  it("occupied is confirmed plus every declaration hold and every unexpired offer", () => {
     expect(
       computeOccupied({
         confirmed: 15,
-        unexpiredPendingDeclarationHolds: 1,
+        pendingDeclarationHolds: 1,
         unexpiredWaitlistOfferedHolds: 2,
       }),
     ).toBe(18);
@@ -20,7 +20,7 @@ describe("capacity formula", () => {
   it("BR-REQ-034-01 criterion 1: 20 capacity, 15 confirmed, 1 hold, 0 waitlisted -> 4 available", () => {
     const occupied = computeOccupied({
       confirmed: 15,
-      unexpiredPendingDeclarationHolds: 1,
+      pendingDeclarationHolds: 1,
       unexpiredWaitlistOfferedHolds: 0,
     });
     expect(computePublicAvailability({ capacity: 20, occupied, eligibleWaitlisted: 0 })).toBe(4);
@@ -29,7 +29,7 @@ describe("capacity formula", () => {
   it("BR-REQ-034-01 criterion 2: the same event with 3 eligible waiting entries -> 1 available", () => {
     const occupied = computeOccupied({
       confirmed: 15,
-      unexpiredPendingDeclarationHolds: 1,
+      pendingDeclarationHolds: 1,
       unexpiredWaitlistOfferedHolds: 0,
     });
     expect(computePublicAvailability({ capacity: 20, occupied, eligibleWaitlisted: 3 })).toBe(1);

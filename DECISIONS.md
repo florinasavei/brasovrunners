@@ -6840,3 +6840,330 @@ chip rows, the kind chip, `aria-label` on the list); `Admin.tasks.summary`, `all
 BR-REQ-090-05 criteria 8–9. The cost half and `tasks-cost.spec.ts` are untouched.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 151. Decided — a verified participant's restart locks the event row like every other allocation (2026-09-19)
+
+**Context.** A reviewer of §147 noticed, in passing, that `submitRegistration`'s restart
+branch — a participant whose address is already verified coming back after a cancelled or
+expired registration — called `allocateOrWaitlist` without `lockEventForCapacity`, against
+the capacity the page had read. Every other door into the allocator locks first (rule 1 of
+the module, §10.6). Under the two-connection suite the door held only by luck.
+
+**Decision.** The restart locks the event row first and allocates against the locked
+capacity, exactly as `confirmEmail` does. The concurrency suite gains the case: twenty
+verified people restarting cancelled rows at once on a one-place event, one hold, nineteen
+waiting. No behaviour changes for anyone but the two people who would have shared a place.
+
+**Consequences.** `registrations/service.ts`; `tests/concurrency/capacity.test.ts`.
+BR-REQ-034-02 criterion 1.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 152. Decided — only the Save button is sticky in the editor (2026-09-19)
+
+**Context.** The owner, on a phone: "I do not like how the bottom save footer keeps showing
+on mobile, it takes too much space." Since §130 and §134 the sticky bar held the
+"I understand I am editing published content" box, the folded "Salvează pentru" box and the
+button — a third of the screen, pinned.
+
+**Decision.** The box and the fold sit in the flow at the end of the form; only the button
+is sticky, above the footer's bar, with less padding. The button's own hint ("tick the box
+to save") still names the box, which is now right above it when the end of the form is in
+view.
+
+**Consequences.** `app/[locale]/admin/events/[id]/page.tsx`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 153. Decided — the event's timezone is chosen from a list (2026-09-19)
+
+**Context.** The owner: "the timezone must be selectable, not free text." The editor took a
+typed IANA name and refused a wrong one only on save.
+
+**Decision.** A native select over every zone the runtime knows
+(`Intl.supportedValuesOf("timeZone")`), the club's `Europe/Bucharest` first, then Europe,
+then the rest; a stored zone the runtime no longer lists is kept as an option so an old event
+still saves. Native rather than MUI's menu: four hundred options are a scroll nobody wants,
+and a native select is searched by typing. Validation on save is unchanged.
+
+**Consequences.** `content/events/ui/EventFieldsForm.tsx`, the help sentence in both
+catalogues.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 154. Decided — a series card folds its dates (2026-09-19)
+
+**Context.** The owner, on the listing on a phone: "these date pills take too much space" —
+eight 44-pixel chips in four rows under every series card, which §138 had unfolded.
+
+**Decision.** The chips sit behind a native disclosure, "Toate datele (8)", closed by
+default, 44 pixels tall; the card is the next date and the rhythm, the rest one press away.
+No JavaScript.
+
+**Consequences.** `events/ui/SeriesCard.tsx`, one key replaces one in both catalogues.
+BR-REQ-041-01 criterion 9 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 155. Decided — the event's structured data carries its cards as images (2026-09-19)
+
+**Context.** Google's Rich Results test on a QA event page: valid, with a warning for the
+missing `image`. The page already draws two cards of the event (§90) — the 1200×630 Open
+Graph card and the square one for Instagram.
+
+**Decision.** `SportsEvent.image` lists both, absolute under `APP_BASE_URL` — Google asks
+for more than one aspect ratio, and these are two. Nothing is drawn that was not drawn
+before.
+
+**Consequences.** `events/structured-data.ts` (an `images` argument), the event page;
+`tests/unit/events/structured-data.test.ts`. BR-REQ-052-02 criterion 2 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 156. Decided — the short description is the card's; the page reads the long one (2026-09-20)
+
+**Context.** The owner: "Major inconsistency! The short description should show on the card
+and the long one when I open the event page." Since §71 the page showed both, the short one
+under the title and the long one after the facts — the same opening sentence twice for
+anyone who had written both.
+
+**Decision.** The card and the hero keep the short description. The event page (and its
+preview) render the short one only while no long description exists; with a long one, the
+page reads that. The metadata, the Open Graph card, the structured data and the emails keep
+the short one — that is what an excerpt is for. The editor's help sentences say which is
+which.
+
+**Consequences.** `app/[locale]/events/[slug]/page.tsx`, the preview, two help sentences
+in both catalogues. BR-REQ-011-01 criterion 11 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 157. Decided — the footer's switch sits above the footer's fold (2026-09-20)
+
+**Context.** The owner, on a phone: "the theme switcher does not work on mobile, nothing
+happens when I click." A Playwright tap said why: the footer's own "Despre club" fold — a
+44-pixel summary across the bar — was the element under the finger. The switch is positioned
+absolutely in the bar's corner (§115); the column beside it is positioned too and comes later
+in the DOM, so it painted on top.
+
+**Decision.** The switch's box carries `zIndex: 1`. Nothing else moves. The e2e suite taps
+the switch on the phone project from now on, because a pointer test at the button's centre is
+the one thing that would have caught this.
+
+**Consequences.** `shared/ui/SiteFooter.tsx`; `tests/e2e/event-pages.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 158. Decided — smaller chrome and smaller pills, the tap targets unchanged (2026-09-20)
+
+**Context.** The owner, three messages on a phone: "the header and the footer must be
+smaller in general, and on mobile smaller still"; "the pills and the selects here are too
+big" (the calendar's month/year, Lună/An, Calendar/Listă); "pretty much all the pills must be
+smaller." Every pill on the public site was a 44-pixel chip because every link must be a
+44-pixel target (BR-REQ-041-01 criterion 6), and the chip had become the target.
+
+**Decision.** The target and the pill part ways everywhere, the way §133 did it for the type
+filter: `shared/ui/ChipLink` is a 44-pixel link around MUI's small chip, and it is what the
+calendar's four choices, the type filter and the series card's dates use; the editor's
+header chips are small too (the backoffice has no 44-pixel rule). The header's lockup goes
+from 44 to 40 pixels with less padding, the sections a step under the body size; the
+footer's summary a step smaller, its marks 20 pixels. Nothing a thumb hits got smaller.
+
+*Rejected:* shrinking the links themselves (the suite measures every link under `main` and
+would say so, rightly).
+
+**Consequences.** `shared/ui/ChipLink.tsx` (new), `events/ui/EventCalendar.tsx`,
+`events/ui/SeriesDates.tsx`, `content/events/ui/SeriesScope.tsx`, the listing,
+`theme/brand.ts`, `SiteHeader`, `SiteNav`, `SiteFooter`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 159. Decided — the calendar carries every detail the page has (2026-09-20)
+
+**Context.** The owner: "in iCal I need as many details as possible, including links to the
+post." Since §107 a calendar entry carried the meeting point, the short description, the
+programme and the page's address; since §146 the opening date while it was ahead. A runner
+reading the entry on a phone still had to open the page for the distance, the rules, the
+route, whether entries are open, and what to bring.
+
+**Decision.** The description says what the page says, in the reader's language and the
+page's own words (the "Event" catalogue), one group per blank line, each line only when the
+event has the thing: the page's notice first when the event is cancelled or over ("Acest
+eveniment a fost anulat.", "Evenimentul s-a încheiat. …"); the meeting point with the map
+beside it — "Vezi pe hartă" when the organizer gave a map and no name, as on the page — and
+the street address on the next line ("Adresă: …"); the short description; the long one's
+first six hundred characters, cut at a word (§156 — the page has the whole, and the entry
+links it); the two times when the race has a gun time — "întâlnire la 08:00 · start la
+09:00"; the facts as one line — "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu ·
+Gratuit"; where registration stands, with the door — "Înscrierile sunt deschise — <form>",
+"Înscrierile se deschid pe <date> — <form>" (the page's sentence, which replaces §146's
+"Înscrieri din"), "Înscrierile s-au închis", "Înscriere pe site-ul organizatorului — <link>"
+(`registrationState` and the CTA's own strings; the calendar has none of its own), nothing
+for an event that takes none or is over; the links, with short labels — the page, the rules
+(`#rules`), the programme (`#schedule`), the route, the film, the Strava event, the Facebook
+event; the programme rows and text (§117) under the page's heading, "Programul
+evenimentului"; "Ce să aduci"; "Împreună cu". A cancelled event's entries — the event's and
+each programme row's — carry `STATUS:CANCELLED` (RFC 5545 §3.8.1.11), which Google, Apple and
+Outlook strike through, so a subscriber's phone does not ring for a race the club called off.
+The same text as minimal HTML — paragraphs and links — in `X-ALT-DESC;FMTTYPE=text/html`,
+which Outlook renders with the words as the links; Apple and Google ignore the property and
+make the bare addresses of the plain text tappable, which is why the plain twin writes
+"words — address"; a TEXT value like the rest, escaped and folded by octets. `URL` stays the
+page, `LOCATION` the map link (§129), or "name, address" without one. Google's add-event
+link carries the same groups as the HTML its dialog renders (the organizer's `<` and `&`
+escaped), within a budget of 1,500 characters of text: the programme's text has no ceiling,
+Romanian letters cost six characters each once encoded, and Google refuses an address past a
+few kilobytes — whole lines while they fit, the line that does not cut at a word with an
+ellipsis, and the page's link last when the cut took it; the `.ics` keeps the whole text.
+Nothing is queried for it: the public row already has every fact, and gains the
+translation's checklist. Where registration stands is decided by `calendarRegistration` from
+the same window rule the page uses, against the clock the route passes; `DTSTAMP` and
+`LAST-MODIFIED` are `calendarStamp` — the later of the row's change and the last boundary of
+an internal window the clock has passed — because the registration line flips at the
+opening and the closing without the row changing, and an app that re-reads an entry only
+when its stamp moves would keep the old sentence; the three callers build the calendar's
+event through one `toCalendarEvent`.
+
+*Rejected:* a full HTML document with the site's styles in `X-ALT-DESC` (Google ignores the
+property, Apple strips the styles, and it doubles the feed); the free-place count on the
+registration line (a query per event on a feed read every hour by every subscriber, for a
+number that is stale the moment it is written); the whole long description in the entry (a
+feed of fifty events would carry fifty articles twice over, plain and HTML, for a reader who
+has the page one tap away); calendar-only strings for "open" and "at the organizer" (the
+page's sentences exist, and two catalogues drift).
+
+**Consequences.** `events/ical.ts` (`calendarDescription`, `calendarDescriptionHtml`,
+`googleCalendarDetails`, `calendarRegistration`, `calendarStamp`; `CalendarLabels` is the
+catalogue's `t`), `events/calendar.ts` (new, `toCalendarEvent`), both `calendar.ics` routes,
+the event page's Google link, `events/repository.ts` (`checklist` in the public columns), the
+preview, four keys under `Event.calendar` in both catalogues (`registrationOpens` gone; the
+editor's help for "Ce să aduci" names the calendar); `tests/unit/events/ical.test.ts` reads
+the real catalogues and pins the budget. BR-REQ-020-01 criterion 7 and BR-REQ-011-01
+criterion 13 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 160. Decided — the declaration's deadline is lenient while nobody waits (2026-09-20)
+
+**Context.** The owner, three messages: "we must emphasise that the declaration must be
+signed, but be more lenient — it often happens that people forget and sign it right on race
+day before picking up the kit"; "we must keep their bib until the last moment"; and on race
+day "there can be entries right on the spot". Until now a hold — the thirty minutes, or the
+participation window of §104 — lapsed at its deadline and the place went back to the pool,
+whether or not anybody wanted it: on a race with places to spare, a person who forgot was
+expired by the next maintenance run, their link answered "nu mai este valabil", the desk could
+not find them, and their only way back was to register again from the start. The deadline
+exists for one reason, the queue: a place held by somebody who may not come is a place
+somebody waiting cannot have. Where nobody waits it protects nothing.
+
+**Decision.** A declaration hold past its deadline is released only when the place is
+wanted, and then only as many holds as are wanted. With nobody waiting the row stays
+`PENDING_DECLARATION` — the place is the person's until the start, it keeps occupying its
+place in the count, and the declaration is signed online at any time before the start (the
+email's link now lives until the start, not until the hold) or on paper at the desk on race
+day, which confirms it as it always confirmed a hold. **One waiter releases one hold**, the
+oldest deadline first, and only when the event has no free place to give them anyway:
+`wanted = waiting - free`, counted under the lock, where `free` is what the event has without
+touching a single hold. A boolean here — release everything the moment anybody waits — would
+have made one walk-in on race morning evict every other unsigned runner on the event and put
+their places back on public sale, which is the outcome the *Rejected* paragraph below
+forbids. The rule lives in `expireStaleHolds`, under the event lock every allocator path
+already takes, so a waiting-list entry arriving at the same moment is serialised against it;
+the count (`countOccupied`) takes a declaration hold by status, deadline or none, because the
+count must say what the allocator will do. When the queue grows — somebody confirms an email
+on an event whose places are held by a lapsed hold — the same transaction releases that one
+hold and offers the place to the front of the line: they get the offer, not a "you are on the
+waiting list" and a wait for the job. When enough people already wait, the deadline is
+enforced as before: it was told to the person and to the queue. A waiting-list offer lapses
+at its deadline as it always did — an offer is a promise made to the queue. An event that has
+started closes every hold as before, **and so does a cancelled one**: nobody is left holding
+a place on a race that will not run, and a declaration signed against a `CANCELLED` event is
+refused outright (`signDeclaration`, under the lock, on the locked row's own status) rather
+than drawing a race number for a race nobody will start.
+
+Three things follow from keeping somebody in a state nobody visits any more. The person who
+forgot is the one population that heard nothing between the deadline and race day — the
+reminder goes to the confirmed, and §104's participation confirmation stops at the deadline
+— so the declaration email goes **once more, two days before the start**, to every
+registration that still owes a signature: the same `COMPLETE_DECLARATION`, whose words
+already say the registration is complete only with the declaration and that it may be signed
+on paper at the desk, and whose deadline line the renderer drops once the deadline is behind.
+The desk, second: the start releases these holds while the kit table is still open, so
+`confirmByStaff` re-allocates a row expired with `DECLARATION_HOLD_LAPSED` instead of
+refusing it — the person standing there with their paper is confirmed if the place is still
+free and told they are on the list if it is not. And the words, third: the page and the
+backoffice say the place is kept only where that is true — the declaration page shows "the
+deadline has passed but the place is still yours" only for a `PENDING_DECLARATION` hold with
+nobody waiting (an offer's deadline is always enforced), and the backoffice journey, rendered
+once per row of a list spanning many events, carries the condition in its own words
+("termen depășit, locul se ține cât nu așteaptă nimeni") rather than counting a queue per row. The maintenance job's scan no longer selects an
+event whose only lapsed holds have nobody waiting, rather than locking it to do nothing on
+every run until the race. The words say it everywhere: the declaration email (both variants)
+— the place is held, the registration is complete only with the signed declaration, sign now
+online or on paper at the desk on race day before picking up the number, and "if a waiting
+list forms, the place is held until <deadline>"; the five steps and the journey's third step
+say "online, or on paper at the desk"; the backoffice journey says "termen depășit, locul se
+ține" for a kept hold; the declaration page says the deadline has passed but the place is
+still theirs; the guide and the queue panel's help say when the deadline counts.
+
+*Rejected:* keeping holds even when people wait (the queue was promised the place, and a
+person who was told "until Friday" and a person told "you are next" cannot both be right); a
+separate "grace period" number (a rule with no number is one fewer thing to configure, and
+any number would be wrong for somebody — the desk on race morning is the only deadline that
+matters); a public count that shows a kept hold as a free place (the person who took it
+would silently evict somebody the owner asked to be lenient with; "full — waiting list" and
+an offer at once to whoever joins says the same thing without the surprise).
+
+**Consequences.** `registrations/repository.ts` (`expireStaleHolds` takes the event —
+start, status and capacity — and releases what `lapsedDeclarationHoldsToRelease` decides,
+oldest deadlines first; `countOccupied` counts `PENDING_DECLARATION` by status,
+`pendingDeclarationHolds`; `findEventsNeedingMaintenance` narrowed to a lapsed hold somebody
+waits for, or one on a cancelled event), `service.ts` (`withLockedRow` now refreshes
+`starts_at` and `event_status` with `capacity`, because since this decision all three are
+capacity decisions; `allocateOrWaitlist`'s second pass whenever the queue grows;
+`enqueueAllocationEmail`; `signDeclaration` refuses a non-`SCHEDULED` event and offers what
+its own expiry freed, as `promoteFromWaitlistByStaff` does; `confirmByStaff` re-allocates a
+hold the start expired), `domain/capacity.ts`, `notifications/event-mail.ts`
+(`queueDeclarationReminders`, two days out), `notifications/render.ts` (the declaration
+token's life is the event's start, read from the event row rather than through the
+translation join, so a secret's lifetime does not depend on who has written the text; a
+passed deadline is not named on a resend), `events/repository.ts` (`findEventStartsAt`),
+`templates.ts`, `ui/StaffJourney.tsx`, the declaration page, both catalogues. AGENTS.md
+§10.5 invariant 5, §10.6, §15.3, §16.2; BUSINESS.md BR-BUS-033, BR-BUS-034; SPECS.md
+BR-REQ-033-01 criteria 3 and 6, BR-REQ-037-07 criterion 8. Tests: `maintenance.test.ts` (one
+waiter releases one hold of three; the scan tells a waited-on event from its quiet
+neighbour; a cancelled event's hold closes), `lifecycle.test.ts`,
+`confirmation-window.test.ts` (the late signature refused when somebody waits; the cancelled
+race), `race-day.test.ts` (the desk after the gun; a number given by hand survives the
+expiry), `notifications/render.test.ts` and `event-mail.test.ts`;
+`tests/concurrency/capacity.test.ts` unchanged and green.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 163. Decided — a QA deployment may address anyone, through the allowlist, not through `live` (2026-09-20)
+
+**Context.** The owner could not invite a colleague on QA: the invitation of §141 was queued
+and captured, because QA transmits only to `EMAIL_ALLOWLIST` (§37, AGENTS.md §16.4) and the
+colleague was not on it. Asked whether to add the two addresses or to let QA mail anyone, he
+chose anyone: the people testing are more than a handful, and every new one was a Vercel
+round trip.
+
+**Decision.** `EMAIL_ALLOWLIST` accepts one entry that is not an address, `*`, and it
+authorizes every recipient. The mode stays `allowlist`: the subject keeps its `[QA]` mark
+(BR-REQ-080-03 criterion 2), the rule that only production sends `live` is untouched (§37),
+and the star is one character to remove. A star anywhere but in allowlist mode is refused at
+startup, because on production the list is not read and a star there would read as a
+permission the code never consults. A malformed recipient is still captured: the star is
+checked after canonicalization, since an address that is not one has nowhere to go.
+
+*Rejected:* `EMAIL_DELIVERY_MODE=live` on QA (it would drop the `[QA]` mark and reverse the
+one email rule that has never bent); a per-address editor in the backoffice (worth building,
+but not what unblocks him this morning — and with a star it is no longer needed for QA).
+
+**Consequences.** `infrastructure/email/delivery.ts`, `shared/config/env.ts`,
+`.env.example`, `AGENTS.md` §16.4; `tests/unit/notifications/delivery.test.ts`. The QA
+project carries `EMAIL_ALLOWLIST=*` from 2026-09-20. **Every QA message now spends the
+club's shared Mailgun allowance** — one account, 100 messages a day, QA and production
+together (§100).
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
@@ -90,11 +91,17 @@ export default async function SeriesCard({
         </Typography>
         <EventFacts event={next} now={now} variant="compact" />
 
-        {/* Every coming date, each a link to its own page. */}
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 0.5 }}>
-          {t("series.allDates")}
-        </Typography>
-        <SeriesDates dates={dates} />
+        {/* Every coming date, each a link to its own page — folded (§154; the owner: "these
+            date pills take too much space"): the card is the next date and the rhythm, the
+            rest is one press away. A native disclosure, 44px, no JavaScript. */}
+        <Box component="details" sx={{ mt: 1.5, "& > summary": { cursor: "pointer", minHeight: 44, display: "flex", alignItems: "center", listStyle: "revert" } }}>
+          <Typography component="summary" variant="body2" color="text.secondary">
+            {t("series.allDatesCount", { count: members.length })}
+          </Typography>
+          <Box sx={{ pt: 0.5 }}>
+            <SeriesDates dates={dates} />
+          </Box>
+        </Box>
       </CardContent>
     </Card>
   );

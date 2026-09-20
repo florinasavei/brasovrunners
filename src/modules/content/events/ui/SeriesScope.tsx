@@ -85,7 +85,7 @@ export function SeriesScopeChips() {
   const router = useRouter();
   const everyOther = preset === "all";
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
       {dates.length > 1 && (
         <Chip
           clickable
@@ -94,7 +94,7 @@ export function SeriesScopeChips() {
           icon={everyOther ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
           label={everyOther ? t("editor.scope.selectNone") : t("editor.scope.selectAll")}
           onClick={() => setPreset(everyOther ? "this" : "all")}
-          sx={{ height: 44, borderRadius: 22, px: 0.5 }}
+          size="small"
         />
       )}
       {dates.map((date) => {
@@ -120,10 +120,8 @@ export function SeriesScopeChips() {
             onClick={current ? undefined : () => toggle(date.id)}
             onDelete={current ? undefined : () => router.push(date.href)}
             deleteIcon={<OpenInNewIcon aria-label={t("editor.scope.open", { date: date.label })} />}
+            size="small"
             sx={{
-              height: 44,
-              borderRadius: 22,
-              px: 0.5,
               ...(date.note?.kind === "cancelled" && !on ? { textDecoration: "line-through", color: "text.secondary" } : {}),
             }}
           />

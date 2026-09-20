@@ -290,6 +290,16 @@ export const envSchema = z
       });
     }
 
+    // `*` (§163) is every recipient, and only where email is not live: on production the mode
+    // is `live` and the list is not read, so a stray star there would be a lie in the console.
+    if (EMAIL_ALLOWLIST.includes("*") && EMAIL_DELIVERY_MODE !== "allowlist") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EMAIL_ALLOWLIST"],
+        message: 'EMAIL_ALLOWLIST="*" means "send to anyone" and is read only in allowlist mode. Remove it, or set EMAIL_DELIVERY_MODE=allowlist.',
+      });
+    }
+
     if (EMAIL_DELIVERY_MODE === "allowlist" && EMAIL_ALLOWLIST.length === 0) {
       ctx.addIssue({
         code: "custom",

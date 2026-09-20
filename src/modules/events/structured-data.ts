@@ -95,7 +95,7 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
 }
 
 /** BR-REQ-052-02 criteria 2 and 4. */
-export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string) {
+export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string, images: readonly string[] = []) {
   return {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
@@ -103,6 +103,9 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     name: event.title,
     ...(event.excerpt ? { description: event.excerpt } : {}),
     url,
+    // The cards the page already draws (§90) — Google's Event result wants an image and asks
+    // for more than one aspect ratio; the 1200×630 card and the square one are those (§155).
+    ...(images.length > 0 ? { image: [...images] } : {}),
     /**
      * Two times, mapped to the two properties schema.org already has for them.
      *

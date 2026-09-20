@@ -79,13 +79,25 @@ export type EventForRegistration = {
 };
 
 /**
- * The event as the allocator must see it once the row is locked: the caller's row, with the
- * places as they stand *now*. The caller read its `capacity` before the lock, and a number
- * raised in the editor (§147) between that read and this lock would otherwise waitlist a person
- * against the old number while the new places stood free until the allocator's next visit.
+ * The event as the allocator must see it once the row is locked: the caller's row, with every
+ * field a capacity decision rests on as it stands *now*.
+ *
+ * The caller read the event before the lock. A `capacity` raised in the editor (§147) in
+ * between would otherwise waitlist a person against the old number while the new places stood
+ * free until the allocator's next visit; and since §160 the `starts_at` and the
+ * `event_status` decide whether a lapsed declaration hold is released at all, so a race
+ * brought forward or called off between the read and the lock must not be decided against the
+ * row the page happened to render.
  */
-function withLockedCapacity(event: EventForRegistration, locked: { capacity: number | null }): EventForRegistration {
-  return event.capacity === locked.capacity ? event : { ...event, capacity: locked.capacity };
+function withLockedRow(
+  event: EventForRegistration,
+  locked: { capacity: number | null; startsAt: Date; eventStatus: EventForRegistration["eventStatus"] },
+): EventForRegistration {
+  return event.capacity === locked.capacity &&
+    event.startsAt.getTime() === locked.startsAt.getTime() &&
+    event.eventStatus === locked.eventStatus
+    ? event
+    : { ...event, capacity: locked.capacity, startsAt: locked.startsAt, eventStatus: locked.eventStatus };
 }
 
 function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDesk = false): void {
@@ -132,6 +144,11 @@ async function deliveryEmailOf<T extends Record<string, unknown>>(
  * email confirmation (AGENTS.md §15.2 steps 5-9, reused by the verified-restart path of §15.1
  * step 9 and by re-allocation in `signDeclaration`). The caller must already hold the
  * event-row lock.
+ *
+ * Returns the registration as it stands when the allocation is over: `PENDING_DECLARATION`
+ * with a hold, `WAITLISTED`, or — when this registration is the first to wait behind a lapsed
+ * hold that was being kept for want of a queue (§160) — `WAITLIST_OFFERED`, the offer email
+ * already queued by `fillAvailableSpots`.
  */
 async function allocateOrWaitlist<T extends Record<string, unknown>>(
   db: Transaction<T>,
@@ -139,7 +156,7 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   registrationId: string,
   now: Date,
 ): Promise<Registration> {
-  await repo.expireStaleHolds(db, event.id, now);
+  await repo.expireStaleHolds(db, event, now);
   await fillAvailableSpots(db, event, now);
 
   const occupied = computeOccupied(await repo.countOccupied(db, event.id, now));
@@ -171,7 +188,44 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
   if (!updated) {
     throw new DomainError("CONFLICT", "this registration changed state concurrently");
   }
+
+  // The queue has just grown by one (§160): a declaration hold past its deadline was kept
+  // because the place was not wanted, and now one more person wants it. The same expiry and
+  // the same allocator, once more under the same lock — one kept hold goes, the oldest
+  // deadline first, and the place is offered to the front of the line, which is this
+  // registration when it is alone there. Nothing is released when no hold has lapsed, so on
+  // an event that is simply full this is one read and no write.
+  if (updated.status === "WAITLISTED") {
+    await fillAvailableSpots(db, event, now);
+    return (await repo.findRegistrationById(db, registrationId)) ?? updated;
+  }
   return updated;
+}
+
+/**
+ * The message an allocation's outcome earns (§15.2 step 10): the declaration to sign, or
+ * "you are on the waiting list". An offer made on the way (§160) already queued its own.
+ */
+async function enqueueAllocationEmail<T extends Record<string, unknown>>(
+  db: Transaction<T>,
+  allocated: Registration,
+  recipientEmail: string,
+  idempotencyKey: string,
+  now: Date,
+): Promise<void> {
+  const messageType =
+    allocated.status === "WAITLISTED" ? "WAITLIST_JOINED" : allocated.status === "PENDING_DECLARATION" ? "COMPLETE_DECLARATION" : null;
+  if (!messageType) return;
+  await enqueueEmail(db, {
+    participantId: allocated.participantId,
+    registrationId: allocated.id,
+    messageType,
+    locale: allocated.locale,
+    recipientEmail,
+    payload: {},
+    idempotencyKey,
+    now,
+  });
 }
 
 /**
@@ -189,7 +243,7 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
   event: EventForRegistration,
   now: Date,
 ): Promise<number> {
-  await repo.expireStaleHolds(db, event.id, now);
+  await repo.expireStaleHolds(db, event, now);
 
   // Nothing is ever waitlisted against an uncapped event, so an uncapped event has no queue to
   // fill — unless its cap was just lifted (§147), in which case everyone still waiting is
@@ -239,11 +293,13 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
  * The places a new registrant could receive right now (BR-REQ-034-01).
  *
  * A read, and only a read: §10.6 says the public count "never mutates state", so this does not
- * expire a lapsed hold on the way past — `countOccupied` compares `hold_expires_at` against
- * `now` itself, which is what makes criterion 3 true without writing anything. It takes no lock
- * for the same reason: nothing is being decided here, and a page that blocked behind a
- * confirmation's row lock would be slower for no gain in truth. The number can be one place
- * stale the instant it is rendered, and the allocator is what actually holds the guarantee.
+ * expire a lapsed hold on the way past — `countOccupied` compares an offer's `hold_expires_at`
+ * against `now` itself, and counts a declaration hold for as long as it stands, because a
+ * lapsed one is kept until somebody waits for the place (§160): the count says "full" and the
+ * door says "waiting list", and the person who joins it is offered that place at once. It
+ * takes no lock for the same reason: nothing is being decided here, and a page that blocked
+ * behind a confirmation's row lock would be slower for no gain in truth. The number can be one
+ * place stale the instant it is rendered, and the allocator is what actually holds the guarantee.
  *
  * This is the same formula the allocator uses, called from the same module, because a second
  * one written for the page is how a site ends up advertising a place that does not exist.
@@ -561,17 +617,14 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         .set({ ...carriedFields, updatedAt: now })
         .where(eq(registrations.id, existing.id));
 
-      const allocated = await allocateOrWaitlist(tx, event, existing.id, now);
-      await enqueueEmail(tx, {
-        participantId: participant.id,
-        registrationId: allocated.id,
-        messageType: allocated.status === "WAITLISTED" ? "WAITLIST_JOINED" : "COMPLETE_DECLARATION",
-        locale: input.locale,
-        recipientEmail: participant.deliveryEmail,
-        payload: {},
-        idempotencyKey: `registration:${allocated.id}:restart:${now.toISOString()}`,
-        now,
-      });
+      // The event row first, like every other allocation (rule 1 above, §10.6): a verified
+      // participant's restart used to allocate against the capacity the page had read, with
+      // no lock — the one door into the allocator that skipped the serialization point
+      // (`DECISIONS.md` §151).
+      const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
+      if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+      const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), existing.id, now);
+      await enqueueAllocationEmail(tx, allocated, participant.deliveryEmail, `registration:${allocated.id}:restart:${now.toISOString()}`, now);
       return;
     }
 
@@ -622,18 +675,14 @@ export async function confirmEmail<T extends Record<string, unknown>>(
     }
 
     await markEmailVerified(tx, current.participantId, now);
-    const allocated = await allocateOrWaitlist(tx, withLockedCapacity(event, lockedEvent), current.id, now);
-
-    await enqueueEmail(tx, {
-      participantId: current.participantId,
-      registrationId: allocated.id,
-      messageType: allocated.status === "WAITLISTED" ? "WAITLIST_JOINED" : "COMPLETE_DECLARATION",
-      locale: current.locale,
-      recipientEmail: await deliveryEmailOf(tx, current.participantId),
-      payload: {},
-      idempotencyKey: `registration:${allocated.id}:email-confirmed:${now.toISOString()}`,
+    const allocated = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
+    await enqueueAllocationEmail(
+      tx,
+      allocated,
+      await deliveryEmailOf(tx, current.participantId),
+      `registration:${allocated.id}:email-confirmed:${now.toISOString()}`,
       now,
-    });
+    );
 
     return allocated;
   });
@@ -659,6 +708,17 @@ export async function signDeclaration<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
+    const locked = withLockedRow(event, lockedEvent);
+
+    /**
+     * The race is still to be run. A declaration signed against a called-off event would draw
+     * a race number and send "you are in" for a race that will not happen — and since §160 the
+     * link in the email lives until the start, so the window in which somebody could open it
+     * after the cancellation is weeks rather than minutes. The event's own row, under the lock.
+     */
+    if (locked.eventStatus !== "SCHEDULED") {
+      throw new DomainError("VALIDATION_ERROR", `the event is ${locked.eventStatus}`);
+    }
 
     const before = await repo.findRegistrationById(tx, registrationId);
     if (!before) throw new DomainError("NOT_FOUND", "no such registration");
@@ -667,15 +727,17 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     }
 
     // Re-verify the hold is still live at the moment of signing — never trusting that it was
-    // live when the page was rendered (§15.3 step 6; §10.6: evaluated against `now`).
-    await repo.expireStaleHolds(tx, event.id, now);
+    // live when the page was rendered (§15.3 step 6; §10.6: evaluated against `now`). A hold
+    // past its deadline is still live while nobody waits for the place (§160): the signature
+    // that comes late is the one the owner asked to be lenient about.
+    await repo.expireStaleHolds(tx, locked, now);
     let current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
 
     if (current.status === "EXPIRED") {
       // The hold lapsed at the very moment of signing (§15.3 step 7): re-run allocation
       // rather than simply refusing a place that might still be free.
-      current = await allocateOrWaitlist(tx, withLockedCapacity(event, lockedEvent), registrationId, now);
+      current = await allocateOrWaitlist(tx, locked, registrationId, now);
       if (current.status === "WAITLISTED") return current; // no declaration requested yet
     }
 
@@ -743,6 +805,11 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       now,
     });
     await enqueueDeclarationCopies(tx, confirmed, now);
+
+    // The expiry above may have released somebody *else's* lapsed hold to the queue — this
+    // signature is the capacity-changing transaction that saw it, and no other will until the
+    // job's next tick. Offer what it freed before the lock is let go (AGENTS.md §10.6).
+    await fillAvailableSpots(tx, locked, now);
 
     return confirmed;
   });
@@ -861,6 +928,15 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
  * staff still waits their turn if the event is full — this returns WAITLISTED then, and says
  * so. What it skips is the two emails: the address is attested by the member of staff whose id
  * goes on the row, and the declaration is on paper in front of them.
+ *
+ * A declaration hold past its deadline is confirmed like any other (§160): the place was kept
+ * for this person and still counts as theirs, so the paper signed at the desk on race morning
+ * is exactly the lenience the owner asked for — "they sign it right on race day before picking
+ * up the kit". Nothing here re-checks capacity for it, because the hold never stopped
+ * occupying the place. And once the gun has gone the same hold *is* released — by the start,
+ * not by anybody's fault — while the kit table is still open: that row is re-allocated here
+ * rather than refused, so the person standing at the desk with their paper is confirmed if
+ * the place is still free and told they are on the list if it is not.
  */
 export async function confirmByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -882,7 +958,12 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
         .update(registrations)
         .set({ emailConfirmedAt: now, emailConfirmedByStaffUserId: actor.id, updatedAt: now })
         .where(eq(registrations.id, current.id));
-      current = await allocateOrWaitlist(tx, withLockedCapacity(event, lockedEvent), current.id, now);
+      current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
+    }
+    // A hold the event's own start released, and nothing else: the allocator decides again,
+    // exactly as `signDeclaration` does for a signature that arrives at the same moment.
+    if (current.status === "EXPIRED" && current.expiryReason === "DECLARATION_HOLD_LAPSED") {
+      current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
     }
     if (current.status === "PENDING_DECLARATION" || current.status === "WAITLIST_OFFERED") {
       return acceptDeclarationOnPaper(tx, current, actor, now);
@@ -908,7 +989,8 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
   return db.transaction(async (tx) => {
     const lockedEvent = await repo.lockEventForCapacity(tx, event.id);
     if (!lockedEvent) throw new DomainError("NOT_FOUND", "no such event");
-    await repo.expireStaleHolds(tx, event.id, now);
+    const locked = withLockedRow(event, lockedEvent);
+    await repo.expireStaleHolds(tx, locked, now);
 
     const current = await repo.findRegistrationById(tx, registrationId);
     if (!current) throw new DomainError("NOT_FOUND", "no such registration");
@@ -927,7 +1009,11 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
       now,
     });
     if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
-    return acceptDeclarationOnPaper(tx, offered, actor, now);
+    const confirmed = await acceptDeclarationOnPaper(tx, offered, actor, now);
+    // As in `signDeclaration`: the expiry above may have released another person's lapsed
+    // hold to the queue, and this transaction is the one holding the lock that can offer it.
+    await fillAvailableSpots(tx, locked, now);
+    return confirmed;
   });
 }
 
@@ -1022,7 +1108,7 @@ export async function unregister<T extends Record<string, unknown>>(
       now,
     });
 
-    await fillAvailableSpots(tx, withLockedCapacity(event, lockedEvent), now);
+    await fillAvailableSpots(tx, withLockedRow(event, lockedEvent), now);
 
     return cancelled;
   });

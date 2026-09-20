@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
+import { atBrasov, nextWeekday, todayInBrasov } from "./sample-dates";
 import { seedSampleLegalDocuments } from "./sample-legal-documents";
 
 /**
@@ -70,8 +71,8 @@ async function seed() {
       surface: "MIXED" as const,
       // Two times, as a race has: gather at nine, gun at ten. `starts_at` is when the event
       // begins and stays what the ordering and the listing read.
-      startsAt: new Date("2026-10-11T09:00:00+03:00"),
-      raceStartsAt: new Date("2026-10-11T10:00:00+03:00"),
+      startsAt: atBrasov(nextWeekday(0, 21), 9),
+      raceStartsAt: atBrasov(nextWeekday(0, 21), 10),
       // The one event the landing page leads with. The database refuses a second.
       featured: true,
       distanceMeters: 10000,
@@ -104,7 +105,7 @@ async function seed() {
     {
       type: "GROUP_RUN" as const,
       surface: "ASPHALT" as const,
-      startsAt: new Date("2026-09-13T07:00:00+03:00"),
+      startsAt: atBrasov(-((todayInBrasov().getUTCDay() + 7) % 7 || 7), 7),
       distanceMeters: 8000,
       locationName: "Parcul Tractorul, intrarea principală",
       difficulty: "EASY" as const,
@@ -123,7 +124,7 @@ async function seed() {
     {
       type: "GROUP_RUN" as const,
       surface: "TRAIL" as const,
-      startsAt: new Date("2026-09-20T08:00:00+03:00"),
+      startsAt: atBrasov(nextWeekday(6, 2), 8),
       distanceMeters: 14000,
       elevationGainMeters: 600,
       locationName: "Stația de telecabină Tâmpa",
@@ -145,7 +146,7 @@ async function seed() {
       // (`DECISIONS.md` §61).
       type: "GROUP_RUN" as const,
       surface: "ASPHALT" as const,
-      startsAt: new Date("2026-09-24T18:30:00+03:00"),
+      startsAt: atBrasov(nextWeekday(3, 1), 18, 30),
       locationName: "Stadionul Olimpia",
       difficulty: "HARD" as const,
       costType: "FREE" as const,

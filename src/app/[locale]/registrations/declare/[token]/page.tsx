@@ -16,7 +16,7 @@ import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { mergeFieldsIn, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
-import { findRegistrationById } from "@/modules/registrations/repository";
+import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
 import { declarantValues } from "@/modules/registrations/signed-declaration";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
@@ -114,6 +114,21 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           timeZone: eventDetails.timezone,
         }).format(registration.holdExpiresAt)
       : undefined;
+  /**
+   * "The deadline has passed, but the place is still yours" — and only where that is true.
+   *
+   * A hold past its deadline is kept while nobody waits for the place (§160), so the sentence
+   * asks the same two questions the allocator asks: is this a declaration hold rather than a
+   * waiting-list offer, whose deadline is always enforced because it was promised to the
+   * queue; and is anybody waiting. With a queue behind them the POST may well hand them the
+   * waiting list, and this page must not have promised otherwise.
+   */
+  const deadlinePassed =
+    registration?.holdExpiresAt !== null &&
+    registration?.holdExpiresAt !== undefined &&
+    registration.status === "PENDING_DECLARATION" &&
+    registration.holdExpiresAt <= new Date() &&
+    (await countEligibleWaitlisted(db, registration.eventId)) === 0;
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
@@ -135,7 +150,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
           {(eventDetails || deadline) && (
             <Alert severity="info" role="status" sx={{ mb: 3 }}>
               {eventDetails && <div>{t("declare.event", { event: eventDetails.title })}</div>}
-              {deadline && <div>{t("declare.deadline", { deadline })}</div>}
+              {deadline && <div>{t(deadlinePassed ? "declare.deadlinePassed" : "declare.deadline", { deadline })}</div>}
             </Alert>
           )}
 

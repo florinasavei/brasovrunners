@@ -458,30 +458,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Box>
 
           {maySaveAnything && (
-            /*
-              Sticky at the bottom of the window while the long form scrolls (the owner: "this
-              save button should be sticky at the bottom"), above the footer's own 44px bar;
-              it settles into place once the end of the form is in view.
-            */
-            <Box
-              component="section"
-              sx={{
-                position: "sticky",
-                bottom: 44,
-                zIndex: 2,
-                bgcolor: "background.default",
-                pt: 1.5,
-                pb: 1.5,
-                borderTop: 1,
-                borderColor: "divider",
-              }}
-            >
+            <Box component="section">
               {/* BR-REQ-051-01 criterion 4, once for the whole save now that there is one save.
                   Binding three times over: `required`, so the browser refuses the submit and
                   names the box; the dimmed button with its sentence, so the organizer sees why
                   before pressing; and the service, which refuses a save of a published event
                   without it whatever the browser did ("I shouldn't be able to save without
-                  ticking it" — the owner, 2026-09-17). */}
+                  ticking it" — the owner, 2026-09-17). In the flow, not in the sticky bar
+                  (§152): on a phone the bar had grown to a third of the screen. */}
               {live && (
                 <Box sx={{ mb: 2 }}>
                   <CheckboxField name="acknowledgeLiveEdit" required>
@@ -497,12 +481,30 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <SeriesScopeBox />
                 </Box>
               )}
-              <SubmitButton
-                label={t("editor.save")}
-                pendingLabel={t("editor.saving")}
-                incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
-                size="medium"
-              />
+              {/*
+                Only the button is sticky at the bottom of the window while the long form
+                scrolls (the owner: "this save button should be sticky at the bottom", then
+                "the bottom save footer takes too much space on mobile"), above the footer's
+                own 44px bar; it settles into place once the end of the form is in view.
+              */}
+              <Box
+                sx={{
+                  position: "sticky",
+                  bottom: 44,
+                  zIndex: 2,
+                  bgcolor: "background.default",
+                  py: 1,
+                  borderTop: 1,
+                  borderColor: "divider",
+                }}
+              >
+                <SubmitButton
+                  label={t("editor.save")}
+                  pendingLabel={t("editor.saving")}
+                  incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
+                  size="medium"
+                />
+              </Box>
             </Box>
           )}
         </Stack>

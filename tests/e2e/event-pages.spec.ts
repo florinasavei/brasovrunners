@@ -40,6 +40,17 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     await expect(main.getByRole("table")).toBeVisible();
   });
 
+  // `DECISIONS.md` §157: a real tap at the switch's centre — the footer's fold once painted over it.
+  test("switches to the dark scheme from the footer's corner, by a tap", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    const toggle = page.getByRole("button", { name: "Temă întunecată" });
+    await expect(toggle).toBeEnabled();
+    await toggle.click();
+    // MUI marks the scheme with a valueless attribute: data-dark="", data-light="".
+    await expect(page.locator("html")).toHaveAttribute("data-dark", "");
+    await expect(page.getByRole("button", { name: "Temă luminoasă" })).toBeVisible();
+  });
+
   test("shows every seeded event with its date and meeting point as text", async ({ page }) => {
     await page.goto("/ro/evenimente");
 

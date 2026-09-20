@@ -1,4 +1,5 @@
-import { and, asc, desc, eq, inArray, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, inArray, lte, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import {
@@ -13,6 +14,7 @@ import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
+import { computeOccupied } from "./domain/capacity";
 import { allowedFromStatuses } from "./domain/state-machine";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
@@ -296,11 +298,18 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
 
 export type OccupiedCountsRow = {
   confirmed: number;
-  unexpiredPendingDeclarationHolds: number;
+  pendingDeclarationHolds: number;
   unexpiredWaitlistOfferedHolds: number;
 };
 
-/** The counts `domain/capacity.ts#computeOccupied` needs, queried inside the locked transaction. */
+/**
+ * The counts `domain/capacity.ts#computeOccupied` needs, queried inside the locked transaction.
+ *
+ * A declaration hold occupies its place by status, deadline or no deadline: since `DECISIONS.md`
+ * §160 a lapsed hold is kept — the place stays the person's until the event starts — unless
+ * somebody is waiting for it, and it is `expireStaleHolds` that decides, never this count. An
+ * offer is a promise to the queue and still occupies only while its deadline is ahead.
+ */
 export async function countOccupied<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
@@ -309,13 +318,13 @@ export async function countOccupied<T extends Record<string, unknown>>(
   const [row] = await db
     .select({
       confirmed: sql<number>`count(*) filter (where ${registrations.status} = 'CONFIRMED')::int`,
-      unexpiredPendingDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION' and ${registrations.holdExpiresAt} > ${now})::int`,
+      pendingDeclarationHolds: sql<number>`count(*) filter (where ${registrations.status} = 'PENDING_DECLARATION')::int`,
       unexpiredWaitlistOfferedHolds: sql<number>`count(*) filter (where ${registrations.status} = 'WAITLIST_OFFERED' and ${registrations.holdExpiresAt} > ${now})::int`,
     })
     .from(registrations)
     .where(eq(registrations.eventId, eventId));
 
-  return row ?? { confirmed: 0, unexpiredPendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0 };
+  return row ?? { confirmed: 0, pendingDeclarationHolds: 0, unexpiredWaitlistOfferedHolds: 0 };
 }
 
 export async function countEligibleWaitlisted<T extends Record<string, unknown>>(
@@ -357,38 +366,97 @@ export async function expireStalePendingEmailConfirmations<T extends Record<stri
   return rows.length;
 }
 
+/** What `expireStaleHolds` needs to know about the event whose places it is releasing. */
+export type EventForExpiry = {
+  id: string;
+  startsAt: Date;
+  eventStatus: "SCHEDULED" | "CANCELLED" | "COMPLETED";
+  capacity: number | null;
+};
+
+/**
+ * Which lapsed declaration holds this event owes the queue right now, oldest deadline first.
+ *
+ * The whole of `DECISIONS.md` §160 is here. A hold past its deadline is released only when
+ * the place it is holding is actually wanted, and then only as many holds as are wanted:
+ *
+ * - the event has started, or will never be run (`CANCELLED`) — every hold is over, because
+ *   nobody may be left holding a place on a race that has begun or that will not happen;
+ * - otherwise, the waiting list wants `waiting - free` places, where `free` is what the event
+ *   has without touching any hold. One person joining the queue releases one hold, the oldest
+ *   deadline first — never the whole event's worth of kept places, which would silently evict
+ *   the very people the decision exists to be lenient with.
+ *
+ * With nobody waiting, or with free places enough for everybody who waits, nothing is
+ * released: the rows stay `PENDING_DECLARATION`, keep occupying their places (`countOccupied`)
+ * and can still be signed online or on paper at the desk.
+ */
+async function lapsedDeclarationHoldsToRelease<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: EventForExpiry,
+  now: Date,
+): Promise<string[]> {
+  const lapsed = await db
+    .select({ id: registrations.id })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, event.id),
+        eq(registrations.status, "PENDING_DECLARATION"),
+        lte(registrations.holdExpiresAt, now),
+      ),
+    )
+    .orderBy(asc(registrations.holdExpiresAt), asc(registrations.id));
+  if (lapsed.length === 0) return [];
+
+  if (event.eventStatus !== "SCHEDULED" || event.startsAt <= now) return lapsed.map((row) => row.id);
+
+  const waiting = await countEligibleWaitlisted(db, event.id);
+  if (waiting === 0) return [];
+  const free =
+    event.capacity === null
+      ? Number.POSITIVE_INFINITY
+      : Math.max(event.capacity - computeOccupied(await countOccupied(db, event.id, now)), 0);
+  const wanted = Math.min(lapsed.length, Math.max(waiting - free, 0));
+  return lapsed.slice(0, wanted).map((row) => row.id);
+}
+
 /**
  * Expire holds whose deadline has passed, for one event, inside the caller's locked
  * transaction. Two statements — one per originating status — because each needs its own
  * `expiry_reason` (AGENTS.md §10.6: "every capacity-changing transaction expires stale holds
  * ... before giving a place to a later registration").
+ *
+ * A waiting-list offer expires at its deadline as it always did: it was a promise made to the
+ * queue. A declaration hold is released only when, and only as far as, the place is wanted —
+ * `lapsedDeclarationHoldsToRelease` above decides, and `DECISIONS.md` §160 says why. Both run
+ * under the caller's event lock, so a waiting-list entry arriving at the same moment is
+ * serialised against this decision rather than racing it.
  */
 export async function expireStaleHolds<T extends Record<string, unknown>>(
   db: Database<T>,
-  eventId: string,
+  event: EventForExpiry,
   now: Date,
 ): Promise<void> {
-  await db
-    .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
-    .where(
-      and(
-        eq(registrations.eventId, eventId),
-        eq(registrations.status, "PENDING_DECLARATION"),
-        lte(registrations.holdExpiresAt, now),
-      ),
-    );
-
+  // The offers first: each one released is a place the queue can have without touching a
+  // kept declaration hold, and the count below must see it as free.
   await db
     .update(registrations)
     .set({ status: "EXPIRED", expiredAt: now, expiryReason: "WAITLIST_OFFER_LAPSED", updatedAt: now })
     .where(
       and(
-        eq(registrations.eventId, eventId),
+        eq(registrations.eventId, event.id),
         eq(registrations.status, "WAITLIST_OFFERED"),
         lte(registrations.holdExpiresAt, now),
       ),
     );
+
+  const releasing = await lapsedDeclarationHoldsToRelease(db, event, now);
+  if (releasing.length === 0) return;
+  await db
+    .update(registrations)
+    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "DECLARATION_HOLD_LAPSED", updatedAt: now })
+    .where(and(eq(registrations.eventId, event.id), inArray(registrations.id, releasing)));
 }
 
 /**
@@ -415,8 +483,11 @@ export async function lockOldestWaitlisted<T extends Record<string, unknown>>(
 }
 
 /**
- * Every event with a registration the maintenance job (AGENTS.md §16.2) needs to look at: a
- * hold past its deadline, or a still-open waiting-list entry for an event that has started.
+ * Every event with a registration the maintenance job (AGENTS.md §16.2) needs to look at: an
+ * offer past its deadline, a lapsed declaration hold that somebody is waiting for or that
+ * stands on a cancelled event (§160 — with nobody waiting and the race still to be run the
+ * hold is kept, and the job would lock the event to do nothing, on every run until the race),
+ * or a hold or waiting-list entry left open on an event that has started.
  *
  * A liveness query, not a correctness one — §16.2 is explicit that the job exists to send
  * expiry messages and retry delivery, not to make capacity correct, so missing an event here
@@ -426,6 +497,13 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
   db: Database<T>,
   now: Date,
 ): Promise<string[]> {
+  const waiting = alias(registrations, "waiting");
+  const somebodyWaits = exists(
+    db
+      .select({ one: sql`1` })
+      .from(waiting)
+      .where(and(eq(waiting.eventId, registrations.eventId), eq(waiting.status, "WAITLISTED"))),
+  );
   const rows = await db
     .selectDistinct({ eventId: registrations.eventId })
     .from(registrations)
@@ -433,14 +511,17 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
     .where(
       and(
         // A completed event is over: the job leaves it alone (§82). Cancelled ones still
-        // expire their holds, so nobody is left holding a place on a race that will not run.
+        // expire their holds and their offers, so nobody is left holding a place on a race
+        // that will not run — the one case §160's lenience does not cover.
         sql`${events.eventStatus} <> 'COMPLETED'`,
         or(
+          and(eq(registrations.status, "WAITLIST_OFFERED"), lte(registrations.holdExpiresAt, now)),
           and(
-            inArray(registrations.status, ["PENDING_DECLARATION", "WAITLIST_OFFERED"]),
+            eq(registrations.status, "PENDING_DECLARATION"),
             lte(registrations.holdExpiresAt, now),
+            or(somebodyWaits, sql`${events.eventStatus} <> 'SCHEDULED'`),
           ),
-          and(eq(registrations.status, "WAITLISTED"), lte(events.startsAt, now)),
+          and(inArray(registrations.status, ["PENDING_DECLARATION", "WAITLISTED"]), lte(events.startsAt, now)),
         ),
       ),
     );

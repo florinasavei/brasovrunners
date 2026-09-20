@@ -24,22 +24,22 @@ export default function SeriesDates({
   currentId?: string;
 }) {
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", columnGap: 0.5, alignItems: "center" }}>
       {dates.map((date) => (
         <Chip
           key={date.id}
           component="a"
           href={date.href}
           clickable
+          // The tap target is the link's box, 44px (BR-REQ-041-01 criterion 6); the pill is drawn small.
           variant={date.id === currentId ? "filled" : "outlined"}
           color={date.id === currentId ? "primary" : "default"}
           aria-current={date.id === currentId ? "page" : undefined}
           icon={date.note ? <EditionMark note={date.note} size={16} /> : undefined}
           label={date.label}
+          size="small"
           sx={{
-            height: 44,
-            borderRadius: 22,
-            px: 0.5,
+            // Inside a 44px target (§158): the pill is small, the link around it is not.
             ...(date.note?.kind === "cancelled" ? { textDecoration: "line-through", color: "text.secondary" } : {}),
           }}
         />
