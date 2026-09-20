@@ -7,7 +7,10 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
-import { findEventNotificationDetails, findEventStartsAt } from "@/modules/events/repository";
+import { findEventNotificationDetails, findEventStartsAt, findPublishedEventBySlug } from "@/modules/events/repository";
+import { toCalendarEvent } from "@/modules/events/calendar";
+import { calendarLabels } from "@/modules/events/calendar-labels";
+import { buildCalendar } from "@/modules/events/ical";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
@@ -209,6 +212,38 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   // (§95): a copy the participant keeps, in the language they signed in — on the confirmation
   // since §126, on the club's archive copy, and on the older message type for a resend.
   let attachments: OutgoingEmail["attachments"];
+
+  /**
+   * The event in the runner's own calendar, attached (§174; the owner: "și de iCal ca să poată
+   * pune în calendar").
+   *
+   * On the confirmation and the reminder, which are the two messages somebody acts on. Every
+   * phone and desktop client opens an `.ics` attachment with one tap — including the ones that
+   * will not follow a link out to the site, which on race week is the point. It is the same
+   * file the event page offers (§107, §159), built from the same function, so what lands in a
+   * calendar says exactly what the page says.
+   *
+   * A published event only: an `.ics` for a draft would leak an unpublished page's details into
+   * somebody's calendar. When there is no published row the message simply goes without it.
+   */
+  if (
+    (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER") &&
+    eventDetails?.slug
+  ) {
+    const published = await findPublishedEventBySlug(db, locale, eventDetails.slug);
+    if (published) {
+      const ics = buildCalendar({
+        events: [toCalendarEvent(published, locale, now)],
+        baseUrl: env.APP_BASE_URL,
+        name: published.title,
+        labels: calendarLabels(locale),
+      });
+      attachments = [
+        { filename: `${eventDetails.slug}.ics`, contentType: "text/calendar; charset=utf-8", data: Buffer.from(ics, "utf8") },
+      ];
+    }
+  }
+
   if (
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "DECLARATION_SIGNED" || row.messageType === "DECLARATION_ARCHIVE") &&
     registration
@@ -216,7 +251,8 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     const signed = await findSignedDeclaration(db, registration.id);
     if (signed) {
       const pdf = await renderSignedDeclarationPdf(db, signed, registration.eventId, declarationWords(signed.locale, now), now);
-      if (pdf) attachments = [{ filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }];
+      // Beside the calendar file, never instead of it: the confirmation carries both (§174).
+      if (pdf) attachments = [...(attachments ?? []), { filename: "declaratie-semnata.pdf", contentType: "application/pdf", data: pdf }];
       data.signedAtFormatted = new Intl.DateTimeFormat(signed.locale === "ro" ? "ro-RO" : "en-GB", {
         dateStyle: "long",
         timeStyle: "short",

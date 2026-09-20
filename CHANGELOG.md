@@ -10,6 +10,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **The club's lockup where it belongs.** The declaration and the bib sheet printed it as a hollow outline — the raster carried an alpha channel, which reaches a PDF as a soft mask and composites badly in most viewers and nearly every printer. Flat now, from one script, at the ratio the layouts already assumed. And the email header carries the lockup instead of the club's name in letters, as a hosted PNG whose alt text says the same thing when images are blocked. §174.
+- **The event lands in the runner's calendar.** The confirmation and the reminder carry the same `.ics` the event page offers, attached — one tap on any phone, including the clients that will not follow a link. Published events only. §174.
 - **Race numbers run in order, from the race's own band.** Each event says where its numbers start (1 by default, 100 or 500 when a distance wants its own series) and what colour they print; a registration takes the lowest free number at or above it, in order of confirmation, under the same lock capacity uses. The random draw is gone. §173.
 - **A confirmed runner's number is settled.** It cannot be changed or cleared once they have been emailed it — only filled in where there is none. A preferential number is still set by hand before confirmation. §173.
 - **The number is its own column** on the registrations list, sortable, nulls last; the step column asks "Unde a ajuns" instead of naming the concept. §173.

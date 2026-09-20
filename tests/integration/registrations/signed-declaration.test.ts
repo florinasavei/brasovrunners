@@ -63,7 +63,18 @@ const PLAIN_DECLARATION: LegalDocumentTranslationInput[] = [
 async function createEvent(db: TestDatabase): Promise<EventForRegistration> {
   const [event] = await db
     .insert(events)
-    .values({ type: "RACE", startsAt: new Date("2026-10-11T07:00:00.000Z"), registrationMode: "INTERNAL", capacity: 10, locationName: "Parcul Tractorul" })
+    // Published, which is what an event taking registrations is — and what the confirmation's
+    // calendar attachment requires (§174): an `.ics` for a draft would put an unpublished
+    // page's details into somebody's calendar.
+    .values({
+      type: "RACE",
+      startsAt: new Date("2026-10-11T07:00:00.000Z"),
+      registrationMode: "INTERNAL",
+      capacity: 10,
+      locationName: "Parcul Tractorul",
+      editorialStatus: "PUBLISHED",
+      publishedAt: NOW,
+    })
     .returning();
   await db.insert(eventTranslations).values([
     { eventId: event.id, locale: "ro", title: "Crosul aniversar", slug: "crosul-aniversar" },
@@ -196,9 +207,23 @@ describe("the club's declaration (§95)", () => {
     const row = queued.find((r) => r.messageType === "REGISTRATION_CONFIRMED")!;
     const message = await renderOutboxMessage({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
     expect(message.subject).toBe("Înscrierea este confirmată / Your registration is confirmed"); // bilingual, the registration's language first (§96)
-    expect(message.attachments).toHaveLength(1);
-    expect(message.attachments![0].filename).toBe("declaratie-semnata.pdf");
-    expect(message.attachments![0].data.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+    /**
+     * Two attachments since §174: the event for the runner's calendar, and the declaration they
+     * signed. The calendar file rides on the confirmation because that is the message somebody
+     * acts on, and every phone opens an `.ics` with one tap — including the clients that will
+     * not follow a link out to the site.
+     */
+    const byName = new Map((message.attachments ?? []).map((one) => [one.filename, one]));
+    expect([...byName.keys()].sort()).toEqual(["crosul-aniversar.ics", "declaratie-semnata.pdf"]);
+    expect(byName.get("declaratie-semnata.pdf")!.data.toString("latin1").startsWith("%PDF-1.")).toBe(true);
+
+    const ics = byName.get("crosul-aniversar.ics")!;
+    expect(ics.contentType).toContain("text/calendar");
+    const calendar = ics.data.toString("utf8");
+    expect(calendar).toContain("BEGIN:VCALENDAR");
+    expect(calendar).toContain("BEGIN:VEVENT");
+    // The event's own details, not a stub: the same file the page offers (§107, §159).
+    expect(calendar).toContain("Crosul aniversar");
     // The same manage token serves the link to the PDF, for a client that strips attachments.
     expect(message.html).toMatch(/\/api\/registrations\/declaration\/[A-Za-z0-9_-]+/);
     expect(message.text).toContain("Declarația pe care ai semnat-o (PDF)");

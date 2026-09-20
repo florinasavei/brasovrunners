@@ -8084,3 +8084,77 @@ confirmation with its duplicate and nonsense refusals, the gap-filling exception
 and suggestions that start where the race does.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 174. Decided — the lockup where it belongs, and the event in the runner's calendar (2026-09-20)
+
+**Context.** The owner, of the declaration PDF: "logo-ul nu apare colorat frumos cu albastru în
+declarație", with a picture of the club's mark drawn as a thin hollow outline; then, with the
+filled mark attached: "logo trebuie să apară așa: și în mail și în declarații și peste tot!".
+Separately: "în mailul de înregistrare am nevoie de logoul BVR și de link către eveniment și
+site", "și de iCal ca să poată pune în calendar".
+
+Two different defects wearing one complaint.
+
+*The PDF.* `src/theme/pdf/logo.png` was already the filled blue lockup — but it carried an
+**alpha channel**. An alpha PNG does not reach a PDF as one image: pdfkit writes the colour and
+a separate soft mask, and the viewer composites them. Several viewers, and most printers,
+composite that badly, and what comes out is edges — the outline the owner photographed. The
+file was also 600×248 against the `495/1200` ratio the three renderers use to place what
+follows it, so the layouts were each off by a hair.
+
+*The email.* The card's header was the club's name as letter-spaced text on a blue band. No
+logo anywhere, in the one message a runner keeps.
+
+**Decision.**
+
+*One script, two rasters, both committed.* `scripts/brand-assets.mjs` renders
+`public/brand/logo.svg` and its white twin into the two places that cannot take an SVG: the
+PDFs, and the email. The SVG stays the source of truth — it is what the site serves and what a
+review can read as text. The outputs are committed rather than built, because rasterising at
+build time would put a native dependency in front of `next build` for a file that changes once
+a year.
+
+*The PDF raster is flattened onto white.* No alpha, so there is no soft mask and nothing to
+composite: no viewer and no printer can get it wrong. White because every page these are drawn
+on is white. And 1200×495, which is finally the ratio the code already assumed.
+
+*The email header carries the lockup as a PNG.* White on the club's blue, hosted under
+`APP_BASE_URL` — a **raster**, because half the mail clients in use refuse SVG, and hosted
+rather than inlined, because a data URI is what the rest of them strip. Its `alt` is the club's
+name, so a reader with images off sees exactly what the band said before: nothing is lost when
+the picture is blocked, which is the common case on a first message from an unknown sender.
+
+*The confirmation and the reminder carry the event as a calendar file.* The same `.ics` the
+event page offers (§107, §159), from the same function, attached. Every phone and desktop
+client opens it with one tap, including the ones that will not follow a link out to the site —
+which on race week is the point. **Published events only**: an `.ics` for a draft would put an
+unpublished page's details into somebody's calendar, and a message for an unpublished event
+simply goes without one. It rides beside the signed declaration on the confirmation, never
+instead of it.
+
+*A translator without a request.* The outbox renderer drains from the scheduler, long after the
+request that queued a row has gone, so `getTranslations` is not available to it —
+`calendarLabels` uses next-intl's own `createTranslator` over the statically imported
+catalogues. The public routes keep `getTranslations`; both produce the same words.
+
+**Rejected.** *Keeping the alpha and fixing the viewer.* There is no viewer to fix; the file is
+handed to whoever the club hands it to.
+
+*Inlining the logo as a data URI.* Gmail and Outlook both strip them, which trades a picture
+that renders badly in some clients for one that renders in none.
+
+*Attaching the `.ics` to every message.* The verification email is about confirming an address,
+not about a date; the state notice is about a place being lost. Two messages carry it, and both
+are ones somebody acts on.
+
+**Consequences.** `findPublishedEventBySlug` becomes generic in its schema, like its neighbours,
+because the renderer reaches it with the application's own database handle. Three test
+assertions that said "this message has no image" or "no link" now ask that of the **body**: the
+header band has a picture on every message, and the claim was always about the content.
+`README.md` indexes the new script.
+
+Tests: `tests/integration/registrations/signed-declaration.test.ts` (the confirmation carries
+both attachments; the calendar file is a real VCALENDAR naming the event), and the three scoped
+assertions above.
+
+Baseline `BR-V1.38-2026-09-18`.

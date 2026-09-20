@@ -260,6 +260,7 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
     expect(message.text).not.toMatch(/\/inregistrari\//);
     expect(message.html).not.toContain("Salut, ,");
     expect(message.html).toContain("Salut,");
-    expect(message.html).not.toContain("<img");
+    // Below the header band, which carries the club lockup on every message (§174).
+    expect(message.html.slice(message.html.indexOf("</div>") + 6)).not.toContain("<img");
   });
 });

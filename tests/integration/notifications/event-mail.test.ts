@@ -276,7 +276,8 @@ describe("§81 the reminder and §82 after the race", () => {
     );
     expect(message.subject).toBe("Thank you for running with us / Mulțumim că ai alergat cu noi");
     expect(message.text).toContain("Results and photos: https://photos.example/album");
-    expect(message.html).not.toContain("<img");
+    // The header band carries the club lockup on every message (§174); the thank-you body has no picture of its own.
+    expect(message.html.slice(message.html.indexOf("</div>") + 6)).not.toContain("<img");
   });
 
   it("refuses a check-in at a completed event", async () => {

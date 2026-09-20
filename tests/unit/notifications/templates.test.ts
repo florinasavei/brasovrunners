@@ -16,6 +16,15 @@ const DATA: TemplateData = {
   currentStatus: "CONFIRMED",
 };
 
+/**
+ * The message without its header band (§174).
+ *
+ * The band carries the club's lockup as an image on every message, so "this message has no
+ * image" and "this message has no link" are claims about the body and have to be asked of the
+ * body. Everything before the first `</div>` is the band.
+ */
+const bodyOf = (html: string) => html.slice(html.indexOf("</div>") + 6);
+
 describe("BR-REQ-080-01 message templates", () => {
   for (const messageType of emailMessageType.enumValues as EmailMessageType[]) {
     for (const locale of ["ro", "en"] as const) {
@@ -102,7 +111,9 @@ describe("BR-REQ-080-01 message templates", () => {
       data: withCode,
       actionUrl: "https://example.test/declare",
     });
-    expect(other.html).not.toContain("<img");
+    // The card's header carries the club's lockup on every message now (§174), so "no image"
+    // is a claim about the body: no QR, and no code in the words either.
+    expect(bodyOf(other.html)).not.toContain("<img");
     expect(other.html).not.toContain("ABCDEFGH23");
 
     // Without a code — a confirmation rendered for a row from before codes existed cannot
@@ -114,7 +125,7 @@ describe("BR-REQ-080-01 message templates", () => {
       messageType: "REGISTRATION_CONFIRMED",
       data: DATA,
     });
-    expect(bare.html).not.toContain("<img");
+    expect(bodyOf(bare.html)).not.toContain("<img");
   });
 
   it("never encodes the recipient's raw email or a stray HTML tag from interpolated data", () => {
