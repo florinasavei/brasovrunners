@@ -8,10 +8,12 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
+import { confirmationPhrase } from "@/modules/legal-documents/domain/confirmation";
 import {
   approvePlatformTemplates,
   approveVersion,
   createDraftVersion,
+  deleteApprovedVersion,
   deleteDraftVersion,
   updateDraftVersion,
   withdrawApprovedVersion,
@@ -44,7 +46,12 @@ function translationsFrom(form: FormData) {
   }));
 }
 
-function backTo(path: string, outcome: { error?: string; saved?: string }): never {
+// `phrase` and `approved` alongside the two outcomes: what an alert needs to say *which* thing
+// it is reporting. Never anything about a person — a document code, a number, a count.
+function backTo(
+  path: string,
+  outcome: { error?: string; saved?: string; phrase?: string; approved?: string },
+): never {
   const query = new URLSearchParams(
     Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
   ).toString();
@@ -179,4 +186,66 @@ export async function withdrawLegalVersionAction(form: FormData): Promise<void> 
   }
 
   backTo(listPath, { saved: "legalVersionWithdrawn" });
+}
+
+/**
+ * Delete an approved version outright, number and all (`DECISIONS.md` §151).
+ *
+ * **Superadministrator here as well as in the service**, and the two are not the same
+ * assertion: `requireStaffRole` answers "is this request from somebody with that role", and
+ * `assertMayEdit` inside `deleteApprovedVersion` answers "may this actor write the club's legal
+ * text" — the second is the one that would still be there if this verb were ever reached from
+ * anywhere but this form (BR-REQ-060-01). It is the same gate `createLegalVersionAction` uses,
+ * because the role that writes the club's word is the role that unwrites it.
+ *
+ * A refusal lands back on the delete screen rather than the list: that screen is where the
+ * consequence is written down, and the commonest refusal by far is a mistyped confirmation,
+ * which has to be answerable where the phrase is displayed. A mistyped phrase and a missing
+ * reason are told apart from every other code, for the same reason erasing a registration tells
+ * them apart — "check what you entered" about a field the reader cannot see is not a message.
+ *
+ * The reason itself never goes into the query string, even on a refusal: it is a free line of
+ * somebody's prose, and a query string is the server log, the browser history and the referrer.
+ * Re-typing a few words is cheaper than that.
+ */
+export async function deleteApprovedLegalVersionAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const versionId = text(form, "versionId");
+  const deletePath = getPathname({
+    locale,
+    href: { pathname: "/admin/legal/[id]/delete", params: { id: versionId } },
+  });
+
+  let deleted: { key: LegalDocumentKey; version: number };
+  try {
+    const actor = await requireStaffRole("SUPERADMIN");
+    deleted = await deleteApprovedVersion(getDb(), actor, {
+      versionId,
+      typedConfirmation: text(form, "typedConfirmation"),
+      reason: text(form, "reason"),
+      now: new Date(),
+    });
+  } catch (error) {
+    const failure = outcomeOf(error);
+    const mistyped = isDomainError(error) && error.fields.includes("typedConfirmation");
+    const noReason = isDomainError(error) && error.fields.includes("reason");
+    backTo(deletePath, {
+      error: mistyped
+        ? "LEGAL_CONFIRMATION_MISMATCH"
+        : noReason
+          ? "LEGAL_DELETE_NEEDS_REASON"
+          : failure.error,
+    });
+  }
+
+  /*
+    The list, never the version's own page: that page now describes a row that does not exist,
+    and a 404 is a poor way to learn a deletion worked. The phrase goes with it so the alert can
+    name what went — it is a document code and a number, which is exactly what the audit row
+    keeps and contains nothing about any person.
+  */
+  backTo(getPathname({ locale, href: "/admin/legal" }), {
+    saved: "legalVersionErased",
+    phrase: confirmationPhrase(deleted.key, deleted.version),
+  });
 }

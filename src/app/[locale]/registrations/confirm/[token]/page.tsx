@@ -7,8 +7,9 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
-import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
+import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { confirmEmailAction } from "./actions";
 
@@ -53,7 +54,26 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
     );
   }
 
-  const context = invalid ? { ok: false as const } : await readRegistrationTokenContext(token, "VERIFY_REGISTRATION_EMAIL");
+  /**
+   * The token is read even when the POST came back `invalid=1`.
+   *
+   * That flag used to short-circuit straight to "this link is no longer valid", which is how
+   * somebody who double-pressed Confirm in two tabs was told her registration had failed. The
+   * read costs one throttled attempt either way, and it is the only way the page can tell a
+   * spent link from a wrong one. A live token plus `invalid=1` still refuses: something else
+   * went wrong with the press, and re-offering the button would hide it.
+   */
+  const context = await readRegistrationTokenContext(token, "VERIFY_REGISTRATION_EMAIL");
+  const spent = context.ok
+    ? null
+    : await readSpentRegistrationLink(
+        token,
+        [{ purpose: "VERIFY_REGISTRATION_EMAIL", reason: context.reason }],
+        locale,
+        new Date(),
+      );
+
+  const journeyStep = spent ? spent.step : ("confirm" as const);
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
@@ -61,10 +81,12 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
         {t("confirm.title")}
       </Typography>
 
-      <RegistrationJourney current="confirm" />
+      {/* A spent link moves the stepper to where the registration actually is, and drops it
+          entirely once there is no journey left (cancelled, lapsed). */}
+      {journeyStep && <RegistrationJourney current={journeyStep} />}
 
-      {!context.ok ? (
-        <Alert severity="warning">{t("invalidOrExpired")}</Alert>
+      {!context.ok || invalid ? (
+        <ActionLinkNotice locale={locale} status={spent} />
       ) : (
         <form action={confirmEmailAction}>
           <input type="hidden" name="locale" value={locale} />

@@ -10,6 +10,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **A confirmation link pressed twice says “you are already confirmed — the declaration is next”**, with the step to take, instead of “this link is no longer valid”. Somebody testing QA read that sentence as a failure and never signed her declaration, which was waiting in her inbox. The link itself is unchanged: still single use, still nothing performed on a second press. §202.
+- **An approved legal version can be deleted**, once its code and number are typed and a reason given — and the number it used is retired for ever, because a registration records the privacy notice by number and a reused number would turn a recorded consent into consent to text nobody was shown. A terms version that has been in force is refused: nothing records which terms anybody accepted, so it cannot be shown to be unused. §203.
 - **Publishing, unpublishing and archiving a live event are the Administrator's.** An Organizer writes, submits and returns work, and archives what was never published; the move that puts something in front of the public — or takes it away — waits for her. Editing the words of an already-published page is not part of this yet, and §201 records why that is the club's decision to take rather than the platform's. §201.
 - **The terms and the privacy notice open in a tab of their own**, marked with an icon — they sit in the middle of a half-filled form, and Back does not restore a form the browser never stored. §197.
 - **A telephone number is judged as it is typed**, by the same function the server validates with rather than by a looser pattern that could not tell somebody their number was too short. §198.

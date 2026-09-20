@@ -468,7 +468,9 @@
       "NOT_FOUND": "That record no longer exists.",
       "VALIDATION_ERROR": "Check what you entered; something is not valid.",
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
-      "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it."
+      "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
+      "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
+      "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion."
     },
     "editor": {
       "eventSection": "Event details",
@@ -903,6 +905,29 @@
         "eventDate": "The event's date, in its own zone",
         "eventLocation": "The meeting point",
         "signedAt": "When it was signed"
+      },
+      "removeBlockedReferenced": "Can neither be withdrawn nor deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
+      "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
+      "deletePermanently": "Delete permanently",
+      "deleteMeans": "Deleting is permanent: the text goes entirely, and version number {version} stays retired for good.",
+      "legalVersionErased": "{phrase} has been deleted permanently. Its number stays retired: it will never be given to another version.",
+      "erase": {
+        "backToVersion": "Back to the version",
+        "title": "Delete permanently: {document}, version {version}",
+        "whatGoes": "{document}, version {version}, in force since {date}, goes permanently: the text in both languages, the titles and the row itself. It cannot be recovered.",
+        "numberRetired": "Version number {version} stays retired for good. The next version of this document takes the next number, never {version} again, so a number people already ticked at registration can never end up on different words.",
+        "auditOnly": "One trace is left: an audit line with the document, the number, the date it took effect, who approved it, the SHA-256 of each language's text and the reason you type. The text itself is kept nowhere.",
+        "nothingDepends": "It can be deleted because nothing depends on it: no signature, no event, no registration — and it is not the text in force right now.",
+        "alreadyWithdrawn": "You already withdrew this version, on {date}. Deleting is the second and final step: now it leaves the record as well.",
+        "notWithdrawn": "This version has not been withdrawn. If you only want it to stop being offered anywhere, withdraw it from the list instead: it stays on the record, with its text and its number. Deleting cannot be undone.",
+        "phraseLabel": "Confirmation",
+        "phraseHelp": "Type exactly “{phrase}” to confirm. Anything else stops the deletion.",
+        "reasonLabel": "Reason",
+        "reasonHelp": "It stays in the audit log. It is the only thing that survives the deletion.",
+        "action": "Delete this version permanently",
+        "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
+        "blockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version. What people accepted stays.",
+        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted."
       }
     },
     "tasks": {
@@ -1866,7 +1891,7 @@
     "phoneInvalid": "That does not look like a complete number for the country chosen — check the digits."
   },
   "Registrations": {
-    "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",
+    "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
     "confirm": {
       "title": "Confirm your email address",
       "prompt": "Press the button below to confirm your email address and continue your registration.",
@@ -1900,7 +1925,8 @@
         "You are on the waiting list; if a place frees up, you get an email with a confirmation link.",
         "The link has a deadline; if you do not confirm in time, the place moves on.",
         "You can withdraw at any time from the email you received."
-      ]
+      ],
+      "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine."
     },
     "mine": {
       "title": "My registrations",
@@ -1941,6 +1967,38 @@
       "selfCheckInDone": "You are marked as here. Pick up your number at the desk.",
       "selfCheckInClosed": "Check-in opens on {date}.",
       "selfCheckInFailed": "Could not mark you as here. Tell the desk; they will sort it out."
+    },
+    "spent": {
+      "event": "For the event: {event}",
+      "resendHelp": "A link from an email works once, so this one no longer opens anything. If you need the next step, we can send it to the same address again.",
+      "resendAction": "Send me the link again",
+      "registerAgainHelp": "If you change your mind, you can register again from the event page.",
+      "registerAgainAction": "See the event",
+      "waitHelp": "There is nothing for you to do now. If a place opens up, you will get an email with a confirmation link.",
+      "CONFIRM_EMAIL": {
+        "title": "One step left: confirming your address",
+        "body": "This link has already been used, but your registration is still waiting for your email address to be confirmed."
+      },
+      "SIGN_DECLARATION": {
+        "title": "Your address is confirmed — the declaration is next",
+        "body": "This link did its job and does not open a second time. Your place is held, and the registration is complete once you sign the declaration — its own link was emailed to you."
+      },
+      "WAITLISTED": {
+        "title": "You are on the waiting list",
+        "body": "This link has already been used. Your registration is in the event's waiting list."
+      },
+      "CONFIRMED": {
+        "title": "Your registration is confirmed",
+        "body": "This link has already been used and opens nothing more — but it does not need to: you have a place in the race. Your check-in code and QR code are in the confirmation email."
+      },
+      "CANCELLED": {
+        "title": "This registration was cancelled",
+        "body": "This link was used to cancel. The place was released and the registration is no longer active."
+      },
+      "LAPSED": {
+        "title": "This registration is no longer active",
+        "body": "This link has already been used, and the registration has lapsed since — either the deadline passed or the event started."
+      }
     }
   },
   "Devs": {

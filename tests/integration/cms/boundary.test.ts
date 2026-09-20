@@ -187,6 +187,10 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/guide",
       "/admin/legal",
       "/admin/legal/[id]",
+      // Deleting an approved version outright (`DECISIONS.md` §151): what goes, that the
+      // number goes with it, and the phrase to type — a screen, like the event erase one,
+      // written here by hand.
+      "/admin/legal/[id]/delete",
       "/admin/legal/new",
       "/admin/pages",
       "/admin/pages/[id]",
@@ -242,14 +246,31 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
      * **changing the words of a version somebody has accepted**, because their signature
      * points at those words.
      *
-     * So: no route may edit or delete, creating is allowed, and the service is where the
-     * conflict is raised for an approved or referenced version (`legal/editor.test.ts` proves
-     * that half).
+     * And now a third time, for `DECISIONS.md` §151. It asserted that no route may *delete*
+     * either, and that stood for the old refusal to remove an approved version — a refusal
+     * whose real content was arithmetic: version numbers are recorded in `registrations` as
+     * plain integers with no foreign key, and a freed number would come back attached to
+     * different words. §151 removes that hazard at the root (the number is retired in
+     * `legal_document_numbering` and never reissued), which leaves "no delete route" standing
+     * for nothing but itself, while the club is left unable to tidy its own documents.
+     *
+     * What must stay impossible has not moved an inch: **changing, or removing, the words of a
+     * version somebody has accepted**. Deletion refuses every version with a signature, an
+     * event or a registration against it, and the one in force — the same guard withdrawal
+     * uses — so no route can reach text anybody relied on.
+     *
+     * So: no route edits in place; exactly one route deletes, and it is the confirmation
+     * screen, whose service refuses anything relied upon (`legal/hard-deletion.test.ts` proves
+     * that half, as `legal/editor.test.ts` proves the editing half).
      */
     const legalRoutes = Object.keys(routing.pathnames).filter((route) => route.startsWith("/admin/legal"));
     for (const route of legalRoutes) {
-      expect(route, `${route} must not be an editing route`).not.toMatch(/\/(edit|delete)$/);
+      expect(route, `${route} must not edit a version in place`).not.toMatch(/\/edit$/);
     }
+    expect(
+      legalRoutes.filter((route) => /\/delete$/.test(route)),
+      "one deletion screen, and it is the guarded one",
+    ).toEqual(["/admin/legal/[id]/delete"]);
 
     /**
      * The repository stays read-and-insert only. Every write that can change an existing row
@@ -260,6 +281,14 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
     const repository = await import("@/modules/legal-documents/repository");
     const writers = Object.keys(repository).filter((name) => /^(update|delete|approve|edit)/.test(name));
     expect(writers, "the legal-documents repository must export no way to change a version").toEqual([]);
+
+    /*
+      `retireVersionNumber` is a write, and it is deliberately not one of those. It touches
+      `legal_document_numbering` — one integer per key saying which numbers are spent — and
+      never `legal_documents` or a word of anybody's text. It is what makes deletion safe
+      rather than a way around this rule (§151).
+    */
+    expect(Object.keys(repository)).toContain("retireVersionNumber");
 
     expect(Object.keys(repository)).toContain("insertLegalDocumentVersion");
 
@@ -286,12 +315,20 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       *future*: a version approved ahead of its date never takes effect. It also refuses
       anything with a signature, an event or a registration against it, which is what keeps an
       acceptance pointing at text that is still there to read.
+
+      `deleteApprovedVersion` (§151) is the sixth, and the same reasoning covers it: it asks
+      exactly the questions withdrawal asks — no signature, no event, no registration that
+      recorded the number, and not the version in force — and then destroys the row, retires
+      its number so it can never be reissued, and leaves the audit entry that is from then on
+      the only record the club published those words. It cannot move which version is current
+      for the same reason withdrawal cannot, and it cannot reach anything anybody accepted.
     */
     const service = await import("@/modules/legal-documents/service");
     expect(Object.keys(service).sort()).toEqual([
       "approvePlatformTemplates",
       "approveVersion",
       "createDraftVersion",
+      "deleteApprovedVersion",
       "deleteDraftVersion",
       "isReliedOn",
       "updateDraftVersion",

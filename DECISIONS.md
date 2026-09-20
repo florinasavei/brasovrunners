@@ -9150,3 +9150,102 @@ belongs — `roles.test.ts`, from both sides, and `boundary.test.ts`. BR-REQ-051
 is narrowed in `SPECS.md` and says what criterion 3 still allows.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 202. Decided — a spent email link says where you are, not that you failed (2026-09-20)
+
+**Context.** QA. A tester registered; the rows say what happened:
+
+```
+19:29:37  VERIFY_REGISTRATION_EMAIL   queued, SENT
+19:36:36  that token used
+19:36:39  COMPLETE_DECLARATION        queued, SENT
+21:37     she opened the SAME verify link again
+```
+
+Her confirmation had worked. Two hours later the same link answered "Acest link nu mai este
+valabil". She read it as failure, reported that the button did not work, and **never signed her
+declaration** — whose token is still unused, because the screen had told her she had failed and
+she had no reason to open the second email. The owner: "ar trebui să fie refolosibil acel link…
+să fie stupid proof", and then: "trebe să știe userul că a confirmat deja".
+
+**Decision.** *The link is not made reusable, and that refusal is half the decision.* An email
+sits in an inbox for years, gets forwarded, and turns up on a phone somebody loses. A verify or
+manage link that still worked would be a standing authorization to confirm or cancel somebody's
+place, held by whoever ends up with the message. Single use stays (`AGENTS.md` §12.8,
+BR-REQ-036-02).
+
+*What is added is idempotence at the level of the page.* Pressing a spent link performs nothing;
+it reports the registration's **current** state — read from the registration, never inferred from
+the token — and names the next step.
+
+*`ALREADY_USED`, and only that, gets the status page.* This amends `AGENTS.md` §13.2's single
+generic response for exactly one refusal reason on four purposes, and the argument is structural:
+that reason is reachable only by an exact match on `token_hash`, a SHA-256 of 32 random bytes,
+so whoever got there holds the secret from the email and learns nothing the link in their hand
+did not already say. NOT_FOUND has no state to report; PURPOSE_MISMATCH must stay
+indistinguishable from it, or a link issued for one thing could be confirmed as real by aiming it
+at another; EXPIRED was never used, so the work was never done; INVALIDATED is not the holder's
+business.
+
+**What review found and what was changed because of it.** Three adversarial passes; no critical
+finding, and four that were fixed here:
+
+- **The stepper told a waitlisted person they were confirmed.** `stepForSpentLink` mapped
+  WAITLISTED to the last step, which carries "Înscrierea ta este confirmată. Ne vedem la start!"
+  in the largest text on the page. It draws no stepper now.
+- **The declaration page charged the throttle twice per request** — it reads the same token as a
+  declaration link and as a waiting-list offer — and an exhausted bucket answers NOT_FOUND, which
+  is not eligible for the status page. So reloading a spent link five times restored exactly the
+  message this feature exists to remove. One request now pays one attempt.
+- **A live token with a failed press was reported as a dead link**, with an offer to send a new
+  one. The press failed because a box was unticked; the link is fine. Said where the press
+  happened.
+- **The event's slug could come from the other language's translation**, producing a link that
+  404s. This locale's words or none.
+
+Tests: `tests/unit/tokens/spent-link-status.test.ts`,
+`tests/integration/tokens/spent-link-page.test.ts` (81 together), including that a second GET
+performs nothing — no token spent, no email queued, no row changed.
+
+## 203. Decided — an approved legal version can be deleted, and its number never comes back (2026-09-20)
+
+**Context.** "Am zis că vreau să fac curățenie în documente și să le pot șterge, mă refer la
+astea!", of five approved versions made while testing. Withdrawal (§181) keeps the row for ever,
+folded away, which is not what "curățenie" means.
+
+**Decision.** *Deletion is allowed, and the hazard that forbade it is removed at its root rather
+than tolerated.* `registrations.privacy_notice_version` and its two siblings are plain integers
+with no foreign key, and the next version number was `max(version) + 1` — so deleting version 4
+made the next draft version 4 again, with different words, and every registration that recorded
+"privacy notice 4" silently became a consent to text nobody was shown.
+
+Migration `0053` adds `legal_document_numbering`: one retired-number floor per key, upserted
+with `GREATEST` inside the delete's own transaction. `nextVersionNumber` is now the single
+place a number is derived, and it reads `max(max(version), highest_retired_version) + 1`. A
+draft's deletion retires nothing: its number never left the backoffice.
+
+*The same guard as withdrawal*, extracted so the two verbs cannot come to disagree about what
+"unused" means, plus the typed confirmation (`GDPR 2`) and a reason, on a page rather than a
+dialog — the consequence is four sentences, the form must work with JavaScript off, and a
+mistyped confirmation needs somewhere to land.
+
+**What review found, and the guard it produced.** *For TERMS there is no dependant signal at
+all.* The three counts are real for two keys and vacuous for the third: acceptances and events
+only ever see the declaration, and the acknowledgement count is restricted to the privacy notice
+— because **a registration records no terms version**. Every TERMS row therefore reads as unused,
+including one a hundred people accepted.
+
+So a terms version that has **ever been in force** is refused deletion. The refusal sits on the
+deletion path alone, not in the shared guard, because the two verbs ask different questions:
+withdrawal keeps the row, its number and its words, so nothing is lost if the counts are blind;
+deletion destroys the words, and afterwards the audit row's hash is the only evidence of what the
+club published — so it has to be able to show nobody relied on them, and for this key it cannot.
+A terms version that never took effect was accepted by nobody and may go.
+
+*The proper repair is a `terms_version` on the registration* — a migration and a change to what
+the form records. Until it exists, this refusal is the honest answer.
+
+Tests: `tests/integration/legal/hard-deletion.test.ts` (18), including the terms refusal, the
+retired number, and that deleting a middle version leaves numbering alone.
+
+Baseline `BR-V1.38-2026-09-18`.

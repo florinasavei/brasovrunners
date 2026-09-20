@@ -69,7 +69,22 @@ export type AuditAction =
    * under that number, and who decided it should stop. The metadata carries the key, the
    * version, its effective date and the content hashes — never the text itself (§12.12).
    */
-  | "legal_document.withdrawn";
+  | "legal_document.withdrawn"
+  /**
+   * An approved legal version deleted outright (`DECISIONS.md` §151).
+   *
+   * The strongest case of a row that outlives what it describes: the `legal_documents` row, its
+   * text and both translations are gone, so this entry is the *only* record that the club ever
+   * published those words under that number — the key, the version, the date it took effect,
+   * who approved it, the SHA-256 of each language's text and the reason typed by the person who
+   * removed it. Never the text itself (§12.12): the hash is what makes the row checkable
+   * against a copy rather than a copy in its own right.
+   *
+   * The number is retired in the same transaction, so nothing will ever be issued this
+   * version's number again; `versionNumberRetired` says so on the row rather than leaving it to
+   * be inferred from another table.
+   */
+  | "legal_document.deleted";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;

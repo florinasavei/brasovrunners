@@ -7,7 +7,11 @@ import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventTranslations, events } from "@/db/schema/events";
 import { jobRuns } from "@/db/schema/job-runs";
-import { legalDocumentTranslations, legalDocuments } from "@/db/schema/legal-documents";
+import {
+  legalDocumentNumbering,
+  legalDocumentTranslations,
+  legalDocuments,
+} from "@/db/schema/legal-documents";
 import { galleryAlbums, galleryAlbumTranslations, galleryItems, mediaAssets } from "@/db/schema/gallery";
 import { pages, pageTranslations } from "@/db/schema/pages";
 import { participants } from "@/db/schema/participants";
@@ -93,6 +97,10 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(events);
   await db.delete(legalDocumentTranslations);
   await db.delete(legalDocuments);
+  // The retired version numbers (`DECISIONS.md` §151). No foreign key to `legal_documents` —
+  // the whole point is that it survives the row — so it has to be truncated explicitly, or a
+  // test that deletes version 3 leaves the next test's first draft starting at version 4.
+  await db.delete(legalDocumentNumbering);
   // Standing pages (BR-REQ-050-03). Translations cascade from their page, but deleting them
   // first keeps this list saying what owns what, like the events pair above.
   await db.delete(pageTranslations);

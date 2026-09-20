@@ -13,13 +13,15 @@ import {
   type LegalDocumentTranslationInput,
 } from "./domain/content-hash";
 import { isEmptyBody } from "./domain/body-text";
+import { matchesConfirmation } from "./domain/confirmation";
 import {
   findCurrentApprovedDocument,
   findCurrentApprovedVersionId,
-  findLatestVersion,
   findVersionWithTranslations,
   type LegalDocumentVersionRow,
   listVersionsForBackoffice,
+  nextVersionNumber,
+  retireVersionNumber,
 } from "./repository";
 import { LEGAL_TEMPLATES } from "./templates/catalogue";
 import { type ClubFacts, fillClubFacts, remainingPlaceholders } from "./templates/club-facts";
@@ -76,6 +78,66 @@ function assertTranslationsUsable(translations: readonly LegalDocumentTranslatio
 }
 
 /**
+ * One version's backoffice row, or a refusal that says which version is missing.
+ *
+ * Every guard below starts here, and they all read the same row from the same query — the one
+ * that carries the three dependant counts. A guard that counted for itself would be a second
+ * definition of "relied upon", and the first time the two disagreed the disagreement would be
+ * silent.
+ */
+async function findVersionRow<T extends Record<string, unknown>>(
+  db: Database<T>,
+  versionId: string,
+): Promise<LegalDocumentVersionRow> {
+  const rows = await listVersionsForBackoffice(db);
+  const row = rows.find((candidate) => candidate.id === versionId);
+  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+  return row;
+}
+
+/**
+ * Nothing in the database depends on this version, and the site is not serving it
+ * (`DECISIONS.md` §46, §53, §151).
+ *
+ * Shared by withdrawal and by deletion, because they ask exactly the same question: is anything
+ * standing on these words. The two verbs differ in what they then do — one stops offering the
+ * version, the other destroys it — and if the conditions were written twice, the destructive one
+ * would eventually be the copy that is one condition short.
+ *
+ * The last check is the one no count can express. Zero signatures is not "unused" for a notice;
+ * it is what the notice of a quiet week looks like, while every visitor to /legal/privacy is
+ * reading it. Removing the version in force would take the club's privacy notice off the public
+ * site and, per BR-REQ-053-01, stop every registration in the same instant.
+ */
+async function assertNothingDependsOn<T extends Record<string, unknown>>(
+  db: Database<T>,
+  row: LegalDocumentVersionRow,
+  now: Date,
+): Promise<void> {
+  if (
+    isReliedOn({
+      acceptances: row.acceptanceCount,
+      events: row.eventCount,
+      privacyAcknowledgements: row.privacyAcknowledgementCount,
+    })
+  ) {
+    throw new DomainError(
+      "CONFLICT",
+      "somebody has relied on this version; it stays exactly where it is",
+    );
+  }
+
+  const inForce = await findCurrentApprovedVersionId(db, row.key, now);
+  if (inForce === row.id) {
+    throw new DomainError(
+      "CONFLICT",
+      "this version is the one currently in force; approve its successor before removing it",
+    );
+  }
+
+}
+
+/**
  * Whether this version may still be written to, and the answer is a fact about the data rather
  * than a permission: approved, accepted by anybody, or pointed at by an event — any one of those
  * and it is history.
@@ -84,9 +146,7 @@ async function assertStillADraft<T extends Record<string, unknown>>(
   db: Database<T>,
   versionId: string,
 ): Promise<void> {
-  const rows = await listVersionsForBackoffice(db);
-  const row = rows.find((candidate) => candidate.id === versionId);
-  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+  const row = await findVersionRow(db, versionId);
 
   if (row.isApproved) {
     throw new DomainError(
@@ -114,6 +174,11 @@ export type SaveDraftInput = {
  * one. Nobody types a version number, so nobody can reuse one — `UNIQUE(key, version)` would
  * refuse it anyway, and a form that can produce a constraint violation is a form with a trap in
  * it.
+ *
+ * "Whatever the highest is" is `nextVersionNumber`, and since §151 it counts the numbers that no
+ * longer have a row as well as the ones that do. A deleted approved version leaves its number
+ * retired in `legal_document_numbering`, so the next draft steps over it rather than inheriting
+ * a number that registrations already recorded against different words.
  */
 export async function createDraftVersion<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -124,8 +189,7 @@ export async function createDraftVersion<T extends Record<string, unknown>>(
   assertMayEdit(actor);
   assertTranslationsUsable(input.translations);
 
-  const latest = await findLatestVersion(db, input.key);
-  const version = (latest?.version ?? 0) + 1;
+  const version = await nextVersionNumber(db, input.key);
 
   return db.transaction(async (tx) => {
     const [document] = await tx
@@ -277,10 +341,16 @@ export function isReliedOn(reliance: VersionReliance): boolean {
  * so nothing is lost by removing it — and without this the club's list of legal documents grew
  * by a row every time somebody started typing and thought better of it, with no way back.
  *
- * **An approved version is never deleted**, whatever its counts say, and that is not the same
- * rule as "nothing relies on it". Approval is the club publishing words as its own; the record
- * of what it published, and when, outlives whether anybody happened to act on it. §46's freeze
- * stands untouched for every version that was ever in force.
+ * **A draft, and nothing else.** An approved version has its own verb since §151 —
+ * `deleteApprovedVersion`, with a typed confirmation, a reason, an audit row and a retired
+ * number — and this one refuses an approved row rather than quietly doing half of that. Aim the
+ * draft's delete at an approved version and it says so, naming the verb that does apply.
+ *
+ * **A draft's number is not retired**, which is the other half of the difference and the reason
+ * the two deletes cannot be the same function. A draft's number never left the backoffice: a
+ * registration records the version *in force*, and a draft is never in force, so nothing can be
+ * pointing at the old meaning of it. Retiring it as well would make the club's version numbers
+ * skip for a reason nothing on the screen could explain.
  *
  * The two translations go with it (`ON DELETE cascade`), which is right: a body belongs to its
  * version and means nothing apart from it.
@@ -292,14 +362,12 @@ export async function deleteDraftVersion<T extends Record<string, unknown>>(
 ): Promise<void> {
   assertMayEdit(actor);
 
-  const rows = await listVersionsForBackoffice(db);
-  const row = rows.find((candidate) => candidate.id === versionId);
-  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+  const row = await findVersionRow(db, versionId);
 
   if (row.isApproved) {
     throw new DomainError(
       "CONFLICT",
-      "an approved version cannot be deleted; its words are part of what the club has published",
+      "an approved version is not deleted by this verb; use deleteApprovedVersion, which asks for the typed confirmation and retires the number",
     );
   }
   if (
@@ -342,9 +410,7 @@ async function assertWithdrawable<T extends Record<string, unknown>>(
   versionId: string,
   now: Date,
 ): Promise<LegalDocumentVersionRow> {
-  const rows = await listVersionsForBackoffice(db);
-  const row = rows.find((candidate) => candidate.id === versionId);
-  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+  const row = await findVersionRow(db, versionId);
 
   if (!row.isApproved) {
     throw new DomainError(
@@ -355,34 +421,10 @@ async function assertWithdrawable<T extends Record<string, unknown>>(
   if (row.withdrawnAt) {
     throw new DomainError("CONFLICT", "this version has already been withdrawn");
   }
-  if (
-    isReliedOn({
-      acceptances: row.acceptanceCount,
-      events: row.eventCount,
-      privacyAcknowledgements: row.privacyAcknowledgementCount,
-    })
-  ) {
-    throw new DomainError(
-      "CONFLICT",
-      "somebody has relied on this version; it stays exactly where it is",
-    );
-  }
 
-  /*
-    And the one a count cannot see: the version the site is serving right now.
-
-    Zero signatures is not "unused" for a notice — it is what the notice of a quiet week looks
-    like, while every visitor to /legal/privacy is reading it. Withdrawing the version in force
-    would take the club's privacy notice off the public site and, per BR-REQ-053-01, stop every
-    registration in the same instant. The successor is approved first; then this one is free.
-  */
-  const inForce = await findCurrentApprovedVersionId(db, row.key, now);
-  if (inForce === versionId) {
-    throw new DomainError(
-      "CONFLICT",
-      "this version is the one currently in force; approve its successor before withdrawing it",
-    );
-  }
+  // The three counts, then the version the site is serving — one definition, shared with
+  // deletion, so the two verbs can never come to disagree about what "unused" means.
+  await assertNothingDependsOn(db, row, now);
 
   return row;
 }
@@ -422,40 +464,13 @@ export async function withdrawApprovedVersion<T extends Record<string, unknown>>
 
   await db.transaction(async (tx) => {
     const row = await assertWithdrawable(tx, versionId, now);
-    const document = await findVersionWithTranslations(tx, versionId);
 
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "legal_document.withdrawn",
       entityType: "legal_document",
       entityId: versionId,
-      /*
-        The shape of what was withdrawn, never the text of it (§12.12). A title is the club's
-        own name for its own document, which is what makes the row readable a year later; the
-        body is the thing §12.12 forbids copying, and the hash stands in for it — the same hash
-        the version's own `content_sha256` is computed with, so the words can be checked against
-        this row rather than described by it.
-      */
-      metadata: {
-        documentKey: row.key,
-        version: row.version,
-        effectiveAt: row.effectiveAt.toISOString(),
-        approvedByStaffUserId: row.approvedByStaffUserId,
-        contentSha256: document?.contentSha256 ?? null,
-        translations: (document?.translations ?? []).map((translation) => ({
-          locale: translation.locale,
-          title: translation.title,
-          contentSha256: isLegalDocumentBody(translation.body)
-            ? computeContentHash([
-                {
-                  locale: translation.locale as Locale,
-                  title: translation.title,
-                  body: translation.body,
-                },
-              ])
-            : null,
-        })),
-      },
+      metadata: await describeVersionForAudit(tx, row),
       now,
     });
 
@@ -481,6 +496,245 @@ export async function withdrawApprovedVersion<T extends Record<string, unknown>>
       throw new DomainError("CONFLICT", "this version changed while it was being withdrawn");
     }
   });
+}
+
+/**
+ * What an audit row is allowed to say about a version of the club's legal text (§12.12).
+ *
+ * The shape of the document, never the text of it. A title is the club's own name for its own
+ * document, which is what makes the row readable a year later; the body is the thing §12.12
+ * forbids copying, and the hash stands in for it — the same hash the version's own
+ * `content_sha256` is computed with, so the words can be *checked* against this row rather than
+ * described by it.
+ *
+ * One function for both verbs, because for deletion this is no longer a record beside the row:
+ * it is the only record. A withdrawal that carried the effective date and a deletion that
+ * forgot it would be discovered exactly once, by somebody asking a year later which text was in
+ * force in September and finding that the answer depended on which verb was used.
+ */
+async function describeVersionForAudit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  row: LegalDocumentVersionRow,
+): Promise<Record<string, unknown>> {
+  const document = await findVersionWithTranslations(db, row.id);
+
+  return {
+    documentKey: row.key,
+    version: row.version,
+    effectiveAt: row.effectiveAt.toISOString(),
+    approvedByStaffUserId: row.approvedByStaffUserId,
+    contentSha256: document?.contentSha256 ?? null,
+    translations: (document?.translations ?? []).map((translation) => ({
+      locale: translation.locale,
+      title: translation.title,
+      contentSha256: isLegalDocumentBody(translation.body)
+        ? computeContentHash([
+            {
+              locale: translation.locale as Locale,
+              title: translation.title,
+              body: translation.body,
+            },
+          ])
+        : null,
+    })),
+  };
+}
+
+export type DeleteApprovedVersionInput = {
+  versionId: string;
+  /** `GDPR 2` — the document's code and its number, as the person typed it. */
+  typedConfirmation: string;
+  /** Why. It goes in the audit row, which is all that survives. */
+  reason: string;
+  now: Date;
+};
+
+/**
+ * Delete an approved version outright — the row, the text, both translations
+ * (BR-REQ-053-02, `DECISIONS.md` §151).
+ *
+ * ## What changed, and what did not
+ *
+ * §46 and §53 said an approved version is never deleted, and the reason underneath the
+ * principle was arithmetic: `registrations.privacy_notice_version`, `results_consent_version`
+ * and `health_consent_version` are plain integers with no foreign key, and `createDraftVersion`
+ * took `max(version) + 1`. Delete version 4 and the next draft became version 4 again, with
+ * different words, and every registration that recorded "privacy notice 4" silently became a
+ * consent to text nobody was ever shown. PostgreSQL has nothing to raise about it.
+ *
+ * That hazard is *removed* here rather than accepted: the number is retired in
+ * `legal_document_numbering` inside the same transaction that destroys the row, and
+ * `nextVersionNumber` counts retired numbers as taken. After this, version 4 of that key cannot
+ * be issued again by any writer — the editor, the platform-templates button or the seed.
+ *
+ * With the arithmetic answered, what was left of the refusal was the club's own bookkeeping,
+ * and the club is who that belongs to. The owner, looking at five approved versions he made
+ * while testing, on a production system no participant has ever registered on: "am zis ca vreau
+ * sa fac curatenie in documente si sa le pot sterge". Withdrawal — §46's answer — does not do
+ * it: the rows stay, folded away, for ever.
+ *
+ * ## What still refuses, and it is most of it
+ *
+ * `assertNothingDependsOn`, the same guard withdrawal uses: no signature, no event, no
+ * registration that recorded this number, and not the version the site is serving right now. A
+ * version anybody has relied on is not deletable and never becomes deletable — this verb has no
+ * force flag, no "delete anyway", and no environment in which those checks are skipped. A draft
+ * is refused too, and told which verb applies: `deleteDraftVersion` needs no confirmation and
+ * retires no number, and quietly doing one verb's work under the other's name is how a draft
+ * would start costing a version number.
+ *
+ * **In production as well.** §30 keeps *test registrations* out of production because a
+ * synthetic row corrupts the club's real counts; nothing follows from it about the club tidying
+ * its own documents, and production is where the five junk versions actually are. A verb that
+ * worked only on QA would be a verb that never worked. What guards this is a Superadministrator,
+ * a phrase typed by hand, a reason, an audit row written first, and the impossibility of
+ * touching anything a person has relied on.
+ *
+ * ## The order inside the transaction
+ *
+ * Audit row, then the retired number, then the delete — and `is_approved` in the `WHERE` again,
+ * because the reads are this transaction's but another connection can still have moved the row.
+ * If the delete matches nothing the whole thing rolls back, audit row included: a trail that
+ * records a destruction which did not happen is worse than no trail.
+ */
+export async function deleteApprovedVersion<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  input: DeleteApprovedVersionInput,
+): Promise<{ key: LegalDocumentKey; version: number }> {
+  /*
+    The role first, before the screen's own fields are looked at: somebody who may not do this
+    is told that, rather than being told their confirmation was mistyped (BR-REQ-060-01).
+
+    `assertMayEdit` — a Superadministrator, `canManageStaff` — and deliberately the same gate
+    as `createDraftVersion` rather than the ADMIN line that `hardDeleteEvent` sits on. That line
+    is about personal data, and this is not personal data; it is the club's own published word,
+    and the role that may write it is the role that may unwrite it. Gating destruction lower
+    than creation would be the odd choice to have to defend.
+  */
+  assertMayEdit(actor);
+
+  const reason = input.reason.trim();
+  if (reason.length < 3) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "a deletion needs a reason; it is the only thing that survives it",
+      ["reason"],
+    );
+  }
+
+  // Outside the transaction, so the screen gets a sentence naming the actual obstacle before
+  // anything is opened; inside it again below, so the decision is taken on rows nothing can
+  // have changed underneath.
+  const preflight = await assertDeletable(db, input.versionId, input.now);
+
+  /*
+    The typed confirmation, checked on the server (BR-REQ-060-01). The phrase carries the
+    *number*, not the title, because the club's five approved versions of one document all have
+    the same title — a typed title would match every one of them, which is the opposite of what
+    this field is for. `matchesConfirmation` explains the rest.
+  */
+  if (!matchesConfirmation(input.typedConfirmation, preflight.key, preflight.version)) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "the typed confirmation does not name this version; nothing was deleted",
+      ["typedConfirmation"],
+    );
+  }
+
+  return db.transaction(async (tx) => {
+    const row = await assertDeletable(tx, input.versionId, input.now);
+
+    // First, and in this transaction: the row that says this happened. It outlives the version
+    // — `audit_logs.entity_id` carries no foreign key — and once the delete below commits it is
+    // the only record that the club ever published these words, under this number.
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "legal_document.deleted",
+      entityType: "legal_document",
+      entityId: row.id,
+      metadata: {
+        ...(await describeVersionForAudit(tx, row)),
+        reason: reason.slice(0, 500),
+        // Stated rather than implied: whoever reads this row a year from now should not have to
+        // know about `legal_document_numbering` to know the number went with it.
+        versionNumberRetired: true,
+      },
+      now: input.now,
+    });
+
+    await retireVersionNumber(tx, row.key, row.version, input.now);
+
+    const [deleted] = await tx
+      .delete(legalDocuments)
+      .where(and(eq(legalDocuments.id, row.id), eq(legalDocuments.isApproved, true)))
+      .returning({ id: legalDocuments.id });
+
+    if (!deleted) {
+      throw new DomainError("CONFLICT", "this version changed while it was being deleted");
+    }
+
+    return { key: row.key, version: row.version };
+  });
+}
+
+/**
+ * Everything deletion requires, asked as one question — and asked twice, like withdrawal's.
+ *
+ * The draft check comes first so that aiming this at a draft is answered by naming the verb
+ * that applies, rather than by the counts; the rest is `assertNothingDependsOn`, shared with
+ * withdrawal so the two can never disagree. A withdrawn version passes: it has no dependants by
+ * construction — withdrawal refused it otherwise — and it is by definition not in force, so it
+ * is the one row for which every condition here was already checked once. That is the natural
+ * second step, and the reason the fold on the list is not a place rows go to stay for ever.
+ */
+async function assertDeletable<T extends Record<string, unknown>>(
+  db: Database<T>,
+  versionId: string,
+  now: Date,
+): Promise<LegalDocumentVersionRow> {
+  const row = await findVersionRow(db, versionId);
+
+  if (!row.isApproved) {
+    throw new DomainError(
+      "CONFLICT",
+      "this version was never approved; a draft is deleted by deleteDraftVersion, which needs no confirmation and retires no number",
+    );
+  }
+
+  await assertNothingDependsOn(db, row, now);
+
+  /*
+    **TERMS cannot be shown to be unused, and deletion is the verb that needs it shown (§203).**
+
+    Found in review. The three counts in `assertNothingDependsOn` are real for two keys and
+    vacuous for the third: acceptances and events only ever see EVENT_DECLARATION, and the
+    acknowledgement count is restricted to PRIVACY_NOTICE — because a registration records
+    `privacy_notice_version`, `results_consent_version` and `health_consent_version` and
+    **never a terms version**. Every TERMS row therefore reads as unused, including one a
+    hundred people accepted at registration.
+
+    This is here and not in the shared guard because the two verbs are asking different
+    questions. **Withdrawal** keeps the row, its number and its words and stops only the
+    offering, so nothing is lost if the counts are blind. **Deletion** destroys the words, and
+    after it the audit row's hash is the only evidence of what the club published — so it has to
+    be able to show that nobody relied on them, and for this key it cannot.
+
+    A terms version that was ever in force is therefore refused: somebody registering in that
+    window accepted it. One that never took effect — approved ahead of its date and superseded
+    before it arrived — was accepted by nobody and may go.
+
+    The proper repair is a `terms_version` on the registration: a migration and a change to
+    what the form records. Until that exists, this refusal is the honest answer.
+  */
+  if (row.key === "TERMS" && row.effectiveAt !== null && row.effectiveAt.getTime() <= now.getTime()) {
+    throw new DomainError(
+      "CONFLICT",
+      "a terms version that has been in force cannot be shown to be unused: a registration records no terms version",
+    );
+  }
+
+  return row;
 }
 
 /**

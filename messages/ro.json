@@ -468,7 +468,9 @@
       "NOT_FOUND": "Înregistrarea nu mai există.",
       "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
-      "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând."
+      "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
+      "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
+      "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -903,6 +905,29 @@
         "eventDate": "Data evenimentului, în fusul lui",
         "eventLocation": "Locul de întâlnire",
         "signedAt": "Momentul semnării"
+      },
+      "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
+      "deletePermanently": "Șterge definitiv",
+      "deleteMeans": "Ștergerea este definitivă: textul dispare cu totul, iar numărul {version} rămâne retras pentru totdeauna.",
+      "legalVersionErased": "{phrase} a fost ștearsă definitiv. Numărul ei rămâne retras: nu va mai fi dat niciodată altei versiuni.",
+      "erase": {
+        "backToVersion": "Înapoi la versiune",
+        "title": "Ștergere definitivă: {document}, versiunea {version}",
+        "whatGoes": "Dispar definitiv {document}, versiunea {version}, în vigoare din {date}: textul în ambele limbi, titlurile și rândul din evidență. Nu se poate recupera.",
+        "numberRetired": "Numărul {version} rămâne retras pentru totdeauna. Următoarea versiune a acestui document va primi numărul următor, niciodată {version}, ca să nu ajungă pe alt text un număr pe care oamenii l-au bifat deja la înscriere.",
+        "auditOnly": "Rămâne o singură urmă: o linie în jurnal cu documentul, numărul, data intrării în vigoare, cine a aprobat-o, amprenta SHA-256 a fiecărei limbi și motivul scris de tine. Textul nu se păstrează nicăieri.",
+        "nothingDepends": "Se poate șterge pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este textul în vigoare acum.",
+        "alreadyWithdrawn": "Ai retras deja această versiune, pe {date}. Ștergerea este al doilea pas și ultimul: acum dispare și din evidență.",
+        "notWithdrawn": "Această versiune nu a fost retrasă. Dacă vrei doar să nu mai fie oferită nicăieri, retrage-o din listă: rămâne în evidență, cu textul și numărul ei. Ștergerea nu se poate anula.",
+        "phraseLabel": "Confirmarea",
+        "phraseHelp": "Scrie exact „{phrase}”, ca să confirmi. Orice altceva oprește ștergerea.",
+        "reasonLabel": "Motivul",
+        "reasonHelp": "Rămâne în jurnal. Este singurul lucru care supraviețuiește ștergerii.",
+        "action": "Șterge definitiv versiunea",
+        "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
+        "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
+        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge."
       }
     },
     "tasks": {
@@ -1866,7 +1891,7 @@
     "phoneInvalid": "Numărul nu pare complet pentru țara aleasă — verifică cifrele."
   },
   "Registrations": {
-    "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",
+    "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
     "confirm": {
       "title": "Confirmă adresa de email",
       "prompt": "Apasă butonul de mai jos pentru a confirma adresa de email și a continua înscrierea.",
@@ -1900,7 +1925,8 @@
         "Ești pe lista de așteptare; dacă se eliberează un loc, primești un email cu un link de confirmare.",
         "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
         "Poți renunța oricând din emailul primit."
-      ]
+      ],
+      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă."
     },
     "mine": {
       "title": "Înscrierile mele",
@@ -1941,6 +1967,38 @@
       "selfCheckInDone": "Ești marcat prezent. Ridică-ți numărul de la masă.",
       "selfCheckInClosed": "Marcarea prezenței se deschide din {date}.",
       "selfCheckInFailed": "Nu am putut marca prezența. Spune la masă, se rezolvă acolo."
+    },
+    "spent": {
+      "event": "Pentru evenimentul: {event}",
+      "resendHelp": "Linkul din email se folosește o singură dată, așa că acesta nu mai deschide nimic. Dacă ai nevoie de pasul următor, ți-l trimitem din nou pe aceeași adresă.",
+      "resendAction": "Trimite-mi din nou linkul",
+      "registerAgainHelp": "Dacă te răzgândești, te poți înscrie din nou de pe pagina evenimentului.",
+      "registerAgainAction": "Vezi evenimentul",
+      "waitHelp": "Nu trebuie să faci nimic acum. Dacă se eliberează un loc, primești un email cu un link de confirmare.",
+      "CONFIRM_EMAIL": {
+        "title": "Mai e un pas: confirmarea adresei",
+        "body": "Linkul acesta s-a folosit deja, dar înscrierea ta încă așteaptă confirmarea adresei de email."
+      },
+      "SIGN_DECLARATION": {
+        "title": "Adresa e confirmată — urmează declarația",
+        "body": "Linkul acesta și-a făcut treaba și nu se mai deschide a doua oară. Locul tău este rezervat, iar înscrierea e completă după ce semnezi declarația pe proprie răspundere — linkul ei ți-a fost trimis pe email."
+      },
+      "WAITLISTED": {
+        "title": "Ești pe lista de așteptare",
+        "body": "Linkul acesta s-a folosit deja. Înscrierea ta este în lista de așteptare a evenimentului."
+      },
+      "CONFIRMED": {
+        "title": "Înscrierea ta este confirmată",
+        "body": "Linkul acesta s-a folosit deja și nu mai deschide nimic — dar nu trebuie: ai loc la cursă. Codul de acces și codul QR sunt în emailul de confirmare."
+      },
+      "CANCELLED": {
+        "title": "Înscrierea a fost anulată",
+        "body": "Linkul acesta s-a folosit pentru anulare. Locul a fost eliberat și înscrierea nu mai este activă."
+      },
+      "LAPSED": {
+        "title": "Înscrierea nu mai este activă",
+        "body": "Linkul acesta s-a folosit deja, iar între timp înscrierea a expirat — fie a trecut termenul, fie evenimentul a început."
+      }
     }
   },
   "Devs": {

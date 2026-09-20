@@ -129,6 +129,13 @@ export const routing = defineRouting({
     "/admin/legal": "/admin/legal",
     "/admin/legal/new": "/admin/legal/new",
     "/admin/legal/[id]": "/admin/legal/[id]",
+    /**
+     * Deleting an approved version outright (`DECISIONS.md` §151): what goes, that the number
+     * goes with it, and the phrase to type. A page rather than a dialog, for the reasons
+     * `/admin/events/[id]/erase` gives — the consequence does not fit in a `confirm()`, the
+     * form must work with JavaScript off, and a mistyped confirmation needs somewhere to land.
+     */
+    "/admin/legal/[id]/delete": "/admin/legal/[id]/delete",
     "/admin/pages": "/admin/pages",
     "/admin/pages/new": "/admin/pages/new",
     "/admin/pages/[id]": "/admin/pages/[id]",
