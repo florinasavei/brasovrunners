@@ -34,7 +34,9 @@ import {
   SELECT_WITH_GLYPHS_SX,
 } from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import Flag from "@/shared/ui/Flag";
+import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -610,6 +612,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   */}
                   <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={typed("clubMemberDeclared") === "on"}>
                     {t("clubMemberDeclared")}
+                    {/* What the claim means, where it is claimed (§189): "grup" rather than
+                        "echipă", because the club is a group somebody runs with and not a squad
+                        somebody is selected for, and the tooltip says where the line is. */}
+                    <Hint text={t("clubMemberHint")} />
                   </CheckboxField>
 
                   <TextField
@@ -635,36 +641,22 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               </Box>
 
               {/*
-                A minor's parent or guardian (§108, §185): a tick, and the name only underneath it.
+                A minor's parent or guardian (§108, §185, §188): shown when the birth date says so.
 
                 It was a fold — "Părinte sau tutore" — and the owner read an opened fold as a
-                question he now had to answer: "mă disperă faza cu tutorele! aparent dacă expandez
-                acel câmp deja trebe să completez!!! vreau să fie o bifă acolo man". He was right
-                about the shape even though the field was never required by the browser: a fold
-                asks "is there more here", and the actual question is "is the runner under
-                eighteen" — which has an answer, and the answer decides whether anything below it
-                applies at all.
+                question he now had to answer: "mă disperă faza cu tutorele!". He was right about
+                the shape. §185 made it a tick, which was the right shape and the wrong question:
+                the form already asks for the birth date, and the birth date is the answer, so
+                asking twice only invites the two answers to disagree — and the server would then
+                refuse an unticked minor over a field nobody had been shown.
 
-                The tick reveals the name with CSS alone: `:has()` on the container, no client
-                island, works with JavaScript switched off. The *rule* stays where it was — the
-                server requires a guardian when the birth date gives under eighteen, whatever this
-                box says, because a legal requirement cannot be untickable. So the tick is checked
-                for them when a rejection names the field, which is how somebody who is a minor
-                and did not tick gets shown the box they have to fill.
+                The rule has not moved: the server requires a guardian when the birth date gives
+                under eighteen, whatever the browser drew. `forceOpen` is that verdict coming
+                back — a rejection naming the field opens the block whatever the date box now
+                holds, so an error never points at something invisible.
               */}
-              <Box
-                sx={{
-                  "& .guardian-fields": { display: "none" },
-                  "&:has(input[name='isMinor']:checked) .guardian-fields": { display: "block" },
-                }}
-              >
-                <CheckboxField
-                  name="isMinor"
-                  defaultChecked={typed("isMinor") === "on" || invalid.has("guardianName")}
-                >
-                  {t("isMinor")}
-                </CheckboxField>
-                <Stack spacing={2} className="guardian-fields" sx={{ pt: 1 }}>
+              <GuardianForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("guardianName")}>
+                <Stack spacing={2}>
                   <Typography variant="body2" color="text.secondary">
                     {t("guardianHelp")}
                   </Typography>
@@ -675,7 +667,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     slotProps={{ htmlInput: { maxLength: 200 } }}
                   />
                 </Stack>
-              </Box>
+              </GuardianForMinor>
 
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a

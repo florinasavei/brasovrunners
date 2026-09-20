@@ -1337,7 +1337,8 @@
       "downloadOnePerPage": "One per page",
       "page": "Page {n} of {total}",
       "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
-      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page."
+      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
+      "downloadAll": "Download every number ({count}) — a PDF to print"
     },
     "desk": {
       "title": "Number pickup desk",
@@ -1773,7 +1774,7 @@
       "socials": "Socials — optional",
       "guardian": "Registering a minor — parent or legal guardian"
     },
-    "clubMemberDeclared": "I am a Brașov Runners team member",
+    "clubMemberDeclared": "I am a member of the Brașov Runners group",
     "facts": {
       "details": "Event details",
       "rules": "The rules",
@@ -1794,7 +1795,7 @@
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
     "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
-    "isMinor": "The participant is under 18"
+    "clubMemberHint": "I have been to at least 3 group runs in the past year."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

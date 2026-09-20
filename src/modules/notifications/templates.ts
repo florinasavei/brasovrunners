@@ -60,7 +60,8 @@ export function renderContent(
     ...(content.facts
       ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
       : []),
-    ...content.paragraphs,
+    // The plain-text half drops the bold markers rather than printing them (§189).
+    ...content.paragraphs.map((text) => text.replace(/\*\*([^*]+)\*\*/g, "$1")),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
@@ -70,6 +71,13 @@ export function renderContent(
     ...(content.footer ? ["", content.footer] : []),
   ];
 
+  /**
+   * `**like this**` becomes bold, applied **after** escaping so the marker can only ever wrap
+   * text this codebase wrote (§189). The owner, of a confirmation: "in mail, numarul de concurs
+   * trebuie facut bold, e super important!" — and it is: it is the one thing a runner reads on
+   * a phone at the desk. The plain-text part strips the markers rather than printing them.
+   */
+  const emphasise = (escaped: string) => escaped.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   const paragraph = (inner: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${inner}</p>`;
   const htmlParts = [
     paragraph(escapeHtml(content.greeting)),
@@ -83,7 +91,7 @@ export function renderContent(
           ),
         ]
       : []),
-    ...content.paragraphs.map((text) => paragraph(escapeHtml(text))),
+    ...content.paragraphs.map((text) => paragraph(emphasise(escapeHtml(text)))),
     // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
     // does not render is a participant at the desk with nothing to show.
     ...(content.image
@@ -133,10 +141,10 @@ function card(blocks: string[][]): string {
    * The address derives from `APP_BASE_URL` like every other absolute URL here (`AGENTS.md`
    * §8): no hostname is written in `src/`.
    */
-  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-white-email.png" alt="Bra&#536;ov Runners" width="180" height="74" style="display:block;width:180px;height:74px;border:0">`;
+  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email.png" alt="Bra&#536;ov Runners" width="180" height="74" style="display:block;width:180px;height:74px;border:0">`;
   return [
     `<div style="max-width:600px;margin:0 auto;font-family:Roboto,Helvetica,Arial,sans-serif;color:${COLOR.ink}">`,
-    `<div style="background:${COLOR.blueInk};color:${COLOR.surface};padding:16px 24px;border-radius:12px 12px 0 0">${logo}</div>`,
+    `<div style="background:${COLOR.surface};padding:16px 24px;border:1px solid ${COLOR.line};border-bottom:0;border-radius:12px 12px 0 0">${logo}</div>`,
     `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background:${COLOR.surface}">`,
     ...blocks.flatMap((parts, index) => (index > 0 ? [rule, ...parts] : parts)),
     "</div></div>",
@@ -280,7 +288,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm!`,
-        ...(d.bibNumber ? [`Numărul tău de concurs: ${d.bibNumber}. Îl primești la masă, în ziua cursei.`] : []),
+        ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**. Îl primești la masă, în ziua cursei.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
@@ -303,7 +311,7 @@ const T = {
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "Evenimentul"} este peste două zile. Iată ce ai nevoie.`,
         ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
-        ...(d.bibNumber ? [`Numărul tău de concurs: ${d.bibNumber}.`] : []),
+        ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`La masă arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
@@ -341,7 +349,7 @@ const T = {
       subject: (d: TemplateData) => `Numărul tău de concurs: ${d.bibNumber ?? "—"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Ți-am dat numărul ${d.bibNumber ?? "—"} la ${d.eventTitle ?? "eveniment"}. Îl ridici la masă în ziua cursei${d.checkinCode ? `, cu codul QR de mai jos sau spunând codul ${d.checkinCode}` : ""}.`,
+        `Ți-am dat numărul **${d.bibNumber ?? "—"}** la ${d.eventTitle ?? "eveniment"}. Îl ridici la masă în ziua cursei${d.checkinCode ? `, cu codul QR de mai jos sau spunând codul ${d.checkinCode}` : ""}.`,
         "Dacă ai primit deja un alt număr prin email, acesta îl înlocuiește.",
       ],
       action: "Vezi înscrierea",
@@ -458,7 +466,7 @@ const T = {
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "The event"} is two days away. Here is what you need.`,
         ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
-        ...(d.bibNumber ? [`Your race number: ${d.bibNumber}.`] : []),
+        ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
         "Can't come? Cancel with the link below — your place goes to somebody on the waiting list.",
@@ -494,7 +502,7 @@ const T = {
       subject: (d: TemplateData) => `Your race number: ${d.bibNumber ?? "—"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `You have number ${d.bibNumber ?? "—"} at ${d.eventTitle ?? "the event"}. Collect it at the desk on race day${d.checkinCode ? `, with the QR code below or by saying the code ${d.checkinCode}` : ""}.`,
+        `You have number **${d.bibNumber ?? "—"}** at ${d.eventTitle ?? "the event"}. Collect it at the desk on race day${d.checkinCode ? `, with the QR code below or by saying the code ${d.checkinCode}` : ""}.`,
         "If an earlier email gave you a different number, this one replaces it.",
       ],
       action: "See your registration",

@@ -8694,3 +8694,71 @@ Test: `tests/unit/events/event-description.test.ts` — including the property t
 document for which the page renders neither field.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 188. Decided — the guardian's name appears when the birth date says minor (2026-09-20)
+
+**Context.** §185 had turned a fold into a tick, because the fold read as a demand. The owner,
+the same evening: "aș vrea ca asta cu «Participantul are sub 18 ani» să apară doar când data
+nașterii indică faptul că e minor… sau să fie ceva bifă doar atunci."
+
+**Decision.** *No tick. The birth date is the answer.* The form already asks for it, and asking
+the same question twice only invites the two answers to disagree — with the server then refusing
+an unticked minor over a field nobody had been shown. `GuardianForMinor` subscribes to the
+birth-date input and opens when it gives under eighteen.
+
+*The rule does not move.* The server still requires a guardian when the birth date says so,
+whatever the browser drew, and `forceOpen` is that verdict coming back: a rejection naming the
+field opens the block whatever the date box now holds, so an error never points at something
+invisible.
+
+*Without JavaScript the field is simply always there.* A `<noscript>` rule forces it open. The
+alternative — hidden and unreachable — would lock out exactly the person who has to fill it, and
+`AGENTS.md` §1.5 says this form works with JavaScript off.
+
+*It subscribes to the input rather than owning it.* `useSyncExternalStore`, not an effect
+writing state: the date field is a Server Component's MUI `TextField` carrying native validation
+(`min`, `max`, `required`), and lifting it into the island would trade all of that for
+hand-written validation on the one form that has to work everywhere.
+
+**Consequences.** `isMinorOn` moved to `registrations/domain/age.ts`, which imports nothing, so
+the browser gets four lines of date arithmetic instead of the form's whole Zod schema — the
+reasoning of `media/limits.ts` in §178. `fields.ts` re-exports it, so nothing else moved.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 189. Decided — three small things the owner asked for, and why each is where it is (2026-09-20)
+
+**The claim is about a group, and it says where its line is.** "Sunt membru al echipei Brașov
+Runners" became "…al **grupului**…", with a "?" beside it reading "Am fost la cel puțin 3 alergări
+de grup în ultimul an." The club is a group somebody runs with, not a squad somebody is selected
+for; and the claim decides nothing on its own (§48) but the club reads it, so it needs a
+definition. A definition printed under every tick would lengthen the form whose length is the
+thing people complain about, so it is a tooltip: `shared/ui/Hint`, which opens on hover, on
+focus and — `enterTouchDelay={0}` — on a tap, because a `title` attribute does none of those on
+a phone. The icon is imported inside the island; a Server Component passing `<Icon />` as a prop
+is the defect `CheckboxField` documents.
+
+**The whole field's numbers download from the page that shows the whole field.** The link already
+existed, several folds down in the event's editor, and the owner — standing on the bib page,
+looking at every number he wanted to print — asked for it again: "vreau să pot exporta toate
+BID-urile!". A verb belongs where its object is. A plain link to the same route, so it works with
+JavaScript off.
+
+**The race number is bold, and the email's header is white.** "În mail, numărul de concurs trebuie
+făcut bold, e super important!" — it is the one line a runner reads on a phone at the desk. The
+card's paragraphs are escaped plain strings, so bold arrives as `**like this**` converted
+**after** escaping: the marker can therefore only ever wrap text this codebase wrote, and a
+participant whose name contains asterisks or angle brackets gets asterisks and angle brackets.
+The plain-text half strips the markers rather than printing them.
+
+"Nu îmi place headerul ăsta albastru, nu se potrivește cu logo-ul BVR." He is right about what it
+looked like: the lockup already contains a blue field, so a blue band around a blue field reads as
+a sticker on a wall rather than as a letterhead. The band is white now, with the lockup in its own
+colours — which is what the site's own header does — and `scripts/brand-assets.mjs` grows the
+matching `logo-email.png`, without alpha, because several mail clients composite a transparent
+PNG onto whatever they please.
+
+Tests: `tests/unit/notifications/emphasis.test.ts`, including the assertion that nothing a
+participant typed can ask for bold.
+
+Baseline `BR-V1.38-2026-09-18`.

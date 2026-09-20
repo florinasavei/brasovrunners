@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isMinorOn } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
 /**
@@ -167,12 +168,12 @@ const submissionFields = z.object({
  * text quietly dropped, because dropping it would leave somebody believing an organizer
  * knows about their asthma.
  */
-/** Eighteen on the day, by calendar years — the same arithmetic a desk uses on an ID card. */
-export function isMinorOn(birthDate: string, on: Date): boolean {
-  const birth = new Date(`${birthDate}T00:00:00Z`);
-  const eighteenth = new Date(Date.UTC(birth.getUTCFullYear() + 18, birth.getUTCMonth(), birth.getUTCDate()));
-  return on.getTime() < eighteenth.getTime();
-}
+/**
+ * Eighteen on the day, by calendar years. It moved to `domain/age.ts` so the browser can read it
+ * without this file's Zod schema coming with it (§188); re-exported here because everything that
+ * validates a registration already imports it from this module.
+ */
+export { isMinorOn } from "./domain/age";
 
 /**
  * A minor is registered by a parent or legal guardian (§108; the terms and the declaration
