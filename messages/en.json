@@ -107,7 +107,7 @@
     "distance": "Distance",
     "distanceKm": "{km} km",
     "elevation": "Elevation gain",
-    "elevationM": "{m} m climb",
+    "elevationM": "{m} m elevation gain",
     "difficulty": "Difficulty",
     "cost": "Cost",
     "registration": "Registration",

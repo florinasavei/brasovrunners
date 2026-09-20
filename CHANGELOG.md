@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **“Diferență de nivel”, not “urcare”** — the term runners actually use, and “elevation gain” in English. §189.
 - **The guardian's name appears when the birth date says the runner is a minor**, instead of being asked for by a tick. The form already asks for the date, and the date is the answer; asking twice only lets the two answers disagree. Without JavaScript the field is simply always there. §188.
 - **“Sunt membru al grupului Brașov Runners”**, with a “?” saying what the claim means — at least three group runs in the past year. §189.
 - **Every race number downloads from the page that shows every race number**, and the number is bold in the emails that carry it. The email's header band is white with the lockup in its own colours: a blue band around a logo that already contains a blue field read as a sticker rather than a letterhead. §189.
