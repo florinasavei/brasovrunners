@@ -63,6 +63,27 @@ export const legalDocuments = pgTable(
       onDelete: "set null",
     }),
 
+    /**
+     * Withdrawal (`DECISIONS.md` §46, §53): an approved version nothing relied on, taken out of
+     * circulation without being taken out of the record.
+     *
+     * Deliberately not a delete, and the reason is a number rather than a principle.
+     * `registrations.privacy_notice_version` is a plain integer with no foreign key, and the
+     * next version is `max(version) + 1` — so deleting a row would free its number to be
+     * reissued to different words, and every registration that recorded that number would
+     * silently become a consent to text written afterwards. The row, the number and the text
+     * all stay; only the offering stops.
+     *
+     * Nullable because "not withdrawn" is the state almost every row is in, and a timestamp
+     * says both *whether* and *when* in one column.
+     */
+    withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
+    // `ON DELETE SET NULL` for the same reason the other two are: a staff account that is later
+    // removed must not take the record of what it did with it.
+    withdrawnByStaffUserId: uuid("withdrawn_by_staff_user_id").references(() => staffUsers.id, {
+      onDelete: "set null",
+    }),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

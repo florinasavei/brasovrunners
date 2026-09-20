@@ -357,7 +357,7 @@
       "sendReminder": "Send the reminder",
       "resendQrLong": "Send the confirmation again, with the QR code and the manage link",
       "raceDayTitle": "Race day",
-      "bibNumber": "Race number",
+      "bibNumber": "Race number (BIB)",
       "checkinCode": "Pickup code",
       "checkinCodeHelp": "The code from the confirmation email; the QR below encodes it. Used at the number pickup desk.",
       "qrAlt": "QR code {code}",
@@ -385,12 +385,13 @@
         "complete": "Every step done"
       },
       "exportExcel": "Export to Excel",
-      "columnBib": "Bib",
+      "columnBib": "Race number (BIB)",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
       "cancelBody": "The place is released through the allocator and offered at once to the first person waiting. An audit row records who cancelled. It cannot be undone: if they change their mind, they register again.",
-      "confirmOnPaperBody": "You are confirming that the participant signed the declaration on paper, at the desk. They get the place and a race number, and the audit row names you as the person who recorded the signature. Use it only with the signed paper in front of you."
+      "confirmOnPaperBody": "You are confirming that the participant signed the declaration on paper, at the desk. They get the place and a race number, and the audit row names you as the person who recorded the signature. Use it only with the signed paper in front of you.",
+      "downloadBib": "Download the race number (BIB)"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -446,7 +447,7 @@
       "repeatTitle": "Create the editions?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
       "bibsTitle": "Assign the race numbers?",
-      "bibsBody": "Every confirmed registration without a number gets a free one, drawn at random. Numbers already given stay."
+      "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -674,10 +675,10 @@
       "tabMissing": "the whole text",
       "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
-      "bibStartNumber": "Race numbers start at",
+      "bibStartNumber": "Race numbers (BIB) start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
-      "bibColour": "Colour of the numbers",
-      "bibColourHelp": "The band under the number on the printed sheet. “The club's colour” unless you want a specific one.",
+      "bibColour": "Colour of the race numbers (BIB)",
+      "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
       "bibColours": {
         "club": "The club's colour",
         "green": "Green",
@@ -686,7 +687,8 @@
         "purple": "Purple",
         "teal": "Teal",
         "black": "Black"
-      }
+      },
+      "confirmationWindowTitle": "Participation confirmation"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -860,7 +862,18 @@
         "consequence": "Pressing it, you take responsibility for these texts as the club's representative: from that moment they are in force on the site, and a correction is a new version. You can read each text first, from the links below.",
         "button": "Approve the three texts now",
         "pending": "Approving…"
-      }
+      },
+      "withdraw": "Withdraw the version",
+      "withdrawTitle": "Withdraw this version?",
+      "withdrawBody": "Nothing is deleted: the version stays on the record with its number and its text, and the number stays taken so it can never end up on different words. It only stops being offered — no longer public, no longer choosable on an event, and gone from the list.",
+      "withdrawBlockedCurrent": "In force right now — it cannot be withdrawn. Approve its successor first; then this one can go.",
+      "withdrawBlockedReferenced": "Cannot be withdrawn: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version.",
+      "withdrawn": "Withdrawn",
+      "withdrawnOn": "Withdrawn on {date}",
+      "withdrawnNotice": "This version was withdrawn on {date}. Its text stays here, on the record, with its number, but it no longer appears publicly and can no longer be chosen on an event.",
+      "showWithdrawn": "Show withdrawn versions too ({count})",
+      "hideWithdrawn": "Hide withdrawn versions",
+      "legalVersionWithdrawn": "The version has been withdrawn. It stays on the record, with its number, but is no longer offered anywhere."
     },
     "tasks": {
       "title": "What is still to do",
@@ -1244,7 +1257,9 @@
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Delete",
       "deleteConfirm": "Delete the picture for good?",
-      "tableCaption": "Uploaded pictures, newest first"
+      "tableCaption": "Uploaded pictures, newest first",
+      "total": "{count, plural, one {# picture} other {# pictures}} · {size} MB stored",
+      "totalHelp": "The large variants added up; each picture also has a thumbnail of a few dozen kilobytes."
     },
     "gallery": {
       "title": "Photo gallery",
@@ -1291,7 +1306,9 @@
         "title": "Title",
         "slug": "Address (slug)",
         "description": "Description"
-      }
+      },
+      "tabAlbums": "Albums",
+      "tabPictures": "Pictures"
     },
     "thanks": {
       "title": "After the race",
@@ -1304,21 +1321,21 @@
       "sentOn": "The thank-you was sent on {date}."
     },
     "bibs": {
-      "title": "Race numbers",
+      "title": "Race numbers (BIB)",
       "assign": "Assign numbers",
       "assigned": "{assigned} numbers assigned ({total} in total).",
       "thanksSent": "The thank-you went out: {recipients} emails.",
       "from": "From",
       "to": "To",
-      "download": "Download the sheet (PDF)",
+      "download": "Download every number (PDF)",
       "preview": "See the bibs ({count})",
       "previewTitle": "Race numbers — {event} ({count})",
       "backToEvent": "← Back to the event",
       "previewAlt": "Number {number} — {name}",
       "downloadOnePerPage": "One per page",
       "page": "Page {n} of {total}",
-      "helpNone": "No number yet. Every registration draws a random number the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event.",
-      "helpSome": "{total} numbers given. Every registration draws a random number the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, with the logo, the name and the event."
+      "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
+      "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page."
     },
     "desk": {
       "title": "Number pickup desk",
@@ -1358,7 +1375,7 @@
       "idDocument": "Identity document",
       "rowHelp": "On each row: type the race number (if not assigned already) → Save; when the person has arrived → Present. Somebody whose email never arrived signs the declaration on paper → Confirm on paper.",
       "givePlace": "Give a place",
-      "bibField": "Race number",
+      "bibField": "Race number (BIB)",
       "saveBib": "Save no.",
       "checkIn": "Mark present",
       "undoCheckIn": "Undo",

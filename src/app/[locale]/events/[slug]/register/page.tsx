@@ -27,6 +27,12 @@ import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/fo
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import {
+  OPTION_GLYPH_SX,
+  OPTION_LABEL_SX,
+  OPTION_ROW_SX,
+  SELECT_WITH_GLYPHS_SX,
+} from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import Flag from "@/shared/ui/Flag";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
@@ -52,8 +58,6 @@ export const metadata: Metadata = {
 /** The anchor a field is reached by from the error summary. Prefixed so it cannot collide. */
 const fieldId = (name: string) => `f-${name}`;
 
-/** An option that wears a mark before its words: the glyph, a gap, the label (§171). */
-const SEX_ITEM_SX = { display: "flex", alignItems: "center", gap: 1 } as const;
 
 /**
  * An optional group, **open by default** since 2026-09-17. It was collapsed to shorten the page
@@ -415,22 +419,39 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   required
                   fullWidth
                   defaultValue={typed("sex", "UNSPECIFIED")}
+                  sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
                       sex"). As **children** of the item, never as a prop across the boundary —
                       see `CheckboxField` for what an element-valued prop costs — and MUI shows
-                      the chosen item's children in the closed field, so the mark stays. */}
-                  <MenuItem value="FEMALE" sx={SEX_ITEM_SX}>
-                    <FemaleIcon fontSize="small" aria-hidden="true" />
-                    {t("sexOptions.FEMALE")}
+                      the chosen item's children in the closed field, so the mark stays.
+
+                      Which is also why the row is declared twice: the children travel to the
+                      closed field, the item's own `sx` does not. `select-option.ts` says what
+                      that cost before it was laid out in both places. */}
+                  <MenuItem value="FEMALE" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <FemaleIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.FEMALE")}
+                    </Box>
                   </MenuItem>
-                  <MenuItem value="MALE" sx={SEX_ITEM_SX}>
-                    <MaleIcon fontSize="small" aria-hidden="true" />
-                    {t("sexOptions.MALE")}
+                  <MenuItem value="MALE" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <MaleIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.MALE")}
+                    </Box>
                   </MenuItem>
-                  <MenuItem value="UNSPECIFIED" sx={SEX_ITEM_SX}>
-                    <PersonIcon fontSize="small" aria-hidden="true" />
-                    {t("sexOptions.UNSPECIFIED")}
+                  <MenuItem value="UNSPECIFIED" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <PersonIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.UNSPECIFIED")}
+                    </Box>
                   </MenuItem>
                 </TextField>
 
@@ -441,6 +462,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   required
                   fullWidth
                   defaultValue={typed("nationality", "RO")}
+                  sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/*
                     The flag before the name (§171), from the set `scripts/sync-flags.mjs`
@@ -453,9 +475,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     — and Windows is what the club's own laptop runs.
                   */}
                   {countries.map((country) => (
-                    <MenuItem key={country.code} value={country.code} sx={SEX_ITEM_SX}>
-                      <Flag code={country.code} width={20} />
-                      {country.label}
+                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
+                      {/* The flag is `display: block` and 20×15; the fixed box is what stops it
+                          taking a line of its own in the closed field and what keeps every
+                          country name starting at the same x. */}
+                      <Box component="span" sx={OPTION_GLYPH_SX}>
+                        <Flag code={country.code} width={20} />
+                      </Box>
+                      <Box component="span" sx={OPTION_LABEL_SX}>
+                        {country.label}
+                      </Box>
                     </MenuItem>
                   ))}
                 </TextField>

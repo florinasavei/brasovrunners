@@ -4,6 +4,7 @@ import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 
@@ -210,17 +211,41 @@ export async function listBibs<T extends Record<string, unknown>>(
   return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName }));
 }
 
-/** What the sheet prints above every number: the event's title in one language, and its date. */
+/**
+ * What a bib carries besides the number: the event's title in one language and its date, the
+ * colour of its header band (§173) and the partners it is held with (§168, §180).
+ *
+ * One query for all four because both renderers draw all four — the sheet and the preview
+ * picture are the same card, and a route that had to assemble the header from three places is
+ * how the two would come to disagree.
+ */
 export async function findEventForBibs<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   locale: string,
-): Promise<{ title: string; startsAt: Date; timezone: string } | undefined> {
+): Promise<{ title: string; startsAt: Date; timezone: string; bibColour: string | null; coHosts: CoHost[] } | undefined> {
   const [row] = await db
-    .select({ title: eventTranslations.title, startsAt: events.startsAt, timezone: events.timezone })
+    .select({
+      title: eventTranslations.title,
+      startsAt: events.startsAt,
+      timezone: events.timezone,
+      bibColour: events.bibColour,
+      coHosts: events.coHosts,
+      coHostName: events.coHostName,
+      coHostUrl: events.coHostUrl,
+    })
     .from(events)
     .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale as "ro" | "en")))
     .where(eq(events.id, eventId))
     .limit(1);
-  return row;
+  if (!row) return undefined;
+  // Through the one reader that decides what a partner row means (§169), never by reading the
+  // column here: the bib has to name the same partners the event page does.
+  return {
+    title: row.title,
+    startsAt: row.startsAt,
+    timezone: row.timezone,
+    bibColour: row.bibColour,
+    coHosts: readCoHosts(row),
+  };
 }

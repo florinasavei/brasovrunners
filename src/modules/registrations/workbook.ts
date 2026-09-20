@@ -52,7 +52,9 @@ const COLUMNS: Array<{
   cell: (row: RegistrationSheetRow) => Record<string, unknown>;
 }> = [
   { header: "ID", width: 38, cell: (row) => ({ value: row.id, type: String }) },
-  { header: "Bib", width: 8, cell: (row) => ({ value: row.bibNumber ?? null, type: Number }) },
+  // Named as the backoffice names it (§180), and wide enough for the heading rather than the
+  // number: a column headed by a truncated word is what makes somebody widen it by hand.
+  { header: "Race number (BIB)", width: 18, cell: (row) => ({ value: row.bibNumber ?? null, type: Number }) },
   { header: "Name", width: 28, cell: (row) => ({ value: row.registeredName, type: String }) },
   { header: "First name", width: 18, cell: (row) => ({ value: row.firstName, type: String }) },
   { header: "Last name", width: 18, cell: (row) => ({ value: row.lastName, type: String }) },

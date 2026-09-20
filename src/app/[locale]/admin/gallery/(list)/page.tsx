@@ -10,6 +10,7 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listAlbumsForAdmin, type AlbumListRow } from "@/modules/content/gallery/repository";
+import GallerySubNav from "@/modules/content/gallery/ui/GallerySubNav";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { isEditorial } from "@/modules/staff-identity/domain/roles";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
@@ -94,13 +95,11 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
         </ButtonLink>
       </Stack>
 
+      {/* The other half of this tab: every stored picture, and where each one is used. */}
+      <GallerySubNav active="albums" />
+
       <Typography variant="body2" color="text.secondary">
         {t("gallery.intro")}
-      </Typography>
-
-      {/* The other kind of picture: the ones in texts, and where each one is used. */}
-      <Typography variant="body2">
-        <Link href="/admin/gallery/pictures">{t("pictures.linkFromGallery")}</Link>
       </Typography>
 
       {/* Read from the environment, never remembered: the five R2 variables are there or not. */}

@@ -2,18 +2,31 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import { COLOR } from "@/theme/brand";
+import { bibBandColour, bibFooterLine } from "./bib-design";
 import type { BibRow } from "./bibs";
 
 /**
- * Race numbers as a sheet to print (BR-REQ-038-01): A4 portrait, two bibs per page, a dashed
- * cut line between them, each bib the club's lockup, the number as large as the paper allows,
- * the participant's registered name, and the event's title and date.
+ * Race numbers as a sheet to print (BR-REQ-038-01, `DECISIONS.md` §180): A4 portrait, two bibs
+ * per page, a dashed cut line between them — and each bib laid out as a race number actually
+ * is, rather than as a certificate with a logo in the corner.
+ *
+ * A coloured band across the whole top, in the event's own `bib_colour` and the club's blue
+ * when it names none (§173, `bib-design.ts`); the lockup in white at the left of it and the
+ * race and its date at the right, both on the band; the number filling everything under it in
+ * the body ink; the registered name beneath; and one thin line at the foot naming the partners
+ * (§168) and the mailbox the club answers on. That is the order the eye reads a bib in at a
+ * start line — colour first, which start line; then the number; then, close up, the name.
  *
  * Two per page because that is what a club prints at home: an A4 folded or cut in half is the
  * size a number is worn at (A5, roughly 21 × 15 cm), and a page per bib would double the paper
  * for no wider a number. The number is set in the site's Roboto Bold from `src/theme/pdf/`
- * (the same face and files the legal PDF uses, `DECISIONS.md` §63), which also covers every
- * name with a diacritic; the logo is the same rasterised lockup.
+ * (the same face and files the legal PDF uses, §63), which also covers every name with a
+ * diacritic; the lockup is `logo-white.png`, the white-on-transparent raster
+ * `scripts/brand-assets.mjs` writes — the email's white lockup is baked onto the club's blue
+ * and would show its own rectangle on a green band.
+ *
+ * **No telephone number is printed**, the participant's least of all their emergency contact:
+ * see `bibFooterLine`.
  *
  * Pure over its inputs: rows, an event header and a label for the footer; the caller decides
  * the language.
@@ -24,6 +37,12 @@ export type BibSheetInput = {
   eventTitle: string;
   /** Already formatted in the event's zone and the sheet's language. */
   eventDate: string;
+  /** The event's `bib_colour`; null is the club's own (§173). */
+  bandColour?: string | null;
+  /** The partners' names, as `readCoHosts` gives them (§168). */
+  partners?: readonly string[];
+  /** `EMAIL_REPLY_TO`, the mailbox every email already says to write to. */
+  replyTo?: string | null;
   /** "Page n of N", called per page. */
   pageLabel: (n: number, total: number) => string;
   generatedAt: Date;
@@ -46,12 +65,20 @@ const BIB = {
   height: (PAGE.height - 2 * MARGIN - GAP) / 2,
 } as const;
 
+/** The coloured strip along the top, and the strip of small print along the bottom. */
+const BAND_HEIGHT = 62;
+const FOOTER_HEIGHT = 22;
+/** How much room the name takes under the number, so the number knows what is left. */
+const NAME_BLOCK = 44;
+
 export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const [regular, bold, logo] = await Promise.all([
     readFile(path.join(ASSETS, "Roboto-Regular.ttf")),
     readFile(path.join(ASSETS, "Roboto-Bold.ttf")),
-    readFile(path.join(ASSETS, "logo.png")),
+    readFile(path.join(ASSETS, "logo-white.png")),
   ]);
+  const band = bibBandColour(input.bandColour);
+  const footer = bibFooterLine(input.partners ?? [], input.replyTo);
 
   const doc = new PDFDocument({
     size: "A4",
@@ -70,6 +97,17 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   doc.registerFont("body", regular);
   doc.registerFont("bold", bold);
 
+  /*
+    The lockup embedded once, then drawn on every bib.
+
+    `doc.image(buffer, …)` embeds a fresh copy of the bytes each time it is called — pdfkit
+    only dedupes when it is handed a path string it can key a registry on — so a two-hundred
+    runner sheet was carrying two hundred copies of the same 18 KiB raster. `openImage` returns
+    the embeddable object to reuse; it is missing from `@types/pdfkit`, like the font buffers
+    above, hence the cast rather than a second file read.
+  */
+  const lockup = (doc as unknown as { openImage: (src: Buffer) => Buffer }).openImage(logo);
+
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
   const finished = new Promise<Buffer>((resolve, reject) => {
@@ -79,50 +117,69 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
 
   const drawBib = (row: Pick<BibRow, "bibNumber" | "registeredName">, top: number) => {
     const left = MARGIN;
-    // The bib's edge, thin, so the cut is guided on all four sides.
-    doc.rect(left, top, BIB.width, BIB.height).lineWidth(0.75).strokeColor(COLOR.line).stroke();
 
-    // Lockup, top-left; title and date, top-right, in the muted ink.
-    const logoWidth = 120;
-    doc.image(logo, left + 18, top + 16, { width: logoWidth });
-    doc
-      .font("body")
-      .fontSize(11)
-      .fillColor(COLOR.inkMuted)
-      .text(input.eventTitle, left + logoWidth + 36, top + 20, {
-        width: BIB.width - logoWidth - 54,
-        align: "right",
-        lineBreak: false,
-      })
-      .text(input.eventDate, left + logoWidth + 36, top + 36, {
-        width: BIB.width - logoWidth - 54,
-        align: "right",
-        lineBreak: false,
-      });
+    // The band first, edge to edge across the top: it is what says which race this is before
+    // anybody is close enough to read a word of it.
+    doc.rect(left, top, BIB.width, BAND_HEIGHT).fill(band);
 
-    // The number: as big as the width allows for four digits, centred, in the club's blue.
-    const numberSize = 190;
+    // The lockup at the left of the band, white on whatever colour the band is; the race and
+    // its date at the right, also white. 2.424:1, the lockup's own proportion.
+    const logoWidth = 122;
+    doc.image(lockup, left + 18, top + (BAND_HEIGHT - logoWidth / 2.424) / 2, { width: logoWidth });
+    const headerLeft = left + logoWidth + 36;
+    const headerWidth = BIB.width - logoWidth - 54;
     doc
       .font("bold")
-      .fontSize(numberSize)
-      .fillColor(COLOR.blue)
-      .text(String(row.bibNumber), left, top + BIB.height / 2 - numberSize * 0.62, {
-        width: BIB.width,
-        align: "center",
-        lineBreak: false,
-      });
+      .fontSize(13)
+      .fillColor(COLOR.surface)
+      .text(input.eventTitle, headerLeft, top + 15, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true })
+      .font("body")
+      .fontSize(10.5)
+      .text(input.eventDate, headerLeft, top + 34, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
+
+    // The number: everything the card has left under the band, in the body ink — a number is
+    // read at distance, and ink on white is the highest contrast the paper can carry.
+    const digits = String(row.bibNumber);
+    const numberSize = digits.length >= 5 ? 140 : digits.length === 4 ? 175 : 200;
+    const numberArea = BIB.height - BAND_HEIGHT - FOOTER_HEIGHT - NAME_BLOCK;
+    doc.font("bold").fontSize(numberSize).fillColor(COLOR.ink);
+    const numberHeight = doc.heightOfString(digits, { width: BIB.width, lineBreak: false });
+    doc.text(digits, left, top + BAND_HEIGHT + Math.max(0, (numberArea - numberHeight) / 2), {
+      width: BIB.width,
+      align: "center",
+      lineBreak: false,
+    });
 
     // The name, under the number, large enough to read at a finish line.
     doc
       .font("bold")
-      .fontSize(22)
+      .fontSize(24)
       .fillColor(COLOR.ink)
-      .text(row.registeredName, left + 18, top + BIB.height - 54, {
+      .text(row.registeredName, left + 18, top + BIB.height - FOOTER_HEIGHT - 34, {
         width: BIB.width - 36,
         align: "center",
         lineBreak: false,
         ellipsis: true,
       });
+
+    // The small print: who is putting the race on, and where to write. Never a telephone
+    // number — `bibFooterLine` says why.
+    if (footer) {
+      doc
+        .font("body")
+        .fontSize(8)
+        .fillColor(COLOR.inkMuted)
+        .text(footer, left + 18, top + BIB.height - 16, {
+          width: BIB.width - 36,
+          align: "center",
+          lineBreak: false,
+          ellipsis: true,
+        });
+    }
+
+    // The bib's edge, thin, so the cut is guided on all four sides. Last, over the band, so
+    // the band's own corner does not sit on top of it.
+    doc.rect(left, top, BIB.width, BIB.height).lineWidth(0.75).strokeColor(COLOR.line).stroke();
   };
 
   if (input.layout === "one") {

@@ -69,7 +69,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Guardian,Submitted,Confirmed,Bib,Checked in,Email bounced");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Guardian,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced");
 
     const withRow = buildRegistrationsCsv([
       {

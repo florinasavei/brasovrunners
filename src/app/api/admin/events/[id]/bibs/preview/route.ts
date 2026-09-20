@@ -9,6 +9,7 @@ import { renderBibImage } from "@/modules/registrations/bib-image";
 import { findEventForBibs } from "@/modules/registrations/bibs";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -51,6 +52,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     registeredName: row.registeredName,
     eventTitle: event.title,
     eventDate: format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" }),
+    // The same three the sheet prints (§180), so the preview is a preview of the paper.
+    bandColour: event.bibColour,
+    partners: event.coHosts.map((host) => host.name),
+    replyTo: env.EMAIL_REPLY_TO,
   });
   // A number and a name change rarely; the browser may keep the picture for an hour.
   image.headers.set("Cache-Control", "private, max-age=3600");

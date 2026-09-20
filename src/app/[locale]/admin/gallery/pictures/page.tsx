@@ -8,7 +8,13 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { listMediaAssetsForAdmin, type MediaAssetRow, type MediaReference } from "@/modules/media/references";
+import GallerySubNav from "@/modules/content/gallery/ui/GallerySubNav";
+import {
+  listMediaAssetsForAdmin,
+  type MediaAssetRow,
+  type MediaReference,
+  totalMediaBytes,
+} from "@/modules/media/references";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { canEditEventFields, isEditorial } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -106,8 +112,23 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
           <Typography component="span" sx={{ display: "block", wordBreak: "break-all" }}>
             {row.originalFilename}
           </Typography>
-          <Typography component="span" variant="caption" color="text.secondary">
+          <Typography component="span" variant="caption" color="text.secondary" sx={{ display: "block" }}>
             {t("pictures.size", { width: row.width, height: row.height, kb: Math.round(row.byteSize / 1024) })}
+          </Typography>
+          {/*
+            The whole address of the large variant, so a picture already in the bucket can go
+            into a newsletter or a post without being uploaded somewhere a second time. Text
+            rather than a copy button: a button here is a client island per row, and
+            `user-select: all` makes one click take the whole address — which is what the
+            button would have done, with no JavaScript and nothing to hydrate.
+          */}
+          <Typography
+            component="span"
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", fontFamily: "monospace", wordBreak: "break-all", userSelect: "all" }}
+          >
+            {row.publicWebUrl}
           </Typography>
         </>
       ),
@@ -151,12 +172,29 @@ export default async function AdminPicturesPage({ params, searchParams }: Props)
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
         {t("pictures.title")}
       </Typography>
+
+      <GallerySubNav active="pictures" />
+
       <Typography variant="body2" color="text.secondary">
         {t("pictures.intro")}
       </Typography>
-      <Typography variant="body2">
-        <Link href="/admin/gallery">← {t("gallery.title")}</Link>
-      </Typography>
+
+      {/*
+        What the club is actually storing, before the list of it — the figure an organizer
+        wants when they wonder whether the bucket is filling up. Summed from the same rows the
+        table pages through, so it counts every picture and not the fifty on this page.
+      */}
+      <Box>
+        <Typography variant="body2">
+          {t("pictures.total", {
+            count: rows.length,
+            size: format.number(totalMediaBytes(rows) / 1024 / 1024, { maximumFractionDigits: 1 }),
+          })}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {t("pictures.totalHelp")}
+        </Typography>
+      </Box>
 
       {!isStorageConfigured() && <Alert severity="warning">{t("gallery.storageUnconfigured")}</Alert>}
 

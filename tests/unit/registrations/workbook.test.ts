@@ -108,6 +108,18 @@ describe("BR-REQ-060-01 the start list as a spreadsheet (§172)", () => {
     expect(parts.get("xl/workbook.xml")).toContain("Crosul Tâmpei");
   });
 
+  /**
+   * §180 — the backoffice calls it "Race number (BIB)" in every screen, and the spreadsheet is
+   * the one place a volunteer meets the column with no screen around it to explain "Bib".
+   */
+  it("heads the race number as the backoffice names it", async () => {
+    expect(REGISTRATION_SHEET_HEADERS).toContain("Race number (BIB)");
+    expect(REGISTRATION_SHEET_HEADERS).not.toContain("Bib");
+    const parts = unzip(await buildRegistrationsWorkbook([row()], "Test"));
+    const strings = `${parts.get("xl/sharedStrings.xml") ?? ""}${parts.get("xl/worksheets/sheet1.xml") ?? ""}`;
+    expect(strings).toContain("Race number (BIB)");
+  });
+
   it("keeps the number a number and the name text, so each sorts as itself", async () => {
     const parts = unzip(await buildRegistrationsWorkbook([row({ bibNumber: 17 })], "Test"));
     const sheet = parts.get("xl/worksheets/sheet1.xml") ?? "";

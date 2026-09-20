@@ -14,6 +14,7 @@ import {
   createDraftVersion,
   deleteDraftVersion,
   updateDraftVersion,
+  withdrawApprovedVersion,
 } from "@/modules/legal-documents/service";
 import { requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -152,4 +153,30 @@ export async function deleteLegalVersionAction(form: FormData): Promise<void> {
   }
 
   backTo(listPath, { saved: "legalVersionDeleted" });
+}
+
+/**
+ * Withdraw an approved version nothing relied on (BR-REQ-053-02, `DECISIONS.md` §46, §53).
+ *
+ * The role is asserted twice and that is not belt-and-braces: `requireStaffRole` answers "is
+ * this request from an Administrator", and `assertMayEdit` inside the service answers "may this
+ * actor write the club's legal text" — the second is the one that would still be there if this
+ * verb were ever called from anywhere but a form (BR-REQ-060-01).
+ *
+ * Back to the list either way, like deletion: on success the version's own page is still there
+ * and still readable, but the thing that changed is which rows the list offers, and that is
+ * where somebody wants to be looking.
+ */
+export async function withdrawLegalVersionAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const listPath = getPathname({ locale, href: "/admin/legal" });
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await withdrawApprovedVersion(getDb(), actor, text(form, "versionId"), new Date());
+  } catch (error) {
+    backTo(listPath, outcomeOf(error));
+  }
+
+  backTo(listPath, { saved: "legalVersionWithdrawn" });
 }

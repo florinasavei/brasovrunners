@@ -50,15 +50,26 @@ export type AuditAction =
   | "event.thanks_sent"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
-  | "contact_recipients.changed";
+  | "contact_recipients.changed"
+  /**
+   * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).
+   *
+   * The second action whose row outlives what it describes, in the sense that matters: the
+   * `legal_documents` row stays, but nothing in the application will offer, render or resolve
+   * it again, so this is the only place that still says the club once published those words,
+   * under that number, and who decided it should stop. The metadata carries the key, the
+   * version, its effective date and the content hashes — never the text itself (§12.12).
+   */
+  | "legal_document.withdrawn";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
   participantId?: string | null;
   action: AuditAction;
   // `event` for the one action that is about a whole event's registrations at once;
-  // `email_outbox` for the one that is about the queue itself.
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting";
+  // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
+  // that is about a version of the club's own text.
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document";
   entityId: string;
   /**
    * The shape of the change, never a copy of what it was about. §12.12: no email body, no raw

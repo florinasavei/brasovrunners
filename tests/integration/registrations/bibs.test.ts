@@ -1,11 +1,11 @@
 import { asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
-import { events } from "@/db/schema/events";
+import { events, eventTranslations } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { type RegistrationKind, type RegistrationStatus, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { assignBibNumbers, BIB_RANGE, listBibs, pickBibNumber } from "@/modules/registrations/bibs";
+import { assignBibNumbers, BIB_RANGE, findEventForBibs, listBibs, pickBibNumber } from "@/modules/registrations/bibs";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -173,6 +173,35 @@ describe("BR-REQ-038-01 race numbers", () => {
     const [lowest, second] = all;
     expect((await listBibs(db, eventId, { from: lowest, to: second })).map((row) => row.bibNumber)).toEqual([lowest, second]);
     expect((await listBibs(db, eventId, { from: all[4] })).map((row) => row.bibNumber)).toEqual([all[4]]);
+  });
+
+  /**
+   * §180 — what the bib carries besides the number. The renderers draw the band in the event's
+   * own colour and name its partners at the foot, and both read them from here, so a lookup
+   * that dropped either would print a club-blue bib for a race the club coloured green and
+   * leave the partners off the one thing every runner wears.
+   */
+  it("hands the renderers the event's colour and its partners, in the read locale", async () => {
+    await db.insert(eventTranslations).values([
+      { eventId, locale: "ro", slug: "crosul-aniversar", title: "Crosul aniversar" },
+      { eventId, locale: "en", slug: "anniversary-cross", title: "The anniversary cross" },
+    ]);
+    await db
+      .update(events)
+      .set({ bibColour: "#1b7f3b", coHosts: [{ name: "Primăria Brașov", url: "https://brasovcity.ro" }, { name: "Salvamont", url: null }] })
+      .where(eq(events.id, eventId));
+
+    const ro = await findEventForBibs(db, eventId, "ro");
+    expect(ro?.title).toBe("Crosul aniversar");
+    expect(ro?.bibColour).toBe("#1b7f3b");
+    expect(ro?.coHosts.map((host) => host.name)).toEqual(["Primăria Brașov", "Salvamont"]);
+    expect((await findEventForBibs(db, eventId, "en"))?.title).toBe("The anniversary cross");
+
+    // An event that names neither: null, and no partners — the renderers' fallback, not theirs.
+    await db.update(events).set({ bibColour: null, coHosts: [] }).where(eq(events.id, eventId));
+    const plain = await findEventForBibs(db, eventId, "ro");
+    expect(plain?.bibColour).toBeNull();
+    expect(plain?.coHosts).toEqual([]);
   });
 
   it("is the Administrator's, and the database refuses a duplicate number at one event", async () => {

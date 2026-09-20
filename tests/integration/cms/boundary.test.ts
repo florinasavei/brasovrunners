@@ -273,9 +273,16 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       `createDraftVersion` and `approveVersion` for each document that has no approved
       version and touches nothing that has one.
 
-      There is deliberately no `withdrawApproval` here. §53 has the reasoning: a declaration is
-      bound to the participant when the form is posted rather than when it is read, so changing
-      which version is current would let somebody sign text they never saw.
+      There is still deliberately no `withdrawApproval`, and `withdrawApprovedVersion` is not
+      it. §53 refused *un-approving*: a declaration is bound to the participant when the form is
+      posted rather than when it is read, so changing which version is current would let
+      somebody sign text they never saw. That reasoning is untouched, because withdrawal cannot
+      change which version is current — the version in force is refused outright, and every
+      other approved version is either already superseded or not yet effective, so removing it
+      leaves `findCurrentApprovedDocument`'s answer exactly where it was. What it changes is the
+      *future*: a version approved ahead of its date never takes effect. It also refuses
+      anything with a signature, an event or a registration against it, which is what keeps an
+      acceptance pointing at text that is still there to read.
     */
     const service = await import("@/modules/legal-documents/service");
     expect(Object.keys(service).sort()).toEqual([
@@ -285,6 +292,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "deleteDraftVersion",
       "isReliedOn",
       "updateDraftVersion",
+      "withdrawApprovedVersion",
     ]);
   });
 });

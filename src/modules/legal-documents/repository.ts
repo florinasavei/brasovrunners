@@ -1,4 +1,4 @@
-import { and, desc, eq, lte, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import {
@@ -35,10 +35,17 @@ export type CurrentLegalDocument = {
 
 /**
  * The version of `key` that is current for `locale` at `now` — the highest `version` that is
- * approved and whose `effective_at` has passed (§12.5: "resolved by `effective_at`").
+ * approved, not withdrawn, and whose `effective_at` has passed (§12.5: "resolved by
+ * `effective_at`").
  *
  * Used both by the public legal routes and by registration (BR-REQ-053-01: registration
  * refuses when this returns nothing).
+ *
+ * `withdrawn_at IS NULL` is what makes withdrawal mean anything: a withdrawn version keeps its
+ * row, its number and its words, and stops being offered anywhere. It can never be the version
+ * this returns *today* — the one in force is refused withdrawal — but it can be one the club
+ * approved ahead of its effective date and thought better of, which without this filter would
+ * quietly become the public text on the day it was dated for.
  */
 export async function findCurrentApprovedDocument<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -68,6 +75,7 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
       and(
         eq(legalDocuments.key, key),
         eq(legalDocuments.isApproved, true),
+        isNull(legalDocuments.withdrawnAt),
         lte(legalDocuments.effectiveAt, now),
       ),
     )
@@ -78,9 +86,46 @@ export async function findCurrentApprovedDocument<T extends Record<string, unkno
 }
 
 /**
+ * Which row of `key` is in force at `now`, as an id — the question withdrawal has to answer.
+ *
+ * The same predicate as `findCurrentApprovedDocument` with the translation join taken out, and
+ * that difference is the whole reason it exists rather than being answered by calling that one.
+ * The joined version asks "what does the public page render in this language", and a version
+ * with no `ro` translation answers *nothing* there — which, asked as "may this be withdrawn",
+ * would say yes about the very row the site is serving in the other language. The unjoined
+ * question has one answer per key and errs towards refusing.
+ */
+export async function findCurrentApprovedVersionId<T extends Record<string, unknown>>(
+  db: Database<T>,
+  key: LegalDocumentKey,
+  now: Date,
+): Promise<string | undefined> {
+  const [row] = await db
+    .select({ id: legalDocuments.id })
+    .from(legalDocuments)
+    .where(
+      and(
+        eq(legalDocuments.key, key),
+        eq(legalDocuments.isApproved, true),
+        isNull(legalDocuments.withdrawnAt),
+        lte(legalDocuments.effectiveAt, now),
+      ),
+    )
+    .orderBy(desc(legalDocuments.version))
+    .limit(1);
+
+  return row?.id;
+}
+
+/**
  * A specific version, for confirming a registration's acknowledged version is still the exact
  * text it was shown (BR-REQ-053-01 criterion 3: an acceptance references the version accepted,
  * not merely "whatever is current now").
+ *
+ * Withdrawn versions are excluded, and it costs nothing: withdrawal requires zero acceptances
+ * and zero acknowledgements, so no registration can be pointing at one. Excluding them here
+ * keeps "approved and still offered" a single meaning across the module rather than two that
+ * differ by one row.
  */
 export async function findApprovedDocumentVersion<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -95,7 +140,14 @@ export async function findApprovedDocumentVersion<T extends Record<string, unkno
       contentSha256: legalDocuments.contentSha256,
     })
     .from(legalDocuments)
-    .where(and(eq(legalDocuments.key, key), eq(legalDocuments.version, version), eq(legalDocuments.isApproved, true)))
+    .where(
+      and(
+        eq(legalDocuments.key, key),
+        eq(legalDocuments.version, version),
+        eq(legalDocuments.isApproved, true),
+        isNull(legalDocuments.withdrawnAt),
+      ),
+    )
     .limit(1);
 
   return row;
@@ -105,6 +157,11 @@ export async function findApprovedDocumentVersion<T extends Record<string, unkno
  * The highest version of a key, whatever its approval state — what "the next version" counts
  * from. A version number is never reused (`docs/RUNBOOKS.md` § Legal document version), so this
  * is the only safe way to ask for one.
+ *
+ * A withdrawn version still counts, and that is the point of withdrawing rather than deleting.
+ * `registrations.privacy_notice_version` is a plain integer with no foreign key; if version 4
+ * were removed and the next draft became 4 again, every registration that recorded "notice 4"
+ * would become a consent to words written after it was given. The number stays taken.
  */
 export async function findLatestVersion<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -129,6 +186,10 @@ export async function findLatestVersion<T extends Record<string, unknown>>(
  *
  * A *selection*, never an edit: §11.1 keeps legal text out of the CMS entirely, and nothing
  * here or in the editor can change a word of one of these rows.
+ *
+ * Withdrawn versions are gone from the list, and no event loses its selected value by it: an
+ * event pointing at a version is one of the three counts that refuse withdrawal, so a withdrawn
+ * version is by construction one nothing here had chosen.
  */
 export async function listApprovedVersions<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -150,7 +211,13 @@ export async function listApprovedVersions<T extends Record<string, unknown>>(
         eq(legalDocumentTranslations.locale, locale),
       ),
     )
-    .where(and(eq(legalDocuments.key, key), eq(legalDocuments.isApproved, true)))
+    .where(
+      and(
+        eq(legalDocuments.key, key),
+        eq(legalDocuments.isApproved, true),
+        isNull(legalDocuments.withdrawnAt),
+      ),
+    )
     .orderBy(desc(legalDocuments.version));
 }
 
@@ -170,6 +237,18 @@ export type LegalDocumentVersionRow = {
   isApproved: boolean;
   effectiveAt: Date;
   approvedByStaffUserId: string | null;
+  /**
+   * When the club took this version out of circulation, or `null` — the one reader that keeps
+   * withdrawn rows rather than filtering them out.
+   *
+   * Everything else in this module excludes them, which is what withdrawal *is*. This screen is
+   * the exception on purpose: the row still exists, it still holds its number, and the club has
+   * to be able to see that — a version that vanished from every list including the one that
+   * administers it would look deleted, which is precisely the impression this mechanism exists
+   * to avoid giving.
+   */
+  withdrawnAt: Date | null;
+  withdrawnByStaffUserId: string | null;
   locales: string[];
   acceptanceCount: number;
   eventCount: number;
@@ -199,6 +278,8 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       isApproved: legalDocuments.isApproved,
       effectiveAt: legalDocuments.effectiveAt,
       approvedByStaffUserId: legalDocuments.approvedByStaffUserId,
+      withdrawnAt: legalDocuments.withdrawnAt,
+      withdrawnByStaffUserId: legalDocuments.withdrawnByStaffUserId,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
       acceptanceCount: sql<number>`(select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
@@ -241,6 +322,7 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       version: number;
       isApproved: boolean;
       effectiveAt: Date;
+      withdrawnAt: Date | null;
       contentSha256: string;
       translations: Array<{ locale: string; title: string; body: unknown }>;
     }
@@ -253,6 +335,9 @@ export async function findVersionWithTranslations<T extends Record<string, unkno
       version: legalDocuments.version,
       isApproved: legalDocuments.isApproved,
       effectiveAt: legalDocuments.effectiveAt,
+      // Read but never filtered on: this is the page somebody lands on from the withdrawn fold,
+      // and a version that renders as though nothing happened to it would be a lie of omission.
+      withdrawnAt: legalDocuments.withdrawnAt,
       contentSha256: legalDocuments.contentSha256,
     })
     .from(legalDocuments)

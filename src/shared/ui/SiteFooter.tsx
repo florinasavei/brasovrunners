@@ -142,9 +142,11 @@ export default async function SiteFooter() {
               {/* "Scrie-ne" (BR-REQ-070-04): the form, beside the address below it. */}
               <Link href="/contact">{footer("contactPage")}</Link>
             </Stack>
-            <Typography variant="body2" color="text.secondary">
-              {footer("about.description")}
-            </Typography>
+            {/* The links and the address, and nothing else. The club's description used to
+                stand here too (the owner: "textul asta nu-și are rostul aici") — a paragraph
+                about who the club is, under a fold called "About the club, contact and terms",
+                which is opened to *reach* something rather than to read. The homepage is where
+                the club introduces itself. */}
             {contact && (
               <Typography variant="body2" color="text.secondary">
                 {footer("about.contact")} <a href={`mailto:${contact}`}>{contact}</a>

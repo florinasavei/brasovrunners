@@ -8442,3 +8442,99 @@ underneath a button labelled "delete the event".
 The cancel help text sits with cancel rather than after both.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 180. Decided — a race number is a picture, and the picture is the same everywhere (2026-09-20)
+
+**Context.** "Ar trebui să văd BID-ul ca și poză! BID-urile sunt super importante!", then "trebuie
+să pot descărca BID-ul!", then "trebe să pot descărca toate BID-urile pentru a le printa!", and
+"folosește termenul «Număr de concurs (BID)»".
+
+**Decision.** *One module decides what a bib looks like; two renderers draw it.* `bib-design.ts`
+holds the band colour and the footer line and imports nothing but the palette — no `node:`
+builtin, no pdfkit, no React — because `bibs-pdf.ts` draws A4 with pdfkit and `bib-image.tsx`
+draws 900×600 with `next/og`, and the picture is the club's preview of the paper. They must
+agree; a shared constant is how, and it is pure for the same reason `media/limits.ts` is (§178).
+
+*Three ways out, one route.* The event's whole sheet, one participant's own page, and the picture
+— the same handler, the same design, authorized the same way. A volunteer printing a replacement
+at the desk and an Administrator printing eighty the night before are the same act at different
+counts.
+
+*The term is "Număr de concurs (BID)" wherever the club reads it*, because that is what the club
+says out loud on race morning.
+
+**Consequences.** `bibs.ts`, `csv.ts` and `workbook.ts` follow the same wording. Tests:
+`bib-design.test.ts` (the fallback colour, a malformed hex), `bib-image.test.ts`,
+`bibs-pdf.test.ts`, `bibs.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 181. Decided — an approved legal version is withdrawn, never deleted (2026-09-20)
+
+**Context.** "Trebuie să pot șterge documente! Trebuie să le refac cu placeholders!"
+
+**Decision.** *Almost yes.* §46 and `AGENTS.md` §12.5 say an approved version is never deleted,
+and underneath the principle sits arithmetic that makes it load-bearing:
+`registrations.privacy_notice_version` is a plain integer with no foreign key, and
+`createDraftVersion` takes `max(version) + 1`. Delete version 4 and the next draft is version 4
+again, with different words — and every registration that recorded "privacy notice 4" becomes a
+consent to text nobody was ever shown, with nothing in the database able to notice.
+
+So: **withdrawal.** The row, the number and the words stay; what goes is the offering. A withdrawn
+version is not resolved as current, not offered to the event editor, not counted as "this key
+already has approved text", and not on the club's list unless the club asks. What withdrawal can
+never touch is a version something relied on, or the text the site is serving right now —
+`assertWithdrawable` is the whole of that rule, and it is called twice: once outside the
+transaction so the screen names the actual obstacle, once inside it so the decision is taken on
+rows nothing can have changed underneath. Two calls of the same function, never a cheap check and
+a thorough one, because a guard that differs between them is a guard that can be talked past.
+
+*A draft is still deleted outright.* Nothing ever relied on it.
+
+**Consequences.** Migration `0051_legal_withdrawal` adds `withdrawn_at` and
+`withdrawn_by_staff_user_id` — expand-only. Test:
+`tests/integration/legal/withdrawal.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 182. Decided — a select that is centred in both places MUI renders it (2026-09-20)
+
+**Context.** "Aceste inputuri sunt super descentrate!!", of the sex and citizenship fields, after
+§171 put a mark before each option's words.
+
+**Decision.** *Lay the row out twice, deliberately.* The cause is MUI's own mechanism, not a stray
+margin: a `Select` shows the chosen option by reusing the matching `MenuItem`'s **children** —
+`SelectInput.js` computes `displaySingle = child.props.children` — and the item's `sx` is not
+among them. A row laid out only on the `MenuItem` is laid out nowhere in the closed field, where
+the glyph falls back to an inline box on the text's baseline, about five pixels below the middle
+of a 56-pixel field. A flag was worse: `Flag` renders `display: block` and took a line of its
+own. So `shared/ui/select-option.ts` lays the row out on the item *and* through the Select's own
+slot class.
+
+*A picture written into the short description shows on the card.* The cards rendered `excerpt`,
+the plain-text shadow of the document, which drops exactly what the owner had put there.
+
+**Consequences.** `select-option.ts` is shared by the two fields that have marks. Tests:
+`select-options.test.ts`, `card-excerpt.test.ts`, `registration-panel.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 183. Decided — the bucket's pictures are a tab, not a grey line of text (2026-09-20)
+
+**Context.** "I should be able to see and manage the pictures stored in Cloudflare as well." The
+list existed. It was reachable through one grey line under the albums' intro paragraph, which is
+where a link goes to be missed.
+
+**Decision.** *Two buttons at the top of both pages*, the current one filled — albums, and every
+picture the bucket holds. A Server Component with no pathname lookup: `AdminTabs` is a client
+island because a layout cannot know which page it wraps, but there are two pages here and each
+knows which it is. No icons: an icon element passed from a Server Component to a client one is the
+defect `shared/ui/action-icons.ts` documents, and a two-word label needs no glyph.
+
+*Each row carries the absolute address as well as the stored one.* A body stores a path when the
+bucket is this app, because a body outlives a hostname (§8, BR-REQ-101-02) — and somebody pasting
+a picture into a newsletter needs the whole address. *The total is summed from the rows the page
+already read*, never asked of the database again, so the figure at the top and the rows under it
+cannot disagree.
+
+Baseline `BR-V1.38-2026-09-18`.

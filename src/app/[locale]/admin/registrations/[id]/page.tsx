@@ -243,9 +243,25 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   </Typography>
                 </form>
               ) : (
-                <Typography variant="body2" color="text.secondary">
-                  {tr("registrations.bibSettled", { number: registration.bibNumber })}
-                </Typography>
+                <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {tr("registrations.bibSettled", { number: registration.bibNumber })}
+                  </Typography>
+                  {/*
+                    This one bib, on its own A4 page (§180). The same route the event's sheet
+                    uses, asked for a range of exactly one and the one-per-page layout — so
+                    there is one renderer, one authorization check and one design, and a
+                    volunteer who has to reprint a single number does not download two hundred.
+                  */}
+                  <Button
+                    component="a"
+                    href={`/api/admin/events/${registration.eventId}/bibs?locale=${locale}&from=${registration.bibNumber}&to=${registration.bibNumber}&layout=one`}
+                    variant="outlined"
+                    sx={{ minHeight: 44 }}
+                  >
+                    {tr("registrations.downloadBib")}
+                  </Button>
+                </Stack>
               )}
               <form action={checkInAction}>
                 {deskHidden}

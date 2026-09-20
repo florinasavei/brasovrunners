@@ -1,0 +1,3 @@
+ALTER TABLE "legal_documents" ADD COLUMN "withdrawn_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "legal_documents" ADD COLUMN "withdrawn_by_staff_user_id" uuid;--> statement-breakpoint
+ALTER TABLE "legal_documents" ADD CONSTRAINT "legal_documents_withdrawn_by_staff_user_id_staff_users_id_fk" FOREIGN KEY ("withdrawn_by_staff_user_id") REFERENCES "public"."staff_users"("id") ON DELETE set null ON UPDATE no action;

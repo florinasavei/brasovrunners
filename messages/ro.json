@@ -357,7 +357,7 @@
       "sendReminder": "Trimite reminderul",
       "resendQrLong": "Trimite din nou confirmarea, cu codul QR și linkul de gestionare",
       "raceDayTitle": "Ziua cursei",
-      "bibNumber": "Număr de concurs",
+      "bibNumber": "Număr de concurs (BIB)",
       "checkinCode": "Cod de ridicare",
       "checkinCodeHelp": "Codul din emailul de confirmare; QR-ul de mai jos îl conține. Se folosește la masa de ridicare a numerelor.",
       "qrAlt": "Cod QR {code}",
@@ -385,12 +385,13 @@
         "complete": "Toți pașii parcurși"
       },
       "exportExcel": "Exportă Excel",
-      "columnBib": "Număr",
+      "columnBib": "Număr de concurs (BIB)",
       "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
       "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
-      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul de concurs, iar în jurnal rămâi tu ca cel care a înregistrat semnătura. Se folosește doar când ai hârtia semnată în față."
+      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul de concurs, iar în jurnal rămâi tu ca cel care a înregistrat semnătura. Se folosește doar când ai hârtia semnată în față.",
+      "downloadBib": "Descarcă numărul de concurs (BIB)"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -446,7 +447,7 @@
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
-      "bibsBody": "Fiecare înscriere confirmată fără număr primește un număr liber, ales la întâmplare. Numerele deja date rămân."
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -674,10 +675,10 @@
       "tabMissing": "textul întreg",
       "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
-      "bibStartNumber": "Numerele de concurs încep de la",
+      "bibStartNumber": "Numerele de concurs (BIB) încep de la",
       "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
-      "bibColour": "Culoarea numerelor",
-      "bibColourHelp": "Banda de sub număr pe foaia de printat. „Culoarea clubului” dacă nu vrei una anume.",
+      "bibColour": "Culoarea numerelor de concurs (BIB)",
+      "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
       "bibColours": {
         "club": "Culoarea clubului",
         "green": "Verde",
@@ -686,7 +687,8 @@
         "purple": "Violet",
         "teal": "Turcoaz",
         "black": "Negru"
-      }
+      },
+      "confirmationWindowTitle": "Confirmarea participării"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -860,7 +862,18 @@
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
         "button": "Aprobă cele trei texte acum",
         "pending": "Se aprobă…"
-      }
+      },
+      "withdraw": "Retrage versiunea",
+      "withdrawTitle": "Retragi versiunea?",
+      "withdrawBody": "Nu se șterge nimic: versiunea rămâne în evidență, cu numărul și cu textul ei, iar numărul rămâne ocupat, ca să nu ajungă niciodată pe alt text. Se oprește doar din a mai fi oferită — nu mai apare public, nu se mai poate alege pe un eveniment și dispare din listă.",
+      "withdrawBlockedCurrent": "În vigoare acum — nu se poate retrage. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage.",
+      "withdrawBlockedReferenced": "Nu se poate retrage: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "withdrawn": "Retrasă",
+      "withdrawnOn": "Retrasă la {date}",
+      "withdrawnNotice": "Versiunea a fost retrasă la {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
+      "showWithdrawn": "Arată și versiunile retrase ({count})",
+      "hideWithdrawn": "Ascunde versiunile retrase",
+      "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -1244,7 +1257,9 @@
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Șterge",
       "deleteConfirm": "Ștergi imaginea definitiv?",
-      "tableCaption": "Imaginile încărcate, cele mai noi primele"
+      "tableCaption": "Imaginile încărcate, cele mai noi primele",
+      "total": "{count, plural, one {# imagine} few {# imagini} other {# de imagini}} · {size} MB în stocare",
+      "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți."
     },
     "gallery": {
       "title": "Galerie foto",
@@ -1291,7 +1306,9 @@
         "title": "Titlu",
         "slug": "Adresă (slug)",
         "description": "Descriere"
-      }
+      },
+      "tabAlbums": "Albume",
+      "tabPictures": "Imagini"
     },
     "thanks": {
       "title": "După cursă",
@@ -1304,21 +1321,21 @@
       "sentOn": "Mulțumirile au fost trimise pe {date}."
     },
     "bibs": {
-      "title": "Numere de concurs",
+      "title": "Numere de concurs (BIB)",
       "assign": "Alocă numerele",
       "assigned": "{assigned} numere alocate ({total} în total).",
       "thanksSent": "Mulțumirile au fost trimise: {recipients} emailuri.",
       "from": "De la",
       "to": "Până la",
-      "download": "Descarcă foaia (PDF)",
+      "download": "Descarcă toate numerele (PDF)",
       "preview": "Vezi numerele ({count})",
       "previewTitle": "Numerele de concurs — {event} ({count})",
       "backToEvent": "← Înapoi la eveniment",
       "previewAlt": "Numărul {number} — {name}",
       "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
-      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
-      "helpSome": "{total} numere date. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
+      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
+      "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -1358,7 +1375,7 @@
       "idDocument": "Act de identitate",
       "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu l-ai alocat deja) → Salvează; când persoana a ajuns → Prezent. Cine nu a confirmat emailul semnează declarația pe hârtie → Confirmă pe hârtie.",
       "givePlace": "Dă-i un loc",
-      "bibField": "Număr de concurs",
+      "bibField": "Număr de concurs (BIB)",
       "saveBib": "Salvează nr.",
       "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
