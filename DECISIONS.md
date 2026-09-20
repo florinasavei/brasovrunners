@@ -6937,3 +6937,44 @@ which.
 in both catalogues. BR-REQ-011-01 criterion 11 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 157. Decided — the footer's switch sits above the footer's fold (2026-09-20)
+
+**Context.** The owner, on a phone: "the theme switcher does not work on mobile, nothing
+happens when I click." A Playwright tap said why: the footer's own "Despre club" fold — a
+44-pixel summary across the bar — was the element under the finger. The switch is positioned
+absolutely in the bar's corner (§115); the column beside it is positioned too and comes later
+in the DOM, so it painted on top.
+
+**Decision.** The switch's box carries `zIndex: 1`. Nothing else moves. The e2e suite taps
+the switch on the phone project from now on, because a pointer test at the button's centre is
+the one thing that would have caught this.
+
+**Consequences.** `shared/ui/SiteFooter.tsx`; `tests/e2e/event-pages.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 158. Decided — smaller chrome and smaller pills, the tap targets unchanged (2026-09-20)
+
+**Context.** The owner, three messages on a phone: "the header and the footer must be
+smaller in general, and on mobile smaller still"; "the pills and the selects here are too
+big" (the calendar's month/year, Lună/An, Calendar/Listă); "pretty much all the pills must be
+smaller." Every pill on the public site was a 44-pixel chip because every link must be a
+44-pixel target (BR-REQ-041-01 criterion 6), and the chip had become the target.
+
+**Decision.** The target and the pill part ways everywhere, the way §133 did it for the type
+filter: `shared/ui/ChipLink` is a 44-pixel link around MUI's small chip, and it is what the
+calendar's four choices, the type filter and the series card's dates use; the editor's
+header chips are small too (the backoffice has no 44-pixel rule). The header's lockup goes
+from 44 to 40 pixels with less padding, the sections a step under the body size; the
+footer's summary a step smaller, its marks 20 pixels. Nothing a thumb hits got smaller.
+
+*Rejected:* shrinking the links themselves (the suite measures every link under `main` and
+would say so, rightly).
+
+**Consequences.** `shared/ui/ChipLink.tsx` (new), `events/ui/EventCalendar.tsx`,
+`events/ui/SeriesDates.tsx`, `content/events/ui/SeriesScope.tsx`, the listing,
+`theme/brand.ts`, `SiteHeader`, `SiteNav`, `SiteFooter`.
+
+Baseline `BR-V1.38-2026-09-18`.
+

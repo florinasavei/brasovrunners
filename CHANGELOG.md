@@ -15,6 +15,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **Smaller header, footer and pills** — every pill is a small chip inside the same 44-pixel link; the lockup is 40 pixels. §158.
+- **The theme switch works on a phone** — the footer's fold had been painting over it. §157.
 - **The page reads the long description; the card the short one.** The short one stands on the page only while no long one exists. §156.
 - **The event's structured data names its two cards as images** — Google's last warning on the event page. §155.
 - **A series card folds its dates** behind "Toate datele (8)". §154.

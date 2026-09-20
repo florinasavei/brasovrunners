@@ -148,7 +148,8 @@ export default async function SiteHeader() {
            */
           flexWrap: "nowrap",
           gap: { xs: 0.5, sm: 1 },
-          py: { xs: 0.5, sm: 1 },
+          // Tighter since §158: the bar is the logo's height plus a hair, on every width.
+          py: { xs: 0.25, sm: 0.5 },
         }}
       >
         <Box sx={{ order: 1, flexShrink: 0 }}>

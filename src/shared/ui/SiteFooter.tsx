@@ -82,7 +82,10 @@ export default async function SiteFooter() {
     >
       {/* In the corner of the bar itself, not of the page's column (the owner: "all the way to
           the left") — positioned like the marks, because the line is the summary's. */}
-      <Box sx={{ position: "absolute", top: 0, left: 0, height: BAR_HEIGHT, display: "flex", alignItems: "center" }}>
+      {/* Above the column (`zIndex`): the column is positioned too and comes later in the DOM, so
+          without it the fold's 44px summary painted over the switch on a phone and swallowed the
+          tap — the owner: "nothing happens when I click" (§157). */}
+      <Box sx={{ position: "absolute", top: 0, left: 0, height: BAR_HEIGHT, display: "flex", alignItems: "center", zIndex: 1 }}>
         <ThemeModeToggle />
       </Box>
       <Container maxWidth={PAGE_WIDTH} sx={{ position: "relative" }}>
@@ -92,7 +95,7 @@ export default async function SiteFooter() {
             sx={{
               cursor: "pointer",
               color: "text.secondary",
-              fontSize: "0.875rem",
+              fontSize: "0.8125rem",
               lineHeight: `${BAR_HEIGHT}px`,
               // Only as wide as its label. A block summary spans the line, which put its
               // centre — where a pointer test clicks — under the social marks, and made empty
@@ -181,7 +184,7 @@ export default async function SiteFooter() {
                   "&:hover": { bgcolor: "action.hover" },
                 }}
               >
-                <SocialIcon network={entry.network} size={22} />
+                <SocialIcon network={entry.network} size={20} />
               </MuiLink>
             ))}
           </Stack>

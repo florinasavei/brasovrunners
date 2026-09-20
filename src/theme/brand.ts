@@ -231,10 +231,12 @@ export const LOGO = {
  * bottom quarter of that artwork, so at 28px it rendered about seven pixels tall — present and
  * unreadable, which is what made the mark-plus-live-text pairing worth trying in the first place.
  * At 44px the lettering is about eleven pixels and reads; at 2.42:1 the logo is then ~107px wide,
- * which still leaves room for the navigation at 320px (BR-REQ-041-01 criterion 1).
+ * which still leaves room for the navigation at 320px (BR-REQ-041-01 criterion 1). 40px since
+ * §158 (the owner: "the header and the footer must be smaller, on mobile smaller still"):
+ * ten pixels of lettering, ~97px wide.
  */
-export const HEADER_MARK_HEIGHT_PX = 44;
-export const HEADER_MARK_HEIGHT = "clamp(32px, 9vw, 44px)";
+export const HEADER_MARK_HEIGHT_PX = 40;
+export const HEADER_MARK_HEIGHT = "clamp(30px, 8vw, 40px)";
 /**
  * How wide the page is. One value, used by the header, the footer, the environment notice and
  * every public and backoffice page, so "allow a wider screen" (the owner, twice on 2026-09-17:

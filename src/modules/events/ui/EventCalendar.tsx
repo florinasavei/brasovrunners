@@ -1,7 +1,7 @@
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
+import ChipLink from "@/shared/ui/ChipLink";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -179,48 +179,16 @@ export default async function EventCalendar({
           </Link>
           {stepLink(nextHref, view.kind === "month" ? t("calendar.next") : t("calendar.nextYear"), <ChevronRightIcon />)}
         </Stack>
-        {/* The view: one month, or the whole year. String hrefs, like the filter chips. */}
+        {/* The view: one month, or the whole year — small pills in 44px links (§158). */}
         <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.viewMonth")} / ${t("calendar.viewYear")}`}>
-          <Chip
-            component="a"
-            href={href({ month: monthParam(month) })}
-            clickable
-            label={t("calendar.viewMonth")}
-            color={view.kind === "month" ? "primary" : "default"}
-            variant={view.kind === "month" ? "filled" : "outlined"}
-            sx={{ height: 44, borderRadius: 22 }}
-          />
-          <Chip
-            component="a"
-            href={href({ year: String(month.year) })}
-            clickable
-            label={t("calendar.viewYear")}
-            color={view.kind === "year" ? "primary" : "default"}
-            variant={view.kind === "year" ? "filled" : "outlined"}
-            sx={{ height: 44, borderRadius: 22 }}
-          />
+          <ChipLink href={href({ month: monthParam(month) })} label={t("calendar.viewMonth")} active={view.kind === "month"} current={view.kind === "month" ? "page" : undefined} />
+          <ChipLink href={href({ year: String(month.year) })} label={t("calendar.viewYear")} active={view.kind === "year"} current={view.kind === "year" ? "page" : undefined} />
         </Stack>
         {/* The layout, for a month (§137): the grid, or the list a phone used to get by default. */}
         {view.kind === "month" && (
           <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`}>
-            <Chip
-              component="a"
-              href={href({}, "view")}
-              clickable
-              label={t("calendar.layoutGrid")}
-              color={layout === "grid" ? "primary" : "default"}
-              variant={layout === "grid" ? "filled" : "outlined"}
-              sx={{ height: 44, borderRadius: 22 }}
-            />
-            <Chip
-              component="a"
-              href={href({ view: "list" })}
-              clickable
-              label={t("calendar.layoutList")}
-              color={layout === "list" ? "primary" : "default"}
-              variant={layout === "list" ? "filled" : "outlined"}
-              sx={{ height: 44, borderRadius: 22 }}
-            />
+            <ChipLink href={href({}, "view")} label={t("calendar.layoutGrid")} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
+            <ChipLink href={href({ view: "list" })} label={t("calendar.layoutList")} active={layout === "list"} current={layout === "list" ? "page" : undefined} />
           </Stack>
         )}
       </Stack>
