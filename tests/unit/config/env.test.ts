@@ -122,3 +122,29 @@ describe("BR-REQ-070-04 contact form mode", () => {
     expect(() => envSchema.parse({ APP_ENV: "qa", ...SMTP, CONTACT_SMTP_USER: "not-an-address" })).toThrow();
   });
 });
+
+/**
+ * `DECISIONS.md` §163 — the star is an allowlist entry, and the schema must let a deployment
+ * carrying it boot: the QA build of 2026-09-20 failed because the per-entry address check
+ * refused it.
+ */
+describe("EMAIL_ALLOWLIST accepts the star", () => {
+  const base = {
+    APP_ENV: "qa",
+    DATABASE_URL: "postgres://u:p@h/db",
+    APP_BASE_URL: "https://qa.example.test",
+    MAILGUN_API_KEY: "key",
+    MAILGUN_DOMAIN: "mail.example.test",
+    MAILGUN_API_BASE_URL: "https://api.example.test",
+  };
+  it("parses in allowlist mode and refuses it anywhere else", () => {
+    const ok = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: "*" });
+    expect(ok.success, ok.success ? "" : JSON.stringify(ok.error.issues)).toBe(true);
+    const mixed = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: "ana@dev.test, *" });
+    expect(mixed.success).toBe(true);
+    const captured = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "capture", EMAIL_ALLOWLIST: "*" });
+    expect(captured.success).toBe(false);
+    const rubbish = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: "not-an-address" });
+    expect(rubbish.success).toBe(false);
+  });
+});

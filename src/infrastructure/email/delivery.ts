@@ -1,3 +1,4 @@
+import { ALLOW_EVERY_RECIPIENT } from "@/shared/config/env-enums";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
@@ -18,8 +19,7 @@ export type EmailDeliveryMode = "capture" | "allowlist" | "live";
 
 export type DeliveryDecision = "send" | "capture";
 
-/** The one `EMAIL_ALLOWLIST` entry that is not an address: every recipient (§163). */
-export const ALLOW_EVERY_RECIPIENT = "*";
+export { ALLOW_EVERY_RECIPIENT };
 
 /**
  * Whether one recipient may actually be transmitted to.
