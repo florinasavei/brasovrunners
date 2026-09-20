@@ -6890,3 +6890,17 @@ and a native select is searched by typing. Validation on save is unchanged.
 catalogues.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 154. Decided — a series card folds its dates (2026-09-19)
+
+**Context.** The owner, on the listing on a phone: "these date pills take too much space" —
+eight 44-pixel chips in four rows under every series card, which §138 had unfolded.
+
+**Decision.** The chips sit behind a native disclosure, "Toate datele (8)", closed by
+default, 44 pixels tall; the card is the next date and the rhythm, the rest one press away.
+No JavaScript.
+
+**Consequences.** `events/ui/SeriesCard.tsx`, one key replaces one in both catalogues.
+BR-REQ-041-01 criterion 9 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
