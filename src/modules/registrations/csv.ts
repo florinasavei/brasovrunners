@@ -71,7 +71,9 @@ const HEADER = [
   "Guardian",
   "Submitted",
   "Confirmed",
-  "Bib",
+  // "Race number (BIB)", not "Bib": the club calls it that everywhere else in the backoffice
+  // (§180), and a spreadsheet column is the one place a volunteer meets the word cold.
+  "Race number (BIB)",
   "Checked in",
   "Email bounced",
 ];

@@ -36,15 +36,33 @@ const OUTPUTS = [
     // The email's header band is the club's blue, and the lockup sits on it.
     background: "#1a1aff",
   },
+  {
+    source: "public/brand/logo-white.svg",
+    target: "src/theme/pdf/logo-white.png",
+    width: 720,
+    /*
+      No background at all, which is the one output here that keeps an alpha channel.
+
+      A bib's header band is the **event's** colour (§173) — a race can be green or red — so
+      the lockup cannot be baked onto the club's blue the way the email's is. It has to arrive
+      transparent and be drawn over whatever the band is.
+
+      Which means the caveat at the top of this file applies, and the way round it is the
+      encoding: this one is written as 8-bit RGBA (`palette: false`), never indexed. An indexed
+      PNG carries its transparency in a `tRNS` chunk, and that is the shape pdfkit composites
+      badly — it is what turned the filled blue lockup into a thin outline in the declaration.
+      A straight RGBA image reaches a PDF as an image plus a soft mask, which is the ordinary,
+      well-trodden path, and it is also what `next/og` wants for the same picture.
+    */
+    background: null,
+  },
 ];
 
 for (const { source, target, width, background } of OUTPUTS) {
   const svg = await readFile(source);
-  const png = await sharp(svg, { density: 600 })
-    .resize({ width, fit: "inside" })
-    .flatten({ background })
-    .png({ compressionLevel: 9, palette: true })
-    .toBuffer();
+  const raster = sharp(svg, { density: 600 }).resize({ width, fit: "inside" });
+  if (background) raster.flatten({ background });
+  const png = await raster.png({ compressionLevel: 9, palette: background !== null }).toBuffer();
   await writeFile(target, png);
   const { width: w, height: h, hasAlpha } = await sharp(png).metadata();
   console.log(`${path.basename(target)}: ${w}x${h}, alpha ${hasAlpha ? "yes" : "no"}, ${(png.byteLength / 1024).toFixed(1)} KiB`);

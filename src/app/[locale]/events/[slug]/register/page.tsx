@@ -27,13 +27,19 @@ import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/fo
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import {
+  OPTION_GLYPH_SX,
+  OPTION_LABEL_SX,
+  OPTION_ROW_SX,
+  SELECT_WITH_GLYPHS_SX,
+} from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import Flag from "@/shared/ui/Flag";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import Script from "next/script";
-import { TURNSTILE_SCRIPT_URL, turnstileSiteKey } from "@/modules/registrations/turnstile";
+import { turnstileSiteKey } from "@/modules/registrations/turnstile";
+import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -52,8 +58,6 @@ export const metadata: Metadata = {
 /** The anchor a field is reached by from the error summary. Prefixed so it cannot collide. */
 const fieldId = (name: string) => `f-${name}`;
 
-/** An option that wears a mark before its words: the glyph, a gap, the label (§171). */
-const SEX_ITEM_SX = { display: "flex", alignItems: "center", gap: 1 } as const;
 
 /**
  * An optional group, **open by default** since 2026-09-17. It was collapsed to shorten the page
@@ -109,6 +113,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!event) notFound();
 
   const now = new Date();
+  // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
+  const siteKey = turnstileSiteKey();
   const state = registrationState(
     {
       registrationMode: event.registrationMode,
@@ -415,22 +421,39 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   required
                   fullWidth
                   defaultValue={typed("sex", "UNSPECIFIED")}
+                  sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
                       sex"). As **children** of the item, never as a prop across the boundary —
                       see `CheckboxField` for what an element-valued prop costs — and MUI shows
-                      the chosen item's children in the closed field, so the mark stays. */}
-                  <MenuItem value="FEMALE" sx={SEX_ITEM_SX}>
-                    <FemaleIcon fontSize="small" aria-hidden="true" />
-                    {t("sexOptions.FEMALE")}
+                      the chosen item's children in the closed field, so the mark stays.
+
+                      Which is also why the row is declared twice: the children travel to the
+                      closed field, the item's own `sx` does not. `select-option.ts` says what
+                      that cost before it was laid out in both places. */}
+                  <MenuItem value="FEMALE" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <FemaleIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.FEMALE")}
+                    </Box>
                   </MenuItem>
-                  <MenuItem value="MALE" sx={SEX_ITEM_SX}>
-                    <MaleIcon fontSize="small" aria-hidden="true" />
-                    {t("sexOptions.MALE")}
+                  <MenuItem value="MALE" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <MaleIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.MALE")}
+                    </Box>
                   </MenuItem>
-                  <MenuItem value="UNSPECIFIED" sx={SEX_ITEM_SX}>
-                    <PersonIcon fontSize="small" aria-hidden="true" />
-                    {t("sexOptions.UNSPECIFIED")}
+                  <MenuItem value="UNSPECIFIED" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <PersonIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.UNSPECIFIED")}
+                    </Box>
                   </MenuItem>
                 </TextField>
 
@@ -441,6 +464,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   required
                   fullWidth
                   defaultValue={typed("nationality", "RO")}
+                  sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/*
                     The flag before the name (§171), from the set `scripts/sync-flags.mjs`
@@ -453,9 +477,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     — and Windows is what the club's own laptop runs.
                   */}
                   {countries.map((country) => (
-                    <MenuItem key={country.code} value={country.code} sx={SEX_ITEM_SX}>
-                      <Flag code={country.code} width={20} />
-                      {country.label}
+                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
+                      {/* The flag is `display: block` and 20×15; the fixed box is what stops it
+                          taking a line of its own in the closed field and what keeps every
+                          country name starting at the same x. */}
+                      <Box component="span" sx={OPTION_GLYPH_SX}>
+                        <Flag code={country.code} width={20} />
+                      </Box>
+                      <Box component="span" sx={OPTION_LABEL_SX}>
+                        {country.label}
+                      </Box>
                     </MenuItem>
                   ))}
                 </TextField>
@@ -603,13 +634,37 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
 
-              {/* A minor's parent or guardian (§108): folded, named for the one case it is
-                  required in, and the server refuses a minor without it. */}
-              <Box component="details" sx={disclosureSx} open={invalid.has("guardianName")}>
-                <Typography component="summary" variant="body2">
-                  {t("disclosure.guardian")}
-                </Typography>
-                <Stack spacing={2} sx={{ pb: 2 }}>
+              {/*
+                A minor's parent or guardian (§108, §185): a tick, and the name only underneath it.
+
+                It was a fold — "Părinte sau tutore" — and the owner read an opened fold as a
+                question he now had to answer: "mă disperă faza cu tutorele! aparent dacă expandez
+                acel câmp deja trebe să completez!!! vreau să fie o bifă acolo man". He was right
+                about the shape even though the field was never required by the browser: a fold
+                asks "is there more here", and the actual question is "is the runner under
+                eighteen" — which has an answer, and the answer decides whether anything below it
+                applies at all.
+
+                The tick reveals the name with CSS alone: `:has()` on the container, no client
+                island, works with JavaScript switched off. The *rule* stays where it was — the
+                server requires a guardian when the birth date gives under eighteen, whatever this
+                box says, because a legal requirement cannot be untickable. So the tick is checked
+                for them when a rejection names the field, which is how somebody who is a minor
+                and did not tick gets shown the box they have to fill.
+              */}
+              <Box
+                sx={{
+                  "& .guardian-fields": { display: "none" },
+                  "&:has(input[name='isMinor']:checked) .guardian-fields": { display: "block" },
+                }}
+              >
+                <CheckboxField
+                  name="isMinor"
+                  defaultChecked={typed("isMinor") === "on" || invalid.has("guardianName")}
+                >
+                  {t("isMinor")}
+                </CheckboxField>
+                <Stack spacing={2} className="guardian-fields" sx={{ pt: 1 }}>
                   <Typography variant="body2" color="text.secondary">
                     {t("guardianHelp")}
                   </Typography>
@@ -760,16 +815,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>
               </TextField>
 
-              {/* Cloudflare Turnstile, when the club switched it on (§97). */}
-              {turnstileSiteKey() && (
+              {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
+                  its own island (§185) — the implicit widget could not survive a re-render. */}
+              {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <div className="cf-turnstile" data-sitekey={turnstileSiteKey()} data-language={locale} />
+                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
                   {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}
                     </Typography>
                   )}
-                  <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
                 </Box>
               )}
               <SubmitButton

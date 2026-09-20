@@ -8400,3 +8400,224 @@ from a role that may not manage registrations; resend exactly where a message ex
 `tests/unit/registrations/default-event-filter.test.ts`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 179. Decided — erase is gated on the role, not on "can this still be cancelled" (2026-09-20)
+
+**Context.** Twice over, an hour apart: "tot nu pot sterge evenimente!" and then "nu pot sterge
+inscrieri!". The second explains the first. He had two registrations he had made himself while
+walking the form, the event refused to be deleted because of them, the refusal told him to
+archive the event instead — and when he went to remove the registrations, the screen that erases
+one was not there.
+
+It was not there because the whole destructive section of a registration's page — cancel *and*
+erase — sat behind one condition: `canTransition(status, "CANCELLED")`. A registration that is
+already CANCELLED or EXPIRED has no such edge. So the verb disappeared from exactly the rows most
+likely to need it, and the more carefully somebody cleaned up after a test — cancel first, then
+remove — the more certainly he locked himself out.
+
+The service never had that limitation. `deleteRegistrationByStaff` releases the place only
+`if (canTransition(current.status, "CANCELLED"))` and erases either way. This was the UI hiding
+a verb the domain supports, which is the failure mode §15.11 is written against from the other
+direction: a screen must not offer what the domain refuses, and it must not withhold what the
+domain allows either.
+
+**Decision.** *Erase is its own section, on its own gate:* `canManageRegistrations(actor.role)`
+— the same condition the Server Action asserts (BR-REQ-060-01). Cancel keeps its own gate, and
+the two are no longer nested, because they answer different questions. Cancel asks "can this
+registration still be withdrawn"; erase asks "may this person remove a person's data at all"
+(BR-REQ-037-06). Nesting them made the second a special case of the first, which it never was.
+
+*The two refusals now name the path.* "Nu se poate șterge: {count} înscrieri reale" used to end
+"arhivează evenimentul" and stop — advice for a club with a real field of runners, addressed to
+somebody looking at three rows he had typed himself. Both messages now name the way through:
+open the registrations, erase each one with a reason, then delete the event. A refusal that does
+not say what would work is a dead end, and the owner walked into it twice.
+
+**Rejected.** *Letting the event delete take its registrations with it.* §176 already sweeps
+`kind = TEST` rows, which is safe because a test registration is not a person. A real one is,
+and erasing it is a decision with an audit row and a reason attached — it does not belong
+underneath a button labelled "delete the event".
+
+**Consequences.** `registrations/[id]/page.tsx` has two sections where it had one nested pair.
+The cancel help text sits with cancel rather than after both.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 180. Decided — a race number is a picture, and the picture is the same everywhere (2026-09-20)
+
+**Context.** "Ar trebui să văd BID-ul ca și poză! BID-urile sunt super importante!", then "trebuie
+să pot descărca BID-ul!", then "trebe să pot descărca toate BID-urile pentru a le printa!", and
+"folosește termenul «Număr de concurs (BID)»".
+
+**Decision.** *One module decides what a bib looks like; two renderers draw it.* `bib-design.ts`
+holds the band colour and the footer line and imports nothing but the palette — no `node:`
+builtin, no pdfkit, no React — because `bibs-pdf.ts` draws A4 with pdfkit and `bib-image.tsx`
+draws 900×600 with `next/og`, and the picture is the club's preview of the paper. They must
+agree; a shared constant is how, and it is pure for the same reason `media/limits.ts` is (§178).
+
+*Three ways out, one route.* The event's whole sheet, one participant's own page, and the picture
+— the same handler, the same design, authorized the same way. A volunteer printing a replacement
+at the desk and an Administrator printing eighty the night before are the same act at different
+counts.
+
+*The term is "Număr de concurs (BID)" wherever the club reads it*, because that is what the club
+says out loud on race morning.
+
+**Consequences.** `bibs.ts`, `csv.ts` and `workbook.ts` follow the same wording. Tests:
+`bib-design.test.ts` (the fallback colour, a malformed hex), `bib-image.test.ts`,
+`bibs-pdf.test.ts`, `bibs.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 181. Decided — an approved legal version is withdrawn, never deleted (2026-09-20)
+
+**Context.** "Trebuie să pot șterge documente! Trebuie să le refac cu placeholders!"
+
+**Decision.** *Almost yes.* §46 and `AGENTS.md` §12.5 say an approved version is never deleted,
+and underneath the principle sits arithmetic that makes it load-bearing:
+`registrations.privacy_notice_version` is a plain integer with no foreign key, and
+`createDraftVersion` takes `max(version) + 1`. Delete version 4 and the next draft is version 4
+again, with different words — and every registration that recorded "privacy notice 4" becomes a
+consent to text nobody was ever shown, with nothing in the database able to notice.
+
+So: **withdrawal.** The row, the number and the words stay; what goes is the offering. A withdrawn
+version is not resolved as current, not offered to the event editor, not counted as "this key
+already has approved text", and not on the club's list unless the club asks. What withdrawal can
+never touch is a version something relied on, or the text the site is serving right now —
+`assertWithdrawable` is the whole of that rule, and it is called twice: once outside the
+transaction so the screen names the actual obstacle, once inside it so the decision is taken on
+rows nothing can have changed underneath. Two calls of the same function, never a cheap check and
+a thorough one, because a guard that differs between them is a guard that can be talked past.
+
+*A draft is still deleted outright.* Nothing ever relied on it.
+
+**Consequences.** Migration `0051_legal_withdrawal` adds `withdrawn_at` and
+`withdrawn_by_staff_user_id` — expand-only. Test:
+`tests/integration/legal/withdrawal.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 182. Decided — a select that is centred in both places MUI renders it (2026-09-20)
+
+**Context.** "Aceste inputuri sunt super descentrate!!", of the sex and citizenship fields, after
+§171 put a mark before each option's words.
+
+**Decision.** *Lay the row out twice, deliberately.* The cause is MUI's own mechanism, not a stray
+margin: a `Select` shows the chosen option by reusing the matching `MenuItem`'s **children** —
+`SelectInput.js` computes `displaySingle = child.props.children` — and the item's `sx` is not
+among them. A row laid out only on the `MenuItem` is laid out nowhere in the closed field, where
+the glyph falls back to an inline box on the text's baseline, about five pixels below the middle
+of a 56-pixel field. A flag was worse: `Flag` renders `display: block` and took a line of its
+own. So `shared/ui/select-option.ts` lays the row out on the item *and* through the Select's own
+slot class.
+
+*A picture written into the short description shows on the card.* The cards rendered `excerpt`,
+the plain-text shadow of the document, which drops exactly what the owner had put there.
+
+**Consequences.** `select-option.ts` is shared by the two fields that have marks. Tests:
+`select-options.test.ts`, `card-excerpt.test.ts`, `registration-panel.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 183. Decided — the bucket's pictures are a tab, not a grey line of text (2026-09-20)
+
+**Context.** "I should be able to see and manage the pictures stored in Cloudflare as well." The
+list existed. It was reachable through one grey line under the albums' intro paragraph, which is
+where a link goes to be missed.
+
+**Decision.** *Two buttons at the top of both pages*, the current one filled — albums, and every
+picture the bucket holds. A Server Component with no pathname lookup: `AdminTabs` is a client
+island because a layout cannot know which page it wraps, but there are two pages here and each
+knows which it is. No icons: an icon element passed from a Server Component to a client one is the
+defect `shared/ui/action-icons.ts` documents, and a two-word label needs no glyph.
+
+*Each row carries the absolute address as well as the stored one.* A body stores a path when the
+bucket is this app, because a body outlives a hostname (§8, BR-REQ-101-02) — and somebody pasting
+a picture into a newsletter needs the whole address. *The total is summed from the rows the page
+already read*, never asked of the database again, so the figure at the top and the rows under it
+cannot disagree.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 184. Decided — the bib is visible where the bib is handed over (2026-09-20)
+
+**Context.** "Numerele de concurs sunt frumoase, dar trebuie să le văd și din zona de înscrieri și
+din ziua cursei."
+
+**Decision.** *The desk shows the picture, folded.* A volunteer holding an envelope checks it
+against the screen; the desk's own job is the large digits and the buttons, so the picture sits
+behind a summary and is fetched only when the fold is opened — `<details>` does not load what it
+does not render, which matters on a phone at a start line.
+
+*Every desk role may ask for one participant's picture.* The preview route was Administrator-only,
+like the sheet. It is now `canWorkTheDesk`, and the sheet is not: the picture carries a name and
+a number, which is exactly what `AGENTS.md` §15.11 already says every staff role sees at the
+desk. One registration at a time, by id, on the event it belongs to — this is not the list, and
+two hundred single requests is not the export.
+
+**Rejected.** *Putting the printable sheet at the desk too.* A volunteer needs the one envelope in
+front of them; the whole field is the club's print run, and it carries every name at once.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 185. Decided — the anti-bot check is rendered explicitly, and the guardian is a tick (2026-09-20)
+
+**Context.** Two screenshots an hour apart, the registration form and the contact form, both
+showing "Verificarea anti-bot nu a reușit. Bifează din nou căsuța «Nu sunt robot»" printed above
+**nothing to tick**. "Plus faza asta cu robotul man!!! implementează corect!!"
+
+**Decision.** *Turnstile renders explicitly, from its own client island, and resets on every
+attempt.* The implicit mode — `<div class="cf-turnstile">` in the server's markup and `api.js`
+loaded beside it — works exactly once. `api.js` scans the document when it loads and never
+again, and the token it produces is single use. So the first thing that goes wrong with a
+submission takes the widget with it: the server re-renders the form, React reuses the same empty
+div, no script load happens, no challenge is drawn, and every further attempt fails on a missing
+token whatever else the person fixes. The instruction to tick the box again was, by then, an
+instruction to tick nothing.
+
+`TurnstileWidget` injects `api.js?render=explicit` once per document, draws the widget into its
+own element when the script is ready, and calls `reset()` whenever `attempt` changes — the
+server passes its render time, a new value on every response. Thirty lines of client island,
+which §1.5 asks a client island to justify: what is being fixed is what happens to the DOM
+*after* the server has answered, and nothing on the server can reach that.
+
+*The guardian is a tick, not a fold.* "Mă disperă faza cu tutorele! Aparent dacă expandez acel
+câmp deja trebe să completez!!! Vreau să fie o bifă acolo man." He was right about the shape even
+though the field was never required by the browser: a fold asks "is there more here", while the
+actual question — "is the runner under eighteen" — has an answer, and the answer decides whether
+anything under it applies. The tick reveals the name field through `:has()`, with no client
+island and with JavaScript switched off.
+
+*The rule does not move.* The server still requires a guardian when the birth date gives under
+eighteen, whatever the box says: a legal requirement cannot be untickable. The tick is checked for
+them when a rejection names the field, which is how somebody who is a minor and did not tick is
+shown the box they have to fill.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 186. Decided — a participant who opted out is counted, never named (2026-09-20)
+
+**Context.** "Trebuie să văd care participanți sunt vizibili pe site și care nu! Și cumva să îi
+afișez cenzurați… gen «participanți surpriză»… sau «participanți anonimi»."
+
+**Decision.** *The public list gains a row per opted-out runner, reading "Participant anonim".*
+The list had been dropping them silently, so an event with forty-two confirmed runners showed
+thirty-nine names under a heading that said forty-two — a page contradicting itself, and the
+count is what most readers came for.
+
+*It is a count, never a row.* `countAnonymousStartListEntries` selects a number and nothing
+else: no name, no club, no identifier, so there is nothing to leak and
+`tests/privacy/public-surface.test.ts` keeps its grip on `listPublicStartList` exactly as it
+was. One row each rather than "and 3 others", because "a person is coming and asked not to be
+named" is true of each of them individually.
+
+*The backoffice marks the ones who are not on the list.* Only those: on an event that publishes a
+list most rows are on it, and a chip on every row is a chip nobody reads. The mark is shown
+whatever the event's own visibility, because it records what the person asked for, not what the
+club has switched on today.
+
+**Rejected.** *Initials, or a censored name.* "M. P." on a start list of a hundred is a name to
+somebody who knows the field, and §32 puts the participant's refusal ahead of the page's
+symmetry. The platform holds their name; the page does not have to.
+
+Baseline `BR-V1.38-2026-09-18`.

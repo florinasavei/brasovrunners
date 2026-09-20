@@ -10,7 +10,6 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import Script from "next/script";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
@@ -22,7 +21,8 @@ import {
   parseContactErrorFields,
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
-import { TURNSTILE_SCRIPT_URL, turnstileSiteKey } from "@/modules/registrations/turnstile";
+import { turnstileSiteKey } from "@/modules/registrations/turnstile";
+import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { env } from "@/shared/config/env";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -66,6 +66,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const { sent, error: rawError, fields } = await searchParams;
   const t = await getTranslations("Contact");
   const now = new Date();
+  // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
+  const siteKey = turnstileSiteKey();
 
   const error = parseContactError(rawError);
   const rejected = parseContactErrorFields(fields);
@@ -188,16 +190,16 @@ export default async function ContactPage({ params, searchParams }: Props) {
                 slotProps={{ htmlInput: { maxLength: CONTACT_MESSAGE_MAX } }}
               />
 
-              {/* Cloudflare Turnstile, when the club switched it on (§97). */}
-              {turnstileSiteKey() && (
+              {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
+                  its own island (§185) — the implicit widget could not survive a re-render. */}
+              {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <div className="cf-turnstile" data-sitekey={turnstileSiteKey()} data-language={locale} />
+                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
                   {invalid.has("captcha") && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}
                     </Typography>
                   )}
-                  <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
                 </Box>
               )}
 

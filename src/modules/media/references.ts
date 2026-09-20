@@ -119,8 +119,25 @@ export type MediaAssetRow = {
   /** The variant addresses, for the list and the picker — `webUrl` in the shape a body carries. */
   webUrl: string;
   thumbUrl: string;
+  /**
+   * The same picture's *absolute* address, which `webUrl` is not: a body stores a path when
+   * the bucket is this app (local and test storage), because a body outlives a hostname
+   * (§8, BR-REQ-101-02). Somebody pasting a picture into a newsletter or a Facebook post needs
+   * the whole address, so the list carries both rather than making the page rebuild one.
+   */
+  publicWebUrl: string;
   references: MediaReference[];
 };
+
+/**
+ * What the bucket holds, in bytes: summed from the rows the list already read rather than
+ * asked of the database again, so the figure at the top of the page and the rows under it
+ * cannot disagree. `byte_size` is the web variant — the thumbnail beside it is a few
+ * kilobytes, and the page says so instead of pretending this is the object count.
+ */
+export function totalMediaBytes(rows: readonly Pick<MediaAssetRow, "byteSize">[]): number {
+  return rows.reduce((sum, row) => sum + row.byteSize, 0);
+}
 
 /**
  * Every stored picture, newest first, with everywhere it is used — so an organizer can see
@@ -193,6 +210,7 @@ export async function listMediaAssetsForAdmin<T extends Record<string, unknown>>
   return assets.map((asset) => ({
     ...asset,
     webUrl: bodyImageSrc(objectKey(asset.keyPrefix, "web")),
+    publicWebUrl: storage.publicUrl(objectKey(asset.keyPrefix, "web")),
     thumbUrl: storage.publicUrl(objectKey(asset.keyPrefix, "thumb")),
     references: references.get(asset.id) ?? [],
   }));

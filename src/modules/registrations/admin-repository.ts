@@ -45,6 +45,12 @@ export type RegistrationListRow = {
   instagramHandle: string | null;
   /** The parent or guardian of a minor (§108); null for an adult. */
   guardianName: string | null;
+  /**
+   * "Keep my name off the public start list" (BR-REQ-039-01, §186). The club sees who is on
+   * the list it published, because "is my name on the site" is a question people ask the
+   * club and not the platform.
+   */
+  listOptOut: boolean;
   submittedAt: Date;
   confirmedAt: Date | null;
   /** The race number, once assigned (BR-REQ-038-01). */
@@ -271,6 +277,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       clubMemberDeclared: registrations.clubMemberDeclared,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       clubName: registrations.clubName,
+      listOptOut: registrations.listOptOut,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,

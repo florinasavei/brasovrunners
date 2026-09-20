@@ -1,16 +1,26 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { legalDocuments, legalDocumentTranslations } from "@/db/schema/legal-documents";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import type { Locale } from "@/i18n/routing";
+import { recordAuditEvent } from "@/modules/audit/repository";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import {
   computeContentHash,
+  isLegalDocumentBody,
   type LegalDocumentTranslationInput,
 } from "./domain/content-hash";
 import { isEmptyBody } from "./domain/body-text";
-import { findCurrentApprovedDocument, findLatestVersion, listVersionsForBackoffice } from "./repository";
+import {
+  findCurrentApprovedDocument,
+  findCurrentApprovedVersionId,
+  findLatestVersion,
+  findVersionWithTranslations,
+  type LegalDocumentVersionRow,
+  listVersionsForBackoffice,
+} from "./repository";
 import { LEGAL_TEMPLATES } from "./templates/catalogue";
 import { type ClubFacts, fillClubFacts, remainingPlaceholders } from "./templates/club-facts";
 
@@ -320,6 +330,160 @@ export async function deleteDraftVersion<T extends Record<string, unknown>>(
 }
 
 /**
+ * Everything withdrawal requires, asked as one question (`DECISIONS.md` §46, §53).
+ *
+ * Called twice per withdrawal — once outside the transaction so the screen gets a sentence
+ * naming the actual obstacle, and once inside it so the decision is taken on rows nothing can
+ * have changed underneath. Two calls of the same function rather than a cheap check and a
+ * thorough one, because a guard that differs between the two is a guard that can be talked past.
+ */
+async function assertWithdrawable<T extends Record<string, unknown>>(
+  db: Database<T>,
+  versionId: string,
+  now: Date,
+): Promise<LegalDocumentVersionRow> {
+  const rows = await listVersionsForBackoffice(db);
+  const row = rows.find((candidate) => candidate.id === versionId);
+  if (!row) throw new DomainError("NOT_FOUND", "no such legal document version");
+
+  if (!row.isApproved) {
+    throw new DomainError(
+      "CONFLICT",
+      "a draft was never in force, so there is nothing to withdraw; delete it instead",
+    );
+  }
+  if (row.withdrawnAt) {
+    throw new DomainError("CONFLICT", "this version has already been withdrawn");
+  }
+  if (
+    isReliedOn({
+      acceptances: row.acceptanceCount,
+      events: row.eventCount,
+      privacyAcknowledgements: row.privacyAcknowledgementCount,
+    })
+  ) {
+    throw new DomainError(
+      "CONFLICT",
+      "somebody has relied on this version; it stays exactly where it is",
+    );
+  }
+
+  /*
+    And the one a count cannot see: the version the site is serving right now.
+
+    Zero signatures is not "unused" for a notice — it is what the notice of a quiet week looks
+    like, while every visitor to /legal/privacy is reading it. Withdrawing the version in force
+    would take the club's privacy notice off the public site and, per BR-REQ-053-01, stop every
+    registration in the same instant. The successor is approved first; then this one is free.
+  */
+  const inForce = await findCurrentApprovedVersionId(db, row.key, now);
+  if (inForce === versionId) {
+    throw new DomainError(
+      "CONFLICT",
+      "this version is the one currently in force; approve its successor before withdrawing it",
+    );
+  }
+
+  return row;
+}
+
+/**
+ * Take an approved version out of circulation without taking it out of the record
+ * (BR-REQ-053-02, `DECISIONS.md` §46, §53).
+ *
+ * The owner asked to be able to delete an approved document, and the answer is *almost* yes.
+ * §46 and `AGENTS.md` §12.5 say an approved version is never deleted, and underneath the
+ * principle there is an arithmetic hazard that makes the principle load-bearing:
+ * `registrations.privacy_notice_version` is a plain integer with no foreign key, and
+ * `createDraftVersion` takes `max(version) + 1`. Delete version 4 and the next draft is version
+ * 4 again — with different words. Every registration that recorded "privacy notice 4" would
+ * then be a consent to text nobody showed anybody, and nothing in the database would notice.
+ *
+ * Withdrawal keeps the row, the number and the words, and removes only the offering: after this
+ * the version is not resolved as current, not offered to the event editor, not counted as "this
+ * key already has approved text", and not shown on the club's list unless the club asks for it.
+ * What it can never do is remove something that was relied on, or the text the site is serving
+ * at this moment — `assertWithdrawable` above is the whole of that rule.
+ *
+ * The audit row goes in first, and in the same transaction, so the fact of the version survives
+ * the change of state: the key, the number, the date it took effect, who approved it and the
+ * hash of each language's text. If the guarded update then matches nothing — somebody withdrew
+ * it in another tab — the transaction rolls back and takes the audit row with it, because a
+ * trail that records changes which did not happen is worse than no trail.
+ */
+export async function withdrawApprovedVersion<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  versionId: string,
+  now: Date,
+): Promise<void> {
+  assertMayEdit(actor);
+  await assertWithdrawable(db, versionId, now);
+
+  await db.transaction(async (tx) => {
+    const row = await assertWithdrawable(tx, versionId, now);
+    const document = await findVersionWithTranslations(tx, versionId);
+
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "legal_document.withdrawn",
+      entityType: "legal_document",
+      entityId: versionId,
+      /*
+        The shape of what was withdrawn, never the text of it (§12.12). A title is the club's
+        own name for its own document, which is what makes the row readable a year later; the
+        body is the thing §12.12 forbids copying, and the hash stands in for it — the same hash
+        the version's own `content_sha256` is computed with, so the words can be checked against
+        this row rather than described by it.
+      */
+      metadata: {
+        documentKey: row.key,
+        version: row.version,
+        effectiveAt: row.effectiveAt.toISOString(),
+        approvedByStaffUserId: row.approvedByStaffUserId,
+        contentSha256: document?.contentSha256 ?? null,
+        translations: (document?.translations ?? []).map((translation) => ({
+          locale: translation.locale,
+          title: translation.title,
+          contentSha256: isLegalDocumentBody(translation.body)
+            ? computeContentHash([
+                {
+                  locale: translation.locale as Locale,
+                  title: translation.title,
+                  body: translation.body,
+                },
+              ])
+            : null,
+        })),
+      },
+      now,
+    });
+
+    /*
+      The conditions again in the `WHERE`, for the reason `deleteDraftVersion` gives: the reads
+      above are this transaction's, but the row can still have moved between this statement and
+      another connection's. Matching nothing is the honest outcome, and it is reported rather
+      than swallowed.
+    */
+    const [withdrawn] = await tx
+      .update(legalDocuments)
+      .set({ withdrawnAt: now, withdrawnByStaffUserId: actor.id })
+      .where(
+        and(
+          eq(legalDocuments.id, versionId),
+          eq(legalDocuments.isApproved, true),
+          isNull(legalDocuments.withdrawnAt),
+        ),
+      )
+      .returning({ id: legalDocuments.id });
+
+    if (!withdrawn) {
+      throw new DomainError("CONFLICT", "this version changed while it was being withdrawn");
+    }
+  });
+}
+
+/**
  * The platform's three texts, with the club's facts written in, created and approved in one act
  * (`DECISIONS.md` §132): what "New version → start from the platform's text → read → save →
  * approve, three times" did, as one press by the person who takes responsibility for them.
@@ -350,6 +514,13 @@ export async function approvePlatformTemplates<T extends Record<string, unknown>
   const result: PlatformApproval = { approved: [], alreadyApproved: [] };
 
   for (const key of keys) {
+    /*
+      "Already approved" means "has text in force", and a withdrawn version is not that —
+      `findCurrentApprovedDocument` skips it now. So a club that approved the platform's text,
+      withdrew it before anybody relied on it, and pressed the button again gets the text back,
+      as the next version number rather than the old one. The alternative would be a key with
+      no legal text and a button that politely refuses to supply any.
+    */
     const inForce = await findCurrentApprovedDocument(db, key, "ro", now);
     if (inForce) {
       result.alreadyApproved.push(key);

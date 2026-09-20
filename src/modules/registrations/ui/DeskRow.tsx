@@ -133,6 +133,32 @@ export default async function DeskRow({
               {format.dateTime(row.eventStartsAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" })}
             </Typography>
           )}
+          {/*
+            The number as the paper shows it (§184). Folded, because the desk's own job is the
+            large digits above and a picture would push the buttons off a phone; open, it is the
+            same PNG the club previewed and printed from, so a volunteer holding an envelope can
+            check the two against each other without leaving the row.
+
+            Loaded only when the fold is opened — `<details>` does not fetch what it does not
+            render — which matters on a phone at a start line.
+          */}
+          {row.bibNumber !== null && row.kind === "REAL" && (
+            <Box component="details" sx={{ mt: 1, "& > summary": { cursor: "pointer", minHeight: 44, py: 1 } }}>
+              <Typography component="summary" variant="body2" color="text.secondary">
+                {t("desk.showBib")}
+              </Typography>
+              {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
+              <img
+                src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}
+                alt={t("desk.bibAlt", { number: row.bibNumber })}
+                width={900}
+                height={600}
+                loading="lazy"
+                decoding="async"
+                style={{ display: "block", width: "100%", maxWidth: 360, height: "auto", border: "1px solid #ddd", borderRadius: 4 }}
+              />
+            </Box>
+          )}
           {row.checkinCode && (
             <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
               {row.checkinCode}

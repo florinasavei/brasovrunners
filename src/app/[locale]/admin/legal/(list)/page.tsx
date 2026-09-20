@@ -9,7 +9,10 @@ import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import {
+  findCurrentApprovedDocument,
+  findCurrentApprovedVersionId,
+} from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { env } from "@/shared/config/env";
@@ -26,7 +29,7 @@ import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
-import { deleteLegalVersionAction } from "../actions";
+import { deleteLegalVersionAction, withdrawLegalVersionAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -57,13 +60,23 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * yet". The row said a version was free when it was the most relied-upon document the club has
  * (`DECISIONS.md` §53).
  *
- * ## What may be deleted, and what the refusal says
+ * ## What may be deleted, what may be withdrawn, and what the refusal says
  *
- * A draft that was never approved, and nothing else. Where a version cannot be deleted the row
- * says why, derived from the counts: "Approved — what the club published stays on the record",
- * or the three numbers that depend on it. A missing button explains nothing; a count is a
- * reason an organizer accepts. The server refuses regardless (BR-REQ-060-01) — this only
- * changes what the screen is able to explain before anything is pressed.
+ * Deleted: a draft that was never approved, and nothing else. Withdrawn: an approved version
+ * that nobody has relied on and that is not the one in force — the row, its number and its words
+ * stay, and only the offering stops (`DECISIONS.md` §46, §53). Between them they answer the
+ * owner's "I have to be able to delete these documents" without reopening the one rule that
+ * cannot move: an approved version is never removed.
+ *
+ * Where neither is possible the row says why, derived from the same facts the service checks and
+ * in the same order — the three counts, then "in force right now". A missing button explains
+ * nothing; a count is a reason an organizer accepts. The server refuses regardless
+ * (BR-REQ-060-01) — this only changes what the screen is able to explain before anything is
+ * pressed.
+ *
+ * Withdrawn rows are folded away by default and revealed with `?withdrawn=1`, because the
+ * point of withdrawing is to get them out of the way, and the point of not deleting them is
+ * that the club can still find them.
  *
  * Administrator only, asserted here on the server — the same rule the staff screen carries,
  * because a legal document is exactly the kind of thing that must not be editable by whoever
@@ -99,6 +112,20 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       ),
     )
   ).filter((key): key is "PRIVACY_NOTICE" | "TERMS" | "EVENT_DECLARATION" => key !== null);
+  /*
+    Which three rows the site is serving right now — the one reason a withdrawal is refused that
+    no count on the row can show. A privacy notice with zero signatures is not unused; it is the
+    notice of a quiet week, and withdrawing it would close registration (BR-REQ-053-01).
+  */
+  const inForceIds = new Set(
+    (
+      await Promise.all(
+        (["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"] as const).map((key) =>
+          findCurrentApprovedVersionId(getDb(), key, now),
+        ),
+      )
+    ).filter((id): id is string => id !== undefined),
+  );
   const missingFacts = (
     [
       ["CLUB_LEGAL_NAME", facts.legalName],
@@ -124,27 +151,45 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
     acknowledgements: version.privacyAcknowledgementCount,
   });
 
+  // The fold. `listVersionsForBackoffice` is the one reader that still returns withdrawn rows,
+  // so the hiding happens here rather than in SQL — the count below has to be honest about
+  // rows the club cannot currently see.
+  const showWithdrawn = current.withdrawn === "1";
+  const withdrawnCount = versions.filter((version) => version.withdrawnAt !== null).length;
+  const visible = showWithdrawn
+    ? versions
+    : versions.filter((version) => version.withdrawnAt === null);
+
   const columns: readonly AdminColumn<LegalDocumentVersionRow>[] = [
     {
       key: "document",
       label: t("legal.document"),
       primary: true,
       render: (version) => (
-        <Link href={{ pathname: "/admin/legal/[id]", params: { id: version.id } }}>
-          {t(`legal.keys.${version.key}`)} · {t("legal.version")} {version.version}
-        </Link>
+        // Greyed when withdrawn, and still a link: the text has not gone anywhere, which is
+        // the difference between this and a delete.
+        <Box component="span" sx={{ opacity: version.withdrawnAt ? 0.6 : 1 }}>
+          <Link href={{ pathname: "/admin/legal/[id]", params: { id: version.id } }}>
+            {t(`legal.keys.${version.key}`)} · {t("legal.version")} {version.version}
+          </Link>
+        </Box>
       ),
     },
     {
       key: "state",
       label: t("legal.state"),
-      render: (version) => (
-        <Chip
-          size="small"
-          color={version.isApproved ? "success" : "default"}
-          label={version.isApproved ? t("legal.approved") : t("legal.draft")}
-        />
-      ),
+      render: (version) =>
+        version.withdrawnAt ? (
+          // Outlined rather than filled, so "retrasă" cannot be mistaken for "ciornă" at a
+          // glance: both are grey, and only one of them was ever the club's word.
+          <Chip size="small" variant="outlined" label={t("legal.withdrawn")} />
+        ) : (
+          <Chip
+            size="small"
+            color={version.isApproved ? "success" : "default"}
+            label={version.isApproved ? t("legal.approved") : t("legal.draft")}
+          />
+        ),
     },
     {
       key: "languages",
@@ -181,10 +226,16 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         {saved === "legalVersionDeleted" && (
           <Alert severity="success">{t("legal.legalVersionDeleted")}</Alert>
         )}
+        {saved === "legalVersionWithdrawn" && (
+          <Alert severity="success">{t("legal.legalVersionWithdrawn")}</Alert>
+        )}
         {saved === "platformApproved" && (
           <Alert severity="success">{t("legal.platformApproved", { count: Number(current.approved ?? "0") })}</Alert>
         )}
-        {saved && saved !== "legalVersionDeleted" && saved !== "platformApproved" && <Alert severity="success">{t("saved")}</Alert>}
+        {saved &&
+          saved !== "legalVersionDeleted" &&
+          saved !== "legalVersionWithdrawn" &&
+          saved !== "platformApproved" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
       {mayCreate && missingKeys.length > 0 && (
@@ -277,17 +328,18 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         <AdminTable
           caption={t("legal.tableCaption")}
           columns={columns}
-          rows={versions}
+          rows={visible}
           rowKey={(version) => version.id}
           basePath={getPathname({ locale, href: "/admin/legal" })}
-          currentParams={{}}
+          // So paging and the page-size control keep the fold open once it is.
+          currentParams={{ withdrawn: current.withdrawn }}
           query={query}
-          total={versions.length}
+          total={visible.length}
           labels={{
-            results: t("list.results", { count: versions.length }),
+            results: t("list.results", { count: visible.length }),
             page: t("list.page", {
               page: query.page,
-              pages: pageCount(versions.length, query.perPage),
+              pages: pageCount(visible.length, query.perPage),
             }),
             previous: t("list.previous"),
             next: t("list.next"),
@@ -304,35 +356,57 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               privacyAcknowledgements: reliance.acknowledgements,
             });
 
+            const reason = (message: string) => (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ maxWidth: 280, textAlign: "right" }}
+              >
+                {message}
+              </Typography>
+            );
+
             /*
-              Three outcomes, and each says which it is. Approval is checked before reliance
-              because it is the stronger reason: an approved version stays whether or not
-              anybody happened to act on it, so reporting "nobody has signed this" about one
-              would be true and beside the point.
+              An approved version is never deleted (§46) — but one nobody has relied on, that is
+              not the text the site is serving, can be withdrawn: out of every list and every
+              resolution, still on the record, still holding its number.
+
+              The three conditions are asked in the service's own order, so the sentence the row
+              gives and the refusal the server would give name the same obstacle.
             */
             if (version.isApproved) {
+              if (version.withdrawnAt) {
+                return reason(
+                  t("legal.withdrawnOn", {
+                    date: format.dateTime(version.withdrawnAt, { dateStyle: "medium" }),
+                  }),
+                );
+              }
+              if (relied) return reason(t("legal.withdrawBlockedReferenced", reliance));
+              if (inForceIds.has(version.id)) return reason(t("legal.withdrawBlockedCurrent"));
+
               return (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ maxWidth: 280, textAlign: "right" }}
-                >
-                  {t("legal.deleteBlockedApproved")}
-                </Typography>
+                <Box component="form" action={withdrawLegalVersionAction}>
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="versionId" value={version.id} />
+                  {/*
+                    Warning rather than error, and the word is "retrage" rather than "șterge",
+                    because the button does not destroy anything — saying otherwise in the one
+                    place somebody reads before pressing would be the wrong kind of honest.
+                  */}
+                  <ConfirmSubmitButton
+                    label={t("legal.withdraw")}
+                    title={t("legal.withdrawTitle")}
+                    body={t("legal.withdrawBody")}
+                    confirmLabel={t("legal.withdraw")}
+                    cancelLabel={t("confirm.cancel")}
+                    color="warning"
+                  />
+                </Box>
               );
             }
 
-            if (relied) {
-              return (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ maxWidth: 280, textAlign: "right" }}
-                >
-                  {t("legal.deleteBlockedReferenced", reliance)}
-                </Typography>
-              );
-            }
+            if (relied) return reason(t("legal.deleteBlockedReferenced", reliance));
 
             return (
               <Box component="form" action={deleteLegalVersionAction}>
@@ -352,6 +426,20 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         />
       )}
 
+      {/*
+        The fold, and an ordinary link rather than a disclosure widget: the state belongs in the
+        URL like every other list filter here, so it survives a Server Action's redirect and can
+        be sent to somebody. Offered only when there is something behind it.
+      */}
+      {withdrawnCount > 0 && (
+        <Box>
+          <Link href={{ pathname: "/admin/legal", query: showWithdrawn ? {} : { withdrawn: "1" } }}>
+            {showWithdrawn
+              ? t("legal.hideWithdrawn")
+              : t("legal.showWithdrawn", { count: withdrawnCount })}
+          </Link>
+        </Box>
+      )}
     </Stack>
   );
 }

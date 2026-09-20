@@ -192,6 +192,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               label={t("registrations.clubMemberChip")}
             />
           )}
+          {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked
+              only when the answer is no: on an event that publishes a list most rows are on it,
+              and a chip on every row is a chip nobody reads. On an event with no published list
+              the mark is still true — it says what this person asked for, whatever the club
+              later switches on. */}
+          {row.listOptOut && (
+            <Chip
+              size="small"
+              variant="outlined"
+              label={t("registrations.notOnPublicList")}
+            />
+          )}
         </Stack>
       ),
     },

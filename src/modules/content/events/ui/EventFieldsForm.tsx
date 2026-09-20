@@ -323,46 +323,64 @@ export default async function EventFieldsForm({
               inputMode="numeric"
             />
 
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-              <WallTimeField
-                name="event.registrationOpensAt"
-                label={t("editor.registrationOpensAt")}
-                timeLabel={t("editor.timeOfDay")}
-                value={event?.registrationOpensAt ?? null}
-                zone={zone}
-              />
-              <WallTimeField
-                name="event.registrationClosesAt"
-                label={t("editor.registrationClosesAt")}
-                timeLabel={t("editor.timeOfDay")}
-                value={event?.registrationClosesAt ?? null}
-                zone={zone}
-              />
-            </Stack>
-            <Typography variant="body2" color="text.secondary">
-              {t("editor.registrationWindowHelp")}
-            </Typography>
+            {/*
+              Two windows, two groups (the owner, of the sentence that stood between them:
+              "partea asta nu e prea clară"). Each help sentence is a child of the group it
+              describes rather than a sibling of both, because a caption sitting *between* two
+              pairs of inputs reads as a heading for the pair below it — which is how "leave
+              the opening empty and registration starts at publication" came to look like a
+              rule about the participation window. The names are untouched: this is a box
+              around fields that already posted these names.
+            */}
+            <Box>
+              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                <WallTimeField
+                  name="event.registrationOpensAt"
+                  label={t("editor.registrationOpensAt")}
+                  timeLabel={t("editor.timeOfDay")}
+                  value={event?.registrationOpensAt ?? null}
+                  zone={zone}
+                />
+                <WallTimeField
+                  name="event.registrationClosesAt"
+                  label={t("editor.registrationClosesAt")}
+                  timeLabel={t("editor.timeOfDay")}
+                  value={event?.registrationClosesAt ?? null}
+                  zone={zone}
+                />
+              </Stack>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                {t("editor.registrationWindowHelp")}
+              </Typography>
+            </Box>
 
-            {/* The participation window (§104): asked a week before, owed two days before. */}
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-              <TextField
-                name="event.confirmationOpensDaysBefore"
-                label={t("editor.confirmationOpensDaysBefore")}
-                defaultValue={event?.confirmationOpensDaysBefore ?? 7}
-                inputMode="numeric"
-                fullWidth
-              />
-              <TextField
-                name="event.confirmationDeadlineDaysBefore"
-                label={t("editor.confirmationDeadlineDaysBefore")}
-                defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
-                inputMode="numeric"
-                fullWidth
-              />
-            </Stack>
-            <Typography variant="body2" color="text.secondary">
-              {t("editor.confirmationWindowHelp")}
-            </Typography>
+            {/* The participation window (§104): asked a week before, owed two days before. Its
+                own heading, so the two numbers are visibly a second question rather than more
+                of the first — the panel's title is an `h2`, so this is the `h3` under it. */}
+            <Box>
+              <Typography component="h3" sx={{ fontSize: "0.95rem", fontWeight: 600, mb: 1 }}>
+                {t("editor.confirmationWindowTitle")}
+              </Typography>
+              <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+                <TextField
+                  name="event.confirmationOpensDaysBefore"
+                  label={t("editor.confirmationOpensDaysBefore")}
+                  defaultValue={event?.confirmationOpensDaysBefore ?? 7}
+                  inputMode="numeric"
+                  fullWidth
+                />
+                <TextField
+                  name="event.confirmationDeadlineDaysBefore"
+                  label={t("editor.confirmationDeadlineDaysBefore")}
+                  defaultValue={event?.confirmationDeadlineDaysBefore ?? 2}
+                  inputMode="numeric"
+                  fullWidth
+                />
+              </Stack>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                {t("editor.confirmationWindowHelp")}
+              </Typography>
+            </Box>
 
             {/* The race's own band of numbers (§173): where they start and what colour the
                 sheet prints behind them. A club that runs a 5 km from 100 and a 10 km from

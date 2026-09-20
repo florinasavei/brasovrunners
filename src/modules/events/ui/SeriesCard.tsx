@@ -11,6 +11,7 @@ import { DISCLOSURE_SX } from "@/shared/ui/disclosure";
 import { riseIn } from "@/theme/motion";
 import { editionDifference, recurrenceOf, usualOf } from "../domain/series";
 import type { PublicEvent } from "../repository";
+import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
@@ -89,11 +90,9 @@ export default async function SeriesCard({
           {sentence}
         </Typography>
 
-        {next.excerpt && !underHero && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {next.excerpt}
-          </Typography>
-        )}
+        {/* The short description as written, picture and all (§73) — the same excerpt the
+            single-event card renders, constrained to the card by `EventExcerpt`. */}
+        {!underHero && <EventExcerpt place="card" excerptJson={next.excerptJson} excerpt={next.excerpt} />}
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.25 }}>
           {t("series.nextLabel")}

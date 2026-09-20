@@ -19,6 +19,7 @@ import { getDb } from "@/db/client";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
@@ -425,11 +426,11 @@ async function EventCard({
             {event.title}
           </Typography>
 
-          {event.excerpt && !underHero && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {event.excerpt}
-            </Typography>
-          )}
+          {/* The short description as it was written, picture and all (§73) — the card used to
+              render the plain-text shadow of it, so a picture in a short description showed on
+              the event page and nowhere else. `EventExcerpt` renders nothing when there is
+              nothing, which is what the old `event.excerpt &&` did. */}
+          {!underHero && <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />}
 
           {/* No links inside: the card is the link. */}
           <EventFacts event={event} now={now} variant="compact" links={false} />

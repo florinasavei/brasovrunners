@@ -1,11 +1,14 @@
 import { writeFileSync } from "node:fs";
+import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { BIB_BAND_FALLBACK } from "@/modules/registrations/bib-design";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 
 /**
- * BR-REQ-038-01 — the printable sheet: two bibs per A4 page, the club's font and logo embedded.
+ * BR-REQ-038-01 — the printable sheet: two bibs per A4 page, the club's font and logo embedded,
+ * and since §180 a header band in the event's own colour with the partners at the foot.
  */
-const sheet = (count: number, layout?: "two" | "one") =>
+const sheet = (count: number, layout?: "two" | "one", over: Partial<Parameters<typeof renderBibSheet>[0]> = {}) =>
   renderBibSheet({
     layout,
     rows: Array.from({ length: count }, (_, i) => ({ bibNumber: i + 1, registeredName: `Alergător Ștefan ${i + 1}` })),
@@ -13,7 +16,49 @@ const sheet = (count: number, layout?: "two" | "one") =>
     eventDate: "11 octombrie 2026",
     pageLabel: (n, total) => `Pagina ${n} din ${total}`,
     generatedAt: new Date("2026-09-17T12:00:00Z"),
+    ...over,
   });
+
+/**
+ * Every fill colour the pages actually ask for.
+ *
+ * pdfkit flate-compresses its content streams, so the drawing operators are not in the bytes
+ * as text — which is why the assertions below inflate every stream in the file first rather
+ * than grepping the PDF. A colour reaches the page as three components between 0 and 1
+ * followed by the fill operator, so the components are compared as numbers: the exact decimal
+ * expansion of 11/255 is pdfkit's business, not this test's.
+ */
+function fillColours(pdf: Buffer): Array<[number, number, number]> {
+  const raw = pdf.toString("latin1");
+  let text = "";
+  // "endstream" also ends in "stream", hence the look-behind for anything but its "d".
+  for (const match of raw.matchAll(/(?<![d])stream\r?\n/g)) {
+    const start = match.index + match[0].length;
+    const end = raw.indexOf("endstream", start);
+    if (end === -1) continue;
+    try {
+      text += inflateSync(Buffer.from(raw.slice(start, end), "latin1")).toString("latin1");
+    } catch {
+      // A font file or an image: not a content stream, and not what this is looking for.
+    }
+  }
+  return [...text.matchAll(/(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(?:rg|scn)\b/g)].map((m) => [
+    Number(m[1]),
+    Number(m[2]),
+    Number(m[3]),
+  ]);
+}
+
+const asComponents = (hex: string): [number, number, number] => [
+  Number.parseInt(hex.slice(1, 3), 16) / 255,
+  Number.parseInt(hex.slice(3, 5), 16) / 255,
+  Number.parseInt(hex.slice(5, 7), 16) / 255,
+];
+
+const carries = (pdf: Buffer, hex: string) => {
+  const want = asComponents(hex);
+  return fillColours(pdf).some((got) => got.every((part, index) => Math.abs(part - want[index]) < 0.002));
+};
 
 describe("BR-REQ-038-01 the bib sheet", () => {
   it("prints two bibs per page, so five bibs are three pages", async () => {
@@ -35,9 +80,46 @@ describe("BR-REQ-038-01 the bib sheet", () => {
     expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
   });
 
+  /**
+   * §180 — the band is the event's colour, which is how a volunteer holding a handful of bibs
+   * knows which start line they belong to before reading a word.
+   */
+  it("fills the header band with the event's own colour", async () => {
+    const pdf = await sheet(2, "two", { bandColour: "#1b7f3b" });
+    expect(carries(pdf, "#1b7f3b")).toBe(true);
+    // And not the club's, which is what it would fall back to had the colour been dropped.
+    expect(carries(pdf, BIB_BAND_FALLBACK)).toBe(false);
+  });
+
+  it("falls back to the club's own colour when the event names none", async () => {
+    expect(carries(await sheet(2, "two", { bandColour: null }), BIB_BAND_FALLBACK)).toBe(true);
+    // The editor's palette cannot produce this, but a hand-written row could; a cosmetic
+    // value must never be the reason a bib fails to print.
+    expect(carries(await sheet(2, "two", { bandColour: "chartreuse" }), BIB_BAND_FALLBACK)).toBe(true);
+  });
+
+  /**
+   * `AGENTS.md` §19.2 — a bib is worn in public. The partners and the club's mailbox belong on
+   * it; a telephone number does not, and the emergency contact's least of all. The renderer is
+   * never given one, and this is the assertion that keeps it that way.
+   */
+  it("prints the partners and the club's mailbox at the foot, and nothing else", async () => {
+    const pdf = await sheet(1, "one", {
+      partners: ["Primăria Brașov", "Salvamont"],
+      replyTo: "contact@example.test",
+    });
+    // The text is drawn with an embedded subset, so the bytes are not searchable: what is
+    // asserted is that the renderer accepted the footer and still produced a page.
+    expect(pdf.toString("latin1").match(/\/Type \/Page\b/g)?.length).toBe(1);
+    expect(pdf.byteLength).toBeGreaterThan(await sheet(1, "one").then((plain) => plain.byteLength - 1));
+  });
+
   it("writes a sample to disk for a person to look at, when asked", async () => {
     const target = process.env.BIBS_PDF_SAMPLE;
     if (!target) return;
-    writeFileSync(target, await sheet(3));
+    writeFileSync(
+      target,
+      await sheet(3, "two", { bandColour: "#1b7f3b", partners: ["Primăria Brașov"], replyTo: "contact@example.test" }),
+    );
   });
 });
