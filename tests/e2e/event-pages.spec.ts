@@ -46,7 +46,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     const toggle = page.getByRole("button", { name: "Temă întunecată" });
     await expect(toggle).toBeEnabled();
     await toggle.click();
-    await expect(page.locator("html")).toHaveAttribute("data-dark", /.+/);
+    // MUI marks the scheme with a valueless attribute: data-dark="", data-light="".
+    await expect(page.locator("html")).toHaveAttribute("data-dark", "");
     await expect(page.getByRole("button", { name: "Temă luminoasă" })).toBeVisible();
   });
 
