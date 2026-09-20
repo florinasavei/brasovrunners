@@ -418,7 +418,7 @@
       "bulkArchiveAction": "Arhivează cele bifate",
       "bulkArchivePending": "Se arhivează…",
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
-      "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul în locul ștergerii.",
+      "deleteBlocked": "Nu se poate șterge: {count} înscrieri reale. Arhivează evenimentul, sau — dacă sunt înscrieri făcute de tine la teste — deschide-le din „Înscrieri”, șterge-le una câte una (jos de tot, „Șterge înscrierea”, cu motiv), apoi șterge evenimentul.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeated": "{created} ediții create.",
       "bulkSelectAll": "Toate",
@@ -426,7 +426,7 @@
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
       "bulkDeleteAction": "Șterge cele bifate",
-      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși; arhivează-le pe acelea.",
+      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge: au înscrieri reale. Arhivează-le, sau șterge întâi înscrierile din „Înscrieri” (fiecare, cu motiv) dacă sunt de la teste.",
       "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate)."
     },
     "confirm": {

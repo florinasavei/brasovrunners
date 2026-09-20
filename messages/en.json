@@ -418,7 +418,7 @@
       "bulkArchiveAction": "Archive the ticked ones",
       "bulkArchivePending": "Archiving…",
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
-      "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event instead.",
+      "deleteBlocked": "Cannot be deleted: {count} real registrations. Archive the event, or — if these are entries you made while testing — open them from “Înscrieri”, erase them one by one (at the bottom, “Erase the registration”, with a reason), then delete the event.",
       "deleteBlockedShort": "{count} registrations",
       "eventsRepeated": "{created} editions created.",
       "bulkSelectAll": "All",
@@ -426,7 +426,7 @@
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
       "bulkPublishAction": "Publish the ticked ones",
       "bulkDeleteAction": "Delete the ticked ones",
-      "eventsDeleted": "{deleted} events deleted. {failed} could not be deleted — people have registered; archive those instead.",
+      "eventsDeleted": "{deleted} events deleted. {failed} could not be: they have real registrations. Archive those, or erase the registrations first from “Înscrieri” (each one, with a reason) if they came from testing.",
       "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile)."
     },
     "confirm": {

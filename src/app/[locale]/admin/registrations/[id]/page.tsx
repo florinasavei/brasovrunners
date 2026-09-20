@@ -370,13 +370,26 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               />
             </Stack>
           </form>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {tr("registrations.cancelHelp")}
+          </Typography>
+        </Box>
+      )}
 
-          {/*
-            Erasure, not withdrawal (BR-REQ-037-06). Deliberately below cancel and styled as the
-            heavier of the two: for a runner who simply drops out, cancelling is right and keeps
-            the record. This is for the case cancelling cannot answer — somebody asking to be
-            removed — and it takes the declaration with it.
-          */}
+      {/*
+        Erasure, not withdrawal (BR-REQ-037-06), and on its own gate (§179).
+
+        Deliberately below cancel and styled as the heavier of the two: for a runner who simply
+        drops out, cancelling is right and keeps the record. This is for the case cancelling
+        cannot answer — somebody asking to be removed, or a row somebody made while testing.
+
+        It used to sit inside the cancel section, which is shown only while the registration can
+        still be cancelled — so a registration that was already cancelled or expired could never
+        be erased, which is exactly the row most likely to need it. The service has always
+        handled either case: it releases the place only when there is one to release.
+      */}
+      {canManageRegistrations(actor.role) && (
+        <Box component="section">
           <Box component="details" sx={{ mt: 3, border: 1, borderColor: "error.light", borderRadius: 1, px: 2, "& > summary": { cursor: "pointer", py: 1.5, listStyle: "revert" } }}>
             <Typography component="summary" variant="subtitle2" color="error.main">
               {tr("registrations.deleteTitle")}
@@ -400,9 +413,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               </Stack>
             </form>
           </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {tr("registrations.cancelHelp")}
-          </Typography>
         </Box>
       )}
 

@@ -8400,3 +8400,45 @@ from a role that may not manage registrations; resend exactly where a message ex
 `tests/unit/registrations/default-event-filter.test.ts`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 179. Decided — erase is gated on the role, not on "can this still be cancelled" (2026-09-20)
+
+**Context.** Twice over, an hour apart: "tot nu pot sterge evenimente!" and then "nu pot sterge
+inscrieri!". The second explains the first. He had two registrations he had made himself while
+walking the form, the event refused to be deleted because of them, the refusal told him to
+archive the event instead — and when he went to remove the registrations, the screen that erases
+one was not there.
+
+It was not there because the whole destructive section of a registration's page — cancel *and*
+erase — sat behind one condition: `canTransition(status, "CANCELLED")`. A registration that is
+already CANCELLED or EXPIRED has no such edge. So the verb disappeared from exactly the rows most
+likely to need it, and the more carefully somebody cleaned up after a test — cancel first, then
+remove — the more certainly he locked himself out.
+
+The service never had that limitation. `deleteRegistrationByStaff` releases the place only
+`if (canTransition(current.status, "CANCELLED"))` and erases either way. This was the UI hiding
+a verb the domain supports, which is the failure mode §15.11 is written against from the other
+direction: a screen must not offer what the domain refuses, and it must not withhold what the
+domain allows either.
+
+**Decision.** *Erase is its own section, on its own gate:* `canManageRegistrations(actor.role)`
+— the same condition the Server Action asserts (BR-REQ-060-01). Cancel keeps its own gate, and
+the two are no longer nested, because they answer different questions. Cancel asks "can this
+registration still be withdrawn"; erase asks "may this person remove a person's data at all"
+(BR-REQ-037-06). Nesting them made the second a special case of the first, which it never was.
+
+*The two refusals now name the path.* "Nu se poate șterge: {count} înscrieri reale" used to end
+"arhivează evenimentul" and stop — advice for a club with a real field of runners, addressed to
+somebody looking at three rows he had typed himself. Both messages now name the way through:
+open the registrations, erase each one with a reason, then delete the event. A refusal that does
+not say what would work is a dead end, and the owner walked into it twice.
+
+**Rejected.** *Letting the event delete take its registrations with it.* §176 already sweeps
+`kind = TEST` rows, which is safe because a test registration is not a person. A real one is,
+and erasing it is a decision with an audit row and a reason attached — it does not belong
+underneath a button labelled "delete the event".
+
+**Consequences.** `registrations/[id]/page.tsx` has two sections where it had one nested pair.
+The cancel help text sits with cancel rather than after both.
+
+Baseline `BR-V1.38-2026-09-18`.
