@@ -7160,6 +7160,12 @@ checked after canonicalization, since an address that is not one has nowhere to 
 one email rule that has never bent); a per-address editor in the backoffice (worth building,
 but not what unblocks him this morning — and with a star it is no longer needed for QA).
 
+**The star had to be let through twice.** The first cut taught `decideDelivery` and the
+mode rule about it and left the per-entry address check refusing it, so the QA build of
+2026-09-20 failed at `envSchema.parse` — the deployment could not boot at all. The constant
+now lives in `shared/config/env-enums.ts`, the leaf both the schema and the delivery decision
+import, and `tests/unit/config/env.test.ts` parses a starred environment.
+
 **Consequences.** `infrastructure/email/delivery.ts`, `shared/config/env.ts`,
 `.env.example`, `AGENTS.md` §16.4; `tests/unit/notifications/delivery.test.ts`. The QA
 project carries `EMAIL_ALLOWLIST=*` from 2026-09-20. **Every QA message now spends the

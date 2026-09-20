@@ -44,3 +44,10 @@ export const CONFIGURATION_ENUMS = [
   { variable: "EMAIL_DELIVERY_MODE", values: EMAIL_DELIVERY_MODES },
   { variable: "STAFF_AUTH_MODE", values: STAFF_AUTH_MODES },
 ] as const satisfies ReadonlyArray<{ variable: string; values: readonly string[] }>;
+
+/**
+ * The one `EMAIL_ALLOWLIST` entry that is not an address: every recipient (`DECISIONS.md` §163).
+ * It lives here, with the enums, because both the environment schema and the delivery decision
+ * must agree on it and neither may import the other.
+ */
+export const ALLOW_EVERY_RECIPIENT = "*";
