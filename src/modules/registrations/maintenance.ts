@@ -4,6 +4,7 @@ import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { materializeStandingRepeats } from "@/modules/content/events/service";
 import { sweepOrphanAssets } from "@/modules/media/references";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
+import { queueRegistrationOpenedMessages } from "./interest";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
 
@@ -33,6 +34,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   remindersQueued: number;
   /** "Confirm your participation" messages queued this run (§104). */
   confirmationsQueued: number;
+  /** "Registration is open" messages queued this run to the addresses left ahead of the window (§146). */
+  interestsNotified: number;
 }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
@@ -96,6 +99,15 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   } catch {
     errorCount += 1;
   }
+  // "Registration is open" (§146): to every address left on the event's page while the window
+  // was ahead, once, the row gone with the message; the rows of an event that will never open
+  // go too. A failure is a late announcement, not a failed run.
+  let interestsNotified = 0;
+  try {
+    interestsNotified = (await queueRegistrationOpenedMessages(db, now)).queued;
+  } catch {
+    errorCount += 1;
+  }
 
   /**
    * The retention sweep, last and in its own try/catch.
@@ -144,11 +156,11 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     jobRunId,
     {
       itemsProcessed:
-        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued + occurrencesCreated,
+        eventIds.length + lapsedEmailConfirmations + prunedRows + orphanPicturesDeleted + remindersQueued + confirmationsQueued + interestsNotified + occurrencesCreated,
       errorCount,
     },
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued, confirmationsQueued };
+  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued, confirmationsQueued, interestsNotified };
 }

@@ -7,7 +7,7 @@ import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { riseIn } from "@/theme/motion";
-import { editionDifference, usualOf } from "../domain/series";
+import { editionDifference, recurrenceOf, usualOf } from "../domain/series";
 import type { PublicEvent } from "../repository";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
@@ -16,7 +16,6 @@ import SeriesDates from "./SeriesDates";
 import { editionNote, recurrenceSentence } from "./series-sentence";
 
 /** How many dates the card lists before pointing at the month view for the rest. */
-const DATES_SHOWN = 6;
 
 /**
  * A repeated event as one card (`DECISIONS.md` §113): the title once, how it recurs, the next
@@ -42,13 +41,17 @@ export default async function SeriesCard({
   const locale = (await getLocale()) as Locale;
   const next = members[0];
   const sentence = await recurrenceSentence(members, next.timezone, locale);
-  const shown = members.slice(0, DATES_SHOWN);
-  const rest = members.length - shown.length;
+  // The chip says how often, not how many (the owner: "8 dates here is redundant, just show
+  // weekly"); a set of dates with no rhythm keeps the count. Every date is shown — "2 more in
+  // the calendar" meant nothing to him.
+  const recurrence = recurrenceOf(members, next.timezone);
+  const rhythm =
+    recurrence.kind === "weekly" ? t("series.weeklyChip") : recurrence.kind === "fortnightly" ? t("series.fortnightlyChip") : t("series.count", { count: members.length });
   const pageOf = (slug: string) => getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // A date unlike the others — cancelled, elsewhere, at another hour — wears its mark (§122).
   const usual = usualOf(members);
   const dates = await Promise.all(
-    shown.map(async (member) => ({
+    members.map(async (member) => ({
       id: member.id,
       href: pageOf(member.slug),
       label: format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "short", day: "numeric", month: "short" }),
@@ -61,7 +64,7 @@ export default async function SeriesCard({
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
           <EventKindChips type={next.type} surface={next.surface} />
-          <GlyphChip glyph="series" variant="outlined" label={t("series.count", { count: members.length })} />
+          <GlyphChip glyph="series" variant="outlined" label={rhythm} />
           {next.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={t("cancelled")} />}
         </Stack>
 
@@ -87,11 +90,11 @@ export default async function SeriesCard({
         </Typography>
         <EventFacts event={next} now={now} variant="compact" />
 
-        {/* The coming dates, each a link to its own page; the month view has the rest. */}
+        {/* Every coming date, each a link to its own page. */}
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 0.5 }}>
           {t("series.allDates")}
         </Typography>
-        <SeriesDates dates={dates} more={rest > 0 ? t("series.moreInCalendar", { count: rest }) : undefined} />
+        <SeriesDates dates={dates} />
       </CardContent>
     </Card>
   );

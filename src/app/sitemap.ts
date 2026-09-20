@@ -75,6 +75,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // The contact page (BR-REQ-070-04), once per locale: a standing page, rarely changed.
+  for (const locale of routing.locales) {
+    entries.push({
+      url: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    });
+  }
+
   // Albums (BR-REQ-054-01): the listing once per locale, then each published album.
   for (const locale of routing.locales) {
     const albums = await listPublishedAlbums(getDb(), locale);

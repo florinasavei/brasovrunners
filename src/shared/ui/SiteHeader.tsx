@@ -5,6 +5,7 @@ import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listPublishedAlbums } from "@/modules/content/gallery/repository";
 import { listPublishedPages } from "@/modules/content/pages/repository";
+import { env } from "@/shared/config/env";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
@@ -86,6 +87,9 @@ export default async function SiteHeader() {
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);
   const showGallery = await hasPublishedAlbum(locale as Locale);
+  // "Contact" leads to the form, or to the club's address; a deployment with neither has no
+  // entry (BR-REQ-070-04) — the gallery's rule, for the same reason.
+  const showContact = env.CONTACT_FORM_MODE !== "off" || Boolean(env.EMAIL_REPLY_TO);
 
   return (
     <Box
@@ -205,6 +209,7 @@ export default async function SiteHeader() {
           <SiteNav
             pages={pages.map((page) => ({ slug: page.slug, title: page.title }))}
             showGallery={showGallery}
+            showContact={showContact}
           />
         </Box>
 

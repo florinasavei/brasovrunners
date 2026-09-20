@@ -36,7 +36,7 @@ export const privacyNoticeRo: LegalDocumentBody = {
     {
       heading: "4. Lista publică, rezultatele, fotografiile",
       paragraphs: [
-        "Lista publică de participanți, oprită la fiecare eveniment până când clubul o pornește, arată doar numele (sau numele de afișare) și clubul participanților confirmați, până după eveniment — interes legitim, art. 6(1)(f) GDPR: ca participanții să vadă cine mai vine. Te poți opune fără motiv (art. 21 GDPR): bifa „nu vreau să apar pe listă” din formular este această opoziție; mai târziu, scrie-ne.",
+        "Lista publică de participanți, oprită la fiecare eveniment până când clubul o pornește, arată doar numele (sau numele de afișare) și clubul participanților confirmați care au bifat „vreau să apar pe lista de participanți” la înscriere, până după eveniment — consimțământ, art. 6(1)(a) GDPR, pe care îl retragi oricând scriindu-ne; fără bifă nu apari.",
         "Numele tău în rezultatele publicate: doar cu consimțământ separat, retractabil oricând (art. 6(1)(a) GDPR); înscrierea este valabilă și fără el.",
         "Fotografiile și filmările de la evenimente, publicate în galerie și pe canalele clubului: interes legitim (art. 6(1)(f) GDPR) — a arăta evenimentele clubului; spațiu public, fără nume, fără EXIF. Un portret îl publicăm doar cu acordul tău (Codul civil, art. 73–75). Spune-ne care și o scoatem în cel mult o lună, fără motiv.",
       ],
@@ -45,12 +45,14 @@ export const privacyNoticeRo: LegalDocumentBody = {
       heading: "5. E-mailurile",
       paragraphs: [
         "Trimitem doar mesaje despre înscrierea ta: confirmări, legături, lista de așteptare, un memento cu 48 de ore înainte și cel mult o mulțumire după cursă, despre acel eveniment — nu comunicări comerciale în sensul Legii nr. 506/2004 privind prelucrarea datelor cu caracter personal și protecția vieții private în sectorul comunicațiilor electronice (art. 12); marketing, doar cu consimțământ separat. Temei: art. 6(1)(b) GDPR. Din fiecare mesaj păstrăm adresa, datele lui și starea trimiterii, nu textul; legăturile, doar ca amprentă.",
+        "„Anunță-mă când se deschid înscrierile”: dacă lași adresa ta pe pagina unui eveniment înainte să se deschidă înscrierile, îți trimitem un singur e-mail, la scurt timp după ce se deschid, cu legătura către formular. Adresa o păstrăm în lista de anunțare doar până la trimiterea acelui mesaj și o ștergem din listă odată cu el (mesajul însuși păstrează adresa ca orice alt mesaj, vezi mai sus) — sau fără mesaj, dacă evenimentul e anulat ori înscrierile nu se mai deschid pe site. Temei: consimțământul tău (art. 6(1)(a) GDPR), pe care îl poți retrage oricând înainte de trimitere, scriindu-ne la <EMAIL DE CONTACT>.",
+        "Formularul de contact („Scrie-ne”): ia numele, adresa de e-mail și mesajul tău, împreună cu limba și pagina de pe care ai scris, și le trimite ca un e-mail obișnuit în căsuța clubului, unde rămân ca orice corespondență; platforma nu păstrează nicio copie. Le folosim doar ca să-ți răspundem — pentru nimic altceva. Temei: interesul nostru legitim de a răspunde la ceea ce ne-ai întrebat (art. 6(1)(f) GDPR). Formularul are aceleași apărări anti-roboți ca cel de înscriere (secțiunea 10).",
       ],
     },
     {
       heading: "6. Cine mai vede datele",
       paragraphs: [
-        "Le prelucrează în numele nostru, ca persoane împuternicite (art. 28 GDPR): Vercel Inc. — găzduire, Frankfurt; Neon, Inc. (grupul Databricks) — baza de date, Frankfurt; Mailgun Technologies, Inc. (grupul Sinch) — e-mail, regiunea UE; Cloudflare Inc. — fotografiile, jurisdicție UE. Mesajele către <EMAIL DE CONTACT> ajung, prin Mailgun, în căsuța organizatorului, la Google (Gmail). Datele mai pot ajunge la autorități, când legea o cere, și la un avocat, la o pretenție.",
+        "Le prelucrează în numele nostru, ca persoane împuternicite (art. 28 GDPR): Vercel Inc. — găzduire, Frankfurt; Neon, Inc. (grupul Databricks) — baza de date, Frankfurt; Mailgun Technologies, Inc. (grupul Sinch) — e-mail, regiunea UE; Cloudflare Inc. — fotografiile, jurisdicție UE. Mesajele către <EMAIL DE CONTACT> ajung, prin Mailgun, în căsuța organizatorului, la Google (Gmail); cele trimise prin formularul de contact ajung în aceeași căsuță direct, prin serverul de e-mail al Google, fără Mailgun. Datele mai pot ajunge la autorități, când legea o cere, și la un avocat, la o pretenție.",
         "Datele stau în UE, dar acești furnizori sunt companii americane și le pot accesa din SUA (Google poate ține căsuța și acolo). Temei de transfer: Cadrul UE–SUA de protecție a datelor (art. 45 GDPR) și clauzele contractuale standard ale Comisiei Europene (art. 46(2)(c) GDPR), copie la cerere.",
       ],
     },
@@ -120,7 +122,7 @@ export const privacyNoticeEn: LegalDocumentBody = {
     {
       heading: "4. Public list, results, photographs",
       paragraphs: [
-        "The public participant list, off on every event until the club switches it on, shows only the name (or display name) and club of confirmed participants, until after the event — legitimate interest, art. 6(1)(f) GDPR: so participants see who else is coming. You may object without reason (art. 21 GDPR): the “keep me off the list” tick on the form is that objection; later, write to us.",
+        "The public participant list, off on every event until the club switches it on, shows only the name (or display name) and club of confirmed participants who ticked “I want to appear on the participant list” when registering, until after the event — consent, art. 6(1)(a) GDPR, withdrawn at any time by writing to us; no tick, no listing.",
         "Your name in published results: only with separate, withdrawable consent (art. 6(1)(a) GDPR); the registration is valid without it.",
         "Photographs and video from events, published in the gallery and on the club's channels: legitimate interest (art. 6(1)(f) GDPR) — showing the club's events; public place, no names, no EXIF. A portrait is published only with your agreement (Romanian Civil Code, art. 73–75). Tell us which and we take it down within a month, no reason needed.",
       ],
@@ -129,12 +131,14 @@ export const privacyNoticeEn: LegalDocumentBody = {
       heading: "5. Emails",
       paragraphs: [
         "We send only messages about your registration: confirmations, links, the waiting list, a reminder 48 hours before and at most one thank-you after the race, about that event — not commercial communications under Romanian Law no. 506/2004 on the processing of personal data and the protection of privacy in the electronic communications sector (art. 12); marketing only with separate consent. Basis: art. 6(1)(b) GDPR. Of each message we keep the address, its facts and delivery state, not the text; links, only as a fingerprint.",
+        "\"Tell me when registration opens\": if you leave your address on an event's page before its registration opens, we send you one email, shortly after it opens, with the link to the form. We keep the address on the notification list only until that message is sent and delete it from the list with it (the message itself keeps the address like any other message, see above) — or without a message, if the event is cancelled or registration no longer opens on the site. Basis: your consent (art. 6(1)(a) GDPR), which you can withdraw at any time before it is sent by writing to <CONTACT EMAIL>.",
+        "The contact form (\"Write to us\"): it takes your name, email address and message, with the language and the page you wrote from, and sends them as an ordinary email to the club's mailbox, where they stay like any correspondence; the platform keeps no copy. We use them only to answer you — for nothing else. Basis: our legitimate interest in answering what you asked (art. 6(1)(f) GDPR). The form has the same anti-bot defences as the registration form (section 10).",
       ],
     },
     {
       heading: "6. Who else sees it",
       paragraphs: [
-        "Processors handle it on our behalf (art. 28 GDPR): Vercel Inc. — hosting, Frankfurt; Neon, Inc. (Databricks group) — database, Frankfurt; Mailgun Technologies, Inc. (Sinch group) — email, EU region; Cloudflare Inc. — photographs, EU jurisdiction. Mail to <CONTACT EMAIL> reaches, through Mailgun, the organiser's mailbox at Google (Gmail). Data may also reach the authorities where the law requires, and a lawyer over a claim.",
+        "Processors handle it on our behalf (art. 28 GDPR): Vercel Inc. — hosting, Frankfurt; Neon, Inc. (Databricks group) — database, Frankfurt; Mailgun Technologies, Inc. (Sinch group) — email, EU region; Cloudflare Inc. — photographs, EU jurisdiction. Mail to <CONTACT EMAIL> reaches, through Mailgun, the organiser's mailbox at Google (Gmail); a message sent through the contact form reaches the same mailbox directly, through Google's own mail server, without Mailgun. Data may also reach the authorities where the law requires, and a lawyer over a claim.",
         "The data stays in the EU, but these providers are US companies and may access it from the US (Google may hold the mailbox there too). Transfer basis: the EU-U.S. Data Privacy Framework (art. 45 GDPR) and the European Commission's standard contractual clauses (art. 46(2)(c) GDPR), copy on request.",
       ],
     },

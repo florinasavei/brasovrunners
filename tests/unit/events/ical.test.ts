@@ -102,6 +102,16 @@ describe("the calendar file", () => {
     expect(unfolded).toContain("Programme:\\nSat 10 Oct 16:00–19:00 — Kit pickup (Start tent)\\nSun 11 Oct 08:30 — Briefing\\n07:00 ridicarea numerelor\\, 09:00 start");
   });
 
+  it("says when registration opens, in the event's zone, only while the caller says it is ahead (§146)", () => {
+    const opensAt = new Date("2026-10-01T15:00:00.000Z");
+    const labels = { programme: "Program", locale: "ro" as const, registrationOpens: (date: string) => `Înscrieri din ${date}` };
+    const ahead = buildCalendar({ events: [{ ...event, timezone: "Europe/Bucharest", registrationOpensAt: opensAt }], baseUrl: "https://example.test", name: "BVR", labels }).replace(/\r\n /g, "");
+    expect(ahead).toContain("Cursa clubului.\\nVino devreme.\\n\\nÎnscrieri din 1 octombrie 2026 la 18:00\\n\\nProgram:");
+    // Not set — the window already open, or no window at all — and the line is not there.
+    const open = buildCalendar({ events: [{ ...event, registrationOpensAt: null }], baseUrl: "https://example.test", name: "BVR", labels });
+    expect(open).not.toContain("Înscrieri din");
+  });
+
   it("builds Google's add-event address and the webcal scheme", () => {
     const url = new URL(googleCalendarUrl(event));
     expect(url.hostname).toBe("calendar.google.com");

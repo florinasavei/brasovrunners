@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   registrationState,
   type RegistrationWindowInput,
+  upcomingRegistrationOpening,
 } from "@/modules/events/domain/registration-window";
 
 /**
  * BR-REQ-011-01 criteria 2, 3 and 4 — the defaults when a window is not stated.
  * BR-REQ-020-01 criterion 3 — a cancelled or completed event never accepts registration.
  * BR-REQ-030-01 criterion 1 — mode NONE offers no registration action.
+ * BR-REQ-011-01 criterion 13 — the opening date, while it is still ahead and only then.
  */
 const START = new Date("2026-10-04T07:00:00Z");
 const PUBLISHED = new Date("2026-09-01T10:00:00Z");
@@ -49,6 +51,31 @@ describe("BR-REQ-011-01 registration window defaults", () => {
     // Closes before the event starts, and stays closed after.
     expect(registrationState(e, closes)).toBe("CLOSED");
     expect(registrationState(e, START)).toBe("CLOSED");
+  });
+});
+
+describe("BR-REQ-011-01 criterion 13 — upcomingRegistrationOpening", () => {
+  const opens = new Date("2026-09-20T00:00:00Z");
+
+  it("returns the stated opening while it is ahead, and null from the opening instant on", () => {
+    const e = event({ registrationOpensAt: opens });
+    expect(upcomingRegistrationOpening(e, new Date(opens.getTime() - 1000))).toEqual(opens);
+    expect(upcomingRegistrationOpening(e, opens)).toBeNull();
+    expect(upcomingRegistrationOpening(e, START)).toBeNull();
+  });
+
+  it("falls back to publication when no opening is stated — the same default as the state", () => {
+    expect(upcomingRegistrationOpening(event(), new Date(PUBLISHED.getTime() - 1000))).toEqual(PUBLISHED);
+    expect(upcomingRegistrationOpening(event(), PUBLISHED)).toBeNull();
+    expect(upcomingRegistrationOpening(event({ publishedAt: null }), PUBLISHED)).toBeNull();
+  });
+
+  it("names no date for an event with no window to open, whatever its columns say", () => {
+    const before = new Date(opens.getTime() - 1000);
+    expect(upcomingRegistrationOpening(event({ registrationOpensAt: opens, registrationMode: "EXTERNAL" }), before)).toBeNull();
+    expect(upcomingRegistrationOpening(event({ registrationOpensAt: opens, registrationMode: "NONE" }), before)).toBeNull();
+    expect(upcomingRegistrationOpening(event({ registrationOpensAt: opens, eventStatus: "CANCELLED" }), before)).toBeNull();
+    expect(upcomingRegistrationOpening(event({ registrationOpensAt: opens, eventStatus: "COMPLETED" }), before)).toBeNull();
   });
 });
 

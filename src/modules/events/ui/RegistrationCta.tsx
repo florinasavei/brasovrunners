@@ -127,6 +127,23 @@ export default async function RegistrationCta({
             }),
           });
 
+  // The opening date is the one fact a visitor wants before the window (§146; the owner:
+  // "first I advertise the event, then I need to let them know when registrations are
+  // opened"): said at the size of the countdown, in the club's blue, wherever the button
+  // will later stand — the hero and the event page alike. The other sentences stay quiet.
+  if (cta.kind === "NOT_YET_OPEN") {
+    return (
+      <Typography
+        variant="h3"
+        component="p"
+        data-testid="registration-opens-on"
+        sx={{ mt: 3, fontSize: { xs: "1.125rem", sm: "1.25rem" }, fontWeight: 700, color: "primary.main" }}
+      >
+        {sentence}
+      </Typography>
+    );
+  }
+
   return (
     <Typography variant="body1" sx={{ mt: 3, fontWeight: 500 }}>
       {sentence}

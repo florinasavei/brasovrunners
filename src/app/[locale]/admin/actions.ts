@@ -36,10 +36,12 @@ import { inviteZitadelUser, resendZitadelInvite } from "@/modules/staff-identity
 import {
   changeStaffRole,
   inviteStaffUser,
+  resendStaffInvitation,
   revokeStaffUser,
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
 import { assignBibNumbers } from "@/modules/registrations/bibs";
+import { withdrawInterest } from "@/modules/registrations/interest";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -136,6 +138,7 @@ function eventFieldsFrom(form: FormData) {
     raceStartsAtWallTime: wallTime("raceStartsAt"),
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
+    facebookEventUrl: value("facebookEventUrl"),
     coHostName: value("coHostName"),
     coHostUrl: value("coHostUrl"),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
@@ -386,14 +389,16 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
   const eventId = text(form, "eventId");
   const path = editorPath(locale, eventId);
 
-  let outcome: { error?: string; saved?: string; applied?: string };
+  let outcome: { error?: string; saved?: string; applied?: string; offered?: string };
   try {
     const actor = await requireStaff();
     const editsEventRow = text(form, "event.expectedVersion") !== "";
-    // Which dates of the series (§130): the radio on a date of a series; absent elsewhere.
+    // Which dates of the series (§130, §134): the dates ticked in the editor's header, or a
+    // preset word; absent elsewhere. Ticks win — they are what the organizer sees.
+    const ticked = form.getAll("dates").filter((value): value is string => typeof value === "string" && value !== "");
     const scope = text(form, "scope");
 
-    const { appliedTo } = await saveEventAndTranslations(getDb(), {
+    const { appliedTo, offered } = await saveEventAndTranslations(getDb(), {
       actor,
       eventId,
       fields: editsEventRow ? eventFieldsFrom(form) : undefined,
@@ -402,9 +407,13 @@ export async function saveEventAndTranslationsAction(form: FormData): Promise<vo
         .map((contentLocale) => translationFieldsFrom(form, contentLocale))
         .filter((entry) => entry !== undefined),
       acknowledgeLiveEdit: form.get("acknowledgeLiveEdit") === "on",
-      scope: SERIES_EDIT_SCOPES.includes(scope as SeriesEditScope) ? (scope as SeriesEditScope) : "this",
+      scope: ticked.length > 0 ? { ids: ticked } : SERIES_EDIT_SCOPES.includes(scope as (typeof SERIES_EDIT_SCOPES)[number]) ? (scope as SeriesEditScope) : "this",
     });
-    outcome = appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" };
+    // A raised capacity's offers (§147) ride on the same banner as a number; absent when none.
+    outcome = {
+      ...(appliedTo > 0 ? { saved: "eventSeries", applied: String(appliedTo) } : { saved: "event" }),
+      offered: offered > 0 ? String(offered) : undefined,
+    };
   } catch (error) {
     outcome = outcomeOf(error);
   }
@@ -631,6 +640,28 @@ export async function removeTestRegistrationsAction(form: FormData): Promise<voi
   backTo(path, outcome);
 }
 
+/**
+ * Withdrawal from "Anunță-mă" (§146), as the notice promises: an Administrator types the
+ * address the person wrote from, and the row goes by its canonical identity. The address is
+ * posted, never put in the URL; the outcome is a flag.
+ */
+export async function withdrawInterestAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const path = editorPath(locale, eventId);
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    await requireStaffRole("ADMIN");
+    const removed = await withdrawInterest(getDb(), eventId, text(form, "email"));
+    outcome = { saved: removed ? "interestRemoved" : "interestNotFound" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  backTo(path, outcome);
+}
+
 export async function inviteStaffAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const path = getPathname({ locale, href: "/admin/staff" });
@@ -666,8 +697,10 @@ export async function resendStaffInviteAction(form: FormData): Promise<void> {
   const path = getPathname({ locale, href: "/admin/staff" });
   let outcome: Record<string, string | undefined>;
   try {
-    await requireStaffRole("ADMIN");
-    const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(text(form, "email")) : ({ kind: "unconfigured" } as const);
+    const actor = await requireStaffRole("ADMIN");
+    // The platform's own invitation again (§141), then Zitadel's password link where the key is set (§123).
+    const member = await resendStaffInvitation(getDb(), actor, text(form, "email"));
+    const invite = env.STAFF_AUTH_MODE === "provider" ? await resendZitadelInvite(member.email) : ({ kind: "unconfigured" } as const);
     outcome = { saved: "reinvited", invite: invite.kind, ...(invite.kind === "failed" ? { reason: invite.reason.slice(0, 120) } : {}) };
   } catch (error) {
     outcome = outcomeOf(error);

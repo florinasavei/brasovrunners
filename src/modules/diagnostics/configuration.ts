@@ -34,6 +34,9 @@ import type {
   StaffAuthMode,
 } from "@/shared/config/env-enums";
 
+/** Derived in `env.ts` like `STORAGE_MODE`; restated as a type here because it is not an enum anybody sets. */
+export type ContactFormMode = "smtp" | "capture" | "off";
+
 /** Every variable this report can speak about. Names only — never a value. */
 export type ConfigurableVariable =
   | "MAILGUN_API_KEY"
@@ -48,12 +51,17 @@ export type ConfigurableVariable =
   | "AUTH_ZITADEL_ISSUER"
   | "JOB_SECRET"
   | "DATABASE_URL"
-  | "NEON_API_KEY";
+  | "NEON_API_KEY"
+  | "CONTACT_SMTP_USER"
+  | "CONTACT_SMTP_PASSWORD"
+  | "CONTACT_FORM_TO";
 
 export type ConfigurationFacts = {
   appEnv: AppEnvironment;
   emailDeliveryMode: EmailDeliveryMode;
   staffAuthMode: StaffAuthMode | undefined;
+  /** The contact form's way out (`env.ts`, `CONTACT_FORM_MODE`; §149). */
+  contactFormMode: ContactFormMode;
   /** How many addresses `EMAIL_ALLOWLIST` parsed to. The addresses themselves stay out. */
   allowlistCount: number;
   /** Whether each variable has a non-empty value. Never the value. */
@@ -178,12 +186,31 @@ function webhookCheck(facts: ConfigurationFacts): ConfigurationCheck {
   };
 }
 
+/**
+ * The contact form (§149): the one message that leaves by SMTP rather than the outbox.
+ *
+ * `capture` is correct on a laptop and impossible on a deployment (`env.ts` derives it from
+ * `APP_ENV`); `off` on a deployment is *limited* rather than blocked — the page shows the
+ * club's address instead of the form — and the three variables it is waiting for are named.
+ */
+function contactFormCheck(facts: ConfigurationFacts): ConfigurationCheck {
+  if (facts.contactFormMode === "capture") {
+    return { key: "contactFormCapture", status: "ok", state: "capture", requires: [] };
+  }
+  const needed = requirements(facts, ["CONTACT_SMTP_USER", "CONTACT_SMTP_PASSWORD", "CONTACT_FORM_TO"]);
+  if (facts.contactFormMode === "smtp") {
+    return { key: "contactFormSmtp", status: "ok", state: "smtp", requires: needed };
+  }
+  return { key: "contactFormOff", status: "limited", state: "off", requires: needed };
+}
+
 export function describeConfiguration(facts: ConfigurationFacts): ConfigurationCheck[] {
   return [
     emailCheck(facts),
     staffAuthCheck(facts),
     jobsCheck(facts),
     webhookCheck(facts),
+    contactFormCheck(facts),
   ];
 }
 

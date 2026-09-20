@@ -22,39 +22,47 @@ import {
 } from "../domain/calendar";
 import type { PublicEvent } from "../repository";
 import { editionDifference, groupSeries, usualOf } from "../domain/series";
+import CalendarEventChip from "./CalendarEventChip";
 import CalendarPicker from "./CalendarPicker";
-import EditionMark, { type EditionNote } from "./EditionMark";
-import { TYPE_GLYPH } from "./glyphs";
+import type { EditionNote } from "./EditionMark";
+import type { GlyphName } from "./glyphs";
 import { editionNote } from "./series-sentence";
 
 /** What the calendar shows: one month (`?month=`) or one year (`?year=`, §116). */
 export type CalendarView = { kind: "month"; month: YearMonth } | { kind: "year"; year: number };
 
+/** How the month is laid out (§137): the grid, on every width, or the agenda by choice (`?view=list`). */
+export type CalendarLayout = "grid" | "list";
+
 /**
- * The month, as a grid from `sm` up and as an agenda on a phone (`DECISIONS.md` §89) — or
- * the year, as the agenda of every month that has something on it (§116).
+ * The month, as a grid on every width — or as an agenda when the reader asks (`?view=list`;
+ * `DECISIONS.md` §89, §137) — or the year, as the agenda of every month that has something
+ * on it (§116).
  *
- * Server-rendered and navigated by links — `?month=2026-10`, `?year=2027` — so the whole
- * thing is HTML and a crawler reads next month's runs; the two selects (`CalendarPicker`) are
- * the one island, and they only go where a link could. A seven-column grid at 320px has 40px
- * a column, which fits a day number and a dot and nothing a reader could tap; there the same
- * month is a list of days, which is what a phone calendar shows in "schedule" view anyway.
+ * Server-rendered and navigated by links — `?month=2026-10`, `?year=2027`, `?view=list` — so
+ * the whole thing is HTML and a crawler reads next month's runs; the two selects
+ * (`CalendarPicker`) and the event chips (`CalendarEventChip`, for the tooltip) are the
+ * islands, and they only go where a link could. A seven-column grid at 320px has 40px a
+ * column: there a chip is its glyphs over the time, and the title is the tooltip's and the
+ * page's (the owner: "use the same calendar view, we can have tooltips").
  *
- * Each event is one link with its type's glyph (§112). A race is filled in the brand colour,
- * everything else is quiet: the race is what the page advertises, the Monday run is what
- * regulars already know.
+ * Each event is one link with its type's glyph and its surface's (§112). A race is filled in
+ * the brand colour, everything else is quiet: the race is what the page advertises, the
+ * Monday run is what regulars already know.
  */
 export default async function EventCalendar({
   view,
   events,
   now,
   query = {},
+  layout = "grid",
 }: {
   view: CalendarView;
   events: PublicEvent[];
   now: Date;
-  /** Other query parameters the month links keep — the type filter (§89). */
+  /** Other query parameters the month links keep — the type filter (§89), the layout (§137). */
   query?: Record<string, string>;
+  layout?: CalendarLayout;
 }) {
   const t = await getTranslations("Events");
   const format = await getFormatter();
@@ -68,7 +76,11 @@ export default async function EventCalendar({
       ? format.dateTime(anchor, { timeZone: "UTC", month: "long", year: "numeric" })
       : String(view.year);
   const basePath = getPathname({ locale, href: "/events" });
-  const href = (params: Record<string, string>) => getPathname({ locale, href: { pathname: "/events", query: { ...query, ...params } } });
+  const href = (params: Record<string, string>, drop?: string) => {
+    const merged: Record<string, string> = { ...query, ...params };
+    if (drop) delete merged[drop];
+    return getPathname({ locale, href: { pathname: "/events", query: merged } });
+  };
   const previousHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, -1)) }) : href({ year: String(view.year - 1) });
   const nextHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, 1)) }) : href({ year: String(view.year + 1) });
 
@@ -94,45 +106,21 @@ export default async function EventCalendar({
     format.dateTime(new Date(Date.UTC(2024, i, 1, 12)), { timeZone: "UTC", month: "long" }),
   );
 
+  // The chip is a client island (the tooltip); everything crosses as strings and names (§112).
   const eventLink = (event: PublicEvent, dense: boolean) => {
-    const Glyph = TYPE_GLYPH[event.type];
+    const glyphs: GlyphName[] = [`type:${event.type}`, ...(event.surface ? [`surface:${event.surface}` as const] : [])];
     return (
-      <Link
+      <CalendarEventChip
         key={event.id}
-        href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}
-        style={{ textDecoration: "none", color: "inherit", display: "block" }}
-      >
-        <Box
-          sx={{
-            // 44px tall wherever it is (BR-REQ-041-01 criterion 6): a chip in a cell is still a tap target.
-            minHeight: 44,
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            px: 0.75,
-            py: 0.25,
-            borderRadius: 1,
-            fontSize: dense ? "0.75rem" : "0.9375rem",
-            lineHeight: 1.3,
-            overflow: "hidden",
-            bgcolor: event.type === "RACE" ? "primary.main" : "action.selected",
-            color: event.type === "RACE" ? "primary.contrastText" : "text.primary",
-            textDecoration: event.eventStatus === "CANCELLED" ? "line-through" : "none",
-            "&:hover": { filter: "brightness(0.95)" },
-          }}
-          title={`${time(event)} ${event.title}`}
-        >
-          {/* The type's glyph (§112): a run, a flag, a hiker, a cup, a group — read at a glance. */}
-          <Glyph aria-hidden="true" sx={{ fontSize: dense ? 14 : 18, flexShrink: 0 }} />
-          <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: dense ? "nowrap" : "normal" }}>
-            <Box component="span" sx={{ fontWeight: 600, mr: 0.5 }}>
-              {time(event)}
-            </Box>
-            {event.title}
-          </Box>
-          {notes.has(event.id) && <EditionMark note={notes.get(event.id) as EditionNote} size={dense ? 16 : 18} />}
-        </Box>
-      </Link>
+        href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } })}
+        time={time(event)}
+        title={event.title}
+        glyphs={glyphs}
+        filled={event.type === "RACE"}
+        cancelled={event.eventStatus === "CANCELLED"}
+        note={notes.get(event.id) ?? null}
+        dense={dense}
+      />
     );
   };
 
@@ -212,6 +200,29 @@ export default async function EventCalendar({
             sx={{ height: 44, borderRadius: 22 }}
           />
         </Stack>
+        {/* The layout, for a month (§137): the grid, or the list a phone used to get by default. */}
+        {view.kind === "month" && (
+          <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`}>
+            <Chip
+              component="a"
+              href={href({}, "view")}
+              clickable
+              label={t("calendar.layoutGrid")}
+              color={layout === "grid" ? "primary" : "default"}
+              variant={layout === "grid" ? "filled" : "outlined"}
+              sx={{ height: 44, borderRadius: 22 }}
+            />
+            <Chip
+              component="a"
+              href={href({ view: "list" })}
+              clickable
+              label={t("calendar.layoutList")}
+              color={layout === "list" ? "primary" : "default"}
+              variant={layout === "list" ? "filled" : "outlined"}
+              sx={{ height: 44, borderRadius: 22 }}
+            />
+          </Stack>
+        )}
       </Stack>
     </Stack>
   );
@@ -271,12 +282,13 @@ export default async function EventCalendar({
     <Box component="section" aria-labelledby="calendar-title" id="calendar">
       {header}
 
-      {/* The grid, from `sm` up. */}
+      {/* The grid, on every width — unless the list was asked for. */}
+      {layout === "grid" && (
       <Box
         role="table"
         aria-label={title}
         sx={{
-          display: { xs: "none", sm: "grid" },
+          display: "grid",
           gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
           border: 1,
           borderColor: "divider",
@@ -302,8 +314,8 @@ export default async function EventCalendar({
                 key={day.key}
                 role="cell"
                 sx={{
-                  minHeight: 80,
-                  p: 0.5,
+                  minHeight: { xs: 56, sm: 80 },
+                  p: { xs: 0.25, sm: 0.5 },
                   borderBottom: 1,
                   borderRight: 1,
                   borderColor: "divider",
@@ -337,17 +349,20 @@ export default async function EventCalendar({
           }),
         )}
       </Box>
+      )}
 
-      {/* The agenda, on a phone. */}
-      <Box sx={{ display: { xs: "block", sm: "none" } }}>
-        {agendaDays.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            {t("calendar.empty")}
-          </Typography>
-        ) : (
-          agenda(agendaDays, byDay)
-        )}
-      </Box>
+      {/* The list, by choice. */}
+      {layout === "list" && (
+        <Box>
+          {agendaDays.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              {t("calendar.empty")}
+            </Typography>
+          ) : (
+            agenda(agendaDays, byDay)
+          )}
+        </Box>
+      )}
     </Box>
   );
 }

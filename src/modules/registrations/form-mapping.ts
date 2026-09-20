@@ -94,7 +94,8 @@ export function readRegistrationForm(
     locale: form.get("preferredLocale") === "en" ? "en" : form.get("preferredLocale") === "ro" ? "ro" : locale,
     privacyAcknowledged: checked(form, "privacyAcknowledged"),
     resultsNameConsent: checked(form, "resultsNameConsent"),
-    listOptOut: checked(form, "listOptOut"),
+    // Opted into, not out of (§143): the row keeps the column's name, the box asks the other way.
+    listOptOut: !checked(form, "listOptIn"),
 
     // Validated in the service, not here: a honeypot failure and a timing failure are answered
     // exactly like success, never as a validation error that would tell a bot what it tripped.

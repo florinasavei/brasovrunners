@@ -18,6 +18,7 @@ function facts(overrides: Partial<ConfigurationFacts> = {}): ConfigurationFacts 
     appEnv: "local",
     emailDeliveryMode: "capture",
     staffAuthMode: "dev-switcher",
+    contactFormMode: "capture",
     allowlistCount: 0,
     present: { JOB_SECRET: true, DATABASE_URL: true },
     ...overrides,
@@ -148,6 +149,9 @@ describe("BR-REQ-090-04 the report cannot carry a value", () => {
       "AUTH_ZITADEL_ISSUER",
       "JOB_SECRET",
       "DATABASE_URL",
+      "CONTACT_SMTP_USER",
+      "CONTACT_SMTP_PASSWORD",
+      "CONTACT_FORM_TO",
     ]);
 
     const result = describeConfiguration(
@@ -161,6 +165,37 @@ describe("BR-REQ-090-04 the report cannot carry a value", () => {
       // The state is a mode token, never free text from configuration.
       expect(entry.state.length).toBeLessThan(24);
     }
+  });
+});
+
+describe("BR-REQ-070-04 the contact form's way out", () => {
+  it("calls capture correct, SMTP configured, and off on a deployment limited with the three variables named", () => {
+    expect(check(describeConfiguration(facts()), "contactFormCapture")?.status).toBe("ok");
+
+    const smtp = check(
+      describeConfiguration(
+        facts({
+          appEnv: "production",
+          contactFormMode: "smtp",
+          present: { CONTACT_SMTP_USER: true, CONTACT_SMTP_PASSWORD: true, CONTACT_FORM_TO: true },
+        }),
+      ),
+      "contactFormSmtp",
+    );
+    expect(smtp?.status).toBe("ok");
+    expect(smtp?.state).toBe("smtp");
+
+    // Off is the page showing the club's address instead of the form — limited, never blocked,
+    // and the report says which of the three is missing.
+    const off = check(
+      describeConfiguration(facts({ appEnv: "qa", contactFormMode: "off", present: { CONTACT_SMTP_USER: true } })),
+      "contactFormOff",
+    );
+    expect(off?.status).toBe("limited");
+    expect(off?.requires.filter((entry) => !entry.present).map((entry) => entry.variable)).toEqual([
+      "CONTACT_SMTP_PASSWORD",
+      "CONTACT_FORM_TO",
+    ]);
   });
 });
 

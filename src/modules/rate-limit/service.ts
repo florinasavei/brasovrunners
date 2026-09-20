@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { retryAfterSeconds, windowStart } from "./domain/window";
@@ -23,7 +23,8 @@ export type RateLimitScope =
   | "admin-resend"
   | "token-validate"
   | "job-invoke"
-  | "admin-send-now";
+  | "admin-send-now"
+  | "contact-message";
 
 /**
  * What each guarded action allows, as data.
@@ -91,6 +92,17 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * hour is more presses than a queue ever needs and fewer than a stuck finger.
    */
   "admin-send-now": { limit: 10, windowMs: 60 * 60_000 },
+  /**
+   * The contact form (`DECISIONS.md` §149), keyed on a hash of the sender's canonical email —
+   * the registration form's identity, hashed because the form promises to keep no copy of the
+   * address and the row lives a day. The mailbox being protected is the club's own: a script
+   * posting the form fills it, and — unlike the outbox — every message here is a real SMTP
+   * send the moment it is posted. Five an hour is a person writing twice and correcting
+   * themselves; the sixth is told so plainly, because a person is not a bot (the form's silence
+   * is for the honeypot). A send the server refused is given back (`refundRateLimit`): it
+   * reached nobody.
+   */
+  "contact-message": { limit: 5, windowMs: 60 * 60_000 },
 };
 
 export type RateLimitVerdict = {
@@ -141,4 +153,32 @@ export async function consumeRateLimit<T extends Record<string, unknown>>(
     limit,
     retryAfter: retryAfterSeconds(now, windowMs),
   };
+}
+
+/**
+ * Give one attempt back, in the window `now` falls in.
+ *
+ * For the one case where an allowed attempt turned out to cost nothing: the contact form's
+ * message the SMTP server refused. Nothing reached the mailbox, so the sender has not used
+ * one of their five — and a person retrying while the club's mailbox is down must read "we
+ * could not send", never "too many messages". One statement, atomic like the count, and the
+ * table's own check keeps it at zero when there is nothing to give back.
+ */
+export async function refundRateLimit<T extends Record<string, unknown>>(
+  db: Database<T>,
+  scope: RateLimitScope,
+  key: string,
+  now: Date,
+): Promise<void> {
+  const { windowMs } = RATE_LIMITS[scope];
+  await db
+    .update(rateLimitBuckets)
+    .set({ count: sql`GREATEST(${rateLimitBuckets.count} - 1, 0)` })
+    .where(
+      and(
+        eq(rateLimitBuckets.scope, scope),
+        eq(rateLimitBuckets.key, key),
+        eq(rateLimitBuckets.windowStartsAt, windowStart(now, windowMs)),
+      ),
+    );
 }

@@ -6092,3 +6092,751 @@ must carry a person's name).
 BR-REQ-053-02 criterion 10.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 133. Decided — the type filter offers only the kinds on the calendar, as small chips (2026-09-19)
+
+**Context.** The owner, looking at the listing on QA with two events on it: "these filters
+should be smaller and I should not show for types that do not exist". Seven 44-pixel pills
+— every kind the platform knows — stood above a calendar that held a run and a race.
+
+**Decision.** The filter row is made of the kinds that have a published event in what the
+page shows — the upcoming list and the month or year in view — plus the kind the address
+names, so a filtered page can still say what it is filtered by. Fewer than two kinds is
+nothing to choose between, and the row is not rendered. Each chip is MUI's small size, the
+glyph in front, inside a 44-pixel-tall link: the tap target is the rule (BR-REQ-041-01
+criterion 6, measured by the e2e suite on every link of the page), the pill's size is not.
+
+*Rejected:* a 32-pixel chip as the link (the suite fails, and rightly: a thumb is the same
+size on a filter as on a card); hiding the active kind when it has no event (the page would
+be filtered by something it does not show).
+
+**Consequences.** `app/[locale]/events/page.tsx`; BR-REQ-041-01 criterion 5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 134. Decided — the dates a save reaches are ticked in the header; the three presets set the ticks (2026-09-19)
+
+**Context.** The owner, on the header of §131: "here I should have a select all!" — and on
+the three radios of §130: "this does not work correctly, they should be radios! I can
+select 'this date only' but also 'this and the following dates' and 'all dates'?? does not
+make sense!", then "should be more boxed and collapsible, it looks ugly on mobile!". The
+radios were three standalone MUI `Radio`s sharing a `name`: the browser unticks the others,
+MUI's own state does not follow, and all three showed ticked at once.
+
+**Decision.** The chips are the choice. Every other date of the series is a chip with a tick;
+a press ticks it, the arrow on it opens that date's editor, and "Toate" in front ticks every
+one (or none). Above Save, a framed `<details>` says the choice in words — "doar această
+dată", "această dată și următoarele (7)", "toate datele seriei (8)", or "această dată și încă
+3 alese sus" — and offers the three presets as one exclusive `ToggleButtonGroup` that sets
+the ticks; its explanation is inside the fold. Both read one piece of state
+(`SeriesScopeProvider`, a context around the page) so the header and the box cannot disagree,
+and the ticked ids reach the form as hidden `dates` inputs. The service's `SeriesEditScope`
+gained `{ ids }`: exactly those dates, an id outside the series ignored, none is "this". The
+three words stay for the API and the tests. The date the page is about is always in.
+
+*Rejected:* a `RadioGroup` alone (fixes the tick, not "select all"); chips that open on
+press with the tick on the icon (a tick nobody can reach from the keyboard); the box open
+by default (the phone was the complaint).
+
+**Consequences.** `content/events/ui/SeriesScope.tsx` (new; `RadioField` no longer used by
+the editor), the editor page, `admin/actions.ts`, `service.ts#applyToSeries`, four keys in
+both catalogues; `tests/integration/cms/series-edit.test.ts`, `tests/e2e/series-edit.spec.ts`.
+BR-REQ-050-02 criterion 17.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 135. Decided — the event page offers its editor to a signed-in staff member (2026-09-19)
+
+**Context.** The owner: "when I am signed in as an admin or editor and I have the rights, I
+should be able to edit events from the event page!" The way was the backoffice list, then
+the row, then Edit.
+
+**Decision.** The public event page reads the staff session — it is rendered per request
+already (`dynamic = "force-dynamic"`), so this costs nothing — and, for a role that may edit
+the words (`canEditTexts`: Redactor and above), shows an "Editează" button beside "back to
+events", 44 pixels tall, leading to `/admin/events/<id>`. Nothing else changes for a
+visitor: no session, no button, and where `STAFF_AUTH_MODE` is `disabled` the session is not
+even asked for. The editor asserts the role for itself (BR-REQ-060-01); the button is a
+door, not a permission.
+
+*Rejected:* a client island that asks `/api/…` who is signed in (worth it only when the page
+stops being per-request — see the caching decision, when it comes); showing the button to a
+volunteer with the editor refusing (a door that does not open is a bug report).
+
+**Consequences.** `app/[locale]/events/[slug]/page.tsx`, one key in both catalogues;
+`tests/e2e/event-edit-link.spec.ts`. BR-REQ-050-02 criterion 18.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 136. Decided — the three legal texts are called GDPR, the racing terms and the declaration (2026-09-19)
+
+**Context.** The owner, on `/admin/legal`: "these documents are not named correctly! privacy
+notice => GDPR, TOS => Racing TOS, declaration is fine" — and, asked whether the public
+links change too: everywhere, with "Termeni de concurs" as the Romanian.
+
+**Decision.** Wherever a reader sees the *name* of a document — the backoffice list, the
+footer, the registration form's links and its consent line, the error summary — the privacy
+notice is "GDPR" in both languages and the terms are "Termeni de concurs" / "Racing TOS";
+the participant declaration keeps its name. The document *kinds* and their keys
+(`PRIVACY_NOTICE`, `TERMS`, `EVENT_DECLARATION`), the routes (`/legal/privacy`,
+`/legal/terms`), the vocabulary in `BUSINESS.md` and the prose that explains what a privacy
+notice *is* do not change: a name is what the club calls the thing, not what the thing is.
+The texts' own titles are the club's, written in `/admin/legal`.
+
+*Rejected:* renaming only the backoffice list (the owner chose everywhere); "Racing TOS" in
+Romanian too (an English abbreviation on a Romanian consent line).
+
+**Consequences.** Seven keys in each catalogue; `tests/e2e/legal-versions.spec.ts`,
+`tests/e2e/registration-form.spec.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 137. Decided — the month is the grid on a phone too, with the surface's glyph and a tooltip; the list by choice (2026-09-19)
+
+**Context.** §89 gave a phone the agenda because seven columns at 320px are 40px each. The
+owner, on QA: "calendar looks bad on mobile: use the same calendar view man, we can have
+tooltips", then "or we can choose compact view but by default I need calendar view!", and
+"the icons in the calendar should also contain the type of terrain … we love icons and
+emojis".
+
+**Decision.** The month is the grid on every width. A chip in a cell is the type's glyph and
+the surface's (§112) over the time on a phone, the two glyphs, the time and the title in one
+line from `sm` up, the whole sentence in a tooltip and as the link's accessible name — 44px
+tall wherever it is. The agenda stays, as the choice: `?view=list`, a chip pair
+"Calendar" / "Listă" in the header, kept by the month links and the filter like `?type=`.
+The chip is a client island (`CalendarEventChip`) because `Tooltip` needs a ref on its child
+and the glyphs are made on that side of the boundary, by name.
+
+*Rejected:* the agenda by default on a phone (§89, reversed on the owner's word); a tooltip
+that opens on tap (a tap on a link is the link — the page is the tooltip on a phone);
+remembering the choice in a cookie (a link says it, and a link can be shared).
+
+**Consequences.** `events/ui/EventCalendar.tsx` (`layout`), `events/ui/CalendarEventChip.tsx`
+(new), `app/[locale]/events/page.tsx` (`?view=`), two keys in both catalogues;
+`tests/e2e/event-pages.spec.ts`. BR-REQ-041-01 criterion 5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 138. Decided — a series card says "Săptămânal", and shows every date (2026-09-19)
+
+**Context.** The owner, on the listing: "8 dates here is redundant, just show weekly", and
+"'2 more in the calendar' does not mean anything".
+
+**Decision.** The card's chip says the rhythm the dates have — "Săptămânal", "La două
+săptămâni" — and only a set with no rhythm keeps "N date". Every coming date is a chip; the
+six-and-a-count of §113 is gone, because a series is made eight weeks ahead (§122) and
+eight chips wrap fine. The backoffice list keeps "8 date": there the number is the point.
+
+**Consequences.** `events/ui/SeriesCard.tsx`, two keys added and one removed in both
+catalogues. BR-REQ-041-01 criterion 9 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 139. Decided — "Adaugă în calendarul tău" is a small region under the month, the address and the explanation folded (2026-09-19)
+
+**Context.** The owner: "I hate how this ics is shown: make it smaller and with a collapsed
+'i'"; "should be a region like 'Add to my calendar', and this info [when each app re-reads]
+should be in a tooltip". The line above the month spelled the feed's address out and
+explained Google's refresh in a sentence, every visit.
+
+**Decision.** Under the month, a bordered region titled "Adaugă în calendarul tău" with the
+three doors of §107 as small 44-pixel buttons — Google Calendar, Apple/Outlook/phone
+(`webcal://`), the download — an "i" (`shared/ui/InfoTip`, a tooltip whose sentence is also
+its accessible name) carrying the refresh note, and the plain address inside a `<details>`
+for the app that wants it pasted. Below the month rather than above: the month is what the
+page is for.
+
+**Consequences.** `app/[locale]/events/page.tsx`, `shared/ui/InfoTip.tsx` (new), two keys
+replace one in both catalogues. BR-REQ-041-01 criterion 7 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 140. Decided — sharing is buttons, the phone's own sheet first; the picture is "Instagram" (2026-09-19)
+
+**Context.** The owner: "the picture for Instagram should be just 'Instagram', and sharing on
+social media should look nicer." §90's row was five text links in a line.
+
+**Decision.** Two rows of 44-pixel pill buttons: "Dă mai departe" — the phone's own share
+sheet (`NativeShareButton`, rendered only where `navigator.share` exists, through
+`useSyncExternalStore` so the HTML and the first client render agree), Facebook, WhatsApp,
+"Instagram" (the square card to save, as before) — and "Adaugă în calendar" — Google
+Calendar, the `.ics`. The share sheet is the honest answer to "nicer on social media": on a
+phone it reaches Instagram stories, Messenger, Telegram and whatever else is installed, which
+no list of links can.
+
+*Rejected:* a script from a network (§90's reason stands); an Instagram deep link (there is
+none that takes a picture).
+
+**Consequences.** `events/ui/ShareLinks.tsx`, `events/ui/NativeShareButton.tsx` (new), two
+keys added and two reworded in both catalogues. BR-REQ-052-02 criterion 8 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 141. Decided — the platform emails the staff invitation itself; Zitadel's key is a bonus (2026-09-19)
+
+**Context.** The owner, testing Echipa on QA: "my top priority is to invite users to the
+platform, which did not work". It did what §123 says without the key: added the row and
+said to create the account by hand. The key (`SETUP.md` §37) is a Zitadel-console step only
+he can do, and until he does, "Add" sent nothing — the one thing he expected it to do.
+
+**Decision.** A sixteenth message type, `STAFF_INVITATION`, queued in the transaction that
+inserts the staff row and sent through the club's own outbox like every other message: to
+the address, in the colleague's language, saying who added them (the actor's name), as what
+(the role's label) and where to sign in — the sign-in page as the action, no token, because
+the sign-in page is what asserts who they are. The Zitadel account is still created by the
+action when the key is set (§123), and Zitadel still sends its password link then; without
+the key the person creates the account at the sign-in page with that address, as the email
+says. "Resend the invitation" queues the message again (a new key; a resend is a new
+trigger, §12.11) and Zitadel's code where configured; refused once they have signed in.
+The page's sentences say what happened in each case, and the To-do row's steps lead with the
+email.
+
+*Rejected:* waiting for the key (the row without a word to the person is what "did not
+work"); sending through Zitadel's SMTP (that is Zitadel's message about a password, not the
+club's about the team); a token in the invitation (nothing to act on — the allowlist row is
+the grant).
+
+**Consequences.** `email-outbox.ts` (enum), migration `0045`, `templates.ts`, `render.ts`,
+`staff-identity/service.ts` (`inviteStaffUser` in a transaction, `resendStaffInvitation`),
+the two actions, the preview's sample, six sentences in both catalogues, the task row's
+steps; `BUSINESS.md` BR-BUS-080, `AGENTS.md` §16.3, `SETUP.md` §37;
+`tests/integration/auth/role-boundaries.test.ts`. BR-REQ-060-01 criterion 11.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 142. Decided — a rejected registration form comes back filled in, from an encrypted cookie (2026-09-19)
+
+**Context.** The owner, on the QA form: "the fields are cleared after submit! super
+annoying! also I can't see that the phone was not valid…". §47's rejection is a redirect
+back to the form with the field *names* in the address — never the values (§14.5: a URL is
+logged by every proxy between here and the phone) — so the person arrived at a summary that
+named the field and a form with nothing in it, and the phone's message read like an
+instruction rather than a verdict.
+
+**Decision.** On a rejection the action keeps what was posted in a cookie for ten minutes:
+AES-256-GCM under a key derived from the deployment's secret (`AUTH_SECRET`, or
+`JOB_SECRET` where there is no sign-in), `httpOnly`, `sameSite=lax`, on the form's own path.
+The page reads it once, only when the address says `error=`, and prefills every box — text,
+the MUI selects (whose choice lives in React state, which is why the DOM could not be
+refilled after the fact), the ticks, both halves of each phone. Left out: the bot fields,
+the address of the form, and the privacy consent, which is re-read every time. Health notes
+ride in it, which is why it is encrypted and short rather than plain and long; a draft past
+the cookie's size (~3.8 KB) is dropped, not truncated, and the person retypes as before. A
+submission that goes through clears it. The phone's message now opens with "the number is
+not valid".
+
+*Rejected:* the values in the URL (§14.5); a client-side form with `useActionState` (the
+whole 700-line Server Component would become a client one to keep four selects); a
+`sessionStorage` island (cannot refill a MUI select either); a server-side store keyed by a
+cookie (a table for a ten-minute draft).
+
+**Consequences.** `registrations/form-draft.ts` (new), the register action and page,
+`ui/PhoneField.tsx` (`draft`), one sentence in both catalogues;
+`tests/unit/registrations/form-draft.test.ts`, `tests/e2e/registration-form.spec.ts`.
+BR-REQ-041-01 criterion 10 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 143. Decided — the participant list is opted into: "Vreau să apar pe lista de participanți" (2026-09-19)
+
+**Context.** The owner, on the form's consents: "here it should be the other way round: 'I
+want to appear on the participant list'". §32 made the list an opt-out — a refusal box,
+legitimate interest with the right to object — beside two consents that ask the other way,
+and the one box that read backwards was the one people got wrong.
+
+**Decision.** The box reads "Vreau să apar pe lista de participanți", unticked; a tick puts
+the name on, no tick keeps it off. The row keeps `list_opt_out` — the column, the published
+set (`list_opt_out = false`) and the privacy test are unchanged — and the form writes the
+tick's opposite. The staff entry form asks the same way. The platform's privacy notice and
+terms say consent (art. 6(1)(a)) rather than objection (art. 21), withdrawn by writing to
+the club; the club approves the texts on production, none is in force yet, so the wording
+changes with the box. Existing rows keep what they answered.
+
+*Rejected:* renaming the column (a migration and every query for a word); keeping the
+objection wording with a consent box (the texts would say the opposite of the form).
+
+**Consequences.** The register page and `form-mapping.ts`, the staff entry page and its
+action, `templates/privacy-notice.ts`, `templates/terms.ts`, two keys in both catalogues;
+`BUSINESS.md` BR-BUS-039, `AGENTS.md` §10.10, `CLAUDE.md`; `tests/unit/registrations/form-mapping.test.ts`,
+`tests/e2e/registration-form.spec.ts`. BR-REQ-039-01 criteria 3–5 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 144. Decided — a Facebook event link on the event, beside the Strava one (2026-09-19)
+
+**Context.** The owner: "we also need a field for the Facebook event and the Strava event".
+The Strava event existed (§71, criterion 10 of BR-REQ-011-01); Facebook is where most of
+the club says "going".
+
+**Decision.** `events.facebook_event_url`, the twin of `strava_event_url` in every respect:
+a page on `facebook.com`, `fb.com` or `fb.me` and nothing else (`isFacebookLink`, the same
+hostname comparison as `isStravaLink` — a comparison, not an emitted address, so §8 stands),
+`https://` by CHECK, its own box in the editor under the Strava one, its own labelled fact
+with the Facebook mark on the event page, absent from the card, never carried onto a
+duplicate or a repeated edition because it is one occurrence's page. Migration `0046`.
+
+**Consequences.** `db/schema/events.ts`, migration `0046`, `domain/event-type.ts`,
+`content/events/fields.ts`, `service.ts` (save and duplicate), the editor form and action,
+`events/repository.ts`, the preview, `ui/EventFacts.tsx`, three keys in both catalogues;
+`tests/integration/cms/workflow.test.ts`. BR-REQ-011-01 criterion 10 amended.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 145. Decided — the backoffice shows each registration's journey (2026-09-19)
+
+**Context.** The owner: "I wanna see as a workflow what step each participant is in, if he
+signed the declaration, if he checked in and picked up his bib" — and, on the order, "there
+should be a 'place reserved' first, then declaration signed and then 'place confirmed'". The
+registration's page had a status chip and a timeline of timestamps (§33); the list had the
+chip. Neither said, in one glance, how far a person had come, and whether the declaration
+was signed had to be read off the acceptance rows at the bottom of the page.
+
+**Decision.** Six steps, in the lifecycle's order (AGENTS.md §10.5): Înscriere trimisă,
+Email confirmat, Loc rezervat, Declarație semnată, Loc confirmat, Prezență marcată — each a
+fact about the registration, never about the person, so no word has to agree with whose name
+it stands under. One pure derivation, `domain/journey.ts`, reads them off the row — status
+first, timestamps only to date a step; a terminal row is read from its timestamps, an
+expired one from its reason. **A restart reuses the row and clears nothing** (the schema's
+"timestamps are historical facts"), so an old `confirmed_at`, offer or check-in outlives a
+later cancellation: the derivation therefore takes `privacy_acknowledged_at` — the one
+column every restart rewrites, and the insert sets — as the start of the current cycle, and
+reads anything dated before it as absent. Confirmed once, cancelled, back on the waiting
+list and cancelled again is "2/6", not "5/6" with a bib; a direct hold this time is not
+dated with the offer of the cycle before. The participant's own email verification is one
+click per person, months before a later registration, so that step is dated at this
+submission and never earlier — the list is a chronology. A terminal row is read as a
+ladder, each rung needing the one below it: a stale hold deadline that outlives a restart
+inside one participation window cannot lift a waiting-list cancellation to "3/6".
+The reservation is the hold ("până la <deadline>", dated at the email step, whose
+transaction places it), the offer ("loc oferit, până la …"), or where a waiting-list entry
+waits ("pe lista de așteptare", nothing after it moves). The declaration is the latest
+acceptance, online or on paper — the method does not matter. The confirmation carries the
+number ("nr. 42"); the desk step says "a ridicat nr. 42", because there is no separate
+pickup event: the number is handed over where the person is marked present
+(BR-REQ-037-08), so the check-in is the pickup. A cancelled or expired row keeps the steps
+it reached, strikes the rest, and ends with "Anulată la …" / "Expirată la …".
+`ui/StaffJourney.tsx` renders it — a hand-rolled `<ol>` with `aria-current="step"`, as
+the participant's own journey is, no client island — in full under the name on the
+registration's page, and as "3/6 · Loc rezervat" in a new "Etapă" column of the list: the
+count and **the last step that is done**, which is always true, where the step being waited
+on ("Declarație semnată" on a row waiting for exactly that, "Prezență marcată" on every
+confirmed row on race morning) would read as its opposite; "urmează: …" and how the row
+ended are in the hover title, and the status chip beside it says Anulată already. The list
+row carries what the derivation needs — the cycle's start, the participant's own
+verification, the hold and offer columns, and the latest acceptance's date through the same
+one-probe subquery `idDocument` uses — never a query per row. The six step names are names
+for the lifecycle's states, like the status chip's, so they live in `staff-labels.ts` in
+Romanian, once (§35: "enums and stuff should not be in 2 languages"); the sentences around
+them — the deadline, the number, "urmează", "Anulată la" — are chrome and stay in both
+catalogues. Test registrations show the same journey: the backoffice is where they are
+looked at.
+
+*Rejected:* MUI's `Stepper` (a client island for six words); a "declaration signed" column
+on the registration (the acceptance table is the record, and a copy would drift); a status
+→ step lookup with no timestamps (the dates are what the owner reads next); sorting on the
+column (the status beside it is ordered already); clearing the cycle's timestamps on a
+restart (it would change the schema's documented rule for one reader, and a cycle marker
+already exists); reading a terminal row by its latest-dated marker (a hold has no date of
+its own, only a deadline).
+
+**Consequences.** `registrations/domain/journey.ts` (new), `ui/StaffJourney.tsx` (new),
+`staff-labels.ts` (`JOURNEY_STEP_LABEL`), `admin-repository.ts` (the list row and the
+detail carry `cycleStartedAt`, `emailVerifiedAt`, `declarationAcceptedAt` and the hold,
+offer and ending columns), the registration page and the list page, one column header and
+one caption and a `journey` block of sentences in both catalogues;
+`tests/unit/registrations/journey.test.ts`,
+`tests/integration/registrations/admin-list.test.ts` (a restart driven through the
+service), `tests/unit/i18n/messages.test.ts`. BR-REQ-037-03 criterion 5.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 146. Decided — the opening date shown big, and "Anunță-mă când se deschid înscrierile" (2026-09-19)
+
+**Context.** The owner: "I need 'registrations open at (date)' because first I advertise the
+event, then I need to let them know when registrations are opened." The event page said
+"Înscrierile se deschid pe 4 octombrie 2026, 18:00" in one quiet sentence
+(`RegistrationCta`); the cards said "Înscrierile nu s-au deschis încă" with no date; the
+calendar feed said nothing; and there was no way for the people the advertisement reached to
+be told when the moment came, short of checking the page. He chose both halves: the date,
+everywhere the event shows, and an address box that sends one message when the window
+opens — on the maintenance job's first run after it, which the pinger drives every fifteen
+minutes by day and hourly at night (§68); no page and no request stands at the opening
+instant, and every text that describes the message says so rather than promising the minute.
+
+**Decision.** *The date.* While `registrationState` is `NOT_YET_OPEN`, `RegistrationCta`
+renders the existing sentence at the countdown's size and in the club's blue — it is the
+one thing a visitor wants before the window, and it stands exactly where the button will —
+on the hero and the event page alike, since the hero already renders the component. The
+compact facts on the listing and series cards replace the state word with
+"Înscrierile se deschid pe 4 oct., 18:00" (`cta.opensOnShort`, short month, the event's
+zone). The calendar feed and the per-event `.ics` write "Înscrieri din 4 octombrie 2026
+la 18:00" above the programme, from a new `registrationOpensAt` on `CalendarEvent` that the
+routes set through `upcomingRegistrationOpening` — the public row's own column would also
+name an opening long past, so the caller decides and the pure module writes. The card
+reads the same helper; the sentence on the page is `registrationCta`'s own `opensAt`.
+
+*The box.* Under the sentence on the event page, only while the window is ahead **and an
+approved privacy notice exists for the locale** — the registration form's own gate
+(BR-REQ-053-01) and the participant list's (§32): an address is personal data taken under
+consent, and the notice is what describes it, so the page reads
+`findCurrentApprovedDocument` once before rendering the box and `registerInterest` refuses
+(CONFLICT, the plain page) whoever posts past it. On production today, with no approved
+texts, there is no box. `RegistrationInterestForm`, a Server Component around a Server
+Action (`events/[slug]/actions.ts`) — one email field, "Anunță-mă", the line "Îți trimitem
+un singur email când se deschid înscrierile; adresa se șterge după aceea." and the link
+"Detalii în nota de confidențialitate." to `/legal/privacy`. It is a public form, so it
+takes the registration form's defences unchanged: the honeypot and the rendering time as
+hidden fields, `looksLikeSpam` (now exported from `service.ts`) with the same silent answer,
+and Turnstile through the same `verifyTurnstile` when the keys are set. One field is
+retyped in under three seconds, so the `invalid` redirect carries the original rendering
+time back as `?since=` (`parseInterestSince`: a timestamp, never a value, ignored when
+unparseable or ahead of the clock) and the corrected form is timed from the render it
+corrects, not from the redirect. `registerInterest`
+canonicalizes the address with the versioned canonicalizer (AGENTS.md §10.4) and inserts
+into **`registration_interests`** — event, delivery address, canonical address and its
+version, the page's locale — `ON CONFLICT DO NOTHING` on `(event_id, canonical_email)`;
+migration `0047`, expand only. The action redirects to `?interest=1#registration-interest`
+whether the row was new, already there or a bot's, and the page says "Te anunțăm pe email
+când se deschid înscrierile." — the resend-oracle rule, BR-REQ-031-01 criterion 3; a
+malformed address is the one fixable error (`interest=invalid`), a failed widget the other
+(`interest=captcha`); never a value in the URL (§14.5). Once the window is no longer ahead
+the service answers CONFLICT and the action lands on the plain page, where the button now
+is. No rate-limit bucket: the limit is keyed on the identity, and the identity's second
+submission is already a no-op.
+
+*The message.* `REGISTRATION_OPENED`, the seventeenth type — "Înscrierile la <event> s-au
+deschis" / "Registration for <event> is open", the facts line, one paragraph, one paragraph
+saying why they got it and that the address is gone, "Înscrie-te" as the action, the event's
+page and its rules beneath. No participant and no token, like `STAFF_INVITATION`: the
+renderer loads the event by the `eventId` in the payload, so a renamed event renders right,
+and the action is the ordinary registration page, which asks everything itself. The greeting
+names nobody ("Salut,"). Previewed on `/admin/emails` with the other sixteen; the two labels
+that page reads (`types`, `when`) were also missing for `STAFF_INVITATION` and are added.
+
+*The job.* `queueRegistrationOpenedMessages`, a step of the registration maintenance after
+the participation confirmations (§104), in its own try/catch: one read joins the events that
+have interest rows; per event `registrationState` decides — `NOT_YET_OPEN` waits; `OPEN` on a
+published event queues one message per row (`interest:<id>:opened`, participant and
+registration null, `{ eventId }`) and deletes the rows in the same transaction; `OPEN` on an
+unpublished event waits for the page to come back; anything else — cancelled, completed,
+started, closed before it opened, moved to another form or to none — deletes the rows with
+no message. So an address exists until the message that is its purpose is queued, and not a
+minute longer; the outbox row keeps `recipient_email` like every other message, under the
+outbox's own ninety days. There is no `notified_at`: a row that has been notified does not
+exist.
+
+*The notice.* One paragraph in section 5 of the platform's privacy-notice template, both
+languages: the purpose, the one message "shortly after" the opening, the address kept on
+the notification list only until it is sent and deleted from that list with it — the
+message itself keeps the address like every other message, which the paragraph above
+already says — consent (art. 6(1)(a) GDPR), withdrawal by writing to the club before it
+goes. The terms need nothing — nothing is entered.
+
+*Withdrawal.* The notice's promise has a verb in the backoffice, or the club could keep it
+only from the database console: on the event's page, under the queue and only while the
+window is ahead, "Adrese care așteaptă anunțul deschiderii: N" (`countInterests`, the count
+and never an address) and one small form, the address typed and "Șterge din listă" —
+`withdrawInterestAction`, Administrator like the queue, `withdrawInterest` deleting by the
+canonical identity so the address as the person wrote it finds the row as they typed it.
+The answer says whether a row went: the person asking is staff.
+
+*Rejected:* a second count or a second formula for the date (the sentence is
+`registrationCta`'s own `opensAt`, read through one helper); a client island for the box
+(a form and a redirect need no script; `SubmitButton` is the one shared island); the
+address in a cookie or the URL on a rejection (one field, retyped); a participant row for an
+address that registered nothing; keeping the row with a `notified_at` (a list of who was
+told is a list the club never asked for, and the notice promises deletion); a rate-limit
+scope (see above); Google Calendar's `details` (a one-tap link, not a subscription — the
+feed is where the date matters); a request-time trigger at the opening instant (nothing
+runs then; the job's cadence is the promise, and the texts say so); skipping the timing
+check on the corrected render (a flag a bot could post — the original time is carried
+instead); a list of the waiting addresses in the backoffice (a count and a withdrawal are
+what the notice needs).
+
+**Consequences.** `db/schema/registration-interests.ts` (new), `db/schema/email-outbox.ts`,
+migration `0047_registration_interests`; `registrations/interest.ts` (new: `registerInterest`,
+`countInterests`, `withdrawInterest`, `queueRegistrationOpenedMessages`), `interest-box.ts`
+(new), `ui/RegistrationInterestForm.tsx` (new), `service.ts` (`looksLikeSpam` exported),
+`maintenance.ts` (the step, `interestsNotified`); `app/[locale]/events/[slug]/actions.ts`
+(new) and `page.tsx`; `app/[locale]/admin/actions.ts` (`withdrawInterestAction`) and
+`admin/events/[id]/page.tsx`; `events/domain/registration-window.ts`
+(`upcomingRegistrationOpening`), `events/ical.ts` (`CalendarLabels`, `registrationOpensAt`),
+both `calendar.ics` routes, `ui/RegistrationCta.tsx`, `ui/EventFacts.tsx`;
+`notifications/templates.ts`, `render.ts`; `legal-documents/templates/privacy-notice.ts`;
+twenty-one keys in both catalogues (eleven under `Event`, four under `Admin.emails` — two of
+them the `STAFF_INVITATION` labels that were missing — six under `Admin.queue`);
+`tests/integration/registrations/interest.test.ts` (new), `tests/unit/events/ical.test.ts`,
+`tests/unit/events/registration-window.test.ts`, `tests/helpers/db.ts`. BR-REQ-011-01
+criterion 13, BR-REQ-080-01 criterion 9; AGENTS.md §16.3; BUSINESS.md BR-BUS-080; CLAUDE.md's
+count.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 147. Decided — more places go to the waiting list at once (2026-09-19)
+
+**Context.** The owner: "we have 200 spots but first I give 100, then I have a waiting
+list and give 100 more." The editor already refused a number below the places taken
+(BR-REQ-034-02 criterion 3) and wrote a higher one, but nothing happened to the people
+waiting: `fillAvailableSpots` runs on a confirmation, a cancellation, an offer's lapse and
+the maintenance job's sweep of events with a hold past its deadline — and an event whose
+capacity grew has no lapsed hold, so its queue stood until somebody cancelled or the job
+happened to pass. Criterion 4 ("given capacity is increased, when the transaction commits,
+then existing waiting-list entries are allocated before any later direct registration") was
+true only because the next direct registration would fill the queue first. The owner chose:
+the offers go out on save, and a sentence in the editor says so.
+
+**Decision.** *The save.* `saveEventAndTranslations` compares the row before and after
+(`capacityRaised`: INTERNAL, and either a higher number or a number turned to none) and,
+when raised, calls `offerRaisedCapacity` **inside the same transaction**, after the guarded
+update — which already row-locks the event — and once more through `lockEventForCapacity`,
+the serialization point every capacity-changing decision takes (AGENTS.md §10.6), reading
+the row as it now stands; then `fillAvailableSpots` with it, the one thing that offers.
+The new number and the offers it makes commit together or not at all. `fillAvailableSpots`
+now returns how many it offered; its other callers ignore the number. A series save (§130)
+does the same per date it touches, when the capacity travelled and is higher than *that
+date's* own number — each date has its own line and its own places — and the two counts add
+up. *Not on a cancelled race.* `capacityRaised` asks for SCHEDULED too: a race cancelled and
+widened in the same press — the status and the number are one form — would otherwise email
+24-hour offers whose link answers only that the event is cancelled; cancelling expires
+nobody, so the same holds for a later edit of a cancelled event with people still waiting.
+On the series path each date's own status counts, as it now stands. *The count behind the
+lock.* Criterion 3's count of the places taken now runs after `lockEventForCapacity`, on
+the event and on every series date: a plain SELECT inside the transaction waited for
+nothing, so a confirmation committing between the count and the guarded update could leave
+the number one below the places taken — the version guard only ever caught another save.
+*The locked row's places.* The allocator's locked paths — the email link, the signature, the
+desk's confirmation and promotion, a cancellation — handed `allocateOrWaitlist` the
+caller's row, whose `capacity` was read before the lock; now that a raise is an everyday
+save, a person confirming while it lands would be waitlisted against the old number with the
+new places standing free until the allocator's next visit. `withLockedCapacity` gives them
+the locked row's number instead. *The lifted cap.* Nothing is ever waitlisted against an uncapped event, so
+`fillAvailableSpots` returned at once for one — which would have left the people waiting
+under the old number stranded the moment it was removed. For an uncapped event the waiting
+count now stands in for the available places: zero on every ordinary visit, everyone waiting
+on the visit that lifts the cap. AGENTS.md §15.6 says so. *The words.* The service answers
+`{ appliedTo, offered }`; the action carries `offered=N` beside the existing `saved` and
+`applied`, and the editor's banner reads "Salvat — locuri oferite listei de așteptare: 12."
+or, with a series, "Salvat — și pe încă 3 date ale seriei; locuri oferite listei de
+așteptare: 12."; nothing new when nobody was offered. The count stands after a colon
+because "1 locuri" and "100 locuri" are both wrong in Romanian and the catalogues carry no
+ICU plurals (`docs/VIBECODING.md`). Under "Număr de locuri", while anyone
+waits: "Pe lista de așteptare: N. Dacă mărești numărul, locurile noi se oferă imediat, în
+ordine, câte 24 h fiecare." — the organizer's word on that screen is the number, not the
+capacity — the count is read once on the page (`countEligibleWaitlisted`)
+and handed to both the queue panel, which counted it itself before, and the settings form,
+as a number; the form is a Server Component and builds the sentence. The queue panel's
+"how to simulate" note names the raise beside a cancellation and a lapse.
+
+*Rejected:* offering from the action after the commit (a second transaction, a second lock,
+and a save that succeeds while its offers fail); a count taken from the outbox or the rows
+after the call (the allocator knows what it did); calling the allocator on every save (the
+sentence promises offers on a raise, and a lapsed hold's offer belongs to the job that
+notifies it); a new message type or a different hold for the raise (a place is a place; the
+runner's email is the same offer); a second formula for "raised" on the series (the same
+function, each date's own number); offering on a cancelled event because the allocator's
+other doors are status-blind (they are reached by a person's act on a live event; the editor
+is the one door where the status changes in the same transaction); an ICU plural for the
+banner's count (the catalogues carry none; the colon needs no agreement).
+
+**Consequences.** `registrations/service.ts` (`fillAvailableSpots` returns the offers,
+fills a lifted cap; `withLockedCapacity` in every locked path); `content/events/service.ts`
+(`capacityRaised` — SCHEDULED and INTERNAL, `offerRaisedCapacity`, the row locked before
+criterion 3's count in `saveEventFields`, `saveEventAndTranslations` and `applyToSeries`,
+`applyToSeries` over a `Transaction` returning `{ applied, offered }`,
+`saveEventAndTranslations` returning `offered`); `app/[locale]/admin/actions.ts`,
+`admin/events/[id]/page.tsx`; `content/events/ui/EventFieldsForm.tsx` (`waiting`),
+`registrations/ui/QueuePanel.tsx` (`waiting` as a prop); three keys under `Admin.editor`
+in both catalogues and `Admin.queue.simulate` extended;
+`tests/integration/cms/capacity-raise.test.ts` (new). BR-REQ-034-02 criterion 5;
+AGENTS.md §15.6. The concurrency contract (`tests/concurrency/capacity.test.ts`) is
+untouched: the raise takes the same lock, in the same place, and nothing bypasses
+`transitionRegistration`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 148. Decided — the health check measures each deployment against its own pinger cadence (2026-09-19)
+
+**Context.** The owner's inbox: nine "Cronjob failed: QA health" emails in an evening,
+while `yarn smoke` on QA said `ok` every time it was asked. §68 pings QA's job endpoints once
+an hour to spare its free CU-hours, but §98's health check called a job stale after twice
+production's fifteen minutes plus five — thirty-five minutes — so QA was "degraded" (a 503,
+which is what a monitor treats as failed) for the last twenty-five minutes of every hour by
+day, and the thirty-minute health monitor caught it about half the time.
+
+**Decision.** The day cadence is the deployment's own: `PINGER_CADENCE_MINUTES` (default 15,
+production's; QA carries 60, set on its Vercel project on 2026-09-19). The threshold stays
+twice the cadence plus five; the night stays hourly everywhere, never faster than the day.
+The owner's proposed workaround — move QA's health monitor to minute 2 of the hour, right
+after the ping — would have halved the false alarms and kept the lie; a deployment should
+say how often it is pinged.
+
+*Rejected:* deriving the cadence from `APP_ENV` (a monitor's schedule is set in a console,
+not in the code, and the two have drifted once already); relaxing the threshold everywhere
+(production's alarm would fire an hour late).
+
+**Consequences.** `env.ts` (`PINGER_CADENCE_MINUTES`), `jobs/quiet-hours.ts`
+(`pingerCadenceMinutes`, `jobStalenessThresholdMs(now, dayCadence?)`), `.env.example`,
+`SETUP.md` §36 and the variable table; `tests/unit/jobs/quiet-hours.test.ts`. The QA
+project's variable takes effect on its next deployment — the release of PR #64.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 149. Decided — a contact form that reaches the club's Gmail without Mailgun (2026-09-19)
+
+**Context.** The owner: "Email communication must be minimal so we meet the quota. A
+contact form on the website that submits to the club's Gmail and bypasses Mailgun.
+Protected against bots. We configure as devs where the emails go, because Amalia has a
+Yahoo account too." The footer already showed `EMAIL_REPLY_TO` as a `mailto:`; on a phone
+without a mail app that is a dead end, and every message the platform sends today goes
+through Mailgun's 100 a day (§98, §100), which the registrations need. He chose Gmail SMTP
+with an app password over a second Mailgun route, and bot protection alone — no account,
+no login, no privacy-notice gate beyond the sentence on the form.
+
+**Decision.** `/contact` in both locales — "Scrie-ne" — a Server Component with the
+registration form's shape: name, email (validated like the form's, then canonicalized),
+message (2 000 characters — the longest the draft cookie hands back on a rejection, with the
+longest name and address; a unit test seals one), the honeypot, the fill-time check and
+Turnstile when its keys are set, a 44 px "Trimite", and one line — "Mesajul ajunge în căsuța
+clubului; datele nu se folosesc pentru altceva. Detalii în nota de confidențialitate." — the
+notice named as the registration form names it, not the footer's bare "GDPR". "Contact" in
+the header (one more entry for the priority+ fold, so the 320 px row is unchanged; offered,
+like the gallery's, only while the page has a form or an address to show) and "Scrie-ne" in
+the footer beside the legal links, each 44 px. The Server Action verifies Turnstile,
+validates, answers a bot with the same `?sent=1` and sends nothing, says "no way out" before
+anything is counted, counts the sender in `rate_limit_buckets` under `contact-message` (five
+an hour on a SHA-256 of the canonical email — the notice says no copy of the address is kept,
+and the row lives a day) and — unlike the form's silence — tells a person who hit it so,
+plainly, because a person is not a bot; then sends and redirects to `?sent=1`, "Mesajul a
+plecat. Îți răspundem pe <adresa>." A rejection is `?error=VALIDATION_ERROR&fields=…` with
+the typed values in the encrypted draft cookie (§142), never a value in the URL; a refused
+send is `?error=DELIVERY` with "Scrie-ne direct la <EMAIL_REPLY_TO>", its code (`smtp EAUTH`,
+`smtp ESOCKET` — never the password or the server's reply) in the function log, and the
+attempt given back to the sender (`refundRateLimit`): a message that reached nobody is not
+one of their five, so a wrong-password day never turns "we could not send" into "too many
+messages". After a send the cookie keeps the address alone, for that sentence.
+
+*The transport.* A second adapter beside Mailgun's, `infrastructure/email/smtp-adapter.ts`,
+over **nodemailer 10.0.10** (pinned; Node has no SMTP client, and a hand-written one over
+`node:tls` is the code that works until Google changes a greeting): host and port from
+`CONTACT_SMTP_HOST`/`CONTACT_SMTP_PORT` (defaults `smtp.gmail.com`, 465, implicit TLS;
+`smtp.gmail.com` joins `PROVIDER_HOSTS` in `docs:check` as Google's own fixed host), the
+account and its 16-character app password in `CONTACT_SMTP_USER`/`CONTACT_SMTP_PASSWORD`,
+the recipients in `CONTACT_FORM_TO` (comma-separated, each validated at startup). The
+message: from the account with the club's name, to every recipient, `Reply-To` the visitor
+with their name, subject "Mesaj de pe site: <name>" — `[QA] ` in front of it on QA, the
+outbox's own mark (AGENTS.md §16.4), because the club's real mailboxes are on both projects
+and a question typed on the public `qa.` host must not read as a real one — a plain-text
+body — name, address, the form's language, the page, the message — and an escaped HTML
+twin. Nodemailer's four waits are all bounded (DNS included; its default is thirty seconds
+on its own, longer than the function). It is **not** an
+`EmailAdapter`, goes through **neither the outbox nor `EMAIL_DELIVERY_MODE`**, and is
+never retried: it is correspondence, not transactional mail, and a failure is told to the
+visitor on the spot. `CONTACT_FORM_MODE` is derived like `STORAGE_MODE`: `capture` in
+local and test (in memory, readable, no socket ever), `smtp` on a deployment with the three
+variables, `off` otherwise — the page then shows "Scrie-ne la <EMAIL_REPLY_TO>" as a
+`mailto:`, and no startup refusal. Nothing is stored: the message is the email.
+
+*The rest.* `/admin/tasks` gets "Formularul de contact" (club, open until the three
+variables exist; `capture` counts, as the local media store does) with the Google → Vercel
+steps; `/devs` reports the mode and names the missing variables, never a value; the
+privacy-notice template says what the form collects, that it lands in the club's mailbox as
+ordinary correspondence, under art. 6(1)(f), and for nothing else; `SETUP.md` §38 is the
+procedure; AGENTS.md §16 records the one message that skips the outbox.
+
+*Rejected:* a Mailgun route with a tag (it is exactly the quota the owner wants spared, and
+it would make the club's inbound mail a transactional message with an outbox row); the outbox
+with a second adapter (retries and idempotency keys for a message whose failure the visitor
+is standing there to read); an SMTP client over `node:tls` by hand (§1.5 prefers the
+platform, but not a protocol implementation); a startup refusal when the variables are
+partial (a page that shows the address is the honest state of a deployment the club has not
+finished); silence for the throttled sender (the honeypot's silence is for scripts; a person
+told nothing writes again and again); the privacy-notice gate the interest box has (§146:
+the form collects an address to *answer* it, the sentence on the form says so, and the
+notice's paragraph is in the template for the approved text to carry); storing the message
+(a copy nobody reads is a copy to erase); a shorter nav label or footer-only on `xs` (the
+priority+ fold already answers a narrow row — measured, not guessed).
+
+**Consequences.** `package.json` (nodemailer 10.0.10); `env.ts` (`CONTACT_SMTP_HOST`,
+`CONTACT_SMTP_PORT`, `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`, `CONTACT_FORM_TO`,
+`CONTACT_FORM_MODE`), `.env.example`; `infrastructure/email/smtp-adapter.ts` (new);
+`modules/contact/{fields,message,service,delivery}.ts` (new); `app/[locale]/contact/{page,actions}.tsx`
+(new); `i18n/routing.ts` (`/contact`), `app/sitemap.ts`; `shared/ui/SiteNav.tsx`,
+`SiteFooter.tsx` (the links row is 44 px per link now); `rate-limit/service.ts`
+(`contact-message`, `refundRateLimit`); `diagnostics/owner-tasks.ts` (`contactForm`), `configuration.ts`
+(`contactFormMode`, the three variables), `admin/tasks/page.tsx`, `devs/page.tsx`;
+`legal-documents/templates/privacy-notice.ts` (§5's third paragraph, §6's sentence, both
+languages); `scripts/docs-check.mjs` (`smtp.gmail.com`); `Contact`, `Site.nav.contact`,
+`Footer.contactPage`, `Admin.tasks.items.contactForm`, `Devs.checks.contactForm*` in both
+catalogues; tests `unit/contact/{fields,message}.test.ts`, `integration/contact/service.test.ts`,
+`e2e/contact.spec.ts`, and the env, diagnostics fixtures. BR-REQ-070-04 (new) under
+BR-BUS-070; `SETUP.md` §38; AGENTS.md §16.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 150. Decided — the task board counts its rows and filters them by owner and by kind (2026-09-19)
+
+**Context.** The owner, on the evening's second pass: "on the TODOs show a counter of how
+many items are pending, and a filter by issue type and owner!" `/admin/tasks` was eleven
+boxed rows in state order with one figure above them — how many block a real registration —
+and no way to see only the club's rows, or only the accounts still to create, without reading
+every box. A task carried an owner and a state and nothing that said what *sort* of work it
+was.
+
+**Decision.** Three things on the to-do half, all server-rendered, no client code:
+
+*The counter.* Under the heading, "De făcut: N · Gata: M" — N every row not done (a blocking
+row is pending too, only more so), M the rest — and, when nothing is pending among the rows
+shown, "Tot ce se vede aici este rezolvat." beneath it — no figure in that sentence: the
+line above carries it, and "Toate 1 sunt rezolvate" is not Romanian (the catalogue carries no
+ICU plurals, `docs/VIBECODING.md`). **It counts the rows the list shows**: with a
+filter on, the counter describes the list under it, not the board; a counter that says four
+above a list of two is a counter to distrust. The amber "Blochează înscrierile reale: N" box
+stays over the whole board whatever the filter — what blocks a real registration is not a
+matter of view. **The tab's label does not carry the count.** `BackofficeShell` renders on
+every backoffice request and knows nothing today; the count needs the privacy notice, two
+job-health checks, the published events and the staff count — five reads on every admin
+page, for a figure on one tab. The page has it; the tab does not.
+
+*The kind.* A closed set of four on every task, `TaskKind`: **account** (an account or a key
+to create at a provider — Mailgun's domain, R2, Turnstile, Vercel's token, the Gmail app
+password, the team's accounts), **decision** (the archive mailbox, the `.ro`), **text** (the
+legal texts, the events to publish) and **check** (the monitors seen running). Each id's
+kind is one entry in `TASK_KIND: Record<TaskId, TaskKind>`, and `OwnerTask.id` is the
+`TaskId` union, so a task added without a kind does not compile; `ownerTasks` pushes every
+row through one helper that looks the kind up and never takes one as an argument. The kind
+is a third outlined chip on the row, the same word the filter uses. The ids are English in
+code and in the address (`?kind=account`), like every other query value; the Romanian —
+Cont, Decizie, Text, Verificare — is in the catalogue.
+
+*The filters.* Two rows of chips above the list, each a plain link with a string href from
+`getPathname` (the events listing's pattern, §133: a Server Component hands MUI's client
+chip a string and nothing else): "Cine: Toate · Clubul · Dezvoltatorul" and "Tip: Toate ·
+Cont · Decizie · Text · Verificare". Each link keeps the other row's choice, so the two
+combine (`?owner=club&kind=account`); the active chip is filled and `aria-current="page"`;
+each link is 44 px tall with a small chip inside. A value outside the closed sets — typed,
+stale, misspelt — reads as "all", checked by `isTaskOwner`/`isTaskKind` and never echoed. No
+state filter: it was not asked for, and the done rows already sit last. A combination with no
+row says "Niciun rând pentru acest filtru." The narrowing and the counting are two pure
+functions beside the list (`filterTasks`, `countTasks`), tested without a browser.
+
+*Rejected:* the count in the tab label (five reads on every backoffice page for one tab; if
+the club asks, the answer is a cheap counter table, not the page's reads in the shell); a
+`Badge` on the tab (the same cost, plus a component prop into a client island); a form with
+selects (the registrations list's shape is right for five fields with free text, wrong for
+two closed sets of two and four — a chip is one press and the address says what is on);
+counting the whole board under a filter, or "2 din 4 afișate" (the list and the figure
+above it must agree at a glance); Romanian ids in the address (`?kind=cont` beside
+`?type=RACE` on the listing); a state filter (not asked, and the order already answers it);
+a kind derived from the state or the owner (it is a third axis: the club's rows are of every
+kind).
+
+**Consequences.** `diagnostics/owner-tasks.ts` (`TaskKind`, `TASK_KINDS`, `TASK_OWNERS`,
+`TaskId`, `TASK_KIND`, `isTaskOwner`, `isTaskKind`, `filterTasks`, `countTasks`; `OwnerTask.kind`;
+`BACKLOG: readonly TaskId[]`); `admin/tasks/page.tsx` (`searchParams`, the counter, the two
+chip rows, the kind chip, `aria-label` on the list); `Admin.tasks.summary`, `allDone`,
+`noneMatch`, `listLabel`, `filter.*`, `kind.*` in both catalogues; tests
+`unit/diagnostics/owner-tasks.test.ts` (the kinds, the counts, the narrowing, the guards),
+`e2e/tasks.spec.ts` (the counter, the chips combining, no sideways scroll on the phone).
+BR-REQ-090-05 criteria 8–9. The cost half and `tasks-cost.spec.ts` are untouched.
+
+Baseline `BR-V1.38-2026-09-18`.

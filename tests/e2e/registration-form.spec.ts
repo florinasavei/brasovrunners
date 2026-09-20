@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, signIn } from "./support/featured-event";
+import { ensureRegistrationIsOpen, FEATURED, HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-031-01, BR-REQ-031-04, BR-REQ-031-05, BR-REQ-031-06, BR-REQ-041-01 — the shape of the
@@ -62,9 +62,9 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // BR-REQ-072-01 criterion 1 and BR-REQ-039-01: these two are optional and still *presented*
     // — a consent behind a summary somebody never opens has not been put to them.
     await expect(page.locator('[name="resultsNameConsent"]')).toBeVisible();
-    // The list opt-out is asked only on an event whose list is switched on (`DECISIONS.md`
-    // §85); the seeded events publish none, so the box is absent rather than a third consent.
-    await expect(page.locator('[name="listOptOut"]')).toHaveCount(0);
+    // "I want to appear on the participant list" is asked only on an event whose list is switched
+    // on (`DECISIONS.md` §85, §143); the seeded events publish none, so the box is absent.
+    await expect(page.locator('[name="listOptIn"]')).toHaveCount(0);
 
     // The optional groups are open as the page loads (the owner's instruction of 2026-09-17,
     // reversing DECISIONS.md §47): a runner's own club was the field people missed when it sat
@@ -142,7 +142,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
 
     // BR-REQ-031-01 criterion 5 (`DECISIONS.md` §102): what is being signed up for, on the
     // form — the event's page, the terms and the privacy notice as links, each a tap target.
-    for (const name of ["Detaliile evenimentului", "Termeni și condiții", "Confidențialitate"]) {
+    for (const name of ["Detaliile evenimentului", "Termeni de concurs", "GDPR"]) {
       const link = page.locator("#main").getByRole("link", { name, exact: true }).first();
       await expect(link).toBeVisible();
       expect((await link.boundingBox())?.height ?? 0, name).toBeGreaterThanOrEqual(44);
@@ -186,6 +186,40 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     // the form rather than a label on it.
     await link.click();
     await expect(page.locator('[name="firstName"]')).toBeFocused();
+
+    // What was typed is still there (`DECISIONS.md` §142) — and not in the address.
+    await expect(page.locator('[name="lastName"]')).toHaveValue("Popescu");
+    await expect(page.locator('[name="city"]')).toHaveValue("Brașov");
+    await expect(page.locator('[name="phone"]')).toHaveValue("+40711111111");
+    await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");
+    expect(page.url()).not.toContain("Popescu");
+  });
+
+  test("keeps a chosen option and says a phone number is not valid", async ({ page }) => {
+    await signIn(page, "Dev Moderator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page);
+    await page.locator('[name="phone"]').fill("12");
+    // A MUI select: the choice lives in React state, which is exactly what a redirect loses (§142).
+    await page.locator("#f-sex").click();
+    await page.getByRole("option", { name: "Feminin" }).click();
+    await page.locator('[name="healthNotes"]').fill("Astm");
+    // The browser would refuse "12" itself; the server's answer is what this proves.
+    await page.locator("form").evaluate((form) => {
+      (form as HTMLFormElement).noValidate = true;
+    });
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+
+    await page.waitForURL(/error=VALIDATION_ERROR/);
+    expect(page.url()).toContain("fields=phone");
+    await expect(page.locator("#f-sex")).toHaveText("Feminin");
+    await expect(page.locator('[name="phone"]')).toHaveValue("12");
+    await expect(page.locator('[name="healthNotes"]')).toHaveValue("Astm");
+    await expect(page.locator("#main")).toContainText("Numărul nu e valid");
+    expect(page.url()).not.toContain("Astm");
   });
 
   test("does not render a field name it does not recognize", async ({ page }) => {

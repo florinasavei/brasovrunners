@@ -45,10 +45,13 @@ export type DeclarationOption = { id: string; version: number; title: string };
 export default async function EventFieldsForm({
   event,
   declarations,
+  waiting = 0,
 }: {
   /** The event being edited, or null on the create form. */
   event: EditableEvent | null;
   declarations: readonly DeclarationOption[];
+  /** How many wait for a place (§147); the create form has nobody. */
+  waiting?: number;
 }) {
   const t = await getTranslations("Admin");
   // The type and surface labels already exist for the public pages, and they read the same to
@@ -265,6 +268,16 @@ export default async function EventFieldsForm({
         inputMode="url"
       />
 
+      {/* The Facebook event for this occurrence (§144). */}
+      <TextField
+        name="event.facebookEventUrl"
+        type="url"
+        label={t("editor.facebookEventUrl")}
+        helperText={t("editor.facebookEventUrlHelp")}
+        defaultValue={event?.facebookEventUrl ?? ""}
+        inputMode="url"
+      />
+
       {/* The other organization the event is held with (§121): a name, and its page. */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
         <TextField
@@ -351,7 +364,7 @@ export default async function EventFieldsForm({
           <TextField
             name="event.capacity"
             label={t("editor.capacity")}
-            helperText={t("editor.capacityHelp")}
+            helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
             defaultValue={event?.capacity ?? ""}
             inputMode="numeric"
           />

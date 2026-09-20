@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
+import Button from "@mui/material/Button";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -26,13 +27,18 @@ import ShareLinks from "@/modules/events/ui/ShareLinks";
 import { googleCalendarUrl } from "@/modules/events/ical";
 import StartList from "@/modules/events/ui/StartList";
 import { registrationState } from "@/modules/events/domain/registration-window";
+import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
+import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
+import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
+import { canEditTexts } from "@/modules/staff-identity/domain/roles";
+import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
 import { PAGE_WIDTH } from "@/theme/brand";
 
-type Props = { params: Promise<{ locale: string; slug: string }> };
+type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string }> };
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -89,10 +95,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function EventDetailPage({ params }: Props) {
+export default async function EventDetailPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
+  const { interest, since } = await searchParams;
 
   const event = await findPublishedEventBySlug(getDb(), locale, slug);
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
@@ -102,13 +109,34 @@ export default async function EventDetailPage({ params }: Props) {
   const t = await getTranslations("Event");
   const tSite = await getTranslations("Site");
   const now = new Date();
+  // "Tell me when registration opens" (§146) takes an address, and an address is taken only
+  // under an approved privacy notice — the registration form's own rule (BR-REQ-053-01). One
+  // read, only while there is a box to show.
+  const interestBox =
+    event.registrationMode === "INTERNAL" &&
+    registrationState(event, now) === "NOT_YET_OPEN" &&
+    (await findCurrentApprovedDocument(getDb(), "PRIVACY_NOTICE", locale, now)) !== undefined;
+  const interestOutcome = parseInterestOutcome(interest);
+  // A staff member who may edit the words gets the way into the editor from here (§135; the
+  // owner: "when I am signed in … I should be able to edit events from the event page"). The
+  // page is rendered per request anyway, so reading the session costs it nothing; the editor
+  // asserts the role again for itself (BR-REQ-060-01). Never where there is no sign-in.
+  const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await getCurrentStaffUser();
+  const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
       <JsonLd data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"))} />
 
-      <Typography variant="body2" sx={{ mb: 2 }}>
-        <Link href="/events">{t("backToEvents")}</Link>
-      </Typography>
+      <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center", justifyContent: "space-between" }}>
+        <Typography variant="body2">
+          <Link href="/events">{t("backToEvents")}</Link>
+        </Typography>
+        {editHref && (
+          <Button component="a" href={editHref} variant="outlined" size="small" sx={{ minHeight: 44 }}>
+            {t("editInBackoffice")}
+          </Button>
+        )}
+      </Stack>
 
       {/* Stated in words, not only by colour — BR-REQ-070-03 criterion 3. */}
       {event.eventStatus === "CANCELLED" && (
@@ -147,6 +175,18 @@ export default async function EventDetailPage({ params }: Props) {
 
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       <RegistrationCta event={event} now={now} />
+
+      {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
+          and the notice that describes it is approved. A corrected address is timed from the
+          render the person is correcting, not from the redirect. */}
+      {interestBox && (
+        <RegistrationInterestForm
+          locale={locale}
+          slug={slug}
+          renderedAt={(interestOutcome === "invalid" && parseInterestSince(since, now)) || now}
+          outcome={interestOutcome}
+        />
+      )}
 
       {/* The whole journey in five steps, folded — for the person deciding whether to press (§91). */}
       {event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN" && (

@@ -26,7 +26,8 @@
       "label": "Main navigation",
       "events": "Events",
       "gallery": "Gallery",
-      "more": "Menu"
+      "more": "Menu",
+      "contact": "Contact"
     }
   },
   "Home": {
@@ -57,10 +58,13 @@
       "nextYear": "Next year",
       "viewMonth": "Month",
       "viewYear": "Year",
+      "layoutGrid": "Calendar",
+      "layoutList": "List",
       "pickMonth": "Month",
       "pickYear": "Year",
       "yearEmpty": "Nothing scheduled this year.",
-      "subscribe": "Every club event in your own calendar, updating by itself — subscribe with:",
+      "addTitle": "Add to your calendar",
+      "feedAddress": "The address for other apps",
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / phone",
       "downloadLink": "download the .ics",
@@ -74,6 +78,7 @@
   },
   "Event": {
     "backToEvents": "Back to events",
+    "editInBackoffice": "Edit",
     "date": "Date",
     "startTime": "Start time",
     "gatheringTime": "Gathering time",
@@ -85,11 +90,13 @@
     "meetingPoint": "Meeting point",
     "share": {
       "title": "Share:",
+      "native": "Share",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
-      "instagram": "Picture for Instagram",
+      "instagram": "Instagram",
+      "calendarTitle": "Add to calendar:",
       "googleCalendar": "Google Calendar",
-      "ics": "Add to calendar (.ics)"
+      "ics": ".ics file"
     },
     "rules": "Event rules",
     "schedule": "Event programme",
@@ -135,6 +142,7 @@
       "placesRemaining": "{count, plural, one {# place left} other {# places left}}",
       "full": "No places left. You can join the waiting list: if one is released, the first person on the list gets it.",
       "opensOn": "Registration opens on {date}.",
+      "opensOnShort": "Registration opens on {date}",
       "closed": "Registration has closed for this event.",
       "closedRaceWeek": "Registration has closed — come to the desk with the QR from your email.",
       "cancelled": "The event has been cancelled, so registration has stopped.",
@@ -169,9 +177,10 @@
       "atTime": "{sentence} at {time}",
       "dates": "{count} dates, until {last}",
       "count": "{count} dates",
+      "weeklyChip": "Weekly",
+      "fortnightlyChip": "Every two weeks",
       "nextLabel": "Next",
-      "allDates": "All dates",
-      "moreInCalendar": "{count} more in the calendar"
+      "allDates": "All dates"
     },
     "route": "Route",
     "openRoute": "View the route",
@@ -182,7 +191,20 @@
     },
     "stravaEvent": "On Strava",
     "openStravaEvent": "The event on Strava",
+    "openFacebookEvent": "The event on Facebook",
+    "interest": {
+      "heading": "Tell me when registration opens",
+      "email": "Your email address",
+      "submit": "Tell me",
+      "submitting": "Sending…",
+      "note": "We send you one email when registration opens; the address is deleted afterwards.",
+      "privacy": "Details in the privacy notice.",
+      "done": "We will email you when registration opens.",
+      "invalid": "That email address does not look valid. Check it and try again.",
+      "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend."
+    },
     "calendar": {
+      "registrationOpens": "Registration from {date}",
       "feedName": "🏃 BVR"
     }
   },
@@ -265,7 +287,7 @@
       "participantEmailHelp": "The confirmation and the declaration link go here. It must be their address, not the club's.",
       "participantLocale": "Language we write to them in",
       "participantLocaleHelp": "The language of every email about this registration.",
-      "listOptOut": "They do not want to appear on the public participant list",
+      "listOptIn": "The person wants to appear on the public participant list",
       "relayConfirmation": "I confirm this person asked me to register them.",
       "create": "Add the registration",
       "viewForEvent": "See this event's registrations",
@@ -309,11 +331,12 @@
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
       "columnStatus": "Status",
+      "columnJourney": "Step",
       "columnEvent": "Event",
       "columnEmail": "Email",
       "columnSubmitted": "Submitted",
       "openNamed": "Open the registration for {name}",
-      "tableCaption": "Registrations, with status, event and date submitted",
+      "tableCaption": "Registrations, with status, step, event and date submitted",
       "emptyFiltered": "No registration matches these filters. Clear them to see all of them.",
       "selectRow": "Select the registration for {name}",
       "bulkCancelTitle": "Cancel the ticked registrations",
@@ -339,7 +362,20 @@
       "declarationsPdf": "Signed declarations (PDF)",
       "declarationForm": "Paper declaration form (PDF)",
       "declarationPaper": "on paper, recorded by {who}",
-      "emailVouched": "address vouched for by {who}"
+      "emailVouched": "address vouched for by {who}",
+      "journey": {
+        "title": "The registration's journey",
+        "held": "until {until}",
+        "offered": "place offered, until {until}",
+        "waitlisted": "on the waiting list",
+        "bib": "no. {number}",
+        "pickedUp": "picked up no. {number}",
+        "cancelledAt": "Cancelled on {date}",
+        "expiredAt": "Expired on {date}",
+        "progress": "{done} of {total} steps",
+        "next": "next: {step}",
+        "complete": "Every step done"
+      }
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -353,6 +389,7 @@
       "registrations": "Registrations",
       "columnTitle": "Event",
       "columnStatus": "Status",
+      "registrationModeTitle": "The registration mode, from the event's settings",
       "columnDate": "Date",
       "seriesDates": "The dates of this series",
       "seriesEdit": "Edit the next date",
@@ -490,6 +527,7 @@
       "registrationModeHelp": "Registration here needs a declaration; registration elsewhere needs the organiser's link.",
       "capacity": "Capacity",
       "capacityHelp": "Leave empty for unlimited. It cannot be lowered below the places already taken.",
+      "capacityWaiting": "On the waiting list: {waiting}. If you raise the number, the new places are offered at once, in order, 24 h each.",
       "registrationOpensAt": "Registration opens",
       "registrationClosesAt": "Registration closes",
       "registrationWindowHelp": "Leave the opening empty and registration opens when the event is published; leave the closing empty and it closes when the event starts.",
@@ -530,18 +568,24 @@
       "repeatStopHelp": "No further dates are made; the ones that exist stay (tick them in the list to delete them).",
       "repeatStopped": "The series is stopped: no further dates will be made.",
       "savedSeries": "Saved — and on {applied} more dates of the series.",
+      "savedSeriesOffered": "Saved — and on {applied} more dates of the series; places offered to the waiting list: {offered}.",
+      "savedOffered": "Saved — places offered to the waiting list: {offered}.",
       "scope": {
         "title": "Save for:",
         "this": "This date only",
         "following": "This and the following dates",
         "all": "All dates of the series",
-        "help": "As in Google Calendar: only what you changed here reaches the other dates — a new time lands at that time on each date's own day; a date moved or cancelled on its own stays so unless the place or the status is what you changed. Each date's page address stays."
+        "help": "As in Google Calendar: only what you changed here reaches the other dates — a new time lands at that time on each date's own day; a date moved or cancelled on its own stays so unless the place or the status is what you changed. Each date's page address stays.",
+        "chosen": "this date and {count} more ticked above",
+        "selectAll": "All",
+        "selectNone": "None",
+        "open": "Open the date {date}"
       },
       "repeatOfNote": "Changes here — a cancellation, another place, another time — are this date's alone, unless you choose otherwise at Save.",
       "series": {
         "kicker": "Series “{title}”",
         "editing": "Editing the date {date}",
-        "position": "Date {position} of {count} in the series. Press another date to open it.",
+        "position": "Date {position} of {count} in the series. Tick the dates the save should reach; the arrow opens a date.",
         "previous": "← Previous date: {date}",
         "next": "Next date: {date} →"
       },
@@ -580,6 +624,8 @@
       "coHostHelp": "Optional. When the event is held together with another organization — an NGO, a shop, a brand — its name here, and its page, if it has one. Shown as “Together with …” beside the club's name, and named as a second organizer to Google.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
+      "facebookEventUrl": "Link to the Facebook event",
+      "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. This edition only; never copied.",
       "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page under the short description.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
@@ -603,12 +649,12 @@
       "role": "Role",
       "preferredLocale": "Preferred language",
       "invite": "Add",
-      "inviteHelp": "This adds the address to the list of who is staff — no email or code is sent. The person also needs a Zitadel account with exactly this address (they create one at the sign-in page, or you do in the Zitadel console → Users), then signs in at /admin. Access begins at that first sign-in.",
-      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation with the link to choose a password. Then they sign in at /admin.",
-      "inviteSent": "Added, and the invitation is on its way to their mailbox.",
-      "inviteExists": "Added. They already have a sign-in account with this address — they can sign in at /admin right away.",
-      "inviteManual": "Added to the list. No invitation was sent: create their account in the Zitadel console (Users → New) with exactly this address, or let them create it at the sign-in page.",
-      "inviteFailed": "Added to the list, but the sign-in provider refused to create the account ({reason}). Create it in the Zitadel console (Users → New) with exactly this address.",
+      "inviteHelp": "This adds the address to the list of who is staff and emails them the invitation: who added them, as what, and the sign-in link. They create their sign-in account at the sign-in page with exactly this address; with the Zitadel key set (To do → \"Invite the team\", SETUP.md §37) we create it for them and they also get the password link. Access begins at their first sign-in.",
+      "inviteHelpSends": "This adds the address to the list of who is staff, creates their sign-in account and emails them the invitation — who added them, as what, the sign-in link — and the link to choose a password. Then they sign in at /admin.",
+      "inviteSent": "Added. The invitation is on its way to their mailbox, with the link to choose a password.",
+      "inviteExists": "Added, the invitation is on its way. They already have a sign-in account with this address — they can sign in at /admin right away.",
+      "inviteManual": "Added. The invitation is on its way to their mailbox: they create their account at the sign-in page with exactly this address. (With the Zitadel key set — To do → \"Invite the team\" — we would create it for them.)",
+      "inviteFailed": "Added and the invitation is on its way, but the sign-in provider refused to create the account ({reason}). They can create it at the sign-in page with exactly this address.",
       "resendInvite": "Resend the invitation",
       "resendInvitePending": "Sending…",
       "pending": "Has not signed in yet",
@@ -647,7 +693,13 @@
       "test": "test",
       "offered": "offer until {until}",
       "since": "since {when}",
-      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (as 30-minute holds), the rest queue here, in order. Cancel a confirmed one or let a hold lapse (the maintenance job runs every 15 minutes) and the first in line gets the offer; its email shows in the Outbox on that registration."
+      "interestTitle": "Addresses waiting for the opening notice: {count}",
+      "interestHelp": "Left at \"Tell me\" on the event's page. Each gets one email on the job's first run after registration opens and is deleted with it. If somebody writes that they no longer want the message, type their address here: it leaves the list. The addresses themselves are not shown.",
+      "interestEmail": "Address to withdraw",
+      "interestRemove": "Remove from the list",
+      "interestRemoved": "The address was removed from the notification list.",
+      "interestNotFound": "That address was not on this event's list. Check whether they wrote from another one.",
+      "simulate": "How to simulate the waiting list (not in production): set a small number of places in Settings, save, then add more test registrations below than there are places — the first take the places (as 30-minute holds), the rest queue here, in order. Cancel a confirmed one, let a hold lapse (the maintenance job runs every 15 minutes) or raise the number of places and the first in line gets the offer; its email shows in the Outbox on that registration."
     },
     "testRegistrations": {
       "title": "Test registrations",
@@ -675,8 +727,8 @@
       "approved": "Approved",
       "draft": "Draft",
       "keys": {
-        "PRIVACY_NOTICE": "Privacy notice",
-        "TERMS": "Terms and conditions",
+        "PRIVACY_NOTICE": "GDPR",
+        "TERMS": "Racing TOS",
         "EVENT_DECLARATION": "Participant declaration"
       },
       "referenced": "{signatures} signatures · {events} events",
@@ -746,6 +798,21 @@
       "intro": "What is missing before the platform can take real entries. Every line is read from the system, not ticked by hand.",
       "blockingSummary": "Blocking real registrations: {count}.",
       "nothingBlocking": "Nothing is blocking registrations. The rest are improvements.",
+      "summary": "To do: {pending} · Done: {done}",
+      "allDone": "Everything shown here is done.",
+      "noneMatch": "No row matches this filter.",
+      "listLabel": "The task list",
+      "filter": {
+        "who": "Who",
+        "kind": "Kind",
+        "all": "All"
+      },
+      "kind": {
+        "account": "Account",
+        "decision": "Decision",
+        "text": "Text",
+        "check": "Check"
+      },
       "emailStalled": {
         "title": "Emails are not going out.",
         "deferred": "Messages waiting: {count}. Mailgun's daily allowance ({allowance} messages a day) is spent. They go out by themselves at {resumesAt} (Romania time); nothing is lost.",
@@ -806,7 +873,7 @@
           "done": "The team has accounts.",
           "how": [
             "Open /admin/staff, type the person's email address and pick the role: Moderator (writes and publishes), Administrator (registrations, legal texts, this page) or Superadministrator (the team too).",
-            "With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), “Add” also creates their Zitadel account and emails them the invitation — the link to choose a password. Without it, the person creates a Zitadel account with exactly that address, or you create it in the Zitadel console → Users. Zitadel only proves who they are; the list here decides whether they are staff.",
+            "“Add” emails them the club's invitation: who added them, as what, the sign-in link. With the invitation key set (SETUP.md §37: a Zitadel service user's token as ZITADEL_MANAGEMENT_PAT on both Vercel projects), it also creates their Zitadel account and they get the link to choose a password too. Without it, the person creates their account at the sign-in page with exactly that address. Zitadel only proves who they are; the list here decides whether they are staff.",
             "They open {baseUrl}/admin, sign in through Zitadel, done. “Access Denied” means an unverified email or a different address from the invited one."
           ]
         },
@@ -871,6 +938,18 @@
             "In a year (September 2027), buy the .ro domain with the same name, at ROTLD or at the .com registrar.",
             "Run `yarn domain:bind production <name>.ro --alias-of {apex}`: it binds the domain to the Vercel project as a permanent redirect to the .com and prints the DNS records to create.",
             "Create the records at the registrar. This row turns green when the site answers on .ro."
+          ]
+        },
+        "contactForm": {
+          "title": "The contact form",
+          "todo": "The “Write to us” page is built: the visitor's name, address and message arrive as an ordinary email in the club's mailbox, straight through Gmail — not through Mailgun, so none of the 100 messages a day are spent. Until the three variables are set, the page shows the club's address instead of the form.",
+          "done": "The contact form sends to the club's mailbox.",
+          "how": [
+            "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
+            "Still under Security → App passwords → create one named “Brașov Runners site” → copy the 16 characters (shown once).",
+            "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters; CONTACT_FORM_TO = the addresses that receive the messages, comma-separated (the club's Gmail, Amalia's Yahoo).",
+            "Redeploy both projects.",
+            "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         }
       },
@@ -1252,7 +1331,9 @@
         "EVENT_THANKS": "Thank you after the race",
         "DECLARATION_SIGNED": "Signed declaration (PDF attached)",
         "DECLARATION_ARCHIVE": "The club's archive copy (PDF attached)",
-        "BIB_ASSIGNED": "A race number given by hand"
+        "BIB_ASSIGNED": "A race number given by hand",
+        "STAFF_INVITATION": "The team invitation",
+        "REGISTRATION_OPENED": "Registration is open"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1269,7 +1350,9 @@
         "EVENT_THANKS": "By hand, from the event page, once the event is marked completed; to those who came.",
         "DECLARATION_SIGNED": "Right after the declaration is signed — electronically or on paper at the desk. With the PDF attached and a link to it.",
         "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link.",
-        "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link."
+        "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link.",
+        "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
+        "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form."
       },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
@@ -1428,12 +1511,13 @@
       "instagram": "Instagram",
       "strava": "Strava",
       "contact": "Write to us:"
-    }
+    },
+    "contactPage": "Write to us"
   },
   "Legal": {
     "unavailable": "This document has not been published for this environment yet.",
-    "privacyLinkLabel": "Privacy",
-    "termsLinkLabel": "Terms and conditions"
+    "privacyLinkLabel": "GDPR",
+    "termsLinkLabel": "Racing TOS"
   },
   "Registration": {
     "title": "Register: {event}",
@@ -1441,7 +1525,7 @@
     "privacyPrefix": "I have read and agree to the",
     "privacyLinkLabel": "privacy notice",
     "resultsNameConsent": "My name may appear in public results",
-    "listOptOut": "Keep me off the public participant list, if there is one",
+    "listOptIn": "I want to appear on the participant list",
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
@@ -1449,7 +1533,7 @@
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
-      "phone": "Type only the digits of the number, without the country code (that is chosen on the left).",
+      "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again."
@@ -1513,7 +1597,7 @@
       "clubName": "Club or team",
       "healthNotes": "Health information",
       "healthConsent": "Health information consent",
-      "privacyAcknowledged": "Privacy notice",
+      "privacyAcknowledged": "GDPR",
       "captcha": "The anti-bot check",
       "stravaUrl": "Strava profile",
       "instagramHandle": "Instagram",
@@ -1581,8 +1665,8 @@
     "facts": {
       "details": "Event details",
       "rules": "The rules",
-      "terms": "Terms and conditions",
-      "privacy": "Privacy"
+      "terms": "Racing TOS",
+      "privacy": "GDPR"
     },
     "socialsHelp": "If you want us to find you and tag you in the club's posts. Not published on the site, not given to anyone.",
     "stravaUrl": "Your Strava profile (link)",
@@ -1674,7 +1758,8 @@
     "captured": {
       "title": "Emails captured on this machine",
       "intro": "Locally nothing leaves the machine: every message the platform would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
-      "empty": "Nothing captured yet. Register for an event and come back."
+      "empty": "Nothing captured yet. Register for an event and come back.",
+      "contact": "Through the contact form — would have reached the club’s mailbox:"
     },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
     "title": "This deployment's configuration",
@@ -1737,6 +1822,18 @@
       "webhook": {
         "title": "Mailgun webhook",
         "body": "How a bounce reaches the registration it belongs to. Without the signing key, requests are refused and delivery state stays unknown."
+      },
+      "contactFormCapture": {
+        "title": "Contact form",
+        "body": "Messages are kept in memory and go nowhere — the only mode locally and in tests; no SMTP connection is ever opened."
+      },
+      "contactFormSmtp": {
+        "title": "Contact form",
+        "body": "Sends over SMTP, straight from the club's Gmail, to CONTACT_FORM_TO — not through Mailgun and not through the email queue."
+      },
+      "contactFormOff": {
+        "title": "Contact form",
+        "body": "The “Write to us” page shows the club's address instead of the form. For the form: CONTACT_SMTP_USER (the Gmail address), CONTACT_SMTP_PASSWORD (the app password) and CONTACT_FORM_TO (the recipients, comma-separated)."
       }
     },
     "rateLimits": "Rate limits",
@@ -1887,5 +1984,47 @@
     "backToGallery": "← All albums",
     "photoCount": "{count} photos",
     "photoAlt": "Photo {n} of {total}: {title}"
+  },
+  "Contact": {
+    "title": "Write to us",
+    "intro": "A question about a run, a registration or the club? Write to us here — the message lands straight in the club's mailbox and we answer by email.",
+    "requiredLegend": "Fields marked with * are required.",
+    "name": "Your name",
+    "email": "Your email address",
+    "emailHelp": "We answer at this address.",
+    "message": "Message",
+    "messageHelp": "At most 2,000 characters.",
+    "privacy": "The message goes to the club's mailbox; the details are used for nothing else.",
+    "privacyDetails": "Details in the",
+    "privacyLinkLabel": "privacy notice",
+    "submit": "Send",
+    "submitting": "Sending…",
+    "incompleteHint": "Fill in your name, address and message to send.",
+    "sent": {
+      "title": "Your message is on its way.",
+      "bodyTo": "We will answer at {email}.",
+      "body": "We will answer at your email address."
+    },
+    "off": {
+      "writeTo": "Write to us at",
+      "none": "The contact form is not available at the moment."
+    },
+    "fieldNames": {
+      "name": "Name",
+      "email": "Email address",
+      "message": "Message",
+      "captcha": "Anti-bot check"
+    },
+    "errors": {
+      "title": "The message was not sent",
+      "fieldsIntro": "Check:",
+      "field": "Check this field.",
+      "generic": "The message could not be sent. Check what you filled in and try again.",
+      "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
+      "LIMITED": "Too many messages from this address in the last hour. Try again later — your message is still written below.",
+      "DELIVERY": "We could not send it. Write to us directly at",
+      "DELIVERY_NO_ADDRESS": "We could not send it. Try again in a few minutes.",
+      "UNAVAILABLE": "The contact form is not available on this site."
+    }
   }
 }

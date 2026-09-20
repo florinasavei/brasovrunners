@@ -21,8 +21,10 @@ import {
   listOutboxHistory,
 } from "@/modules/registrations/admin-repository";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
+import { journeyOf } from "@/modules/registrations/domain/journey";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
+import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -129,6 +131,9 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           <Chip size="small" color="info" variant="outlined" label={tr("registrations.clubMemberChip")} />
         )}
       </Stack>
+      {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"
+          column uses, so the page never contradicts the row that led here. */}
+      <StaffJourney journey={journeyOf(registration)} bibNumber={registration.bibNumber} variant="full" />
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>

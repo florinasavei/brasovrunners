@@ -1336,9 +1336,11 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - the published set is exactly `status = CONFIRMED AND kind = 'REAL' AND list_opt_out = false`,
   ordered by `confirmed_at` then `id`. The select list is the registered name and nothing else —
   no address, no status, no identifier, and no count of anything unconfirmed;
-- `registrations.list_opt_out` is the participant's own refusal, asked on every registration
-  form whatever the event's current setting is: a list can be switched on months later, and a
-  question nobody put to that person cannot be answered on their behalf;
+- `registrations.list_opt_out` is the participant's own answer, the opposite of the tick "I want
+  to appear on the participant list" (`DECISIONS.md` §143): no tick, no listing. Asked on the
+  form of an event whose list is switched on (§85); switching a list on later means asking the
+  people already registered, because a question nobody put to that person cannot be answered
+  on their behalf;
 - it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
   sample notice carries the paragraph with the club's facts as placeholders (§29,
   `DECISIONS.md` §29);
@@ -2418,7 +2420,7 @@ Within an event-locked transaction, called by cancellation, hold expiry, capacit
    - decrement local available count;
 4. commit without calling Mailgun.
 
-For unlimited events there is no waitlist promotion.
+For unlimited events there is no waitlist promotion — nothing is ever waitlisted against one. The one exception is the moment a cap is lifted in the editor (`DECISIONS.md` §147): whoever was waiting under the old number is offered a place then, by this same procedure, the waiting count standing in for the available places. A capacity raised in the editor runs this inside the save's transaction, after the guarded update has locked the row, and the save reports the offers made.
 
 ### 15.7 Offer accept/decline/expiry
 
@@ -2662,6 +2664,11 @@ PROFILE_MANAGE_LINK
 REGISTRATION_STATE_NOTICE
 EVENT_REMINDER
 EVENT_THANKS
+DECLARATION_SIGNED
+DECLARATION_ARCHIVE
+BIB_ASSIGNED
+STAFF_INVITATION
+REGISTRATION_OPENED
 ```
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
@@ -2677,6 +2684,21 @@ footer "reply to this email with questions" when `EMAIL_REPLY_TO` is set.
 It states the current status and, when rejoining is eligible, links to the ordinary
 public event registration page. It carries no scoped token and creates none.
 
+`STAFF_INVITATION` is the one message with no participant: queued in the transaction that
+adds a colleague on Echipa (`staff:<id>:invitation:<time>`), to the staff address, in the
+colleague's language — who added them, as what, the sign-in page as the action. No token:
+the sign-in page asserts who they are. Sent again from the row until they first sign in
+(`DECISIONS.md` §141).
+
+`REGISTRATION_OPENED` is the other message with no participant: from the maintenance job,
+the run that first sees an event's window open, to every address left in "Anunță-mă" on
+its page while the window was ahead (`registration_interests`, one row per event and
+canonical identity), once (`interest:<id>:opened`), the row deleted in the same transaction
+— the address is kept for nothing else. The event's id rides in the payload; the facts line
+and the ordinary registration page as the action; no token. Never for an event that will
+not open on the site — cancelled, started, moved to another form — whose rows go with no
+message (`DECISIONS.md` §146).
+
 Complete Romanian/English HTML and text templates. Locale/timezone-aware dates and localized URLs. No fragile sentence fragments.
 
 ### 16.4 Modes
@@ -2686,6 +2708,16 @@ Complete Romanian/English HTML and text templates. Locale/timezone-aware dates a
 - live: production.
 
 QA subject visibly marked. Startup rejects unsafe combination.
+
+**The contact form is the one message that does not go through the outbox** (BR-REQ-070-04,
+`DECISIONS.md` §149). It is a visitor's correspondence to the club, not transactional mail:
+no participant row depends on it, it carries no token, and the visitor is standing there to
+read a failure. It leaves over SMTP through the club's own mailbox account
+(`infrastructure/email/smtp-adapter.ts`, `CONTACT_SMTP_*`, `CONTACT_FORM_TO`), outside
+`EMAIL_DELIVERY_MODE` and its allowance, is never retried and never stored; local and test
+capture it in memory and open no socket, and QA marks its subject like the outbox marks
+every other. Nothing else may take this route — every message to a participant is an
+outbox row.
 
 ### 16.5 Webhooks
 

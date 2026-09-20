@@ -74,9 +74,11 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     ? await db.select().from(registrations).where(eq(registrations.id, row.registrationId)).limit(1)
     : [];
 
-  const eventDetails = registration
-    ? await findEventNotificationDetails(db, registration.eventId, locale)
-    : undefined;
+  // The event comes from the registration — or, for the one message about an event and
+  // nobody's registration (§146), from the payload's id, so a renamed event renders right.
+  const payloadEventId = row.messageType === "REGISTRATION_OPENED" ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
+  const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
+  const eventDetails = eventId ? await findEventNotificationDetails(db, eventId, locale) : undefined;
 
   const data: TemplateData = {
     participantName: participant?.defaultName ?? "",
@@ -127,6 +129,22 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       data.thanksUrl = url;
       payloadActionUrl = url;
     }
+  }
+  // The staff invitation (§141): everything it says is in the payload — there is no
+  // participant and no token; the action is the sign-in page, which asserts who they are.
+  if (row.messageType === "STAFF_INVITATION") {
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; role?: unknown; inviterName?: unknown };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    data.staffRole = typeof payload.role === "string" ? payload.role : undefined;
+    data.inviterName = typeof payload.inviterName === "string" ? payload.inviterName : undefined;
+    data.staffEmail = row.recipientEmail;
+    data.signInUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
+    payloadActionUrl = data.signInUrl;
+  }
+  // "Registration is open" (§146): no participant, no token; the action is the ordinary
+  // registration page, which asks everything itself.
+  if (row.messageType === "REGISTRATION_OPENED" && eventDetails?.slug) {
+    payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
   }
   // The desk code on the confirmation and the reminder (BR-REQ-037-08). A confirmed
   // registration made before codes existed gets one here, so a resent confirmation carries it too.

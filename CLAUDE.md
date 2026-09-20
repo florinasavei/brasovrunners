@@ -73,7 +73,7 @@ These carry trust. `AGENTS.md` §1.5 ranks them above every other goal, includin
 | No registration without an approved declaration and privacy notice, and no legal text in effect that the club did not approve. The platform ships complete texts as templates (`legal-documents/templates/`), with the club's four facts as visible `<PLACEHOLDER>`s; everywhere but production the seed wraps them in a not-approved banner, and production is refused a seed — the club approves them in `/admin/legal` ("start from the platform's text"). The refusal has a test. | `AGENTS.md` §10.8, §29; BR-REQ-053-01; `DECISIONS.md` §29, §95 |
 | Publication is one state per event: both languages go live together, and PUBLISHED requires a complete translation in every locale. A locale with no translation is a 404, never the other language's text. | `AGENTS.md` §11.2, BR-REQ-040-02, `DECISIONS.md` §28 |
 | A test registration behaves exactly like a real one in the queue — `kind` appears in no condition in the allocator or the capacity formula — is omitted from every count the club is given, and cannot exist in production. | `AGENTS.md` §12.6, BR-REQ-037-04, `DECISIONS.md` §30 |
-| A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, confirmed and not opted out, and never switched on before the approved privacy notice describes it. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
+| A public participant list is a disclosure, not a display option: `HIDDEN` by default on every event, names only, confirmed and having ticked "I want to appear" (§143), and never switched on before the approved privacy notice describes it. | `AGENTS.md` §10.10, BR-REQ-039-01, `DECISIONS.md` §32 |
 | Staff may enter, rename, cancel and erase a registration, and — at the race-day desk — confirm one on a paper declaration the *participant* signed, give a waiting-list entry a free place, set a number by hand and check people in. Nothing else: no verified-email edit, no participant merge, no staff-signed declaration (a paper acceptance names the staff member who *recorded* it), and no desk verb that bypasses the allocator or an approved declaration. Every staff role works the desk and sees a name, a state and a number there, never an address; the list, the export, cancel and erase stay Administrator-only. Erasing releases the place through the allocator and leaves an audit row that names who and why but never who was erased. | `AGENTS.md` §15.11, BR-REQ-037-03, BR-REQ-037-05, BR-REQ-037-06, BR-REQ-037-07, BR-REQ-037-08, `DECISIONS.md` §67 |
 | Participants never get passwords or accounts. Staff-only auth. | `AGENTS.md` §10.3, §13 |
 | Email action links: token hashed at rest, single use, GET never mutates. | `AGENTS.md` §12.8, BR-REQ-036-02 |
@@ -160,7 +160,7 @@ sections and in `CHANGELOG.md`.
 
 **Email**
 
-- Fourteen message types (`email_outbox.email_message_type`), bilingual by default, one branded
+- Seventeen message types (`email_outbox.email_message_type`), bilingual by default, one branded
   card, the action as a button, deep links — event, programme, rules, "I can't make it any
   more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
   at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`
@@ -195,8 +195,9 @@ sections and in `CHANGELOG.md`.
   type, confirm on paper, give a place, a number, check in, walk-ins (§67); the desk row names
   a minor's parent (§108).
 - `/admin/tasks`: what the club still owes and what it pays, read from the system — the
-  monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro` — with the steps
-  under each row; the cost table with the Mailgun plan's price (§41, §97–§101). `/devs`: the
+  monitors, Mailgun, Turnstile, the archive mailbox, Vercel's token, the `.ro`, the contact
+  form — with the steps under each row; the cost table with the Mailgun plan's price (§41,
+  §97–§101, §149). `/devs`: the
   configuration, Neon's month, Vercel's deployments and build minutes, the outbox, the
   repository's documents at `/devs/docs/<name>` (§88, §101).
 
@@ -251,6 +252,10 @@ evening; `/admin/tasks` shows the same list with the steps, read from the system
 10. **The invitation key** — a Zitadel service user with Org User Manager and its token as
     `ZITADEL_MANAGEMENT_PAT` on both Vercel projects (`SETUP.md` §37), so "Add" on Echipa
     sends the invitation itself (§123).
+11. **The contact form's Gmail** — an app password on the club's Google account, then
+    `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both Vercel
+    projects (`SETUP.md` §38). Until then `/contact` shows the club's address instead of the
+    form (§149).
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 

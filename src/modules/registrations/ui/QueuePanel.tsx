@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Database } from "@/db/types";
 import { computeOccupied } from "../domain/capacity";
-import { countOccupied, countEligibleWaitlisted } from "../repository";
+import { countOccupied } from "../repository";
 import { listQueueForEvent } from "../admin-repository";
 
 /**
@@ -22,17 +22,19 @@ import { listQueueForEvent } from "../admin-repository";
 export default async function QueuePanel<T extends Record<string, unknown>>({
   db,
   event,
+  waiting,
   now,
 }: {
   db: Database<T>;
   event: { id: string; capacity: number | null };
+  /** WAITLISTED rows — the page reads it once, for this panel and for the capacity field (§147). */
+  waiting: number;
   now: Date;
 }) {
   const t = await getTranslations("Admin");
   const format = await getFormatter();
   const counts = await countOccupied(db, event.id, now);
   const occupied = computeOccupied(counts);
-  const waiting = await countEligibleWaitlisted(db, event.id);
   const rows = await listQueueForEvent(db, event.id);
   const free = event.capacity === null ? null : Math.max(0, event.capacity - occupied);
   const holds = counts.unexpiredPendingDeclarationHolds + counts.unexpiredWaitlistOfferedHolds;

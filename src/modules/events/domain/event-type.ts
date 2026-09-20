@@ -57,6 +57,16 @@ export function isStravaLink(url: string): boolean {
   }
 }
 
+/** The same comparison for a Facebook event (§144): facebook.com, its subdomains, and fb.me. */
+export function isFacebookLink(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me" || host === "fb.com";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The types that are simply turned up to — no registration, no participants, no programme.
  *

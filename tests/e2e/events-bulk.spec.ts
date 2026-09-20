@@ -40,7 +40,7 @@ test.describe("BR-REQ-050-02 a series is one row, and the bulk bar deletes it", 
     // hidden, so the row is whichever visible `tr` or `li` holds the title.
     await expect(main.getByRole("link", { name: title, exact: true })).toHaveCount(1);
     const row = main.locator("tr, li").filter({ visible: true }).filter({ has: page.getByRole("link", { name: title, exact: true }) });
-    await expect(row.getByText("2 date")).toBeVisible();
+    await expect(row.getByText("2 date", { exact: true })).toBeVisible();
 
     await row.getByRole("checkbox", { name: `Selectează „${title}”` }).check();
     await expect(main.getByText("Bifate: 1")).toBeVisible();

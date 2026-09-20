@@ -21,6 +21,25 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
   });
 
+  // BR-REQ-041-01 criterion 5 (`DECISIONS.md` §137): the month is the grid on every width,
+  // the list one press away, and the choice is kept by the month links.
+  test("shows the month as a grid, and as a list when asked", async ({ page }) => {
+    await page.goto("/ro/evenimente");
+    const main = page.locator("#main");
+    await expect(main.getByRole("table")).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+
+    await main.getByRole("link", { name: "Listă", exact: true }).click();
+    await expect(page).toHaveURL(/view=list/);
+    await expect(main.getByRole("table")).toHaveCount(0);
+    // The next-month arrow keeps the list.
+    expect(await main.getByRole("link", { name: "Luna următoare" }).getAttribute("href")).toContain("view=list");
+    await main.getByRole("link", { name: "Calendar", exact: true }).click();
+    await expect(page).not.toHaveURL(/view=list/);
+    await expect(main.getByRole("table")).toBeVisible();
+  });
+
   test("shows every seeded event with its date and meeting point as text", async ({ page }) => {
     await page.goto("/ro/evenimente");
 

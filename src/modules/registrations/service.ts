@@ -78,6 +78,16 @@ export type EventForRegistration = {
   confirmationDeadlineDaysBefore?: number | null;
 };
 
+/**
+ * The event as the allocator must see it once the row is locked: the caller's row, with the
+ * places as they stand *now*. The caller read its `capacity` before the lock, and a number
+ * raised in the editor (§147) between that read and this lock would otherwise waitlist a person
+ * against the old number while the new places stood free until the allocator's next visit.
+ */
+function withLockedCapacity(event: EventForRegistration, locked: { capacity: number | null }): EventForRegistration {
+  return event.capacity === locked.capacity ? event : { ...event, capacity: locked.capacity };
+}
+
 function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDesk = false): void {
   if (event.registrationMode !== "INTERNAL") {
     throw new DomainError("VALIDATION_ERROR", "this event does not accept local registration");
@@ -168,25 +178,29 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
  * Offer the released or newly available places to the front of the queue (AGENTS.md §15.6).
  *
  * Called from inside every transaction that might free or add capacity: confirmation,
- * cancellation, an offer's decline or expiry, and a future capacity increase. The caller must
- * already hold the event-row lock; this does not take it itself, so it composes safely with
- * `allocateOrWaitlist`, which calls it after locking once.
+ * cancellation, an offer's decline or expiry, and a capacity raised in the editor (§147). The
+ * caller must already hold the event-row lock; this does not take it itself, so it composes
+ * safely with `allocateOrWaitlist`, which calls it after locking once. Returns how many offers
+ * it made — the editor's "locuri oferite listei de așteptare: N" — which every other caller
+ * ignores.
  */
 export async function fillAvailableSpots<T extends Record<string, unknown>>(
   db: Transaction<T>,
   event: EventForRegistration,
   now: Date,
-): Promise<void> {
+): Promise<number> {
   await repo.expireStaleHolds(db, event.id, now);
 
-  // "For unlimited events there is no waitlist promotion" — there is also no waiting list to
-  // promote from, since nothing is ever waitlisted against an uncapped event.
-  if (event.capacity === null) return;
+  // Nothing is ever waitlisted against an uncapped event, so an uncapped event has no queue to
+  // fill — unless its cap was just lifted (§147), in which case everyone still waiting is
+  // offered a place: the count is what bounds the loop, and it is zero on every other visit.
+  const availablePlaces =
+    event.capacity === null
+      ? await repo.countEligibleWaitlisted(db, event.id)
+      : Math.max(event.capacity - computeOccupied(await repo.countOccupied(db, event.id, now)), 0);
+  if (availablePlaces <= 0) return 0;
 
-  const occupied = computeOccupied(await repo.countOccupied(db, event.id, now));
-  const availablePlaces = Math.max(event.capacity - occupied, 0);
-  if (availablePlaces <= 0) return;
-
+  let offers = 0;
   const candidates = await repo.lockOldestWaitlisted(db, event.id, availablePlaces);
   for (const candidate of candidates) {
     const holdExpiresAt = computeWaitlistOfferExpiry({
@@ -214,7 +228,9 @@ export async function fillAvailableSpots<T extends Record<string, unknown>>(
       idempotencyKey: `registration:${offered.id}:waitlist-offered:${now.toISOString()}`,
       now,
     });
+    offers += 1;
   }
+  return offers;
 }
 
 // --- §10.6 The public free-place count ---------------------------------------------------------
@@ -252,7 +268,8 @@ export async function readPublicAvailability<T extends Record<string, unknown>>(
  * error, which would tell a bot which check it tripped. */
 const MIN_SUBMISSION_SECONDS = 3;
 
-function looksLikeSpam(input: { honeypot?: string; renderedAt?: string }, now: Date): boolean {
+/** Shared with the interest form (`interest.ts`, §146): one rule for every public form. */
+export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string }, now: Date): boolean {
   if ((input.honeypot ?? "") !== "") return true;
   // An absent value parses to `Invalid Date`, which the guard below rejects — a public
   // submission that lost its timestamp is treated as a bot rather than waved through.
@@ -605,7 +622,7 @@ export async function confirmEmail<T extends Record<string, unknown>>(
     }
 
     await markEmailVerified(tx, current.participantId, now);
-    const allocated = await allocateOrWaitlist(tx, event, current.id, now);
+    const allocated = await allocateOrWaitlist(tx, withLockedCapacity(event, lockedEvent), current.id, now);
 
     await enqueueEmail(tx, {
       participantId: current.participantId,
@@ -658,7 +675,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
     if (current.status === "EXPIRED") {
       // The hold lapsed at the very moment of signing (§15.3 step 7): re-run allocation
       // rather than simply refusing a place that might still be free.
-      current = await allocateOrWaitlist(tx, event, registrationId, now);
+      current = await allocateOrWaitlist(tx, withLockedCapacity(event, lockedEvent), registrationId, now);
       if (current.status === "WAITLISTED") return current; // no declaration requested yet
     }
 
@@ -865,7 +882,7 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
         .update(registrations)
         .set({ emailConfirmedAt: now, emailConfirmedByStaffUserId: actor.id, updatedAt: now })
         .where(eq(registrations.id, current.id));
-      current = await allocateOrWaitlist(tx, event, current.id, now);
+      current = await allocateOrWaitlist(tx, withLockedCapacity(event, lockedEvent), current.id, now);
     }
     if (current.status === "PENDING_DECLARATION" || current.status === "WAITLIST_OFFERED") {
       return acceptDeclarationOnPaper(tx, current, actor, now);
@@ -899,7 +916,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
       throw new DomainError("CONFLICT", `only a waiting-list registration can be promoted; this one is ${current.status}`);
     }
     const occupied = computeOccupied(await repo.countOccupied(tx, event.id, now));
-    if (event.capacity !== null && occupied >= event.capacity) {
+    if (lockedEvent.capacity !== null && occupied >= lockedEvent.capacity) {
       throw new DomainError("VALIDATION_ERROR", "the event is full: no place is free to promote into");
     }
     const offered = await repo.transitionRegistration(tx, {
@@ -1005,7 +1022,7 @@ export async function unregister<T extends Record<string, unknown>>(
       now,
     });
 
-    await fillAvailableSpots(tx, event, now);
+    await fillAvailableSpots(tx, withLockedCapacity(event, lockedEvent), now);
 
     return cancelled;
   });

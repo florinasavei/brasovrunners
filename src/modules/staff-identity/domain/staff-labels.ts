@@ -1,4 +1,5 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import type { JourneyStepKey } from "@/modules/registrations/domain/journey";
 import type { EditorialStatus, StaffRole } from "./roles";
 
 /**
@@ -52,9 +53,9 @@ export const EVENT_STATUS_LABEL: Record<"SCHEDULED" | "CANCELLED" | "COMPLETED",
 };
 
 export const REGISTRATION_MODE_LABEL: Record<"NONE" | "INTERNAL" | "EXTERNAL", string> = {
-  NONE: "Fără înscriere",
-  INTERNAL: "Înscriere aici",
-  EXTERNAL: "Înscriere în altă parte",
+  NONE: "Fără înscrieri",
+  INTERNAL: "Înscrieri pe site",
+  EXTERNAL: "Înscrieri la organizator",
 };
 
 export const REGISTRATION_STATUS_LABEL: Record<RegistrationStatus, string> = {
@@ -65,4 +66,19 @@ export const REGISTRATION_STATUS_LABEL: Record<RegistrationStatus, string> = {
   CONFIRMED: "Confirmată",
   CANCELLED: "Anulată",
   EXPIRED: "Expirată",
+};
+
+/**
+ * The six steps of a registration's journey (§145) — a second reading of the same lifecycle
+ * the statuses above name, so the same rule: Romanian, once. Each is a fact about the
+ * *registration* (feminine: "trimisă", like the status chip's "Confirmată"), never about the
+ * person, so nothing has to agree with whose name it stands under.
+ */
+export const JOURNEY_STEP_LABEL: Record<JourneyStepKey, string> = {
+  submitted: "Înscriere trimisă",
+  emailVerified: "Email confirmat",
+  placeHeld: "Loc rezervat",
+  declarationSigned: "Declarație semnată",
+  confirmed: "Loc confirmat",
+  checkedIn: "Prezență marcată",
 };

@@ -15,6 +15,11 @@ const SECTIONS = [
   // Offered only when a published album exists (`showGallery`): a section with nothing
   // behind it is a signpost to an empty room.
   { segment: "gallery", href: "/gallery" },
+  // "Scrie-ne" (BR-REQ-070-04, §149). Last, and one more entry the priority+ fold measures:
+  // at 320px it goes behind "Meniu" like everything past the first section, so the row the
+  // owner asked for ("logo and navbar on the same row") is unchanged. Offered only while the
+  // page has something to offer (`showContact`): the form, or the club's address as a link.
+  { segment: "contact", href: "/contact" },
 ] as const;
 
 export type NavPage = { slug: string; title: string };
@@ -77,16 +82,20 @@ type Item = { key: string; href: Href; label: string; current: boolean };
 export default function SiteNav({
   pages = [],
   showGallery = false,
+  showContact = false,
 }: {
   pages?: readonly NavPage[];
   showGallery?: boolean;
+  showContact?: boolean;
 }) {
   const t = useTranslations("Site.nav");
   const segments = useSelectedLayoutSegments();
   const selected = segments[0];
 
   const items: Item[] = [
-    ...SECTIONS.filter((section) => section.segment !== "gallery" || showGallery).map((section) => ({
+    ...SECTIONS.filter(
+      (section) => (section.segment !== "gallery" || showGallery) && (section.segment !== "contact" || showContact),
+    ).map((section) => ({
       key: section.segment,
       href: section.href as Href,
       label: t(section.segment),

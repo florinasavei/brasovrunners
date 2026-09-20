@@ -142,8 +142,8 @@ test.describe("the build badge", () => {
     // footer. The whole footer is one disclosure now, so they are behind its summary, which names
     // them; a closed <details> hides its content from the accessibility tree, so open it first.
     await footer.locator("summary").click();
-    await expect(footer.getByRole("link", { name: /confidențialitate/i })).toBeVisible();
-    await expect(footer.getByRole("link", { name: /termeni/i })).toBeVisible();
+    await expect(footer.getByRole("link", { name: /GDPR/i })).toBeVisible();
+    await expect(footer.getByRole("link", { name: /termeni de concurs/i })).toBeVisible();
   });
 
   test("does not widen the document past the viewport", async ({ page }) => {
@@ -164,7 +164,7 @@ test.describe("the build badge", () => {
     // is the failure a fixed overlay actually causes on a 320px screen. The footer is a
     // disclosure, so open it; the link is then under the badge's corner exactly as before.
     await page.getByRole("contentinfo").locator("summary").click();
-    await page.getByRole("link", { name: /confidențialitate/i }).click();
+    await page.getByRole("link", { name: /GDPR/i }).click();
     await expect(page).toHaveURL(/\/ro\/confidentialitate/);
   });
 });

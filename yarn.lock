@@ -3764,6 +3764,7 @@ __metadata:
     next: "npm:16.3.4"
     next-auth: "npm:5.0.0-beta.32"
     next-intl: "npm:4.14.2"
+    nodemailer: "npm:10.0.10"
     pdfkit: "npm:0.20.2"
     pg: "npm:8.23.0"
     qrcode: "npm:1.5.4"
@@ -6508,6 +6509,13 @@ __metadata:
   version: 2.0.54
   resolution: "node-releases@npm:2.0.54"
   checksum: 10c0/196b54ab06fd03b742816b6ca8185c69af42735b283083036e2579682c430b8f9ff89046891fe8c625557e5885793a2032d28070100bb2e57e6d6586b2f483c1
+  languageName: node
+  linkType: hard
+
+"nodemailer@npm:10.0.10":
+  version: 10.0.10
+  resolution: "nodemailer@npm:10.0.10"
+  checksum: 10c0/062bf0861e4986eca150b8d78b8289c55f33ad689e9596aa71b4abd4ab4358b9c4881cec8acca3251643814d84d26ca6b1082153f47d35d65639d4ce858cfd67
   languageName: node
   linkType: hard
 

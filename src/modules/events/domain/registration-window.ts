@@ -50,3 +50,13 @@ export function registrationState(event: RegistrationWindowInput, now: Date): Re
 
   return "OPEN";
 }
+
+/**
+ * When registration opens, while that is still ahead (§146): the date the hero, the card and
+ * the calendar feed show, and the one the "tell me" box waits for. Null once the window has
+ * opened, and for every event that has no window to open.
+ */
+export function upcomingRegistrationOpening(event: RegistrationWindowInput, now: Date): Date | null {
+  if (registrationState(event, now) !== "NOT_YET_OPEN") return null;
+  return event.registrationOpensAt ?? event.publishedAt;
+}
