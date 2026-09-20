@@ -96,10 +96,27 @@ export function canEditTranslation(
   actorId: string,
 ): boolean {
   // Since §103 the answer no longer depends on whose draft it is: a copywriter edits every
-  // text and a volunteer none. The status and the author stay in the signature because the
-  // callers pass them and a future rule (a locked piece under review, say) would read them.
-  void translation;
+  // text and a volunteer none. The author stays in the signature because the callers pass it
+  // and a future rule — a piece locked while under review, say — would read it.
   void actorId;
+  /*
+    **Live text is still editorial, and that is a question left open on purpose (§201).**
+
+    §201 made every move that crosses public view an Administrator's. Editing the *words* of an
+    already-published page is the remaining way something reaches the public without her, and
+    closing it is one line here — `if (isLiveContent(...)) return atLeast(role, "ADMIN")`.
+
+    It is not written, because it would reverse BR-REQ-051-01 criterion 3 in as many words: "a
+    copywriter edits live text with the acknowledgement; a volunteer never" (§103). The club
+    asked for the *organizer* to be managed by the Administrator, and the organizer sits above
+    the copywriter, so the restriction cannot be applied to one without the other. That is a
+    decision about how the club works, not about how this function is written, and it waits for
+    the club rather than being taken here.
+
+    What stands in the meantime: BR-REQ-051-01 criterion 4's acknowledgement, which the server
+    checks, "because a warning the server does not check is a decoration".
+  */
+  void translation;
   return canEditTexts(role);
 }
 
@@ -129,12 +146,25 @@ type Transition = { from: EditorialStatus; to: EditorialStatus; minimum: StaffRo
 export const TRANSITIONS: readonly Transition[] = [
   // Submit for approval: the one move a copywriter may make (§103).
   { from: "DRAFT", to: "IN_REVIEW", minimum: "COPYWRITER" },
-  // Return to the contributor.
+  // Return to the contributor. Nothing public moves, so the organizer still does it.
   { from: "IN_REVIEW", to: "DRAFT", minimum: "MODERATOR" },
-  { from: "IN_REVIEW", to: "PUBLISHED", minimum: "MODERATOR" },
+  /*
+    **Crossing into or out of public view is an Administrator's act since §201.**
+
+    The owner, of his two colleagues: "Amalia e Administrator, Dani e Organizator dar poate face
+    prostii, deci trebuie manageuit de Amalia". These four rows are the whole of what the public
+    can see changing — a page appearing, a page disappearing, a live page being taken down or
+    put back — so raising exactly these four is what "nothing Dani does goes live on its own"
+    means, expressed as the smallest possible change to the table.
+
+    The organizer keeps everything that does not cross that line: writing, submitting, returning
+    a draft, archiving something that was never published.
+  */
+  { from: "IN_REVIEW", to: "PUBLISHED", minimum: "ADMIN" },
   // Unpublish: back to a draft, so the public page 404s again.
-  { from: "PUBLISHED", to: "DRAFT", minimum: "MODERATOR" },
-  { from: "PUBLISHED", to: "ARCHIVED", minimum: "MODERATOR" },
+  { from: "PUBLISHED", to: "DRAFT", minimum: "ADMIN" },
+  { from: "PUBLISHED", to: "ARCHIVED", minimum: "ADMIN" },
+  // Neither of these was ever public: a draft and a submission are invisible either way.
   { from: "DRAFT", to: "ARCHIVED", minimum: "MODERATOR" },
   { from: "IN_REVIEW", to: "ARCHIVED", minimum: "MODERATOR" },
   { from: "ARCHIVED", to: "DRAFT", minimum: "MODERATOR" },

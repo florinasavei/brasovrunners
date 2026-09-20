@@ -27,6 +27,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
   let close: () => Promise<void>;
   let author: StaffUser;
   let editor: StaffUser;
+  /** Since §201 only an Administrator may put something in front of the public. */
   let admin: StaffUser;
 
   beforeAll(async () => {
@@ -128,7 +129,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         to: "IN_REVIEW",
       });
       const published = await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: created.id,
         expectedVersion: reviewed.version,
         to: "PUBLISHED",
@@ -183,7 +184,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         to: "IN_REVIEW",
       });
       await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: source.id,
         expectedVersion: reviewed.version,
         to: "PUBLISHED",

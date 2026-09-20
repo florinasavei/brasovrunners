@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **Publishing, unpublishing and archiving a live event are the Administrator's.** An Organizer writes, submits and returns work, and archives what was never published; the move that puts something in front of the public — or takes it away — waits for her. Editing the words of an already-published page is not part of this yet, and §201 records why that is the club's decision to take rather than the platform's. §201.
 - **The terms and the privacy notice open in a tab of their own**, marked with an icon — they sit in the middle of a half-filled form, and Back does not restore a form the browser never stored. §197.
 - **A telephone number is judged as it is typed**, by the same function the server validates with rather than by a looser pattern that could not tell somebody their number was too short. §198.
 - **Filling the form again always sends something to the address.** It used to re-send the confirmation link only while the first registration was still waiting for one; everybody past that point saw “we have sent you a link” and got nothing, which is what a failure looks like. §199.

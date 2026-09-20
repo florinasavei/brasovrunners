@@ -164,7 +164,7 @@ describe("BR-REQ-050-03 standing pages", () => {
 
   describe("publication is one state for the whole page", () => {
     it("refuses PUBLISHED while either language is empty, and says which", async () => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const input = fields();
       input.translations.en.body = "";
       const page = await createPage(db, { actor: editor, fields: input, now: NOW });
@@ -191,7 +191,7 @@ describe("BR-REQ-050-03 standing pages", () => {
     });
 
     it("puts both languages live together, and each answers at its own address", async () => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
       const reviewed = await transitionPage(db, {
@@ -220,7 +220,7 @@ describe("BR-REQ-050-03 standing pages", () => {
 
     it("never serves one language's text at the other's address", async () => {
       // BR-REQ-040-02. The Romanian slug in the English locale is a 404, not a fallback.
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
       const reviewed = await transitionPage(db, {
         actor: editor,
@@ -242,7 +242,7 @@ describe("BR-REQ-050-03 standing pages", () => {
     });
 
     it("resolves the sibling address for the language switcher", async () => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
       const reviewed = await transitionPage(db, {
         actor: editor,
@@ -264,7 +264,7 @@ describe("BR-REQ-050-03 standing pages", () => {
     });
 
     it("takes an archived page off the public site in both languages", async () => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
       const reviewed = await transitionPage(db, {
         actor: editor,

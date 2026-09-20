@@ -9099,3 +9099,54 @@ is a legend nobody reads twice — where the reader's question is, the answer is
 out of the way otherwise.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 201. Decided — crossing into public view is the Administrator's (2026-09-20)
+
+**Context.** The owner, naming his two colleagues: "Organizatorul trebuie să primească aprobare de
+la Administrator pt orice. Amalia e Administrator, Dani e Organizator dar poate face prostii, deci
+trebuie manageuit de Amalia."
+
+"Pt orice" is the hard part, and the honest answer is that this codebase has no approval queue: a
+change an Organizer makes takes effect when they make it. Building one — a pending revision beside
+every live record, a screen where Amalia reads the difference, an apply-on-approve path, a story
+for two pending revisions of the same page — is a feature, not a flag.
+
+**Decision.** *The line that is available today, and it is a true one: below Administrator,
+nothing crosses into or out of public view.* Four rows of `TRANSITIONS` move to `ADMIN` —
+IN_REVIEW → PUBLISHED, PUBLISHED → DRAFT, PUBLISHED → ARCHIVED — and everything that never touches
+the public stays with the Organizer: writing, submitting, returning a submission to its author,
+archiving a draft that was never live.
+
+That is the smallest possible change to the table, and the table is the right place: its
+interesting property has always been which moves are *absent*, and this adds "absent below
+Administrator" to the three that matter.
+
+**What was deliberately not done, and why it is written here rather than decided here.** Editing
+the **words** of an already-published page is the remaining way something reaches the public
+without the Administrator. Closing it is one line —
+`if (isLiveContent(status)) return atLeast(role, "ADMIN")` in `canEditTranslation`. It was
+written, tested, and then taken out again, because it reverses BR-REQ-051-01 criterion 3 in as
+many words: "a copywriter edits live text with the acknowledgement; a volunteer never" (§103). The
+club asked for the *Organizer* to be managed by the Administrator, and the Organizer sits **above**
+the copywriter in the hierarchy, so the restriction cannot be applied to one without the other. A
+Redactor losing the ability to fix a typo on a live page is a decision about how the club works.
+It waits for the club.
+
+What stands in the meantime is criterion 4's acknowledgement, which the server checks rather than
+merely displaying.
+
+**Rejected.** *An approval queue over every write.* It is the literal reading of "pt orice" and it
+is a large, separate piece of work; it is named here so that choosing it later is a decision and
+not a rediscovery. Roughly: a `pending_revisions` row carrying the proposed fields and who
+proposed them, a diff screen, an apply that re-runs the same validation the direct save runs, and
+a rule for what happens when a pending revision is overtaken by a direct one.
+
+*Raising `canEditEventFields` and `canCreateEvent` as well.* Neither is public until something
+is published, which is now gated.
+
+**Consequences.** Five test suites drove their whole flow with an Organizer, because publishing
+was theirs; they drive it with the Administrator now, and the role boundary is asserted where it
+belongs — `roles.test.ts`, from both sides, and `boundary.test.ts`. BR-REQ-051-01 criterion 2
+is narrowed in `SPECS.md` and says what criterion 3 still allows.
+
+Baseline `BR-V1.38-2026-09-18`.
