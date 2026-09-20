@@ -5,6 +5,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { listTranslationsForEvent } from "@/modules/content/events/repository";
+import { countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
   createEvent,
   deleteEvent,
@@ -281,6 +282,79 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         "VALIDATION_ERROR",
       );
       expect(await db.select().from(events).where(eq(events.id, created.id))).toHaveLength(1);
+    });
+
+    /**
+     * §176 — an event whose only registrations are **test** rows is deleted with them.
+     *
+     * The refusal was right and its advice was a dead end: "archive it instead", said to
+     * somebody looking at an event that was already archived, about rows he had created himself
+     * to rehearse with. Nothing new is permitted — clearing test rows is already an
+     * Administrator's verb on the event page and already refused in production; this is the two
+     * presses in one. A single real registration still blocks it, which is the rule that matters
+     * (`AGENTS.md` §10.8).
+     *
+     * The rows are inserted directly rather than through `addTestRegistrations`, which would
+     * need an event that takes registrations and an approved declaration: what is under test
+     * here is what `deleteEvent` does about `kind`, and nothing else.
+     */
+    it("takes its own test registrations with it, and still refuses for a real one", async () => {
+      const enter = async (eventId: string, kind: "REAL" | "TEST", email: string) => {
+        const [participant] = await db
+          .insert(participants)
+          .values({
+            deliveryEmail: email,
+            normalizedEmail: email,
+            canonicalEmail: email,
+            canonicalizationVersion: 1,
+            defaultName: "Cineva",
+          })
+          .returning();
+        await db.insert(registrations).values({
+          eventId,
+          participantId: participant.id,
+          kind,
+          status: "CONFIRMED",
+          locale: "ro",
+          registeredName: "Cineva",
+          displayName: "Cineva",
+          privacyNoticeVersion: 1,
+          privacyAcknowledgedAt: new Date(),
+          raceId: null,
+          resultsNameConsent: false,
+          listOptOut: false,
+          resultsConsentVersion: 1,
+        });
+      };
+
+      const onlyTests = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      await enter(onlyTests.id, "TEST", "t1@test.invalid");
+      await enter(onlyTests.id, "TEST", "t2@test.invalid");
+      expect(await countRegistrationsForEvent(db, onlyTests.id)).toBe(2);
+
+      await deleteEvent(db, { actor: admin, eventId: onlyTests.id });
+      expect(await db.select().from(events).where(eq(events.id, onlyTests.id))).toHaveLength(0);
+      // The synthetic rows went with it rather than being left orphaned.
+      expect(await countRegistrationsForEvent(db, onlyTests.id)).toBe(0);
+
+      // One real registration beside the test ones, and the whole delete is refused.
+      const mixed = await createEvent(db, {
+        actor: editor,
+        fields: {
+          ...NEW_EVENT,
+          translations: {
+            ro: { ...NEW_EVENT.translations.ro, slug: "cros-mixt" },
+            en: { ...NEW_EVENT.translations.en, slug: "mixed-cross" },
+          },
+        },
+      });
+      await enter(mixed.id, "TEST", "t3@test.invalid");
+      await enter(mixed.id, "REAL", "ana@example.test");
+
+      expect(await codeOf(deleteEvent(db, { actor: admin, eventId: mixed.id }))).toBe("VALIDATION_ERROR");
+      expect(await db.select().from(events).where(eq(events.id, mixed.id))).toHaveLength(1);
+      // And nothing was cleared on the way to being refused.
+      expect(await countRegistrationsForEvent(db, mixed.id)).toBe(2);
     });
   });
 });

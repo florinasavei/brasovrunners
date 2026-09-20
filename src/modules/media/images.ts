@@ -22,8 +22,29 @@ export const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
 /** Below this a "photo" is an icon; above the upper bound a phone did not take it. */
 export const MIN_DIMENSION = 200;
 export const MAX_DIMENSION = 12_000;
-export const WEB_MAX = 1600;
-export const THUMB_MAX = 480;
+/**
+ * How large the two variants are, and why (§176; the owner, three times: "pictures look really
+ * bad and compressed now", "în continuare imaginile sunt super pixelate, hyper-comprimate").
+ *
+ * 1600 was the width of a full-bleed image on a 1× laptop and nothing else. The editor and the
+ * event page render a picture across roughly 1000 CSS pixels, and every laptop and phone the
+ * club uses has a 2× screen — so the browser was **upscaling a 1600px file to 2000 physical
+ * pixels** and then the reader was seeing WebP artefacts magnified. 2400 covers a full-width
+ * image at 2× with room for the hero, and costs about 180 KB more on the one image a page
+ * shows at that size; the card and the gallery grid read `thumb`, which is what most pages load.
+ */
+export const WEB_MAX = 2400;
+export const THUMB_MAX = 640;
+
+/**
+ * WebP quality. 80 is the number one reaches for when the file has been encoded once; this one
+ * has been encoded **twice** — the browser shrinks and re-encodes before upload (§176 changed
+ * that too, but every picture already stored went through it) — and lossy generations stack.
+ * 88 with `effort: 6` costs roughly a third more bytes and removes the blocking the owner saw
+ * around flags, shirts and grass, which is exactly where a low-effort WebP falls apart.
+ */
+const WEB_QUALITY = 88;
+const THUMB_QUALITY = 78;
 
 const ACCEPTED = new Set(["jpeg", "png", "webp"]);
 
@@ -65,12 +86,15 @@ export async function processUploadedImage(input: Buffer): Promise<ProcessedImag
   const { data: web, info } = await upright
     .clone()
     .resize({ width: WEB_MAX, height: WEB_MAX, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 80 })
+    // `effort: 6` is WebP's own quality/time dial and costs milliseconds on an upload nobody is
+    // waiting on; `smartSubsample` keeps colour detail where a photo has hard edges — a race
+    // number on a shirt, a flag, lettering on a banner — which is where the artefacts showed.
+    .webp({ quality: WEB_QUALITY, effort: 6, smartSubsample: true })
     .toBuffer({ resolveWithObject: true });
   const thumb = await upright
     .clone()
     .resize({ width: THUMB_MAX, height: THUMB_MAX, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 72 })
+    .webp({ quality: THUMB_QUALITY, effort: 6 })
     .toBuffer();
 
   return { web, thumb, width: info.width, height: info.height };

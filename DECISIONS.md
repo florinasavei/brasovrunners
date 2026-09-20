@@ -8226,3 +8226,86 @@ Tests: `tests/unit/events/ical.test.ts` (production unmarked, QA marked on the c
 and on the entry).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 176. Decided — three things that were silently impossible (2026-09-20)
+
+**Context.** Three reports in one afternoon, on the day the owner meant to finish and test the
+site. Each is the same failure: the platform knew exactly what was wrong and said something
+else, or nothing.
+
+*Registration.* "Trebuie să ne putem înscrie man!" — the form returned "Înscrierea nu a putut fi
+trimisă. Verifică datele completate", on a form where every field was correct. The rejection was
+Turnstile: a token Cloudflare will not confirm redirects with `fields=captcha`, and `captcha` is
+not one of the form's fields, so `parseInvalidFields` dropped it and the summary fell through to
+the generic sentence. The catalogue has had the right words (`errors.captcha`) since §97 and
+nothing could reach them. A visitor is sent hunting through twenty correct inputs for a failure
+that is about none of them — and the club cannot register anybody.
+
+*Deleting an event.* "Încerc să șterg un eveniment și nu merge! E destul de grav! Asta o să îmi
+umple baza de date." The refusal was correct — an event with registrations is archived, not
+deleted — and its advice was a dead end: it said "arhivează-l" to somebody looking at an event
+that was **already archived**, about rows he had created himself to rehearse with. A QA database
+fills with events nobody can remove.
+
+*Pictures.* "Pictures look really bad and compressed now", then "în continuare imaginile sunt
+super pixelate, hyper-comprimate, big issue."
+
+*Staff sign-in.* "That invitation email code does not work, I am still asked to sign in but I
+don't have the option to create an account." The invitation said the colleague makes their own
+account on the sign-in page. They cannot: that page is one button that hands off to the
+provider, and the provider offers no self-registration for this organization. Without
+`ZITADEL_MANAGEMENT_PAT` nothing creates the account, so the sentence described something
+impossible.
+
+**Decision.**
+
+*The anti-bot refusal says what it is.* `captcha` is read from the raw parameter — it is a
+rejection about nothing the person typed, so it is deliberately not a form field — and the
+summary shows `errors.captcha` first and alone, with the same sentence under the widget. The
+check itself is unchanged: an unconfirmed token is still refused, in every environment. What
+changed is that the person is told, and the club is not left thinking the form is broken.
+
+*An event takes its own test registrations with it.* When every registration blocking a delete
+is `kind = TEST`, they are removed and the event goes. Nothing new is permitted: clearing test
+rows is already an Administrator's verb on the event page, already refused in production, and
+already exactly this code (`removeTestRegistrations`) — this is the two presses in one. **A
+single real registration still blocks the delete**, and the count in the list now names the real
+ones only, so "3 persoane sunt înscrise" never again means three rows the organizer invented.
+The evidence rule is untouched: a real registration carries the privacy notice its participant
+acknowledged and, once signed, their declaration (`AGENTS.md` §10.8).
+
+*A picture is encoded lossily once, not twice, and at a size a screen actually has.* The browser
+re-encoded every upload to WebP at 0.86 before sending it, and the server decoded that and
+re-encoded to WebP at 80 — two lossy generations, the second working from detail the first had
+already discarded. The browser now sends the file **untouched** when the server will accept it,
+and shrinks only what is too large, at 0.95, because that output is an intermediate whose
+artefacts become permanent. The stored width goes from 1600 to **2400** and quality from 80 to
+**88** with `effort: 6`: the editor and the event page render a picture across about a thousand
+CSS pixels, and every screen the club uses is 2×, so 1600 was being *upscaled* — magnifying the
+artefacts of a double encode. The thumbnail follows, 480 → 640.
+
+*Echipa says the real step when it cannot create an account.* A warning names
+`ZITADEL_MANAGEMENT_PAT`, and the help text stops promising self-registration: it says to set
+the key or to create the account in the provider's console. Nothing about the auth model
+changed — `staff_users` is still the allowlist (`AGENTS.md` §13).
+
+**Rejected.** *Waving through a missing Turnstile token outside production.* It would make QA
+disagree with production about whether a registration succeeds, which hides the problem until
+the day it matters. The owner can switch the keys off in thirty seconds if he wants the form
+open, and the honeypot and the timing check stay in front of it either way (§19.4).
+
+*Letting a delete clear real registrations.* That is the evidence the platform exists to keep.
+
+*Fixing the pictures by raising quality alone.* The double encode was the larger half; quality 95
+on a twice-encoded 1600px file is a bigger file that still looks soft.
+
+**Consequences.** `countRegistrationsByEvent` returns `{total, test}` per event, so the list can
+say how many real registrations are in the way. `deleteEvent` calls `removeTestRegistrations`,
+which brings the environment gate with it — in production the refusal is unchanged whatever the
+rows are. Pictures already stored keep the artefacts they were given; re-uploading is what fixes
+them, and the owner has been told so.
+
+Tests: `tests/integration/cms/crud.test.ts` (an event with only test rows is deleted with them;
+one real row still refuses, and nothing is cleared on the way to being refused).
+
+Baseline `BR-V1.38-2026-09-18`.

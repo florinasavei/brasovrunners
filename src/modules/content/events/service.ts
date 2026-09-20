@@ -21,7 +21,8 @@ import {
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
-import { countOccupied, countRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
+import { countOccupied, countRegistrationsForEvent, countTestRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
+import { areTestRegistrationsAvailable, removeTestRegistrations } from "@/modules/registrations/test-registrations";
 import { fillAvailableSpots } from "@/modules/registrations/service";
 import {
   canCreateEvent,
@@ -1510,10 +1511,31 @@ export async function deleteEvent<T extends Record<string, unknown>>(
 
   const registered = await countRegistrationsForEvent(db, input.eventId);
   if (registered > 0) {
-    throw new DomainError(
-      "VALIDATION_ERROR",
-      `this event has ${registered} registration(s) and cannot be deleted; archive it instead`,
-    );
+    /**
+     * An event whose only registrations are **test** rows takes them with it (§176; the owner:
+     * "încerc să șterg un eveniment și nu merge! e destul de grav! asta o să îmi umple baza de
+     * date").
+     *
+     * The refusal was right and its advice was a dead end: it said "archive it instead" to
+     * somebody looking at an event that was **already archived**, and the rows in the way were
+     * data he had created himself to rehearse with. Nothing new is permitted here — clearing
+     * test rows is already a verb on the event page (`removeTestRegistrations`), already an
+     * Administrator's, and already refused in production; this is those two presses in one,
+     * which is what stops a QA database filling with events nobody can remove.
+     *
+     * A single **real** registration still blocks the delete, and that is the rule that matters:
+     * it carries the privacy notice the person acknowledged and, once signed, their declaration
+     * (`AGENTS.md` §10.8). Archive is the answer there, and the message says so with the count.
+     */
+    const test = await countTestRegistrationsForEvent(db, input.eventId);
+    const real = registered - test;
+    if (real > 0 || !areTestRegistrationsAvailable()) {
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        `this event has ${real} real registration(s) and cannot be deleted; archive it instead`,
+      );
+    }
+    await removeTestRegistrations(db, input.actor, input.eventId);
   }
 
   // `event_translations` cascades from the event; nothing else references an event with no

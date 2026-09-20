@@ -198,6 +198,21 @@ export default async function StaffPage({ params, searchParams }: Props) {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
           {invitesSend ? t("staff.inviteHelpSends") : t("staff.inviteHelp")}
         </Typography>
+        {/*
+          Without the key, "Adaugă" cannot create the account — and the sentence above used to
+          tell the invitee to make one themselves on the sign-in page (§176; the owner: "that
+          invitation email code does not work, I am still asked to sign in but I don't have the
+          option to create an account").
+          They cannot: the sign-in page is one button that hands off to the provider, and the
+          provider's own login offers no self-registration for this organization. The row said
+          something impossible, so the page says the real step instead — loudly, because until
+          it is done nobody new can get in at all.
+        */}
+        {!invitesSend && env.STAFF_AUTH_MODE === "provider" && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            {t("staff.inviteKeyMissing")}
+          </Alert>
+        )}
       </Box>
 
       <AdminTable
