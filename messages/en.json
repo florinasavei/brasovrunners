@@ -393,7 +393,13 @@
       "cancelBody": "The place is released through the allocator and offered at once to the first person waiting. An audit row records who cancelled. It cannot be undone: if they change their mind, they register again.",
       "confirmOnPaperBody": "You are confirming that the participant signed the declaration on paper, at the desk. They get the place and a race number, and the audit row names you as the person who recorded the signature. Use it only with the signed paper in front of you.",
       "downloadBib": "Download the race number (BIB)",
-      "notOnPublicList": "Not shown publicly"
+      "notOnPublicList": "Not shown publicly",
+      "erase": "Erase permanently",
+      "eraseTitle": "Erase {name}'s registration for good?",
+      "eraseTypeName": "Type the participant's name",
+      "eraseTypeNameHelp": "Type “{name}” exactly, so we know this is the row you meant. Capitals and diacritics do not matter.",
+      "eraseAction": "Erase permanently",
+      "erasePending": "Erasing…"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -421,7 +427,7 @@
       "bulkArchiveAction": "Archive the ticked ones",
       "bulkArchivePending": "Archiving…",
       "eventsArchived": "{archived} events archived. {failed} could not be archived.",
-      "deleteBlocked": "Cannot be deleted: {count} real registrations. Archive the event, or — if these are entries you made while testing — open them from “Înscrieri”, erase them one by one (at the bottom, “Erase the registration”, with a reason), then delete the event.",
+      "deleteBlocked": "Cannot be deleted: {count} people have registered. Archive the event, or use “Permanent deletion…” below, which deletes the registrations too.",
       "deleteBlockedShort": "{count} registrations",
       "eventsRepeated": "{created} editions created.",
       "bulkSelectAll": "All",
@@ -429,8 +435,10 @@
       "bulkHelp": "Tick events in the list, or all of them. “Publish” sends them through review and publishes the ones complete in both languages — a whole series at once; “Archive” takes them off the site; “Delete” removes the ones nobody has registered for.",
       "bulkPublishAction": "Publish the ticked ones",
       "bulkDeleteAction": "Delete the ticked ones",
-      "eventsDeleted": "{deleted} events deleted. {failed} could not be: they have real registrations. Archive those, or erase the registrations first from “Înscrieri” (each one, with a reason) if they came from testing.",
-      "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile)."
+      "eventsDeleted": "{deleted} events deleted. {failed} could not be deleted — they have registrations. Archive those, or use “Permanent deletion…” in the row's ⋮ menu, which deletes the registrations too.",
+      "eventsPublished": "{published} events published. {failed} could not be (a language incomplete, or changed meanwhile).",
+      "hardDelete": "Permanent deletion…",
+      "eventErased": "Event permanently deleted, together with {erased} registrations."
     },
     "confirm": {
       "cancel": "Never mind",
@@ -458,7 +466,8 @@
       "FORBIDDEN": "Your role does not allow this.",
       "NOT_FOUND": "That record no longer exists.",
       "VALIDATION_ERROR": "Check what you entered; something is not valid.",
-      "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten."
+      "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
+      "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it."
     },
     "editor": {
       "eventSection": "Event details",
@@ -1217,7 +1226,12 @@
       "youtubeApply": "Add the film",
       "youtubeInvalid": "Not a YouTube address. Copy the link from the browser bar or from “Share” (youtube.com/watch?v=… or youtu.be/…).",
       "youtubeCaption": "Caption (under the film)",
-      "youtubeRemove": "Remove the film"
+      "youtubeRemove": "Remove the film",
+      "imageAlign": "Where it sits in the text",
+      "imageAlignBlock": "In the flow",
+      "imageAlignLeft": "Left",
+      "imageAlignRight": "Right",
+      "imageAlignHelp": "\"In the flow\" gives the picture the whole column. \"Left\" or \"right\" moves it to one side and the text wraps around it — on a phone it is the full width either way."
     },
     "pages": {
       "title": "Pages",
@@ -1624,6 +1638,20 @@
         }
       ],
       "yours": "Your role: {role}. Your sections come first and open; the rest are your colleagues'."
+    },
+    "erase": {
+      "backToEvent": "Back to the event",
+      "title": "Permanent deletion: {event}",
+      "whatGoes": "This permanently deletes the event “{event}” of {date}, in both languages, together with its {count} registrations and the personal data behind them.",
+      "breakdown": "Of those: {confirmed} confirmed, {real} real, {test} test.",
+      "realPeople": "{count} of the registrations belong to real people. They go with their signed declarations and their addresses, and nothing can be recovered.",
+      "noRealPeople": "No real registration: nobody loses a place.",
+      "alternative": "If the event took place, archive it instead: it stays in the records and disappears from the site. Permanent deletion is for an event that should never have existed.",
+      "typeTitleLabel": "Type the event's title",
+      "typeTitleHelp": "Type “{title}” exactly, to confirm. Anything else stops the deletion.",
+      "reasonLabel": "Reason",
+      "reasonHelp": "It is kept in the audit trail. It is the only thing that survives the deletion; the names of the people erased are kept nowhere.",
+      "action": "Permanently delete the event and its registrations"
     }
   },
   "NotFound": {

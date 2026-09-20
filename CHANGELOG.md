@@ -10,6 +10,9 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **An event can be erased with everyone registered for it**, once its exact title is typed and a reason given — a second verb, Administrator-only, never the bulk button. Every registration leaves through the same path a single erasure takes: the place released through the allocator, the declaration with the row, one audit row each that never names who was erased. The screen says what will be destroyed before anything is pressed. §191.
+- **A participant can be erased from the list**, not only from their own page — the last verb on the row menu, opening a panel that asks for a reason and for that row's name, typed. In a list where two rows are one line apart, a confirm dialog is answered by reflex. §192.
+- **A picture can sit left or right with the text flowing around it.** Not on a phone, never two side by side, and never reaching past the end of the text — the three things “never floated” was protecting, kept as rules instead of as a ban. §193.
 - **“Diferență de nivel”, not “urcare”** — the term runners actually use, and “elevation gain” in English. §189.
 - **The guardian's name appears when the birth date says the runner is a minor**, instead of being asked for by a tick. The form already asks for the date, and the date is the answer; asking twice only lets the two answers disagree. Without JavaScript the field is simply always there. §188.
 - **“Sunt membru al grupului Brașov Runners”**, with a “?” saying what the claim means — at least three group runs in the past year. §189.

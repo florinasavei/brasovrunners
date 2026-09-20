@@ -8762,3 +8762,92 @@ Tests: `tests/unit/notifications/emphasis.test.ts`, including the assertion that
 participant typed can ask for bold.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 191. Decided — an event can be erased with everyone on it, once its title is typed (2026-09-20)
+
+**Context.** Three times, an hour apart: "tot nu pot sterge evenimente!" The club's own data
+controller had an archived event carrying two registrations he had entered himself, and no way to
+remove either. "It cannot be deleted" is not an answer a controller can be given about his own
+records.
+
+**Decision.** *A second verb, not the same one made permissive.* `deleteEvent` still refuses an
+event with registrations against it; `hardDeleteEvent` takes the event **and** everyone on it,
+and it is a different button in a different place with a different colour.
+
+*Administrator, not Superadministrator.* `canHardDeleteEvent` is `canDeleteEvent &&
+canManageRegistrations`. The hierarchy's line is personal data and that line is ADMIN — an
+Administrator may already erase each of these rows one at a time, so the gate answers "may this
+person erase participants", which is the question actually being asked.
+
+*The confirmation is the event's exact title, typed, plus a reason.* Checked on the server, no
+`window.confirm`, and the screen works with JavaScript off. A dialog with a button is answered
+yes by reflex; a transcription cannot be.
+
+*Every registration leaves through the path a single erasure takes.* `eraseRegistration` is
+factored out of `deleteRegistrationByStaff` rather than copied — the place released through the
+allocator, the declaration acceptance with the row, one audit row each naming who and why and
+never who was erased — plus one audit row for the event carrying its title, its date and the
+counts, written first, all in one transaction. Two implementations of "remove a person from the
+system" is how one of them forgets the audit row.
+
+*The screen says what will be destroyed before anything is pressed*: how many registrations, how
+many confirmed, and how many are real people rather than test rows.
+
+**Rejected.** *A bulk hard delete over ticked rows.* That is how somebody loses a season.
+
+Tests: `tests/integration/events/hard-delete.test.ts` (11).
+
+## 192. Decided — erase from the registrations list, with the name typed (2026-09-20)
+
+**Context.** "Vreau să pot șterge și participanții!", also three times. Erasing existed only on a
+registration's own page, so clearing eighty test rows meant eighty round trips through a list that
+re-sorts underneath you.
+
+**Decision.** Erase is the last verb on the row menu, below a rule, in the error colour,
+Administrator-only. *It is not a one-press verb*: it opens a panel at the top of the list asking
+for a reason and for that row's name, typed. In a list where the row you meant and the row above
+it are one line apart, a confirm dialog is answered by reflex — and the reflex is how the wrong
+person gets erased.
+
+*One erase path, not two.* `deleteRegistrationByStaff` does exactly what it did and gains one
+optional argument, the typed name, checked against the row the deletion is already built on rather
+than against a second fetch. The panel is a link, a server-rendered form and a redirect, so it
+behaves the same with JavaScript and without; a `<noscript>` link covers the only part that
+needs JavaScript, which is opening the menu.
+
+## 193. Decided — a picture the text flows around, reversing "never floated" (2026-09-20)
+
+**Context.** "Vreau să pot seta imaginile ca și «inline» ca să pot scrie text în stânga sau
+dreapta lor! Adică vreau un rich text editor mai smart!" §73 decided the opposite in as many
+words: four widths, "and a picture is a block in the flow, **never floated**, so two pictures are
+never side by side."
+
+**Decision.** The image node gains `align`: `block` (the default), `left`, `right` — a closed
+set of three literals in the allowlist, exactly as `widthPercent` is a closed set of four
+numbers, so the attribute names a rendering the renderer knows rather than a CSS value somebody
+typed. Absent means `block`, so every stored document renders unchanged and no migration is
+needed.
+
+Three fences keep the reversal from becoming the layout tool §72 refused:
+
+1. **A phone never floats.** The float is a media query from `sm` up. 320 pixels is a hard target
+   here, and a third of 320 beside a paragraph is two words a line.
+2. **Two pictures are never side by side.** Every figure in a body that floats anything also
+   clears, so a second picture drops below the first instead of forming a row. §73's invariant
+   survives its own reversal.
+3. **The float ends with the body.** One clearing element after the last block, so a float never
+   reaches the registration panel or the programme — and a body that floats nothing emits no
+   clearing rules at all, not rules that happen to be no-ops.
+
+*What is left of "never floated" is a habit.* §73's argument was about narrow columns, which is
+now a breakpoint rather than a ban on everybody; its consequence was two pictures in a row, which
+is now `clear` rather than never floating at all.
+
+*The listing card puts every picture back in the flow* — a card has one column and a cropped,
+capped picture, so a float there is two words a line, and a float at the end of an excerpt would
+reach into the date beneath it.
+
+Tests: `tests/unit/content/rich-text-image-layout.test.ts`, `rich-text.test.ts`,
+`card-excerpt.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.

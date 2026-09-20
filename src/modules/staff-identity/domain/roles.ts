@@ -197,6 +197,30 @@ export function canDeleteEvent(role: StaffRole): boolean {
 }
 
 /**
+ * Erasing an event **and everyone registered for it** — the hard delete (BR-REQ-037-06,
+ * BR-REQ-060-01).
+ *
+ * Two powers at once, so it asks for both: it destroys club content (`canDeleteEvent`) and it
+ * destroys participant data (`canManageRegistrations`). Writing it as the conjunction rather
+ * than as `atLeast(role, "ADMIN")` is not decoration — it means that if either boundary is
+ * ever moved, this moves with it instead of quietly keeping the old one.
+ *
+ * **Why not SUPERADMIN.** The tempting answer is "the most destructive verb belongs to the
+ * highest role", and it is the wrong one. SUPERADMIN is defined by exactly one capability —
+ * deciding who is on the staff and what they may do — and it is deliberately *not* a general
+ * "dangerous things" tier; the hierarchy's real line is personal data, and that line is ADMIN
+ * (see the header of this file). An Administrator may already erase every registration on an
+ * event, one at a time, and then delete the event: gating the single-step version behind a
+ * higher role would not protect one row, it would only make the safe path slower than the
+ * unsafe one. What actually protects the data is the confirmation the service demands — the
+ * event's exact title typed by hand, and a reason — the audit rows it leaves, and the fact
+ * that this verb is absent from every bulk control.
+ */
+export function canHardDeleteEvent(role: StaffRole): boolean {
+  return canDeleteEvent(role) && canManageRegistrations(role);
+}
+
+/**
  * Registrations, participants, the timeline and the export — everything about the people who
  * signed up. This is the personal-data boundary, and it is where ADMIN begins (§10.2).
  *

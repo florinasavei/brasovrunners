@@ -393,7 +393,13 @@
       "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul de concurs, iar în jurnal rămâi tu ca cel care a înregistrat semnătura. Se folosește doar când ai hârtia semnată în față.",
       "downloadBib": "Descarcă numărul de concurs (BIB)",
-      "notOnPublicList": "Nu apare public"
+      "notOnPublicList": "Nu apare public",
+      "erase": "Șterge definitiv",
+      "eraseTitle": "Ștergi definitiv înscrierea lui {name}?",
+      "eraseTypeName": "Scrie numele înscrisului",
+      "eraseTypeNameHelp": "Scrie exact „{name}”, ca să fim siguri că este rândul pe care îl vrei. Majusculele și diacriticele nu contează.",
+      "eraseAction": "Șterge definitiv",
+      "erasePending": "Se șterge…"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -421,7 +427,7 @@
       "bulkArchiveAction": "Arhivează cele bifate",
       "bulkArchivePending": "Se arhivează…",
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
-      "deleteBlocked": "Nu se poate șterge: {count} înscrieri reale. Arhivează evenimentul, sau — dacă sunt înscrieri făcute de tine la teste — deschide-le din „Înscrieri”, șterge-le una câte una (jos de tot, „Șterge înscrierea”, cu motiv), apoi șterge evenimentul.",
+      "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeated": "{created} ediții create.",
       "bulkSelectAll": "Toate",
@@ -429,8 +435,10 @@
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
       "bulkDeleteAction": "Șterge cele bifate",
-      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge: au înscrieri reale. Arhivează-le, sau șterge întâi înscrierile din „Înscrieri” (fiecare, cu motiv) dacă sunt de la teste.",
-      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate)."
+      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate).",
+      "hardDelete": "Ștergere definitivă…",
+      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
     },
     "confirm": {
       "cancel": "Renunță",
@@ -458,7 +466,8 @@
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
       "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
-      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris."
+      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
+      "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1217,7 +1226,12 @@
       "youtubeApply": "Adaugă filmul",
       "youtubeInvalid": "Nu e o adresă de YouTube. Copiază linkul din bara browserului sau din „Distribuie” (youtube.com/watch?v=… sau youtu.be/…).",
       "youtubeCaption": "Legendă (sub film)",
-      "youtubeRemove": "Scoate filmul"
+      "youtubeRemove": "Scoate filmul",
+      "imageAlign": "Poziția în text",
+      "imageAlignBlock": "În flux",
+      "imageAlignLeft": "Stânga",
+      "imageAlignRight": "Dreapta",
+      "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea."
     },
     "pages": {
       "title": "Pagini",
@@ -1624,6 +1638,20 @@
         }
       ],
       "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor."
+    },
+    "erase": {
+      "backToEvent": "Înapoi la eveniment",
+      "title": "Ștergere definitivă: {event}",
+      "whatGoes": "Se șterge definitiv evenimentul „{event}” din {date}, în ambele limbi, împreună cu cele {count} înscrieri ale lui și cu datele persoanelor din spatele lor.",
+      "breakdown": "Dintre ele: {confirmed} confirmate, {real} reale, {test} de test.",
+      "realPeople": "{count} dintre înscrieri sunt ale unor persoane reale. Dispar cu tot cu declarațiile semnate și cu adresele lor, și nu se pot recupera.",
+      "noRealPeople": "Nicio înscriere reală: nimeni nu pierde un loc.",
+      "alternative": "Dacă evenimentul a avut loc, arhivează-l în locul ștergerii: rămâne în evidențe și dispare de pe site. Ștergerea definitivă este pentru un eveniment care nu ar fi trebuit să existe.",
+      "typeTitleLabel": "Scrie titlul evenimentului",
+      "typeTitleHelp": "Scrie exact „{title}”, ca să confirmi. Orice altceva oprește ștergerea.",
+      "reasonLabel": "Motivul",
+      "reasonHelp": "Rămâne în jurnalul de audit. Este singurul lucru care supraviețuiește ștergerii; numele celor șterși nu se păstrează nicăieri.",
+      "action": "Șterge definitiv evenimentul și înscrierile"
     }
   },
   "NotFound": {

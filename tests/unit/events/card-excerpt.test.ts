@@ -22,6 +22,17 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_SX["& figure"].width).toBe("100%");
   });
 
+  it("puts a floated picture back in the flow, whatever side was chosen", () => {
+    // The alignment (2026-09-20) is a decision about a text column wide enough to have a side.
+    // A card is one narrow column with a cropped picture at a fixed height, and a float at the
+    // end of the excerpt would reach into the date and the place beneath it. Same mechanism as
+    // the width: one type selector more specific than the figure's own media query.
+    expect(CARD_EXCERPT_SX["& figure"].float).toBe("none");
+    expect(CARD_EXCERPT_SX["& figure"].marginLeft).toBe("auto");
+    expect(CARD_EXCERPT_SX["& figure"].marginRight).toBe("auto");
+    expect(CARD_EXCERPT_SX["& figcaption"].textAlign).toBe("center");
+  });
+
   it("caps the picture's height and crops it, so the facts stay on the first screen", () => {
     expect(CARD_EXCERPT_SX["& figure img"].maxHeight).toBe(180);
     expect(CARD_EXCERPT_SX["& figure img"].objectFit).toBe("cover");

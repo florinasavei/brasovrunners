@@ -16,7 +16,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
-import { EMPTY_DOC, IMAGE_WIDTH_PERCENTS, readRichText } from "../domain/schema";
+import { EMPTY_DOC, IMAGE_ALIGNMENTS, IMAGE_WIDTH_PERCENTS, readRichText } from "../domain/schema";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -85,6 +85,12 @@ export default function RichTextEditor({
     imageAltHelp: string;
     imageCaption: string;
     imageSize: string;
+    /** Where the picture sits: a band across the column, or floated with the text beside it. */
+    imageAlign: string;
+    imageAlignBlock: string;
+    imageAlignLeft: string;
+    imageAlignRight: string;
+    imageAlignHelp: string;
     imageRemove: string;
     imageDone: string;
     /**
@@ -180,6 +186,21 @@ export default function RichTextEditor({
               default: 100,
               renderHTML: (attrs) => ({ style: `width: ${attrs.widthPercent ?? 100}%` }),
             },
+            /**
+             * Where the picture sits in the column: a band across it, or floated left or right
+             * with the text wrapping around. Shown here as the page will show it on a wide
+             * screen — `mergeAttributes` merges this `style` with the width's, declaration by
+             * declaration — so what the organizer sees is what the page does (§73's rule, kept).
+             */
+            align: {
+              default: "block",
+              renderHTML: (attrs) =>
+                attrs.align === "left" || attrs.align === "right"
+                  ? {
+                      style: `float: ${attrs.align}; clear: both; margin-${attrs.align === "left" ? "right" : "left"}: 24px`,
+                    }
+                  : {},
+            },
           };
         },
       }),
@@ -236,7 +257,7 @@ export default function RichTextEditor({
       editor
         ?.chain()
         .focus()
-        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100 } as never)
+        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100, align: "block" } as never)
         .run();
       setImageState("idle");
     } catch {
@@ -286,7 +307,7 @@ export default function RichTextEditor({
     editor
       ?.chain()
       .focus()
-      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100 } as never)
+      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block" } as never)
       .run();
     setGallery(null);
   };
@@ -554,6 +575,9 @@ export default function RichTextEditor({
               p: 2,
               outline: "none",
               "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: -2 },
+              // A floated picture at the end of the body would otherwise hang out of the
+              // writing area and over whatever the form puts beneath it.
+              "&::after": { content: '""', display: "table", clear: "both" },
             },
             // A picture is never wider than the column, here as on the page; the selected one
             // is outlined so the panel beside it is plainly about *this* picture.
@@ -651,6 +675,41 @@ export default function RichTextEditor({
                   </ToggleButton>
                 ))}
               </ToggleButtonGroup>
+            </Box>
+            <Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                {labels.imageAlign}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={String(imageAttrs?.align ?? "block")}
+                onChange={(_event, align: string | null) => {
+                  if (align === null) return;
+                  /**
+                   * Floating a picture that takes the whole column leaves no column to write in,
+                   * so the two controls move together: choosing left or right from a full-width
+                   * picture halves it, in the same transaction, and the four widths stay there
+                   * to change afterwards. The alternative — letting the organizer press "left"
+                   * and see nothing happen — is the worse of the two surprises.
+                   */
+                  const widthPercent =
+                    align !== "block" && Number(imageAttrs?.widthPercent ?? 100) === 100
+                      ? 50
+                      : undefined;
+                  setImageAttr(widthPercent ? { align, widthPercent } : { align });
+                }}
+                aria-label={labels.imageAlign}
+              >
+                {IMAGE_ALIGNMENTS.map((align) => (
+                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
+                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                {labels.imageAlignHelp}
+              </Typography>
             </Box>
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>

@@ -356,6 +356,93 @@ export async function deleteRegistrationAction(form: FormData): Promise<void> {
 }
 
 /**
+ * Erase one registration from the list, with its name typed out (BR-REQ-037-06, §180).
+ *
+ * The owner, three times: "vreau sa pot sterge si participantii". He is the club's data
+ * controller and the rows are his. What was missing was never the permission — it was the
+ * *reach*: erasure existed only on a registration's own page, so clearing eighty test rows was
+ * eighty round trips through a list that re-sorts underneath you.
+ *
+ * A second entrance, not a second erase. Every word of what erasing means —
+ * releasing the place through the allocator, the audit row written before the delete and
+ * outliving it, the declaration acceptance going in the same transaction, the participant going
+ * with their last registration — is `deleteRegistrationByStaff` and is untouched. This function
+ * adds exactly two things the detail page does not need:
+ *
+ * 1. **The typed name is compulsory here.** `deleteRegistrationAction` accepts a ticked box
+ *    because you reached that page by choosing that person. A list row is one line from its
+ *    neighbour, so the confirmation has to be one a reflex cannot answer. It is read here and
+ *    checked in the service against the row the deletion is built on — never against a second
+ *    fetch that could disagree with it. Refusing the empty case *before* the service is not a
+ *    duplicate of that check: it is what stops an empty field spending a database round trip,
+ *    and the service refuses it too.
+ * 2. **It comes back to the list you were on.** Only the query travels, in a field; the path is
+ *    rebuilt from `getPathname` here, so the field can choose which rows are shown and can never
+ *    become an open redirect — the same rule `bulkCancelRegistrationsAction` follows.
+ *
+ * One row at a time, on purpose. See the note on `bulkCancelRegistrationsAction`: cancelling in
+ * bulk is recoverable — the person registers again — and erasing is not.
+ */
+export async function eraseRegistrationFromListAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const confirmName = text(form, "confirmName");
+  const listPath = getPathname({ locale, href: "/admin/registrations" });
+
+  /*
+    Merged into the list's own query rather than appended to it. `backTo` builds a query string
+    and joins it with a bare "?", which is right for the paths it was written for — a detail page
+    with no query of its own — and wrong for a return to a filtered, sorted, paginated list,
+    where it would produce `?eventId=…?error=…` and lose both.
+  */
+  const params = new URLSearchParams(text(form, "listQuery"));
+  const land = (outcome: Record<string, string | undefined>): never => {
+    for (const [key, value] of Object.entries(outcome)) {
+      if (value === undefined) params.delete(key);
+      else params.set(key, value);
+    }
+    const query = params.toString();
+    redirect(query ? `${listPath}?${query}#admin-alert` : `${listPath}#admin-alert`);
+  };
+
+  /*
+    Refused before the database is touched, and the panel reopens on the same row.
+
+    Not a duplicate of the service's own check: that one compares against the registration, this
+    one is what stops an empty field spending a round trip. Both have to exist, because the
+    `required` attribute on the field is a courtesy the browser may not be running.
+
+    What does *not* come back is the reason that was typed. Carrying it would mean putting a free
+    line of somebody's prose into a query string, and from there into the server log, the browser
+    history and any referrer — for an action whose entire purpose is to remove a person's data.
+    Re-typing a few words is the cheaper of the two.
+  */
+  if (confirmName.trim() === "") {
+    land({ error: "ERASE_NAME_MISMATCH", erase: registrationId || undefined, saved: undefined });
+  }
+
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    await deleteRegistrationByStaff(getDb(), actor, registrationId, text(form, "reason"), new Date(), {
+      confirmName,
+    });
+  } catch (error) {
+    const failure = outcomeOf(error);
+    // A mistyped name is the one failure that is about what was typed rather than about the
+    // registration, so it says so and leaves the panel open on the same row — with the reason
+    // to type again, for the reason above. Every other code stays what the service called it.
+    const mistyped = isDomainError(error) && error.fields.includes("confirmName");
+    land({
+      error: mistyped ? "ERASE_NAME_MISMATCH" : failure.error,
+      erase: mistyped ? registrationId : undefined,
+      saved: undefined,
+    });
+  }
+
+  land({ saved: "registrationDeleted", error: undefined, erase: undefined });
+}
+
+/**
  * "Send now" — drain the outbox from the list page, within the day's allowance
  * (`DECISIONS.md` §80). Lands back on the list with the count it sent, or the refusal.
  */

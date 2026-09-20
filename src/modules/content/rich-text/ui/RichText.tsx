@@ -7,6 +7,7 @@ import {
   type RichTextBlock,
   type RichTextText,
 } from "../domain/schema";
+import { imageCaptionSx, imageFigureSx } from "./image-layout";
 import RichTextVideo from "./RichTextVideo";
 
 /**
@@ -25,17 +26,31 @@ import RichTextVideo from "./RichTextVideo";
  */
 export default function RichText({ body }: { body: unknown }) {
   const doc = readRichText(body);
+  const blocks = doc.content ?? [];
+  /**
+   * A float that runs past the last block would reach into whatever the page puts after the
+   * body — the registration panel, the programme, the next section — and pull it up beside the
+   * picture. One clearing element, rendered only when the body actually floats something, so a
+   * document written before 2026-09-20 emits exactly the markup it emitted yesterday.
+   */
+  const floats = blocks.some((block) => block.type === "image" && block.attrs.align !== "block");
 
   return (
     <>
-      {(doc.content ?? []).map((block, index) => (
-        <Fragment key={index}>{renderBlock(block)}</Fragment>
+      {blocks.map((block, index) => (
+        <Fragment key={index}>{renderBlock(block, floats)}</Fragment>
       ))}
+      {floats && <Box sx={{ clear: "both" }} />}
     </>
   );
 }
 
-function renderBlock(block: RichTextBlock): ReactNode {
+/**
+ * `floats` is whether *this document* floats a picture anywhere. It is false for every body
+ * written before the alignment existed, and a false one emits exactly the styles it emitted
+ * before: the clearing rules are not merely no-ops there, they are absent.
+ */
+function renderBlock(block: RichTextBlock, floats = false): ReactNode {
   switch (block.type) {
     case "youtube":
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
@@ -43,20 +58,11 @@ function renderBlock(block: RichTextBlock): ReactNode {
       return <RichTextVideo videoId={block.attrs.videoId} caption={block.attrs.caption} />;
     case "image":
       // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
-      // address was validated to be one of this site's own variants (§72). The figure takes
-      // the chosen share of the column on a wide screen and the whole width on a phone (§73)
-      // — a block in the flow, never floated, so two pictures are never side by side.
+      // address was validated to be one of this site's own variants (§72). Where the figure
+      // sits in the column — a band, or floated with the text beside it — is `image-layout.ts`,
+      // which is also where the reversal of §73's "never floated" is argued.
       return (
-        <Box
-          component="figure"
-          sx={{
-            m: 0,
-            my: 2,
-            mx: "auto",
-            width: { xs: "100%", sm: `${block.attrs.widthPercent}%` },
-            maxWidth: "100%",
-          }}
-        >
+        <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
           <Box
             component="img"
             src={block.attrs.src}
@@ -67,7 +73,7 @@ function renderBlock(block: RichTextBlock): ReactNode {
             sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1 }}
           />
           {block.attrs.caption !== "" && (
-            <Typography component="figcaption" variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: "center" }}>
+            <Typography component="figcaption" variant="body2" color="text.secondary" sx={imageCaptionSx(block.attrs)}>
               {block.attrs.caption}
             </Typography>
           )}
