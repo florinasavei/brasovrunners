@@ -1231,7 +1231,13 @@
       "imageAlignBlock": "In the flow",
       "imageAlignLeft": "Left",
       "imageAlignRight": "Right",
-      "imageAlignHelp": "\"In the flow\" gives the picture the whole column. \"Left\" or \"right\" moves it to one side and the text wraps around it — on a phone it is the full width either way."
+      "imageAlignHelp": "\"In the flow\" gives the picture the whole column. \"Left\" or \"right\" moves it to one side and the text wraps around it — on a phone it is the full width either way.",
+      "table": "Table",
+      "tableAddRow": "Add a row",
+      "tableAddColumn": "Add a column",
+      "tableDeleteRow": "Delete the row",
+      "tableDeleteColumn": "Delete the column",
+      "tableDelete": "Delete the table"
     },
     "pages": {
       "title": "Pages",

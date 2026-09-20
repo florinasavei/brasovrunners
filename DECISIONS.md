@@ -8974,3 +8974,55 @@ the operating system as a subscription rather than as a file downloaded once, wh
 difference between a calendar that keeps up and a snapshot of today.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 196. Decided — tables in the editor, and the one dependency they cost (2026-09-20)
+
+**Context.** "Ar fi fain să pot face tabele în editor!", twice. What a running club puts in one is
+a schedule of waves, a price list, a table of cut-offs — a few columns of short facts that a
+paragraph cannot hold straight.
+
+**Decision.** *One package, and it is the platform's own.* `@tiptap/extension-table` at the
+version already installed for everything else, pinned exact. The standing instruction is to prefer
+nothing over a dependency; the alternative here is a table editor written by hand against
+ProseMirror's transforms, which is a worse trade by a wide margin. It has **no dependencies of its
+own** — its peers, `@tiptap/core` and `@tiptap/pm`, are already here — and its `./kit` export
+carries the row, the cell and the header, so the count really is one.
+
+*The allowlist is the smallest table that carries those facts.* A cell holds a paragraph or a
+list, which is what a fact with a note under it looks like. **No table inside a table**: nesting is
+where a text editor becomes a spreadsheet, and where a phone runs out of width. `colspan` and
+`rowspan` are kept and bounded, because Tiptap emits them for a merged header and a table that
+lost its merges on the way through the allowlist would be silently rearranged. `colwidth` is
+dropped: it is a pixel width chosen on somebody's laptop, and the hard target here is a 320-pixel
+column — so the editor's resize handles are switched off rather than left to produce a value that
+is thrown away.
+
+*The table keeps its shape and the wrapper scrolls.* A table cannot reflow — four columns of times
+and distances are four columns whatever the screen — so one element scrolls sideways inside a page
+that does not, which is the single arrangement a phone handles without the whole layout sliding
+under a thumb. The scrolling box is focusable, because a region that scrolls and cannot be reached
+from a keyboard is unreadable to anybody not using a pointer, and browsers do not make it focusable
+on their own.
+
+*Header cells are `<th scope>`* — "col" on the first row, "row" elsewhere — so a screen reader
+announces "Ora de start, 10:00" rather than "10:00".
+
+*In plain text a table becomes lines, cells separated by a tab.* The excerpt, the calendar entry
+and the search index are single-column text; a tab is what a spreadsheet takes if somebody pastes
+the line, and it is invisible where the line is only being counted for words.
+
+*The toolbar shows the table verbs only inside a table.* One button inserts one; add and delete
+row and column appear when the caret is in one. Four dead controls beside somebody writing a
+paragraph is the opposite of a toolbar with words on it rather than icons.
+
+**Rejected.** *Column resizing.* See `colwidth` above.
+
+*Writing the extension by hand to avoid the dependency.* Table editing is selection and transform
+work — merging, splitting, navigating with the keyboard — and a hand-rolled version would be a
+worse table and a larger thing to keep.
+
+Tests: `tests/unit/content/rich-text-table.test.ts` (9), including the refusals — a nested
+table, an empty row, a span that is not a small positive number — and the assertion that a body
+written before tables existed parses to exactly itself.
+
+Baseline `BR-V1.38-2026-09-18`.

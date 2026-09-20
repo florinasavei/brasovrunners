@@ -123,6 +123,51 @@ const blockquoteNode = z.object({
 });
 
 /**
+ * A table (`DECISIONS.md` §196; the owner: "ar fi fain să pot face tabele în editor!").
+ *
+ * What a running club puts in one is a schedule of waves, a price list, a table of cut-offs — a
+ * few columns of short facts. So the allowlist is deliberately the smallest table that can carry
+ * those and nothing that turns a page into a layout:
+ *
+ * - **Cells hold blocks, not arbitrary documents.** A paragraph or a list, which is what a fact
+ *   with a note under it looks like. No table inside a table: nesting is where a text editor
+ *   becomes a spreadsheet, and where a phone runs out of width.
+ * - **`colspan` and `rowspan` are kept**, because Tiptap emits them for a merged header and a
+ *   table that lost its merges on the way through the allowlist would be silently rearranged.
+ *   Both are bounded: a span beyond the table is a way to make a page render strangely.
+ * - **`colwidth` is dropped.** It is a pixel width chosen on somebody's laptop, and this site's
+ *   hard target is a 320-pixel column. The renderer decides widths.
+ *
+ * A header row is `tableHeader` cells, which is Tiptap's own shape; the renderer turns them into
+ * `<th>` with a scope, so a screen reader announces which column a figure belongs to.
+ */
+const SPAN = z.number().int().min(1).max(20).optional();
+
+const tableCellContent = z.array(z.union([paragraphNode, bulletListNode, orderedListNode])).min(1);
+
+const tableCellNode = z.object({
+  type: z.literal("tableCell"),
+  attrs: z.object({ colspan: SPAN, rowspan: SPAN }).optional(),
+  content: tableCellContent,
+});
+
+const tableHeaderNode = z.object({
+  type: z.literal("tableHeader"),
+  attrs: z.object({ colspan: SPAN, rowspan: SPAN }).optional(),
+  content: tableCellContent,
+});
+
+const tableRowNode = z.object({
+  type: z.literal("tableRow"),
+  content: z.array(z.union([tableCellNode, tableHeaderNode])).min(1),
+});
+
+const tableNode = z.object({
+  type: z.literal("table"),
+  content: z.array(tableRowNode).min(1),
+});
+
+/**
  * A picture (AGENTS.md §11.3's "media-library image reference", `DECISIONS.md` §72, §73): a
  * block of its own, never inline in a paragraph, so a page is text with pictures between
  * paragraphs rather than a layout. `src` is the address the upload route answered — one of
@@ -202,6 +247,7 @@ const blockNode = z.discriminatedUnion("type", [
   blockquoteNode,
   imageNode,
   youtubeNode,
+  tableNode,
 ]);
 
 export const richTextSchema = z.object({
@@ -316,6 +362,24 @@ export function richTextToPlainText(doc: RichTextDoc): string {
       case "youtube":
         // A film's words are its caption; the id is not a word.
         return [block.attrs.caption];
+      case "table":
+        /*
+          A table's words are its cells, row by row, each row on one line with its cells
+          separated (§196).
+
+          This projection is what the excerpt, the calendar entry and the search index read, and
+          all three are single-column plain text — so a table has to become sentences rather than
+          a grid. Tab between cells rather than a pipe: a tab is what a spreadsheet takes if
+          somebody pastes the line, and it is invisible where the line is only being counted for
+          words.
+        */
+        return block.content.map((row) =>
+          row.content
+            .flatMap((cell) => cell.content.flatMap(blockText))
+            .map((line) => line.trim())
+            .filter((line) => line !== "")
+            .join("	"),
+        );
     }
   };
 

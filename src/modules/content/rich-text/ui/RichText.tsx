@@ -131,6 +131,73 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
           ))}
         </Box>
       );
+
+    case "table":
+      /*
+        A table (§196), and the whole of the difficulty is that this site's hard target is a
+        320-pixel column.
+
+        A table cannot reflow: four columns of times and distances are four columns whatever the
+        screen. So the table keeps its shape and the *wrapper* scrolls sideways — one element
+        that scrolls, inside a page that does not, which is the one arrangement a phone handles
+        without the whole layout sliding under the reader's thumb. `maxWidth: 100%` on the
+        wrapper is what keeps the page from growing to the table's width.
+
+        `tabIndex={0}` on the scrolling box is not decoration: a region that scrolls and cannot
+        be reached from a keyboard is unreadable to anybody not using a pointer, and browsers do
+        not make it focusable on their own.
+
+        Header cells become `<th scope>` — a column header says which column, a row header which
+        row — so a screen reader announces "Ora de start, 10:00" rather than "10:00".
+      */
+      return (
+        <Box
+          tabIndex={0}
+          role="region"
+          sx={{ maxWidth: "100%", overflowX: "auto", mb: 2, WebkitOverflowScrolling: "touch" }}
+        >
+          <Box
+            component="table"
+            sx={{
+              borderCollapse: "collapse",
+              // Never narrower than it needs to be, never forced wider than the column.
+              minWidth: "min(100%, 28rem)",
+              "& td, & th": {
+                border: 1,
+                borderColor: "divider",
+                px: 1.5,
+                py: 1,
+                textAlign: "left",
+                verticalAlign: "top",
+              },
+              "& th": { fontWeight: 700, backgroundColor: "action.hover" },
+              "& p:last-of-type": { mb: 0 },
+            }}
+          >
+            <Box component="tbody">
+              {block.content.map((row, rowIndex) => (
+                <Box component="tr" key={rowIndex}>
+                  {row.content.map((cell, cellIndex) => (
+                    <Box
+                      component={cell.type === "tableHeader" ? "th" : "td"}
+                      key={cellIndex}
+                      scope={
+                        cell.type === "tableHeader" ? (rowIndex === 0 ? "col" : "row") : undefined
+                      }
+                      colSpan={cell.attrs?.colspan}
+                      rowSpan={cell.attrs?.rowspan}
+                    >
+                      {cell.content.map((inner, innerIndex) => (
+                        <Fragment key={innerIndex}>{renderBlock(inner)}</Fragment>
+                      ))}
+                    </Box>
+                  ))}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Box>
+      );
   }
 }
 

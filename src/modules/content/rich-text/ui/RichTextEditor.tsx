@@ -13,6 +13,7 @@ import { Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
@@ -71,6 +72,12 @@ export default function RichTextEditor({
     bulletList: string;
     orderedList: string;
     quote: string;
+    table: string;
+    tableAddRow: string;
+    tableAddColumn: string;
+    tableDeleteRow: string;
+    tableDeleteColumn: string;
+    tableDelete: string;
     link: string;
     linkUrl: string;
     linkApply: string;
@@ -168,6 +175,14 @@ export default function RichTextEditor({
        * nothing but the id.
        */
       YoutubeNode,
+      /*
+        Tables (§196). `TableKit` is the table node with its row, cell and header in one import;
+        `resizable: false` because a column width is a pixel measurement made on somebody's
+        laptop and this site's hard target is a 320-pixel column — the renderer decides widths,
+        and the schema drops `colwidth` on the way in, so a handle here would only produce a
+        value that is thrown away.
+      */
+      TableKit.configure({ table: { resizable: false } }),
       Image.configure({ inline: false, allowBase64: false }).extend({
         parseHTML() {
           return [];
@@ -394,6 +409,54 @@ export default function RichTextEditor({
             active={editor?.isActive("blockquote") ?? false}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           />
+          {/*
+            One button inserts a table; the rest of the verbs appear only while the caret is
+            inside one (§196). A toolbar that showed "add a row" to somebody writing a paragraph
+            is four dead controls, and this toolbar already has words on it rather than icons
+            precisely so that what it offers is legible.
+          */}
+          <Control
+            label={labels.table}
+            text="⊞"
+            active={editor?.isActive("table") ?? false}
+            onClick={() =>
+              editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+            }
+          />
+          {editor?.isActive("table") && (
+            <>
+              <Control
+                label={labels.tableAddRow}
+                text="+↓"
+                active={false}
+                onClick={() => editor?.chain().focus().addRowAfter().run()}
+              />
+              <Control
+                label={labels.tableAddColumn}
+                text="+→"
+                active={false}
+                onClick={() => editor?.chain().focus().addColumnAfter().run()}
+              />
+              <Control
+                label={labels.tableDeleteRow}
+                text="−↓"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteRow().run()}
+              />
+              <Control
+                label={labels.tableDeleteColumn}
+                text="−→"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteColumn().run()}
+              />
+              <Control
+                label={labels.tableDelete}
+                text="⊟"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteTable().run()}
+              />
+            </>
+          )}
           <Control
             label={labels.link}
             text="🔗"

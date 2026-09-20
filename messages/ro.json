@@ -1231,7 +1231,13 @@
       "imageAlignBlock": "În flux",
       "imageAlignLeft": "Stânga",
       "imageAlignRight": "Dreapta",
-      "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea."
+      "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea.",
+      "table": "Tabel",
+      "tableAddRow": "Adaugă un rând",
+      "tableAddColumn": "Adaugă o coloană",
+      "tableDeleteRow": "Șterge rândul",
+      "tableDeleteColumn": "Șterge coloana",
+      "tableDelete": "Șterge tabelul"
     },
     "pages": {
       "title": "Pagini",
