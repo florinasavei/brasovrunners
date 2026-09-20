@@ -10,6 +10,9 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **Race numbers run in order, from the race's own band.** Each event says where its numbers start (1 by default, 100 or 500 when a distance wants its own series) and what colour they print; a registration takes the lowest free number at or above it, in order of confirmation, under the same lock capacity uses. The random draw is gone. §173.
+- **A confirmed runner's number is settled.** It cannot be changed or cleared once they have been emailed it — only filled in where there is none. A preferential number is still set by hand before confirmation. §173.
+- **The number is its own column** on the registrations list, sortable, nulls last; the step column asks "Unde a ajuns" instead of naming the concept. §173.
 - **The start list as a real spreadsheet, named after its race.** „Exportă Excel” writes an `.xlsx` with a bold frozen header, readable columns, dates that sort as dates and the number as a number — with the registration id and the runner's club beside the rest — and the file is called after the event that was filtered for. The comma-separated export stays, quieter, for whatever is reading it automatically. §172.
 - **Smaller month and year pickers on a desktop**, and the declaration step says how long the signed PDF takes to arrive. §172.
 - **The whole account workflow on Echipa.** Adding somebody whose provider account already exists now sends them the invitation instead of skipping it — that is how a colleague ended up on the list with no way to set a password. Two new buttons: send a password reset, and deactivate the sign-in account, which is a different decision from withdrawing access and stays a separate press. §171.

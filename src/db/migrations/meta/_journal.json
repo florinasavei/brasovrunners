@@ -351,6 +351,13 @@
       "when": 1789910938171,
       "tag": "0049_fitness_declared",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1789913133681,
+      "tag": "0050_bib_band",
+      "breakpoints": true
     }
   ]
 }

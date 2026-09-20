@@ -176,6 +176,8 @@ function eventFieldsFrom(form: FormData) {
     isSpecial: form.get("event.isSpecial") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
+    bibStartNumber: value("bibStartNumber"),
+    bibColour: value("bibColour"),
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),

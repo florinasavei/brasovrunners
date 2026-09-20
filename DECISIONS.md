@@ -8013,3 +8013,74 @@ the frozen pane, a number that stays a number, a name that never becomes a formu
 name Excel would refuse, and an empty list that still produces a file).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 173. Decided — race numbers in order, from the race's own band (2026-09-20, reversing §94)
+
+**Context.** The owner, having asked for a random draw on 2026-09-18 ("the bibs must be
+generated randomly", §94), reversed it: "cred că ar fi mai ușor să dăm numerele de concurs în
+ordinea înscrierii, așa se face de obicei, dar există un prefix de cursă — spre exemplu numerele
+pot începe cu 1 acum dar la alte curse sunt de la 100 în funcție de distanță și au altă
+culoare". And, separately: "nu ar trebui să mai pot schimba numărul de concurs odată
+confirmat!"; and "nu văd BID-ul" of the registrations list.
+
+He is right, and the reasons are not aesthetic. A random number is a number nobody can check
+off: a volunteer with an envelope of pre-printed bibs hands them out in order, a start list is
+read down a column, and "is 47 here yet" is a question a sequential list answers and a scattered
+one does not. The band is the other half: a club running a 5 km and a 10 km gives one 100–199
+and the other 500–599, in two colours, and the number a runner wears says which start line they
+belong on before anybody reads a name.
+
+**Decision.**
+
+*Numbers run in order, from the event's own start.* `pickBibNumber` returns the lowest free
+number at or above `events.bib_start_number`, which defaults to 1. Not "the last one plus one":
+the lowest free one, so a gap left by a number typed by hand out of order is filled by the next
+registration rather than skipped past. Everything that made §94 safe is untouched — the draw
+happens under the event row's lock, the same serialization point capacity uses (§10.6); a number
+once given is never renumbered; a cancelled registration keeps its number so it is not handed to
+somebody else.
+
+*Two columns on the event: the band and its colour.* `bib_start_number` (1 by default, at most
+99000) and `bib_colour` (a hex triplet, or nothing for the club's own). Both on the event
+because the club runs one distance per event today — multi-distance races are M2 — so an event
+is exactly the unit a band belongs to. Both are checked at the database: a start that a
+four-digit bib can reach, and a colour that is six hex digits after a hash, because the sheet
+paints the value straight into the printed band and a stored `red; background: url(…)` would be
+a style injection into a PDF the club hands to two hundred people.
+
+*A confirmed runner's number is settled.* §105 put a preferential number in an organizer's
+hands; that stays, before confirmation, which is when nothing is printed and nobody has been
+told. Once a registration is confirmed the runner has the number in their inbox, it is on a
+sheet and possibly on a bib in an envelope, and changing it there produces two people who each
+believe they are 214. The one exception is a confirmed registration with **no** number: filling
+that gap is not moving anybody, and it is what a row confirmed before §87 looks like.
+
+*The number is a column of the list.* It was inside the journey chip, which is where somebody
+looks for "how far along is this person" and not for "which number is this". It sorts, nulls
+last — a row with no number is not "before 1", it is not in the list the sort is about — and the
+step column is called "Unde a ajuns" rather than "Etapă", which named the concept and not the
+question.
+
+**Rejected.** *Keeping the random draw behind a setting.* Two allocation strategies is two
+things to reason about at the one point in the system where two organizers press a button at
+once, for a choice nobody will change twice.
+
+*A band per distance rather than per event.* It is the right model and it is M2's, when an event
+can hold several races. Building the column now would mean a shape with one row in it forever
+and a migration anyway when the real thing arrives.
+
+*Letting an Administrator override the lock.* Every override becomes the normal path within a
+month. The desk can already give a number to somebody who has none, which is the case that
+actually arises.
+
+**Consequences.** Migration `0050_bib_band`, expand only: two nullable-or-defaulted columns and
+two checks. `suggestFreeBibNumbers` counts from the event's band unless the caller says
+otherwise, so the backoffice stops offering 1, 2, 3 at a race whose numbers start at 500.
+`assignBibNumbers` reads the band once under the lock it already takes.
+
+Tests: `tests/integration/registrations/race-day.test.ts` — numbers in order from 1 and from
+100, a confirmed number that cannot be changed or cleared, a preferential number before
+confirmation with its duplicate and nonsense refusals, the gap-filling exception with its email,
+and suggestions that start where the race does.
+
+Baseline `BR-V1.38-2026-09-18`.

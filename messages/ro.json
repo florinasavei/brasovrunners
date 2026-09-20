@@ -338,7 +338,7 @@
       "clubMemberChip": "Membru (declarat)",
       "columnName": "Nume",
       "columnStatus": "Stare",
-      "columnJourney": "Etapă",
+      "columnJourney": "Unde a ajuns",
       "columnEvent": "Eveniment",
       "columnEmail": "E-mail",
       "columnSubmitted": "Trimisă",
@@ -384,7 +384,8 @@
         "next": "urmează: {step}",
         "complete": "Toți pașii parcurși"
       },
-      "exportExcel": "Exportă Excel"
+      "exportExcel": "Exportă Excel",
+      "columnBib": "Număr"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -667,7 +668,11 @@
       "repeatHelpSummary": "Cum funcționează o serie",
       "tabMissing": "textul întreg",
       "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
-      "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri."
+      "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
+      "bibStartNumber": "Numerele de concurs încep de la",
+      "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
+      "bibColour": "Culoarea numărului",
+      "bibColourHelp": "Banda de sub număr, pe foaia de printat."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",

@@ -350,6 +350,31 @@ export default async function EventFieldsForm({
               {t("editor.confirmationWindowHelp")}
             </Typography>
 
+            {/* The race's own band of numbers (§173): where they start and what colour the
+                sheet prints behind them. A club that runs a 5 km from 100 and a 10 km from
+                500 can tell two envelopes apart across a table without reading a name. */}
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <TextField
+                name="event.bibStartNumber"
+                type="number"
+                label={t("editor.bibStartNumber")}
+                helperText={t("editor.bibStartNumberHelp")}
+                defaultValue={event?.bibStartNumber ?? 1}
+                slotProps={{ htmlInput: { min: 1, max: 99_000, step: 1 } }}
+                inputMode="numeric"
+                sx={{ width: { sm: 220 } }}
+              />
+              <TextField
+                name="event.bibColour"
+                type="color"
+                label={t("editor.bibColour")}
+                helperText={t("editor.bibColourHelp")}
+                defaultValue={event?.bibColour ?? "#1a4fd6"}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: { sm: 160 } }}
+              />
+            </Stack>
+
             {/*
               A choice among approved versions, never an editor. AGENTS.md §11.1 keeps legal text
               out of the CMS entirely: this select can point an event at a version, and nothing

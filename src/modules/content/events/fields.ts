@@ -343,6 +343,18 @@ export const eventFieldsSchema = z
     registrationMode: z.enum(["NONE", "INTERNAL", "EXTERNAL"]),
     capacity: optionalWholeNumber({ min: 1, max: 100_000 }),
     /**
+     * The race's own band (§173): where its numbers start, and the colour the sheet prints
+     * behind them. The 5 km starts at 100 and prints green; the 10 km starts at 500 and prints
+     * blue, and a volunteer sorting envelopes can tell them apart across a table.
+     */
+    bibStartNumber: wholeNumberWithDefault(1, { min: 1, max: 99_000 }),
+    bibColour: z
+      .string()
+      .trim()
+      .regex(/^(#[0-9a-fA-F]{6})?$/, { message: "a colour is six hex digits after a hash, such as #1a73e8" })
+      .optional()
+      .transform((value) => (value ? value.toLowerCase() : null)),
+    /**
      * The participation window (§104), in days before the start: when the confirmation is
      * asked and when it is owed. Absent (an older form, a test fixture) means the defaults; an
      * empty box means the default too. Zero "opens" switches the window off.

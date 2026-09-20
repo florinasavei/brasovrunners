@@ -186,6 +186,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={row.bibNumber} variant="compact" />,
     },
     {
+      /*
+        The race number, as its own column (§173; the owner: "și nu văd BID-ul"). It was inside
+        the journey chip, which is where somebody looks for "how far along are they" and not for
+        "which number is this". On race morning it is the column the list is read by.
+      */
+      key: "bib",
+      label: t("registrations.columnBib"),
+      sortable: true,
+      render: (row) =>
+        row.bibNumber === null ? (
+          <Box component="span" sx={{ color: "text.disabled" }}>
+            —
+          </Box>
+        ) : (
+          <Box component="span" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
+            {row.bibNumber}
+          </Box>
+        ),
+    },
+    {
       key: "event",
       label: t("registrations.columnEvent"),
       sortable: true,

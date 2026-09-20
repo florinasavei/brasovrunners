@@ -90,7 +90,7 @@ export type RegistrationListFilters = {
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -227,6 +227,10 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
       return direction(eventTranslations.title);
     case "submitted":
       return direction(registrations.submittedAt);
+    // Race morning sorts by this (§173). Nulls last either way: a row with no number yet is
+    // not "before 1", it is not in the list the sort is about.
+    case "bib":
+      return dir === "asc" ? sql`${registrations.bibNumber} asc nulls last` : sql`${registrations.bibNumber} desc nulls last`;
   }
 }
 

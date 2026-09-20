@@ -338,7 +338,7 @@
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
       "columnStatus": "Status",
-      "columnJourney": "Step",
+      "columnJourney": "How far",
       "columnEvent": "Event",
       "columnEmail": "Email",
       "columnSubmitted": "Submitted",
@@ -384,7 +384,8 @@
         "next": "next: {step}",
         "complete": "Every step done"
       },
-      "exportExcel": "Export to Excel"
+      "exportExcel": "Export to Excel",
+      "columnBib": "Bib"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -667,7 +668,11 @@
       "repeatHelpSummary": "How a series works",
       "tabMissing": "the whole text",
       "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
-      "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk."
+      "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
+      "bibStartNumber": "Race numbers start at",
+      "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "bibColour": "Number colour",
+      "bibColourHelp": "The band under the number, on the printed sheet."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
