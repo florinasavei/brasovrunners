@@ -1694,7 +1694,9 @@
       "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
-      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
+      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
+      "tooFastTitle": "Mai încearcă o dată",
+      "tooFast": "Formularul a plecat foarte repede după ce s-a deschis pagina, iar noi verificăm asta ca să ținem roboții afară. Datele tale sunt toate aici — apasă din nou „Trimite înscrierea” și gata."
     },
     "sections": {
       "about": "Despre tine",

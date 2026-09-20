@@ -1694,7 +1694,9 @@
       "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
-      "generic": "The registration could not be submitted. Check what you entered and try again."
+      "generic": "The registration could not be submitted. Check what you entered and try again.",
+      "tooFastTitle": "Please try once more",
+      "tooFast": "The form was submitted very soon after the page opened, and we check for that to keep bots out. Everything you typed is still here — press “Send the registration” again and that is all."
     },
     "sections": {
       "about": "About you",

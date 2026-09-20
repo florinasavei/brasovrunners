@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **A registration is no longer thrown away for arriving quickly.** Somebody with autofill posted the form in under three seconds, was classified as a script, and was shown “we have sent you a confirmation link” while nothing at all was created — no registration, no queued email, no log line. The hidden-field trap keeps its silence, because only a machine trips it; the timing check now refuses with a sentence and the form comes back whole, so a person presses again and is registered. §194.
 - **An event can be erased with everyone registered for it**, once its exact title is typed and a reason given — a second verb, Administrator-only, never the bulk button. Every registration leaves through the same path a single erasure takes: the place released through the allocator, the declaration with the row, one audit row each that never names who was erased. The screen says what will be destroyed before anything is pressed. §191.
 - **A participant can be erased from the list**, not only from their own page — the last verb on the row menu, opening a panel that asks for a reason and for that row's name, typed. In a list where two rows are one line apart, a confirm dialog is answered by reflex. §192.
 - **A picture can sit left or right with the text flowing around it.** Not on a phone, never two side by side, and never reaching past the end of the text — the three things “never floated” was protecting, kept as rules instead of as a ban. §193.

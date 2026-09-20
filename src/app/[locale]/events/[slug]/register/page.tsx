@@ -151,6 +151,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * against the one literal it may be — anybody can type into a URL.
    */
   const captchaFailed = (fields ?? "").split(",").includes("captcha");
+  /**
+   * The timing check asked again rather than discarding the submission (§194). Like the captcha
+   * above it is a rejection about nothing the person typed, so it is read from the raw parameter
+   * and matched against the one literal it may be.
+   */
+  const tooFast = (fields ?? "").split(",").includes("tooFast");
 
   // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
   const latestBirthDate = now.toISOString().slice(0, 10);
@@ -818,6 +824,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     </Typography>
                   )}
                 </Box>
+              )}
+              {/* Said where the press happened, in the plain second person: the form is whole, the
+                  answers are still in it, and pressing again is all there is to do (§194). */}
+              {tooFast && (
+                <Alert severity="warning">
+                  <AlertTitle>{t("errors.tooFastTitle")}</AlertTitle>
+                  {t("errors.tooFast")}
+                </Alert>
               )}
               <SubmitButton
                 label={t("submit")}

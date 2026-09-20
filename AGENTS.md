@@ -2352,7 +2352,16 @@ the answer travels in a URL that every proxy in between logs (§14.5). The names
 against the form's own list on the way back in — the parameter is a string anybody can type —
 and the page is entered at the error summary rather than at the top (§18.2). Nothing past step
 3 is ever reported that way: from canonicalization onward the response is the generic one
-whatever the address turns out to mean, honeypot, timing check and throttle included.
+whatever the address turns out to mean, honeypot and throttle included.
+
+**The timing check is the one exception, since §194.** The honeypot is tripped by a machine and
+by nothing else, so it keeps the generic answer and creates nothing. The three-second floor is a
+*guess* about a person, and it was wrong about a real participant who had autofill: he was shown
+"we have sent you a confirmation link" while no registration, no outbox row and no log line were
+written anywhere. It now refuses with a field marker, the form returns with every answer still in
+it, and one sentence asks for another press — a script that posts instantly reads the same
+sentence and still has to wait, which is all a timing check ever bought. Both verdicts are logged
+by event and reason, never by address.
 
 ### 15.2 Email confirmation
 

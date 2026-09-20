@@ -8851,3 +8851,59 @@ Tests: `tests/unit/content/rich-text-image-layout.test.ts`, `rich-text.test.ts`,
 `card-excerpt.test.ts`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 194. Decided — a guess about a person is a question, not a silent refusal (2026-09-20)
+
+**Context.** Somebody the owner had asked to test QA registered, saw "Ți-am trimis un email cu un
+link de confirmare", and nothing arrived. He did not appear in the registrations list either. The
+owner reported it as an email problem — "Dani nu a primit mail", and then, reasonably, "so Yahoo
+doesn't receive registrations but Gmail does".
+
+It was not an email problem. A query against QA's `email_outbox` returned **zero rows** for his
+address: nothing had ever been queued for him, because no registration had ever been created. The
+only path in the codebase that produces exactly that — the confirmation page, and nothing written
+anywhere — is `service.ts`'s answer to a suspected bot: `if (origin.source === "PUBLIC" &&
+looksLikeSpam(input, now)) return { ok: true };`
+
+He has autofill. The form went back in under three seconds. He was classified as a script and
+discarded, silently, and the club was told he had been sent a link.
+
+**What made it expensive** was not the rule but its silence: no registration, no outbox row, no
+log line, nothing on any screen. Which of the two checks had fired could not be established from
+the data at all — it had to be reasoned out of the source by eliminating every other path.
+
+**Decision.** *The two defences answer separately, because they are not equally certain.*
+
+- **The trap keeps its silence.** A hidden field is filled by a machine and by nothing else, so a
+  distinct error would only tell a script what to stop doing (BR-REQ-031-01 criterion 3). It now
+  writes a log line naming the event and the verdict — never the address.
+- **The timing check asks again.** Under three seconds, or with no render time at all, is a
+  *guess* about a person — one that is wrong about anybody who types quickly, uses autofill, or
+  comes back to a cached page. The submission is refused with a field marker rather than
+  swallowed, the form comes back whole with every answer in it (§142), and one sentence says to
+  press again. A script that posts instantly gets the same sentence and still has to wait, which
+  is the entire benefit a timing check ever offered. What it no longer buys is a vanished
+  participant.
+
+**Rejected.** *Loading screens*, which the owner suggested and which would change nothing: the
+three seconds are measured from when the page rendered to when it was posted, so a spinner after
+the press is on the wrong side of the measurement.
+
+*Dropping the timing check.* It is cheap and it works on the submissions it was written for; what
+was wrong was the penalty, not the test.
+
+*Recording the dropped submission's address so the club could recover the person.* That would
+store personal data from a submission the platform decided not to accept. The log line carries the
+event and the verdict, and the participant is now told to press again, which recovers them without
+keeping anything.
+
+**Consequences.** `classifySubmission` replaces `looksLikeSpam` at the registration form;
+`looksLikeSpam` stays as a wrapper for the contact and interest forms (§146, §149), which keep
+the older single answer. `AGENTS.md` §19.4's "answered exactly like success" now describes the
+trap alone.
+
+Tests: `tests/unit/registrations/submission-verdict.test.ts` (6, including the boundary at
+exactly three seconds), and `lifecycle.test.ts`, whose single test became two — the trap still
+answers like success and creates nothing; the quick submission is refused and creates nothing.
+
+Baseline `BR-V1.38-2026-09-18`.
