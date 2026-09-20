@@ -1,58 +1,67 @@
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import Link from "@mui/material/Link";
+import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import SocialIcon from "@/shared/ui/SocialIcon";
+import NativeShareButton from "./NativeShareButton";
 
 /**
- * Share this event (`DECISIONS.md` §90): Facebook and WhatsApp take the link and show the
- * card drawn by `opengraph-image.tsx`; Instagram takes no link, so the third item is the same
- * card as a square picture to save and post. Three plain links, no script — the networks'
- * own share addresses, which need nothing loaded from them.
+ * Share this event (`DECISIONS.md` §90, §140): the phone's own share sheet where there is
+ * one, then Facebook and WhatsApp, which take the link and show the card drawn by
+ * `opengraph-image.tsx`; Instagram takes no link, so its button is the same card as a
+ * square picture to save and post. Beside them, "add to calendar" (§107): Google's own
+ * add-event address and the `.ics`. Buttons rather than a line of text links (the owner:
+ * "share should look nicer"); the icons are children, never a prop across the boundary
+ * (`AGENTS.md` §14.1).
  */
 type Props = {
   url: string;
   title: string;
   imageHref: string;
-  /** "Add to calendar" (§107): the `.ics` to download and Google's own add-event address. */
   calendar?: { icsHref: string; googleUrl: string };
 };
 
 export default async function ShareLinks({ url, title, imageHref, calendar }: Props) {
   const t = await getTranslations("Event");
-  const link = (href: string, label: string, icon: ReactNode, download = false) => (
-    <Link
+  const button = (href: string, label: string, icon: ReactNode, download = false) => (
+    <Button
+      component="a"
       href={href}
       target={download ? undefined : "_blank"}
       rel={download ? undefined : "noopener noreferrer"}
       download={download ? true : undefined}
-      sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}
+      variant="outlined"
+      size="small"
+      sx={{ minHeight: 44, gap: 0.75, borderRadius: 22, px: 1.5 }}
     >
       {icon}
       {label}
-    </Link>
+    </Button>
+  );
+  const label = (text: string) => (
+    <Typography variant="body2" color="text.secondary" sx={{ minHeight: 44, display: "inline-flex", alignItems: "center", mr: 0.5 }}>
+      {text}
+    </Typography>
   );
   return (
-    <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", alignItems: "center", rowGap: 0 }}>
-      <Typography variant="body2" color="text.secondary" sx={{ minHeight: 44, display: "inline-flex", alignItems: "center" }}>
-        {t("share.title")}
-      </Typography>
-      {link(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        t("share.facebook"),
-        <SocialIcon network="facebook" size={20} />,
+    <Stack spacing={0.5}>
+      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+        {label(t("share.title"))}
+        <NativeShareButton url={url} title={title} text={title} label={t("share.native")} />
+        {button(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, t("share.facebook"), <SocialIcon network="facebook" size={20} />)}
+        {button(`https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`, t("share.whatsapp"), <WhatsAppIcon sx={{ fontSize: 20 }} aria-hidden="true" />)}
+        {button(imageHref, t("share.instagram"), <SocialIcon network="instagram" size={20} />, true)}
+      </Stack>
+      {calendar && (
+        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+          {label(t("share.calendarTitle"))}
+          {button(calendar.googleUrl, t("share.googleCalendar"), <EventAvailableIcon sx={{ fontSize: 20 }} aria-hidden="true" />)}
+          {button(calendar.icsHref, t("share.ics"), <EventAvailableIcon sx={{ fontSize: 20 }} aria-hidden="true" />, true)}
+        </Stack>
       )}
-      {link(
-        `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`,
-        t("share.whatsapp"),
-        <WhatsAppIcon sx={{ fontSize: 20, color: "#25D366" }} aria-hidden="true" />,
-      )}
-      {link(imageHref, t("share.instagram"), <SocialIcon network="instagram" size={20} />, true)}
-      {calendar && link(calendar.googleUrl, t("share.googleCalendar"), <EventAvailableIcon sx={{ fontSize: 20 }} aria-hidden="true" />)}
-      {calendar && link(calendar.icsHref, t("share.ics"), <EventAvailableIcon sx={{ fontSize: 20 }} aria-hidden="true" />, true)}
     </Stack>
   );
 }

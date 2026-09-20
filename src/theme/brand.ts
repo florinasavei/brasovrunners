@@ -111,6 +111,43 @@ export const GRADIENT = {
    * each use, so every surface that carries it carries the same one.
    */
   vertical: "linear-gradient(180deg, #0b1f4d 0%, #12508f 55%, #3aa0d8 100%)",
+
+  /**
+   * The two tints the site's own surfaces are allowed to end on (`DECISIONS.md` §166; the
+   * owner: "I need more gradients and shiny Front-End stuff").
+   *
+   * NOT the kit ramp above. A hero carries a heading, two paragraphs, a countdown and a
+   * button, so its background has to stay a *surface*: these are the card colour walked a
+   * few steps towards the club's blue, which is about as far as a background can move before
+   * body text on it stops clearing AA. `tests/unit/theme/brand.test.ts` asserts ink and
+   * muted ink against both ends of both schemes, which is what makes that a rule rather than
+   * a claim. The kit ramp stays for a surface that carries no text.
+   */
+  heroTint: "#e9eeff",
+  /** The same step after dark: the dark card colour, walked towards the dark blue. */
+  heroTintDark: "#232a3c",
+} as const;
+
+/**
+ * The gradients as CSS values, light and dark, assembled once.
+ *
+ * A component picks one of these and its `[data-dark]` twin — MUI writes the scheme onto
+ * `<html>` as a valueless `data-light` / `data-dark` attribute (`theme.ts`,
+ * `cssVariables.colorSchemeSelector`), so a plain object selector is enough and no component
+ * needs `theme.applyStyles`, which is a function and therefore cannot cross into a MUI client
+ * component from a Server Component (`AGENTS.md` §14.1). `src/theme/surfaces.ts` holds the
+ * ready-made `sx` fragments; this is the vocabulary they are written in.
+ */
+export const SURFACE_GRADIENT = {
+  /** The featured event's box, and any other surface that carries text. 160°: light from above-left. */
+  hero: `linear-gradient(160deg, ${COLOR.surface} 0%, ${GRADIENT.heroTint} 100%)`,
+  heroDark: `linear-gradient(160deg, ${COLOR_DARK.surface} 0%, ${GRADIENT.heroTintDark} 100%)`,
+  /** A filled primary button under the pointer: the blue running into its own ink. */
+  accent: `linear-gradient(90deg, ${COLOR.blue} 0%, ${COLOR.blueInk} 100%)`,
+  accentDark: `linear-gradient(90deg, ${COLOR_DARK.blue} 0%, ${COLOR_DARK.blueInk} 100%)`,
+  /** The short bar under a section heading. Decorative, so it carries no text and needs no ratio. */
+  rule: `linear-gradient(90deg, ${COLOR.blue} 0%, ${COLOR.orange} 100%)`,
+  ruleDark: `linear-gradient(90deg, ${COLOR_DARK.blue} 0%, ${COLOR.orange} 100%)`,
 } as const;
 
 /**
@@ -231,10 +268,12 @@ export const LOGO = {
  * bottom quarter of that artwork, so at 28px it rendered about seven pixels tall — present and
  * unreadable, which is what made the mark-plus-live-text pairing worth trying in the first place.
  * At 44px the lettering is about eleven pixels and reads; at 2.42:1 the logo is then ~107px wide,
- * which still leaves room for the navigation at 320px (BR-REQ-041-01 criterion 1).
+ * which still leaves room for the navigation at 320px (BR-REQ-041-01 criterion 1). 40px since
+ * §158 (the owner: "the header and the footer must be smaller, on mobile smaller still"):
+ * ten pixels of lettering, ~97px wide.
  */
-export const HEADER_MARK_HEIGHT_PX = 44;
-export const HEADER_MARK_HEIGHT = "clamp(32px, 9vw, 44px)";
+export const HEADER_MARK_HEIGHT_PX = 40;
+export const HEADER_MARK_HEIGHT = "clamp(30px, 8vw, 40px)";
 /**
  * How wide the page is. One value, used by the header, the footer, the environment notice and
  * every public and backoffice page, so "allow a wider screen" (the owner, twice on 2026-09-17:

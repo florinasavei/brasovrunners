@@ -193,6 +193,8 @@ export async function listSeriesDates<T extends Record<string, unknown>>(db: Dat
       locationName: events.locationName,
       eventStatus: events.eventStatus,
       editorialStatus: events.editorialStatus,
+      // A special edition is one of the four marks a date of a series can wear (§169).
+      isSpecial: events.isSpecial,
     })
     .from(events)
     .where(or(eq(events.id, sourceId), eq(events.repeatOf, sourceId)))

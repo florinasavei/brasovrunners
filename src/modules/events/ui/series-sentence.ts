@@ -56,6 +56,8 @@ export async function editionNote(difference: EditionDifference): Promise<Editio
   if (!difference) return null;
   const t = await getTranslations("Event");
   if (difference.kind === "cancelled") return { kind: "cancelled", text: t("series.cancelledMark") };
+  // A special edition among the ordinary dates (§169): the one mark the organizer stated.
+  if (difference.kind === "special") return { kind: "special", text: t("series.specialMark") };
   if (difference.kind === "moved") return { kind: "moved", text: t("series.movedMark", { place: difference.place }) };
   return { kind: "retimed", text: t("series.retimedMark", { time: difference.time }) };
 }

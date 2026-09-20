@@ -292,7 +292,7 @@ For internal registration, the normal sequence is:
 1. participant submits name and email and acknowledges the privacy notice;
 2. participant confirms the email address within 48 hours;
 3. if a place is available, the platform temporarily holds it;
-4. participant reads and signs the approved declaration;
+4. participant reads and signs the approved declaration — online, or on paper at the desk on race day before picking up the number;
 5. registration becomes confirmed;
 6. a confirmation email containing a secure management/unregistration link is sent.
 
@@ -310,15 +310,15 @@ For a capped event:
 
 - the public event page shows the exact number of places immediately available to a new registrant;
 - confirmed registrations consume places;
-- an unexpired temporary hold while a participant signs the declaration or accepts a waiting-list offer also consumes a place;
+- a temporary hold while a participant signs the declaration, and an unexpired hold while one accepts a waiting-list offer, also consume a place;
 - ordinary waiting-list entries do not consume a place, but they have priority over later registrations;
 - the displayed free-place number therefore respects both occupied places and existing waiting-list priority;
 - pending email confirmations do not consume places;
-- cancellations and expired holds release places;
+- cancellations and expired holds release places; a declaration hold past its deadline expires only as far as the queue wants its place — one person waiting releases one hold, the one whose deadline passed first — or once the event has started or been cancelled (`DECISIONS.md` §160); otherwise the place stays the participant's until the start, and the declaration may still be signed online or on paper at the desk;
 - every capacity-changing action promotes eligible waiting participants before allocating a direct place to a later registrant;
 - concurrent actions must never exceed capacity or let a later registrant jump the queue.
 
-The initial direct declaration hold is 30 minutes, capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104).
+The initial direct declaration hold is 30 minutes, capped by registration closing and event start. For an event further away than its **participation window** (per event; default: asked 7 days before, due 2 days before the start), the place is instead held until the window's deadline and the declaration is the participant's confirmation that they are still coming — the race is free, and a place taken in June by somebody who forgot by October is a place nobody ran on (`DECISIONS.md` §104). Either deadline is enforced only when it protects somebody: with nobody on the waiting list, the person who forgot keeps the place and their number, and signs on race day at the desk; the declaration is asked once more two days before the start, and a race called off refuses the signature and releases the place (`DECISIONS.md` §160).
 
 For an event without a capacity limit, the page shows that registration is open without displaying a fabricated number of places.
 
@@ -337,7 +337,7 @@ Rules:
 - an offered place is temporarily held and therefore reduces the public free-place count;
 - the participant becomes confirmed only after signing the declaration;
 - declining or cancelling the offer releases the place immediately;
-- an expired offer leaves the active queue; the participant may rejoin at the end while registration remains open;
+- an expired offer leaves the active queue; the participant may rejoin at the end while registration remains open — an offer's deadline is always enforced, because it was a promise made to the queue;
 - when the event starts, any remaining waiting-list entries are closed; the participant receives no further message about that event;
 - an administrator may exceptionally promote a different participant only with a recorded reason.
 
@@ -479,10 +479,11 @@ Rules:
   agreed to anything yet, and publishing that they tried is a disclosure they never made;
 - **the registered name and nothing else.** No email address, no status, no place number, no
   count of who is still deciding, and nothing at all about a waiting list;
-- **a participant may keep their own name off it.** The registration form asks, in plain words,
-  on every event — including one with no list today, because the club may add one later and a
-  question nobody was asked cannot be answered on their behalf. A participant may also ask
-  afterwards, by writing to the club;
+- **a participant is on it only because they asked to be.** The registration form of an event
+  with a list offers, in plain words, "I want to appear on the participant list", unticked; no
+  tick, no listing (`DECISIONS.md` §143). A list switched on later means asking the people already
+  registered, because a question nobody was asked cannot be answered on their behalf. A
+  participant may withdraw afterwards, by writing to the club;
 - **it may not be switched on until the approved privacy notice describes it.** The sample
   notice carries the paragraph with the club's facts left as placeholders; the approved wording
   is the club's to write;
@@ -689,6 +690,8 @@ A public runner profile exposes only information the participant explicitly publ
 
 The platform collects only information needed by the active workflow. V1 normally needs name, email, language, registration state, declaration acceptance, transactional email state, and optional public profile fields.
 
+A visitor may write to the club through a contact form on the website; the message goes to the club's own mailbox as ordinary correspondence, is used only to answer, and is never stored by the platform.
+
 ### BR-BUS-071 — Participant exports
 
 Only an administrator may export participant data.
@@ -729,7 +732,12 @@ Messages include:
 - waiting-list offer expired;
 - secure registration-management link;
 - secure public-profile management link;
-- current registration status notice for a cancelled or expired registration.
+- current registration status notice for a cancelled or expired registration;
+- the reminder before the event and the thank-you after it;
+- the signed declaration to the participant, and the club's archive copy;
+- a race number given by hand;
+- a staff invitation: who added the colleague, as what, and where to sign in (`DECISIONS.md` §141);
+- "registration is open", once, to an address left on the event's page before its window — the address kept only until the message is queued (`DECISIONS.md` §146).
 
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
 

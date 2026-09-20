@@ -74,10 +74,10 @@ export async function ensureRegistrationIsOpen(page: Page) {
     await page.getByRole("link", { name: FEATURED.title }).first().click();
     await expect(page).toHaveURL(/\/admin\/events\//);
 
-    if ((await modeSelect(page).textContent()) === "Înscriere aici") return;
+    if ((await modeSelect(page).textContent()) === "Înscrieri pe site") return;
 
     await modeSelect(page).click();
-    await page.getByRole("option", { name: "Înscriere aici" }).click();
+    await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await page.locator('[name="event.capacity"]').fill("50");
 
     // The approved declaration a participant signs. Chosen, never written: the first real

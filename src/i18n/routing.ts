@@ -78,6 +78,13 @@ export const routing = defineRouting({
     "/gallery": { ro: "/galerie", en: "/gallery" },
     "/gallery/[slug]": { ro: "/galerie/[slug]", en: "/gallery/[slug]" },
 
+    /**
+     * "Scrie-ne" (BR-REQ-070-04, `DECISIONS.md` §149): the form that reaches the club's own
+     * mailbox. The same word in both languages, and a different prefix from the club's
+     * standing pages, so a page the club calls `contact` keeps its address at `/pagini/contact`.
+     */
+    "/contact": "/contact",
+
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
     "/legal/terms": { ro: "/termeni", en: "/terms" },

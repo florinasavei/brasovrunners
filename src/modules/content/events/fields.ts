@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { isYoutubeLink } from "@/modules/events/domain/video";
-import { isStravaLink } from "@/modules/events/domain/event-type";
+import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
+import { MAX_CO_HOSTS, isCoHostUrl } from "@/modules/events/domain/co-hosts";
 
 /**
  * Exactly which fields the backoffice may write (BR-REQ-050-01 criterion 1).
@@ -269,9 +270,52 @@ export const eventFieldsSchema = z
       .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isStravaLink(value)), {
         message: "a Strava event link must be an https page on strava.com",
       }),
-    // The other organization, when there is one (§121): a name, and its page if it has one.
-    coHostName: optionalText(200).optional().transform((value) => value ?? null),
-    coHostUrl: httpsUrl("the co-host's page must start with https://").optional().transform((value) => value ?? null),
+    // The Facebook event for this occurrence (§144): a Facebook page, or nothing.
+    facebookEventUrl: z
+      .string()
+      .trim()
+      .max(2000)
+      .optional()
+      .transform((value) => (value ? value : null))
+      .refine((value) => value === null || (/^https:\/\/\S+$/i.test(value) && isFacebookLink(value)), {
+        message: "a Facebook event link must be an https page on facebook.com",
+      }),
+    /**
+     * The organizations the event is held with (§168), as the editor posts them: a name and a
+     * page per row, in the club's own order. A row left blank in both boxes is the editor's
+     * spare line and is dropped; a row with a page and no name is refused with its number,
+     * so the organizer is told which line rather than that one is wrong.
+     *
+     * Absent means "this caller is not editing the partners" and **not** "no partners"
+     * (§169). The editor always posts the boxes, so an empty list from it is the club having
+     * removed every partner and is written as `[]` — which is what `readCoHosts` needs in
+     * order not to fall back to the two columns §121 wrote. A caller from before the list
+     * existed (a script, a fixture, a test's form) posts nothing, and a column nobody
+     * mentioned is a column nobody may erase: the save leaves it exactly as it was, so a
+     * legacy row's partner survives an update that never spoke about it.
+     */
+    coHosts: z
+      .array(
+        z.object({
+          name: z.string().trim().max(200).optional().default(""),
+          url: z.string().trim().max(2000).optional().default(""),
+        }),
+      )
+      .max(50)
+      .transform((rows) => rows.filter((row) => row.name !== "" || row.url !== ""))
+      .superRefine((rows, ctx) => {
+        if (rows.length > MAX_CO_HOSTS) {
+          ctx.addIssue({ code: "custom", message: `at most ${MAX_CO_HOSTS} partners can be named on one event` });
+        }
+        rows.forEach((row, index) => {
+          if (!row.name) ctx.addIssue({ code: "custom", message: `co-host ${index + 1}: a partner needs a name` });
+          if (row.url && !isCoHostUrl(row.url)) {
+            ctx.addIssue({ code: "custom", message: `co-host ${index + 1}: the partner's page must start with https://` });
+          }
+        });
+      })
+      .transform((rows) => rows.map((row) => ({ name: row.name, url: row.url === "" ? null : row.url })))
+      .optional(),
     // Optional in the input as well as in the value — a caller from before the field existed
     // (a script, a duplicate) sends nothing and means "no film".
     videoUrl: z
@@ -287,6 +331,12 @@ export const eventFieldsSchema = z
     distanceMeters: optionalWholeNumber({ min: 0, max: 500_000 }),
     elevationGainMeters: optionalWholeNumber({ min: 0, max: 20_000 }),
     featured: z.boolean(),
+    /**
+     * A special edition (§168): any number of events may carry it, so there is nothing to
+     * clear and no index to collide with. Optional for a caller from before it existed, which
+     * means an ordinary event.
+     */
+    isSpecial: z.boolean().optional().default(false),
 
     // The registration block. The database refuses the combinations this does not: capacity and
     // a declaration only on an INTERNAL event, the external fields only on an EXTERNAL one.

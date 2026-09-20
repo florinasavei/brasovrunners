@@ -5,6 +5,9 @@ import { getDb } from "@/db/client";
 import type { Locale } from "@/i18n/routing";
 import { listPublishedAlbums } from "@/modules/content/gallery/repository";
 import { listPublishedPages } from "@/modules/content/pages/repository";
+import { contactFormReaches } from "@/modules/contact/delivery";
+import { readContactRecipientsOrNull } from "@/modules/contact/recipients";
+import { env } from "@/shared/config/env";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
@@ -86,6 +89,25 @@ export default async function SiteHeader() {
   const locale = await getLocale();
   const pages = await navigationPages(locale as Locale);
   const showGallery = await hasPublishedAlbum(locale as Locale);
+  /**
+   * "Contact" leads to the form, or to the club's address; a deployment with neither has no
+   * entry (BR-REQ-070-04 criterion 1) — the gallery's rule, for the same reason.
+   *
+   * The same question the page itself asks, and it has to be: since §164 `CONTACT_FORM_MODE`
+   * answers for the transport alone, so "can send" no longer implies "has somebody to send
+   * to" — a deployment with the Gmail account set and nobody named would otherwise show a
+   * menu entry leading to a page that says there is no address.
+   *
+   * The read costs nothing on the common path and is skipped by the `||`: an address to
+   * write to, or an environment that already reaches somebody, answers without it — and a
+   * setting can only *add* recipients to those, never take them away. Otherwise it is one
+   * primary-key lookup on `platform_settings`, beside the two the header already makes, and
+   * guarded the same way: no database means the environment's list answers, as before §164.
+   */
+  const showContact =
+    Boolean(env.EMAIL_REPLY_TO) ||
+    contactFormReaches(env, null) ||
+    contactFormReaches(env, await readContactRecipientsOrNull());
 
   return (
     <Box
@@ -144,7 +166,8 @@ export default async function SiteHeader() {
            */
           flexWrap: "nowrap",
           gap: { xs: 0.5, sm: 1 },
-          py: { xs: 0.5, sm: 1 },
+          // Tighter since §158: the bar is the logo's height plus a hair, on every width.
+          py: { xs: 0.25, sm: 0.5 },
         }}
       >
         <Box sx={{ order: 1, flexShrink: 0 }}>
@@ -205,6 +228,7 @@ export default async function SiteHeader() {
           <SiteNav
             pages={pages.map((page) => ({ slug: page.slug, title: page.title }))}
             showGallery={showGallery}
+            showContact={showContact}
           />
         </Box>
 

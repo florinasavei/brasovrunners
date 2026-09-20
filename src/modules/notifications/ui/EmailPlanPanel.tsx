@@ -46,6 +46,15 @@ export default async function EmailPlanPanel({ locale, plan, volume }: Props) {
           waiting: volume.waitingMessages,
         })}
       </Typography>
+      {/*
+        One account, two deployments (§100, §163): the club's Mailgun allowance is shared by
+        QA and production, and the count above is this environment's own outbox rows — so
+        "99 left" on production is silent about whatever QA sent on the same account this
+        morning. Said here rather than left to be discovered on race day.
+      */}
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        {t("emails.plan.shared")}
+      </Typography>
       {plan.updatedAt && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
           {t("emails.plan.updatedAt", {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupSeries, recurrenceOf, seriesKey } from "@/modules/events/domain/series";
+import { editionDifference, groupSeries, recurrenceOf, seriesKey, usualOf } from "@/modules/events/domain/series";
 
 /** BR-REQ-020-01 criterion 9, BR-REQ-050-02 criterion 11 (`DECISIONS.md` §113) — a repeated event is one line. */
 const ZONE = "Europe/Bucharest";
@@ -52,5 +52,37 @@ describe("how a series recurs", () => {
     expect(recurrenceOf([at("2026-09-21T18:30"), at("2026-10-21T18:30")].map((startsAt) => ({ startsAt })), ZONE)).toEqual({ kind: "dates" });
     expect(recurrenceOf([at("2026-09-21T18:30"), at("2026-09-23T18:30")].map((startsAt) => ({ startsAt })), ZONE)).toEqual({ kind: "dates" });
     expect(recurrenceOf([{ startsAt: at("2026-09-21T18:30") }], ZONE)).toEqual({ kind: "dates" });
+  });
+});
+
+describe("a date that is not like the series' others", () => {
+  /** Four Wednesdays at Parcul Tractorul, 18:30 — what "usual" is read off. */
+  const member = (values: Partial<Parameters<typeof editionDifference>[0]> = {}) => ({
+    startsAt: at("2026-09-23T18:30"),
+    timezone: ZONE,
+    locationName: "Parcul Tractorul",
+    eventStatus: "SCHEDULED",
+    isSpecial: false,
+    ...values,
+  });
+  const usual = usualOf([member(), member({ startsAt: at("2026-09-30T18:30") }), member({ startsAt: at("2026-10-07T18:30") })]);
+
+  it("has no mark when it is like the others", () => {
+    expect(editionDifference(member(), usual)).toBeNull();
+  });
+
+  it("marks the special edition inside a series (§168, §169) — the owner's Brașov-Marathon Wednesday", () => {
+    expect(editionDifference(member({ isSpecial: true }), usual)).toEqual({ kind: "special" });
+  });
+
+  it("ranks the marks: cancelled, then special, then the place, then the hour", () => {
+    // Nothing to come to outranks everything, including a special edition that was called off.
+    expect(editionDifference(member({ isSpecial: true, eventStatus: "CANCELLED" }), usual)).toEqual({ kind: "cancelled" });
+    // A special edition explains its own place and hour, so it is what the date is told as.
+    expect(editionDifference(member({ isSpecial: true, locationName: "Poiana Brașov" }), usual)).toEqual({ kind: "special" });
+    expect(editionDifference(member({ isSpecial: true, startsAt: at("2026-09-23T09:00") }), usual)).toEqual({ kind: "special" });
+    // An ordinary date elsewhere or at another hour says so, as it always did.
+    expect(editionDifference(member({ locationName: "Poiana Brașov" }), usual)).toEqual({ kind: "moved", place: "Poiana Brașov" });
+    expect(editionDifference(member({ startsAt: at("2026-09-23T09:00") }), usual)).toEqual({ kind: "retimed", time: "09:00" });
   });
 });

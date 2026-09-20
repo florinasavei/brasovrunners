@@ -4,6 +4,7 @@ import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -11,8 +12,10 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { listPublishedAlbums } from "@/modules/content/gallery/repository";
 import CardLink from "@/shared/ui/CardLink";
+import { GalleryGridSkeleton } from "@/shared/ui/PublicSkeleton";
 import { PAGE_WIDTH } from "@/theme/brand";
-import { liftOnHover, riseIn } from "@/theme/motion";
+import { headingRule } from "@/theme/surfaces";
+import { fadeInSoft, liftOnHover, riseIn } from "@/theme/motion";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -36,18 +39,39 @@ export default async function GalleryPage({ params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("Gallery");
-  const format = await getFormatter();
-  const albums = await listPublishedAlbums(getDb(), locale);
+  // Started, not awaited (§166): the heading and the intro reach the browser at once, and
+  // the covers fill a grid of their own size when the query answers.
+  const albums = listPublishedAlbums(getDb(), locale);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
-      <Typography variant="h1" gutterBottom>
+      <Typography variant="h1" gutterBottom sx={headingRule}>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
         {t("intro")}
       </Typography>
 
+      <Suspense fallback={<GalleryGridSkeleton label={t("loading")} />}>
+        <AlbumGrid albums={albums} />
+      </Suspense>
+    </Container>
+  );
+}
+
+/**
+ * The albums themselves, behind a `<Suspense>` boundary (§166).
+ *
+ * The query is started by the page and awaited here, so the shell is sent while the database
+ * is still answering and the wait is a grid of covers rather than a blank page.
+ */
+async function AlbumGrid({ albums: pending }: { albums: ReturnType<typeof listPublishedAlbums> }) {
+  const t = await getTranslations("Gallery");
+  const format = await getFormatter();
+  const albums = await pending;
+
+  return (
+    <Box sx={fadeInSoft}>
       {albums.length === 0 ? (
         <Typography variant="body1">{t("empty")}</Typography>
       ) : (
@@ -87,6 +111,6 @@ export default async function GalleryPage({ params }: Props) {
           ))}
         </Box>
       )}
-    </Container>
+    </Box>
   );
 }

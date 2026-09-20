@@ -130,6 +130,30 @@ describe("§81 the reminder and §82 after the race", () => {
     expect(result.errorCount).toBe(0);
   });
 
+  it("asks once more for the declaration two days out, to whoever still owes one (§160)", async () => {
+    const soon = await seedEvent(new Date(NOW.getTime() + 40 * HOUR));
+    const later = await seedEvent(new Date(NOW.getTime() + 60 * HOUR));
+    // A hold weeks past its deadline, kept because nobody waited — the one person §160 keeps
+    // a place for, and the one who would otherwise hear nothing more before the race.
+    const kept = await seedRegistration(soon.id, "PENDING_DECLARATION", participantId, {
+      holdExpiresAt: new Date(NOW.getTime() - 10 * 24 * HOUR),
+    });
+    await seedRegistration(later.id, "PENDING_DECLARATION", participantId, { holdExpiresAt: new Date(NOW.getTime() + HOUR) });
+
+    expect(await queueEventReminders(db, NOW)).toBe(1);
+    expect(await queueEventReminders(db, new Date(NOW.getTime() + HOUR))).toBe(0);
+    const rows = await outbox("COMPLETE_DECLARATION");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].registrationId).toBe(kept.id);
+    expect(rows[0].idempotencyKey).toBe(`registration:${kept.id}:sign-reminder`);
+
+    // The words are the declaration email's own: no deadline is named, because the place is
+    // being kept, and the paper at the desk is offered instead.
+    const message = await renderOutboxMessage({ ...rows[0], status: "PROCESSING", attemptCount: 1, lockedAt: NOW }, db, NOW);
+    expect(message.text).toContain("pe hârtie la masa de înscrieri");
+    expect(message.text).not.toContain("lista de așteptare");
+  });
+
   it("renders the reminder and the confirmation with the facts line, the links, the checklist, the QR and the footer", async () => {
     const soon = await seedEvent(new Date(NOW.getTime() + 40 * HOUR));
     const confirmed = await seedRegistration(soon.id, "CONFIRMED", participantId, { checkinCode: "ABCDEFGHJK" });

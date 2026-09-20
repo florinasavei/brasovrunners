@@ -28,7 +28,8 @@ import {
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { isCheckinCode } from "@/modules/registrations/checkin-code";
 import { renderOutboxMessage } from "@/modules/notifications/render";
-import { checkIn, type EventForRegistration } from "@/modules/registrations/service";
+import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
+import { checkIn, confirmEmail, type EventForRegistration } from "@/modules/registrations/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -232,6 +233,47 @@ describe("BR-REQ-037-07 the desk confirms a registration", () => {
     expect(acceptance.attestedByStaffUserId).toBe(volunteer.id);
   });
 
+  it("confirms on paper at the desk after the gun, when the start itself released the hold (§160)", async () => {
+    const event = await createInternalEvent(10);
+    const { registration } = await enter(event, "forgot@example.org");
+    const held = await confirmEmail(db, event, registration.id, NOW);
+    expect(held.status).toBe("PENDING_DECLARATION");
+
+    // The race starts. The job sweeps the hold — the one case §160 does not keep — while the
+    // kit table is still open and the person is standing at it with their paper.
+    const afterStart = new Date(event.startsAt.getTime() + 5 * 60_000);
+    await runRegistrationMaintenance(db, afterStart);
+    const [swept] = await db.select().from(registrations).where(eq(registrations.id, registration.id));
+    expect(swept.status).toBe("EXPIRED");
+    expect(swept.expiryReason).toBe("DECLARATION_HOLD_LAPSED");
+
+    const confirmed = await confirmRegistrationByStaff(db, volunteer, registration.id, afterStart);
+    expect(confirmed.status).toBe("CONFIRMED");
+    expect(confirmed.bibNumber).not.toBeNull();
+    const [acceptance] = await db
+      .select()
+      .from(declarationAcceptances)
+      .where(eq(declarationAcceptances.registrationId, registration.id));
+    expect(acceptance.method).toBe("PAPER");
+  });
+
+  it("keeps a number given by hand when the hold behind it expires, and never offers it again", async () => {
+    const event = await createInternalEvent(10);
+    const { registration } = await enter(event, "numbered@example.org");
+    await confirmEmail(db, event, registration.id, NOW);
+    await setBibNumberByStaff(db, volunteer, registration.id, 7, NOW);
+
+    const afterStart = new Date(event.startsAt.getTime() + 5 * 60_000);
+    await runRegistrationMaintenance(db, afterStart);
+
+    const [expired] = await db.select().from(registrations).where(eq(registrations.id, registration.id));
+    expect(expired.status).toBe("EXPIRED");
+    // Expiry touches the status and nothing else: a number that was printed is not handed to
+    // somebody else because the person who had it never signed.
+    expect(expired.bibNumber).toBe(7);
+    expect(await suggestFreeBibNumbers(db, event.id, 5, 4)).toEqual([5, 6, 8, 9]);
+  });
+
   it("confirms a pending online registration whose email never arrived", async () => {
     const event = await createInternalEvent(10);
     const { registration } = await enter(event, "pending@example.org");
@@ -334,8 +376,10 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     expect(b.registration.bibNumber).not.toBeNull();
     expect(a.registration.bibNumber).not.toBe(b.registration.bibNumber);
 
-    await setBibNumberByStaff(db, volunteer, a.registration.id, 5, NOW);
-    expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 5, NOW))).toBe("CONFLICT");
+    // A number neither of them drew: the draw is random, and 5 has come up (a flaky run, 2026-09-19).
+    const chosen = [5, 6, 7].find((n) => n !== a.registration.bibNumber && n !== b.registration.bibNumber) as number;
+    await setBibNumberByStaff(db, volunteer, a.registration.id, chosen, NOW);
+    expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, chosen, NOW))).toBe("CONFLICT");
     expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 0, NOW))).toBe("VALIDATION_ERROR");
     expect(await codeOf(setBibNumberByStaff(db, volunteer, b.registration.id, 1.5, NOW))).toBe("VALIDATION_ERROR");
 
@@ -345,7 +389,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
       .select()
       .from(auditLogs)
       .where(eq(auditLogs.action, "registration.bib_set"));
-    expect(entry.metadataJson).toEqual({ from: a.registration.bibNumber, to: 5 });
+    expect(entry.metadataJson).toEqual({ from: a.registration.bibNumber, to: chosen });
 
     // The runner is told the number given by hand, once per number, and not when it is cleared (§105).
     const told = (await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, a.registration.id))).filter(

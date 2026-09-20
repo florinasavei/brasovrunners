@@ -81,3 +81,74 @@ describe("staff authentication mode", () => {
     }
   });
 });
+
+/**
+ * BR-REQ-070-04 — the contact form's way out (`DECISIONS.md` §149) is derived, never typed.
+ *
+ * A laptop and the test suite must never open an SMTP socket, whatever is set; a deployment
+ * sends only with a sender, its password and somebody to send to; and `off` is a page that
+ * shows the address, not a process that refuses to start.
+ */
+describe("BR-REQ-070-04 contact form mode", () => {
+  const SMTP = {
+    CONTACT_SMTP_USER: "club@example.com",
+    CONTACT_SMTP_PASSWORD: "abcd efgh ijkl mnop",
+    CONTACT_FORM_TO: "club@example.com, colleague@example.org",
+  };
+
+  it("captures locally and in tests even with every SMTP variable set", () => {
+    for (const APP_ENV of ["local", "test"] as const) {
+      expect(envSchema.parse({ APP_ENV, ...SMTP }).CONTACT_FORM_MODE).toBe("capture");
+    }
+  });
+
+  it("sends on a deployment with the sender and its password; the recipients are the club's", () => {
+    const parsed = envSchema.parse({ APP_ENV: "production", ...SMTP });
+    expect(parsed.CONTACT_FORM_MODE).toBe("smtp");
+    expect(parsed.CONTACT_FORM_TO).toEqual(["club@example.com", "colleague@example.org"]);
+    expect(parsed.CONTACT_SMTP_HOST).toBe("smtp.gmail.com");
+    expect(parsed.CONTACT_SMTP_PORT).toBe(465);
+
+    // Since §164 the mode is about the transport alone: the recipients live in
+    // `platform_settings`, which a startup-time derivation cannot see, so an empty
+    // `CONTACT_FORM_TO` is no longer `off` — `contact/delivery.ts` decides who it reaches.
+    for (const missing of ["CONTACT_SMTP_USER", "CONTACT_SMTP_PASSWORD"]) {
+      const partial = { ...SMTP, [missing]: undefined };
+      expect(envSchema.parse({ APP_ENV: "qa", ...partial }).CONTACT_FORM_MODE, missing).toBe("off");
+    }
+    expect(envSchema.parse({ APP_ENV: "qa", ...SMTP, CONTACT_FORM_TO: undefined }).CONTACT_FORM_MODE).toBe("smtp");
+  });
+
+  it("names a recipient that is not an address, because the operator typed it", () => {
+    expect(() => envSchema.parse({ APP_ENV: "qa", ...SMTP, CONTACT_FORM_TO: "club@example.com; nope" })).toThrow(
+      /CONTACT_FORM_TO entry is not a valid address/,
+    );
+    expect(() => envSchema.parse({ APP_ENV: "qa", ...SMTP, CONTACT_SMTP_USER: "not-an-address" })).toThrow();
+  });
+});
+
+/**
+ * `DECISIONS.md` §163 — the star is an allowlist entry, and the schema must let a deployment
+ * carrying it boot: the QA build of 2026-09-20 failed because the per-entry address check
+ * refused it.
+ */
+describe("EMAIL_ALLOWLIST accepts the star", () => {
+  const base = {
+    APP_ENV: "qa",
+    DATABASE_URL: "postgres://u:p@h/db",
+    APP_BASE_URL: "https://qa.example.test",
+    MAILGUN_API_KEY: "key",
+    MAILGUN_DOMAIN: "mail.example.test",
+    MAILGUN_API_BASE_URL: "https://api.example.test",
+  };
+  it("parses in allowlist mode and refuses it anywhere else", () => {
+    const ok = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: "*" });
+    expect(ok.success, ok.success ? "" : JSON.stringify(ok.error.issues)).toBe(true);
+    const mixed = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: "ana@dev.test, *" });
+    expect(mixed.success).toBe(true);
+    const captured = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "capture", EMAIL_ALLOWLIST: "*" });
+    expect(captured.success).toBe(false);
+    const rubbish = envSchema.safeParse({ ...base, EMAIL_DELIVERY_MODE: "allowlist", EMAIL_ALLOWLIST: "not-an-address" });
+    expect(rubbish.success).toBe(false);
+  });
+});

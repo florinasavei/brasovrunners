@@ -27,10 +27,11 @@ export const REMINDER_HOURS_BEFORE = 48;
  * open — "starts in the next 48 hours, has not started" — and the idempotency key is what
  * keeps a registration to one reminder across the runs that see it in that window.
  *
- * Confirmed only: a waiting-list entry has nothing to be reminded of, and a pending one has
- * its own email. Scheduled events only: a cancelled or completed event reminds nobody. Test
- * registrations are included — they behave as real ones everywhere (§12.6) and their
- * addresses go nowhere.
+ * Confirmed only: a waiting-list entry has nothing to be reminded of, and a registration that
+ * still owes its declaration gets its own email from `queueDeclarationReminders` below, in
+ * the same two days (§160). Scheduled events only: a cancelled or completed event reminds
+ * nobody. Test registrations are included — they behave as real ones everywhere (§12.6) and
+ * their addresses go nowhere. The number returned counts both messages.
  */
 /**
  * "Confirm your participation" (`DECISIONS.md` §104): when an event's window opens, every
@@ -119,7 +120,6 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
         sql`(${registrations.confirmedAt} IS NULL OR ${registrations.confirmedAt} < ${new Date(now.getTime() - 24 * 60 * 60_000)})`,
       ),
     );
-  if (rows.length === 0) return 0;
 
   let queued = 0;
   await db.transaction(async (tx) => {
@@ -133,6 +133,66 @@ export async function queueEventReminders<T extends Record<string, unknown>>(
         payload: {},
         // One per registration, ever: the second run in the window finds this key and inserts nothing.
         idempotencyKey: `registration:${row.registrationId}:reminder`,
+        now,
+      });
+      if (inserted) queued += 1;
+    }
+  });
+  return queued + (await queueDeclarationReminders(db, now, horizon));
+}
+
+/**
+ * The last call to sign, inside the same two days (`DECISIONS.md` §160).
+ *
+ * §160 keeps the place of somebody who forgot — and the population it keeps it for is the one
+ * population that then hears nothing more: the reminder above is for the confirmed, and the
+ * participation confirmation of §104 stops once the deadline is behind. So the declaration
+ * email goes once more, two days out, to every registration that still owes a signature. Not
+ * a new message type: it is the same `COMPLETE_DECLARATION`, whose words already say the
+ * registration is complete only with the declaration and that it can be signed on paper at
+ * the desk on race day — and whose deadline line the renderer drops once the deadline is
+ * behind, because the place is being kept rather than counted down.
+ *
+ * One per registration, ever, by its own key: somebody who registered inside the window and
+ * signed nothing gets this and nothing else.
+ */
+async function queueDeclarationReminders<T extends Record<string, unknown>>(
+  db: Database<T>,
+  now: Date,
+  horizon: Date,
+): Promise<number> {
+  const rows = await db
+    .select({
+      registrationId: registrations.id,
+      participantId: registrations.participantId,
+      locale: registrations.locale,
+      recipientEmail: participants.deliveryEmail,
+    })
+    .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
+    .innerJoin(participants, eq(participants.id, registrations.participantId))
+    .where(
+      and(
+        eq(registrations.status, "PENDING_DECLARATION"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.registrationMode, "INTERNAL"),
+        gt(events.startsAt, now),
+        lte(events.startsAt, horizon),
+      ),
+    );
+  if (rows.length === 0) return 0;
+
+  let queued = 0;
+  await db.transaction(async (tx) => {
+    for (const row of rows) {
+      const inserted = await enqueueEmail(tx, {
+        participantId: row.participantId,
+        registrationId: row.registrationId,
+        messageType: "COMPLETE_DECLARATION",
+        locale: row.locale,
+        recipientEmail: row.recipientEmail,
+        payload: {},
+        idempotencyKey: `registration:${row.registrationId}:sign-reminder`,
         now,
       });
       if (inserted) queued += 1;

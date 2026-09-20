@@ -76,3 +76,18 @@ describe("BR-REQ-080-03 criterion 2 — a QA message is visibly marked", () => {
     expect(markSubjectForEnvironment(once, "qa")).toBe(once);
   });
 });
+
+/**
+ * `DECISIONS.md` §163 — the one allowlist entry that is not an address.
+ */
+describe("BR-REQ-080-03 the allowlist's escape hatch", () => {
+  it("sends to anyone when the list is a star, and still captures a malformed recipient", () => {
+    expect(decideDelivery("allowlist", "stranger@example.org", ["*"])).toBe("send");
+    expect(decideDelivery("allowlist", "stranger@example.org", ["ana@dev.test", "*"])).toBe("send");
+    expect(decideDelivery("allowlist", "not-an-address", ["*"])).toBe("capture");
+    // Without it, nothing changes.
+    expect(decideDelivery("allowlist", "stranger@example.org", ["ana@dev.test"])).toBe("capture");
+    // Capture still captures, whatever the list says.
+    expect(decideDelivery("capture", "ana@dev.test", ["*"])).toBe("capture");
+  });
+});

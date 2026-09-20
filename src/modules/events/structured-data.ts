@@ -1,4 +1,5 @@
 import { env } from "@/shared/config/env";
+import { readCoHosts } from "./domain/co-hosts";
 import type { PublicEvent } from "./repository";
 
 /**
@@ -94,8 +95,24 @@ export function toOffsetIsoString(date: Date, timeZone: string): string {
   return `${local}${offset}`;
 }
 
+/**
+ * The club, then the partners (§168): schema.org takes one organizer or several, and the
+ * order is what says who holds the event. The club's entry is the same `@id` every event
+ * points at, so a search engine reads one organization across the whole site; a partner is a
+ * plain Organization with a name and, when the club pasted one, its page.
+ */
+function organizers(event: PublicEvent, organizationName: string) {
+  const club = { "@type": "SportsOrganization", "@id": clubId(), name: organizationName };
+  const coHosts = readCoHosts(event);
+  if (coHosts.length === 0) return club;
+  return [
+    club,
+    ...coHosts.map((host) => ({ "@type": "Organization", name: host.name, ...(host.url ? { url: host.url } : {}) })),
+  ];
+}
+
 /** BR-REQ-052-02 criteria 2 and 4. */
-export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string) {
+export function sportsEventJsonLd(event: PublicEvent, url: string, organizationName: string, images: readonly string[] = []) {
   return {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
@@ -103,6 +120,9 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     name: event.title,
     ...(event.excerpt ? { description: event.excerpt } : {}),
     url,
+    // The cards the page already draws (§90) — Google's Event result wants an image and asks
+    // for more than one aspect ratio; the 1200×630 card and the square one are those (§155).
+    ...(images.length > 0 ? { image: [...images] } : {}),
     /**
      * Two times, mapped to the two properties schema.org already has for them.
      *
@@ -117,13 +137,10 @@ export function sportsEventJsonLd(event: PublicEvent, url: string, organizationN
     // Criterion 4: a cancelled event keeps its block and states the status.
     eventStatus: EVENT_STATUS_URL[event.eventStatus],
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    // The club, and the co-host when there is one (§121) — two organizers, the club first.
-    organizer: event.coHostName
-      ? [
-          { "@type": "SportsOrganization", "@id": clubId(), name: organizationName },
-          { "@type": "Organization", name: event.coHostName, ...(event.coHostUrl ? { url: event.coHostUrl } : {}) },
-        ]
-      : { "@type": "SportsOrganization", "@id": clubId(), name: organizationName },
+    // The club, and every organization the event is held with (§121, §168) — the club
+    // first, the partners in the club's own order. A bare object when the club hosts alone,
+    // because `organizer` is one value there and an array of one reads as a list of one.
+    organizer: organizers(event, organizationName),
     /**
      * Brașov Runners events are free (the owner, 2026-09-19: "state somewhere that Brașov
      * Runners events are always free — this also helps us pass the Google verifications").

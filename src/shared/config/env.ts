@@ -1,6 +1,6 @@
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { z } from "zod";
-import { APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES } from "./env-enums";
+import { ALLOW_EVERY_RECIPIENT, APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES } from "./env-enums";
 
 // AGENTS.md §7.1: APP_ENV is the environment identity; NODE_ENV is not.
 // AGENTS.md §8: APP_BASE_URL is the single source of every absolute URL the app emits.
@@ -76,6 +76,8 @@ export const envSchema = z
 
     // Verifies job-endpoint callers (AGENTS.md §16.2) — a scheduler, not a staff session.
     JOB_SECRET: z.string().min(1).optional(),
+    /** How often the day-time monitor pings the job endpoints, in minutes (§148): 15 on production, 60 on QA. */
+    PINGER_CADENCE_MINUTES: z.coerce.number().int().min(1).max(240).default(15),
 
     // Read-only, for `/devs` to show the database's CU-hours against the plan (SETUP.md §33).
     NEON_API_KEY: z.string().min(1).optional(),
@@ -197,6 +199,26 @@ export const envSchema = z
      * participant's copy and the per-event bundle on the event page are the archive.
      */
     DECLARATIONS_ARCHIVE_TO: z.email().optional(),
+    /**
+     * The contact form's own way out (`DECISIONS.md` §149; the owner: "a contact form that
+     * submits to the club's Gmail and bypasses Mailgun"). Plain SMTP with a Gmail app password
+     * — the one message the platform sends that never touches the outbox or the Mailgun
+     * allowance, because it is correspondence, not transactional mail. The host and port are
+     * Google's defaults and stay configuration (§8); `CONTACT_FORM_TO` is where the message
+     * lands — the club's Gmail and a colleague's Yahoo, comma-separated — because the club
+     * decides who reads its mail, not the code. Never validated as a set at startup: a
+     * deployment without them shows "write to us at …" instead of the form (`CONTACT_FORM_MODE`).
+     *
+     * Since §164 `CONTACT_FORM_TO` is the *fallback*: the club edits the recipients and the
+     * copy list on `/admin/emails`, and that list answers only while the setting names
+     * nobody. There is no `CONTACT_FORM_CC` and there will not be one — a copy for a
+     * colleague is a club decision, made in the app, not a redeploy.
+     */
+    CONTACT_SMTP_HOST: z.string().trim().min(1).default("smtp.gmail.com"),
+    CONTACT_SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(465),
+    CONTACT_SMTP_USER: z.email().optional(),
+    CONTACT_SMTP_PASSWORD: z.string().min(1).optional(),
+    CONTACT_FORM_TO: allowlist,
     // Verifies inbound Mailgun webhooks (AGENTS.md §16.5) — a separate secret from the API
     // key, since the two prove different things: one authenticates outbound calls this
     // application makes, the other authenticates inbound calls Mailgun makes to it.
@@ -273,6 +295,16 @@ export const envSchema = z
       });
     }
 
+    // `*` (§163) is every recipient, and only where email is not live: on production the mode
+    // is `live` and the list is not read, so a stray star there would be a lie in the console.
+    if (EMAIL_ALLOWLIST.includes(ALLOW_EVERY_RECIPIENT) && EMAIL_DELIVERY_MODE !== "allowlist") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EMAIL_ALLOWLIST"],
+        message: 'EMAIL_ALLOWLIST="*" means "send to anyone" and is read only in allowlist mode. Remove it, or set EMAIL_DELIVERY_MODE=allowlist.',
+      });
+    }
+
     if (EMAIL_DELIVERY_MODE === "allowlist" && EMAIL_ALLOWLIST.length === 0) {
       ctx.addIssue({
         code: "custom",
@@ -283,6 +315,10 @@ export const envSchema = z
     }
 
     for (const entry of EMAIL_ALLOWLIST) {
+      // `*` is the one entry that is not an address (§163): every recipient. The rule above
+      // has already refused it outside allowlist mode; here it must pass, or a deployment
+      // carrying the star cannot boot — which is how the QA build broke on 2026-09-20.
+      if (entry === ALLOW_EVERY_RECIPIENT) continue;
       if (!isValidEmail(entry)) {
         ctx.addIssue({
           code: "custom",
@@ -290,6 +326,17 @@ export const envSchema = z
           // The entry is configuration written by an operator, not participant data, so
           // naming it is what makes the error fixable.
           message: `EMAIL_ALLOWLIST entry is not a valid address: "${entry}".`,
+        });
+      }
+    }
+
+    // Configuration typed by an operator, so the bad entry is named (the allowlist's reasoning).
+    for (const entry of value.CONTACT_FORM_TO) {
+      if (!isValidEmail(entry)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["CONTACT_FORM_TO"],
+          message: `CONTACT_FORM_TO entry is not a valid address: "${entry}".`,
         });
       }
     }
@@ -353,6 +400,24 @@ export const envSchema = z
               value.R2_PUBLIC_BASE_URL
             ? ("r2" as const)
             : ("unconfigured" as const),
+    /**
+     * Derived like `STORAGE_MODE`: local and test never open a socket — the message is kept
+     * in memory for the developer and the tests to read (§149); a deployment sends over SMTP
+     * when the sender and its password exist, and is `off` otherwise, which the contact page
+     * renders as "write to us at …" rather than a form that fails.
+     *
+     * The recipients are deliberately not part of this since §164: they live in
+     * `platform_settings.contactRecipients`, which a startup-time derivation cannot see, and
+     * `CONTACT_FORM_TO` is only their fallback. So this says whether the deployment can send
+     * at all, and `contact/delivery.ts` says whether there is anybody to send to — a form
+     * needs both, and either one missing shows the club's address instead.
+     */
+    CONTACT_FORM_MODE:
+      value.APP_ENV === "local" || value.APP_ENV === "test"
+        ? ("capture" as const)
+        : value.CONTACT_SMTP_USER && value.CONTACT_SMTP_PASSWORD
+          ? ("smtp" as const)
+          : ("off" as const),
   }));
 
 export type Env = z.infer<typeof envSchema>;

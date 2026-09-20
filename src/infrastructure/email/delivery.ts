@@ -1,3 +1,4 @@
+import { ALLOW_EVERY_RECIPIENT } from "@/shared/config/env-enums";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
@@ -18,6 +19,8 @@ export type EmailDeliveryMode = "capture" | "allowlist" | "live";
 
 export type DeliveryDecision = "send" | "capture";
 
+export { ALLOW_EVERY_RECIPIENT };
+
 /**
  * Whether one recipient may actually be transmitted to.
  *
@@ -33,6 +36,12 @@ export type DeliveryDecision = "send" | "capture";
  * one address were on the list.
  *
  * An address that cannot be canonicalized is captured. There is no address to send to.
+ *
+ * One entry is not an address: `*` authorizes every recipient (`DECISIONS.md` §163). It is
+ * what an operator sets on QA when the people testing are more than a handful — a colleague
+ * being invited, a runner walking through the journey — and it is deliberately the allowlist's
+ * own escape hatch rather than `live`, so the mode stays `allowlist`, the subject keeps its
+ * `[QA]` mark, production's "live only here" rule is untouched, and one character undoes it.
  */
 export function decideDelivery(
   mode: EmailDeliveryMode,
@@ -51,6 +60,10 @@ export function decideDelivery(
   } catch {
     return "capture";
   }
+
+  // Everyone, when the operator said so — after canonicalization, because an address that is
+  // not one has nowhere to go, star or no star.
+  if (allowlist.includes(ALLOW_EVERY_RECIPIENT)) return "send";
 
   return allowlist.some((entry) => {
     try {

@@ -103,7 +103,67 @@ describe("BR-REQ-080-01 outbox renderer", () => {
 
     const [token] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
     expect(token.purpose).toBe("COMPLETE_DECLARATION");
-    expect(token.expiresAt).toEqual(new Date(NOW.getTime() + 30 * 60_000)); // borrowed the hold's own deadline
+    // The declaration link lives until the race, not until the hold (§160): a hold past its
+    // deadline is kept while nobody waits, and the link must still open the declaration then.
+    // Read from the event's own row, so it does not depend on a translation existing.
+    expect(token.expiresAt).toEqual(new Date("2026-10-01T09:00:00.000Z"));
+  });
+
+  it("gives the declaration token the event's start, the offer's token the offer's deadline (§160)", async () => {
+    const [event] = await db.select().from(events).limit(1);
+    await db.insert(eventTranslations).values({ eventId: event.id, locale: "ro", slug: "crosul", title: "Crosul", excerpt: "x" });
+
+    const row = {
+      id: "row-t",
+      participantId,
+      registrationId,
+      messageType: "COMPLETE_DECLARATION" as const,
+      locale: "ro" as const,
+      recipientEmail: "ana@example.ro",
+      payloadJson: {},
+      idempotencyKey: "test:t",
+      requestedByStaffUserId: null,
+      isManualResend: false,
+      status: "PROCESSING" as const,
+      attemptCount: 1,
+      nextAttemptAt: null,
+      lockedAt: NOW,
+      providerMessageId: null,
+      lastError: null,
+      createdAt: NOW,
+      sentAt: null,
+    };
+
+    // With the translation in place the answer is the same instant: the event's start.
+    await renderOutboxMessage(row, db, NOW);
+    const [declaration] = await db
+      .select()
+      .from(emailActionTokens)
+      .where(eq(emailActionTokens.purpose, "COMPLETE_DECLARATION"));
+    expect(declaration.expiresAt).toEqual(event.startsAt);
+
+    // An offer is a promise to the queue: its token dies with the offer, not with the race.
+    const offerDeadline = new Date(NOW.getTime() + 24 * 60 * 60_000);
+    await db
+      .update(registrations)
+      .set({ status: "WAITLIST_OFFERED", holdExpiresAt: offerDeadline })
+      .where(eq(registrations.id, registrationId));
+    await renderOutboxMessage({ ...row, id: "row-o", messageType: "WAITLIST_SPOT_OFFER", idempotencyKey: "test:o" }, db, NOW);
+    const [offer] = await db.select().from(emailActionTokens).where(eq(emailActionTokens.purpose, "WAITLIST_OFFER"));
+    expect(offer.expiresAt).toEqual(offerDeadline);
+
+    // Past the start there is no place left to bound the link: the fourteen-day default.
+    const afterStart = new Date(event.startsAt.getTime() + 60_000);
+    await db
+      .update(registrations)
+      .set({ status: "PENDING_DECLARATION", holdExpiresAt: null })
+      .where(eq(registrations.id, registrationId));
+    await renderOutboxMessage({ ...row, id: "row-l", idempotencyKey: "test:l" }, db, afterStart);
+    const late = await db
+      .select()
+      .from(emailActionTokens)
+      .where(eq(emailActionTokens.purpose, "COMPLETE_DECLARATION"));
+    expect(late.at(-1)?.expiresAt).toEqual(new Date(afterStart.getTime() + 14 * 24 * 60 * 60_000));
   });
 
   it("repeats the programme's rows in the reminder, each half in its own language (§117)", async () => {

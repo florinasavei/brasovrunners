@@ -16,7 +16,17 @@ import { listPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
-import { ownerTasks, sortTasks, type TaskState } from "@/modules/diagnostics/owner-tasks";
+import {
+  countTasks,
+  filterTasks,
+  isTaskKind,
+  isTaskOwner,
+  ownerTasks,
+  sortTasks,
+  TASK_KINDS,
+  TASK_OWNERS,
+  type TaskState,
+} from "@/modules/diagnostics/owner-tasks";
 import { isStorageConfigured } from "@/modules/media/storage";
 import {
   annualCostToday,
@@ -40,11 +50,19 @@ import {
   messagesPerCompletedRegistration,
   readEmailVolumeToday,
 } from "@/modules/notifications/volume";
+import { contactFormReaches } from "@/modules/contact/delivery";
+import { readContactRecipients } from "@/modules/contact/recipients";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
+import { getPathname } from "@/i18n/navigation";
+import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = {
+  params: Promise<{ locale: string }>;
+  /** `?owner=club&kind=account` — the two filters (§150); anything else reads as "all". */
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 export const dynamic = "force-dynamic";
 
@@ -96,10 +114,20 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
  * checklist somebody has to remember to tick, and every price is quoted from
  * `docs/PLATFORM.md` with the date it was checked (`AGENTS.md` §1.2).
  */
-export default async function AdminTasksPage({ params }: Props) {
+export default async function AdminTasksPage({ params, searchParams }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
+
+  // The filters, checked against the closed sets: a typed value nobody offered is "all".
+  const query = await searchParams;
+  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  const ownerRaw = first(query.owner);
+  const kindRaw = first(query.kind);
+  const filter = {
+    owner: isTaskOwner(ownerRaw) ? ownerRaw : undefined,
+    kind: isTaskKind(kindRaw) ? kindRaw : undefined,
+  };
 
   const actor = await requireStaff();
   if (!canManageRegistrations(actor.role)) notFound();
@@ -128,6 +156,8 @@ export default async function AdminTasksPage({ params }: Props) {
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now);
+  // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
+  const contactRecipients = await readContactRecipients(db);
   // The plan the club says it is on (§100): its price is a row on the cost table below.
   const emailPlan = await readEmailPlan(db);
   const emailPlanCeilings = emailCeilings(emailPlan);
@@ -189,11 +219,39 @@ export default async function AdminTasksPage({ params }: Props) {
       botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
       declarationArchiveConfigured: Boolean(env.DECLARATIONS_ARCHIVE_TO),
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
+      // Capture counts, like local storage does: on a laptop the form works and nothing is
+      // owed. Since §164 the recipients are the club's own, so the row asks the same question
+      // the page does: is there a way out, and is there anybody at the other end.
+      contactFormConfigured: contactFormReaches(env, contactRecipients),
     }),
   );
 
   const t = await getTranslations("Admin.tasks");
+  // Over every row, filter or not: what blocks a real registration is not a matter of view.
   const blocking = tasks.filter((task) => task.state === "blocking").length;
+
+  /**
+   * What the list shows and what the counter counts are the same rows (§150): "De făcut: 2 ·
+   * Gata: 3" describes the list under it, whichever filter is on. Each chip row keeps the
+   * other's choice, so the two combine; a string href from `getPathname`, since a component
+   * reference cannot cross into MUI's client component from here (the events listing's pattern).
+   */
+  const shown = filterTasks(tasks, filter);
+  const counts = countTasks(shown);
+  const filterHref = (patch: Partial<typeof filter>) => {
+    const next = { ...filter, ...patch };
+    return getPathname({
+      locale,
+      href: {
+        pathname: "/admin/tasks",
+        query: { ...(next.owner ? { owner: next.owner } : {}), ...(next.kind ? { kind: next.kind } : {}) },
+      },
+    });
+  };
+  const chipLook = (active: boolean) => ({
+    color: active ? ("primary" as const) : ("default" as const),
+    variant: active ? ("filled" as const) : ("outlined" as const),
+  });
 
   const databaseBytes = await readDatabaseSizeBytes(db);
   const neon = await readNeonConsumption(env);
@@ -259,11 +317,58 @@ export default async function AdminTasksPage({ params }: Props) {
         <Typography variant="body2" color="text.secondary">
           {t("intro")}
         </Typography>
+        {/* The counter (§150; the owner: "show a counter of how many items are pending"):
+            the rows below it, counted — so the figure follows the filter. */}
+        <Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
+          {t("summary", { pending: counts.pending, done: counts.done })}
+        </Typography>
+        {shown.length > 0 && counts.pending === 0 && (
+          <Typography variant="body2" color="text.secondary">
+            {t("allDone")}
+          </Typography>
+        )}
       </Box>
 
       <Alert severity={blocking > 0 ? "warning" : "success"}>
         {blocking > 0 ? t("blockingSummary", { count: blocking }) : t("nothingBlocking")}
       </Alert>
+
+      {/* Who and what kind — two rows of links, no client code, each keeping the other's
+          choice (§150). The link is 44 px tall; the chip inside it is small. */}
+      <Stack spacing={0.5}>
+        <Stack component="nav" aria-label={t("filter.who")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+            {t("filter.who")}:
+          </Typography>
+          {[undefined, ...TASK_OWNERS].map((candidate) => (
+            <Box
+              key={candidate ?? "all"}
+              component="a"
+              href={filterHref({ owner: candidate })}
+              aria-current={candidate === filter.owner ? "page" : undefined}
+              sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
+            >
+              <Chip size="small" label={candidate ? t(`owner.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.owner)} />
+            </Box>
+          ))}
+        </Stack>
+        <Stack component="nav" aria-label={t("filter.kind")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+            {t("filter.kind")}:
+          </Typography>
+          {[undefined, ...TASK_KINDS].map((candidate) => (
+            <Box
+              key={candidate ?? "all"}
+              component="a"
+              href={filterHref({ kind: candidate })}
+              aria-current={candidate === filter.kind ? "page" : undefined}
+              sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
+            >
+              <Chip size="small" label={candidate ? t(`kind.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.kind)} />
+            </Box>
+          ))}
+        </Stack>
+      </Stack>
 
       {/* Email has stopped (§98). Red, above the list, because every row below assumes the
           confirmations are going out — and this page is the one the club opens. */}
@@ -303,8 +408,14 @@ export default async function AdminTasksPage({ params }: Props) {
         </Alert>
       )}
 
-      <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-        {tasks.map((task) => (
+      {shown.length === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          {t("noneMatch")}
+        </Typography>
+      )}
+
+      <Stack spacing={2} component="ul" aria-label={t("listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+        {shown.map((task) => (
           <Box
             component="li"
             key={task.id}
@@ -315,6 +426,8 @@ export default async function AdminTasksPage({ params }: Props) {
               {/* Who it is waiting on, because that is the difference between a list somebody
                   acts on and a list they scroll past. */}
               <Chip size="small" variant="outlined" label={t(`owner.${task.owner}`)} />
+              {/* And what sort of work it is — the same word the filter above uses. */}
+              <Chip size="small" variant="outlined" label={t(`kind.${task.kind}`)} />
             </Stack>
             <Typography variant="h2" sx={{ fontSize: "1rem", mb: 0.5 }}>
               {t(`items.${task.id}.title`)}
@@ -332,7 +445,7 @@ export default async function AdminTasksPage({ params }: Props) {
             */}
             {task.state !== "done" && (
               <Box component="details" sx={{ mt: 1.5 }}>
-                <Box component="summary" sx={{ cursor: "pointer", fontSize: "0.875rem", fontWeight: 500 }}>
+                <Box component="summary" sx={{ ...DISCLOSURE_SUMMARY_SX, minHeight: 36, py: 0.5, fontSize: "0.875rem", fontWeight: 500 }}>
                   {t("howTitle")}
                 </Box>
                 <Box component="ol" sx={{ m: 0, mt: 1, pl: 2.5, "& li": { mb: 0.75 } }}>

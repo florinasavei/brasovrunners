@@ -40,10 +40,15 @@ const PUBLIC_COLUMNS = {
   videoUrl: events.videoUrl,
   // The club's Strava group event for this occurrence (criterion 10).
   stravaEventUrl: events.stravaEventUrl,
-  // The other organization the event is held with, when there is one (§121).
+  facebookEventUrl: events.facebookEventUrl,
+  // The organizations the event is held with (§168), the list and the two columns it
+  // replaced — read together, and only ever through `readCoHosts`.
+  coHosts: events.coHosts,
   coHostName: events.coHostName,
   coHostUrl: events.coHostUrl,
   featured: events.featured,
+  // A special edition (§168): a badge on the card and the page, and a tie-break below.
+  isSpecial: events.isSpecial,
   distanceMeters: events.distanceMeters,
   elevationGainMeters: events.elevationGainMeters,
   registrationMode: events.registrationMode,
@@ -70,6 +75,8 @@ const PUBLIC_COLUMNS = {
   bodyJson: eventTranslations.bodyJson,
   rulesJson: eventTranslations.rulesJson,
   scheduleJson: eventTranslations.scheduleJson,
+  // "What to bring", one line (§81) — in the emails, and in the calendar's description (§159).
+  checklist: eventTranslations.checklist,
   // The programme's rows (§117), the event's own; read through `readScheduleItems`.
   scheduleItems: events.scheduleItems,
   /** When the event row last changed — the calendar feed's `DTSTAMP` (§107). */
@@ -173,7 +180,21 @@ const RACES_FIRST = desc(sql`${events.type} = 'RACE'`);
 const FEATURED_FIRST = desc(events.featured);
 
 /**
- * Published events that have not happened yet: the featured one, then races, then soonest.
+ * A special edition leads its own band (`DECISIONS.md` §168).
+ *
+ * Third in the ordering, and third deliberately: the hero is decided by `FEATURED_FIRST`
+ * alone — `listingSections` reads the first row's `featured` flag and nothing else, so no
+ * number of special events can change which event the page leads with — and races still
+ * outrank everything that is not the lead, because that trade is older than this flag and was
+ * argued on its own terms above. What is left for "special" is the order *within* a band: the
+ * anniversary cross above the ordinary races, the Wednesday the club joins another club's
+ * race above the ordinary Wednesdays. The date is still the last word.
+ */
+const SPECIAL_FIRST = desc(events.isSpecial);
+
+/**
+ * Published events that have not happened yet: the featured one, then races, then the
+ * special editions within each band, then soonest.
  *
  * The listing shows these rather than everything: a page whose first card is last month's run
  * reads as abandoned, which for a club whose events are its whole purpose is the worst thing
@@ -186,7 +207,7 @@ export async function listUpcomingEvents(db: Database, locale: Locale, now: Date
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
     .where(and(publishedIn(locale), gte(eventEndsAt, now)))
-    .orderBy(FEATURED_FIRST, RACES_FIRST, asc(events.startsAt));
+    .orderBy(FEATURED_FIRST, RACES_FIRST, SPECIAL_FIRST, asc(events.startsAt));
 }
 
 /**
@@ -233,6 +254,23 @@ export async function findEventForRegistrationById(db: Database, eventId: string
 }
 
 /**
+ * When an event starts, and nothing else — the event's own row, with no join through
+ * `event_translations`.
+ *
+ * `findEventNotificationDetails` below is that join, and an event whose text nobody has
+ * written yet returns nothing from it. The declaration link's lifetime is the event's start
+ * since `DECISIONS.md` §160, and how long a secret lives must not depend on whether a
+ * translation row happens to exist (AGENTS.md §12.8).
+ */
+export async function findEventStartsAt<T extends Record<string, unknown>>(
+  db: GenericDatabase<T>,
+  eventId: string,
+): Promise<Date | undefined> {
+  const [row] = await db.select({ startsAt: events.startsAt }).from(events).where(eq(events.id, eventId)).limit(1);
+  return row?.startsAt;
+}
+
+/**
  * The title, meeting point and start time an email template needs, in one locale — falling
  * back to the other published locale if this one has none, since a notification must never
  * fail to render for a locale gap that a 404 would be the right answer to on the public site.
@@ -258,6 +296,7 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
       locationName: events.locationName,
       mapUrl: events.mapUrl,
       stravaEventUrl: events.stravaEventUrl,
+      facebookEventUrl: events.facebookEventUrl,
       startsAt: events.startsAt,
       timezone: events.timezone,
     })

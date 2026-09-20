@@ -149,7 +149,7 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
               ))}
             </TextField>
 
-            <CheckboxField name="listOptOut">{t("registrations.listOptOut")}</CheckboxField>
+            <CheckboxField name="listOptIn">{t("registrations.listOptIn")}</CheckboxField>
 
             {/* The service refuses the whole registration without this, so the warning is
                 binding rather than decorative — the same rule the live-edit acknowledgement

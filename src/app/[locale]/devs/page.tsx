@@ -16,6 +16,8 @@ import {
   describeConfiguration,
   worstStatus,
 } from "@/modules/diagnostics/configuration";
+import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
+import { readContactRecipients } from "@/modules/contact/recipients";
 import { checkJobHealth } from "@/modules/jobs/health";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { megabytes, NEON_FREE_STORAGE_BYTES, readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
@@ -35,6 +37,7 @@ import { buildInfo, formatLastUpdated, formatVersion } from "@/shared/config/bui
 import { CONFIGURATION_ENUMS } from "@/shared/config/env-enums";
 import { env } from "@/shared/config/env";
 import { capturedEmails } from "@/infrastructure/email/sender";
+import { capturedContactMessages } from "@/modules/contact/delivery";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -92,6 +95,9 @@ export default async function DevsPage({ params }: Props) {
     appEnv: env.APP_ENV,
     emailDeliveryMode: env.EMAIL_DELIVERY_MODE,
     staffAuthMode: env.STAFF_AUTH_MODE,
+    contactFormMode: env.CONTACT_FORM_MODE,
+    // Where the recipients come from (§164) — the source, never an address.
+    contactRecipientsSource: resolveContactRecipients(await readContactRecipients(getDb()), env.CONTACT_FORM_TO).source,
     allowlistCount: env.EMAIL_ALLOWLIST.length,
     present: {
       MAILGUN_API_KEY: Boolean(env.MAILGUN_API_KEY),
@@ -107,6 +113,9 @@ export default async function DevsPage({ params }: Props) {
       JOB_SECRET: Boolean(env.JOB_SECRET),
       DATABASE_URL: Boolean(env.DATABASE_URL),
       NEON_API_KEY: Boolean(env.NEON_API_KEY),
+      CONTACT_SMTP_USER: Boolean(env.CONTACT_SMTP_USER),
+      CONTACT_SMTP_PASSWORD: Boolean(env.CONTACT_SMTP_PASSWORD),
+      CONTACT_FORM_TO: env.CONTACT_FORM_TO.length > 0,
     },
   };
 
@@ -182,6 +191,26 @@ export default async function DevsPage({ params }: Props) {
                       </MuiLink>
                     ))}
                   </Stack>
+                </Box>
+              ))}
+            </Stack>
+          )}
+
+          {/* The contact form's messages (§149): the same capture, a different mailbox — the club's. */}
+          {capturedContactMessages().length > 0 && (
+            <Stack spacing={1.5} sx={{ mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                {t("captured.contact")}
+              </Typography>
+              {capturedContactMessages().map((message) => (
+                <Box key={message.providerMessageId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {message.subject}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                    {message.to.join(", ")} · Reply-To {message.replyTo.address} ·{" "}
+                    {format.dateTime(message.capturedAt, { dateStyle: "short", timeStyle: "short", hourCycle: "h23" })}
+                  </Typography>
                 </Box>
               ))}
             </Stack>

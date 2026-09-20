@@ -11,8 +11,12 @@ import { useRouter } from "next/navigation";
  * path the server resolved and the query it keeps (the type filter), never from a hostname.
  *
  * In the year view the month select is not shown: the year is the whole question there.
- * `useRouter().push` rather than `location.assign`: a soft navigation, so the listing's
- * `loading.tsx` shows while the month loads instead of a blank document.
+ *
+ * `useRouter().push` rather than `location.assign`: a soft navigation, so the header, the
+ * hero and these two selects stay exactly where they are and only the calendar's body is
+ * replaced, instead of the browser throwing the document away and painting white. The
+ * comment that stood here since §116 promised "the listing's `loading.tsx`" instead. There
+ * has never been one, and §167 records why there still is not.
  */
 export default function CalendarPicker({
   basePath,

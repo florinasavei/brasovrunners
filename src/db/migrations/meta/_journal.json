@@ -316,6 +316,34 @@
       "when": 1789807382003,
       "tag": "0044_event_types_cohost_repeat",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1789838999847,
+      "tag": "0045_staff_invitation_email",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1789840248989,
+      "tag": "0046_facebook_event_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1789843955867,
+      "tag": "0047_registration_interests",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789896377978,
+      "tag": "0048_special_and_co_hosts",
+      "breakpoints": true
     }
   ]
 }

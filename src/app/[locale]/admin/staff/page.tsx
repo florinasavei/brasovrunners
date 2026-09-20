@@ -229,8 +229,10 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
 
-              {/* The invitation again, while they have not signed in (§123). */}
-              {invitesSend && !member.firstSignedInAt && (
+              {/* The invitation again, while they have not signed in (§123) — offered whether or
+                  not the key is set (the owner: "here I should have a resend email"): without
+                  it the answer names the key, which is better than a button that is not there. */}
+              {!member.firstSignedInAt && (
                 <Box component="form" action={resendStaffInviteAction}>
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="email" value={member.email} />

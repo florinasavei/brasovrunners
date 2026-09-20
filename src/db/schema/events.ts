@@ -223,6 +223,11 @@ export const events = pgTable(
      * duplicate or a repeat. Checked to be a Strava page at the form (`isStravaLink`).
      */
     stravaEventUrl: text("strava_event_url"),
+    /**
+     * The Facebook event for this occurrence (§144): where most of the club says "going". One
+     * occurrence's link, like the Strava one; checked to be a Facebook page at the form.
+     */
+    facebookEventUrl: text("facebook_event_url"),
 
     /**
      * The other organization an event is held with (`DECISIONS.md` §121; the owner: "a co-host
@@ -232,6 +237,21 @@ export const events = pgTable(
      */
     coHostName: text("co_host_name"),
     coHostUrl: text("co_host_url"),
+
+    /**
+     * Every organization the event is held with (`DECISIONS.md` §168; the owner: "several
+     * co-hosts, each with a name and an optional link"): an ordered array of
+     * `[{ name, url }]` — the club's partners in the order the editor lists them, at most
+     * eight. Read through `events/domain/co-hosts.ts`, which drops what is not a partner
+     * rather than rendering it, and which reads a row written before this column as the one
+     * co-host the two columns above held. Those two stay, unread, until a later contraction
+     * removes them (`AGENTS.md` §7.6).
+     *
+     * Null and `[]` are different answers: null is "never saved since this column existed",
+     * and only null falls back to the two columns above; `[]` is "the club removed every
+     * partner", which must not bring the old name back.
+     */
+    coHosts: jsonb("co_hosts"),
 
     /**
      * A standing recurrence (`DECISIONS.md` §122): on the *source* event, how it repeats —
@@ -299,6 +319,18 @@ export const events = pgTable(
      * club would have no way to tell which without reading the database.
      */
     featured: boolean("featured").notNull().default(false),
+
+    /**
+     * A special edition (`DECISIONS.md` §168; the owner: "I need to define special events as
+     * well") — an anniversary, a charity run, a date the club joins somebody else's race.
+     *
+     * Unlike `featured`, which is the one event the site leads with, any number of rows may
+     * carry this and one date of a series may carry it alone: a weekly run that overlaps with
+     * another club's race this Wednesday is special that Wednesday and ordinary the next. So
+     * there is no unique index here and nothing to clear — it is a badge on the card and the
+     * page, and a tie-break in the listing's order, never the hero's flag.
+     */
+    isSpecial: boolean("is_special").notNull().default(false),
 
     capacity: integer("capacity"),
     /**
@@ -400,6 +432,10 @@ export const events = pgTable(
     check(
       "events_strava_event_url_is_https",
       sql`${t.stravaEventUrl} IS NULL OR ${t.stravaEventUrl} LIKE 'https://%'`,
+    ),
+    check(
+      "events_facebook_event_url_is_https",
+      sql`${t.facebookEventUrl} IS NULL OR ${t.facebookEventUrl} LIKE 'https://%'`,
     ),
     check(
       "events_co_host_url_is_https",

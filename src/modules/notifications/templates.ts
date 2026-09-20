@@ -196,11 +196,19 @@ export type TemplateData = {
   /** The programme's rows as lines, in the message's language and in the other's (§117); on the reminder. */
   eventProgramme?: string[];
   eventProgrammeOther?: string[];
-  /** When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`. */
+  /**
+   * When the hold on the place lapses, in the event's zone (§104); on `COMPLETE_DECLARATION`,
+   * and only while it is ahead — past it the place is kept for as long as nobody waits (§160).
+   */
   holdExpiresAtFormatted?: string;
   /** True when the hold is the participation window's (§104), not the thirty minutes. */
   confirmLater?: boolean;
   manageUrl?: string;
+  /** The staff invitation (§141): who is invited, as what, by whom, and where to sign in. */
+  staffRole?: string;
+  inviterName?: string;
+  staffEmail?: string;
+  signInUrl?: string;
 };
 
 /** The bold line and its links, shared by the confirmation and the reminder. */
@@ -230,15 +238,12 @@ const T = {
         d.confirmLater
           ? `Ești înscris — confirmă participarea până la ${d.holdExpiresAtFormatted ?? "termen"}`
           : "Un loc te așteaptă — semnează declarația",
-      body: (d: TemplateData) =>
+      body: (d: TemplateData) => [
         d.confirmLater
-          ? [
-              `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: semnezi declarația pe proprie răspundere până la ${d.holdExpiresAtFormatted ?? "termenul din pagina înscrierii"}. Poți acum, din linkul de mai jos, sau când îți reamintim cu o săptămână înainte de start.`,
-              "Fără semnătură până la termen, locul se eliberează pentru cei de pe lista de așteptare — nu-l pierzi din alt motiv.",
-            ]
-          : [
-              `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine${d.holdExpiresAtFormatted ? ` până la ${d.holdExpiresAtFormatted}` : ""}. Pentru a finaliza înscrierea, citește și semnează declarația pe proprie răspundere.`,
-            ],
+          ? `Locul tău la ${d.eventTitle ?? "eveniment"} este rezervat. Cursa e gratuită, așa că îți cerem o confirmare: înscrierea este completă doar cu declarația pe proprie răspundere semnată. Poți semna acum, din linkul de mai jos, sau când îți reamintim cu o săptămână înainte de start.`
+          : `Un loc la ${d.eventTitle ?? "eveniment"} este rezervat pentru tine. Înscrierea este completă doar cu declarația pe proprie răspundere semnată — citește-o și semneaz-o din linkul de mai jos.`,
+        `Dacă nu apuci online, semnezi declarația pe hârtie la masa de înscrieri, în ziua cursei, înainte să-ți ridici numărul.${d.holdExpiresAtFormatted ? ` Dacă se formează lista de așteptare, locul îți este ținut până la ${d.holdExpiresAtFormatted}; până atunci semnează.` : ""}`,
+      ],
       action: "Semnează declarația",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
     },
@@ -340,6 +345,29 @@ const T = {
         "Copia pentru arhiva clubului. Se păstrează 3 ani după eveniment, ca în nota de informare; același document este și în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice.",
       ],
     },
+    staffInvitation: {
+      subject: "Ești în echipa Brașov Runners",
+      body: (d: TemplateData) => [
+        `${d.inviterName || "Un coleg"} te-a adăugat în echipa care administrează site-ul Brașov Runners, ca ${d.staffRole ?? "membru al echipei"}.`,
+        `Intri cu adresa ${d.staffEmail ?? "aceasta"}: dacă nu ai încă un cont, îl faci din pagina de autentificare, cu exact această adresă (contul e legat de adresă). Accesul începe la prima autentificare.`,
+      ],
+      action: "Intră în backoffice",
+    },
+    registrationOpened: {
+      // To an address, not a participant (§146): the greeting names nobody.
+      subject: (d: TemplateData) => `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis`,
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Înscrierile la ${d.eventTitle ?? "eveniment"} s-au deschis. Te poți înscrie cu butonul de mai jos.`,
+        "Primești acest mesaj pentru că ai cerut, pe pagina evenimentului, să fii anunțat când se deschid înscrierile. E singurul: adresa ta a fost ștearsă din lista de anunțare odată cu trimiterea lui.",
+      ],
+      action: "Înscrie-te",
+      links: (d: TemplateData) => [
+        ...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "Regulamentul evenimentului", url: d.eventRulesUrl }] : []),
+      ],
+    },
     registrationCancelled: {
       subject: "Înscrierea a fost anulată",
       body: (d: TemplateData) => [`Înscrierea ta la ${d.eventTitle ?? "eveniment"} a fost anulată.`],
@@ -387,15 +415,12 @@ const T = {
         d.confirmLater
           ? `You are registered — confirm your participation by ${d.holdExpiresAtFormatted ?? "the deadline"}`
           : "A place is waiting — sign the declaration",
-      body: (d: TemplateData) =>
+      body: (d: TemplateData) => [
         d.confirmLater
-          ? [
-              `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: sign the declaration of own responsibility by ${d.holdExpiresAtFormatted ?? "the deadline on your registration page"}. You can now, from the link below, or when we remind you a week before the start.`,
-              "Without a signature by the deadline, the place is released to the waiting list — you lose it for no other reason.",
-            ]
-          : [
-              `A place at ${d.eventTitle ?? "the event"} is held for you${d.holdExpiresAtFormatted ? ` until ${d.holdExpiresAtFormatted}` : ""}. To finish registering, read and sign the event declaration.`,
-            ],
+          ? `Your place at ${d.eventTitle ?? "the event"} is held. The race is free, so we ask for a confirmation: the registration is complete only with the signed declaration of own responsibility. You can sign now, from the link below, or when we remind you a week before the start.`
+          : `A place at ${d.eventTitle ?? "the event"} is held for you. The registration is complete only with the signed declaration of own responsibility — read and sign it from the link below.`,
+        `If you do not get to it online, you sign the declaration on paper at the registration desk on race day, before picking up your number.${d.holdExpiresAtFormatted ? ` If a waiting list forms, the place is held for you until ${d.holdExpiresAtFormatted}; sign before then.` : ""}`,
+      ],
       action: "Sign the declaration",
       links: (d: TemplateData) => (d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
     },
@@ -472,6 +497,28 @@ const T = {
         "The club's archive copy. Kept for 3 years after the event, as the privacy notice says; the same document is in the all-declarations PDF on the event's backoffice page.",
       ],
     },
+    staffInvitation: {
+      subject: "You are on the Brașov Runners team",
+      body: (d: TemplateData) => [
+        `${d.inviterName || "A colleague"} added you to the team that runs the Brașov Runners website, as ${d.staffRole ?? "a team member"}.`,
+        `You sign in with ${d.staffEmail ?? "this address"}: if you have no account yet, create one at the sign-in page with exactly this address (the account is tied to the address). Access begins at your first sign-in.`,
+      ],
+      action: "Open the backoffice",
+    },
+    registrationOpened: {
+      subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Registration for ${d.eventTitle ?? "the event"} is open. Register with the button below.`,
+        "You are getting this because you asked, on the event's page, to be told when registration opens. It is the only one: your address was deleted from the notification list when it was sent.",
+      ],
+      action: "Register",
+      links: (d: TemplateData) => [
+        ...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : []),
+        ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
+      ],
+    },
     registrationConfirmed: {
       subject: "Your registration is confirmed",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -544,6 +591,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   DECLARATION_SIGNED: "declarationSigned",
   DECLARATION_ARCHIVE: "declarationArchive",
   BIB_ASSIGNED: "bibAssigned",
+  STAFF_INVITATION: "staffInvitation",
+  REGISTRATION_OPENED: "registrationOpened",
 };
 
 /**

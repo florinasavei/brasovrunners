@@ -8,6 +8,8 @@ import { getTranslations } from "next-intl/server";
 import { EVENT_SURFACES, EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { readCoHosts } from "@/modules/events/domain/co-hosts";
+import CoHostRowsEditor from "./CoHostRowsEditor";
 import GlyphSelect from "./GlyphSelect";
 import OnlyForType from "./OnlyForType";
 import ScheduleRowsEditor from "./ScheduleRowsEditor";
@@ -40,15 +42,33 @@ const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
  * an airport is not where the race is. */
 const DEFAULT_TIMEZONE = "Europe/Bucharest";
 
+/**
+ * The zones an organizer may pick (§153; the owner: "the timezone must be selectable, not free
+ * text"): every IANA zone this runtime knows, the club's first, then Europe, then the rest —
+ * a native select, because four hundred options in a MUI menu is a scroll nobody wants and a
+ * native one is searchable by typing. A stored zone the runtime no longer lists is kept as an
+ * option so an old event still saves.
+ */
+function timezoneOptions(current: string): readonly string[] {
+  const known = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [DEFAULT_TIMEZONE];
+  const europe = known.filter((zone) => zone.startsWith("Europe/") && zone !== DEFAULT_TIMEZONE);
+  const rest = known.filter((zone) => !zone.startsWith("Europe/"));
+  const ordered = [DEFAULT_TIMEZONE, ...europe, ...rest];
+  return ordered.includes(current) ? ordered : [current, ...ordered];
+}
+
 export type DeclarationOption = { id: string; version: number; title: string };
 
 export default async function EventFieldsForm({
   event,
   declarations,
+  waiting = 0,
 }: {
   /** The event being edited, or null on the create form. */
   event: EditableEvent | null;
   declarations: readonly DeclarationOption[];
+  /** How many wait for a place (§147); the create form has nobody. */
+  waiting?: number;
 }) {
   const t = await getTranslations("Admin");
   // The type and surface labels already exist for the public pages, and they read the same to
@@ -61,6 +81,16 @@ export default async function EventFieldsForm({
     const end = item.endsAt ? toWallTimeInput(new Date(item.endsAt), zone) : "";
     return { date: start.slice(0, 10), time: start.slice(11, 16), endTime: end.slice(11, 16), ro: item.label.ro, en: item.label.en, place: item.place ?? "" };
   });
+
+  /**
+   * The partners as boxes (§168), read through the one function that decides whether a row
+   * means its list or the two columns the list replaced — so an event saved before the list
+   * existed opens with the partner it has, and the first save writes it as a list.
+   */
+  const coHostRows = readCoHosts(event ?? { coHosts: null, coHostName: null, coHostUrl: null }).map((host) => ({
+    name: host.name,
+    url: host.url ?? "",
+  }));
 
   return (
     <Stack spacing={2}>
@@ -107,12 +137,20 @@ export default async function EventFieldsForm({
       </Stack>
 
       <TextField
+        select
         name="event.timezone"
         label={t("editor.timezone")}
         helperText={t("editor.timezoneHelp")}
         defaultValue={zone}
         required
-      />
+        slotProps={{ select: { native: true } }}
+      >
+        {timezoneOptions(zone).map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </TextField>
 
       {/* A date and a 24-hour time each, whatever clock the browser speaks (§70). */}
       <WallTimeField
@@ -265,27 +303,36 @@ export default async function EventFieldsForm({
         inputMode="url"
       />
 
-      {/* The other organization the event is held with (§121): a name, and its page. */}
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <TextField
-          name="event.coHostName"
-          label={t("editor.coHostName")}
-          defaultValue={event?.coHostName ?? ""}
-          slotProps={{ htmlInput: { maxLength: 200 } }}
-          sx={{ flex: 1 }}
-        />
-        <TextField
-          name="event.coHostUrl"
-          type="url"
-          label={t("editor.coHostUrl")}
-          defaultValue={event?.coHostUrl ?? ""}
-          inputMode="url"
-          sx={{ flex: 1 }}
+      {/* The Facebook event for this occurrence (§144). */}
+      <TextField
+        name="event.facebookEventUrl"
+        type="url"
+        label={t("editor.facebookEventUrl")}
+        helperText={t("editor.facebookEventUrlHelp")}
+        defaultValue={event?.facebookEventUrl ?? ""}
+        inputMode="url"
+      />
+
+      {/* The organizations the event is held with (§168): a name and a page each, any
+          number of them. An event saved before the list existed opens with the one partner
+          its two old columns hold, and the first save writes it as a list. */}
+      <Stack spacing={1}>
+        <Typography variant="h3" sx={{ fontSize: "1rem", pt: 1 }}>
+          {t("editor.coHostSection")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("editor.coHostHelp")}
+        </Typography>
+        <CoHostRowsEditor
+          initial={coHostRows}
+          labels={{
+            name: t("editor.coHostName"),
+            url: t("editor.coHostUrl"),
+            add: t("editor.coHostRows.add"),
+            remove: t("editor.coHostRows.remove"),
+          }}
         />
       </Stack>
-      <Typography variant="body2" color="text.secondary">
-        {t("editor.coHostHelp")}
-      </Typography>
 
       {/* A film of the event — a YouTube link, embedded on the page (criterion 9). */}
       <TextField
@@ -323,6 +370,17 @@ export default async function EventFieldsForm({
         {t("editor.featuredHelp")}
       </Typography>
 
+      {/* A special edition (§168) — beside the lead-event box because that is where an
+          organizer looks for "this one is different", and unlike it in the one way that
+          matters: any number of events may carry it, including one date of a series. */}
+      <FormControlLabel
+        control={<Checkbox name="event.isSpecial" defaultChecked={event?.isSpecial ?? false} />}
+        label={t("editor.special")}
+      />
+      <Typography variant="body2" color="text.secondary">
+        {t("editor.specialHelp")}
+      </Typography>
+
       {/* The registration block. The database refuses the combinations that do not go
           together, and the service says which one in words before it gets there. Not on a
           group run (§111): the whole block follows the type select, and the service writes
@@ -351,7 +409,7 @@ export default async function EventFieldsForm({
           <TextField
             name="event.capacity"
             label={t("editor.capacity")}
-            helperText={t("editor.capacityHelp")}
+            helperText={waiting > 0 ? `${t("editor.capacityHelp")} ${t("editor.capacityWaiting", { waiting })}` : t("editor.capacityHelp")}
             defaultValue={event?.capacity ?? ""}
             inputMode="numeric"
           />

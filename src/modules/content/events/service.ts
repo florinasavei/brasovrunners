@@ -1,10 +1,11 @@
-import { and, eq, gt, ne, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
-import type { Database } from "@/db/types";
+import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
+import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import {
   horizonEnd,
@@ -20,7 +21,8 @@ import {
 import { readScheduleItems, type ScheduleItem, shiftScheduleItems } from "@/modules/events/domain/schedule";
 import { addWallClockInterval, fromWallTimeInput, toWallTimeInput, wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
-import { countOccupied, countRegistrationsForEvent } from "@/modules/registrations/repository";
+import { countOccupied, countRegistrationsForEvent, lockEventForCapacity } from "@/modules/registrations/repository";
+import { fillAvailableSpots } from "@/modules/registrations/service";
 import {
   canCreateEvent,
   canDeleteEvent,
@@ -318,8 +320,16 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     routeUrl: fields.routeUrl,
     videoUrl: fields.videoUrl,
     stravaEventUrl: fields.stravaEventUrl,
-    coHostName: fields.coHostName,
-    coHostUrl: fields.coHostName ? fields.coHostUrl : null,
+    facebookEventUrl: fields.facebookEventUrl,
+    // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any
+    // more and not read anywhere: they hold whatever they held until a later contraction
+    // drops them, and `readCoHosts` prefers the list whenever the row has one — which is why
+    // an editor that removed every partner must write `[]` rather than null.
+    //
+    // A caller that said nothing about the partners writes no column at all (§169): `[]`
+    // would be indistinguishable from "remove them", and on a row saved before the list
+    // existed that would erase the partner its two old columns still hold.
+    ...(fields.coHosts === undefined ? {} : { coHosts: fields.coHosts }),
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     difficulty: fields.difficulty,
@@ -327,6 +337,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     featured: fields.featured,
+    isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
@@ -651,12 +662,13 @@ export async function saveEventFields<T extends Record<string, unknown>>(
 
   /**
    * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
-   * BR-REQ-034-02 criterion 3). Counted here rather than trusted from a cached figure, and
-   * inside the same transaction as the write so a confirmation landing between the two cannot
-   * slip past it.
+   * BR-REQ-034-02 criterion 3). Counted here rather than trusted from a cached figure, behind
+   * the event row's lock — the serialization point every allocation takes — so a confirmation
+   * landing between the count and the write waits rather than slipping past it.
    */
   return db.transaction(async (tx) => {
     if (fields.capacity !== null) {
+      await lockEventForCapacity(tx, input.eventId);
       const occupied = computeOccupied(await countOccupied(tx, input.eventId, now));
       if (fields.capacity < occupied) {
         throw new DomainError(
@@ -701,7 +713,11 @@ export type SaveEventAndTranslationsInput = {
 
 /** As Google Calendar asks: this date, this and the following ones, or every date of the series. */
 export const SERIES_EDIT_SCOPES = ["this", "following", "all"] as const;
-export type SeriesEditScope = (typeof SERIES_EDIT_SCOPES)[number];
+/**
+ * Which other dates a save reaches (§130): one of the three words, or the dates ticked by
+ * hand in the editor's header (§134) — ids outside the series are ignored, none is "this".
+ */
+export type SeriesEditScope = (typeof SERIES_EDIT_SCOPES)[number] | { ids: readonly string[] };
 
 /** The row's columns a series edit carries to its other dates — every one an organizer sets, minus the ones below. */
 const SERIES_COLUMNS = [
@@ -711,8 +727,7 @@ const SERIES_COLUMNS = [
   "timezone",
   "mapUrl",
   "routeUrl",
-  "coHostName",
-  "coHostUrl",
+  "coHosts",
   "locationName",
   "locationAddress",
   "difficulty",
@@ -760,14 +775,16 @@ function wallDay(date: Date, zone: string): number {
  * on its own keeps that place unless the place is what was edited; a cancelled date stays
  * cancelled unless the status is what was edited. An instant lands at the same wall-clock time
  * on each date's own day (the run moved to 18:50 is at 18:50 every Wednesday), the programme's
- * rows shifted by the same days as when the date was made; the featured flag, the rule, the
- * publication state, a film and a Strava event are one date's own and never travel; a slug is
+ * rows shifted by the same days as when the date was made; a partner is the series' and
+ * travels with it (§168); the featured flag, **the special mark** — the owner: "some dates can
+ * be special events where we overlap with, say, Brașov Marathon on the same Wednesday" — the
+ * rule, the publication state, a film and a Strava event are one date's own and never travel; a slug is
  * a public address and never changes. Capacity is checked against each date's own places
  * taken, and one date too full refuses the whole save, naming its day. Every touched row takes
  * a new version, in the caller's transaction.
  */
 async function applyToSeries<T extends Record<string, unknown>>(
-  tx: Database<T>,
+  tx: Transaction<T>,
   input: {
     actor: Actor;
     scope: SeriesEditScope;
@@ -777,17 +794,27 @@ async function applyToSeries<T extends Record<string, unknown>>(
     translationsAfter: readonly EditableTranslation[];
     now: Date;
   },
-): Promise<number> {
+): Promise<{ applied: number; offered: number }> {
   const { before, after, now } = input;
   const sourceId = before.repeatOf ?? (before.repeatRule ? before.id : null);
-  if (!sourceId) return 0;
+  if (!sourceId) return { applied: 0, offered: 0 };
   if (!canEditEventFields(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not edit a series`);
   }
 
   const rowChanges: Partial<Record<(typeof SERIES_COLUMNS)[number], unknown>> = {};
   for (const column of SERIES_COLUMNS) {
-    if (!sameValue(before[column], after[column])) rowChanges[column] = after[column];
+    // The partners are compared by what the row *means*, not by what the column holds
+    // (§169). A row nobody has saved since the list existed holds `null` where a saved one
+    // holds `[]`, and both mean "no partners" — comparing the raw columns would make the
+    // first series save of every legacy event report and apply a change nobody made, on a
+    // save that changed nothing. `readCoHosts` is the one place that decides what a row
+    // means, so it is the one place this may ask.
+    const differs =
+      column === "coHosts"
+        ? !sameValue(readCoHosts(before), readCoHosts(after))
+        : !sameValue(before[column], after[column]);
+    if (differs) rowChanges[column] = after[column];
   }
   const timeChanges = SERIES_TIME_COLUMNS.filter((column) => !sameValue(before[column], after[column]));
   const scheduleChanged = !sameValue(before.scheduleItems, after.scheduleItems);
@@ -801,11 +828,14 @@ async function applyToSeries<T extends Record<string, unknown>>(
     return Object.keys(changes).length > 0 ? [{ locale: saved.locale, changes }] : [];
   });
   if (Object.keys(rowChanges).length === 0 && timeChanges.length === 0 && !scheduleChanged && translationChanges.length === 0) {
-    return 0;
+    return { applied: 0, offered: 0 };
   }
 
   // The series is the source and every date made from it; "following" is by the day this
-  // date had before the save, so moving it does not change which dates follow.
+  // date had before the save, so moving it does not change which dates follow; ticked dates
+  // are those and no other, whatever else the list carried.
+  const chosen = typeof input.scope === "object" ? input.scope.ids.filter((id) => id !== before.id) : null;
+  if (chosen && chosen.length === 0) return { applied: 0, offered: 0 };
   const members = await tx
     .select()
     .from(events)
@@ -814,11 +844,13 @@ async function applyToSeries<T extends Record<string, unknown>>(
         or(eq(events.id, sourceId), eq(events.repeatOf, sourceId)),
         ne(events.id, before.id),
         input.scope === "following" ? gt(events.startsAt, before.startsAt) : undefined,
+        chosen ? inArray(events.id, chosen) : undefined,
       ),
     );
 
   const zone = after.timezone;
   let applied = 0;
+  let offered = 0;
   for (const member of members) {
     const days = Math.round((wallDay(member.startsAt, zone) - wallDay(before.startsAt, zone)) / 86_400_000);
     const shift = (date: Date | null) => (date ? addWallClockInterval(date, zone, { days }) : null);
@@ -832,6 +864,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
     }
 
     if (typeof changes.capacity === "number") {
+      await lockEventForCapacity(tx, member.id);
       const occupied = computeOccupied(await countOccupied(tx, member.id, now));
       if (changes.capacity < occupied) {
         throw new DomainError(
@@ -848,6 +881,19 @@ async function applyToSeries<T extends Record<string, unknown>>(
         .set({ ...changes, version: sql`${events.version} + 1`, updatedAt: now, updatedByStaffUserId: input.actor.id })
         .where(eq(events.id, member.id));
       touched = true;
+      // Each date has its own queue, checked against its own places (§147): the new capacity
+      // is the source's, the raise is measured against what this date had, and the status is
+      // this date's as it now stands — a cancelled date offers nothing.
+      if (
+        "capacity" in changes &&
+        capacityRaised(member, {
+          eventStatus: changes.eventStatus ?? member.eventStatus,
+          registrationMode: changes.registrationMode ?? member.registrationMode,
+          capacity: changes.capacity ?? null,
+        })
+      ) {
+        offered += await offerRaisedCapacity(tx, member.id, now);
+      }
     }
     if (translationChanges.length > 0) {
       const memberTranslations = await listTranslationsForEvent(tx, member.id);
@@ -863,7 +909,50 @@ async function applyToSeries<T extends Record<string, unknown>>(
     }
     if (touched) applied += 1;
   }
-  return applied;
+  return { applied, offered };
+}
+
+/**
+ * Whether a save gave the event more places than it had: a higher number, or the cap lifted —
+ * on an event that will run. A race cancelled and widened in the same press offers nothing:
+ * the offer's link would only answer that the event is cancelled (§147).
+ */
+function capacityRaised(
+  before: { capacity: number | null },
+  after: { eventStatus: EditableEvent["eventStatus"]; registrationMode: EditableEvent["registrationMode"]; capacity: number | null },
+): boolean {
+  if (after.eventStatus !== "SCHEDULED" || after.registrationMode !== "INTERNAL") return false;
+  if (after.capacity === null) return before.capacity !== null;
+  return before.capacity !== null && after.capacity > before.capacity;
+}
+
+/**
+ * The places a raised capacity adds, offered to the waiting list at once (§147, BR-REQ-034-02
+ * criterion 5) — inside the save's own transaction, so the new number and the offers it makes
+ * commit together or not at all, and after the event row is locked, the serialization point
+ * every capacity-changing decision takes (AGENTS.md §10.6). `fillAvailableSpots` is the one
+ * thing that offers; this only asks it, with the row as it now stands. Returns the offers made.
+ */
+async function offerRaisedCapacity<T extends Record<string, unknown>>(tx: Transaction<T>, eventId: string, now: Date): Promise<number> {
+  const event = await lockEventForCapacity(tx, eventId);
+  if (!event) return 0;
+  return fillAvailableSpots(
+    tx,
+    {
+      id: event.id,
+      eventStatus: event.eventStatus,
+      registrationMode: event.registrationMode,
+      startsAt: event.startsAt,
+      registrationOpensAt: event.registrationOpensAt,
+      registrationClosesAt: event.registrationClosesAt,
+      confirmationOpensDaysBefore: event.confirmationOpensDaysBefore,
+      confirmationDeadlineDaysBefore: event.confirmationDeadlineDaysBefore,
+      capacity: event.capacity,
+      raceId: event.raceId,
+      publishedAt: event.publishedAt,
+    },
+    now,
+  );
 }
 
 /**
@@ -885,7 +974,7 @@ async function applyToSeries<T extends Record<string, unknown>>(
 export async function saveEventAndTranslations<T extends Record<string, unknown>>(
   db: Database<T>,
   input: SaveEventAndTranslationsInput,
-): Promise<{ appliedTo: number }> {
+): Promise<{ appliedTo: number; offered: number }> {
   const now = input.now ?? new Date();
 
   const [current] = await db.select().from(events).where(eq(events.id, input.eventId)).limit(1);
@@ -911,10 +1000,13 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
     if (parsedEventFields && times) {
       /**
        * Lowering capacity below the places already taken is refused (AGENTS.md §10.6,
-       * BR-REQ-034-02 criterion 3). Counted inside the transaction so a confirmation landing
-       * between the count and the write cannot slip past it.
+       * BR-REQ-034-02 criterion 3). The event row is locked first — the serialization point
+       * every allocation takes — so a confirmation landing between the count and the write
+       * waits behind this save instead of slipping past it; the version guard alone would
+       * only catch another *save*.
        */
       if (parsedEventFields.capacity !== null) {
+        await lockEventForCapacity(tx, input.eventId);
         const occupied = computeOccupied(await countOccupied(tx, input.eventId, now));
         if (parsedEventFields.capacity < occupied) {
           throw new DomainError(
@@ -953,22 +1045,28 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       );
     }
 
+    // More places than before: the difference goes to the waiting list at once (§147), here,
+    // where the row is already locked by the guarded update and the number is not yet committed.
+    let offered = capacityRaised(current, savedEvent) ? await offerRaisedCapacity(tx, savedEvent.id, now) : 0;
+
     // The other dates of the series, when asked (§130) — after this one, so what travels is
     // exactly what was written, and inside the transaction, so a refused date undoes it all.
     const scope = input.scope ?? "this";
-    const appliedTo =
-      scope === "this"
-        ? 0
-        : await applyToSeries(tx, {
-            actor: input.actor,
-            scope,
-            before: current,
-            after: savedEvent,
-            translationsBefore: existingTranslations,
-            translationsAfter: savedTranslations,
-            now,
-          });
-    return { appliedTo };
+    let appliedTo = 0;
+    if (scope !== "this") {
+      const series = await applyToSeries(tx, {
+        actor: input.actor,
+        scope,
+        before: current,
+        after: savedEvent,
+        translationsBefore: existingTranslations,
+        translationsAfter: savedTranslations,
+        now,
+      });
+      appliedTo = series.applied;
+      offered += series.offered;
+    }
+    return { appliedTo, offered };
   });
 }
 
@@ -1087,7 +1185,7 @@ type TranslationRow = typeof eventTranslations.$inferSelect;
  * Every column a copy inherits from its source, in one place for duplicating and repeating.
  *
  * What a copy deliberately does not inherit: publication and the first-publication date, the
- * featured flag, and the start list switch — publishing names is a decision about the people
+ * featured flag, the special mark (§168), and the start list switch — publishing names is a decision about the people
  * who entered *that* event, and a copy has none. It starts HIDDEN like every other new event.
  */
 function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
@@ -1109,6 +1207,11 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // partner is held with them every time.
     videoUrl: null,
     stravaEventUrl: null,
+    facebookEventUrl: null,
+    coHosts: source.coHosts,
+    // The two columns the list replaced (§168) travel with a copy as well, so that copying a
+    // row nobody has saved since the list existed does not lose the partner it still holds
+    // there. Nothing reads them while `co_hosts` is a list.
     coHostName: source.coHostName,
     coHostUrl: source.coHostUrl,
     // Never the rule: a copy is one date, and only the source repeats (§122).
@@ -1121,6 +1224,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
     featured: false,
+    // Nor the special mark (§168): it says something about one edition — the anniversary, the
+    // Wednesday another club's race passes through — and the copy is a different one.
+    isSpecial: false,
     capacity: source.capacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,

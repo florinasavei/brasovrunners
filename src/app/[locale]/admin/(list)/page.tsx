@@ -39,6 +39,7 @@ import { editionNote } from "@/modules/events/ui/series-sentence";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
+import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import {
@@ -211,8 +212,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               </Typography>
             )}
             {members.length > 1 ? (
-              /* The dates, folded: each its own link into the editor, with its state (§113). */
-              <Box component="details" sx={{ "& > summary": { cursor: "pointer", minHeight: 36, display: "flex", alignItems: "center" } }}>
+              /* The dates, folded: each its own link into the editor, with its state (§113);
+                 the shared affordance (§164) at the backoffice's own density — the height is
+                 padding, because `display: flex` on a `<summary>` removes the triangle. */
+              <Box component="details" sx={{ "& > summary": { ...DISCLOSURE_SUMMARY_SX, minHeight: 36, py: 0.5 } }}>
                 <Typography component="summary" variant="body2">
                   {t("events.seriesDates")}
                 </Typography>
@@ -264,7 +267,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
       key: "status",
       label: t("events.columnStatus"),
       render: ({ members, next }) => {
-        // One chip per state the series is in, with how many dates are in it; one event, one chip.
+        // One chip per state the series is in, with how many dates are in it ("Publicat · 8 date";
+        // the owner: "not sure what these statuses are"); one event, one chip. The registration
+        // mode is a chip of its own, with a title saying which setting it is.
         const byStatus = new Map<EditableEvent["editorialStatus"], number>();
         for (const member of members) byStatus.set(member.event.editorialStatus, (byStatus.get(member.event.editorialStatus) ?? 0) + 1);
         return (
@@ -274,13 +279,14 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                 key={status}
                 size="small"
                 color={status === "PUBLISHED" ? "success" : "default"}
-                label={members.length > 1 ? `${EDITORIAL_STATUS_LABEL[status]} · ${count}` : EDITORIAL_STATUS_LABEL[status]}
+                label={members.length > 1 ? `${EDITORIAL_STATUS_LABEL[status]} · ${tEvent("series.count", { count })}` : EDITORIAL_STATUS_LABEL[status]}
               />
             ))}
             {next.event.registrationMode !== "NONE" && (
               <Chip
                 size="small"
                 variant="outlined"
+                title={t("events.registrationModeTitle")}
                 label={REGISTRATION_MODE_LABEL[next.event.registrationMode]}
               />
             )}

@@ -15,7 +15,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, listSeriesDates } from "@/modules/content/events/repository";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
-import SeriesDates from "@/modules/events/ui/SeriesDates";
+import { SeriesScopeBox, SeriesScopeChips, SeriesScopeProvider } from "@/modules/content/events/ui/SeriesScope";
 import { editionNote } from "@/modules/events/ui/series-sentence";
 import {
   describeIncompleteLocales,
@@ -43,8 +43,9 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import { listBibs } from "@/modules/registrations/bibs";
+import { countInterests } from "@/modules/registrations/interest";
+import { countEligibleWaitlisted } from "@/modules/registrations/repository";
 import QueuePanel from "@/modules/registrations/ui/QueuePanel";
-import RadioField from "@/shared/ui/RadioField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   addTestRegistrationsAction,
@@ -55,9 +56,11 @@ import {
   repeatEventAction,
   removeTestRegistrationsAction,
   saveEventAndTranslationsAction,
+  withdrawInterestAction,
   stopRepeatAction,
   transitionEventAction,
 } from "../../actions";
+import { upcomingRegistrationOpening } from "@/modules/events/domain/registration-window";
 import { readRepeatRule } from "@/modules/events/domain/repeat";
 import { wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { ruleSentence } from "@/modules/events/ui/series-sentence";
@@ -65,7 +68,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -107,7 +110,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, created, applied } = await searchParams;
+  const { error, saved, assigned, total, created, applied, offered } = await searchParams;
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -147,6 +150,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // registrations do not make sense for group runs!").
   const mayFillTheQueue =
     canManageTestRegistrations(staffUser.role) && areTestRegistrationsAvailable() && event.registrationMode === "INTERNAL";
+
+  // "Anunță-mă" (§146): while the window is ahead, how many addresses wait for the announcement,
+  // and the one verb the notice promises — withdrawal before the message goes. Administrator,
+  // like the queue it stands under; the count is the only thing shown, never an address.
+  const interestsWaiting =
+    canManageRegistrations(staffUser.role) && upcomingRegistrationOpening(event, now) !== null ? await countInterests(db, event.id) : null;
+
+  // The waiting list's length, read once for the queue panel and for the sentence under
+  // "Număr de locuri" (§147): raising the number offers these people places at once.
+  const waiting =
+    event.registrationMode === "INTERNAL" && (maySaveSettings || canManageRegistrations(staffUser.role))
+      ? await countEligibleWaitlisted(db, event.id)
+      : 0;
 
   /**
    * Romanian first, then English — `routing.locales` order, which is the order the club works
@@ -193,6 +209,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     format.dateTime(member.startsAt, { timeZone: member.timezone, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
 
   return (
+    <SeriesScopeProvider dates={dateChips} currentId={event.id}>
     <Stack spacing={4}>
       <Box>
         <Typography variant="body2">
@@ -214,8 +231,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           <Alert severity="success">{t("events.eventsRepeated", { created: created ?? "0" })}</Alert>
         )}
         {saved === "repeatStopped" && <Alert severity="success">{t("editor.repeatStopped")}</Alert>}
-        {saved === "eventSeries" && <Alert severity="success">{t("editor.savedSeries", { applied: applied ?? "0" })}</Alert>}
-        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries"].includes(saved) && !(saved === "created" && created) && (
+        {saved === "interestRemoved" && <Alert severity="success">{t("queue.interestRemoved")}</Alert>}
+        {saved === "interestNotFound" && <Alert severity="info">{t("queue.interestNotFound")}</Alert>}
+        {saved === "eventSeries" && (
+          <Alert severity="success">
+            {offered ? t("editor.savedSeriesOffered", { applied: applied ?? "0", offered }) : t("editor.savedSeries", { applied: applied ?? "0" })}
+          </Alert>
+        )}
+        {saved === "event" && offered && <Alert severity="success">{t("editor.savedOffered", { offered })}</Alert>}
+        {saved && !["bibsAssigned", "eventsRepeated", "repeatStopped", "eventSeries", "interestRemoved", "interestNotFound"].includes(saved) && !(saved === "created" && created) && !(saved === "event" && offered) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -296,7 +320,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             {t("editor.series.position", { position: String(position + 1), count: String(seriesDates.length) })}
             {event.repeatOf ? ` ${t("editor.repeatOfNote")}` : ""}
           </Typography>
-          <SeriesDates dates={dateChips} currentId={event.id} />
+          <SeriesScopeChips />
           <Stack direction="row" spacing={2} sx={{ mt: 1.5, flexWrap: "wrap", gap: 1 }}>
             {previousDate && (
               <Link href={{ pathname: "/admin/events/[id]", params: { id: previousDate.id } }}>
@@ -397,7 +421,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </Typography>
 
             {maySaveSettings ? (
-              <EventFieldsForm event={event} declarations={declarations} />
+              <EventFieldsForm event={event} declarations={declarations} waiting={waiting} />
             ) : (
               <Alert severity="info">{t("editor.eventFieldsReadOnly")}</Alert>
             )}
@@ -434,30 +458,14 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Box>
 
           {maySaveAnything && (
-            /*
-              Sticky at the bottom of the window while the long form scrolls (the owner: "this
-              save button should be sticky at the bottom"), above the footer's own 44px bar;
-              it settles into place once the end of the form is in view.
-            */
-            <Box
-              component="section"
-              sx={{
-                position: "sticky",
-                bottom: 44,
-                zIndex: 2,
-                bgcolor: "background.default",
-                pt: 1.5,
-                pb: 1.5,
-                borderTop: 1,
-                borderColor: "divider",
-              }}
-            >
+            <Box component="section">
               {/* BR-REQ-051-01 criterion 4, once for the whole save now that there is one save.
                   Binding three times over: `required`, so the browser refuses the submit and
                   names the box; the dimmed button with its sentence, so the organizer sees why
                   before pressing; and the service, which refuses a save of a published event
                   without it whatever the browser did ("I shouldn't be able to save without
-                  ticking it" — the owner, 2026-09-17). */}
+                  ticking it" — the owner, 2026-09-17). In the flow, not in the sticky bar
+                  (§152): on a phone the bar had grown to a third of the screen. */}
               {live && (
                 <Box sx={{ mb: 2 }}>
                   <CheckboxField name="acknowledgeLiveEdit" required>
@@ -465,31 +473,38 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   </CheckboxField>
                 </Box>
               )}
-              {/* A date of a series (§130): as Google Calendar asks — this date, this and the
-                  following, or all. Only what changed travels; the service says how. */}
+              {/* A date of a series (§130, §134): the dates ticked in the header, said in words,
+                  with the three presets — this date, this and the following, all — as one
+                  exclusive control. Only what changed travels; the service says how. */}
               {inSeries && maySaveSettings && (
-                <Box sx={{ mb: 1.5 }}>
-                  <Typography variant="body2" sx={{ mb: 0.5 }}>
-                    {t("editor.scope.title")}
-                  </Typography>
-                  <Stack direction={{ xs: "column", sm: "row" }} sx={{ columnGap: 1 }}>
-                    <RadioField name="scope" value="this" defaultChecked>
-                      {t("editor.scope.this")}
-                    </RadioField>
-                    <RadioField name="scope" value="following">{t("editor.scope.following")}</RadioField>
-                    <RadioField name="scope" value="all">{t("editor.scope.all")}</RadioField>
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    {t("editor.scope.help")}
-                  </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <SeriesScopeBox />
                 </Box>
               )}
-              <SubmitButton
-                label={t("editor.save")}
-                pendingLabel={t("editor.saving")}
-                incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
-                size="medium"
-              />
+              {/*
+                Only the button is sticky at the bottom of the window while the long form
+                scrolls (the owner: "this save button should be sticky at the bottom", then
+                "the bottom save footer takes too much space on mobile"), above the footer's
+                own 44px bar; it settles into place once the end of the form is in view.
+              */}
+              <Box
+                sx={{
+                  position: "sticky",
+                  bottom: 44,
+                  zIndex: 2,
+                  bgcolor: "background.default",
+                  py: 1,
+                  borderTop: 1,
+                  borderColor: "divider",
+                }}
+              >
+                <SubmitButton
+                  label={t("editor.save")}
+                  pendingLabel={t("editor.saving")}
+                  incompleteHint={live ? t("editor.acknowledgeLiveHint") : undefined}
+                  size="medium"
+                />
+              </Box>
             </Box>
           )}
         </Stack>
@@ -664,7 +679,28 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
             {t("queue.title")}
           </Typography>
-          <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity }} now={now} />
+          <QueuePanel db={db} event={{ id: event.id, capacity: event.capacity }} waiting={waiting} now={now} />
+
+          {interestsWaiting !== null && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                {t("queue.interestTitle", { count: interestsWaiting })}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                {t("queue.interestHelp")}
+              </Typography>
+              <form action={withdrawInterestAction}>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="eventId" value={event.id} />
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", rowGap: 1 }}>
+                  <TextField name="email" type="email" label={t("queue.interestEmail")} required size="small" sx={{ minWidth: 260 }} />
+                  <Button type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+                    {t("queue.interestRemove")}
+                  </Button>
+                </Stack>
+              </form>
+            </Box>
+          )}
         </Box>
       )}
 
@@ -756,5 +792,6 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
       </Box>
     </Stack>
+    </SeriesScopeProvider>
   );
 }

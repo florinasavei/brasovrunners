@@ -310,6 +310,12 @@ AUTH_ZITADEL_ID          required when STAFF_AUTH_MODE=provider
 AUTH_ZITADEL_SECRET      required when STAFF_AUTH_MODE=provider
 AUTH_ZITADEL_ISSUER      required when STAFF_AUTH_MODE=provider
 JOB_SECRET               verifies the two job endpoints (§16.2); a scheduler's secret, not a staff session
+PINGER_CADENCE_MINUTES   the day-time monitor's cadence in minutes; 15 on production, 60 on QA (§148)
+CONTACT_SMTP_USER        the club's Gmail address, the contact form's sender (§149, §38 below)
+CONTACT_SMTP_PASSWORD    its 16-character Google app password
+CONTACT_FORM_TO          who receives the form's messages, comma-separated (the Gmail, a Yahoo)
+CONTACT_SMTP_HOST        smtp.gmail.com unless the club leaves Google
+CONTACT_SMTP_PORT        465 unless the club leaves Google
 EMAIL_DELIVERY_MODE
 EMAIL_ALLOWLIST
 MAILGUN_API_KEY
@@ -1174,13 +1180,18 @@ nobody redoes them (`/admin/tasks` reads the same facts from the deployment):
 - **The health monitors** (`DECISIONS.md` §98): cron-job.org has `GET /api/health` every
   30 minutes with "notify on failure" on production and on QA — the club is emailed when
   email stops. Nine monitors in all: the two job pingers per environment (§26) and this one.
+  QA's pingers are hourly (§68), so QA carries `PINGER_CADENCE_MINUTES=60` (set 2026-09-19,
+  `DECISIONS.md` §148): without it the health check measured QA against production's fifteen
+  minutes and cried "degraded" — a cronjob-failed email — for most of every hour.
 - **Release #58** (`qa → main`, 2026-09-19) is live; the production schema is `0042`
   (`0043`, the programme rows, arrives with the next release and its gated migration run).
 
 ## 37. Let "Add" on Echipa create the sign-in account and send the invitation
 
-Five minutes in the Zitadel console, once (`DECISIONS.md` §123). Without this, adding a
-colleague only allowlists them and the page says to create their account by hand.
+Five minutes in the Zitadel console, once (`DECISIONS.md` §123). The platform emails the
+invitation itself either way — who added them, as what, the sign-in link (§141); without
+this key the colleague creates their own account at the sign-in page with that address, with
+it "Add" creates the account too and Zitadel sends the password link.
 
 1. Zitadel console → **Users → Service Accounts → New**: user name `brasovrunners-invites`,
    name "Brașov Runners — invitații", access token type **Bearer**. Create.
@@ -1192,7 +1203,48 @@ colleague only allowlists them and the page says to create their account by hand
    `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
    both.
 5. Check: Echipa → add yourself with a second address → the alert says the invitation is on
-   its way, and the mail arrives from `noreply@mail.<club domain>` (Zitadel's SMTP, §35). A
-   colleague who never signed in has "Resend the invitation" on their row.
+   its way with the password link, and two mails arrive: the club's (through Mailgun) and
+   Zitadel's from `noreply@mail.<club domain>` (Zitadel's SMTP, §35). A colleague who never
+   signed in has "Resend the invitation" on their row.
 
 Locally the development switcher is the provider, so nothing is sent and the alert says so.
+
+## 38. The contact form — the club's Gmail lends it an app password
+
+Five minutes, once, in the club's Google account and on Vercel (`DECISIONS.md` §149). The
+"Scrie-ne" page is built and works on every laptop (the message is captured, nothing is
+sent); on a deployment it shows the club's address as a link until these are set, and the
+form itself once they are. Nothing here touches Mailgun or its 100 messages a day: the form
+sends through Google's own mail server, from the club's Gmail, to whichever mailboxes the
+club names — which is why a colleague's Yahoo can be on the list.
+
+1. The club's Google account → **Security → 2-Step Verification**: on. Google offers app
+   passwords only to accounts with it.
+2. Still under Security → **App passwords** → create one named "Brașov Runners site" → copy
+   the 16 characters (shown once) into the password manager.
+3. Vercel → the production project → Settings → Environment Variables (Production):
+   `CONTACT_SMTP_USER` = the club's Gmail address; `CONTACT_SMTP_PASSWORD` = the 16
+   characters (spaces or not, both work). The same on the QA project (a QA message is a real
+   email to the same mailboxes, its subject starting with `[QA] ` so it is never mistaken
+   for a real question; put a test address there if even that is unwelcome).
+   `CONTACT_FORM_TO` is **optional since `DECISIONS.md` §164**: it is the fallback list, read
+   only while the club has named nobody in the app, and there is no `CONTACT_CC` variable at
+   all. Set it if you want the form to work before anybody opens the backoffice.
+4. Redeploy both projects.
+5. In the app — the part the club owns, and the part that changes without a developer:
+   `/admin/emails` → **"Cine primește mesajele de contact"** → **Către** = the mailboxes that
+   receive each message, comma-separated; **Copie (Cc)** = anybody who should get a copy and
+   be visible to the others (Amalia's Yahoo, say) → Salvează. The sentence above the boxes
+   says which list is in force — the app's or `CONTACT_FORM_TO` — so there is no guessing.
+6. Check: open `/ro/contact` on the deployment and send a message. The page says "Mesajul a
+   plecat. Îți răspundem pe …", the email arrives in every mailbox from the club's address
+   with "Reply" addressed to whoever wrote, and the "Formularul de contact" row on
+   `/admin/tasks` is green; `/devs` shows the form as `smtp`. A wrong password shows
+   "Nu am putut trimite. Scrie-ne direct la …" on the page and `smtp EAUTH` in the function
+   log — never the password. Those failed tries are not counted against the sender: once
+   the password is right, the same address sends at once.
+
+To take the form away, clear the recipients on `/admin/emails` and leave `CONTACT_FORM_TO`
+empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
+back to the address either way. Google's own limit on an ordinary account is about 500 messages a day,
+which is more than a club receives; the form's own limit is five an hour per sender.

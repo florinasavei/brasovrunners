@@ -38,6 +38,11 @@ export const emailMessageType = pgEnum("email_message_type", [
   "DECLARATION_ARCHIVE",
   // A race number given or changed by hand after confirmation (§105): the runner is told.
   "BIB_ASSIGNED",
+  // A colleague added on Echipa (§141): who added them, as what, and where to sign in. No token.
+  "STAFF_INVITATION",
+  // "Registration is open" to an address left on the event's page before the window (§146):
+  // no participant, no token; the action is the ordinary registration page.
+  "REGISTRATION_OPENED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

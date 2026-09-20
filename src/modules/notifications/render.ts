@@ -7,7 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { issueActionToken } from "@/modules/action-tokens/repository";
 import { localizedSchedule, programmeLines, readScheduleItems } from "@/modules/events/domain/schedule";
-import { findEventNotificationDetails } from "@/modules/events/repository";
+import { findEventNotificationDetails, findEventStartsAt } from "@/modules/events/repository";
 import { newCheckinCode } from "@/modules/registrations/checkin-code";
 import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
@@ -74,9 +74,11 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     ? await db.select().from(registrations).where(eq(registrations.id, row.registrationId)).limit(1)
     : [];
 
-  const eventDetails = registration
-    ? await findEventNotificationDetails(db, registration.eventId, locale)
-    : undefined;
+  // The event comes from the registration — or, for the one message about an event and
+  // nobody's registration (§146), from the payload's id, so a renamed event renders right.
+  const payloadEventId = row.messageType === "REGISTRATION_OPENED" ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
+  const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
+  const eventDetails = eventId ? await findEventNotificationDetails(db, eventId, locale) : undefined;
 
   const data: TemplateData = {
     participantName: participant?.defaultName ?? "",
@@ -100,8 +102,9 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   };
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   // The hold's deadline on the declaration email (§104), and whether it is the window's — a
-  // deadline more than a day away is the week-before confirmation, not the thirty minutes.
-  if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt) {
+  // deadline more than a day away is the week-before confirmation, not the thirty minutes. A
+  // deadline already behind us (a resend after it) is not named: the place is being kept (§160).
+  if (row.messageType === "COMPLETE_DECLARATION" && registration?.holdExpiresAt && registration.holdExpiresAt.getTime() > now.getTime()) {
     data.holdExpiresAtFormatted = new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
       dateStyle: "long",
       timeStyle: "short",
@@ -128,6 +131,22 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       payloadActionUrl = url;
     }
   }
+  // The staff invitation (§141): everything it says is in the payload — there is no
+  // participant and no token; the action is the sign-in page, which asserts who they are.
+  if (row.messageType === "STAFF_INVITATION") {
+    const payload = (row.payloadJson ?? {}) as { displayName?: unknown; role?: unknown; inviterName?: unknown };
+    data.participantName = typeof payload.displayName === "string" ? payload.displayName : "";
+    data.staffRole = typeof payload.role === "string" ? payload.role : undefined;
+    data.inviterName = typeof payload.inviterName === "string" ? payload.inviterName : undefined;
+    data.staffEmail = row.recipientEmail;
+    data.signInUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: "/sign-in" })}`;
+    payloadActionUrl = data.signInUrl;
+  }
+  // "Registration is open" (§146): no participant, no token; the action is the ordinary
+  // registration page, which asks everything itself.
+  if (row.messageType === "REGISTRATION_OPENED" && eventDetails?.slug) {
+    payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
+  }
   // The desk code on the confirmation and the reminder (BR-REQ-037-08). A confirmed
   // registration made before codes existed gets one here, so a resent confirmation carries it too.
   if (
@@ -150,13 +169,24 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   if (purpose && row.participantId) {
     const route = ROUTE_BY_PURPOSE[purpose];
     const defaultExpiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
-    // Borrow the registration's own hold deadline so the token dies exactly when the hold
-    // does — but only while that deadline is still ahead of `now`. A hold can lapse between
-    // this message being queued and a delayed batch actually rendering it; issuing a token
-    // that expires in the past would fail outright, and the registration's own status guard
-    // is what correctly refuses a stale click regardless of how long the token stays valid.
+    // Borrow the registration's own deadline so the token dies when the place does — but only
+    // while that deadline is still ahead of `now`. A hold can lapse between this message being
+    // queued and a delayed batch actually rendering it; issuing a token that expires in the
+    // past would fail outright, and the registration's own status guard is what correctly
+    // refuses a stale click regardless of how long the token stays valid. For the declaration
+    // that deadline is the event's start, not the hold's (§160): a hold past its deadline is
+    // kept while nobody waits, and the link in the email must still open the declaration then.
+    //
+    // The start is read from the event's own row rather than from `eventDetails`, which is a
+    // join through `event_translations`: how long a secret lives must not depend on whether
+    // somebody has written the event's text in a locale (AGENTS.md §12.8).
     const holdExpiresAt = registration?.holdExpiresAt;
-    const expiresAt = holdExpiresAt && holdExpiresAt.getTime() > now.getTime() ? holdExpiresAt : defaultExpiresAt;
+    const eventStartsAt =
+      purpose === "COMPLETE_DECLARATION" && eventId
+        ? (eventDetails?.startsAt ?? (await findEventStartsAt(db, eventId)))
+        : undefined;
+    const placeUntil = purpose === "COMPLETE_DECLARATION" ? (eventStartsAt ?? holdExpiresAt) : holdExpiresAt;
+    const expiresAt = placeUntil && placeUntil.getTime() > now.getTime() ? placeUntil : defaultExpiresAt;
     const issued = await issueActionToken(db, {
       participantId: row.participantId,
       registrationId: row.registrationId,

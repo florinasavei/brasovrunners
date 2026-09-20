@@ -28,9 +28,16 @@ export type Series<T> = {
 };
 
 /**
- * Groups in order of first appearance, so a list sorted featured-first, races-first, soonest
- * (`listUpcomingEvents`) keeps that order for the lines: a series sits where its soonest
- * occurrence would have.
+ * Groups in order of first appearance, so a list sorted featured-first, races-first,
+ * special-first, soonest (`listUpcomingEvents`) keeps that order for the lines: a series sits
+ * where its *first-appearing* occurrence would have.
+ *
+ * That is the soonest one for an ordinary series, and the special one for a series that holds
+ * a special edition (§168) — a weekly run whose November Wednesday the club joins another
+ * club's race is lifted above the ordinary runs of its band. The lift is deliberate and it is
+ * legible: `SeriesCard` wears the special badge whenever any of its dates does, and the folded
+ * date list marks which date it is (§169). Without both marks the line would jump for a reason
+ * the reader cannot see, which is why they are part of the same decision.
  */
 export function groupSeries<T extends SeriesMember>(events: readonly T[]): Series<T>[] {
   const byKey = new Map<string, T[]>();
@@ -118,16 +125,25 @@ export function usualOf(members: readonly { startsAt: Date; timezone: string; lo
 
 export type EditionDifference =
   | { kind: "cancelled" }
+  | { kind: "special" }
   | { kind: "moved"; place: string }
   | { kind: "retimed"; time: string }
   | null;
 
-/** Why this date is not like the series' others, or null when it is. Cancelled outranks the rest. */
+/**
+ * Why this date is not like the series' others, or null when it is.
+ *
+ * One mark per date, so they are ranked. Cancelled outranks everything: there is nothing to
+ * come to. A special edition (§168, §169) comes next — it is the reason the rest of that
+ * date differs, and it is the one difference the organizer stated rather than the reader
+ * having to infer it — then the place, then the hour.
+ */
 export function editionDifference(
-  member: { startsAt: Date; timezone: string; locationName: string | null; eventStatus: string },
+  member: { startsAt: Date; timezone: string; locationName: string | null; eventStatus: string; isSpecial: boolean },
   usual: Usual,
 ): EditionDifference {
   if (member.eventStatus === "CANCELLED") return { kind: "cancelled" };
+  if (member.isSpecial) return { kind: "special" };
   if (member.locationName && usual.place && member.locationName !== usual.place) return { kind: "moved", place: member.locationName };
   const time = toWallTimeInput(member.startsAt, member.timezone).slice(11, 16);
   if (usual.time && time !== usual.time) return { kind: "retimed", time };

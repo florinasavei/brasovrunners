@@ -20,19 +20,76 @@
 
 export type TaskOwner = "club" | "developer";
 
+/** The two owners, in the order the filter offers them; also the closed set a query value is checked against. */
+export const TASK_OWNERS: readonly TaskOwner[] = ["club", "developer"];
+
 /**
  * `blocking` is reserved for the things that stop a real person registering today. Everything
  * else is `open`: real work, no deadline attached to it by the software.
  */
 export type TaskState = "blocking" | "open" | "done";
 
+/**
+ * What sort of work a task is (§150; the owner: "a filter by issue type and owner"). Four
+ * kinds, because the list has four sorts of row and a fifth would be a kind with one member:
+ * an **account** or key to create at a provider, a **decision** the club has to take, a
+ * **text** to write or approve, and a **check** — a rehearsal or a monitor that has to be seen
+ * running. The kind says what a volunteer needs in hand to close the row: a browser and a
+ * credit card, a meeting, an afternoon of writing, or a phone on race day.
+ */
+export type TaskKind = "account" | "decision" | "text" | "check";
+
+/** In the order the filter offers them, and the closed set a query value is checked against. */
+export const TASK_KINDS: readonly TaskKind[] = ["account", "decision", "text", "check"];
+
+/** Every task the list can carry. A new id is a TypeScript error until `TASK_KIND` names its kind. */
+export type TaskId =
+  | "approveLegalText"
+  | "liveEmail"
+  | "scheduler"
+  | "inviteStaff"
+  | "publishEvents"
+  | "mediaStorage"
+  | "botCheck"
+  | "declarationArchiveMail"
+  | "vercelUsage"
+  | "contactForm"
+  | "roDomain";
+
+/**
+ * Each task's kind, typed as a `Record` over every id so a task added without one does not
+ * compile — the filter must never offer a row it cannot classify.
+ */
+export const TASK_KIND: Record<TaskId, TaskKind> = {
+  approveLegalText: "text",
+  liveEmail: "account",
+  scheduler: "check",
+  inviteStaff: "account",
+  publishEvents: "text",
+  mediaStorage: "account",
+  botCheck: "account",
+  declarationArchiveMail: "decision",
+  vercelUsage: "account",
+  contactForm: "account",
+  roDomain: "decision",
+};
+
 export type OwnerTask = {
-  id: string;
+  id: TaskId;
   owner: TaskOwner;
   state: TaskState;
+  kind: TaskKind;
   /** What the page appends to the sentence, when there is something specific to say. */
   detail?: string;
 };
+
+export function isTaskOwner(value: string | undefined): value is TaskOwner {
+  return TASK_OWNERS.some((owner) => owner === value);
+}
+
+export function isTaskKind(value: string | undefined): value is TaskKind {
+  return TASK_KINDS.some((kind) => kind === value);
+}
 
 export type OwnerTaskInputs = {
   /** Is the approved privacy notice the club's own wording, or still the sample? */
@@ -82,6 +139,14 @@ export type OwnerTaskInputs = {
   /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
   vercelUsageConfigured: boolean;
   /**
+   * Can the contact form reach the club (§149, §164)? Both halves: a way to send — the Gmail
+   * account and its app password, `CONTACT_FORM_MODE` (`capture` on a laptop counts, as the
+   * local media store does) — and somebody to send to, from the club's own list on
+   * `/admin/emails` or from `CONTACT_FORM_TO` behind it. Either one missing and the page
+   * shows the club's address instead, so the row is open until both answer.
+   */
+  contactFormConfigured: boolean;
+  /**
    * Does this deployment answer on a `.ro` hostname?
    *
    * The owner bought the `.com` on 2026-09-16 and decided a `.ro` follows a year later, both
@@ -94,6 +159,9 @@ export type OwnerTaskInputs = {
 
 export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   const tasks: OwnerTask[] = [];
+  // One door for every row, so the kind is looked up and never typed: a task is its id's kind.
+  const push = (id: TaskId, task: Omit<OwnerTask, "id" | "kind">) =>
+    tasks.push({ id, kind: TASK_KIND[id], ...task });
 
   /**
    * First, because it is the one that refuses people rather than merely inconveniencing them.
@@ -103,8 +171,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    * club's to resolve, and neither can be resolved by writing code — `docs/RUNBOOKS.md` §
    * Legal document version is the procedure.
    */
-  tasks.push({
-    id: "approveLegalText",
+  push("approveLegalText", {
     owner: "club",
     state: !input.hasApprovedPrivacyNotice
       ? "blocking"
@@ -121,8 +188,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   const emailDone =
     input.emailDeliveryMode === "live" ||
     (input.appEnv !== "production" && input.emailDeliveryMode === "allowlist");
-  tasks.push({
-    id: "liveEmail",
+  push("liveEmail", {
     owner: "club",
     state: emailDone ? "done" : "blocking",
     detail: input.emailDeliveryMode === "live" ? undefined : input.emailDeliveryMode,
@@ -130,8 +196,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
   // The one developer-owned entry, and it earns its place: when a job stops, no message is sent
   // or no hold expires, and neither failure announces itself on the public site.
-  tasks.push({
-    id: "scheduler",
+  push("scheduler", {
     owner: "developer",
     state: input.staleJobNames.length === 0 ? "done" : "blocking",
     // Carried so the page can name the job rather than say "something is late". A missing
@@ -141,52 +206,52 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 
   // Not blocking: one Administrator can run a race alone. It is open because a club with one
   // account is a club whose backoffice goes with that one person's holiday.
-  tasks.push({
-    id: "inviteStaff",
+  push("inviteStaff", {
     owner: "club",
     state: input.staffCount > 1 ? "done" : "open",
   });
 
-  tasks.push({
-    id: "publishEvents",
+  push("publishEvents", {
     owner: "club",
     state: input.publishedEventCount > 0 ? "done" : "open",
   });
 
   // Not blocking: registrations do not need photos. Open until the bucket exists, because an
   // album page without an upload button is a gallery nobody can fill (BR-REQ-054-01).
-  tasks.push({
-    id: "mediaStorage",
+  push("mediaStorage", {
     owner: "club",
     state: input.storageConfigured ? "done" : "open",
   });
 
   // Not blocking either: the form already refuses the dumb bots. Open until the two keys exist,
   // because a race that opens entries to a hundred people is when the other kind shows up (§97).
-  tasks.push({
-    id: "botCheck",
+  push("botCheck", {
     owner: "club",
     state: input.botCheckConfigured ? "done" : "open",
   });
 
   // Built (§99); open until the club names the mailbox, never blocking: the per-event bundle
   // on the event page is the archive meanwhile.
-  tasks.push({
-    id: "declarationArchiveMail",
+  push("declarationArchiveMail", {
     owner: "club",
     state: input.declarationArchiveConfigured ? "done" : "open",
   });
 
   // Built (§101), as far as Vercel's API allows; open until the token exists, never blocking.
-  tasks.push({
-    id: "vercelUsage",
+  push("vercelUsage", {
     owner: "club",
     state: input.vercelUsageConfigured ? "done" : "open",
   });
 
+  // Built (§149); open until the club's Gmail lends the form its app password, never
+  // blocking: without it the contact page shows the club's address as a link.
+  push("contactForm", {
+    owner: "club",
+    state: input.contactFormConfigured ? "done" : "open",
+  });
+
   // Open for a year by design, and never blocking: the `.com` serves; the `.ro` is a second door.
-  tasks.push({
-    id: "roDomain",
+  push("roDomain", {
     owner: "club",
     state: input.roDomainBound ? "done" : "open",
   });
@@ -198,16 +263,39 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
    * here and records it in `DECISIONS.md`. Developer-owned, so they sort after the club's.
    * Empty since 2026-09-19 (§117, §118); the next ask goes here with its catalogue entry.
    */
-  for (const id of BACKLOG) tasks.push({ id, owner: "developer", state: "open" });
+  for (const id of BACKLOG) push(id, { owner: "developer", state: "open" });
 
   return tasks;
 }
 
 /** In the order to take them. Each has its title, its "why" and its steps in `Admin.tasks.items`. */
-export const BACKLOG: readonly string[] = [];
+export const BACKLOG: readonly TaskId[] = [];
 
 /** Blocking first, then open, then done — the order somebody scanning the page needs. */
 export function sortTasks(tasks: OwnerTask[]): OwnerTask[] {
   const rank: Record<TaskState, number> = { blocking: 0, open: 1, done: 2 };
   return [...tasks].sort((a, b) => rank[a.state] - rank[b.state]);
+}
+
+/** The board's two filters (§150). `undefined` is "all"; a value outside the closed sets never gets here. */
+export type TaskFilter = { owner?: TaskOwner; kind?: TaskKind };
+
+/** The rows a filter keeps, in the order given. Both halves combine; an empty filter keeps everything. */
+export function filterTasks(tasks: readonly OwnerTask[], filter: TaskFilter): OwnerTask[] {
+  return tasks.filter(
+    (task) =>
+      (filter.owner === undefined || task.owner === filter.owner) &&
+      (filter.kind === undefined || task.kind === filter.kind),
+  );
+}
+
+/**
+ * What the counter says: `pending` is everything not done — a blocking row is pending too,
+ * only more so — and `done` the rest. Counted over the rows handed in, so the page counts
+ * what it shows: a counter that says four while the filter shows two is a counter to distrust.
+ */
+export function countTasks(tasks: readonly OwnerTask[]): { pending: number; done: number } {
+  let done = 0;
+  for (const task of tasks) if (task.state === "done") done += 1;
+  return { pending: tasks.length - done, done };
 }

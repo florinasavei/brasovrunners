@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import messages from "@/../messages/ro.json";
-import { COLOR, COLOR_DARK, FONT, LOGO, WORDMARK } from "@/theme/brand";
+import { COLOR, COLOR_DARK, FONT, GRADIENT, LOGO, SURFACE_GRADIENT, WORDMARK } from "@/theme/brand";
 
 /**
  * BR-REQ-070-02 criterion 4 — colour contrast meets the accessibility baseline.
@@ -104,6 +104,85 @@ describe("BR-REQ-070-02 the palette is readable", () => {
   it("uses six-digit hex everywhere, which the contrast helper assumes", () => {
     for (const [name, value] of Object.entries(COLOR)) {
       expect(value, name).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
+});
+
+/**
+ * BR-REQ-070-02 criterion 4, again, for the gradients (§166).
+ *
+ * A flat background is one colour and one ratio. A gradient is a *range*, and a reader lands
+ * somewhere in it: the countdown sits over the light end of the hero and the body text runs
+ * across the whole of it. So every pair is asserted against **both stops**, in both schemes,
+ * which is what stops "more gradients and shiny Front-End stuff" from costing somebody the
+ * one sentence the hero exists to say.
+ *
+ * The accent gradient's two stops are the palette's own blue and its ink-blue, so their
+ * ratios against button text are asserted above; what is asserted here is that the gradient
+ * is actually made of them, because a hand-written stop inside the CSS string would be a hex
+ * outside the palette and no other test would see it.
+ */
+describe("BR-REQ-070-02 the gradients are readable at both ends", () => {
+  const overHero: Array<[string, string, string]> = [
+    ["body text over the hero's light end", COLOR.ink, GRADIENT.heroTint],
+    ["body text over the hero's card end", COLOR.ink, COLOR.surface],
+    ["muted text over the hero's light end", COLOR.inkMuted, GRADIENT.heroTint],
+    ["the countdown over the hero's light end", COLOR.blue, GRADIENT.heroTint],
+    ["dark: body text over the hero's light end", COLOR_DARK.ink, GRADIENT.heroTintDark],
+    ["dark: muted text over the hero's light end", COLOR_DARK.inkMuted, GRADIENT.heroTintDark],
+    ["dark: the countdown over the hero's light end", COLOR_DARK.blue, GRADIENT.heroTintDark],
+  ];
+
+  for (const [label, foreground, background] of overHero) {
+    it(`clears AA for ${label}`, () => {
+      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  const overAccent: Array<[string, string, string]> = [
+    ["button text over the accent's first stop", COLOR.paper, COLOR.blue],
+    ["button text over the accent's last stop", COLOR.paper, COLOR.blueInk],
+    ["dark: button text over the accent's first stop", COLOR_DARK.paper, COLOR_DARK.blue],
+    ["dark: button text over the accent's last stop", COLOR_DARK.paper, COLOR_DARK.blueInk],
+  ];
+
+  for (const [label, foreground, background] of overAccent) {
+    it(`clears AA for ${label}`, () => {
+      expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  it("keeps the hero a surface rather than a wash", () => {
+    // The tint is a step away from the card colour, not a different colour. If a future edit
+    // pushes it far enough to need its own text colour, the pairs above fail first — this
+    // catches the milder version, where the hero stops reading as a card at all.
+    expect(GRADIENT.heroTint).not.toBe(COLOR.surface);
+    expect(GRADIENT.heroTintDark).not.toBe(COLOR_DARK.surface);
+    expect(contrastRatio(COLOR.surface, GRADIENT.heroTint)).toBeLessThan(1.5);
+    expect(contrastRatio(COLOR_DARK.surface, GRADIENT.heroTintDark)).toBeLessThan(1.5);
+  });
+
+  it("states the new tints in six-digit hex, which the contrast helper assumes", () => {
+    expect(GRADIENT.heroTint).toMatch(/^#[0-9a-f]{6}$/);
+    expect(GRADIENT.heroTintDark).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it("builds every CSS gradient out of palette tokens and nothing else", () => {
+    // Every stop a component can paint has to be a value some assertion above has measured.
+    // A colour typed straight into the CSS string would be a hex the palette never saw.
+    const stops: Record<string, string[]> = {
+      hero: [COLOR.surface, GRADIENT.heroTint],
+      heroDark: [COLOR_DARK.surface, GRADIENT.heroTintDark],
+      accent: [COLOR.blue, COLOR.blueInk],
+      accentDark: [COLOR_DARK.blue, COLOR_DARK.blueInk],
+      rule: [COLOR.blue, COLOR.orange],
+      ruleDark: [COLOR_DARK.blue, COLOR.orange],
+    };
+
+    for (const [name, expected] of Object.entries(stops)) {
+      const css = SURFACE_GRADIENT[name as keyof typeof SURFACE_GRADIENT];
+      const found = css.match(/#[0-9a-f]{3,8}/g) ?? [];
+      expect(found, name).toEqual(expected);
     }
   });
 });

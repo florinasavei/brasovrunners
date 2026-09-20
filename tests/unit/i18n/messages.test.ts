@@ -183,13 +183,20 @@ describe("BR-REQ-040-04 the backoffice keys the source builds dynamically", () =
     for (const status of registrationStatus.enumValues) {
       expect(labels.REGISTRATION_STATUS_LABEL[status], `label for ${status}`).toBeTruthy();
     }
+    // The journey's six steps name the same lifecycle (§145), so the same rule.
+    const { JOURNEY_STEPS } = await import("@/modules/registrations/domain/journey");
+    for (const step of JOURNEY_STEPS) {
+      expect(labels.JOURNEY_STEP_LABEL[step], `label for ${step}`).toBeTruthy();
+    }
 
     // And the catalogues no longer carry them: two copies of the same seven words is what this
     // move removed, so a key creeping back in is a regression rather than a nicety.
+    const journeySteps = new RegExp(`^Admin\\.registrations\\.journey\\.(${JOURNEY_STEPS.join("|")})$`);
     for (const key of Object.keys(roFlat)) {
       expect(
         /^Admin\.(status|transition|roles|eventStatus|registrationMode)\./.test(key) ||
-          key.startsWith("Admin.registrations.status."),
+          key.startsWith("Admin.registrations.status.") ||
+          journeySteps.test(key),
         `${key} belongs in staff-labels.ts, not in the catalogues`,
       ).toBe(false);
     }

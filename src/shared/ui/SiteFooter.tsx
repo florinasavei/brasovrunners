@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
+import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -82,7 +83,10 @@ export default async function SiteFooter() {
     >
       {/* In the corner of the bar itself, not of the page's column (the owner: "all the way to
           the left") — positioned like the marks, because the line is the summary's. */}
-      <Box sx={{ position: "absolute", top: 0, left: 0, height: BAR_HEIGHT, display: "flex", alignItems: "center" }}>
+      {/* Above the column (`zIndex`): the column is positioned too and comes later in the DOM, so
+          without it the fold's 44px summary painted over the switch on a phone and swallowed the
+          tap — the owner: "nothing happens when I click" (§157). */}
+      <Box sx={{ position: "absolute", top: 0, left: 0, height: BAR_HEIGHT, display: "flex", alignItems: "center", zIndex: 1 }}>
         <ThemeModeToggle />
       </Box>
       <Container maxWidth={PAGE_WIDTH} sx={{ position: "relative" }}>
@@ -90,9 +94,14 @@ export default async function SiteFooter() {
           <Box
             component="summary"
             sx={{
-              cursor: "pointer",
+              // The shared affordance (§164): marker, pointer, and an underline on hover and
+              // on focus. The height is the bar's here rather than the shared padding — this
+              // summary *is* the bar — and the rest is the same fold everywhere else is.
+              ...DISCLOSURE_SUMMARY_SX,
+              py: 0,
+              minHeight: BAR_HEIGHT,
               color: "text.secondary",
-              fontSize: "0.875rem",
+              fontSize: "0.8125rem",
               lineHeight: `${BAR_HEIGHT}px`,
               // Only as wide as its label. A block summary spans the line, which put its
               // centre — where a pointer test clicks — under the social marks, and made empty
@@ -120,11 +129,18 @@ export default async function SiteFooter() {
 
           {/* Indented to the summary's text, past the switch and its marker, so the panel reads as its body. */}
           <Stack spacing={1.5} sx={{ pt: 0.5, pb: 2, pl: { xs: `${SWITCH_WIDTH + 20}px`, xl: 2.5 }, maxWidth: "40rem" }}>
-            <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+            {/* Each link a 44px target (BR-REQ-041-01 criterion 6): the panel is read on a phone too. */}
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ flexWrap: "wrap", "& > a": { display: "inline-flex", alignItems: "center", minHeight: 44 } }}
+            >
               <Link href="/legal/privacy">{legal("privacyLinkLabel")}</Link>
               <Link href="/legal/terms">{legal("termsLinkLabel")}</Link>
               {/* "My registrations" (BR-REQ-036-04): the one place a runner finds it without an email. */}
               <Link href="/registrations/mine">{footer("myRegistrations")}</Link>
+              {/* "Scrie-ne" (BR-REQ-070-04): the form, beside the address below it. */}
+              <Link href="/contact">{footer("contactPage")}</Link>
             </Stack>
             <Typography variant="body2" color="text.secondary">
               {footer("about.description")}
@@ -174,7 +190,7 @@ export default async function SiteFooter() {
                   "&:hover": { bgcolor: "action.hover" },
                 }}
               >
-                <SocialIcon network={entry.network} size={22} />
+                <SocialIcon network={entry.network} size={20} />
               </MuiLink>
             ))}
           </Stack>

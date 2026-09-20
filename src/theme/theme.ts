@@ -103,6 +103,13 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
           from: { boxShadow: "none" },
           to: { boxShadow: theme.shadows[2] },
         },
+        // The loader's stride (§166). Transform only, so it composites and never reflows the
+        // skeleton it sits in; the lean is two degrees, which reads as running rather than
+        // wobbling at the 20–24px the figure is drawn at.
+        [`@keyframes ${KEYFRAMES.run}`]: {
+          "0%, 100%": { transform: "translateY(0) rotate(-3deg)" },
+          "50%": { transform: "translateY(-3px) rotate(3deg)" },
+        },
       }),
     },
   },

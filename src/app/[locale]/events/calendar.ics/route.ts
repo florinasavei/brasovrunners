@@ -1,8 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
-import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { localizedSchedule, readScheduleItems } from "@/modules/events/domain/schedule";
+import { toCalendarEvent } from "@/modules/events/calendar";
 import { buildCalendar } from "@/modules/events/ical";
 import { listPublishedEventsBetween } from "@/modules/events/repository";
 import { env } from "@/shared/config/env";
@@ -26,14 +25,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   const events = await listPublishedEventsBetween(getDb(), known, new Date(now.getTime() - 30 * DAY), new Date(now.getTime() + 365 * DAY));
   const t = await getTranslations({ locale: known, namespace: "Event" });
   const body = buildCalendar({
-    events: events.map((event) => ({
-      ...event,
-      url: `${env.APP_BASE_URL}${getPathname({ locale: known, href: { pathname: "/events/[slug]", params: { slug: event.slug } } })}`,
-      programme: localizedSchedule(readScheduleItems(event.scheduleItems), known),
-    })),
+    // Every detail the page has, in the description (§159); where registration stands is read against `now`.
+    events: events.map((event) => toCalendarEvent(event, known, now)),
     baseUrl: env.APP_BASE_URL,
     name: t("calendar.feedName"),
-    labels: { programme: t("schedule"), locale: known },
+    labels: { locale: known, t },
   });
   return new Response(body, {
     headers: {

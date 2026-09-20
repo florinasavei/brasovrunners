@@ -23,7 +23,9 @@ import {
 } from "@/modules/registrations/admin-repository";
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
+import { journeyOf } from "@/modules/registrations/domain/journey";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
+import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -174,6 +176,14 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       label: t("registrations.columnStatus"),
       sortable: true,
       render: (row) => <Chip size="small" label={REGISTRATION_STATUS_LABEL[row.status]} />,
+    },
+    {
+      // The owner's "what step each participant is in" (§145): steps done out of six and the
+      // last one done, from the same derivation the registration's page shows in full.
+      // Not sortable — the status column beside it is the ordered one.
+      key: "journey",
+      label: t("registrations.columnJourney"),
+      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={row.bibNumber} variant="compact" />,
     },
     {
       key: "event",
