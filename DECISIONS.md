@@ -6874,3 +6874,19 @@ view.
 **Consequences.** `app/[locale]/admin/events/[id]/page.tsx`.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 153. Decided — the event's timezone is chosen from a list (2026-09-19)
+
+**Context.** The owner: "the timezone must be selectable, not free text." The editor took a
+typed IANA name and refused a wrong one only on save.
+
+**Decision.** A native select over every zone the runtime knows
+(`Intl.supportedValuesOf("timeZone")`), the club's `Europe/Bucharest` first, then Europe,
+then the rest; a stored zone the runtime no longer lists is kept as an option so an old event
+still saves. Native rather than MUI's menu: four hundred options are a scroll nobody wants,
+and a native select is searched by typing. Validation on save is unchanged.
+
+**Consequences.** `content/events/ui/EventFieldsForm.tsx`, the help sentence in both
+catalogues.
+
+Baseline `BR-V1.38-2026-09-18`.

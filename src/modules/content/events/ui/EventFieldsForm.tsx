@@ -40,6 +40,21 @@ const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
  * an airport is not where the race is. */
 const DEFAULT_TIMEZONE = "Europe/Bucharest";
 
+/**
+ * The zones an organizer may pick (§153; the owner: "the timezone must be selectable, not free
+ * text"): every IANA zone this runtime knows, the club's first, then Europe, then the rest —
+ * a native select, because four hundred options in a MUI menu is a scroll nobody wants and a
+ * native one is searchable by typing. A stored zone the runtime no longer lists is kept as an
+ * option so an old event still saves.
+ */
+function timezoneOptions(current: string): readonly string[] {
+  const known = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [DEFAULT_TIMEZONE];
+  const europe = known.filter((zone) => zone.startsWith("Europe/") && zone !== DEFAULT_TIMEZONE);
+  const rest = known.filter((zone) => !zone.startsWith("Europe/"));
+  const ordered = [DEFAULT_TIMEZONE, ...europe, ...rest];
+  return ordered.includes(current) ? ordered : [current, ...ordered];
+}
+
 export type DeclarationOption = { id: string; version: number; title: string };
 
 export default async function EventFieldsForm({
@@ -110,12 +125,20 @@ export default async function EventFieldsForm({
       </Stack>
 
       <TextField
+        select
         name="event.timezone"
         label={t("editor.timezone")}
         helperText={t("editor.timezoneHelp")}
         defaultValue={zone}
         required
-      />
+        slotProps={{ select: { native: true } }}
+      >
+        {timezoneOptions(zone).map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </TextField>
 
       {/* A date and a 24-hour time each, whatever clock the browser speaks (§70). */}
       <WallTimeField

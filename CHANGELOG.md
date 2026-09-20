@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **The timezone is a select**, Brașov's first. §153.
 - **The editor's sticky bar is just the Save button** on a phone; the consent box and "Salvează pentru" sit in the form above it. §152.
 - **A returning participant's restart takes the event lock** before it allocates, like every other door into the allocator; proven under real concurrency. §151.
 - **The task board counts and filters.** "De făcut: N · Gata: M" under the heading of `/admin/tasks`, counting the rows shown; every task has a kind — Cont, Decizie, Text, Verificare — as a chip on the row, typed so a task without one does not compile; two rows of chip links, "Cine" and "Tip", each keeping the other's choice (`?owner=club&kind=account`), no client code; the count stays off the section tab, which would pay five reads on every backoffice page for it. §150.

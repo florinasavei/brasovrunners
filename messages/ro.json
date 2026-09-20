@@ -180,7 +180,7 @@
       "weeklyChip": "Săptămânal",
       "fortnightlyChip": "La două săptămâni",
       "nextLabel": "Următoarea",
-      "allDates": "Toate datele"
+      "allDatesCount": "Toate datele ({count})"
     },
     "route": "Traseu",
     "openRoute": "Vezi traseul",
@@ -516,7 +516,7 @@
       "surface": "Suprafață",
       "eventStatus": "Starea evenimentului",
       "timezone": "Fus orar",
-      "timezoneHelp": "Fusul în care sunt scrise orele de mai jos, de exemplu Europe/Bucharest.",
+      "timezoneHelp": "Fusul în care sunt scrise orele de mai jos. Pentru Brașov, Europe/Bucharest.",
       "endsAt": "Sfârșitul evenimentului",
       "endsAtHelp": "Opțional. Lasă gol dacă s-a anunțat doar ora de start.",
       "distanceMeters": "Distanță",

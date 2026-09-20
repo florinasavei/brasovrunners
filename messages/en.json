@@ -180,7 +180,7 @@
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
       "nextLabel": "Next",
-      "allDates": "All dates"
+      "allDatesCount": "All dates ({count})"
     },
     "route": "Route",
     "openRoute": "View the route",
@@ -516,7 +516,7 @@
       "surface": "Surface",
       "eventStatus": "Event status",
       "timezone": "Time zone",
-      "timezoneHelp": "The zone the times below are typed in, e.g. Europe/Bucharest.",
+      "timezoneHelp": "The zone the times below are typed in. For Brașov, Europe/Bucharest.",
       "endsAt": "Event end",
       "endsAtHelp": "Optional. Leave empty when the club has stated only a start.",
       "distanceMeters": "Distance",
