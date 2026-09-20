@@ -8621,3 +8621,76 @@ somebody who knows the field, and §32 puts the participant's refusal ahead of t
 symmetry. The platform holds their name; the page does not have to.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 187. Decided — one description slot, under the title, on the page and in its preview (2026-09-20)
+
+**Context.** The owner, straight out of the editor he had just asked for: "pagina de edit event și
+main e diferită… rezumatul apare înainte descrierii full! Fi consistent man!"
+
+Four readers went over every surface that renders either field — the page, the preview, the
+listing and its hero, the cards, the Open Graph description, the JSON-LD, the calendar feed, the
+emails — and three reviewers were asked to refute what they concluded. All three refuted the first
+proposal, on file and line; what survived is smaller than what was proposed and is recorded here.
+Three separate things were true at once, and one edit answers all three.
+
+**1. The order contradicted the editor.** §170 put *Conținut* first and *Rezumat* under it, because
+asking somebody to summarise what they have not written yet is what left summaries empty — and an
+empty summary is what refuses publication. The page kept the summary's slot under the title and
+rendered the long description eighty lines and six rendered blocks lower: after the divider, the
+facts, the registration call to action, the interest box, the five-step panel, the share and
+calendar row and the street address.
+
+**2. The one description moved half a page depending on which field was filled.** With only a
+summary, the page's prose sat under the title. With a long description, it sat below the address.
+Same editorial role, two positions — and the more an organizer wrote, the further down the reader
+had to scroll to find any prose at all.
+
+**3. A long description that was only a picture or only a film was silently dropped.** The page
+guarded *both* of its slots with `isRichTextEmpty`, which is defined over the plain text;
+`EventExcerpt` has always guarded itself with `hasRichTextContent`, which counts a picture. So a
+picture-only *Conținut* was "empty": it did not render, and the *Rezumat* rendered in its place.
+That is the owner's sentence exactly — the summary where the full description should have been.
+
+**Decision.** *One slot, directly under the title, shared by one component.* `EventDescription`
+renders it and the page and the preview both call it, because the preview is the only way to read
+a draft before publication and it had been showing the body five blocks higher than the live page
+did — an organizer checked one layout and shipped another.
+
+*The rule takes two predicates, and that is the point.* `planEventDescription` is pure and
+tested: `hasRichTextContent` decides whether the long description renders at all,
+`isRichTextEmpty` decides whether it contributed any **words**, and the summary stands in when it
+did not. So a picture-only *Conținut* now renders *under* its summary rather than instead of it —
+the page keeps its prose and the organizer keeps his picture. Reading one question with one
+predicate is what produced defect 3, so the pair lives in a function with a test rather than in
+two JSX guards eighty lines apart.
+
+*The editor's order stands; the page moves to meet it.* §170 is one day old and has a reason
+behind it. The page's order was never decided — it is where the body block happened to sit when
+§71 added it. Reversing the editor would restore the empty-summary trap §170 removed, and it would
+not even answer the complaint, because the *Conținut* would still render below the address.
+
+**Rejected.** *Changing the calendar entry.* The `.ics` carries the summary and then the long
+description's first six hundred characters, which is the owner's sentence in a file the page's own
+button hands him — but §159 decided that deliberately, and the change breaks three golden-string
+tests whose fixtures the first proposal had not read. It is a separate decision with a separate
+cost, and it is named here so it is not lost rather than folded in quietly.
+
+*Changing the structured data to prefer `seoDescription`.* §156 says the metadata, the Open Graph
+card, the structured data and the emails keep the short one. They do.
+
+*Using `hasRichTextContent` for both questions.* That is what loses the summary: an event with a
+sentence in *Rezumat* and a picture in *Conținut* would render the picture and no words at all,
+while its own card, hero, search result and share preview all carried the sentence.
+
+**Consequences.** `AGENTS.md` §11.3 said the full description is "rendered on the event page
+under the short description" — stale since §156 and wrong after this; amended. `SPECS.md`
+BR-REQ-011-01 criterion 11 now states the position and the words-not-content distinction. The
+long description now pushes the facts and the registration button down the page: on a phone a
+long one puts "Înscrie-te" below the prose. That is the one visible trade, and it is the order the
+editor implies. Publication is untouched — `REQUIRED_PUBLIC_TRANSLATION_FIELDS` is still title,
+slug and excerpt, and `bodyJson` is still optional.
+
+Test: `tests/unit/events/event-description.test.ts` — including the property that there is no
+document for which the page renders neither field.
+
+Baseline `BR-V1.38-2026-09-18`.

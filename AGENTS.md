@@ -1456,8 +1456,9 @@ server — a node type it has no case for cannot reach a page whatever is stored
 `ui/RichTextEditor.tsx` is the one client island, which switches off everything StarterKit ships
 beyond the list above. Bodies written before it existed are read through the same module and need
 no migration. **Events write it too since 2026-09-18** (`DECISIONS.md` §71): each language's
-"full description" is the same editor and the same allowlist, rendered on the event page under
-the short description — the day's schedule, what to bring, where to park — and validated as
+"full description" is the same editor and the same allowlist, rendered on the event page in the
+short description's own slot, directly under the title — the summary stands there only while the
+full description has no words (§187) — the day's schedule, what to bring, where to park — and validated as
 `body` in `translationFieldsSchema` on the way in. Legal documents keep the
 plain-text shape, because `content_sha256` is published under a version number and computed over
 it (§12.5).

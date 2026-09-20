@@ -22,7 +22,7 @@ import { SURFACE_GLYPH, TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import Box from "@mui/material/Box";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
-import EventExcerpt from "@/modules/events/ui/EventExcerpt";
+import EventDescription from "@/modules/events/ui/EventDescription";
 import RegistrationCta from "@/modules/events/ui/RegistrationCta";
 import ShareLinks from "@/modules/events/ui/ShareLinks";
 import { toCalendarEvent } from "@/modules/events/calendar";
@@ -183,10 +183,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         {event.title}
       </Typography>
 
-      {/* The short description is the card's (§156; the owner: "the short one on the card,
-          the long one when I open the page"): here it stands in only while no long
-          description has been written. */}
-      {isRichTextEmpty(readRichText(event.bodyJson)) && <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />}
+      {/* The description, in the slot the editor's order implies (§187): the long one when it has
+          words, the summary otherwise, and then a wordless long description's picture. Shared
+          with the preview so the two cannot show it in different places. */}
+      <EventDescription bodyJson={event.bodyJson} excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
       <Divider sx={{ my: 3 }} />
       {/* One fact per line here (§168): the page is where they are read one at a time. */}
@@ -267,13 +267,6 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             )}
           </Typography>
         </Stack>
-      )}
-
-      {/* The description proper, when one was written (§11.3, §71). */}
-      {!isRichTextEmpty(readRichText(event.bodyJson)) && (
-        <Box sx={{ mt: 3 }}>
-          <RichText body={event.bodyJson} />
-        </Box>
       )}
 
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
