@@ -78,6 +78,34 @@ describe("BR-REQ-052-02 criterion 2 SportsEvent", () => {
     ]);
   });
 
+  it("names every co-host as an organizer after the club, in the club's own order (§168)", () => {
+    const block = parsed(
+      sportsEventJsonLd(
+        baseEvent({
+          coHosts: [
+            { name: "Brașov Marathon", url: "https://example.org/bm" },
+            { name: "Salvamont", url: null },
+          ],
+          // The two columns the list replaced are ignored while the list is there.
+          coHostName: "Asociația X",
+          coHostUrl: "https://example.org/x",
+        } as Partial<PublicEvent>),
+        URL,
+        "Brașov Runners",
+      ),
+    );
+    expect(block.organizer).toEqual([
+      { "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" },
+      { "@type": "Organization", name: "Brașov Marathon", url: "https://example.org/bm" },
+      { "@type": "Organization", name: "Salvamont" },
+    ]);
+  });
+
+  it("keeps one organizer object, not a list of one, when the club hosts alone", () => {
+    const block = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
+    expect(block.organizer).toEqual({ "@type": "SportsOrganization", "@id": clubId(), name: "Brașov Runners" });
+  });
+
   it("says a club event is free, with a zero offer at its own page, unless it is marked PAID (§121)", () => {
     const free = parsed(sportsEventJsonLd(baseEvent(), URL, "Brașov Runners"));
     expect(free.isAccessibleForFree).toBe(true);

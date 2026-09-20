@@ -2,11 +2,12 @@
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import RunnerLoader from "./RunnerLoader";
 import { TAP_TARGET } from "./tap-target";
+import { accentOnHover } from "@/theme/surfaces";
 
 type Props = {
   label: string;
@@ -127,10 +128,14 @@ export default function SubmitButton({
         aria-disabled={pending}
         aria-busy={pending}
         aria-describedby={dimmed ? "submit-incomplete" : undefined}
-        sx={{ ...TAP_TARGET, ...(dimmed ? { opacity: 0.55 } : {}) }}
-        startIcon={
-          pending ? <CircularProgress size={16} thickness={5} color="inherit" /> : undefined
-        }
+        sx={{ ...TAP_TARGET, ...(variant === "contained" && color === "primary" ? accentOnHover : {}), ...(dimmed ? { opacity: 0.55 } : {}) }}
+        // The club's runner rather than MUI's ring (§166; the owner: "I need a runner showing
+        // as a loader"). `color="inherit"` so it takes the button's own foreground on a
+        // contained button and the brand blue on a text one, and it carries no accessible
+        // name of its own: the label beside it has already changed to `pendingLabel` and
+        // `aria-busy` is set, so the figure is the third way of saying it rather than the
+        // only one. Under `prefers-reduced-motion` it stands still and the words carry it.
+        startIcon={pending ? <RunnerLoader size={18} color="inherit" /> : undefined}
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.

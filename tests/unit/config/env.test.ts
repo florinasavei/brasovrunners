@@ -102,17 +102,21 @@ describe("BR-REQ-070-04 contact form mode", () => {
     }
   });
 
-  it("sends on a deployment only with the sender, its password and a recipient", () => {
+  it("sends on a deployment with the sender and its password; the recipients are the club's", () => {
     const parsed = envSchema.parse({ APP_ENV: "production", ...SMTP });
     expect(parsed.CONTACT_FORM_MODE).toBe("smtp");
     expect(parsed.CONTACT_FORM_TO).toEqual(["club@example.com", "colleague@example.org"]);
     expect(parsed.CONTACT_SMTP_HOST).toBe("smtp.gmail.com");
     expect(parsed.CONTACT_SMTP_PORT).toBe(465);
 
-    for (const missing of Object.keys(SMTP)) {
+    // Since §164 the mode is about the transport alone: the recipients live in
+    // `platform_settings`, which a startup-time derivation cannot see, so an empty
+    // `CONTACT_FORM_TO` is no longer `off` — `contact/delivery.ts` decides who it reaches.
+    for (const missing of ["CONTACT_SMTP_USER", "CONTACT_SMTP_PASSWORD"]) {
       const partial = { ...SMTP, [missing]: undefined };
       expect(envSchema.parse({ APP_ENV: "qa", ...partial }).CONTACT_FORM_MODE, missing).toBe("off");
     }
+    expect(envSchema.parse({ APP_ENV: "qa", ...SMTP, CONTACT_FORM_TO: undefined }).CONTACT_FORM_MODE).toBe("smtp");
   });
 
   it("names a recipient that is not an address, because the operator typed it", () => {

@@ -37,6 +37,7 @@
   },
   "Events": {
     "title": "Events",
+    "loading": "Loading…",
     "intro": "Runs, trail outings and training sessions organised by the club — always free.",
     "empty": "No events are published right now. Check back soon.",
     "noUpcoming": "No upcoming events are scheduled. The club's most recent event:",
@@ -84,6 +85,7 @@
     "gatheringTime": "Gathering time",
     "gatheringAt": "gather at {time}",
     "raceStartAt": "start at {time}",
+    "startAt": "starts at {time}",
     "when": "When",
     "where": "Where",
     "raceStartTime": "Race start",
@@ -123,6 +125,7 @@
       "EXTERNAL": "External event"
     },
     "coHost": "Together with",
+    "special": "Special edition",
     "surface": {
       "ASPHALT": "Asphalt",
       "TRAIL": "Trail",
@@ -172,6 +175,7 @@
       "fortnightly": "Every other {days}",
       "monthly": "Monthly, on the {day}",
       "cancelledMark": "Cancelled",
+      "specialMark": "A special edition",
       "movedMark": "Not at the usual place: {place}",
       "retimedMark": "Not at the usual time: {time}",
       "atTime": "{sentence} at {time}",
@@ -180,7 +184,7 @@
       "weeklyChip": "Weekly",
       "fortnightlyChip": "Every two weeks",
       "nextLabel": "Next",
-      "allDatesCount": "All dates ({count})"
+      "allDatesCount": "Upcoming dates ({count})"
     },
     "route": "Route",
     "openRoute": "View the route",
@@ -457,6 +461,8 @@
       "locationHelp": "The place, as you would tell a friend: a name, a street, or both. The same in both languages, filled in once.",
       "featured": "Lead the site with this event",
       "featuredHelp": "Only one event can be featured. The previously featured one loses the flag automatically.",
+      "special": "A special edition",
+      "specialHelp": "An edition apart — an anniversary, a charity run, a race the club joins somebody else at. Shown with a badge on the card and on the page. Any number of events may be special, including one date of a series; the mark does not travel to the other dates.",
       "saveEvent": "Save the event details",
       "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
       "translationSection": "Content ({locale})",
@@ -623,9 +629,14 @@
       "createdWithSeries": "The event and {created} editions were created, as drafts. Tick them in the events list and publish them together.",
       "durationMinutes": "Duration (minutes)",
       "durationMinutesHelp": "How long it lasts, in minutes — 90, say. The end is worked out from it. Leave empty if none was announced.",
-      "coHostName": "Co-host (another organization)",
-      "coHostUrl": "Co-host's page",
-      "coHostHelp": "Optional. When the event is held together with another organization — an NGO, a shop, a brand — its name here, and its page, if it has one. Shown as “Together with …” beside the club's name, and named as a second organizer to Google.",
+      "coHostSection": "Partners",
+      "coHostName": "Partner (another organization)",
+      "coHostUrl": "Partner's page",
+      "coHostRows": {
+        "add": "Add a partner",
+        "remove": "Remove partner"
+      },
+      "coHostHelp": "Optional. The organizations the club holds the event with — an NGO, a shop, a brand, another club — one per row, with their page if they have one. Shown as “Together with A, B, and C” on the page and on the card, and named as organizers after the club to Google. Partners travel to every date of a series.",
       "stravaEventUrl": "Strava event link",
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
       "facebookEventUrl": "Link to the Facebook event",
@@ -946,13 +957,14 @@
         },
         "contactForm": {
           "title": "The contact form",
-          "todo": "The “Write to us” page is built: the visitor's name, address and message arrive as an ordinary email in the club's mailbox, straight through Gmail — not through Mailgun, so none of the 100 messages a day are spent. Until the three variables are set, the page shows the club's address instead of the form.",
+          "todo": "The “Write to us” page is built: the visitor's name, address and message arrive as an ordinary email in the club's mailbox, straight through Gmail — not through Mailgun, so none of the 100 messages a day are spent. Until the sending account has its address and app password, the page shows the club's address instead of the form; who receives the messages is written in the app, on /admin/emails.",
           "done": "The contact form sends to the club's mailbox.",
           "how": [
             "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
             "Still under Security → App passwords → create one named “Brașov Runners site” → copy the 16 characters (shown once).",
-            "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters; CONTACT_FORM_TO = the addresses that receive the messages, comma-separated (the club's Gmail, Amalia's Yahoo).",
+            "Vercel → the production project (and QA) → Settings → Environment Variables: CONTACT_SMTP_USER = the club's Gmail address; CONTACT_SMTP_PASSWORD = the 16 characters. (CONTACT_FORM_TO is no longer required — it is only the fallback for the recipients.)",
             "Redeploy both projects.",
+            "In the app: /admin/emails → “Who receives the contact messages” → write the addresses under “To” and, if somebody should get a copy, under “Copy (Cc)” → Save. Changed here at any time, with no redeploy.",
             "Open {baseUrl}/en/contact and send a test message: “Your message is on its way.” on the page and the email in the mailbox, with “Reply” addressed to whoever wrote. This row turns green."
           ]
         }
@@ -1013,12 +1025,12 @@
         },
         "mailgun": {
           "name": "Mailgun (sending email)",
-          "freeGives": "Free: 100 emails a day. Until the club has its own address, email can only go to five test addresses.",
+          "freeGives": "Free: 100 emails a day — on one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. Until the club has its own address, email can only go to five test addresses.",
           "ceiling": "The first limit: 100 emails a day, which is about 33 entries, because one complete entry takes three emails.",
           "whenCrossed": "Emails over the limit are not lost: they wait in the queue and go out after midnight. But a race whose confirmations only arrive the next morning is a bad race, so the paid plan is bought before entries open, not during them.",
-          "closeMeasured": "{used} of {of} emails have gone out today — enough left for about {left} entries.",
+          "closeMeasured": "{used} of {of} emails have gone out today — enough left for about {left} entries. Counted from this environment's own messages; the allowance belongs to one Mailgun account, shared with the other environment.",
           "bumpBack": "Taken for the month of the race and stopped the month after. One month per race, not a long-term subscription.",
-          "closeMeasuredMonth": "This month {used} of {of} emails went out (plan {plan}) — enough for about {left} more registrations.",
+          "closeMeasuredMonth": "This month {used} of {of} emails went out (plan {plan}) — enough for about {left} more registrations. Counted from this environment's own messages; the allowance belongs to one Mailgun account, shared with the other environment.",
           "closeNone": "Plan {plan}, no message limit."
         },
         "vercel": {
@@ -1382,7 +1394,26 @@
         "save": "Save the plan",
         "saving": "Saving…",
         "saved": "The plan is saved; the figures above and on /admin/tasks use it from now on.",
-        "unlimited": "no limit"
+        "unlimited": "no limit",
+        "shared": "The 100 messages a day belong to one Mailgun account, used by both QA and production: what one sends comes off what the other can still send. The figures above are counted from this environment's own messages; the allowance is the club's, shared."
+      },
+      "contacts": {
+        "title": "Who receives the contact messages",
+        "intro": "Messages from “Write to us” leave through the club's own Google account, not through Mailgun, and spend none of the 100 a day. Set who receives them here: “To” are the recipients, “Copy (Cc)” are the people who get a copy and can see one another. Saved here, with no redeploy.",
+        "source": {
+          "setting": "They currently reach: {to}. Copy: {cc}. Set here, in the app.",
+          "environment": "They currently reach: {to} — from the CONTACT_FORM_TO variable on the server, because the list below is empty. Copy: {cc}.",
+          "none": "Nobody receives them: the “Write to us” page shows the club's address instead of the form. Write at least one address under “To”."
+        },
+        "updatedAt": "Set on {when}.",
+        "to": "To (addresses separated by commas)",
+        "toHelp": "Who receives the message. Empty means CONTACT_FORM_TO on the server is used instead.",
+        "cc": "Copy – Cc (addresses separated by commas)",
+        "ccHelp": "They get a copy of every message the form sends, on “Cc”, so they can see one another. Empty means no copies.",
+        "save": "Save the recipients",
+        "saving": "Saving…",
+        "saved": "The contact form's recipients have been saved.",
+        "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
       }
     },
     "guide": {
@@ -1834,11 +1865,15 @@
       },
       "contactFormSmtp": {
         "title": "Contact form",
-        "body": "Sends over SMTP, straight from the club's Gmail, to CONTACT_FORM_TO — not through Mailgun and not through the email queue."
+        "body": "Sends over SMTP, straight from the club's Gmail — not through Mailgun and not through the email queue. The recipients come from /admin/emails, or from CONTACT_FORM_TO while nobody is set there; the label beside this says which one answered."
+      },
+      "contactFormNoRecipients": {
+        "title": "Contact form",
+        "body": "It can send, but there is nobody to send to: neither the list on /admin/emails nor CONTACT_FORM_TO holds an address. The “Write to us” page shows the club's address until somebody writes a recipient on /admin/emails — no redeploy needed."
       },
       "contactFormOff": {
         "title": "Contact form",
-        "body": "The “Write to us” page shows the club's address instead of the form. For the form: CONTACT_SMTP_USER (the Gmail address), CONTACT_SMTP_PASSWORD (the app password) and CONTACT_FORM_TO (the recipients, comma-separated)."
+        "body": "The “Write to us” page shows the club's address instead of the form. The sending account is missing: CONTACT_SMTP_USER (the Gmail address) and CONTACT_SMTP_PASSWORD (the app password). The recipients are written in the app, on /admin/emails; CONTACT_FORM_TO is only the fallback."
       }
     },
     "rateLimits": "Rate limits",
@@ -1984,6 +2019,7 @@
   },
   "Gallery": {
     "title": "Gallery",
+    "loading": "Loading…",
     "intro": "Photos from the club's runs, races and meetups.",
     "empty": "No published albums yet.",
     "backToGallery": "← All albums",

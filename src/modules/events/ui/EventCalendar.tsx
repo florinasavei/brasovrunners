@@ -1,14 +1,10 @@
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
-import ChipLink from "@/shared/ui/ChipLink";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
 import { getPathname, Link } from "@/i18n/navigation";
 import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
+import { fadeInSoft } from "@/theme/motion";
 import {
   type CalendarDay,
   dayKey,
@@ -16,14 +12,11 @@ import {
   groupByMonth,
   monthGrid,
   monthParam,
-  shiftMonth,
   type YearMonth,
-  yearsAround,
 } from "../domain/calendar";
 import type { PublicEvent } from "../repository";
 import { editionDifference, groupSeries, usualOf } from "../domain/series";
 import CalendarEventChip from "./CalendarEventChip";
-import CalendarPicker from "./CalendarPicker";
 import type { EditionNote } from "./EditionMark";
 import type { GlyphName } from "./glyphs";
 import { editionNote } from "./series-sentence";
@@ -35,16 +28,21 @@ export type CalendarView = { kind: "month"; month: YearMonth } | { kind: "year";
 export type CalendarLayout = "grid" | "list";
 
 /**
- * The month, as a grid on every width — or as an agenda when the reader asks (`?view=list`;
- * `DECISIONS.md` §89, §137) — or the year, as the agenda of every month that has something
- * on it (§116).
+ * The calendar's **body**: the month as a grid on every width — or as an agenda when the
+ * reader asks (`?view=list`; `DECISIONS.md` §89, §137) — or the year, as the agenda of every
+ * month that has something on it (§116).
  *
- * Server-rendered and navigated by links — `?month=2026-10`, `?year=2027`, `?view=list` — so
- * the whole thing is HTML and a crawler reads next month's runs; the two selects
- * (`CalendarPicker`) and the event chips (`CalendarEventChip`, for the tooltip) are the
- * islands, and they only go where a link could. A seven-column grid at 320px has 40px a
- * column: there a chip is its glyphs over the time, and the title is the tooltip's and the
- * page's (the owner: "use the same calendar view, we can have tooltips").
+ * The controls that change the period are `CalendarHeader`, and the split is deliberate
+ * (§166): this is the half that costs a query, so this is the half the listing wraps in a
+ * `<Suspense>` boundary. `events` therefore arrives as a **promise** — the page starts the
+ * query and hands it over without awaiting, so the rest of the page can be sent to the
+ * browser while the database is still answering, and this region shows a skeleton of its own
+ * exact size until it is not.
+ *
+ * Server-rendered and navigated by links, so the whole thing is HTML and a crawler reads next
+ * month's runs; the event chips (`CalendarEventChip`, for the tooltip) are the only island
+ * here, and they only go where a link could. A seven-column grid at 320px has 40px a column:
+ * there a chip is its glyphs over the time, and the title is the tooltip's and the page's.
  *
  * Each event is one link with its type's glyph and its surface's (§112). A race is filled in
  * the brand colour, everything else is quiet: the race is what the page advertises, the
@@ -58,7 +56,8 @@ export default async function EventCalendar({
   layout = "grid",
 }: {
   view: CalendarView;
-  events: PublicEvent[];
+  /** Awaited here, so the boundary above suspends on the query rather than the page doing it. */
+  events: PublicEvent[] | Promise<PublicEvent[]>;
   now: Date;
   /** Other query parameters the month links keep — the type filter (§89), the layout (§137). */
   query?: Record<string, string>;
@@ -67,22 +66,9 @@ export default async function EventCalendar({
   const t = await getTranslations("Events");
   const format = await getFormatter();
   const locale = (await getLocale()) as "ro" | "en";
+  const rows = await events;
 
   const today = dayKey(now, CLUB_TIME_ZONE);
-  const month: YearMonth = view.kind === "month" ? view.month : { year: view.year, month: 1 };
-  const anchor = new Date(Date.UTC(month.year, month.month - 1, 1, 12));
-  const title =
-    view.kind === "month"
-      ? format.dateTime(anchor, { timeZone: "UTC", month: "long", year: "numeric" })
-      : String(view.year);
-  const basePath = getPathname({ locale, href: "/events" });
-  const href = (params: Record<string, string>, drop?: string) => {
-    const merged: Record<string, string> = { ...query, ...params };
-    if (drop) delete merged[drop];
-    return getPathname({ locale, href: { pathname: "/events", query: merged } });
-  };
-  const previousHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, -1)) }) : href({ year: String(view.year - 1) });
-  const nextHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, 1)) }) : href({ year: String(view.year + 1) });
 
   const time = (event: PublicEvent) =>
     format.dateTime(event.startsAt, { timeZone: event.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -90,7 +76,7 @@ export default async function EventCalendar({
   // A date unlike its series' others (§122) — read against the dates on view, which is the
   // series as the reader sees it here; a lone cancelled event is marked too.
   const notes = new Map<string, EditionNote>();
-  for (const series of groupSeries(events)) {
+  for (const series of groupSeries(rows)) {
     const usual = series.members.length > 1 ? usualOf(series.members) : { place: null, time: null };
     for (const member of series.members) {
       const note = await editionNote(editionDifference(member, usual));
@@ -124,13 +110,6 @@ export default async function EventCalendar({
     );
   };
 
-  // A string href, because a component reference cannot cross into MUI's client component.
-  const stepLink = (target: string, label: string, icon: ReactNode) => (
-    <IconButton component="a" href={target} aria-label={label} sx={{ minHeight: 44, minWidth: 44 }}>
-      {icon}
-    </IconButton>
-  );
-
   /** The agenda of some days: the weekday and the number, then the day's events; `dense` in a month box. */
   const agenda = (days: CalendarDay[], byDay: Map<string, PublicEvent[]>, dense = false) => (
     <Stack component="ol" spacing={dense ? 1 : 1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
@@ -155,52 +134,12 @@ export default async function EventCalendar({
     </Stack>
   );
 
-  const header = (
-    <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1.5 }}>
-      <Typography id="calendar-title" component="h2" variant="h2" sx={{ fontSize: "1.25rem", textTransform: "capitalize" }}>
-        {title}
-      </Typography>
-      <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-        {/* Month or year, by select (§116) — the arrows step one at a time, "today" resets. */}
-        <CalendarPicker
-          basePath={basePath}
-          query={query}
-          view={view.kind}
-          year={month.year}
-          month={month.month}
-          years={yearsAround(now, CLUB_TIME_ZONE)}
-          monthNames={monthNames}
-          labels={{ month: t("calendar.pickMonth"), year: t("calendar.pickYear") }}
-        />
-        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-          {stepLink(previousHref, view.kind === "month" ? t("calendar.previous") : t("calendar.previousYear"), <ChevronLeftIcon />)}
-          <Link href={{ pathname: "/events", query }} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
-            {t("calendar.today")}
-          </Link>
-          {stepLink(nextHref, view.kind === "month" ? t("calendar.next") : t("calendar.nextYear"), <ChevronRightIcon />)}
-        </Stack>
-        {/* The view: one month, or the whole year — small pills in 44px links (§158). */}
-        <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.viewMonth")} / ${t("calendar.viewYear")}`}>
-          <ChipLink href={href({ month: monthParam(month) })} label={t("calendar.viewMonth")} active={view.kind === "month"} current={view.kind === "month" ? "page" : undefined} />
-          <ChipLink href={href({ year: String(month.year) })} label={t("calendar.viewYear")} active={view.kind === "year"} current={view.kind === "year" ? "page" : undefined} />
-        </Stack>
-        {/* The layout, for a month (§137): the grid, or the list a phone used to get by default. */}
-        {view.kind === "month" && (
-          <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`}>
-            <ChipLink href={href({}, "view")} label={t("calendar.layoutGrid")} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
-            <ChipLink href={href({ view: "list" })} label={t("calendar.layoutList")} active={layout === "list"} current={layout === "list" ? "page" : undefined} />
-          </Stack>
-        )}
-      </Stack>
-    </Stack>
-  );
-
   if (view.kind === "year") {
-    const byMonth = groupByMonth(events);
+    const byMonth = groupByMonth(rows);
     const months = Array.from({ length: 12 }, (_, i) => ({ year: view.year, month: i + 1 })).filter((ym) => byMonth.has(monthParam(ym)));
     return (
-      <Box component="section" aria-labelledby="calendar-title" id="calendar">
-        {header}
+      // The streamed swap settles rather than snapping; static for reduced motion (§166).
+      <Box sx={fadeInSoft}>
         {months.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
             {t("calendar.yearEmpty")}
@@ -242,19 +181,25 @@ export default async function EventCalendar({
   }
 
   const weeks = monthGrid(view.month);
-  const byDay = groupByDay(events);
+  const byDay = groupByDay(rows);
+  // The grid's accessible name is the month it shows, the same string the heading above it
+  // carries — recomputed here rather than passed down, because it is one `Intl` call and a
+  // prop would have tied the streamed body back to the header it was split from.
+  const monthTitle = format.dateTime(new Date(Date.UTC(view.month.year, view.month.month - 1, 1, 12)), {
+    timeZone: "UTC",
+    month: "long",
+    year: "numeric",
+  });
   // The agenda: the month's days that have something on them, in order.
   const agendaDays = weeks.flat().filter((day) => day.inMonth && byDay.has(day.key));
 
   return (
-    <Box component="section" aria-labelledby="calendar-title" id="calendar">
-      {header}
-
+    <Box sx={fadeInSoft}>
       {/* The grid, on every width — unless the list was asked for. */}
       {layout === "grid" && (
       <Box
         role="table"
-        aria-label={title}
+        aria-label={monthTitle}
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(7, minmax(0, 1fr))",

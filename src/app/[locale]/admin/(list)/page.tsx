@@ -39,6 +39,7 @@ import { editionNote } from "@/modules/events/ui/series-sentence";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TYPE_GLYPH } from "@/modules/events/ui/glyphs";
 import { recurrenceSentence } from "@/modules/events/ui/series-sentence";
+import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import PencilIcon from "@/shared/ui/PencilIcon";
 import {
@@ -211,8 +212,10 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
               </Typography>
             )}
             {members.length > 1 ? (
-              /* The dates, folded: each its own link into the editor, with its state (§113). */
-              <Box component="details" sx={{ "& > summary": { cursor: "pointer", minHeight: 36, display: "flex", alignItems: "center" } }}>
+              /* The dates, folded: each its own link into the editor, with its state (§113);
+                 the shared affordance (§164) at the backoffice's own density — the height is
+                 padding, because `display: flex` on a `<summary>` removes the triangle. */
+              <Box component="details" sx={{ "& > summary": { ...DISCLOSURE_SUMMARY_SX, minHeight: 36, py: 0.5 } }}>
                 <Typography component="summary" variant="body2">
                   {t("events.seriesDates")}
                 </Typography>

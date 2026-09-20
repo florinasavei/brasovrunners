@@ -4,16 +4,19 @@ import {
   createSmtpTransport,
 } from "@/infrastructure/email/smtp-adapter";
 import { env, type Env } from "@/shared/config/env";
+import { type ContactRecipients, resolveContactRecipients } from "./domain/recipients";
 import type { ContactDelivery } from "./service";
 
 /**
- * Where the contact form's configuration meets its transport (`DECISIONS.md` §149) — the
- * `sender.ts` of this one message, and the only module here that reads `env`.
+ * Where the contact form's configuration meets its transport (`DECISIONS.md` §149, §164) —
+ * the `sender.ts` of this one message, and the only module here that reads `env`.
  *
- * `CONTACT_FORM_MODE` is derived in `env.ts`: `capture` on a laptop and in the tests (no
- * socket, ever), `smtp` on a deployment with a sender, its password and somebody to send
- * to, `off` otherwise. The page reads the mode to decide whether to show the form at all;
- * the action asks for the delivery and gets `null` when there is none.
+ * `CONTACT_FORM_MODE` is derived in `env.ts` and answers one question only: has this
+ * deployment a way of sending at all — `capture` on a laptop and in the tests (no socket,
+ * ever), `smtp` with the Gmail account and its app password, `off` otherwise. *Who* receives
+ * is the club's, set on `/admin/emails` and passed in here (§164), with `CONTACT_FORM_TO` as
+ * the fallback for a deployment whose database has no row yet. Both must answer for the form
+ * to exist: a transport with nobody to send to is `null`, exactly as no transport is.
  */
 
 /** One capture for the process, so what a request captured is what `/devs` shows a minute later (§124). */
@@ -38,16 +41,38 @@ export type ContactConfig = Pick<
   | "EMAIL_FROM_NAME"
 >;
 
-export function contactDeliveryFor(config: ContactConfig): ContactDelivery | null {
+type ContactRoute = Omit<ContactDelivery, "transport">;
+
+/** The addresses and the envelope, with no transport attached — what both callers below need. */
+function contactRoute(config: ContactConfig, recipients: ContactRecipients | null): ContactRoute | null {
   if (config.CONTACT_FORM_MODE === "off") return null;
+
+  const resolved = resolveContactRecipients(recipients, config.CONTACT_FORM_TO);
+  // Nobody to send to is the same answer as no way to send: the page shows the club's address.
+  // On a laptop a placeholder stands in, so the form works with nothing configured at all.
+  const to =
+    resolved.to.length > 0 ? resolved.to : config.CONTACT_FORM_MODE === "capture" ? ["club@localhost"] : null;
+  if (!to) return null;
 
   // The display name is the club's, quoted by Nodemailer; the address is the Gmail account —
   // Google rewrites any other sender to it anyway. Captured, a placeholder stands in.
   const from = { name: config.EMAIL_FROM_NAME, address: config.CONTACT_SMTP_USER ?? "contact@localhost" };
-  const to = config.CONTACT_FORM_TO.length > 0 ? config.CONTACT_FORM_TO : ["club@localhost"];
-  const appEnv = config.APP_ENV;
+  return { from, to, cc: resolved.cc, appEnv: config.APP_ENV };
+}
 
-  if (config.CONTACT_FORM_MODE === "capture") return { transport: sharedCapture, from, to, appEnv };
+/** Can a message posted on this deployment reach anybody? The page asks before it shows a form. */
+export function contactFormReaches(config: ContactConfig, recipients: ContactRecipients | null): boolean {
+  return contactRoute(config, recipients) !== null;
+}
+
+export function contactDeliveryFor(
+  config: ContactConfig,
+  recipients: ContactRecipients | null,
+): ContactDelivery | null {
+  const route = contactRoute(config, recipients);
+  if (!route) return null;
+
+  if (config.CONTACT_FORM_MODE === "capture") return { transport: sharedCapture, ...route };
 
   return {
     transport: createSmtpTransport({
@@ -56,13 +81,11 @@ export function contactDeliveryFor(config: ContactConfig): ContactDelivery | nul
       user: config.CONTACT_SMTP_USER ?? "",
       password: config.CONTACT_SMTP_PASSWORD ?? "",
     }),
-    from,
-    to,
-    appEnv,
+    ...route,
   };
 }
 
-/** This process's delivery, from its environment. */
-export function contactDelivery(): ContactDelivery | null {
-  return contactDeliveryFor(env);
+/** This process's delivery, from its environment and the club's own recipient list. */
+export function contactDelivery(recipients: ContactRecipients | null): ContactDelivery | null {
+  return contactDeliveryFor(env, recipients);
 }

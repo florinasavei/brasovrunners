@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
+import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -93,7 +94,12 @@ export default async function SiteFooter() {
           <Box
             component="summary"
             sx={{
-              cursor: "pointer",
+              // The shared affordance (§164): marker, pointer, and an underline on hover and
+              // on focus. The height is the bar's here rather than the shared padding — this
+              // summary *is* the bar — and the rest is the same fold everywhere else is.
+              ...DISCLOSURE_SUMMARY_SX,
+              py: 0,
+              minHeight: BAR_HEIGHT,
               color: "text.secondary",
               fontSize: "0.8125rem",
               lineHeight: `${BAR_HEIGHT}px`,

@@ -232,4 +232,34 @@ describe("BR-REQ-011-01 event configuration", () => {
       ]);
     });
   });
+
+  describe("criterion 15 a special edition, any number of them (`DECISIONS.md` §168)", () => {
+    it("puts no limit on how many events are special, unlike the featured flag", async () => {
+      await insertEvent({ isSpecial: true });
+      await insertEvent({ isSpecial: true });
+      await expect(insertEvent({ isSpecial: true })).resolves.toBeDefined();
+    });
+
+    it("lifts a special edition above the ordinary ones in its own band, and never above the lead", async () => {
+      const featured = await insertEvent({ startsAt: new Date("2026-12-01T06:00:00Z"), featured: true });
+      const race = await insertEvent({ startsAt: new Date("2026-09-20T06:00:00Z") });
+      const ordinaryRun = await insertEvent({ type: "GROUP_RUN", startsAt: new Date("2026-09-15T06:00:00Z") });
+      const specialRun = await insertEvent({ type: "GROUP_RUN", startsAt: new Date("2026-09-16T06:00:00Z"), isSpecial: true });
+
+      await publish(featured.id, "crosul-aniversar");
+      await publish(race.id, "cursa-devreme");
+      await publish(ordinaryRun.id, "alergare");
+      await publish(specialRun.id, "alergare-cu-maratonul");
+
+      const list = await listUpcomingEvents(db, "ro", new Date("2026-09-01T00:00:00Z"));
+      // The lead is still the lead and the race is still ahead of the runs; among the runs,
+      // the special Wednesday comes first although it is a day later.
+      expect(list.map((event) => event.slug)).toEqual([
+        "crosul-aniversar",
+        "cursa-devreme",
+        "alergare-cu-maratonul",
+        "alergare",
+      ]);
+    });
+  });
 });

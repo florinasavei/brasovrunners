@@ -8,6 +8,7 @@ import { findEventForRegistrationById } from "@/modules/events/repository";
 import { readPublicAvailability } from "@/modules/registrations/service";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { accentOnHover } from "@/theme/surfaces";
 import { registrationCta } from "../domain/registration-cta";
 import { registrationState } from "../domain/registration-window";
 import type { PublicEvent } from "../repository";
@@ -68,7 +69,7 @@ export default async function RegistrationCta({
           target="_blank"
           rel="noopener noreferrer nofollow"
           variant="contained"
-          sx={TAP_TARGET}
+          sx={{ ...TAP_TARGET, ...accentOnHover }}
         >
           {cta.provider
             ? t("cta.externalWithProvider", { provider: cta.provider })
@@ -83,7 +84,10 @@ export default async function RegistrationCta({
       <Stack spacing={1} sx={{ mt: 3, alignItems: "flex-start" }}>
         <ButtonLink
           variant="contained"
-          sx={TAP_TARGET}
+          // The one action the page exists for, so it is the one button that lights up under
+          // a pointer (§166). Hover only, and only where hover is real: on a phone `:hover`
+          // sticks after a tap and the button would stay lit for the rest of the visit.
+          sx={{ ...TAP_TARGET, ...accentOnHover }}
           href={{ pathname: "/events/[slug]/register", params: { slug: event.slug } }}
         >
           {cta.kind === "FULL" ? t("cta.joinWaitingList") : t("cta.register")}

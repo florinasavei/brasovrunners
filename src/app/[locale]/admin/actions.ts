@@ -126,6 +126,19 @@ function eventFieldsFrom(form: FormData) {
     scheduleRows[index] = { ...(scheduleRows[index] ?? {}), [match[2]]: entry };
   }
 
+  /**
+   * The partners (§168), posted as `event.coHosts[i].<box>` by `CoHostRowsEditor` — gathered
+   * by index like the programme's rows above, blanks included; `fields.ts` drops the spare
+   * line and refuses a page with no name beside it.
+   */
+  const coHosts: Array<Record<string, string>> = [];
+  for (const [key, entry] of form.entries()) {
+    const match = /^event\.coHosts\[(\d+)\]\.(name|url)$/.exec(key);
+    if (!match || typeof entry !== "string") continue;
+    const index = Number(match[1]);
+    coHosts[index] = { ...(coHosts[index] ?? {}), [match[2]]: entry };
+  }
+
   return {
     type: value("type"),
     // Optional, like difficulty below: "" from the unselected dropdown means "none".
@@ -139,8 +152,7 @@ function eventFieldsFrom(form: FormData) {
     scheduleRows: scheduleRows.filter((row) => row !== undefined),
     stravaEventUrl: value("stravaEventUrl"),
     facebookEventUrl: value("facebookEventUrl"),
-    coHostName: value("coHostName"),
-    coHostUrl: value("coHostUrl"),
+    coHosts: coHosts.filter((row) => row !== undefined),
     // One value for the whole event (`DECISIONS.md` §36), so they arrive with the event half.
     locationName: value("locationName"),
     // No box for it any more (`EventFieldsForm`); the field is folded into the meeting point.
@@ -154,6 +166,9 @@ function eventFieldsFrom(form: FormData) {
     distanceMeters: value("distanceMeters"),
     elevationGainMeters: value("elevationGainMeters"),
     featured: form.get("event.featured") === "on",
+    // A checkbox like the one above it, and unlike it in every other way: any number of
+    // events may be special (§168), so nothing is cleared when one is ticked.
+    isSpecial: form.get("event.isSpecial") === "on",
     registrationMode: value("registrationMode"),
     capacity: value("capacity"),
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),

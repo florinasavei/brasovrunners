@@ -5,6 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
 import type { Locale } from "@/i18n/routing";
+import { readCoHosts } from "@/modules/events/domain/co-hosts";
 import { hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import {
   horizonEnd,
@@ -320,8 +321,15 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     videoUrl: fields.videoUrl,
     stravaEventUrl: fields.stravaEventUrl,
     facebookEventUrl: fields.facebookEventUrl,
-    coHostName: fields.coHostName,
-    coHostUrl: fields.coHostName ? fields.coHostUrl : null,
+    // The partners as a list (§168). `co_host_name`/`co_host_url` are not written here any
+    // more and not read anywhere: they hold whatever they held until a later contraction
+    // drops them, and `readCoHosts` prefers the list whenever the row has one — which is why
+    // an editor that removed every partner must write `[]` rather than null.
+    //
+    // A caller that said nothing about the partners writes no column at all (§169): `[]`
+    // would be indistinguishable from "remove them", and on a row saved before the list
+    // existed that would erase the partner its two old columns still hold.
+    ...(fields.coHosts === undefined ? {} : { coHosts: fields.coHosts }),
     locationName: fields.locationName,
     locationAddress: fields.locationAddress,
     difficulty: fields.difficulty,
@@ -329,6 +337,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     distanceMeters: fields.distanceMeters,
     elevationGainMeters: fields.elevationGainMeters,
     featured: fields.featured,
+    isSpecial: fields.isSpecial,
     registrationMode: fields.registrationMode,
     capacity: fields.capacity,
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
@@ -718,8 +727,7 @@ const SERIES_COLUMNS = [
   "timezone",
   "mapUrl",
   "routeUrl",
-  "coHostName",
-  "coHostUrl",
+  "coHosts",
   "locationName",
   "locationAddress",
   "difficulty",
@@ -767,8 +775,10 @@ function wallDay(date: Date, zone: string): number {
  * on its own keeps that place unless the place is what was edited; a cancelled date stays
  * cancelled unless the status is what was edited. An instant lands at the same wall-clock time
  * on each date's own day (the run moved to 18:50 is at 18:50 every Wednesday), the programme's
- * rows shifted by the same days as when the date was made; the featured flag, the rule, the
- * publication state, a film and a Strava event are one date's own and never travel; a slug is
+ * rows shifted by the same days as when the date was made; a partner is the series' and
+ * travels with it (§168); the featured flag, **the special mark** — the owner: "some dates can
+ * be special events where we overlap with, say, Brașov Marathon on the same Wednesday" — the
+ * rule, the publication state, a film and a Strava event are one date's own and never travel; a slug is
  * a public address and never changes. Capacity is checked against each date's own places
  * taken, and one date too full refuses the whole save, naming its day. Every touched row takes
  * a new version, in the caller's transaction.
@@ -794,7 +804,17 @@ async function applyToSeries<T extends Record<string, unknown>>(
 
   const rowChanges: Partial<Record<(typeof SERIES_COLUMNS)[number], unknown>> = {};
   for (const column of SERIES_COLUMNS) {
-    if (!sameValue(before[column], after[column])) rowChanges[column] = after[column];
+    // The partners are compared by what the row *means*, not by what the column holds
+    // (§169). A row nobody has saved since the list existed holds `null` where a saved one
+    // holds `[]`, and both mean "no partners" — comparing the raw columns would make the
+    // first series save of every legacy event report and apply a change nobody made, on a
+    // save that changed nothing. `readCoHosts` is the one place that decides what a row
+    // means, so it is the one place this may ask.
+    const differs =
+      column === "coHosts"
+        ? !sameValue(readCoHosts(before), readCoHosts(after))
+        : !sameValue(before[column], after[column]);
+    if (differs) rowChanges[column] = after[column];
   }
   const timeChanges = SERIES_TIME_COLUMNS.filter((column) => !sameValue(before[column], after[column]));
   const scheduleChanged = !sameValue(before.scheduleItems, after.scheduleItems);
@@ -1165,7 +1185,7 @@ type TranslationRow = typeof eventTranslations.$inferSelect;
  * Every column a copy inherits from its source, in one place for duplicating and repeating.
  *
  * What a copy deliberately does not inherit: publication and the first-publication date, the
- * featured flag, and the start list switch — publishing names is a decision about the people
+ * featured flag, the special mark (§168), and the start list switch — publishing names is a decision about the people
  * who entered *that* event, and a copy has none. It starts HIDDEN like every other new event.
  */
 function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
@@ -1188,6 +1208,10 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     videoUrl: null,
     stravaEventUrl: null,
     facebookEventUrl: null,
+    coHosts: source.coHosts,
+    // The two columns the list replaced (§168) travel with a copy as well, so that copying a
+    // row nobody has saved since the list existed does not lose the partner it still holds
+    // there. Nothing reads them while `co_hosts` is a list.
     coHostName: source.coHostName,
     coHostUrl: source.coHostUrl,
     // Never the rule: a copy is one date, and only the source repeats (§122).
@@ -1200,6 +1224,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     distanceMeters: source.distanceMeters,
     elevationGainMeters: source.elevationGainMeters,
     featured: false,
+    // Nor the special mark (§168): it says something about one edition — the anniversary, the
+    // Wednesday another club's race passes through — and the copy is a different one.
+    isSpecial: false,
     capacity: source.capacity,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: source.confirmationDeadlineDaysBefore,

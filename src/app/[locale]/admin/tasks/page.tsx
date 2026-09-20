@@ -50,10 +50,13 @@ import {
   messagesPerCompletedRegistration,
   readEmailVolumeToday,
 } from "@/modules/notifications/volume";
+import { contactFormReaches } from "@/modules/contact/delivery";
+import { readContactRecipients } from "@/modules/contact/recipients";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
+import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -153,6 +156,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now);
+  // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
+  const contactRecipients = await readContactRecipients(db);
   // The plan the club says it is on (§100): its price is a row on the cost table below.
   const emailPlan = await readEmailPlan(db);
   const emailPlanCeilings = emailCeilings(emailPlan);
@@ -214,8 +219,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
       declarationArchiveConfigured: Boolean(env.DECLARATIONS_ARCHIVE_TO),
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
-      // Capture counts, like local storage does: on a laptop the form works and nothing is owed.
-      contactFormConfigured: env.CONTACT_FORM_MODE !== "off",
+      // Capture counts, like local storage does: on a laptop the form works and nothing is
+      // owed. Since §164 the recipients are the club's own, so the row asks the same question
+      // the page does: is there a way out, and is there anybody at the other end.
+      contactFormConfigured: contactFormReaches(env, contactRecipients),
     }),
   );
 
@@ -438,7 +445,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             */}
             {task.state !== "done" && (
               <Box component="details" sx={{ mt: 1.5 }}>
-                <Box component="summary" sx={{ cursor: "pointer", fontSize: "0.875rem", fontWeight: 500 }}>
+                <Box component="summary" sx={{ ...DISCLOSURE_SUMMARY_SX, minHeight: 36, py: 0.5, fontSize: "0.875rem", fontWeight: 500 }}>
                   {t("howTitle")}
                 </Box>
                 <Box component="ol" sx={{ m: 0, mt: 1, pl: 2.5, "& li": { mb: 0.75 } }}>

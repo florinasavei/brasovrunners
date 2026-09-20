@@ -337,6 +337,13 @@
       "when": 1789843955867,
       "tag": "0047_registration_interests",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789896377978,
+      "tag": "0048_special_and_co_hosts",
+      "breakpoints": true
     }
   ]
 }

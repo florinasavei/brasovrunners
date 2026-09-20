@@ -85,7 +85,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
 
   const message = renderContactMessage(
     { name: input.name, email: input.email, message: input.message, locale: input.locale, pageUrl },
-    { from: delivery.from, to: delivery.to, appEnv: delivery.appEnv },
+    { from: delivery.from, to: delivery.to, cc: delivery.cc, appEnv: delivery.appEnv },
   );
   const result = await delivery.transport.send(message);
   if (result.outcome === "sent") return { outcome: "sent" };

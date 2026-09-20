@@ -139,9 +139,11 @@ export type OwnerTaskInputs = {
   /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
   vercelUsageConfigured: boolean;
   /**
-   * Can the contact form reach the club (§149)? `CONTACT_FORM_MODE=smtp` — the Gmail app
-   * password and the recipients on the deployment (`capture` on a laptop counts, as the local
-   * media store does). Off, the page shows the club's address instead.
+   * Can the contact form reach the club (§149, §164)? Both halves: a way to send — the Gmail
+   * account and its app password, `CONTACT_FORM_MODE` (`capture` on a laptop counts, as the
+   * local media store does) — and somebody to send to, from the club's own list on
+   * `/admin/emails` or from `CONTACT_FORM_TO` behind it. Either one missing and the page
+   * shows the club's address instead, so the row is open until both answer.
    */
   contactFormConfigured: boolean;
   /**

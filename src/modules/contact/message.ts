@@ -28,6 +28,11 @@ export type ContactMessageInput = {
 export type ContactMessageRoute = {
   from: SmtpAddress;
   to: readonly string[];
+  /**
+   * The club's copy list (`DECISIONS.md` §164): a real `Cc` header, not a second `To`, so a
+   * colleague sees she was copied and "Reply all" keeps the club together on the thread.
+   */
+  cc?: readonly string[];
   /** Which deployment sends it, for the subject's mark. */
   appEnv: AppEnvironment;
 };
@@ -79,7 +84,11 @@ export function renderContactMessage(input: ContactMessageInput, route: ContactM
 
   return {
     from: route.from,
-    to: route.to,
+    // Each address on one line, whatever a setting or a variable once held: a header may not
+    // fold (§164). Both lists, because `CONTACT_FORM_TO` is never validated at startup —
+    // the operator types it — while the setting's addresses met the canonicalizer.
+    to: route.to.map(headerSafe),
+    ...(route.cc && route.cc.length > 0 ? { cc: route.cc.map(headerSafe) } : {}),
     replyTo: { name, address: input.email },
     subject: markSubjectForEnvironment(contactSubject(name), route.appEnv),
     text,

@@ -12,6 +12,7 @@ import EventKindChips from "./EventKindChips";
 import GlyphChip from "./GlyphChip";
 import RegistrationCta from "./RegistrationCta";
 import { fadeIn } from "@/theme/motion";
+import { heroSurface } from "@/theme/surfaces";
 
 /**
  * The event the club is leading with, above the ordinary listing.
@@ -56,11 +57,19 @@ export default async function FeaturedEventHero({
         border: 2,
         borderColor: "primary.main",
         boxShadow: 3,
+        // A gradient rather than a flat card (§166; the owner: "I need more gradients"): the
+        // card colour walked a few steps towards the club's blue, and no further — body text,
+        // muted text and the countdown are all asserted against both ends of both schemes in
+        // `tests/unit/theme/brand.test.ts`. `bgcolor` stays underneath as the fallback.
         bgcolor: "background.paper",
+        ...heroSurface,
       }}
     >
       <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
         <GlyphChip glyph="featured" color="primary" label={t("featured")} />
+        {/* Special is not featured (§168): the lead event may also be an edition apart, and
+            then it says both — "the one we are leading with" and "not an ordinary one". */}
+        {event.isSpecial && <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />}
         <EventKindChips type={event.type} surface={event.surface} />
         {/* BR-REQ-020-01 criterion 2: a cancelled event says so wherever it appears. */}
         {event.eventStatus === "CANCELLED" && (

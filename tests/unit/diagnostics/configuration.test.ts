@@ -19,6 +19,7 @@ function facts(overrides: Partial<ConfigurationFacts> = {}): ConfigurationFacts 
     emailDeliveryMode: "capture",
     staffAuthMode: "dev-switcher",
     contactFormMode: "capture",
+    contactRecipientsSource: "environment",
     allowlistCount: 0,
     present: { JOB_SECRET: true, DATABASE_URL: true },
     ...overrides,
@@ -169,7 +170,7 @@ describe("BR-REQ-090-04 the report cannot carry a value", () => {
 });
 
 describe("BR-REQ-070-04 the contact form's way out", () => {
-  it("calls capture correct, SMTP configured, and off on a deployment limited with the three variables named", () => {
+  it("calls capture correct, SMTP configured, and off on a deployment limited with the missing half named", () => {
     expect(check(describeConfiguration(facts()), "contactFormCapture")?.status).toBe("ok");
 
     const smtp = check(
@@ -183,18 +184,62 @@ describe("BR-REQ-070-04 the contact form's way out", () => {
       "contactFormSmtp",
     );
     expect(smtp?.status).toBe("ok");
-    expect(smtp?.state).toBe("smtp");
+    // The state names which half answered for the recipients (§164): the screen, or the
+    // variable — the question the owner kept having to ask.
+    expect(smtp?.state).toBe("smtp/env");
+
+    const fromSetting = check(
+      describeConfiguration(
+        facts({
+          appEnv: "production",
+          contactFormMode: "smtp",
+          contactRecipientsSource: "setting",
+          present: { CONTACT_SMTP_USER: true, CONTACT_SMTP_PASSWORD: true },
+        }),
+      ),
+      "contactFormSmtp",
+    );
+    expect(fromSetting?.state).toBe("smtp/setting");
+    // And the row asks for the transport's two variables only: the addresses came from the
+    // screen, so naming `CONTACT_FORM_TO` here would print a red cross under a green row (§164).
+    expect(fromSetting?.requires.map((entry) => entry.variable)).toEqual([
+      "CONTACT_SMTP_USER",
+      "CONTACT_SMTP_PASSWORD",
+    ]);
+
+    // A deployment that can send and has nobody to send to is its own answer: the fix is a
+    // screen, not a redeploy, and the page shows the club's address meanwhile.
+    const nobody = check(
+      describeConfiguration(
+        facts({
+          appEnv: "production",
+          contactFormMode: "smtp",
+          contactRecipientsSource: "none",
+          present: { CONTACT_SMTP_USER: true, CONTACT_SMTP_PASSWORD: true },
+        }),
+      ),
+      "contactFormNoRecipients",
+    );
+    expect(nobody?.status).toBe("limited");
+    // This is the one branch where the variable is genuinely a way out — the other is a screen,
+    // which has no variable to name — so it is the one branch that lists it.
+    expect(nobody?.requires.map((entry) => entry.variable)).toEqual([
+      "CONTACT_SMTP_USER",
+      "CONTACT_SMTP_PASSWORD",
+      "CONTACT_FORM_TO",
+    ]);
 
     // Off is the page showing the club's address instead of the form — limited, never blocked,
-    // and the report says which of the three is missing.
+    // and the report names the half that is missing: the transport, here.
     const off = check(
-      describeConfiguration(facts({ appEnv: "qa", contactFormMode: "off", present: { CONTACT_SMTP_USER: true } })),
+      describeConfiguration(
+        facts({ appEnv: "qa", contactFormMode: "off", contactRecipientsSource: "none", present: { CONTACT_SMTP_USER: true } }),
+      ),
       "contactFormOff",
     );
     expect(off?.status).toBe("limited");
     expect(off?.requires.filter((entry) => !entry.present).map((entry) => entry.variable)).toEqual([
       "CONTACT_SMTP_PASSWORD",
-      "CONTACT_FORM_TO",
     ]);
   });
 });

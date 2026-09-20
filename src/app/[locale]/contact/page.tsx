@@ -13,6 +13,8 @@ import { notFound } from "next/navigation";
 import Script from "next/script";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { contactFormReaches } from "@/modules/contact/delivery";
+import { readContactRecipientsOrNull } from "@/modules/contact/recipients";
 import {
   CONTACT_ERROR_SUMMARY_ID,
   CONTACT_MESSAGE_MAX,
@@ -50,9 +52,11 @@ const fieldId = (name: string) => `c-${name}`;
  * working. Every guard is on the server; a rejection is a redirect back here with the field
  * names and the typed values in the draft cookie, the same shape as the registration form.
  *
- * On a deployment where the form has no way out (`CONTACT_FORM_MODE=off`) the page shows the
- * club's address as a `mailto:` instead of a form that would fail — the address from the
- * environment, never the source (§8).
+ * On a deployment where the form has no way out the page shows the club's address as a
+ * `mailto:` instead of a form that would fail — the address from the environment, never the
+ * source (§8). "No way out" is two things since §164: no transport (`CONTACT_FORM_MODE=off`,
+ * the Gmail account and its app password), or nobody to send to — neither the club's own
+ * list on `/admin/emails` nor `CONTACT_FORM_TO` behind it.
  */
 export default async function ContactPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -72,7 +76,9 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const typed = (name: string) => draft?.[name];
 
   const writeTo = env.EMAIL_REPLY_TO;
-  const formAvailable = env.CONTACT_FORM_MODE !== "off";
+  // Guarded, because this is the page that has to work when nothing else does: a database
+  // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
+  const formAvailable = contactFormReaches(env, await readContactRecipientsOrNull());
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
 
   const field = (name: "name" | "email" | "message", help?: string) => ({

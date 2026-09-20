@@ -24,7 +24,13 @@ export default function GlyphChip({
 }: {
   glyph: GlyphName;
   label: string;
-  color?: "default" | "primary";
+  /**
+   * The club's blue for the one event the site leads with, the club's orange for a special
+   * edition (§168) — two claims side by side on the same hero, each with its own colour and
+   * its own word. Both are palette entries with a stated `contrastText` (`theme/theme.ts`),
+   * never a colour written here.
+   */
+  color?: "default" | "primary" | "secondary";
   variant?: "filled" | "outlined";
   /** Set, the chip is a link — the listing's type filter. */
   href?: string;

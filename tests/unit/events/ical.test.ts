@@ -179,8 +179,7 @@ describe("the calendar file", () => {
     stravaEventUrl: "https://www.strava.com/clubs/1/group_events/2",
     facebookEventUrl: "https://www.facebook.com/events/3",
     checklist: "număr de concurs, apă",
-    coHostName: "Clubul Alpin",
-    coHostUrl: "https://alpin.example.test",
+    coHosts: [{ name: "Clubul Alpin", url: "https://alpin.example.test" }],
     registration: { kind: "OPEN", url: "https://example.test/ro/evenimente/crosul-aniversar/inscriere" },
   };
 
@@ -229,6 +228,42 @@ describe("the calendar file", () => {
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).toContain("\n\nAvansat\n\n");
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("Gratuit");
     expect(calendarDescription({ ...event, difficulty: "HARD" }, labelsRo)).not.toContain("întâlnire");
+  });
+
+  it("writes one line per partner, the label said once, each keeping its own page (§168)", () => {
+    const three = calendarDescription(
+      {
+        ...event,
+        coHosts: [
+          { name: "Brașov Marathon", url: "https://example.test/bm" },
+          { name: "Clubul Alpin", url: "https://alpin.example.test" },
+          { name: "Salvamont", url: null },
+        ],
+      },
+      labelsRo,
+    );
+    const group = three.split("\n\n").at(-1);
+    expect(group).toBe(
+      [
+        "Împreună cu Brașov Marathon — https://example.test/bm",
+        "Clubul Alpin — https://alpin.example.test",
+        "Salvamont",
+      ].join("\n"),
+    );
+    // The label belongs to the group, not to every line of it.
+    expect(three.match(/Împreună cu/g)).toHaveLength(1);
+    // The same group as paragraphs and links for Outlook, each partner its own anchor.
+    const html = calendarDescriptionHtml(
+      { ...event, coHosts: [{ name: "Brașov Marathon", url: "https://example.test/bm" }, { name: "Salvamont", url: null }] },
+      labelsRo,
+    );
+    expect(html).toContain('<p><a href="https://example.test/bm">Împreună cu Brașov Marathon</a><br>Salvamont</p>');
+    // A single partner reads exactly as it did before the list existed.
+    expect(calendarDescription({ ...event, coHosts: [{ name: "Salvamont", url: null }] }, labelsRo).split("\n\n").at(-1)).toBe(
+      "Împreună cu Salvamont",
+    );
+    // No partners, no line and no label.
+    expect(calendarDescription({ ...event, coHosts: [] }, labelsRo)).not.toContain("Împreună cu");
   });
 
   it("carries the start of the long description, cut at a word, and the page for the rest (§156, §159)", () => {
@@ -332,8 +367,7 @@ describe("the calendar file", () => {
     const full: CalendarEvent = {
       ...event,
       title: "Crosul <aniversar> & co, ediția a 3-a",
-      coHostName: "A & B <sport>",
-      coHostUrl: "https://alpin.example.test/?a=1&b=2",
+      coHosts: [{ name: "A & B <sport>", url: "https://alpin.example.test/?a=1&b=2" }],
       rulesJson: rules,
       registration: { kind: "OPEN", url: "https://example.test/ro/evenimente/crosul-aniversar/inscriere" },
     };
@@ -368,7 +402,7 @@ describe("the calendar file", () => {
 
   it("keeps Google's add-event link within a budget: the text cut at a word, the page's link last (§159)", () => {
     const programme = paragraphs(Array.from({ length: 30 }, (_, i) => `Ora ${i + 7}:00 — încălzire în Parcul Tractorul, apoi alergăm ușor până la Șchei și înapoi, cu opriri la fiecare țâșnitoare.`));
-    const long: CalendarEvent = { ...full, scheduleJson: programme, checklist: "număr de concurs, apă, jachetă", coHostName: "Clubul Alpin" };
+    const long: CalendarEvent = { ...full, scheduleJson: programme, checklist: "număr de concurs, apă, jachetă", coHosts: [{ name: "Clubul Alpin", url: null }] };
     // The file keeps the whole text.
     expect(calendarDescription(long, labelsRo)).toContain("Ora 36:00");
     expect(calendarDescription(long, labelsRo).length).toBeGreaterThan(3000);
