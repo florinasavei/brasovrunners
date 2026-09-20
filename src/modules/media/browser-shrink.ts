@@ -1,4 +1,4 @@
-import { MAX_UPLOAD_BYTES } from "./images";
+import { MAX_UPLOAD_BYTES } from "./limits";
 
 /**
  * Shrink a picture in the browser **only when it has to be** (BR-REQ-054-01, BR-REQ-050-03 c8;
