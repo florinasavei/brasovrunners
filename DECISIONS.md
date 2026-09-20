@@ -8158,3 +8158,48 @@ both attachments; the calendar file is a real VCALENDAR naming the event), and t
 assertions above.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 175. Decided — the QA calendar says so, and a tick that cannot be untied is not offered (2026-09-20)
+
+**Context.** Two findings from the owner's walkthrough, both about a control saying something
+untrue about itself.
+
+"The QA iCal needs to be named differently!" — the `.ics` files two deployments produce carry
+different UIDs, because a UID takes its host from the site's own address, so a QA copy and a
+production copy of the Sunday run never merge into one entry. What they do instead is sit side
+by side in the same calendar app, same title, same hour, with nothing on screen to say which
+one is real. The club's own people subscribe to both while rehearsing, which is exactly the
+situation §163 already solved for email with the `[QA]` subject mark.
+
+"E ciudat că aici nu pot deselecta ediția curentă, e un pic redundant sincer" — the series
+header shows every date as a chip with a tick box, and the date whose editor is open is ticked
+and cannot be unticked (§134: the save always reaches it). A box that refuses to change is not
+a choice; it is a picture of one, and it invites the press that does nothing.
+
+**Decision.**
+
+*The environment goes on the calendar's name **and** on every entry.* `[QA] ` in front of
+`X-WR-CALNAME` and in front of each `SUMMARY`, idempotent, QA only — production is never
+marked, and local and test never leave the machine. Both halves are needed: a subscribed feed
+shows its calendar name, while a single event added from the confirmation's attachment lands in
+a calendar that already has a name of its own, and the only thing on screen is the entry's
+title.
+
+*The current date's chip drops its box.* It stays filled, keeps `aria-current="page"` and keeps
+the arrow that opens it; the checkbox role and the tick belong to the dates where ticking is a
+decision. Nothing about the rule changed — a save still reaches the date whose editor is open —
+only the claim the control was making about itself.
+
+**Rejected.** *Marking the QA `.ics` by UID alone.* Already true, and invisible: a UID is not
+something anybody reads.
+
+*Letting the current date be unticked.* It would mean "save this event, but not this event".
+
+**Consequences.** `qaMarked` lives in `ical.ts` beside the builder, because both the feed and
+the per-event file pass through it. The one test that asserts the mark sets `APP_ENV` around a
+fresh import rather than mutating a module's view of the environment behind its back.
+
+Tests: `tests/unit/events/ical.test.ts` (production unmarked, QA marked on the calendar name
+and on the entry).
+
+Baseline `BR-V1.38-2026-09-18`.

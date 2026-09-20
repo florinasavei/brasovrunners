@@ -111,8 +111,18 @@ export function SeriesScopeChips() {
             variant={on ? "filled" : "outlined"}
             color={on ? "primary" : "default"}
             icon={
+              /*
+                The date being edited wears no box (§175; the owner: "e ciudat că aici nu pot
+                deselecta ediția curentă, e un pic redundant sincer").
+
+                He is right: a tick that cannot be untied is not a choice, it is a picture of
+                one, and offering it invites the press that does nothing. The save always
+                reaches the date whose editor is open — that is what §134 decided and it has
+                not changed — so this chip says "this one" by being filled and current, and the
+                boxes are on the dates where ticking is a decision.
+              */
               <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, ml: 0.5 }}>
-                {on ? <CheckBoxIcon fontSize="small" /> : <CheckBoxOutlineBlankIcon fontSize="small" />}
+                {current ? null : on ? <CheckBoxIcon fontSize="small" /> : <CheckBoxOutlineBlankIcon fontSize="small" />}
                 {date.note && <EditionMark note={date.note} size={16} />}
               </Box>
             }

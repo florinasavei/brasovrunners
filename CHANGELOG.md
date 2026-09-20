@@ -10,6 +10,9 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **Smaller controls where a pointer uses them.** A rule between "lună / an" and "calendar / listă", which are two questions and read as one set of four answers; the three add-to-calendar buttons at a pointer size with a glyph each, 44 pixels still on a touch screen. §175.
+- **A QA calendar says it is QA.** The `[QA]` mark an email subject carries now goes on the calendar's name and on every entry, so a rehearsal copy sitting beside the real Sunday run in the same app says which is which. §175.
+- **The date you are editing no longer offers a tick that does nothing.** It stays filled and current; the boxes are on the dates where ticking is a decision. §175.
 - **The club's lockup where it belongs.** The declaration and the bib sheet printed it as a hollow outline — the raster carried an alpha channel, which reaches a PDF as a soft mask and composites badly in most viewers and nearly every printer. Flat now, from one script, at the ratio the layouts already assumed. And the email header carries the lockup instead of the club's name in letters, as a hosted PNG whose alt text says the same thing when images are blocked. §174.
 - **The event lands in the runner's calendar.** The confirmation and the reminder carry the same `.ics` the event page offers, attached — one tap on any phone, including the clients that will not follow a link. Published events only. §174.
 - **Race numbers run in order, from the race's own band.** Each event says where its numbers start (1 by default, 100 or 500 when a distance wants its own series) and what colour they print; a registration takes the lowest free number at or above it, in order of confirmation, under the same lock capacity uses. The random draw is gone. §173.

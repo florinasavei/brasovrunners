@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
@@ -89,7 +90,16 @@ export default async function CalendarHeader({
           <ChipLink href={href({ month: monthParam(month) })} label={t("calendar.viewMonth")} active={view.kind === "month"} current={view.kind === "month" ? "page" : undefined} />
           <ChipLink href={href({ year: String(month.year) })} label={t("calendar.viewYear")} active={view.kind === "year"} current={view.kind === "year" ? "page" : undefined} />
         </Stack>
-        {/* The layout, for a month (§137): the grid, or the list a phone used to get by default. */}
+        {/* The layout, for a month (§137): the grid, or the list a phone used to get by default.
+            A rule between the two groups (§175; the owner: "I need a separator here"): "month
+            or year" and "grid or list" are two questions, and four pills in a row read as one
+            set of four answers. It folds away with the row on a narrow screen. */}
+        {view.kind === "month" && (
+          <Box
+            aria-hidden="true"
+            sx={{ width: "1px", alignSelf: "stretch", minHeight: 20, bgcolor: "divider", mx: 0.5, display: { xs: "none", sm: "block" } }}
+          />
+        )}
         {view.kind === "month" && (
           <Stack direction="row" spacing={0.5} role="group" aria-label={`${t("calendar.layoutGrid")} / ${t("calendar.layoutList")}`}>
             <ChipLink href={href({}, "view")} label={t("calendar.layoutGrid")} active={layout === "grid"} current={layout === "grid" ? "page" : undefined} />
