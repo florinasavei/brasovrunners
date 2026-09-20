@@ -493,7 +493,7 @@
       "newTitle": "Eveniment nou",
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
-      "excerptHelp": "Una-două fraze. Este ce se vede pe cardul din listă și este obligatorie înainte de publicare.",
+      "excerptHelp": "Una-două fraze: ce se vede pe cardul din listă (și pe pagină doar cât nu există descriere completă). Obligatorie înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",
@@ -626,7 +626,7 @@
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
       "facebookEventUrl": "Link către evenimentul Facebook",
       "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Doar pentru această ediție; nu se copiază.",
-      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sub descrierea scurtă.",
+      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului — descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
       "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână."

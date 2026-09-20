@@ -6919,3 +6919,21 @@ before.
 `tests/unit/events/structured-data.test.ts`. BR-REQ-052-02 criterion 2 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 156. Decided — the short description is the card's; the page reads the long one (2026-09-20)
+
+**Context.** The owner: "Major inconsistency! The short description should show on the card
+and the long one when I open the event page." Since §71 the page showed both, the short one
+under the title and the long one after the facts — the same opening sentence twice for
+anyone who had written both.
+
+**Decision.** The card and the hero keep the short description. The event page (and its
+preview) render the short one only while no long description exists; with a long one, the
+page reads that. The metadata, the Open Graph card, the structured data and the emails keep
+the short one — that is what an excerpt is for. The editor's help sentences say which is
+which.
+
+**Consequences.** `app/[locale]/events/[slug]/page.tsx`, the preview, two help sentences
+in both catalogues. BR-REQ-011-01 criterion 11 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

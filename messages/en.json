@@ -493,7 +493,7 @@
       "newTitle": "New event",
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
-      "excerptHelp": "One or two sentences. It is what the listing card shows, and it is required before the event can be published.",
+      "excerptHelp": "One or two sentences: what the listing card shows (and the page, only while there is no full description). Required before the event can be published.",
       "rulesEmpty": "(none yet — press to write)",
       "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
       "programmeSection": "Programme",
@@ -626,7 +626,7 @@
       "stravaEventUrlHelp": "Optional. The event's address in the Strava club (strava.com/clubs/…/group_events/…), for those who RSVP there. This edition only; never copied.",
       "facebookEventUrl": "Link to the Facebook event",
       "facebookEventUrlHelp": "Optional. The event's address on Facebook (facebook.com/events/…), for those who say \"Going\" there. This edition only; never copied.",
-      "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page under the short description.",
+      "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page — the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
       "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway."

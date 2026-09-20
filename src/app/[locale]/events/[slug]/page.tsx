@@ -173,7 +173,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         {event.title}
       </Typography>
 
-      <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />
+      {/* The short description is the card's (§156; the owner: "the short one on the card,
+          the long one when I open the page"): here it stands in only while no long
+          description has been written. */}
+      {isRichTextEmpty(readRichText(event.bodyJson)) && <EventExcerpt excerptJson={event.excerptJson} excerpt={event.excerpt} />}
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={event} now={now} />

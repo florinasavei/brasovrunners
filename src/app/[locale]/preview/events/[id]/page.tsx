@@ -143,7 +143,8 @@ export default async function PreviewEventPage({ params }: Props) {
         {preview.title}
       </Typography>
 
-      <EventExcerpt excerptJson={preview.excerptJson} excerpt={preview.excerpt} />
+      {/* As on the public page (§156): the short description only while there is no long one. */}
+      {isRichTextEmpty(readRichText(preview.bodyJson)) && <EventExcerpt excerptJson={preview.excerptJson} excerpt={preview.excerpt} />}
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} />

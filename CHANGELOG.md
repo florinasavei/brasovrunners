@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **The page reads the long description; the card the short one.** The short one stands on the page only while no long one exists. §156.
 - **The event's structured data names its two cards as images** — Google's last warning on the event page. §155.
 - **A series card folds its dates** behind "Toate datele (8)". §154.
 - **The timezone is a select**, Brașov's first. §153.
