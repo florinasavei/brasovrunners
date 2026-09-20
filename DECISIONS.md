@@ -7939,3 +7939,77 @@ for a link and never a code; deactivate and reactivate; each verb without the ke
 that a test registration makes it like a real one).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 172. Decided — the start list as a spreadsheet, named after its race (2026-09-20)
+
+**Context.** The owner: "the participants list must be exported to an excel (nicely formatted)
+and also re-imported", then, flatly: "CSV is stupid! I want excel! and export just for a
+particular race!"
+
+He is right about the file and half right about the filter. The per-race export already
+existed — the button carries the list's filters, so setting "Evenimente" and pressing it
+produces that race's entrants and nothing else (§15.10) — but the file it produced was called
+`registrations.csv` whichever race it was about, which is how three of them end up in a
+downloads folder telling you nothing. And a comma-separated file is not what a volunteer opens
+on race morning: a Romanian Excel splits on semicolons rather than commas, renders `07` as `7`,
+reads a timestamp as whatever the machine's locale thinks it is, and arrives with no header
+frozen and every column one character wide. The club's actual use — sort by club, scan down the
+numbers, tick people off — is a spreadsheet's job, and the file was making it hard.
+
+**Decision.**
+
+*The same rows, as a real `.xlsx`.* `format=xlsx` on the same route, and the button on the list
+asks for it; the comma-separated file stays behind a quieter link, because it is what a script
+reads and the one format nothing can misinterpret. The sheet has a bold header frozen at the
+top, columns wide enough to read, dates written as dates so they sort as dates, and the race
+number as a number so it sorts as one. Two columns the CSV never had: the registration's `id`,
+first and narrow, and the runner's own club — the thing a start list is actually sorted by.
+
+*The file is named after the race.* The event's title as filtered for, plus the day, so two
+exports of one race a week apart are two files. The sheet inside carries the same name, reduced
+to what Excel accepts: at most 31 characters and none of `: \ / ? * [ ]`.
+
+*`write-excel-file`, not ExcelJS.* 1.8 MB against 21, in a function whose whole bundle has a
+ceiling on the plan this runs on. ExcelJS is the better-known answer and would have been the
+lazy one. This writes; it does not read, and the reader — the other half of what was asked —
+is chosen on its own merits when the import is built, because reading somebody's edited
+spreadsheet is a different problem from writing a clean one.
+
+*Every cell is typed, and that is the formula guard.* A name beginning with `=` is a formula to
+a spreadsheet, and a start list is exactly where one arrives from a public form. The CSV
+prefixes an apostrophe (`neutralizeCsvValue`); here the cell is declared as text, which is the
+stronger version of the same guarantee — a text cell is never evaluated, whatever it starts
+with — and the test asserts that no `<f>` element exists anywhere in the sheet.
+
+*The tests read the bytes.* Not a round trip through the same library, which would agree with
+itself and with nothing else: the test opens the ZIP through its central directory, checks the
+four parts without which no spreadsheet opens the file, and reads the sheet's own XML for the
+header, the frozen pane and the values. A writer that passes this produces a file Excel opens.
+
+**Deferred — the re-import, deliberately, and it needs a decision the owner has to make.**
+Reading the file back is easy; deciding what it is *allowed to do* is not. An imported row must
+never create a registration, because a place comes from the allocator under lock (§10.6,
+BR-REQ-034-01) and a spreadsheet row that becomes a confirmed entrant is an overbooking with
+extra steps. It must never set a status, because a confirmation requires an approved declaration
+somebody signed (§10.8). So an import can only be "update these columns on rows that already
+exist, matched by the `id` the export wrote" — a spelling corrected, a club filled in, a t-shirt
+size — with a preview of exactly what would change before anything is written. That is the
+shape; which columns are editable is the owner's call, and building it before that answer would
+be building the wrong thing.
+
+**Rejected.** *Replacing the CSV.* It costs nothing to keep, it is what anything automated
+should consume, and the one property it has that the workbook does not — being readable by
+every tool ever written — is worth a second button.
+
+*Putting the filters in the filename beyond the event.* "Confirmate" and "necăutate" are how
+the file was made, not what it is about; the event is what it is about.
+
+**Consequences.** One dependency, pinned. `RegistrationListRow` carries `clubName`. The export
+route grows a branch rather than a second route, because everything before the branch — the
+role check, the filters, the omission of test rows — is identical and must stay identical.
+
+Tests: `tests/unit/registrations/workbook.test.ts` (the container and its parts, every header,
+the frozen pane, a number that stays a number, a name that never becomes a formula, a sheet
+name Excel would refuse, and an empty list that still produces a file).
+
+Baseline `BR-V1.38-2026-09-18`.

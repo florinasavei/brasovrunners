@@ -383,7 +383,8 @@
         "progress": "{done} of {total} steps",
         "next": "next: {step}",
         "complete": "Every step done"
-      }
+      },
+      "exportExcel": "Export to Excel"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1720,7 +1721,7 @@
       "now": {
         "details": "Fill in the form. We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link. It can take up to 5 minutes to arrive — check your spam folder before registering again.",
-        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held.",
+        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
         "done": "Your registration is confirmed. See you at the start!"
       }
     },

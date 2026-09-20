@@ -61,7 +61,7 @@ export default function CalendarPicker({
           value={month}
           onChange={(event) => go({ year, month: Number(event.target.value) })}
           slotProps={select}
-          sx={{ minWidth: 140, "& select": { minHeight: 44, boxSizing: "border-box", textTransform: "capitalize" } }}
+          sx={{ minWidth: { xs: 130, sm: 118 }, "& select": { minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box", textTransform: "capitalize" } }}
         >
           {monthNames.map((name, index) => (
             <option key={name} value={index + 1}>
@@ -77,7 +77,7 @@ export default function CalendarPicker({
         value={year}
         onChange={(event) => go({ year: Number(event.target.value), month })}
         slotProps={select}
-        sx={{ minWidth: 100, "& select": { minHeight: 44, boxSizing: "border-box" } }}
+        sx={{ minWidth: { xs: 100, sm: 88 }, "& select": { minHeight: { xs: 44, sm: 34 }, py: { sm: 0.5 }, boxSizing: "border-box" } }}
       >
         {years.map((candidate) => (
           <option key={candidate} value={candidate}>

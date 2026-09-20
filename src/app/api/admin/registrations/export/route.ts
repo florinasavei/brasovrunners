@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
+import { buildRegistrationsWorkbook } from "@/modules/registrations/workbook";
 import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -9,6 +10,24 @@ import { isDomainError } from "@/shared/errors/domain-error";
 
 function isRegistrationStatus(value: string | null): value is RegistrationStatus {
   return !!value && (registrationStatus.enumValues as readonly string[]).includes(value);
+}
+
+/**
+ * What the downloaded file is called (§172).
+ *
+ * The event's own title, reduced to what every filesystem accepts — diacritics kept, because
+ * Windows, macOS and Linux all take them and "Crosul Tâmpei" is what the club calls it — with
+ * the date appended so two exports of the same race a week apart are two files. Falls back to
+ * the plain name when nothing was filtered for.
+ */
+function fileNameFor(eventTitle: string | null): string {
+  const day = new Date().toISOString().slice(0, 10);
+  const stem = (eventTitle ?? "inscrieri")
+    .replace(/[\\/:*?"<>|]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60);
+  return `${stem || "inscrieri"} ${day}`;
 }
 
 /**
@@ -56,6 +75,53 @@ export async function GET(request: Request): Promise<Response> {
     search: search || undefined,
     excludeTest: true,
   });
+
+  /**
+   * The spreadsheet, or the comma-separated file (§172; the owner: "CSV is stupid! I want
+   * excel!"). `format=xlsx` is what the button asks for now; the CSV stays behind the same
+   * route because it is what a script reads and what nothing can misinterpret.
+   *
+   * The filename carries the event when one was filtered for — "export just for a particular
+   * race" was already what the filter did, and the file it produced was called
+   * `registrations.csv` whichever race it was about, which is how three of them end up in a
+   * downloads folder telling you nothing.
+   */
+  if (url.searchParams.get("format") === "xlsx") {
+    const eventTitle = rows.find((row) => row.eventTitle)?.eventTitle ?? null;
+    const workbook = await buildRegistrationsWorkbook(
+      rows.map((row) => ({
+        id: row.id,
+        eventTitle: row.eventTitle ?? row.eventId,
+        registeredName: row.registeredName,
+        firstName: row.firstName ?? "",
+        lastName: row.lastName ?? "",
+        idDocument: row.idDocument ?? "",
+        email: row.participantEmail,
+        status: row.status,
+        clubName: row.clubName ?? "",
+        clubMemberDeclared: row.clubMemberDeclared,
+        fitnessDeclaredAt: row.fitnessDeclaredAt,
+        stravaUrl: row.stravaUrl ?? "",
+        guardianName: row.guardianName ?? "",
+        instagramHandle: row.instagramHandle ?? "",
+        submittedAt: row.submittedAt,
+        confirmedAt: row.confirmedAt,
+        bibNumber: row.bibNumber,
+        checkedInAt: row.checkedInAt,
+        emailBounced: row.emailRejectedReason !== null,
+      })),
+      eventTitle ?? "Participants",
+    );
+
+    return new NextResponse(new Uint8Array(workbook), {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${fileNameFor(eventTitle)}.xlsx"`,
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store",
+      },
+    });
+  }
 
   const csv = buildRegistrationsCsv(
     rows.map((row) => ({

@@ -38,6 +38,8 @@ export type RegistrationListRow = {
   clubMemberDeclared: boolean;
   /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
   fitnessDeclaredAt: Date | null;
+  /** The runner's own club, as typed (§172): a column the start list is sorted by. */
+  clubName: string | null;
   /** The optional socials (§106), as typed; null when not given. */
   stravaUrl: string | null;
   instagramHandle: string | null;
@@ -264,6 +266,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
       fitnessDeclaredAt: registrations.fitnessDeclaredAt,
+      clubName: registrations.clubName,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,

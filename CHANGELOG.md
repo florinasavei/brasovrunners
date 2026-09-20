@@ -10,6 +10,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **The start list as a real spreadsheet, named after its race.** „Exportă Excel” writes an `.xlsx` with a bold frozen header, readable columns, dates that sort as dates and the number as a number — with the registration id and the runner's club beside the rest — and the file is called after the event that was filtered for. The comma-separated export stays, quieter, for whatever is reading it automatically. §172.
+- **Smaller month and year pickers on a desktop**, and the declaration step says how long the signed PDF takes to arrive. §172.
 - **The whole account workflow on Echipa.** Adding somebody whose provider account already exists now sends them the invitation instead of skipping it — that is how a colleague ended up on the list with no way to set a password. Two new buttons: send a password reset, and deactivate the sign-in account, which is a different decision from withdrawing access and stays a separate press. §171.
 - **The registration form says where its answers go.** One sentence above the first field — nothing you write appears on the site, with the start list named as the single exception and only where there is one — and a marker under each block of fields. §171.
 - **The medical block is a statement, not an interrogation.** "Declar pe propria răspundere că sunt apt medical să particip" is a required tick among the consents; the free-text note stays, folded, optional, saying what it is for and that it is deleted seven days after the event. A glyph beside each answer for sex, and every country wears its flag. §171.
