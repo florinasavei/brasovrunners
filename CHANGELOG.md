@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 The owner's second pass on QA, the same evening.
 
+- **The event's structured data names its two cards as images** — Google's last warning on the event page. §155.
 - **A series card folds its dates** behind "Toate datele (8)". §154.
 - **The timezone is a select**, Brașov's first. §153.
 - **The editor's sticky bar is just the Save button** on a phone; the consent box and "Salvează pentru" sit in the form above it. §152.

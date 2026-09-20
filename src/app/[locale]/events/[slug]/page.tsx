@@ -125,7 +125,12 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
-      <JsonLd data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"))} />
+      <JsonLd
+        data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"), [
+          `${env.APP_BASE_URL}/${locale}/events/${slug}/opengraph-image`,
+          `${env.APP_BASE_URL}/${locale}/events/${slug}/share-image`,
+        ])}
+      />
 
       <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center", justifyContent: "space-between" }}>
         <Typography variant="body2">

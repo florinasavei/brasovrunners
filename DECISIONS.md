@@ -6904,3 +6904,18 @@ No JavaScript.
 BR-REQ-041-01 criterion 9 amended.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 155. Decided — the event's structured data carries its cards as images (2026-09-19)
+
+**Context.** Google's Rich Results test on a QA event page: valid, with a warning for the
+missing `image`. The page already draws two cards of the event (§90) — the 1200×630 Open
+Graph card and the square one for Instagram.
+
+**Decision.** `SportsEvent.image` lists both, absolute under `APP_BASE_URL` — Google asks
+for more than one aspect ratio, and these are two. Nothing is drawn that was not drawn
+before.
+
+**Consequences.** `events/structured-data.ts` (an `images` argument), the event page;
+`tests/unit/events/structured-data.test.ts`. BR-REQ-052-02 criterion 2 amended.
+
+Baseline `BR-V1.38-2026-09-18`.

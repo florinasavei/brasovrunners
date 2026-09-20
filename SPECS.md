@@ -1253,7 +1253,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 **Acceptance criteria**
 
 1. Given the homepage, when it renders, then it contains one `SportsOrganization` JSON-LD block with a stable `@id`, the club name, logo, URL, and `sameAs` entries for the club's official profiles. `sameAs` comes from `CLUB_FACEBOOK_URL`, `CLUB_INSTAGRAM_URL` and `CLUB_STRAVA_URL` and is omitted where none is configured; `logo` is still absent and needs an approved raster (`DECISIONS.md` §58).
-2. Given a published event page, when it renders, then it contains a `SportsEvent` block whose start and end times carry the event timezone offset, whose `organizer` references the club `@id`, and whose `location` includes a postal address.
+2. Given a published event page, when it renders, then it contains a `SportsEvent` block whose start and end times carry the event timezone offset, whose `organizer` references the club `@id`, whose `location` includes a postal address, and whose `image` lists the event's two cards (2026-09-19, `DECISIONS.md` §155).
 3. Given a capped event, when the block renders, then `remainingAttendeeCapacity` equals the free-place count displayed on the same page.
 4. Given a cancelled event, when the page renders, then the block is still present with `eventStatus` set to cancelled.
 4a. Given a race with a gun time distinct from the event start, when the block renders, then `startDate` is the race start and `doorTime` is the event start; with no distinct gun time, `startDate` falls back to the event start.
