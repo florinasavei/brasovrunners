@@ -21,13 +21,14 @@ import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domai
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
-import { countryFlag, countryOptions } from "@/modules/registrations/countries";
+import { countryOptions } from "@/modules/registrations/countries";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import Flag from "@/shared/ui/Flag";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -421,13 +422,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   fullWidth
                   defaultValue={typed("nationality", "RO")}
                 >
-                  {/* The flag before the name (§171): two regional indicators from the code
-                      itself, so nothing is shipped and nothing is fetched. */}
+                  {/*
+                    The flag before the name (§171), from the set `scripts/sync-flags.mjs`
+                    already copies into `public/flags/` — which that script's own comment
+                    anticipated for exactly this ("will show many when a participant can state
+                    their country"). Normalised to 4:3, so a column of two hundred names does
+                    not wobble between Romania's 2:3 and the United Kingdom's 1:2.
+
+                    Not the regional-indicator emoji, which Windows draws as two boxed capitals
+                    — and Windows is what the club's own laptop runs.
+                  */}
                   {countries.map((country) => (
                     <MenuItem key={country.code} value={country.code} sx={SEX_ITEM_SX}>
-                      <Box component="span" aria-hidden="true" sx={{ fontSize: "1.1em", lineHeight: 1 }}>
-                        {countryFlag(country.code)}
-                      </Box>
+                      <Flag code={country.code} width={20} />
                       {country.label}
                     </MenuItem>
                   ))}

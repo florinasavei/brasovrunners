@@ -216,28 +216,37 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           )}
           {registration.status === "CONFIRMED" && (
             <>
-              <form action={setBibNumberAction}>
-                {deskHidden}
-                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                  <TextField
-                    name="bibNumber"
-                    type="number"
-                    label={tr("registrations.bibNumber")}
-                    size="small"
-                    defaultValue={registration.bibNumber ?? ""}
-                    slotProps={{ htmlInput: { min: 1, max: 99999 } }}
-                    sx={{ width: 140 }}
-                  />
-                  <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-                    {tr("desk.saveBib")}
-                  </Button>
-                </Stack>
-                {/* A preferential number is picked among the free ones (§105): the first free
-                    numbers, and the runner is emailed the one that is saved. */}
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                  {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+              {/* Only where there is a gap to fill (§173): a confirmed runner's number is
+                  settled — they have it in their inbox and it may be printed — so the service
+                  refuses a change, and a box that always refuses invites the press. The number
+                  itself is on the journey above. */}
+              {registration.bibNumber === null ? (
+                <form action={setBibNumberAction}>
+                  {deskHidden}
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                    <TextField
+                      name="bibNumber"
+                      type="number"
+                      label={tr("registrations.bibNumber")}
+                      size="small"
+                      slotProps={{ htmlInput: { min: 1, max: 99999 } }}
+                      sx={{ width: 140 }}
+                    />
+                    <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                      {tr("desk.saveBib")}
+                    </Button>
+                  </Stack>
+                  {/* A preferential number is picked among the free ones (§105): the first free
+                      numbers, and the runner is emailed the one that is saved. */}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                    {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                  </Typography>
+                </form>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  {tr("registrations.bibSettled", { number: registration.bibNumber })}
                 </Typography>
-              </form>
+              )}
               <form action={checkInAction}>
                 {deskHidden}
                 <input type="hidden" name="direction" value={registration.checkedInAt ? "undo" : "in"} />

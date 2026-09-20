@@ -34,6 +34,9 @@ async function fillRequired(page: Page, omit?: string) {
     await page.locator(`[name="${name}"]`).fill(value);
   }
   await page.locator('[name="privacyAcknowledged"]').check();
+  // "Declar că sunt apt medical să particip" (§171): required on the public form, like the
+  // privacy acknowledgment beside it.
+  await page.locator('[name="fitnessDeclared"]').check();
 }
 
 test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable", () => {
@@ -54,6 +57,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       "phone",
       "emergencyContactName",
       "emergencyContactPhone",
+      "fitnessDeclared",
       "privacyAcknowledged",
     ]) {
       await expect(page.locator(`[name="${name}"]`), `${name} is asked up front`).toBeVisible();
@@ -69,21 +73,27 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // The optional groups are open as the page loads (the owner's instruction of 2026-09-17,
     // reversing DECISIONS.md §47): a runner's own club was the field people missed when it sat
     // behind a summary, and a field nobody sees is a field nobody fills.
-    await expect(page.locator('[name="healthNotes"]')).toBeVisible();
     await expect(page.locator('[name="clubName"]')).toBeVisible();
+    // The medical note is the one exception (§171): folded, because asking for free text first
+    // read as "tell us your conditions" and buried the statement the club actually needs. It is
+    // on the page and one press away — and what is required is the tick among the consents.
+    await expect(page.locator('[name="healthNotes"]')).toBeHidden();
+    await expect(page.getByText("Informații medicale", { exact: false }).first()).toBeVisible();
     // The public display name is behind `FEATURE_DISPLAY_NAME`, off by default (§95): absent.
     await expect(page.locator('[name="displayName"]')).toHaveCount(0);
-    // BR-REQ-031-05 criterion 1: the health question keeps its own consent beside it.
-    await expect(page.locator('[name="healthConsent"]')).toBeVisible();
+    // BR-REQ-031-05 criterion 1: the health question keeps its own consent beside it — inside
+    // the same fold, so it is measured for presence rather than visibility.
+    await expect(page.locator('[name="healthConsent"]')).toHaveCount(1);
     // BR-REQ-031-06: the club's own people say so here.
     await expect(page.locator('[name="clubMemberDeclared"]')).toBeVisible();
 
-    // Still a disclosure: anybody who wants the page shorter can fold a group, and the summary
-    // names what it hides — the health one on its own, so the question is never buried.
-    await page.getByText("Informații medicale — opțional").click();
-    await expect(page.locator('[name="healthNotes"]')).toBeHidden();
+    // Still a disclosure, and the health one starts **closed** (§171): the summary names what
+    // it holds, one press opens it, and the statement the club actually needs is the tick among
+    // the consents rather than anything inside here.
     await page.getByText("Informații medicale — opțional").click();
     await expect(page.locator('[name="healthNotes"]')).toBeVisible();
+    await page.getByText("Informații medicale — opțional").click();
+    await expect(page.locator('[name="healthNotes"]')).toBeHidden();
   });
 
   test("accepts a registration from somebody who says they are in the club", async ({ page }) => {
@@ -108,8 +118,11 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
 
-    // Criterion 1, with every disclosure open — the widest the page can be made. They open by
-    // default now, so nothing needs clicking; assert that rather than assume it.
+    // Criterion 1, with every disclosure open — the widest the page can be made. All but the
+    // medical note open by default (§59); that one is closed since §171, so it is opened here,
+    // because the question is whether the page can ever scroll sideways and not whether it does
+    // on load.
+    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     for (const name of ["healthNotes", "clubName", "preferredLocale"]) {
       await expect(page.locator(`[name="${name}"]`)).toBeVisible();
     }
@@ -206,6 +219,8 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     // A MUI select: the choice lives in React state, which is exactly what a redirect loses (§142).
     await page.locator("#f-sex").click();
     await page.getByRole("option", { name: "Feminin" }).click();
+    // Behind the fold since §171; the point of the test is that what was typed comes back.
+    await page.evaluate(() => document.querySelectorAll("details").forEach((details) => (details.open = true)));
     await page.locator('[name="healthNotes"]').fill("Astm");
     // The browser would refuse "12" itself; the server's answer is what this proves.
     await page.locator("form").evaluate((form) => {

@@ -71,6 +71,8 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.locator('[name="emergencyContactName"]').fill("Ion Popescu");
     await page.locator('[name="emergencyContactPhone"]').fill("+40722222222");
     await page.locator('[name="privacyAcknowledged"]').check();
+    // Required since §171, beside the privacy acknowledgment.
+    await page.locator('[name="fitnessDeclared"]').check();
 
     // BR-REQ-039-02: the display name is behind a collapsed <details>, closed by default,
     // and left alone here — a submission that never opens it must still be accepted, and the

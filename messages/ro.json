@@ -385,7 +385,8 @@
         "complete": "Toți pașii parcurși"
       },
       "exportExcel": "Exportă Excel",
-      "columnBib": "Număr"
+      "columnBib": "Număr",
+      "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",

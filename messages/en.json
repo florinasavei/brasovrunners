@@ -385,7 +385,8 @@
         "complete": "Every step done"
       },
       "exportExcel": "Export to Excel",
-      "columnBib": "Bib"
+      "columnBib": "Bib",
+      "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed."
     },
     "events": {
       "empty": "There is no event in the database.",

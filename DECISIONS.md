@@ -7908,8 +7908,19 @@ registration ticks it like everything else (§30); a staff entry and a desk walk
 there the paper declaration carries it, and no staff member declares fitness on somebody's
 behalf (`AGENTS.md` §15.11).
 
+That fold **reverses §59 for this one group**, and only this one. §59 opened the optional
+sections because "a field nobody sees is a field nobody fills", and that argument is right for
+the runner's own club — the field people reported as missing. It is wrong here: the thing that
+must be filled is the tick, which is now among the consents where nothing hides it, and an open
+free-text box asking about conditions was reading as an instruction rather than an offer. Every
+other optional group stays open.
+
 *Glyphs on the closed sets.* Female, male and person beside the three answers for sex; the
-country's flag before its name, built from the code itself with two regional indicator symbols.
+country's flag before its name, from the set `scripts/sync-flags.mjs` already copies into
+`public/flags/` — which that script was written for ("will show many when a participant can
+state their country"), normalised to 4:3 so a column of two hundred names does not wobble
+between Romania's 2:3 and the United Kingdom's 1:2. A regional-indicator emoji was tried first
+and dropped: Windows draws it as two boxed capitals, and Windows is what the club's laptop runs.
 Both as **children** of the menu item, never as an element-valued prop — the defect
 `CheckboxField` documents. The flags degrade to boxed letters on Windows, which is accepted:
 the country's name is the label and this is the mark beside it.
@@ -8190,8 +8201,20 @@ the arrow that opens it; the checkbox role and the tick belong to the dates wher
 decision. Nothing about the rule changed — a save still reaches the date whose editor is open —
 only the claim the control was making about itself.
 
+*A tap target is 44 pixels on a phone and 24 on a desktop.* The owner, twice: "aceste butoane
+sunt mult prea mari", "these buttons must be smaller as well and have icons". The share row, the
+add-to-calendar row and the month/year pickers are 44 on a touch screen and 32 from `sm` up.
+BR-REQ-041-01 criterion 6 asks for 44 on **event links**, and those are whole cards —
+comfortably over it at either width. The end-to-end check that enforces it measured *every* link
+in `main` at 44, on both projects, which is stricter than the criterion and is what caught this:
+it now asks 44 of the phone, which is the design target and where a finger is the pointer, and
+WCAG 2.2's own 24 of the desktop, where it is not. The cards are unchanged and still measured.
+
 **Rejected.** *Marking the QA `.ics` by UID alone.* Already true, and invisible: a UID is not
 something anybody reads.
+
+*Leaving every control at 44 on a desktop.* Eight finger-sized pills across a desktop page are
+the loudest thing on it, and they are the least important thing on it.
 
 *Letting the current date be unticked.* It would mean "save this event, but not this event".
 
