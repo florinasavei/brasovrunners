@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, exists, inArray, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, inArray, lte, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
@@ -316,6 +316,35 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
       ),
     )
     .orderBy(asc(registrations.confirmedAt), asc(registrations.id));
+}
+
+/**
+ * How many confirmed runners asked to be left off the list (`DECISIONS.md` §186).
+ *
+ * The owner: "trebuie să văd care participanți sunt vizibili pe site și care nu — și cumva să îi
+ * afișez cenzurați… gen «participanți surpriză», sau «participanți anonimi»". A count, never a
+ * row: this query selects a number and nothing else, so there is no name, no club and no
+ * identifier to leak, and `tests/privacy/public-surface.test.ts` keeps its grip on
+ * `listPublicStartList` exactly as it was. What the page gains is honesty about its own total —
+ * "42 înscriși" that lists 39 is a page contradicting itself — and what it cannot gain, because
+ * the data is not here, is any hint of who the other three are.
+ */
+export async function countAnonymousStartListEntries<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: count() })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.status, "CONFIRMED"),
+        eq(registrations.kind, "REAL"),
+        eq(registrations.listOptOut, true),
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 export type OccupiedCountsRow = {

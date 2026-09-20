@@ -135,7 +135,8 @@
       "title": "Who's coming",
       "titleCount": "Who's coming ({count})",
       "empty": "Nobody has confirmed a place yet.",
-      "note": "Only people who confirmed their registration and did not ask to be left out are listed here."
+      "note": "Only people who confirmed their registration and did not ask to be left out are listed here.",
+      "anonymous": "Anonymous participant"
     },
     "cta": {
       "register": "Register for this event",
@@ -391,7 +392,8 @@
       "cancel": "Cancel the registration",
       "cancelBody": "The place is released through the allocator and offered at once to the first person waiting. An audit row records who cancelled. It cannot be undone: if they change their mind, they register again.",
       "confirmOnPaperBody": "You are confirming that the participant signed the declaration on paper, at the desk. They get the place and a race number, and the audit row names you as the person who recorded the signature. Use it only with the signed paper in front of you.",
-      "downloadBib": "Download the race number (BIB)"
+      "downloadBib": "Download the race number (BIB)",
+      "notOnPublicList": "Not shown publicly"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1393,7 +1395,9 @@
       },
       "bibFree": "Free numbers at this event: {numbers}. The saved number reaches the participant by email, with the QR code; a number somebody else already wears is refused.",
       "guardian": "Minor — parent/guardian: {name}",
-      "confirmOnPaper": "Confirm on paper"
+      "confirmOnPaper": "Confirm on paper",
+      "showBib": "Show the race number (BID)",
+      "bibAlt": "Race number (BID) {number}"
     },
     "emails": {
       "title": "The emails participants receive",
@@ -1789,7 +1793,8 @@
     "confidentialNote": "Confidential. Never published.",
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
     "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
-    "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part."
+    "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
+    "isMinor": "The participant is under 18"
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

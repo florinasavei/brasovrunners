@@ -38,8 +38,8 @@ import Flag from "@/shared/ui/Flag";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import Script from "next/script";
-import { TURNSTILE_SCRIPT_URL, turnstileSiteKey } from "@/modules/registrations/turnstile";
+import { turnstileSiteKey } from "@/modules/registrations/turnstile";
+import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -113,6 +113,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!event) notFound();
 
   const now = new Date();
+  // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
+  const siteKey = turnstileSiteKey();
   const state = registrationState(
     {
       registrationMode: event.registrationMode,
@@ -632,13 +634,37 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
 
-              {/* A minor's parent or guardian (§108): folded, named for the one case it is
-                  required in, and the server refuses a minor without it. */}
-              <Box component="details" sx={disclosureSx} open={invalid.has("guardianName")}>
-                <Typography component="summary" variant="body2">
-                  {t("disclosure.guardian")}
-                </Typography>
-                <Stack spacing={2} sx={{ pb: 2 }}>
+              {/*
+                A minor's parent or guardian (§108, §185): a tick, and the name only underneath it.
+
+                It was a fold — "Părinte sau tutore" — and the owner read an opened fold as a
+                question he now had to answer: "mă disperă faza cu tutorele! aparent dacă expandez
+                acel câmp deja trebe să completez!!! vreau să fie o bifă acolo man". He was right
+                about the shape even though the field was never required by the browser: a fold
+                asks "is there more here", and the actual question is "is the runner under
+                eighteen" — which has an answer, and the answer decides whether anything below it
+                applies at all.
+
+                The tick reveals the name with CSS alone: `:has()` on the container, no client
+                island, works with JavaScript switched off. The *rule* stays where it was — the
+                server requires a guardian when the birth date gives under eighteen, whatever this
+                box says, because a legal requirement cannot be untickable. So the tick is checked
+                for them when a rejection names the field, which is how somebody who is a minor
+                and did not tick gets shown the box they have to fill.
+              */}
+              <Box
+                sx={{
+                  "& .guardian-fields": { display: "none" },
+                  "&:has(input[name='isMinor']:checked) .guardian-fields": { display: "block" },
+                }}
+              >
+                <CheckboxField
+                  name="isMinor"
+                  defaultChecked={typed("isMinor") === "on" || invalid.has("guardianName")}
+                >
+                  {t("isMinor")}
+                </CheckboxField>
+                <Stack spacing={2} className="guardian-fields" sx={{ pt: 1 }}>
                   <Typography variant="body2" color="text.secondary">
                     {t("guardianHelp")}
                   </Typography>
@@ -789,16 +815,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>
               </TextField>
 
-              {/* Cloudflare Turnstile, when the club switched it on (§97). */}
-              {turnstileSiteKey() && (
+              {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
+                  its own island (§185) — the implicit widget could not survive a re-render. */}
+              {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <div className="cf-turnstile" data-sitekey={turnstileSiteKey()} data-language={locale} />
+                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
                   {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}
                     </Typography>
                   )}
-                  <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
                 </Box>
               )}
               <SubmitButton

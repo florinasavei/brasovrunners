@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
-import { listPublicStartList } from "@/modules/registrations/repository";
+import { countAnonymousStartListEntries, listPublicStartList } from "@/modules/registrations/repository";
 import type { PublicEvent } from "../repository";
 
 /**
@@ -19,7 +19,12 @@ export default async function StartList({ event }: { event: PublicEvent }) {
   if (event.participantListVisibility !== "NAMES") return null;
 
   const t = await getTranslations("Event");
-  const participants = await listPublicStartList(getDb(), event.id);
+  const db = getDb();
+  const [participants, anonymous] = await Promise.all([
+    listPublicStartList(db, event.id),
+    countAnonymousStartListEntries(db, event.id),
+  ]);
+  const total = participants.length + anonymous;
 
   return (
     <Box
@@ -36,10 +41,10 @@ export default async function StartList({ event }: { event: PublicEvent }) {
       }}
     >
       <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
-        {t("startList.titleCount", { count: participants.length })}
+        {t("startList.titleCount", { count: total })}
       </Typography>
 
-      {participants.length === 0 ? (
+      {total === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ pb: 2 }}>
           {t("startList.empty")}
         </Typography>
@@ -57,6 +62,26 @@ export default async function StartList({ event }: { event: PublicEvent }) {
                     {participant.clubName}
                   </Typography>
                 )}
+              </Typography>
+            ))}
+            {/*
+              The runners who asked to be left off, counted but never named (§186).
+
+              One row each rather than a single "and 3 others", because the list is read to find
+              out how many are coming as much as who — and a row that says "participant anonim"
+              is the truth about that person: they are coming, and they said not to print their
+              name. Nothing identifies them; the page never had their name to withhold, because
+              the query that counted them selected a number.
+            */}
+            {Array.from({ length: anonymous }, (_, index) => (
+              <Typography
+                component="li"
+                variant="body1"
+                key={`anonymous-${index}`}
+                color="text.secondary"
+                sx={{ py: 0.25, breakInside: "avoid", fontStyle: "italic" }}
+              >
+                {t("startList.anonymous")}
               </Typography>
             ))}
           </Box>

@@ -135,7 +135,8 @@
       "title": "Cine vine",
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
-      "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei."
+      "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei.",
+      "anonymous": "Participant anonim"
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
@@ -391,7 +392,8 @@
       "cancel": "Anulează înscrierea",
       "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
       "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul de concurs, iar în jurnal rămâi tu ca cel care a înregistrat semnătura. Se folosește doar când ai hârtia semnată în față.",
-      "downloadBib": "Descarcă numărul de concurs (BIB)"
+      "downloadBib": "Descarcă numărul de concurs (BIB)",
+      "notOnPublicList": "Nu apare public"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1393,7 +1395,9 @@
       },
       "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
       "guardian": "Minor — părinte/tutore: {name}",
-      "confirmOnPaper": "Confirmă pe hârtie"
+      "confirmOnPaper": "Confirmă pe hârtie",
+      "showBib": "Vezi numărul de concurs (BID)",
+      "bibAlt": "Numărul de concurs (BID) {number}"
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -1789,7 +1793,8 @@
     "confidentialNote": "Confidențial. Nu se publică.",
     "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
     "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
-    "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip."
+    "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip.",
+    "isMinor": "Participantul are sub 18 ani"
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

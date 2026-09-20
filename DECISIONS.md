@@ -8538,3 +8538,86 @@ already read*, never asked of the database again, so the figure at the top and t
 cannot disagree.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 184. Decided — the bib is visible where the bib is handed over (2026-09-20)
+
+**Context.** "Numerele de concurs sunt frumoase, dar trebuie să le văd și din zona de înscrieri și
+din ziua cursei."
+
+**Decision.** *The desk shows the picture, folded.* A volunteer holding an envelope checks it
+against the screen; the desk's own job is the large digits and the buttons, so the picture sits
+behind a summary and is fetched only when the fold is opened — `<details>` does not load what it
+does not render, which matters on a phone at a start line.
+
+*Every desk role may ask for one participant's picture.* The preview route was Administrator-only,
+like the sheet. It is now `canWorkTheDesk`, and the sheet is not: the picture carries a name and
+a number, which is exactly what `AGENTS.md` §15.11 already says every staff role sees at the
+desk. One registration at a time, by id, on the event it belongs to — this is not the list, and
+two hundred single requests is not the export.
+
+**Rejected.** *Putting the printable sheet at the desk too.* A volunteer needs the one envelope in
+front of them; the whole field is the club's print run, and it carries every name at once.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 185. Decided — the anti-bot check is rendered explicitly, and the guardian is a tick (2026-09-20)
+
+**Context.** Two screenshots an hour apart, the registration form and the contact form, both
+showing "Verificarea anti-bot nu a reușit. Bifează din nou căsuța «Nu sunt robot»" printed above
+**nothing to tick**. "Plus faza asta cu robotul man!!! implementează corect!!"
+
+**Decision.** *Turnstile renders explicitly, from its own client island, and resets on every
+attempt.* The implicit mode — `<div class="cf-turnstile">` in the server's markup and `api.js`
+loaded beside it — works exactly once. `api.js` scans the document when it loads and never
+again, and the token it produces is single use. So the first thing that goes wrong with a
+submission takes the widget with it: the server re-renders the form, React reuses the same empty
+div, no script load happens, no challenge is drawn, and every further attempt fails on a missing
+token whatever else the person fixes. The instruction to tick the box again was, by then, an
+instruction to tick nothing.
+
+`TurnstileWidget` injects `api.js?render=explicit` once per document, draws the widget into its
+own element when the script is ready, and calls `reset()` whenever `attempt` changes — the
+server passes its render time, a new value on every response. Thirty lines of client island,
+which §1.5 asks a client island to justify: what is being fixed is what happens to the DOM
+*after* the server has answered, and nothing on the server can reach that.
+
+*The guardian is a tick, not a fold.* "Mă disperă faza cu tutorele! Aparent dacă expandez acel
+câmp deja trebe să completez!!! Vreau să fie o bifă acolo man." He was right about the shape even
+though the field was never required by the browser: a fold asks "is there more here", while the
+actual question — "is the runner under eighteen" — has an answer, and the answer decides whether
+anything under it applies. The tick reveals the name field through `:has()`, with no client
+island and with JavaScript switched off.
+
+*The rule does not move.* The server still requires a guardian when the birth date gives under
+eighteen, whatever the box says: a legal requirement cannot be untickable. The tick is checked for
+them when a rejection names the field, which is how somebody who is a minor and did not tick is
+shown the box they have to fill.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 186. Decided — a participant who opted out is counted, never named (2026-09-20)
+
+**Context.** "Trebuie să văd care participanți sunt vizibili pe site și care nu! Și cumva să îi
+afișez cenzurați… gen «participanți surpriză»… sau «participanți anonimi»."
+
+**Decision.** *The public list gains a row per opted-out runner, reading "Participant anonim".*
+The list had been dropping them silently, so an event with forty-two confirmed runners showed
+thirty-nine names under a heading that said forty-two — a page contradicting itself, and the
+count is what most readers came for.
+
+*It is a count, never a row.* `countAnonymousStartListEntries` selects a number and nothing
+else: no name, no club, no identifier, so there is nothing to leak and
+`tests/privacy/public-surface.test.ts` keeps its grip on `listPublicStartList` exactly as it
+was. One row each rather than "and 3 others", because "a person is coming and asked not to be
+named" is true of each of them individually.
+
+*The backoffice marks the ones who are not on the list.* Only those: on an event that publishes a
+list most rows are on it, and a chip on every row is a chip nobody reads. The mark is shown
+whatever the event's own visibility, because it records what the person asked for, not what the
+club has switched on today.
+
+**Rejected.** *Initials, or a censored name.* "M. P." on a start list of a hundred is a name to
+somebody who knows the field, and §32 puts the participant's refusal ahead of the page's
+symmetry. The platform holds their name; the page does not have to.
+
+Baseline `BR-V1.38-2026-09-18`.
