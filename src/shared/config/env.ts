@@ -1,6 +1,6 @@
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { z } from "zod";
-import { APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES } from "./env-enums";
+import { ALLOW_EVERY_RECIPIENT, APP_ENVIRONMENTS, EMAIL_DELIVERY_MODES, STAFF_AUTH_MODES } from "./env-enums";
 
 // AGENTS.md §7.1: APP_ENV is the environment identity; NODE_ENV is not.
 // AGENTS.md §8: APP_BASE_URL is the single source of every absolute URL the app emits.
@@ -297,7 +297,7 @@ export const envSchema = z
 
     // `*` (§163) is every recipient, and only where email is not live: on production the mode
     // is `live` and the list is not read, so a stray star there would be a lie in the console.
-    if (EMAIL_ALLOWLIST.includes("*") && EMAIL_DELIVERY_MODE !== "allowlist") {
+    if (EMAIL_ALLOWLIST.includes(ALLOW_EVERY_RECIPIENT) && EMAIL_DELIVERY_MODE !== "allowlist") {
       ctx.addIssue({
         code: "custom",
         path: ["EMAIL_ALLOWLIST"],
@@ -315,6 +315,10 @@ export const envSchema = z
     }
 
     for (const entry of EMAIL_ALLOWLIST) {
+      // `*` is the one entry that is not an address (§163): every recipient. The rule above
+      // has already refused it outside allowlist mode; here it must pass, or a deployment
+      // carrying the star cannot boot — which is how the QA build broke on 2026-09-20.
+      if (entry === ALLOW_EVERY_RECIPIENT) continue;
       if (!isValidEmail(entry)) {
         ctx.addIssue({
           code: "custom",
