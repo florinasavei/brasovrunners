@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { inviteZitadelUser, resendZitadelInvite } from "@/modules/staff-identity/zitadel-users";
+import {
+  inviteZitadelUser,
+  resendZitadelInvite,
+  sendZitadelPasswordReset,
+  setZitadelUserActive,
+} from "@/modules/staff-identity/zitadel-users";
 
 /** BR-REQ-060-01 criterion 9 (`DECISIONS.md` §123) — "Add" on Echipa creates the account and sends the invitation. */
 const deps = { issuer: "https://id.example.test/", token: "pat" };
@@ -33,9 +38,24 @@ describe("the Zitadel invitation", () => {
     expect(calls[1].body).toEqual({ sendCode: { applicationName: "Brașov Runners" } });
   });
 
-  it("reports an account that exists, a refusal with its reason, and a missing key as unconfigured", async () => {
-    const exists = fakeFetch({ "/v2/users/human": () => new Response(JSON.stringify({ message: "User already exists" }), { status: 409 }) });
+  /**
+   * §171. A 409 used to end the story — the row joined the allowlist, the screen said "they
+   * already have an account", and nobody ever sent them the link that lets them set a password.
+   * An existing account gets the same invitation a new one does, and the outcome still says
+   * "exists" so the screen can word it honestly.
+   */
+  it("invites an account that already exists rather than leaving it without a password link", async () => {
+    const exists = fakeFetch({
+      "/v2/users/human": () => new Response(JSON.stringify({ message: "User already exists" }), { status: 409 }),
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
+      "/v2/users/42/invite_code": () => new Response("{}", { status: 200 }),
+    });
     expect(await inviteZitadelUser({ email: "a@b.ro", displayName: "A", locale: "en" }, { ...deps, fetch: exists.call })).toEqual({ kind: "exists" });
+    expect(exists.calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/invite_code");
+  });
+
+  it("reports a refusal with its reason, and a missing key as unconfigured", async () => {
+    const exists = fakeFetch({ "/v2/users/human": () => new Response(JSON.stringify({ message: "User already exists" }), { status: 409 }) });
 
     const refused = fakeFetch({ "/v2/users/human": () => new Response(JSON.stringify({ message: "permission denied" }), { status: 403 }) });
     expect(await inviteZitadelUser({ email: "a@b.ro", displayName: "A", locale: "en" }, { ...deps, fetch: refused.call })).toEqual({
@@ -46,12 +66,95 @@ describe("the Zitadel invitation", () => {
     expect(await inviteZitadelUser({ email: "a@b.ro", displayName: "A", locale: "en" }, { issuer: "", token: "", fetch: exists.call })).toEqual({ kind: "unconfigured" });
   });
 
-  it("resends by looking the account up by its login name", async () => {
+  /**
+   * §170. The lookup was by login name alone, and Zitadel scopes a login name to the
+   * organization's primary domain — so a colleague created as `dani@example.ro` has the login
+   * name `dani@example.ro@<org>.zitadel.cloud`, an equality match on the address finds nobody,
+   * and "Retrimite invitația" told the owner there was no account for somebody who had one.
+   */
+  it("resends by looking the account up by its email address", async () => {
     const { call, calls } = fakeFetch({
       "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "7" }] }), { status: 200 }),
       "/v2/users/7/invite_code": () => new Response("{}", { status: 200 }),
     });
     expect(await resendZitadelInvite("dani@example.ro", { ...deps, fetch: call })).toEqual({ kind: "invited" });
-    expect(calls[0].body).toMatchObject({ queries: [{ loginNameQuery: { loginName: "dani@example.ro" } }] });
+    expect(calls[0].body).toMatchObject({ queries: [{ emailQuery: { emailAddress: "dani@example.ro" } }] });
+    // One search was enough: the fallback below is not paid for when the first one answers.
+    expect(calls.filter((entry) => entry.url.endsWith("/v2/users")).length).toBe(1);
+  });
+
+  /** A person created by hand with a username that is not their address is still found. */
+  it("falls back to the login name, and says plainly when there is no account at all", async () => {
+    let searches = 0;
+    const { call, calls } = fakeFetch({
+      "/v2/users": () => {
+        searches += 1;
+        return new Response(JSON.stringify({ result: searches === 1 ? [] : [{ userId: "9" }] }), { status: 200 });
+      },
+      "/v2/users/9/invite_code": () => new Response("{}", { status: 200 }),
+    });
+    expect(await resendZitadelInvite("dani@example.ro", { ...deps, fetch: call })).toEqual({ kind: "invited" });
+    expect(calls[1].body).toMatchObject({ queries: [{ loginNameQuery: { loginName: "dani@example.ro" } }] });
+
+    const nobody = fakeFetch({ "/v2/users": () => new Response(JSON.stringify({ result: [] }), { status: 200 }) });
+    expect(await resendZitadelInvite("ghost@example.ro", { ...deps, fetch: nobody.call })).toEqual({
+      kind: "failed",
+      reason: "no account with this address at the identity provider",
+    });
+  });
+});
+
+/**
+ * §171 — the rest of the account workflow the owner asked for: "I must invite users and stuff,
+ * and I can also deactivate, send password resets, etc".
+ */
+describe("the account verbs", () => {
+  it("asks Zitadel to email a password link, and says when there is nobody to email", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
+      "/v2/users/42/password_reset": () => new Response("{}", { status: 200 }),
+    });
+    expect(await sendZitadelPasswordReset("dani@example.ro", { ...deps, fetch: call })).toEqual({ kind: "done" });
+    expect(calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/password_reset");
+    // The link, not a code handed back to us: nothing here ever holds a password or its code.
+    expect(calls.at(-1)?.body).toEqual({ sendLink: { notificationType: "NOTIFICATION_TYPE_Email" } });
+
+    const nobody = fakeFetch({ "/v2/users": () => new Response(JSON.stringify({ result: [] }), { status: 200 }) });
+    expect(await sendZitadelPasswordReset("ghost@example.ro", { ...deps, fetch: nobody.call })).toEqual({ kind: "missing" });
+  });
+
+  it("deactivates and reactivates the account, and needs the key for either", async () => {
+    const off = fakeFetch({
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
+      "/v2/users/42/deactivate": () => new Response("{}", { status: 200 }),
+    });
+    expect(await setZitadelUserActive("dani@example.ro", false, { ...deps, fetch: off.call })).toEqual({ kind: "done" });
+    expect(off.calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/deactivate");
+
+    const on = fakeFetch({
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
+      "/v2/users/42/reactivate": () => new Response("{}", { status: 200 }),
+    });
+    expect(await setZitadelUserActive("dani@example.ro", true, { ...deps, fetch: on.call })).toEqual({ kind: "done" });
+    expect(on.calls.at(-1)?.url).toBe("https://id.example.test/v2/users/42/reactivate");
+
+    // Without the key nothing is attempted: "not configured" is an answer, not a failure.
+    expect(await setZitadelUserActive("dani@example.ro", false, { issuer: "", token: "", fetch: off.call })).toEqual({
+      kind: "unconfigured",
+    });
+    expect(await sendZitadelPasswordReset("dani@example.ro", { issuer: "", token: "", fetch: off.call })).toEqual({
+      kind: "unconfigured",
+    });
+  });
+
+  it("refuses with the provider's own reason when the call fails", async () => {
+    const refused = fakeFetch({
+      "/v2/users": () => new Response(JSON.stringify({ result: [{ userId: "42" }] }), { status: 200 }),
+      "/v2/users/42/deactivate": () => new Response(JSON.stringify({ message: "permission denied" }), { status: 403 }),
+    });
+    expect(await setZitadelUserActive("dani@example.ro", false, { ...deps, fetch: refused.call })).toEqual({
+      kind: "failed",
+      reason: "403 permission denied",
+    });
   });
 });

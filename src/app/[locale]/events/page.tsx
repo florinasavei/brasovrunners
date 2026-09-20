@@ -1,3 +1,6 @@
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import DownloadIcon from "@mui/icons-material/Download";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -81,6 +84,19 @@ async function loadListing(db: Db, locale: EventLocale, now: Date) {
 }
 
 type Listing = Awaited<ReturnType<typeof loadListing>>;
+
+/**
+ * The three calendar buttons (§175; the owner: "these buttons must be smaller as well and have
+ * icons"). A finger's 44 pixels on a touch screen, a pointer's 32 from `sm` up — the same two
+ * sizes the share pills take — and the glyph as a child of the Button, never an element-valued
+ * prop across the server/client boundary.
+ */
+const CALENDAR_BUTTON_SX = {
+  minHeight: { xs: 44, sm: 32 },
+  gap: 0.5,
+  px: { xs: 1.5, sm: 1.25 },
+  fontSize: { sm: "0.78rem" },
+} as const;
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -197,14 +213,17 @@ export default async function EventsPage({ params, searchParams }: Props) {
               rel="noopener noreferrer"
               size="small"
               variant="outlined"
-              sx={{ minHeight: 44 }}
+              sx={CALENDAR_BUTTON_SX}
             >
+              <EventAvailableIcon sx={{ fontSize: 18 }} aria-hidden="true" />
               {t("calendar.subscribeGoogle")}
             </Button>
-            <Button component="a" href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+            <Button component="a" href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
+              <CalendarMonthIcon sx={{ fontSize: 18 }} aria-hidden="true" />
               {t("calendar.subscribeApple")}
             </Button>
-            <Button component="a" href={`/${locale}/events/calendar.ics`} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+            <Button component="a" href={`/${locale}/events/calendar.ics`} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
+              <DownloadIcon sx={{ fontSize: 18 }} aria-hidden="true" />
               {t("calendar.downloadLink")}
             </Button>
             <InfoTip text={t("calendar.refreshNote")} />

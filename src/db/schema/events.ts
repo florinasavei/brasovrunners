@@ -332,6 +332,25 @@ export const events = pgTable(
      */
     isSpecial: boolean("is_special").notNull().default(false),
 
+    /**
+     * Where this race's numbers start, and what colour they are printed (§173; the owner:
+     * "cred că ar fi mai ușor să dăm numerele de concurs în ordinea înscrierii, așa se face de
+     * obicei, dar există un prefix de cursă — spre exemplu numerele pot începe cu 1 acum dar la
+     * alte curse sunt de la 100 în funcție de distanță și au altă culoare").
+     *
+     * This is what makes a bib a *race's* bib rather than a row's: the 5 km starts at 100 and
+     * prints green, the 10 km starts at 500 and prints blue, and the number a runner is given
+     * says which start line they belong on before anybody reads a word. Both are the event's,
+     * because the club runs one distance per event today (multi-distance races are M2) and an
+     * event is therefore exactly the unit a band belongs to.
+     *
+     * The start is where the first number is drawn from; it never renumbers anybody. The colour
+     * is a hex triplet the sheet prints as the band behind the number, and null means the
+     * club's own.
+     */
+    bibStartNumber: integer("bib_start_number").notNull().default(1),
+    bibColour: text("bib_colour"),
+
     capacity: integer("capacity"),
     /**
      * The participation window (`DECISIONS.md` §104): for an event further away than
@@ -420,6 +439,15 @@ export const events = pgTable(
      * direct `UPDATE` all reach this column, and a stored `javascript:` URL is a script that
      * runs when a visitor clicks the club's own map link.
      */
+    /**
+     * A band has to start somewhere a three- or four-digit bib can reach (§173), and the colour
+     * has to be a colour: the sheet paints it straight into the printed band, so a stored
+     * `red; background: url(...)` would be a style injection into a PDF the club hands out.
+     * Six hex digits, hash included, or nothing.
+     */
+    check("events_bib_start_number_positive", sql`${t.bibStartNumber} >= 1 AND ${t.bibStartNumber} <= 99000`),
+    check("events_bib_colour_is_hex", sql`${t.bibColour} IS NULL OR ${t.bibColour} ~ '^#[0-9a-fA-F]{6}$'`),
+
     check("events_map_url_is_https", sql`${t.mapUrl} IS NULL OR ${t.mapUrl} LIKE 'https://%'`),
     check(
       "events_route_url_is_https",

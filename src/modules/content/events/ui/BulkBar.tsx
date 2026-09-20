@@ -11,6 +11,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
@@ -26,6 +27,11 @@ import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
  * JavaScript the buttons still post — only the counter and "select all" go quiet.
  */
 type Action = (form: FormData) => Promise<void>;
+
+/** The three verbs' glyphs, from the shared registry (§170). */
+const PublishGlyph = ACTION_ICONS.publish;
+const ArchiveGlyph = ACTION_ICONS.archive;
+const DeleteGlyph = ACTION_ICONS.delete;
 
 /** The row checkboxes of the table above, which name this form as theirs. */
 function rowBoxes(formId: string): HTMLInputElement[] {
@@ -78,6 +84,9 @@ export default function BulkBar({
     return () => document.removeEventListener("change", read);
   }, [formId]);
 
+  /** Nothing ticked, and this island is running — see the buttons below for why both halves. */
+  const idle = total > 0 && count === 0;
+
   const selectAll = (checked: boolean) => {
     for (const box of rowBoxes(formId)) {
       if (box.checked !== checked) box.click();
@@ -103,12 +112,36 @@ export default function BulkBar({
         </Typography>
         <form id={formId} ref={form} action={archive} style={{ display: "contents" }}>
           <input type="hidden" name="uiLocale" value={uiLocale} />
-          {/* Never disabled on an empty selection: without JavaScript the count is unknown, and
-              the server answers "nothing ticked" either way. */}
-          <Button type="submit" formAction={publish} variant="contained" size="small" sx={{ textTransform: "none", minHeight: 36 }}>
+          {/*
+            Dim while nothing is ticked (§170; the owner: "trebe să fie active doar dacă
+            selectez ceva"), and each verb wears its glyph ("și butoanele astea au nevoie de
+            iconițe").
+
+            `total > 0` is the honest test for "this island is running": it is zero until the
+            effect above has counted the rows, which is exactly the state a browser without
+            JavaScript stays in — there the buttons still post, and the server answers "nothing
+            ticked" as it always did. The server-side refusal is untouched either way.
+          */}
+          <Button
+            type="submit"
+            formAction={publish}
+            variant="contained"
+            size="small"
+            disabled={idle}
+            startIcon={<PublishGlyph fontSize="small" />}
+            sx={{ textTransform: "none", minHeight: 36 }}
+          >
             {labels.publish}
           </Button>
-          <Button type="submit" formAction={archive} variant="outlined" size="small" sx={{ textTransform: "none", minHeight: 36 }}>
+          <Button
+            type="submit"
+            formAction={archive}
+            variant="outlined"
+            size="small"
+            disabled={idle}
+            startIcon={<ArchiveGlyph fontSize="small" />}
+            sx={{ textTransform: "none", minHeight: 36 }}
+          >
             {labels.archive}
           </Button>
           {remove && (
@@ -119,6 +152,8 @@ export default function BulkBar({
               variant="outlined"
               color="error"
               size="small"
+              disabled={idle}
+              startIcon={<DeleteGlyph fontSize="small" />}
               sx={{ textTransform: "none", minHeight: 36 }}
               onClick={(event) => {
                 event.preventDefault();

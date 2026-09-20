@@ -16,6 +16,7 @@ import { listApprovedVersions } from "@/modules/legal-documents/repository";
 import { canCreateEvent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import RepeatFields from "@/modules/content/events/ui/RepeatFields";
+import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { createEventAction } from "../../actions";
 
 type Props = {
@@ -103,16 +104,20 @@ export default async function NewEventPage({ params, searchParams }: Props) {
           ))}
 
           {/* Recurrence, where the owner looked for it first (BR-REQ-050-02 criterion 7). The
-              copies are drafts like the event itself; the list publishes them together. */}
+              copies are drafts like the event itself; the list publishes them together.
+              A tick first, the frequency after it (§170) — the select's "does not repeat"
+              option existed only because the control was always shown. */}
           <Box>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
               {t("editor.repeatSection")}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t("editor.repeatOnCreateHelp")}
-            </Typography>
-            <RepeatFields prefix="repeat." withNone />
+            <RepeatToggle name="repeat.on" label={t("editor.repeatOn")}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t("editor.repeatOnCreateHelp")}
+              </Typography>
+              <RepeatFields prefix="repeat." />
+            </RepeatToggle>
           </Box>
 
           <Box>

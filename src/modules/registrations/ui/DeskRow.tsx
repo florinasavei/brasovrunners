@@ -165,23 +165,36 @@ export default async function DeskRow({
           )}
           {!readOnly && row.status === "CONFIRMED" && (
             <>
-              <form action={setBibNumberAction}>
-                {hidden}
-                <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-                  <TextField
-                    name="bibNumber"
-                    type="number"
-                    size="small"
-                    label={t("desk.bibField")}
-                    defaultValue={row.bibNumber ?? ""}
-                    slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
-                    sx={{ width: 120 }}
-                  />
-                  <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
-                    {t("desk.saveBib")}
-                  </Button>
-                </Stack>
-              </form>
+              {/*
+                The field only where there is a number to give (§173; the owner: "nu ar trebui
+                să mai pot schimba numărul de concurs odată confirmat!").
+
+                A confirmed runner has the number in their inbox and possibly on a bib in an
+                envelope, so the service refuses a change — and a box that always refuses is
+                worse than no box: it invites the press, and the desk is the one screen where
+                being told "ceva nu este valid" in front of a queue is expensive. What stays is
+                filling a gap, which is the one case that still arises: a row confirmed before
+                a number was drawn automatically. The number itself is already shown large at
+                the head of the row.
+              */}
+              {row.bibNumber === null && (
+                <form action={setBibNumberAction}>
+                  {hidden}
+                  <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                    <TextField
+                      name="bibNumber"
+                      type="number"
+                      size="small"
+                      label={t("desk.bibField")}
+                      slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
+                      sx={{ width: 120 }}
+                    />
+                    <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                      {t("desk.saveBib")}
+                    </Button>
+                  </Stack>
+                </form>
+              )}
               <form action={checkInAction}>
                 {hidden}
                 <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />

@@ -78,6 +78,7 @@ const submission = (email: string) => ({
   email,
   locale: "ro",
   privacyAcknowledged: true,
+  fitnessDeclared: true,
   resultsNameConsent: false,
   listOptOut: false,
   honeypot: "",

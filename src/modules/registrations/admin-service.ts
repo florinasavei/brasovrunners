@@ -380,6 +380,15 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
 /**
  * One race number by hand, or none (BR-REQ-038-01 criterion 7). The partial unique index is
  * what refuses two runners with one number; here that surfaces as a sentence.
+ *
+ * **A confirmed registration's number is settled** (§173; the owner: "nu ar trebui să mai pot
+ * schimba numărul de concurs odată confirmat!"). §105 put a preferential number in an
+ * organizer's hands, and that stays — before confirmation, which is when there is nothing
+ * printed and nobody has been told. Once a registration is confirmed the runner has been
+ * emailed their number, it is on a sheet, and quite possibly on a bib in an envelope; changing
+ * it there produces two runners who each believe they are 214. The one exception is giving a
+ * number to a confirmed registration that has none, which is filling a gap rather than moving
+ * anybody.
  */
 export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -395,6 +404,12 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   if (current.bibNumber === bibNumber) return current;
+  if (current.status === "CONFIRMED" && current.bibNumber !== null) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "this registration is confirmed and already has a race number; it cannot be changed",
+    );
+  }
 
   let updated: Registration;
   try {

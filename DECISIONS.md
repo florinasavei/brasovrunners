@@ -7720,3 +7720,509 @@ lenient read), `events/ical.test.ts` (several partners, the label said once),
 on it is no change).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 170. Decided — the editor reads like an editor, and every refusal names what it wants (2026-09-20)
+
+**Context.** The owner asked for a WordPress-like event editor on 2026-09-20 and the work
+never happened — the run that was to do it stopped on a credit limit. What was there instead
+was a single column of roughly forty inputs under two headings, in the order the columns had
+been added to the `events` table, with publication at the very top and the words the organizer
+came to write about two screens below it. The same session's walkthrough turned up the rest,
+and they are not separate complaints: "aparent nu pot publica un eveniment" (the alert reads
+`Lipsesc: RO: excerpt` — a *column* name, for a box labelled "Rezumat" that sits under nothing
+and above the long description that dwarfs it); "aparent nu pot șterge evenimente" (the button
+fires and `VALIDATION_ERROR` comes back, where the list has explained the same refusal with a
+count since §114); "textul ăsta trebuie să fie collapsed" (six lines describing all seven event
+types, under every type); "repetă evenimentul trebuie să fie o bifă și abia apoi pot să setez
+frecvența"; "am nevoie de iconițe și aici" on the publication row; "și butoanele astea au
+nevoie de iconițe și trebe să fie active doar dacă selectez ceva" on the bulk bar; "this part
+should be sticky" on the language tabs; "aceste butoane sunt mult prea mari" on the share
+pills; and "«Deschide la masă» e confusing? ce e asta? e gen check-in?".
+
+Every one of them is the same defect in a different place: **the screen knows something it
+does not say.** It knows which field is missing and says a column name; it knows the event has
+three registrations and says nothing until you press; it knows you are choosing a type and
+explains the other six; it knows nothing is ticked and offers three live buttons.
+
+**Decision.**
+
+*The words first, the settings in named panels, publication in its own column.* The editor is
+two columns from `md` up and one on a phone. The main column is the single save form it has
+been since §28 — one `<form>`, one button, one transaction — and inside it the **content**
+panel comes first, then four settings panels: "Când și unde", "Înscrieri", "Traseu și detalii",
+"Film". The second column is "Publicare": the state and version chips, the live-edit warning,
+what is still missing, the transition buttons, the series header with its date chips, and
+repeat. On a phone that column is **first**, because on a phone it is what somebody opened the
+page to check. The two are siblings and never nested: the save is one form and every
+publication verb is a form of its own, and a form inside a form is not a thing HTML has.
+
+Nothing was renamed. Every field posts the name it posted before, so `eventFieldsFrom` and
+`translationFieldsFrom` read exactly what they read yesterday and every end-to-end locator
+still finds what it looked for. This is a rearrangement, and it is written down as one so that
+the next person does not go looking for the migration.
+
+*Within a language: the order somebody writes in.* Title, then the long description
+("Conținut — apare pe pagina evenimentului"), then the summary under it ("Rezumat — apare pe
+card și în distribuiri"), then rules, programme, what to bring. The page address and the two
+search-engine fields are folded at the bottom: set once, never looked at again. The summary
+was **above** the description, which asked for a one-sentence summary of something not yet
+written — and an empty summary is precisely what refuses publication. The labels now say where
+each one shows up, because "Descriere scurtă" and "Descriere completă" differ by one adjective
+and nothing about what they are for.
+
+*A refusal names the field on the screen, not the column in the table.* "Not ready to publish"
+maps every key `missingPublicFields` and `missingPublicEventFields` return through
+`editor.fields.*`, and names the language in its own endonym: `Română: Rezumat — apare pe card
+și în distribuiri`, not `RO: excerpt`. The service's own message keeps the column names; it is
+a developer's log line, and this is the sentence a person reads.
+
+*Delete explains itself before it is pressed.* The editor counts the registrations against the
+event and replaces the button with the reason, exactly as the list has. When every row in the
+way is test data it says so and points at the button that clears them, one section above,
+because "three registrations" on a QA event the organizer filled themselves is a dead end and
+"three registrations, all of them test data" is a next step.
+
+*Race numbers say why there are none.* A queue made entirely of test registrations gets no
+numbers and never will (§30, `AGENTS.md` §12.6). The screen said "no numbers yet", which reads
+as a broken button. It now says the rule and names the way to rehearse: a walk-in at the desk,
+which writes a real row.
+
+*The type note is about the type you chose.* One sentence for the chosen type, under the
+select; the comparison of all seven folded beside it. A comparison is for choosing and belongs
+one press away; the description of six types you did not choose is noise on every event.
+
+*Recurrence is a tick.* "Repetă evenimentul" is a checkbox, and the cadence, the weekdays, the
+end date and the button appear under it once it is ticked. The `NONE` cadence existed only
+because the control was always shown; the creation form and the event page both read the tick
+now, and both actions refuse a series without it. The fields are hidden, never unmounted, so a
+date typed and then unticked is still there when the box goes back on.
+
+*Glyphs on the verbs, dimmed when there is nothing to act on.* One registry,
+`shared/ui/action-icons.ts`, keyed by name — because an icon passed from a Server Component as
+an element-valued prop is the defect `CheckboxField` documents, and the fix is the same: the
+name crosses, the client makes the element. The bulk bar's three buttons dim while nothing is
+ticked, and the test for "this island is running" is `total > 0`: without JavaScript the count
+is never taken, the buttons stay live, and the server answers "nothing ticked" as it always
+did. No guard moved to the client.
+
+*The language tabs stay put.* The content panel is the tallest thing on the page, and by the
+bottom of the Romanian text the way to the English one was a page and a half above.
+
+*Two sizes for a pill.* The share and calendar buttons are 44 pixels on a touch screen and 32
+from `sm` up. A finger needs the 44; a pointer does not, and eight finger-sized pills across a
+desktop row are the loudest thing on a page where they are the least important. 32 is still
+well over the 24 WCAG 2.2 asks for.
+
+*A link says where it goes.* "Deschide la masă" is "Deschide la masa din ziua cursei
+(check-in)".
+
+**Rejected.** *Folding the settings panels.* A `<details>` would hide a required field from
+somebody who has never seen this screen, and the whole of this section is about a publication
+refusal naming a field nobody was shown. The panels are boxes, not folds; the folds are for
+what is genuinely optional — SEO, the type comparison, how a series works.
+
+*Showing the type help only for `RACE`*, which is the literal reading of "trebuie să apară
+doar la concurs, nu la toate". It would hide the explanation of what a race is from somebody
+sitting on `GROUP_RUN` wondering which to pick. The substance of the ask — do not show me six
+paragraphs about types I did not choose — is met by the one-line note, and the comparison stays
+reachable.
+
+*Moving the featured and special marks into "Publicare"*, where they belong by meaning. They
+are `event.*` columns and post with the save form; the publication column holds the transition
+forms, which are separate forms. Putting them there would have meant either a form inside a
+form or a second save, and both are worse than a mark at the bottom of "Traseu și detalii".
+
+**Consequences.** `EventFieldsForm` returns four `EditorPanel`s instead of one `Stack`;
+`TranslationFieldsForm` is reordered and gains a fold; the event page's `return` is a grid with
+two children. `RepeatFields` loses `withNone` and both actions gain a tick to read, so a form
+posted by an older cached page creates no series — which is the safe direction. Two message
+keys change wording (`editor.fields.body`, `editor.fields.excerpt`) and one link does
+(`registrations.openDesk`); the rest are additions. `tests/e2e/series-edit.spec.ts` ticks the
+new box before it fills the cadence.
+
+Tests: `tests/e2e/series-edit.spec.ts` (the repeat tick), `tests/unit/i18n/messages.test.ts`
+(both catalogues carry every new key), `tests/integration/cms/workflow.test.ts` (the excerpt
+derivation the reordered panel now makes obvious).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 171. Decided — the whole account workflow, and a form that says where its answers go (2026-09-20)
+
+**Context.** Two clusters from the same walkthrough, and they meet in the same place: a screen
+that knows something it does not say, and a workflow that stops one step short of being usable.
+
+*The accounts.* The owner: "but the zitadel workflow is not complete… I need to invite users to
+create accounts man! and set passwords and stuff", then "I must invite users and stuff, and I
+can also deactivate, send password resets, etc". What existed was half of it — create the human
+user, ask Zitadel for an invite code — with three holes. An account that already existed
+returned 409 and the story ended there: the row joined the allowlist, the screen said "they
+already have an account", and **nobody ever sent them the link that sets a password**, which is
+the common case rather than the rare one. There was no way to send a password reset to somebody
+who had signed in before and could not now. And there was no way to switch an account off at
+the provider — "Retrage accesul" removes the `staff_users` row, which is what stops the
+*backoffice* letting somebody in, and says nothing about whether they can still sign in at all.
+
+*The form.* "La formularul de înscriere trebuie să fie clar ce date sunt publice și ce date sunt
+confidențiale"; "nu e clar cu informațiile medicale, trebuie să bifeze doar «declar că sunt
+apt»"; "pune iconițe chiar și la sex"; "și la cetățenie pune steaguri man". The registration
+form asks for a birth date, a phone number, a next of kin and a health note, and said nothing
+anywhere about where any of it goes — while the answer is unusually good and worth saying. The
+medical block asked for free text first with a consent under it, which reads as "tell us your
+conditions", so the one thing the club actually needs from everybody — that they consider
+themselves fit — was nowhere and the Article 9 box was everywhere.
+
+**Decision.**
+
+*An existing account is invited, not skipped.* A 409 on create falls through to the same
+invitation a new account gets, so the person receives the link that sets their password either
+way. The outcome still reports `exists`, because the screen should say "they already had an
+account" rather than claim one was made.
+
+*Two more verbs, each its own button.* **"Trimite resetare de parolă"** asks Zitadel to email a
+reset link (`POST /v2/users/{id}/password_reset` with `sendLink`) — offered only to somebody who
+has signed in at least once, because before that the invitation is the right email and it sets
+the first password anyway. **"Dezactivează contul"** deactivates at the provider
+(`/deactivate`, with `/reactivate` behind the same function). It is deliberately *not* folded
+into "Retrage accesul": they answer two different questions — "may they use the backoffice" and
+"may they sign in at all" — and a colleague who changed job inside the club wants the first
+without the second. Nothing here ever holds a password or a code; Zitadel sends, Zitadel owns.
+
+*Every lookup is by email.* One `findZitadelUserId`, shared by all three verbs, because each is
+"find the person, then do one thing to them" and a lookup that disagreed between two of them
+would be the same defect twice. It searches `emailQuery` first and `loginNameQuery` second —
+the fix §170 made for the resend, now the only implementation there is.
+
+*The form says where its answers go.* One sentence above the first field, in two versions: the
+ordinary one ("nothing you write here appears anywhere on the site") and the one for an event
+that publishes a start list, which names the single exception and says what is *not* published
+even then. Each block of fields carries its own marker underneath — "Confidențial. Nu se
+publică." — so somebody who skipped the banner still meets the answer beside the question.
+
+*The medical block becomes a statement and a note.* **"Declar pe propria răspundere că sunt apt
+medical să particip"** is a required tick among the consents, stored as `fitness_declared_at`.
+It is **not health data**: no condition, no diagnosis, nothing Article 9 covers — which is
+exactly why it can be required where `health_notes` cannot, and why it needs no separate
+consent. The free text and its own consent stay, folded and closed, under a sentence saying it
+is optional, what it is for and that it is deleted seven days after the event. A test
+registration ticks it like everything else (§30); a staff entry and a desk walk-in do not —
+there the paper declaration carries it, and no staff member declares fitness on somebody's
+behalf (`AGENTS.md` §15.11).
+
+That fold **reverses §59 for this one group**, and only this one. §59 opened the optional
+sections because "a field nobody sees is a field nobody fills", and that argument is right for
+the runner's own club — the field people reported as missing. It is wrong here: the thing that
+must be filled is the tick, which is now among the consents where nothing hides it, and an open
+free-text box asking about conditions was reading as an instruction rather than an offer. Every
+other optional group stays open.
+
+*Glyphs on the closed sets.* Female, male and person beside the three answers for sex; the
+country's flag before its name, from the set `scripts/sync-flags.mjs` already copies into
+`public/flags/` — which that script was written for ("will show many when a participant can
+state their country"), normalised to 4:3 so a column of two hundred names does not wobble
+between Romania's 2:3 and the United Kingdom's 1:2. A regional-indicator emoji was tried first
+and dropped: Windows draws it as two boxed capitals, and Windows is what the club's laptop runs.
+Both as **children** of the menu item, never as an element-valued prop — the defect
+`CheckboxField` documents. The flags degrade to boxed letters on Windows, which is accepted:
+the country's name is the label and this is the mark beside it.
+
+**Rejected.** *Making the fitness statement part of the privacy acknowledgment.* They are
+different things — one is "I have read what you do with my data", the other is "I am fit to run"
+— and a single box covering both would let a refusal of either be read as agreement to the
+other.
+
+*Shipping flag images.* 249 SVGs, or a package, to fix a rendering choice one desktop platform
+makes, on a page every phone loads. The name is the label; the flag is decoration.
+
+*Deactivating the account inside "Retrage accesul".* It would make the common case (somebody
+moving between roles) destructive, and the destructive case is one extra press away.
+
+**Consequences.** Migration `0049_fitness_declared` adds one nullable column — expand only,
+null for every row taken before it existed. `registrationSubmissionSchema` gains a
+`z.literal(true)`, so every fixture that builds a valid public submission carries it, and
+`REGISTRATION_FORM_FIELDS` carries it too, because an unticked literal is a rejection the error
+summary must be able to name and link to. The CSV export gains a "Medically fit (declared)"
+column. `zitadel-users.ts` goes from two exported functions to four, over one connection helper
+and one lookup.
+
+Tests: `tests/unit/staff/zitadel-users.test.ts` (an existing account is invited; the reset asks
+for a link and never a code; deactivate and reactivate; each verb without the key),
+`tests/unit/registrations/*` and `tests/integration/registrations/*` (the new required tick, and
+that a test registration makes it like a real one).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 172. Decided — the start list as a spreadsheet, named after its race (2026-09-20)
+
+**Context.** The owner: "the participants list must be exported to an excel (nicely formatted)
+and also re-imported", then, flatly: "CSV is stupid! I want excel! and export just for a
+particular race!"
+
+He is right about the file and half right about the filter. The per-race export already
+existed — the button carries the list's filters, so setting "Evenimente" and pressing it
+produces that race's entrants and nothing else (§15.10) — but the file it produced was called
+`registrations.csv` whichever race it was about, which is how three of them end up in a
+downloads folder telling you nothing. And a comma-separated file is not what a volunteer opens
+on race morning: a Romanian Excel splits on semicolons rather than commas, renders `07` as `7`,
+reads a timestamp as whatever the machine's locale thinks it is, and arrives with no header
+frozen and every column one character wide. The club's actual use — sort by club, scan down the
+numbers, tick people off — is a spreadsheet's job, and the file was making it hard.
+
+**Decision.**
+
+*The same rows, as a real `.xlsx`.* `format=xlsx` on the same route, and the button on the list
+asks for it; the comma-separated file stays behind a quieter link, because it is what a script
+reads and the one format nothing can misinterpret. The sheet has a bold header frozen at the
+top, columns wide enough to read, dates written as dates so they sort as dates, and the race
+number as a number so it sorts as one. Two columns the CSV never had: the registration's `id`,
+first and narrow, and the runner's own club — the thing a start list is actually sorted by.
+
+*The file is named after the race.* The event's title as filtered for, plus the day, so two
+exports of one race a week apart are two files. The sheet inside carries the same name, reduced
+to what Excel accepts: at most 31 characters and none of `: \ / ? * [ ]`.
+
+*`write-excel-file`, not ExcelJS.* 1.8 MB against 21, in a function whose whole bundle has a
+ceiling on the plan this runs on. ExcelJS is the better-known answer and would have been the
+lazy one. This writes; it does not read, and the reader — the other half of what was asked —
+is chosen on its own merits when the import is built, because reading somebody's edited
+spreadsheet is a different problem from writing a clean one.
+
+*Every cell is typed, and that is the formula guard.* A name beginning with `=` is a formula to
+a spreadsheet, and a start list is exactly where one arrives from a public form. The CSV
+prefixes an apostrophe (`neutralizeCsvValue`); here the cell is declared as text, which is the
+stronger version of the same guarantee — a text cell is never evaluated, whatever it starts
+with — and the test asserts that no `<f>` element exists anywhere in the sheet.
+
+*The tests read the bytes.* Not a round trip through the same library, which would agree with
+itself and with nothing else: the test opens the ZIP through its central directory, checks the
+four parts without which no spreadsheet opens the file, and reads the sheet's own XML for the
+header, the frozen pane and the values. A writer that passes this produces a file Excel opens.
+
+**Deferred — the re-import, deliberately, and it needs a decision the owner has to make.**
+Reading the file back is easy; deciding what it is *allowed to do* is not. An imported row must
+never create a registration, because a place comes from the allocator under lock (§10.6,
+BR-REQ-034-01) and a spreadsheet row that becomes a confirmed entrant is an overbooking with
+extra steps. It must never set a status, because a confirmation requires an approved declaration
+somebody signed (§10.8). So an import can only be "update these columns on rows that already
+exist, matched by the `id` the export wrote" — a spelling corrected, a club filled in, a t-shirt
+size — with a preview of exactly what would change before anything is written. That is the
+shape; which columns are editable is the owner's call, and building it before that answer would
+be building the wrong thing.
+
+**Rejected.** *Replacing the CSV.* It costs nothing to keep, it is what anything automated
+should consume, and the one property it has that the workbook does not — being readable by
+every tool ever written — is worth a second button.
+
+*Putting the filters in the filename beyond the event.* "Confirmate" and "necăutate" are how
+the file was made, not what it is about; the event is what it is about.
+
+**Consequences.** One dependency, pinned. `RegistrationListRow` carries `clubName`. The export
+route grows a branch rather than a second route, because everything before the branch — the
+role check, the filters, the omission of test rows — is identical and must stay identical.
+
+Tests: `tests/unit/registrations/workbook.test.ts` (the container and its parts, every header,
+the frozen pane, a number that stays a number, a name that never becomes a formula, a sheet
+name Excel would refuse, and an empty list that still produces a file).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 173. Decided — race numbers in order, from the race's own band (2026-09-20, reversing §94)
+
+**Context.** The owner, having asked for a random draw on 2026-09-18 ("the bibs must be
+generated randomly", §94), reversed it: "cred că ar fi mai ușor să dăm numerele de concurs în
+ordinea înscrierii, așa se face de obicei, dar există un prefix de cursă — spre exemplu numerele
+pot începe cu 1 acum dar la alte curse sunt de la 100 în funcție de distanță și au altă
+culoare". And, separately: "nu ar trebui să mai pot schimba numărul de concurs odată
+confirmat!"; and "nu văd BID-ul" of the registrations list.
+
+He is right, and the reasons are not aesthetic. A random number is a number nobody can check
+off: a volunteer with an envelope of pre-printed bibs hands them out in order, a start list is
+read down a column, and "is 47 here yet" is a question a sequential list answers and a scattered
+one does not. The band is the other half: a club running a 5 km and a 10 km gives one 100–199
+and the other 500–599, in two colours, and the number a runner wears says which start line they
+belong on before anybody reads a name.
+
+**Decision.**
+
+*Numbers run in order, from the event's own start.* `pickBibNumber` returns the lowest free
+number at or above `events.bib_start_number`, which defaults to 1. Not "the last one plus one":
+the lowest free one, so a gap left by a number typed by hand out of order is filled by the next
+registration rather than skipped past. Everything that made §94 safe is untouched — the draw
+happens under the event row's lock, the same serialization point capacity uses (§10.6); a number
+once given is never renumbered; a cancelled registration keeps its number so it is not handed to
+somebody else.
+
+*Two columns on the event: the band and its colour.* `bib_start_number` (1 by default, at most
+99000) and `bib_colour` (a hex triplet, or nothing for the club's own). Both on the event
+because the club runs one distance per event today — multi-distance races are M2 — so an event
+is exactly the unit a band belongs to. Both are checked at the database: a start that a
+four-digit bib can reach, and a colour that is six hex digits after a hash, because the sheet
+paints the value straight into the printed band and a stored `red; background: url(…)` would be
+a style injection into a PDF the club hands to two hundred people.
+
+*A confirmed runner's number is settled.* §105 put a preferential number in an organizer's
+hands; that stays, before confirmation, which is when nothing is printed and nobody has been
+told. Once a registration is confirmed the runner has the number in their inbox, it is on a
+sheet and possibly on a bib in an envelope, and changing it there produces two people who each
+believe they are 214. The one exception is a confirmed registration with **no** number: filling
+that gap is not moving anybody, and it is what a row confirmed before §87 looks like.
+
+*The number is a column of the list.* It was inside the journey chip, which is where somebody
+looks for "how far along is this person" and not for "which number is this". It sorts, nulls
+last — a row with no number is not "before 1", it is not in the list the sort is about — and the
+step column is called "Unde a ajuns" rather than "Etapă", which named the concept and not the
+question.
+
+**Rejected.** *Keeping the random draw behind a setting.* Two allocation strategies is two
+things to reason about at the one point in the system where two organizers press a button at
+once, for a choice nobody will change twice.
+
+*A band per distance rather than per event.* It is the right model and it is M2's, when an event
+can hold several races. Building the column now would mean a shape with one row in it forever
+and a migration anyway when the real thing arrives.
+
+*Letting an Administrator override the lock.* Every override becomes the normal path within a
+month. The desk can already give a number to somebody who has none, which is the case that
+actually arises.
+
+**Consequences.** Migration `0050_bib_band`, expand only: two nullable-or-defaulted columns and
+two checks. `suggestFreeBibNumbers` counts from the event's band unless the caller says
+otherwise, so the backoffice stops offering 1, 2, 3 at a race whose numbers start at 500.
+`assignBibNumbers` reads the band once under the lock it already takes.
+
+Tests: `tests/integration/registrations/race-day.test.ts` — numbers in order from 1 and from
+100, a confirmed number that cannot be changed or cleared, a preferential number before
+confirmation with its duplicate and nonsense refusals, the gap-filling exception with its email,
+and suggestions that start where the race does.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 174. Decided — the lockup where it belongs, and the event in the runner's calendar (2026-09-20)
+
+**Context.** The owner, of the declaration PDF: "logo-ul nu apare colorat frumos cu albastru în
+declarație", with a picture of the club's mark drawn as a thin hollow outline; then, with the
+filled mark attached: "logo trebuie să apară așa: și în mail și în declarații și peste tot!".
+Separately: "în mailul de înregistrare am nevoie de logoul BVR și de link către eveniment și
+site", "și de iCal ca să poată pune în calendar".
+
+Two different defects wearing one complaint.
+
+*The PDF.* `src/theme/pdf/logo.png` was already the filled blue lockup — but it carried an
+**alpha channel**. An alpha PNG does not reach a PDF as one image: pdfkit writes the colour and
+a separate soft mask, and the viewer composites them. Several viewers, and most printers,
+composite that badly, and what comes out is edges — the outline the owner photographed. The
+file was also 600×248 against the `495/1200` ratio the three renderers use to place what
+follows it, so the layouts were each off by a hair.
+
+*The email.* The card's header was the club's name as letter-spaced text on a blue band. No
+logo anywhere, in the one message a runner keeps.
+
+**Decision.**
+
+*One script, two rasters, both committed.* `scripts/brand-assets.mjs` renders
+`public/brand/logo.svg` and its white twin into the two places that cannot take an SVG: the
+PDFs, and the email. The SVG stays the source of truth — it is what the site serves and what a
+review can read as text. The outputs are committed rather than built, because rasterising at
+build time would put a native dependency in front of `next build` for a file that changes once
+a year.
+
+*The PDF raster is flattened onto white.* No alpha, so there is no soft mask and nothing to
+composite: no viewer and no printer can get it wrong. White because every page these are drawn
+on is white. And 1200×495, which is finally the ratio the code already assumed.
+
+*The email header carries the lockup as a PNG.* White on the club's blue, hosted under
+`APP_BASE_URL` — a **raster**, because half the mail clients in use refuse SVG, and hosted
+rather than inlined, because a data URI is what the rest of them strip. Its `alt` is the club's
+name, so a reader with images off sees exactly what the band said before: nothing is lost when
+the picture is blocked, which is the common case on a first message from an unknown sender.
+
+*The confirmation and the reminder carry the event as a calendar file.* The same `.ics` the
+event page offers (§107, §159), from the same function, attached. Every phone and desktop
+client opens it with one tap, including the ones that will not follow a link out to the site —
+which on race week is the point. **Published events only**: an `.ics` for a draft would put an
+unpublished page's details into somebody's calendar, and a message for an unpublished event
+simply goes without one. It rides beside the signed declaration on the confirmation, never
+instead of it.
+
+*A translator without a request.* The outbox renderer drains from the scheduler, long after the
+request that queued a row has gone, so `getTranslations` is not available to it —
+`calendarLabels` uses next-intl's own `createTranslator` over the statically imported
+catalogues. The public routes keep `getTranslations`; both produce the same words.
+
+**Rejected.** *Keeping the alpha and fixing the viewer.* There is no viewer to fix; the file is
+handed to whoever the club hands it to.
+
+*Inlining the logo as a data URI.* Gmail and Outlook both strip them, which trades a picture
+that renders badly in some clients for one that renders in none.
+
+*Attaching the `.ics` to every message.* The verification email is about confirming an address,
+not about a date; the state notice is about a place being lost. Two messages carry it, and both
+are ones somebody acts on.
+
+**Consequences.** `findPublishedEventBySlug` becomes generic in its schema, like its neighbours,
+because the renderer reaches it with the application's own database handle. Three test
+assertions that said "this message has no image" or "no link" now ask that of the **body**: the
+header band has a picture on every message, and the claim was always about the content.
+`README.md` indexes the new script.
+
+Tests: `tests/integration/registrations/signed-declaration.test.ts` (the confirmation carries
+both attachments; the calendar file is a real VCALENDAR naming the event), and the three scoped
+assertions above.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 175. Decided — the QA calendar says so, and a tick that cannot be untied is not offered (2026-09-20)
+
+**Context.** Two findings from the owner's walkthrough, both about a control saying something
+untrue about itself.
+
+"The QA iCal needs to be named differently!" — the `.ics` files two deployments produce carry
+different UIDs, because a UID takes its host from the site's own address, so a QA copy and a
+production copy of the Sunday run never merge into one entry. What they do instead is sit side
+by side in the same calendar app, same title, same hour, with nothing on screen to say which
+one is real. The club's own people subscribe to both while rehearsing, which is exactly the
+situation §163 already solved for email with the `[QA]` subject mark.
+
+"E ciudat că aici nu pot deselecta ediția curentă, e un pic redundant sincer" — the series
+header shows every date as a chip with a tick box, and the date whose editor is open is ticked
+and cannot be unticked (§134: the save always reaches it). A box that refuses to change is not
+a choice; it is a picture of one, and it invites the press that does nothing.
+
+**Decision.**
+
+*The environment goes on the calendar's name **and** on every entry.* `[QA] ` in front of
+`X-WR-CALNAME` and in front of each `SUMMARY`, idempotent, QA only — production is never
+marked, and local and test never leave the machine. Both halves are needed: a subscribed feed
+shows its calendar name, while a single event added from the confirmation's attachment lands in
+a calendar that already has a name of its own, and the only thing on screen is the entry's
+title.
+
+*The current date's chip drops its box.* It stays filled, keeps `aria-current="page"` and keeps
+the arrow that opens it; the checkbox role and the tick belong to the dates where ticking is a
+decision. Nothing about the rule changed — a save still reaches the date whose editor is open —
+only the claim the control was making about itself.
+
+*A tap target is 44 pixels on a phone and 24 on a desktop.* The owner, twice: "aceste butoane
+sunt mult prea mari", "these buttons must be smaller as well and have icons". The share row, the
+add-to-calendar row and the month/year pickers are 44 on a touch screen and 32 from `sm` up.
+BR-REQ-041-01 criterion 6 asks for 44 on **event links**, and those are whole cards —
+comfortably over it at either width. The end-to-end check that enforces it measured *every* link
+in `main` at 44, on both projects, which is stricter than the criterion and is what caught this:
+it now asks 44 of the phone, which is the design target and where a finger is the pointer, and
+WCAG 2.2's own 24 of the desktop, where it is not. The cards are unchanged and still measured.
+
+**Rejected.** *Marking the QA `.ics` by UID alone.* Already true, and invisible: a UID is not
+something anybody reads.
+
+*Leaving every control at 44 on a desktop.* Eight finger-sized pills across a desktop page are
+the loudest thing on it, and they are the least important thing on it.
+
+*Letting the current date be unticked.* It would mean "save this event, but not this event".
+
+**Consequences.** `qaMarked` lives in `ical.ts` beside the builder, because both the feed and
+the per-event file pass through it. The one test that asserts the mark sets `APP_ENV` around a
+fresh import rather than mutating a module's view of the environment behind its back.
+
+Tests: `tests/unit/events/ical.test.ts` (production unmarked, QA marked on the calendar name
+and on the entry).
+
+Baseline `BR-V1.38-2026-09-18`.

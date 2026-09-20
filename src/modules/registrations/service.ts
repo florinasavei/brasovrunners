@@ -560,6 +560,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     healthNotes,
     healthConsentVersion: healthNotes ? privacyNotice.version : null,
     healthConsentAt: healthNotes ? now : null,
+    // The statement itself, with the moment it was made (§171). A staff entry leaves it null:
+    // the paper declaration at the desk carries it, and nobody declares it on another's behalf.
+    fitnessDeclaredAt: input.fitnessDeclared ? now : null,
   };
 
   await db.transaction(async (tx) => {

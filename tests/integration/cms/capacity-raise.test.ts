@@ -139,6 +139,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
         email: `${name.toLowerCase()}@example.ro`,
         locale: "ro",
         privacyAcknowledged: true,
+        fitnessDeclared: true,
         resultsNameConsent: true,
         listOptOut: false,
         honeypot: "",

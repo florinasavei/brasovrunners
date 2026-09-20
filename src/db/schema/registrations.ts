@@ -256,6 +256,22 @@ export const registrations = pgTable(
     healthConsentVersion: integer("health_consent_version"),
     healthConsentAt: timestamp("health_consent_at", { withTimezone: true }),
 
+    /**
+     * "I declare I am medically fit to take part" (§171; the owner: "nu e clar cu informațiile
+     * medicale, trebuie să bifeze doar «declar că sunt apt»").
+     *
+     * **Not health data.** It is a statement the participant makes about themselves, the same
+     * kind of thing the declaration they sign later says, and it carries no diagnosis, no
+     * condition and nothing an Article 9 category covers — which is exactly why it can be
+     * required where `health_notes` cannot. The free text and its own consent stay where they
+     * were, optional and folded: somebody who wants the medical team to know something still
+     * has somewhere to write it.
+     *
+     * Null for every registration taken before this existed, and for a row a staff member
+     * entered at the desk on a paper declaration — there the paper carries the statement.
+     */
+    fitnessDeclaredAt: timestamp("fitness_declared_at", { withTimezone: true }),
+
     privacyNoticeVersion: integer("privacy_notice_version").notNull(),
     privacyAcknowledgedAt: timestamp("privacy_acknowledged_at", { withTimezone: true }).notNull(),
 

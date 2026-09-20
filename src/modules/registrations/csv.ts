@@ -40,6 +40,8 @@ export type RegistrationCsvRow = {
    * the data actually is.
    */
   clubMemberDeclared: boolean;
+  /** When the entrant ticked "I am medically fit" (§171); empty for a desk or phone entry. */
+  fitnessDeclaredAt: string | null;
   /** The optional socials (§106), empty when not given. */
   stravaUrl: string;
   instagramHandle: string;
@@ -63,6 +65,7 @@ const HEADER = [
   "Email",
   "Status",
   "Club member (declared)",
+  "Medically fit (declared)",
   "Strava",
   "Instagram",
   "Guardian",
@@ -88,6 +91,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.email,
         row.status,
         row.clubMemberDeclared ? "Yes" : "",
+        row.fitnessDeclaredAt ?? "",
         row.stravaUrl,
         row.instagramHandle,
         row.guardianName,

@@ -186,6 +186,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={row.bibNumber} variant="compact" />,
     },
     {
+      /*
+        The race number, as its own column (§173; the owner: "și nu văd BID-ul"). It was inside
+        the journey chip, which is where somebody looks for "how far along are they" and not for
+        "which number is this". On race morning it is the column the list is read by.
+      */
+      key: "bib",
+      label: t("registrations.columnBib"),
+      sortable: true,
+      render: (row) =>
+        row.bibNumber === null ? (
+          <Box component="span" sx={{ color: "text.disabled" }}>
+            —
+          </Box>
+        ) : (
+          <Box component="span" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
+            {row.bibNumber}
+          </Box>
+        ),
+    },
+    {
       key: "event",
       label: t("registrations.columnEvent"),
       sortable: true,
@@ -255,12 +275,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Button>
           {/*
             The export takes the filters and not the page: a spreadsheet of whichever 25 rows
-            happened to be on screen would be a quietly wrong file (§15.10).
+            happened to be on screen would be a quietly wrong file (§15.10). Set the event
+            filter and the file is that race's start list, named after it (§172).
+
+            Excel first, because that is what somebody opens: a bold frozen header, columns
+            wide enough to read, dates that sort as dates. The comma-separated file stays for
+            whoever is feeding it to something else.
           */}
           <Button
             component="a"
-            href={`/api/admin/registrations/export${listQueryString ? `?${listQueryString}` : ""}`}
+            href={`/api/admin/registrations/export?format=xlsx${listQueryString ? `&${listQueryString}` : ""}`}
             variant="outlined"
+            size="small"
+            sx={TAP_TARGET}
+          >
+            {t("registrations.exportExcel")}
+          </Button>
+          <Button
+            component="a"
+            href={`/api/admin/registrations/export${listQueryString ? `?${listQueryString}` : ""}`}
+            variant="text"
             size="small"
             sx={TAP_TARGET}
           >

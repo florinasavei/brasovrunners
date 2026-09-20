@@ -36,6 +36,10 @@ export type RegistrationListRow = {
   eventTitle: string | null;
   /** BR-REQ-031-06. What this person said about themselves, never what the club verified. */
   clubMemberDeclared: boolean;
+  /** When the entrant ticked "I am medically fit" (§171); null on a desk or phone entry. */
+  fitnessDeclaredAt: Date | null;
+  /** The runner's own club, as typed (§172): a column the start list is sorted by. */
+  clubName: string | null;
   /** The optional socials (§106), as typed; null when not given. */
   stravaUrl: string | null;
   instagramHandle: string | null;
@@ -86,7 +90,7 @@ export type RegistrationListFilters = {
  * An allowlist rather than a mapping built from the request: `?sort=` arrives from a URL anybody
  * can type, and the one thing that must not be possible is for it to name a column.
  */
-export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted"] as const;
+export const REGISTRATION_SORT_KEYS = ["name", "status", "event", "submitted", "bib"] as const;
 export type RegistrationSortKey = (typeof REGISTRATION_SORT_KEYS)[number];
 
 /**
@@ -223,6 +227,10 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
       return direction(eventTranslations.title);
     case "submitted":
       return direction(registrations.submittedAt);
+    // Race morning sorts by this (§173). Nulls last either way: a row with no number yet is
+    // not "before 1", it is not in the list the sort is about.
+    case "bib":
+      return dir === "asc" ? sql`${registrations.bibNumber} asc nulls last` : sql`${registrations.bibNumber} desc nulls last`;
   }
 }
 
@@ -261,6 +269,8 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      fitnessDeclaredAt: registrations.fitnessDeclaredAt,
+      clubName: registrations.clubName,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,
@@ -409,6 +419,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
       eventId: registrations.eventId,
       eventTitle: eventTranslations.title,
       clubMemberDeclared: registrations.clubMemberDeclared,
+      fitnessDeclaredAt: registrations.fitnessDeclaredAt,
       stravaUrl: registrations.stravaUrl,
       instagramHandle: registrations.instagramHandle,
       guardianName: registrations.guardianName,

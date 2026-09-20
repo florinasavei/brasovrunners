@@ -338,7 +338,7 @@
       "clubMemberChip": "Member (declared)",
       "columnName": "Name",
       "columnStatus": "Status",
-      "columnJourney": "Step",
+      "columnJourney": "How far",
       "columnEvent": "Event",
       "columnEmail": "Email",
       "columnSubmitted": "Submitted",
@@ -361,7 +361,7 @@
       "checkinCode": "Pickup code",
       "checkinCodeHelp": "The code from the confirmation email; the QR below encodes it. Used at the number pickup desk.",
       "qrAlt": "QR code {code}",
-      "openDesk": "Open at the desk",
+      "openDesk": "Open at the race-day desk (check-in)",
       "notCheckedIn": "Not marked as here.",
       "checkedIn": "Here: {time} · {who}",
       "idDocument": "Identity document",
@@ -383,7 +383,10 @@
         "progress": "{done} of {total} steps",
         "next": "next: {step}",
         "complete": "Every step done"
-      }
+      },
+      "exportExcel": "Export to Excel",
+      "columnBib": "Bib",
+      "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -479,7 +482,7 @@
       "fields": {
         "title": "Title",
         "slug": "Page address",
-        "excerpt": "Short description",
+        "excerpt": "Summary — shown on the card and in shares",
         "locationName": "Meeting point",
         "locationAddress": "Address",
         "seoTitle": "Search engine title",
@@ -487,7 +490,7 @@
         "difficulty": "Difficulty",
         "costType": "Cost",
         "checklist": "What to bring (one line, in the emails and the calendar)",
-        "body": "Full description",
+        "body": "Content — shown on the event page",
         "rules": "Event rules",
         "schedule": "Event programme"
       },
@@ -644,7 +647,33 @@
       "bodyHelp": "The full description, with headings, lists and links — the day's schedule, what to bring, where to park. Shown on the event page — the short description stays on the card.",
       "confirmationOpensDaysBefore": "Participation confirmation: asked how many days before",
       "confirmationDeadlineDaysBefore": "…and due how many days before",
-      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway."
+      "confirmationWindowHelp": "For events further away than the first number, whoever confirms their email keeps the place until the deadline and signs the declaration (= confirms participation) inside that window; at the first number they get the reminder email. Put 0 in the first to ask for the signature at once (30 minutes), as for the weekly runs — which are within a week anyway.",
+      "panels": {
+        "when": "When and where",
+        "registration": "Registration",
+        "details": "Route and details",
+        "video": "Film"
+      },
+      "seoSection": "Page address and search engines",
+      "typeHelpSummary": "What each type means",
+      "typeNotes": {
+        "GROUP_RUN": "Group run: people simply turn up — no registration, no participants, no programme.",
+        "RACE": "Race: registration, a declaration, race numbers and a programme for the day.",
+        "HIKE": "Hike: may take registrations and have a programme, when places are limited.",
+        "COFFEE": "Coffee: may take registrations, to book the table. No programme.",
+        "GEAR_TEST": "Gear test: may take registrations and have a programme.",
+        "MEETUP": "Special event: the one-off, with a partner or for an occasion. May take registrations and have a programme.",
+        "EXTERNAL": "External event: it is somebody else's, and registration happens on the organizer's own page."
+      },
+      "repeatOn": "Repeat this event",
+      "repeatHelpSummary": "How a series works",
+      "tabMissing": "the whole text",
+      "deleteBlockedByTest": "Cannot be deleted: it has {count} registrations, all of them test data. Remove those first, under “Test registrations” above.",
+      "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
+      "bibStartNumber": "Race numbers start at",
+      "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "bibColour": "Number colour",
+      "bibColourHelp": "The band under the number, on the printed sheet."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -692,7 +721,18 @@
         "DEV": "plus the technical page /devs. No participant data.",
         "ADMIN": "plus registrations, the export, the legal texts, the emails, the tasks.",
         "SUPERADMIN": "plus the team: who has access and with which role."
-      }
+      },
+      "resendFailed": "The invitation did not go out: the identity provider has no account with this address ({reason}). Check the address in the table — if it is wrong, withdraw access and add the person again with the right one.",
+      "passwordReset": "Send a password reset",
+      "passwordResetPending": "Sending…",
+      "passwordResetSent": "Done. They have been emailed the link for setting a new password.",
+      "deactivateAccount": "Deactivate the account",
+      "deactivateAccountPending": "Deactivating…",
+      "accountDeactivated": "The sign-in account is deactivated: they can no longer sign in anywhere. The team row stays — to take their access away too, use “Withdraw access”.",
+      "accountReactivated": "The sign-in account is active again.",
+      "accountMissing": "The identity provider has no account with this address, so there was nothing to change. Check the address in the table.",
+      "accountUnconfigured": "This needs the Zitadel key (To do → “Invite the team”, SETUP.md §37). Until then, from the Zitadel console.",
+      "accountFailed": "The identity provider refused ({reason})."
     },
     "queue": {
       "title": "The registration queue",
@@ -1636,7 +1676,8 @@
       "captcha": "The anti-bot check",
       "stravaUrl": "Strava profile",
       "instagramHandle": "Instagram",
-      "guardianName": "Parent / guardian"
+      "guardianName": "Parent / guardian",
+      "fitnessDeclared": "The statement that you are medically fit"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -1686,7 +1727,7 @@
       "now": {
         "details": "Fill in the form. We will then email you to confirm your address.",
         "confirm": "We have sent you a confirmation link. It can take up to 5 minutes to arrive — check your spam folder before registering again.",
-        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held.",
+        "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
         "done": "Your registration is confirmed. See you at the start!"
       }
     },
@@ -1710,7 +1751,13 @@
     "instagramHandleHelp": "With or without the @.",
     "guardianHelp": "A participant under 18 is registered by a parent or legal guardian, who also signs the declaration of own responsibility on their behalf and collects the kit. For an adult, leave this empty.",
     "guardianName": "Full name of the parent / guardian",
-    "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer."
+    "guardianNameHelp": "Required under 18. This name appears on the declaration as the signer.",
+    "privacyBanner": "Nothing you write here appears anywhere on the site. Only the team organizing this event sees it, and the declaration and the emails go to you alone.",
+    "privacyBannerWithList": "Nothing you write here appears on the site — with one exception: this event has a public participant list, and your name goes on it only if you tick the box below. Nothing else is published: not your email, not your phone, not your date of birth.",
+    "confidentialNote": "Confidential. Never published.",
+    "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
+    "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
+    "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

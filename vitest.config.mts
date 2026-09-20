@@ -22,10 +22,14 @@ export default defineConfig({
     // PGlite instances are per-file and hold WebAssembly memory, so the worker count is
     // capped rather than left to the core count; serialising the files entirely (the setting
     // until 2026-09-18) made the suite take five minutes on a 32-core machine, which the
-    // owner called out. Eight workers hold eight databases — a few hundred megabytes — and
-    // finish in about a minute; CI's four cores get four.
+    // owner called out. CI's four cores get four.
+    //
+    // Twelve, measured rather than guessed (§171): on the owner's 32-core machine the whole
+    // suite takes 58.6s at eight and 44.9s at twelve. Sixteen saves a further 1.5s for a third
+    // more CPU and a third more memory — twelve is where the curve flattens, and the memory
+    // ceiling is what caps it at all: twelve PGlite instances are about half a gigabyte.
     fileParallelism: true,
-    maxWorkers: 8,
+    maxWorkers: 12,
     testTimeout: 30_000,
     /**
      * The same budget for a hook as for a test, because `beforeAll` here does strictly more

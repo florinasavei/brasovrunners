@@ -308,7 +308,13 @@ export async function findEventNotificationDetails<T extends Record<string, unkn
 }
 
 /** One published event by its locale-scoped slug, or undefined when it should 404. */
-export async function findPublishedEventBySlug(db: Database, locale: Locale, slug: string) {
+// Generic in the schema like its neighbours (§174): the outbox renderer reaches it with the
+// application's own `Db`, and the public routes with theirs.
+export async function findPublishedEventBySlug<T extends Record<string, unknown>>(
+  db: GenericDatabase<T>,
+  locale: Locale,
+  slug: string,
+) {
   const [row] = await db
     .select(PUBLIC_COLUMNS)
     .from(events)

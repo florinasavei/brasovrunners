@@ -338,7 +338,7 @@
       "clubMemberChip": "Membru (declarat)",
       "columnName": "Nume",
       "columnStatus": "Stare",
-      "columnJourney": "Etapă",
+      "columnJourney": "Unde a ajuns",
       "columnEvent": "Eveniment",
       "columnEmail": "E-mail",
       "columnSubmitted": "Trimisă",
@@ -361,7 +361,7 @@
       "checkinCode": "Cod de ridicare",
       "checkinCodeHelp": "Codul din emailul de confirmare; QR-ul de mai jos îl conține. Se folosește la masa de ridicare a numerelor.",
       "qrAlt": "Cod QR {code}",
-      "openDesk": "Deschide la masă",
+      "openDesk": "Deschide la masa din ziua cursei (check-in)",
       "notCheckedIn": "Nu a fost marcat prezent.",
       "checkedIn": "Prezent: {time} · {who}",
       "idDocument": "Act de identitate",
@@ -383,7 +383,10 @@
         "progress": "{done} din {total} pași",
         "next": "urmează: {step}",
         "complete": "Toți pașii parcurși"
-      }
+      },
+      "exportExcel": "Exportă Excel",
+      "columnBib": "Număr",
+      "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -479,7 +482,7 @@
       "fields": {
         "title": "Titlu",
         "slug": "Adresa paginii",
-        "excerpt": "Descriere scurtă",
+        "excerpt": "Rezumat — apare pe card și în distribuiri",
         "locationName": "Punct de întâlnire",
         "locationAddress": "Adresă",
         "seoTitle": "Titlu pentru motoarele de căutare",
@@ -487,7 +490,7 @@
         "difficulty": "Dificultate",
         "costType": "Cost",
         "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
-        "body": "Descriere completă",
+        "body": "Conținut — apare pe pagina evenimentului",
         "rules": "Regulamentul evenimentului",
         "schedule": "Programul evenimentului"
       },
@@ -644,7 +647,33 @@
       "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului — descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
-      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână."
+      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
+      "panels": {
+        "when": "Când și unde",
+        "registration": "Înscrieri",
+        "details": "Traseu și detalii",
+        "video": "Film"
+      },
+      "seoSection": "Adresa paginii și motoarele de căutare",
+      "typeHelpSummary": "Ce înseamnă fiecare tip?",
+      "typeNotes": {
+        "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
+        "RACE": "Cursă: înscriere, declarație, numere de concurs și program al zilei.",
+        "HIKE": "Drumeție: poate avea înscriere și program, dacă locurile sunt limitate.",
+        "COFFEE": "Cafea: poate avea înscriere, pentru rezervarea mesei. Fără program.",
+        "GEAR_TEST": "Testare de echipament: poate avea înscriere și program.",
+        "MEETUP": "Eveniment special: ediția aparte, cu un partener sau cu o ocazie. Poate avea înscriere și program.",
+        "EXTERNAL": "Eveniment extern: e al altcuiva, iar înscrierea se face pe pagina organizatorului."
+      },
+      "repeatOn": "Repetă evenimentul",
+      "repeatHelpSummary": "Cum funcționează o serie",
+      "tabMissing": "textul întreg",
+      "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
+      "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
+      "bibStartNumber": "Numerele de concurs încep de la",
+      "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
+      "bibColour": "Culoarea numărului",
+      "bibColourHelp": "Banda de sub număr, pe foaia de printat."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -692,7 +721,18 @@
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
         "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
         "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
-      }
+      },
+      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
+      "passwordReset": "Trimite resetare de parolă",
+      "passwordResetPending": "Se trimite…",
+      "passwordResetSent": "Gata. I-am trimis pe email linkul cu care își pune o parolă nouă.",
+      "deactivateAccount": "Dezactivează contul",
+      "deactivateAccountPending": "Se dezactivează…",
+      "accountDeactivated": "Contul de autentificare a fost dezactivat: nu se mai poate autentifica nicăieri. Rândul din echipă rămâne — ca să-i iei și accesul, folosește „Retrage accesul”.",
+      "accountReactivated": "Contul de autentificare a fost reactivat.",
+      "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
+      "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (To do → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
+      "accountFailed": "Furnizorul de autentificare a refuzat ({reason})."
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -1636,7 +1676,8 @@
       "captcha": "Verificarea anti-bot",
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
-      "guardianName": "Părinte / tutore"
+      "guardianName": "Părinte / tutore",
+      "fitnessDeclared": "Declarația că ești apt medical"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1686,7 +1727,7 @@
       "now": {
         "details": "Completează formularul. După trimitere îți scriem pe email ca să confirmi adresa.",
         "confirm": "Ți-am trimis un email cu un link de confirmare. Poate dura până la 5 minute să ajungă — verifică și folderul de spam înainte să te înscrii din nou.",
-        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat.",
+        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
     },
@@ -1710,7 +1751,13 @@
     "instagramHandleHelp": "Cu sau fără @.",
     "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Pentru un adult, lasă secțiunea goală.",
     "guardianName": "Numele complet al părintelui / tutorelui",
-    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar."
+    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
+    "privacyBanner": "Datele tale nu apar nicăieri pe site. Le vede doar echipa care organizează, pentru această cursă, iar declarația și emailurile merg doar la tine.",
+    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar numele tău apare acolo doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii.",
+    "confidentialNote": "Confidențial. Nu se publică.",
+    "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
+    "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
+    "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

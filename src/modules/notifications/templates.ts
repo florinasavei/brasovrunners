@@ -1,6 +1,7 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { COLOR } from "@/theme/brand";
+import { env } from "@/shared/config/env";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -119,9 +120,23 @@ export function renderContent(
  */
 function card(blocks: string[][]): string {
   const rule = `<hr style="border:0;border-top:1px solid ${COLOR.line};margin:24px 0">`;
+  /**
+   * The club's lockup on the band, not its name in letters (§174; the owner: "în mailul de
+   * înregistrare am nevoie de logoul BVR").
+   *
+   * A hosted **PNG**, because half the mail clients in use refuse SVG, and the white-on-blue
+   * raster is generated from the same source the site serves (`scripts/brand-assets.mjs`). The
+   * `alt` is the club's name, so a client with images off shows exactly what the band said
+   * before — nothing is lost when the picture is blocked, which is the common case on a first
+   * message from an unknown sender.
+   *
+   * The address derives from `APP_BASE_URL` like every other absolute URL here (`AGENTS.md`
+   * §8): no hostname is written in `src/`.
+   */
+  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-white-email.png" alt="Bra&#536;ov Runners" width="180" height="74" style="display:block;width:180px;height:74px;border:0">`;
   return [
     `<div style="max-width:600px;margin:0 auto;font-family:Roboto,Helvetica,Arial,sans-serif;color:${COLOR.ink}">`,
-    `<div style="background:${COLOR.blueInk};color:${COLOR.surface};padding:16px 24px;border-radius:12px 12px 0 0;font-weight:700;letter-spacing:3px;font-size:14px">BRA&#536;OV RUNNERS</div>`,
+    `<div style="background:${COLOR.blueInk};color:${COLOR.surface};padding:16px 24px;border-radius:12px 12px 0 0">${logo}</div>`,
     `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background:${COLOR.surface}">`,
     ...blocks.flatMap((parts, index) => (index > 0 ? [rule, ...parts] : parts)),
     "</div></div>",

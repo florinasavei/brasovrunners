@@ -1,3 +1,6 @@
+import FemaleIcon from "@mui/icons-material/Female";
+import MaleIcon from "@mui/icons-material/Male";
+import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -25,6 +28,7 @@ import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import Flag from "@/shared/ui/Flag";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -47,6 +51,9 @@ export const metadata: Metadata = {
 
 /** The anchor a field is reached by from the error summary. Prefixed so it cannot collide. */
 const fieldId = (name: string) => `f-${name}`;
+
+/** An option that wears a mark before its words: the glyph, a gap, the label (§171). */
+const SEX_ITEM_SX = { display: "flex", alignItems: "center", gap: 1 } as const;
 
 /**
  * An optional group, **open by default** since 2026-09-17. It was collapsed to shorten the page
@@ -286,6 +293,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {t("requiredLegend")}
           </Typography>
+          {/*
+            What is published and what is not, before the first field asks for anything (§171;
+            the owner: "la formularul de înscriere trebuie să fie clar ce date sunt publice și
+            ce date sunt confidențiale").
+
+            A form that asks for a birth date, a phone number, a next of kin and a health note
+            owes the person reading it one sentence about where any of that goes — and the
+            answer here is unusually good, so it is worth saying: nothing is published unless
+            the event has a start list *and* the box below is ticked, and then only the name.
+            The two section markers repeat it where each block of fields is.
+          */}
+          <Alert severity="info" icon={false} sx={{ mb: 2 }}>
+            {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
+          </Alert>
           <form action={submitRegistrationAction}>
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
@@ -323,6 +344,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Stack spacing={2} sx={{ minWidth: 0 }}>
               <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
                 {t("sections.about")}
+              </Typography>
+              {/* The marker under each block (§171): where these answers go. */}
+              <Typography variant="caption" color="text.secondary">
+                {t("confidentialNote")}
               </Typography>
 
               {/*
@@ -371,9 +396,22 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   fullWidth
                   defaultValue={typed("sex", "UNSPECIFIED")}
                 >
-                  <MenuItem value="FEMALE">{t("sexOptions.FEMALE")}</MenuItem>
-                  <MenuItem value="MALE">{t("sexOptions.MALE")}</MenuItem>
-                  <MenuItem value="UNSPECIFIED">{t("sexOptions.UNSPECIFIED")}</MenuItem>
+                  {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
+                      sex"). As **children** of the item, never as a prop across the boundary —
+                      see `CheckboxField` for what an element-valued prop costs — and MUI shows
+                      the chosen item's children in the closed field, so the mark stays. */}
+                  <MenuItem value="FEMALE" sx={SEX_ITEM_SX}>
+                    <FemaleIcon fontSize="small" aria-hidden="true" />
+                    {t("sexOptions.FEMALE")}
+                  </MenuItem>
+                  <MenuItem value="MALE" sx={SEX_ITEM_SX}>
+                    <MaleIcon fontSize="small" aria-hidden="true" />
+                    {t("sexOptions.MALE")}
+                  </MenuItem>
+                  <MenuItem value="UNSPECIFIED" sx={SEX_ITEM_SX}>
+                    <PersonIcon fontSize="small" aria-hidden="true" />
+                    {t("sexOptions.UNSPECIFIED")}
+                  </MenuItem>
                 </TextField>
 
                 <TextField
@@ -384,8 +422,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   fullWidth
                   defaultValue={typed("nationality", "RO")}
                 >
+                  {/*
+                    The flag before the name (§171), from the set `scripts/sync-flags.mjs`
+                    already copies into `public/flags/` — which that script's own comment
+                    anticipated for exactly this ("will show many when a participant can state
+                    their country"). Normalised to 4:3, so a column of two hundred names does
+                    not wobble between Romania's 2:3 and the United Kingdom's 1:2.
+
+                    Not the regional-indicator emoji, which Windows draws as two boxed capitals
+                    — and Windows is what the club's own laptop runs.
+                  */}
                   {countries.map((country) => (
-                    <MenuItem key={country.code} value={country.code}>
+                    <MenuItem key={country.code} value={country.code} sx={SEX_ITEM_SX}>
+                      <Flag code={country.code} width={20} />
                       {country.label}
                     </MenuItem>
                   ))}
@@ -401,6 +450,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
                 {t("sections.contact")}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t("contactNote")}
               </Typography>
 
               <TextField
@@ -585,12 +637,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 disclosure rather than a line inside the group above, its own consent, and
                 wording that says plainly it may be left empty. The server refuses text without
                 the tick rather than silently dropping either one.
+
+                Closed now, and second (§171; the owner: "nu e clar cu informațiile medicale,
+                trebuie să bifeze doar «declar că sunt apt»"). The block asked for free text
+                first and a consent under it, which reads as "tell us your conditions" — so the
+                one thing the club actually needs from everybody, the fitness statement, was
+                nowhere and this was everywhere. The statement is a required tick down in the
+                consents; this is the optional note for the person who wants the medical team
+                to know something, and it says so.
               */}
-              <Box component="details" open sx={disclosureSx}>
+              <Box component="details" sx={disclosureSx} open={invalid.has("healthConsent")}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.health")}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("healthIntro")}
+                  </Typography>
                   <TextField
                     {...field("healthNotes", t("healthNotesHelp"))}
                     label={t("healthNotes")}
@@ -621,6 +684,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 rendered "nota de confidențialitate * *" on the form. The two consents below
                 say "optional" in words, so the difference is legible without pressing anything.
               */}
+              {/*
+                "Declar că sunt apt" (§171), required, and first among the consents because it
+                is the one every entrant makes about themselves. It is a statement, not health
+                data: no condition, no diagnosis, nothing Article 9 covers — which is why it can
+                be insisted on where the note above cannot. The declaration signed later says
+                the same thing at length; this is it asked at the moment of entering.
+              */}
+              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
+                {t("fitnessDeclared")}
+              </CheckboxField>
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
                 {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
               </CheckboxField>

@@ -39,3 +39,7 @@ export function countryOptions(locale: "ro" | "en", name: (code: string) => stri
 
   return [{ code: "RO", label: name("RO") }, ...rest];
 }
+
+// The flag beside each name is `shared/ui/Flag`, over the set `scripts/sync-flags.mjs` copies
+// into `public/flags/` — which that script was written for (§171). A regional-indicator emoji
+// was tried first and dropped: Windows draws it as two boxed capitals.

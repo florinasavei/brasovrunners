@@ -121,6 +121,17 @@ const submissionFields = z.object({
   healthNotes: z.string().trim().max(2000).optional(),
   healthConsent: z.boolean().default(false),
 
+  /**
+   * "I declare I am medically fit to take part" (§171).
+   *
+   * Required on the public form and nowhere else. It is a statement about oneself, not health
+   * data — which is why it can be insisted on where `healthNotes` cannot — and it is the thing
+   * the medical block was always trying to ask before the free-text box buried it. A
+   * registration an organizer takes over the telephone, or a walk-in at the desk, makes it on
+   * paper instead, so the staff schema relaxes it below.
+   */
+  fitnessDeclared: z.literal(true),
+
   email: z.email().max(320),
   locale: z.enum(["ro", "en"]),
   privacyAcknowledged: z.literal(true),
@@ -220,6 +231,9 @@ export const staffRegistrationSubmissionSchema = submissionFields
     phone: true,
     emergencyContactName: true,
     emergencyContactPhone: true,
+    // The fitness statement is made on the paper declaration at the desk (§171), not by a
+    // staff member ticking a box on somebody else's behalf — `AGENTS.md` §15.11.
+    fitnessDeclared: true,
   })
   .superRefine(healthConsentRule)
   .superRefine(guardianRule);

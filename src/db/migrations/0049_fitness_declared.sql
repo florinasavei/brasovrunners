@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "fitness_declared_at" timestamp with time zone;

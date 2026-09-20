@@ -3774,6 +3774,7 @@ __metadata:
     tsx: "npm:4.23.13"
     typescript: "npm:5.9.3"
     vitest: "npm:4.1.11"
+    write-excel-file: "npm:4.1.1"
     zod: "npm:4.5.4"
   languageName: unknown
   linkType: soft
@@ -8646,6 +8647,15 @@ __metadata:
     string-width: "npm:^4.1.0"
     strip-ansi: "npm:^6.0.0"
   checksum: 10c0/baad244e6e33335ea24e86e51868fe6823626e3a3c88d9a6674642afff1d34d9a154c917e74af8d845fd25d170c4ea9cf69a47133c3f3656e1252b3d462d9f6c
+  languageName: node
+  linkType: hard
+
+"write-excel-file@npm:4.1.1":
+  version: 4.1.1
+  resolution: "write-excel-file@npm:4.1.1"
+  dependencies:
+    fflate: "npm:^0.8.2"
+  checksum: 10c0/6c301bdd99af643687aadc3dd3697ea9e647dd8f6fe3df8a43d61924cda8c21bdff08aa0c79b44e09160d84485dab69d8dcb3deec5317f5593154c88c3042bfa
   languageName: node
   linkType: hard
 
