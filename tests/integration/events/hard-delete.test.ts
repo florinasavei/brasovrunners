@@ -151,6 +151,7 @@ async function registerPublicly(event: EventForRegistration, email: string) {
       privacyAcknowledged: true,
       // Required of a public entry since §171 — this fixture predates it.
       fitnessDeclared: true,
+      rulesAcknowledged: true,
       resultsNameConsent: false,
       listOptOut: false,
       honeypot: "",

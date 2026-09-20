@@ -8907,3 +8907,70 @@ exactly three seconds), and `lifecycle.test.ts`, whose single test became two �
 answers like success and creates nothing; the quick submission is refused and creates nothing.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 195. Decided — the race's conditions are opened before they can be agreed to (2026-09-20)
+
+**Context.** The owner: "oamenii trebuie să deschidă condițiile concursului într-un pop-up, să dea
+scroll până jos și să confirme, **dar fă safe!** Adică unii oameni nu sunt așa tech-savvy
+(afișează «dă click aici») mai întâi, ca să poată bifa că sunt de acord."
+
+Two requirements in one sentence, and the second is the harder one. A gate that keeps somebody
+out of a race because a script did not load is a worse failure than the one it prevents.
+
+**Decision.** *Before anything is read there is a button, not a box.* A checkbox beside a link
+asks somebody to notice the link, decide to follow it, come back, and then tick — four steps,
+three of them skippable, and every one invisible to a person who does not already know how forms
+work. "Citește condițiile concursului" is one step with one meaning. The box appears in its
+place, already ticked, once the text has been read to its end.
+
+*The gate is an enhancement, never a requirement.* `ReadAndAgree` renders the **plain, tickable
+checkbox** on the server and on the first client render, and takes over only after React has
+hydrated. No JavaScript, a script that failed to load, a browser the dialog does not suit — the
+entrant gets an ordinary required checkbox and an ordinary link, and registers. This is the whole
+of "fă safe", and it is the reason the island uses `useSyncExternalStore` rather than an effect:
+the server's own markup has to be the usable one.
+
+*The scroll rule is a pure function with its own test* (`domain/read-gate.ts`), because the
+interesting case is not scrolling to the end — it is the two ways the measurement can be wrong.
+A short set of rules on a tall screen has nothing to scroll, so the button opens at once; a gate
+waiting for a gesture that cannot happen is a gate nobody passes. And the last pixel is forgiven
+by eight, because zoom, device pixel ratio and an overlay scrollbar each land
+`scrollTop + clientHeight` a little short of `scrollHeight` while the reader is looking at the
+final line.
+
+*What is recorded is a timestamp, and it claims only what it can.* `rules_acknowledged_at`
+(migration 0052, expand-only) says the person was shown the text and said they had read it, at
+that moment. Scrolling is a measurement of a browser and is not evidence of reading; the column
+does not pretend otherwise. It is the same thing a paper form records, and it is what lets the
+club answer "was this person shown the conditions" with a row rather than a recollection.
+
+*Required on the public path only.* Like §171's fitness statement, and for the same reason: at
+the desk the participant signs a paper declaration that already says they have read the rules
+(§67, `AGENTS.md` §15.11), and a staff member does not make the statement on somebody's behalf.
+
+*An event with no rules of its own gets the plain checkbox and a link to the club's terms.* There
+is nothing to open, and a panel containing an empty document would be worse than a link.
+
+**Rejected.** *Enforcing the reading server-side.* It cannot be done — nothing in an HTTP request
+distinguishes a page that was read from one that was scrolled past — and a check that cannot be
+performed should not be implied by the record it writes.
+
+*Disabling the checkbox until the panel is closed.* A disabled input posts nothing, so a browser
+that never ran the script would post nothing either, and the refusal would be silent. The input
+exists from the start, unticked: the browser's own validation refuses the form and names the
+control, with no JavaScript involved in producing the refusal.
+
+**Consequences.** Every fixture that builds a public submission learnt the new tick — the same
+sweep §171 needed, fifteen test files and the synthetic-registration generator.
+`form-errors.ts` names it, so a rejection can point at it, and both catalogues carry the name.
+
+Tests: `tests/unit/registrations/read-gate.test.ts` (6),
+`tests/integration/registrations/rules-acknowledgement.test.ts` (3).
+
+**Also, from the same sitting:** the calendar feed's address on the listing is a link now, not
+only a string to copy ("ăsta trebuia să fie link"). It is still selected whole by one click for
+the applications that want it pasted, and the anchor is `webcal://` — the same address handed to
+the operating system as a subscription rather than as a file downloaded once, which is the
+difference between a calendar that keeps up and a snapshot of today.
+
+Baseline `BR-V1.38-2026-09-18`.

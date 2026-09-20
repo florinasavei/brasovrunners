@@ -16,6 +16,7 @@ const base = {
   locale: "ro",
   privacyAcknowledged: true,
   fitnessDeclared: true,
+  rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
   honeypot: "",

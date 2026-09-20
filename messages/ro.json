@@ -1762,7 +1762,8 @@
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
       "guardianName": "Părinte / tutore",
-      "fitnessDeclared": "Declarația că ești apt medical"
+      "fitnessDeclared": "Declarația că ești apt medical",
+      "rulesAcknowledged": "condițiile concursului"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1843,7 +1844,17 @@
     "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
     "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
     "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip.",
-    "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an."
+    "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an.",
+    "rules": {
+      "open": "Citește condițiile concursului",
+      "reading": "Apasă butonul de mai sus. Se deschid aici, le citești până la capăt, și abia apoi poți confirma.",
+      "panelTitle": "Condițiile concursului — {event}",
+      "keepReading": "Derulează până la sfârșit ca să poți confirma.",
+      "agreeButton": "Am citit și sunt de acord",
+      "close": "Închide",
+      "agreed": "Ai citit condițiile concursului și ești de acord cu ele.",
+      "plain": "Am citit și sunt de acord cu condițiile concursului:"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",

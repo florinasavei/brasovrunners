@@ -1762,7 +1762,8 @@
       "stravaUrl": "Strava profile",
       "instagramHandle": "Instagram",
       "guardianName": "Parent / guardian",
-      "fitnessDeclared": "The statement that you are medically fit"
+      "fitnessDeclared": "The statement that you are medically fit",
+      "rulesAcknowledged": "the race conditions"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -1843,7 +1844,17 @@
     "contactNote": "Confidential. Used only to reach you, and to call somebody if something happens to you during the event.",
     "healthIntro": "Optional, and only if you want to. Write here only what the medical team should know on the day — an allergy, a treatment, a condition. It is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
-    "clubMemberHint": "I have been to at least 3 group runs in the past year."
+    "clubMemberHint": "I have been to at least 3 group runs in the past year.",
+    "rules": {
+      "open": "Read the race conditions",
+      "reading": "Press the button above. They open here, you read to the end, and only then can you confirm.",
+      "panelTitle": "Race conditions — {event}",
+      "keepReading": "Scroll to the end to be able to confirm.",
+      "agreeButton": "I have read them and I agree",
+      "close": "Close",
+      "agreed": "You have read the race conditions and agree to them.",
+      "plain": "I have read and agree to the race conditions:"
+    }
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. You can request a new one from the event page.",

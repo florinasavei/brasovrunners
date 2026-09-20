@@ -15,8 +15,9 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import ReadAndAgree from "@/modules/registrations/ui/ReadAndAgree";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
@@ -764,6 +765,33 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 be insisted on where the note above cannot. The declaration signed later says
                 the same thing at length; this is it asked at the moment of entering.
               */}
+              {/*
+                The race's own conditions, read before they can be agreed to (§195).
+
+                Only when this event wrote any. An event with no rules of its own has nothing to
+                open, so the tick points at the club's terms as a plain link — the requirement is
+                the same, the panel would just be an empty box.
+              */}
+              {hasRules ? (
+                <ReadAndAgree
+                  name="rulesAcknowledged"
+                  fieldId={fieldId("rulesAcknowledged")}
+                  title={t("rules.panelTitle", { event: event.title })}
+                  openLabel={t("rules.open")}
+                  readingLabel={t("rules.reading")}
+                  agreedLabel={t("rules.agreed")}
+                  agreeButtonLabel={t("rules.agreeButton")}
+                  keepReadingLabel={t("rules.keepReading")}
+                  closeLabel={t("rules.close")}
+                  plainLabel={t("rules.plain")}
+                  href={`${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}#rules`}
+                  document={event.rulesJson}
+                />
+              ) : (
+                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required>
+                  {t("rules.plain")} <Link href="/legal/terms">{t("facts.terms")}</Link>
+                </CheckboxField>
+              )}
               <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
                 {t("fitnessDeclared")}
               </CheckboxField>

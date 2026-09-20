@@ -44,6 +44,7 @@ function filledForm(overrides: Record<string, string> = {}): FormData {
   // the privacy acknowledgment and the fitness statement (§171).
   form.set("privacyAcknowledged", "on");
   form.set("fitnessDeclared", "on");
+  form.set("rulesAcknowledged", "on");
   return form;
 }
 

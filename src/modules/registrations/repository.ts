@@ -233,6 +233,7 @@ export async function insertPendingEmailRegistration<T extends Record<string, un
       healthConsentVersion: input.details?.healthConsentVersion ?? null,
       healthConsentAt: input.details?.healthConsentAt ?? null,
       fitnessDeclaredAt: input.details?.fitnessDeclaredAt ?? null,
+      rulesAcknowledgedAt: input.details?.rulesAcknowledgedAt ?? null,
 
       privacyNoticeVersion: input.privacyNoticeVersion,
       privacyAcknowledgedAt: input.privacyAcknowledgedAt,

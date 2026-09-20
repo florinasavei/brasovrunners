@@ -126,6 +126,7 @@ async function registerPublicly(event: EventForRegistration, email: string, at: 
       locale: "ro",
       privacyAcknowledged: true,
       fitnessDeclared: true,
+      rulesAcknowledged: true,
       resultsNameConsent: false,
       listOptOut: false,
       honeypot: "",

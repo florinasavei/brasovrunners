@@ -272,6 +272,20 @@ export const registrations = pgTable(
      */
     fitnessDeclaredAt: timestamp("fitness_declared_at", { withTimezone: true }),
 
+    /**
+     * When the entrant confirmed they had read the race's conditions (`DECISIONS.md` §195).
+     *
+     * The tick is behind a reading: the conditions open in a panel, the button that agrees is
+     * dead until the text has been scrolled to its end, and only then does the box become
+     * tickable. What is *recorded* is this timestamp and nothing else — scrolling cannot be
+     * proved and this column does not pretend to prove it. It says the person was shown the
+     * text and said they had read it, at this moment, which is what a paper form records too.
+     *
+     * Null for every registration taken before this existed, and for a desk entry: there the
+     * paper declaration carries the same sentence, signed (§67).
+     */
+    rulesAcknowledgedAt: timestamp("rules_acknowledged_at", { withTimezone: true }),
+
     privacyNoticeVersion: integer("privacy_notice_version").notNull(),
     privacyAcknowledgedAt: timestamp("privacy_acknowledged_at", { withTimezone: true }).notNull(),
 
