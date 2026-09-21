@@ -30,7 +30,7 @@ describe("BR-REQ-050-02 criterion 15 editing one date, the following ones or the
     await resetTables(db);
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "ADMIN" })
       .returning();
     const translations = [
       { locale: "ro" as const, title: "Declarație", body: { sections: [{ paragraphs: ["Declar."] }] } },

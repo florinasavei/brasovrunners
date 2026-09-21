@@ -38,6 +38,7 @@ export const REGISTRATION_FORM_FIELDS = [
   // name and link to — unlike the optional boxes, which cannot fail (§171).
   "fitnessDeclared",
   "rulesAcknowledged",
+  "emailConfirm",
   "privacyAcknowledged",
 ] as const;
 

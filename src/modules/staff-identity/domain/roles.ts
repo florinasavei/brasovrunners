@@ -203,12 +203,20 @@ export function canEditEventFields(role: StaffRole): boolean {
 }
 
 /**
- * Creating and duplicating an event is the same power as configuring one: what the club
- * advertises, and — since the registration block is part of the same row — whether it takes
- * entries at all.
+ * **The Administrator creates events (§204).**
+ *
+ * The owner: "administratorul crează evenimente". It had been the same power as configuring one,
+ * on the reasoning that both decide what the club advertises — and the reasoning holds for
+ * *configuring*, which stays with the Organizer. Creating is the act that decides there is a
+ * race at all, and since the registration block is part of the same row, it decides whether the
+ * club takes entries. That is the club's decision, not the organizer's preparation of it.
+ *
+ * An Organizer opens an event the Administrator created and does everything to it: the date, the
+ * place, the route, the capacity, the registration window, the queue, the desk. What they cannot
+ * do is invent a race, publish one, or take a published one down (§201).
  */
 export function canCreateEvent(role: StaffRole): boolean {
-  return isEditorial(role);
+  return atLeast(role, "ADMIN");
 }
 
 /** A page is words; a copywriter starts one as a draft. Deleting and ordering stay editorial. */

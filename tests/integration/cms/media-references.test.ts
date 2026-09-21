@@ -41,7 +41,7 @@ describe("§17 the orphan picture sweep and the pictures list", () => {
     await resetTables(db);
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "mod@dev.test", displayName: "Mod", role: "MODERATOR" })
+      .values({ email: "mod@dev.test", displayName: "Mod", role: "ADMIN" })
       .returning();
   });
 

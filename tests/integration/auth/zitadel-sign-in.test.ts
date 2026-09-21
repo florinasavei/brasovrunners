@@ -46,7 +46,7 @@ describe("BR-REQ-060-01 Zitadel sign-in", () => {
     const invited = await insertStaffUser(db, {
       email: "ana@example.test",
       displayName: "Ana",
-      role: "MODERATOR",
+      role: "ADMIN",
     });
     await resolveZitadelSignIn(
       db,
@@ -66,7 +66,7 @@ describe("BR-REQ-060-01 Zitadel sign-in", () => {
   });
 
   it("refuses a provider that has not verified the email", async () => {
-    await insertStaffUser(db, { email: "ana@example.test", displayName: "Ana", role: "MODERATOR" });
+    await insertStaffUser(db, { email: "ana@example.test", displayName: "Ana", role: "ADMIN" });
 
     const allowed = await resolveZitadelSignIn(
       db,
@@ -83,7 +83,7 @@ describe("BR-REQ-060-01 Zitadel sign-in", () => {
     const invited = await insertStaffUser(db, {
       email: "ana@example.test",
       displayName: "Ana",
-      role: "MODERATOR",
+      role: "ADMIN",
     });
     expect(invited.zitadelSubject).toBeNull();
 
@@ -100,7 +100,7 @@ describe("BR-REQ-060-01 Zitadel sign-in", () => {
   });
 
   it("allows a later sign-in by subject alone, without re-checking the invitation", async () => {
-    await insertStaffUser(db, { email: "ana@example.test", displayName: "Ana", role: "MODERATOR" });
+    await insertStaffUser(db, { email: "ana@example.test", displayName: "Ana", role: "ADMIN" });
     await resolveZitadelSignIn(
       db,
       { subject: "zitadel:ana-subject", email: "ana@example.test", emailVerified: true },
@@ -120,7 +120,7 @@ describe("BR-REQ-060-01 Zitadel sign-in", () => {
     const invited = await insertStaffUser(db, {
       email: "ana@example.test",
       displayName: "Ana",
-      role: "MODERATOR",
+      role: "ADMIN",
     });
     await resolveZitadelSignIn(
       db,
@@ -147,7 +147,7 @@ describe("BR-REQ-060-01 Zitadel sign-in", () => {
     const invited = await insertStaffUser(db, {
       email: "ana@example.test",
       displayName: "Ana",
-      role: "MODERATOR",
+      role: "ADMIN",
     });
     await resolveZitadelSignIn(
       db,

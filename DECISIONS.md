@@ -9249,3 +9249,79 @@ Tests: `tests/integration/legal/hard-deletion.test.ts` (18), including the terms
 retired number, and that deleting a middle version leaves numbering alone.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 204. Decided — the Administrator creates events (2026-09-21)
+
+**Context.** "Administratorul crează evenimente", in the same breath as §201.
+
+**Decision.** `canCreateEvent` moves to `ADMIN`. It had been the same power as configuring one,
+on the reasoning that both decide what the club advertises — and that reasoning holds for
+*configuring*, which stays with the Organizer. Creating is the act that decides there is a race
+at all, and because the registration block lives on the same row, it decides whether the club
+takes entries.
+
+An Organizer opens an event the Administrator created and does everything to it: the date, the
+place, the route, the capacity, the registration window, the queue, the desk. What they cannot do
+is invent a race, publish one, or take a published one down (§201).
+
+**Consequences.** Twenty test suites created their fixtures with an Organizer, because creating
+was theirs. They create with the Administrator now; the files that *assert* the boundary — an
+author refused, an organizer refused — keep their Organizer, and that is where the boundary is
+tested.
+
+## 205. Decided — somebody who gets no email must still be able to register (2026-09-21)
+
+**Context.** Two people in one evening got no message. The owner: "trebuie să lăsăm oamenii să se
+înscrie cu orice preț!!! Asta e scopul principal al site-ului. Dacă nu primesc mail trebuie să le
+apară opțiunea de retrimite sau să ne dea mail prin formularul de contact."
+
+**Decision.** *A second way out, beside the resend.* The resend answers the case where a message
+was lost in transit. It does nothing for the cases that actually strand somebody: a spam filter
+swallowing every one, a provider refusing the sending domain, or an address typed wrongly and no
+longer correctable. In all three the person sits on "check your email" with no way to tell
+anybody, and the club never learns they tried.
+
+So the screen carries a link to the contact form, which reaches a human, and it carries the event
+— `?about=<slug>` — so the message box opens with the sentence they would otherwise compose
+while annoyed: which event, and that nothing arrived. They can delete every word of it; what it
+saves is the blank page, which is where somebody gives up. The slug is matched against the club's
+published events rather than printed, because anybody can type one into a URL and this text goes
+into an email the club reads.
+
+It is deliberately second and quieter than the resend — most people need the resend — and
+deliberately present, because "the message never arrives" is not a rare case in a club's first
+season on a new sending domain.
+
+## 206. Decided — the address is typed twice, and the match is the form's business (2026-09-21)
+
+**Context.** "În formularul de înscriere și de contact, pune oamenii să reintroducă mailul de
+mână, fără auto-complete, și fă verificarea live ca mailurile să se potrivească."
+
+The evidence was already in QA's outbox: three BOUNCED messages to `…@gmail.con`. One letter,
+and the person is gone — the link is sent into nothing, the screen says to check the inbox, and
+the club never learns. A resend does not help, because it resends to the same wrong address.
+
+**Decision.** *Two boxes, both `autoComplete="off"`.* The point of the second is a second act of
+typing, and a browser filling it from the first defeats the exercise. **Paste is left alone**: a
+password manager holds the address somebody uses everywhere, and refusing a paste pushes them to
+type from memory, which is worse than pasting the right thing.
+
+*The comparison is the canonicalizer's, not `===`.* `canonicalizeEmail` is what the platform
+uses to decide whether two addresses are the same person (`AGENTS.md` §10.4), so
+`Ana@Gmail.com` matches `ana@gmail.com` — the same row once stored — while two Gmail spellings
+differing in dots do not, because the club treats those as two people (§74). Comparing raw
+strings would refuse the first pair and accept the second: wrong in both directions.
+
+*The check lives in the action, not in the submission schema.* This is the part worth recording,
+because it was built the other way first. Putting `emailConfirm` in
+`registrationSubmissionSchema` made every caller of the service carry a field only one screen
+has — the desk, the telephone entry, the synthetic queue and forty fixtures — for a check none of
+them can fail, and it turned a form concern into a domain one. `assertEmailTypedTwice` runs in
+the public action, where the two boxes exist; the service's schema is unchanged. A missing second
+box means "this form does not ask twice", which is exactly true of the desk.
+
+*Live, but not nagging:* the mismatch is silent until the second box has something in it, and the
+verdict is consulted only once hydrated, so the server's markup is what it always was and nothing
+shifts under somebody already typing.
+
+Baseline `BR-V1.38-2026-09-18`.

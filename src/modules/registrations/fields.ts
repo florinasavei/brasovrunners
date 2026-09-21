@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { DomainError } from "@/shared/errors/domain-error";
+import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { isMinorOn } from "./domain/age";
 import { E164_PHONE } from "./phone";
 
@@ -143,6 +145,12 @@ const submissionFields = z.object({
   rulesAcknowledged: z.literal(true),
 
   email: z.email().max(320),
+  /**
+   * The address typed a second time (§206) — carried through the schema so the draft cookie can
+   * put it back after a rejection, and checked by `assertEmailTypedTwice` in the action rather
+   * than here: asking twice is the public form's affair and no other caller has a second box.
+   */
+  emailConfirm: z.email().max(320).optional(),
   locale: z.enum(["ro", "en"]),
   privacyAcknowledged: z.literal(true),
   resultsNameConsent: z.boolean(),
@@ -221,7 +229,43 @@ const healthConsentRule = (
 };
 
 /** The public form. Every race detail is insisted on (BR-REQ-031-04 criterion 2). */
-export const registrationSubmissionSchema = submissionFields.superRefine(healthConsentRule).superRefine(guardianRule);
+/**
+ * The two addresses of the public form must be the same mailbox (§206).
+ *
+ * **Not part of `registrationSubmissionSchema`**, and that is the decision: typing an address
+ * twice is a property of the *form*, not of a registration. Putting it in the submission schema
+ * made every caller of the service carry a field that only one screen has — the desk, the
+ * telephone entry, the synthetic queue and forty test fixtures — for a check none of them can
+ * fail. It belongs where the two boxes exist, which is the public action.
+ *
+ * The comparison is the canonicalizer's, not `===`: that is what the platform uses to decide
+ * whether two addresses are the same person (`AGENTS.md` §10.4), so `Ana@Gmail.com` and
+ * `ana@gmail.com` match — the same row once stored — while two Gmail spellings differing in
+ * dots do not, because the club treats those as two people (§74). Comparing raw strings would
+ * refuse the first pair and accept the second, which is wrong in both directions.
+ *
+ * Checked on the server, because a comparison that only ever ran in a browser is a decoration.
+ */
+export function assertEmailTypedTwice(input: { email?: string; emailConfirm?: string }): void {
+  const second = input.emailConfirm?.trim();
+  // Absent means this form does not ask twice; the desk and the telephone entry never do.
+  if (!second) return;
+  let same = false;
+  try {
+    same = canonicalizeEmail(input.email ?? "").canonicalEmail === canonicalizeEmail(second).canonicalEmail;
+  } catch {
+    same = false;
+  }
+  if (!same) {
+    throw new DomainError("VALIDATION_ERROR", "the two addresses are not the same mailbox", [
+      "emailConfirm",
+    ]);
+  }
+}
+
+export const registrationSubmissionSchema = submissionFields
+  .superRefine(healthConsentRule)
+  .superRefine(guardianRule);
 
 /**
  * The same form as an organizer fills it in for somebody who telephoned (BR-REQ-031-04

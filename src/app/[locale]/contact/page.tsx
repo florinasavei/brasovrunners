@@ -10,7 +10,9 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
+import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { routing } from "@/i18n/routing";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipientsOrNull } from "@/modules/contact/recipients";
@@ -30,7 +32,7 @@ import { submitContactAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ sent?: string; error?: string; fields?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; fields?: string; about?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -63,7 +65,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const { sent, error: rawError, fields } = await searchParams;
+  const { sent, error: rawError, fields, about } = await searchParams;
   const t = await getTranslations("Contact");
   const now = new Date();
   // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
@@ -83,12 +85,25 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const formAvailable = contactFormReaches(env, await readContactRecipientsOrNull());
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
 
+  /**
+   * `?about=<slug>` — somebody sent here from a registration that produced no email (§205).
+   *
+   * The message box opens with the sentence they would otherwise have to compose while annoyed:
+   * which event, and that nothing arrived. They can delete every word of it; what it saves is
+   * the blank page, which is where somebody gives up. The slug is matched against the club's own
+   * published events rather than printed, because anybody can type one into a URL and this text
+   * goes into an email the club reads.
+   */
+  const aboutEvent = about ? await findPublishedEventBySlug(getDb(), locale, about) : null;
+
   const field = (name: "name" | "email" | "message", help?: string) => ({
     id: fieldId(name),
     name,
     error: invalid.has(name),
     helperText: invalid.has(name) ? t("errors.field") : help,
-    defaultValue: typed(name),
+    defaultValue:
+      typed(name) ??
+      (name === "message" && aboutEvent ? t("prefill.noEmail", { event: aboutEvent.title }) : undefined),
   });
 
   return (

@@ -8,6 +8,7 @@ import { findEventForRegistrationById, findPublishedEventBySlug } from "@/module
 import { clearFormDraft, stashFormDraft } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
+import { assertEmailTypedTwice } from "@/modules/registrations/fields";
 import { submitRegistration } from "@/modules/registrations/service";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { headers } from "next/headers";
@@ -51,6 +52,15 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   }
 
   try {
+    /*
+      The address, twice, and the same mailbox both times (§206).
+
+      Before anything else in the try, so a mismatch is a field error on the form rather than
+      a registration created for an address nobody can read. It is a property of this form and
+      not of a registration, which is why it is asserted here and not in the service's schema.
+    */
+    assertEmailTypedTwice(readRegistrationForm(form, locale));
+
     const internalEvent = await findEventForRegistrationById(db, publicEvent.id);
     if (!internalEvent) redirect(getPathname({ locale, href: "/events" }));
 

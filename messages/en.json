@@ -1795,7 +1795,8 @@
       "instagramHandle": "Instagram",
       "guardianName": "Parent / guardian",
       "fitnessDeclared": "The statement that you are medically fit",
-      "rulesAcknowledged": "the race conditions"
+      "rulesAcknowledged": "the race conditions",
+      "emailConfirm": "the address typed a second time"
     },
     "requiredLegend": "Fields marked * are required. Everything else is optional — leave it blank if you would rather not say.",
     "optionalSuffix": "optional",
@@ -1806,7 +1807,9 @@
       "submit": "Send the link",
       "sent": "If that address has a registration, we have just sent the link there. Check your spam folder too.",
       "prompt": "Did the message not arrive?",
-      "linkLabel": "Send it again"
+      "linkLabel": "Send it again",
+      "stillNothing": "Nothing arrived even after asking again?",
+      "contactLinkLabel": "Write to us and we will register you"
     },
     "steps": {
       "title": "How registration works",
@@ -1888,7 +1891,10 @@
       "plain": "I have read and agree to the race conditions:"
     },
     "opensInNewTab": "opens in a new tab",
-    "phoneInvalid": "That does not look like a complete number for the country chosen — check the digits."
+    "phoneInvalid": "That does not look like a complete number for the country chosen — check the digits.",
+    "emailConfirm": "Type the address once more *",
+    "emailMismatch": "The two addresses are not the same — check the letters.",
+    "emailHelp": "This is where the confirmation link goes. Type it carefully."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -2265,7 +2271,8 @@
       "name": "Name",
       "email": "Email address",
       "message": "Message",
-      "captcha": "Anti-bot check"
+      "captcha": "Anti-bot check",
+      "emailConfirm": "the address typed a second time"
     },
     "errors": {
       "title": "The message was not sent",
@@ -2277,6 +2284,11 @@
       "DELIVERY": "We could not send it. Write to us directly at",
       "DELIVERY_NO_ADDRESS": "We could not send it. Try again in a few minutes.",
       "UNAVAILABLE": "The contact form is not available on this site."
-    }
+    },
+    "prefill": {
+      "noEmail": "Hello! I tried to register for {event}, but the confirmation email never arrived — not even after I asked for it again. Could you help?\n\n(Write the name you want to be registered under below, if it differs from the one above.)"
+    },
+    "emailConfirm": "Type the address once more *",
+    "emailMismatch": "The two addresses are not the same — check the letters."
   }
 }
