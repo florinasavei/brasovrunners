@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.40-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -10468,5 +10468,40 @@ job is to answer "is there headroom for the window I am about to open?".
 Tests: `tests/integration/notifications/club-notices.test.ts` — one notice per address, the
 right words, nothing for a test registration; `tests/unit/diagnostics/platform-plans.test.ts`
 — the arithmetic the platform document states in prose.
+
+Baseline `BR-V1.41-2026-09-21`.
+
+## 246. Decided — the registrations list opens with a counter, and it costs one query (2026-09-21)
+
+**Context.** The owner: "on the registrations tab I should have a counter! but I wanna make
+sure it's performant and light on the DB."
+
+The list has always said how many rows *match the current filter* — which is the pager's
+number, not the club's. "How many have signed up for the race" meant filtering by state, four
+times, and writing the numbers down.
+
+**Decision.** *A strip above the list*: how many real registrations there are, then each state
+it is made of, then the test rows apart.
+
+*One grouped query, and that is the whole of the performance argument.* A strip of five
+numbers invites five `SELECT count(*)`, each re-scanning the same rows. This is
+`GROUP BY status, kind` over the `WHERE` the list already builds, so the page costs one round
+trip more than it did rather than five — which matters on Neon's free compute-hours (§68) as
+much as it does in milliseconds.
+
+*Blind to the status filter, and only to that one.* The strip answers "how does this event
+stand", so it must not collapse to a single number the moment somebody filters by "confirmate".
+Every other filter — the event, the search, the club member, the bounced — narrows it, because
+those *are* the question being asked.
+
+*Test rows apart, never inside.* §12.6 keeps a synthetic runner out of every number the club is
+given, and hiding them altogether would make the strip disagree with the list underneath, which
+does show them with their own chip. So: counted, labelled, and outside the club's own figure.
+
+**Not the navigation tab.** A badge on the tab would be a query on every backoffice page,
+including the ones that are about something else entirely — the opposite of what was asked for.
+
+Tests: `tests/integration/registrations/admin-list.test.ts` — each state counted once, the test
+rows apart, and the same filters the list uses.
 
 Baseline `BR-V1.41-2026-09-21`.

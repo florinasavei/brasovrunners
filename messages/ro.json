@@ -271,6 +271,8 @@
       "filterAll": "Toate evenimentele",
       "filter": "Filtrează",
       "statusLabel": "Stare",
+      "summaryTotal": "Înscrieri: {count}",
+      "summaryTest": "De test: {count}",
       "export": "Exportă CSV",
       "backToList": "Înapoi la înscrieri",
       "resend": "Retrimite emailul",

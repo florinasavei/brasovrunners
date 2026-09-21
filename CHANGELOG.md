@@ -8,10 +8,17 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
-## BR-V1.40-2026-09-21
+## BR-V1.41-2026-09-21
 
 - **The organizer draws the crop on a picture, and that is what the site shows.** Drag a box over a photograph in the editor: the event page, the listing card and the editor itself all show that rectangle. Nothing is re-encoded — the stored file is untouched and the crop can be removed — and a picture with no crop renders exactly as it did. §241.
 - **The summary field says where the summary appears.** It is on the event page, on the listing card and in the shares, but not on the dense cards under the featured event, which carry the title, the date and the place alone. The cards were right; the label was not. §242.
+- **`/admin/emails` shows what is actually queued** — which message, to whom, when it was queued, how many attempts it has survived and what the provider last said — with the same "Trimite acum" the registrations list has. A message that has spent every attempt is in the list, which is exactly what a count of "waiting" was hiding. Administrator only. §243.
+- **Who receives a signed declaration is set in the backoffice**, not in the deployment: the club's mailbox plus visible copies (Cc) and hidden ones (Bcc), with the old `DECLARATIONS_ARCHIVE_TO` kept as the fallback. The Bcc box carries a warning, because a declaration holds the participant's identity document and a hidden copy delivers it to a mailbox nobody on the message can see. §244.
+- **The club is told when somebody confirms** — who, which event, which race number — to whichever of its own mailboxes it named. It costs one message per registration, so the Mailgun forecast is six per completed registration now and 100 a day is about 16 rather than 20. §245.
+- **The registrations list opens with a counter**: how many have signed up, each state beside it, the test rows apart. One grouped query, so the page costs one round trip more rather than five. §246.
+
+## BR-V1.40-2026-09-21
+
 - **The form refuses an emergency contact that is your own number before you can send it**, and says so correctly — it used to accept the press, come back from the server, and tell you the number was invalid, which it was not. §231.
 - **The “give this runner a number” box knows they already have one.** Since numbers are reserved at registration, that box was rendering empty for somebody holding number 2 and offering the free numbers with theirs missing. It now says which number they hold, comes prefilled, and is a change rather than a gift — and setting one by hand releases the provisional one instead of stranding it. §230.
 - **The confirmation screen no longer claims a registration it did not make.** Filling the form again with an address that is already registered creates nothing — the database forbids a second row — but it re-sends the confirmation with its QR, and the screen said “check your email to confirm your registration”. It now says, to everybody alike, that an email to an address already registered is the existing confirmation. §229.
