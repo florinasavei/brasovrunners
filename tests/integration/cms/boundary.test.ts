@@ -200,6 +200,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/registrations/new",
       "/admin/staff",
       "/admin/tasks",
+      // The club's month, its own page since §251.
+      "/calendar",
       "/contact",
       "/devs",
       "/devs/docs/[name]",

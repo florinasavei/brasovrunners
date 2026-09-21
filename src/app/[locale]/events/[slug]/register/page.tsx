@@ -225,7 +225,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   const factLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight, marginRight: 16 } as const;
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title", { event: event.title })}
       </Typography>

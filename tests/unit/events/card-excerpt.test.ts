@@ -67,16 +67,21 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(Object.keys(PAGE_EXCERPT_SX)).toEqual(["color", "mb", "& p:last-of-type"]);
   });
 
-  it("says in the editor that the dense cards under the hero carry no summary", () => {
-    // §242: the field is labelled "shown on the card", and the cards under the featured event
-    // deliberately drop it — title, date and place only, so the lead is not followed by a
-    // scroll (§78). The rule stays; the label is what had to change, and this is the pair.
+  it("carries the summary on every card, under the hero as well (§251)", () => {
+    // §242 kept the list under the featured event dense — title, date and place — so the lead
+    // was not followed by a scroll (§78). The owner asked for the opposite once a picture could
+    // be cropped to the shape a card shows (§241): "on the event card I wanna be able to see
+    // pictures in the preview". So there is no longer a card that drops it, and the editor's
+    // help text must not claim there is.
     const cards = readFileSync(path.join(process.cwd(), "src", "app", "[locale]", "events", "page.tsx"), "utf8");
-    expect(cards).toContain("{!underHero && <EventExcerpt");
+    expect(cards).not.toContain("underHero");
+    expect(cards).toContain('<EventExcerpt place="card"');
+    const series = readFileSync(path.join(process.cwd(), "src", "modules", "events", "ui", "SeriesCard.tsx"), "utf8");
+    expect(series).not.toContain("underHero");
     const ro = JSON.parse(readFileSync(path.join(process.cwd(), "messages", "ro.json"), "utf8"));
     const en = JSON.parse(readFileSync(path.join(process.cwd(), "messages", "en.json"), "utf8"));
-    expect(ro.Admin.editor.excerptHelp).toContain("compacte");
-    expect(en.Admin.editor.excerptHelp).toContain("dense");
+    expect(ro.Admin.editor.excerptHelp).not.toContain("compacte");
+    expect(en.Admin.editor.excerptHelp).not.toContain("dense");
   });
 
   it("is what both cards render the excerpt through", () => {

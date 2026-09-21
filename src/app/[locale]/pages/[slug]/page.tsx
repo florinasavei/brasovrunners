@@ -53,7 +53,7 @@ export default async function StandingPage({ params }: Props) {
   if (!page) notFound();
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       {/* As wide as the header, so the title sits on the logo's column; the prose stops at a
           readable measure rather than running the whole width (AGENTS.md §18.2). */}
       <Box sx={{ maxWidth: PROSE_MEASURE }}>

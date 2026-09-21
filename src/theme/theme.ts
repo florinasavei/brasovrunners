@@ -62,7 +62,30 @@ export const buildTheme = (options: ThemeOptions) => createTheme({
     h2: { fontFamily: `${options.display}, ${FONT.fallback}`, fontSize: "1.5rem", fontWeight: 500 },
   },
   shape: { borderRadius: options.radius },
+  /*
+    The page is wider than MUI's own `xl` (§252; the owner: "the website can span a bit wider
+    and there is too much whitespace overall").
+
+    `PAGE_WIDTH` is `xl` and every page reads it, so widening the page is this one number
+    rather than nineteen `maxWidth` props. 1760 is about as wide as a two-column card row wants
+    to be before the eye has to travel; prose inside it is still held to `PROSE_MEASURE`, so
+    nothing that is read line by line got wider — only the room the cards, the calendar grid
+    and the backoffice tables have.
+  */
+  breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 2040 } },
   components: {
+    /*
+      Cards carry less air (§252; the owner: "there is too much whitespace overall and padding").
+
+      MUI's default is 16 pixels and 24 at the bottom of the last block, which on a listing of
+      cards is a third of what the eye has to travel between two titles. Twelve, and the same
+      at the foot, so a card is its content and a margin rather than a frame around a frame.
+    */
+    MuiCardContent: {
+      styleOverrides: {
+        root: { padding: 12, "&:last-child": { paddingBottom: 12 } },
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: (theme) => ({
         /**

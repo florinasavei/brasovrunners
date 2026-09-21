@@ -2,6 +2,7 @@
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { useTranslations } from "next-intl";
@@ -10,22 +11,36 @@ import { useLayoutEffect, useRef, useState, type ComponentProps, type MouseEvent
 import { Link } from "@/i18n/navigation";
 import { DURATION, EASE, HOVER_OK } from "@/theme/motion";
 
+/**
+ * The platform's own sections, in the order the owner asked for them (§251): "Events, Calendar,
+ * Contact, then separators and the rest of the custom pages".
+ *
+ * The gallery sits with them rather than with the club's pages, because it is a section this
+ * application ships and not something an organizer wrote — and it is offered only when a
+ * published album exists (`showGallery`): a section with nothing behind it is a signpost to an
+ * empty room. "Scrie-ne" (BR-REQ-070-04, §149) is last of the four and offered only while the
+ * page has something to offer (`showContact`): the form, or the club's address as a link.
+ */
 const SECTIONS = [
   { segment: "events", href: "/events" },
-  // Offered only when a published album exists (`showGallery`): a section with nothing
-  // behind it is a signpost to an empty room.
+  // The club's month, on its own page since §251: the front page is "what is on next", and a
+  // grid of squares belongs a press away rather than above the next run.
+  { segment: "calendar", href: "/calendar" },
   { segment: "gallery", href: "/gallery" },
-  // "Scrie-ne" (BR-REQ-070-04, §149). Last, and one more entry the priority+ fold measures:
-  // at 320px it goes behind "Meniu" like everything past the first section, so the row the
-  // owner asked for ("logo and navbar on the same row") is unchanged. Offered only while the
-  // page has something to offer (`showContact`): the form, or the club's address as a link.
   { segment: "contact", href: "/contact" },
 ] as const;
 
 export type NavPage = { slug: string; title: string };
 
 type Href = ComponentProps<typeof Link>["href"];
-type Item = { key: string; href: Href; label: string; current: boolean };
+/**
+ * A row entry: a link, or the rule between this application's own sections and the club's
+ * pages (§251). The rule is an item rather than a wrapper so the measuring below counts its
+ * width like any other entry — a row that folds has to know what it is folding.
+ */
+type Item =
+  | { key: string; href: Href; label: string; current: boolean; divider?: false }
+  | { key: string; divider: true; current: false };
 
 /**
  * The site's sections, in the header, on every page — and, when they do not all fit on the
@@ -101,6 +116,8 @@ export default function SiteNav({
       label: t(section.segment),
       current: selected === section.segment,
     })),
+    // The rule, and only when there is something on the other side of it.
+    ...(pages.length > 0 ? [{ key: "divider", divider: true as const, current: false as const }] : []),
     ...pages.map((page) => ({
       key: `page:${page.slug}`,
       href: { pathname: "/pages/[slug]", params: { slug: page.slug } } as Href,
@@ -188,9 +205,15 @@ export default function SiteNav({
             ref={(el: HTMLElement | null) => {
               itemRefs.current[index] = el;
             }}
-            aria-hidden={folded || undefined}
+            aria-hidden={folded || item.divider || undefined}
             sx={folded ? FOLDED : undefined}
           >
+            {item.divider ? (
+              // A hairline, not a character: decoration, so it is out of the accessible name
+              // of the row and out of its tab order.
+              <Box sx={{ width: "1px", height: 20, bgcolor: "divider", mx: { xs: 0.25, sm: 0.5 } }} />
+            ) : (
+            <>
             {/* inline-flex so the anchor's box is the 44px entry, not a line of text. */}
             <Link
               href={item.href}
@@ -201,6 +224,8 @@ export default function SiteNav({
                 {item.label}
               </Box>
             </Link>
+            </>
+            )}
           </Box>
         );
       })}
@@ -259,18 +284,22 @@ export default function SiteNav({
         onClose={close}
         slotProps={{ list: { "aria-labelledby": "site-nav-more" } }}
       >
-        {overflow.map((item) => (
-          <MenuItem
-            key={item.key}
-            component={Link}
-            href={item.href}
-            selected={item.current}
-            onClick={close}
-            sx={{ minHeight: 44 }}
-          >
-            {item.label}
-          </MenuItem>
-        ))}
+        {overflow.map((item) =>
+          item.divider ? (
+            <Divider key={item.key} component="li" />
+          ) : (
+            <MenuItem
+              key={item.key}
+              component={Link}
+              href={item.href}
+              selected={item.current}
+              onClick={close}
+              sx={{ minHeight: 44 }}
+            >
+              {item.label}
+            </MenuItem>
+          ),
+        )}
       </Menu>
     </Box>
   );

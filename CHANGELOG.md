@@ -8,6 +8,14 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.43-2026-09-21
+
+- **The club's email has a tab.** `/admin/emails` — the templates, the plan, who receives a copy of a declaration, the outbox queue — had no entry in the backoffice navigation at all, only a link buried in the guide. §253.
+- **Every card shows its summary and its picture**, under the featured event as well — which is what the crop (§241) made worth looking at. The list's heading is "Toate evenimentele" now, because that is what it is. §251.
+- **The calendar has its own page and its own tab**, after Events, and no longer sits above the next run on the front page. The menu is Events · Calendar · Gallery · Contact, then a rule, then the club's own pages. §251.
+- **The page is wider and carries less air**: 2040 pixels instead of 1536, a third less vertical padding on every page, 12 pixels inside a card instead of 16 and 24 — and the events are a grid of two or three columns on a wide screen rather than one stripe of full-width cards. Running text keeps its reading measure. §252.
+- **"Cine vine" is a real table now**, with a position, the name and the club, and fifty to a page — the pages are links, so it works with JavaScript off and a list of four hundred is not four hundred rows on a phone. Who is listed has not changed: confirmed participants who did not ask to be left out. §250.
+
 ## BR-V1.42-2026-09-21
 
 - **The club designs its own race number.** What is printed on the bib — the runner's name, the event, the date, the club's logo — how large the number is, whether the name sits above it or below, a picture of your own instead of the coloured band, a strip of sponsors, and cut marks on the sheet. The preview on the event's page is the sheet that prints. §249.

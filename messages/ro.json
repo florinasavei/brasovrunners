@@ -25,6 +25,7 @@
     "nav": {
       "label": "Navigare principală",
       "events": "Evenimente",
+      "calendar": "Calendar",
       "gallery": "Galerie",
       "more": "Meniu",
       "contact": "Contact"
@@ -50,7 +51,7 @@
     "featured": "Evenimentul principal",
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
-    "othersCount": "Alte evenimente ({count})",
+    "othersCount": "Toate evenimentele ({count})",
     "filter": {
       "label": "Tipul evenimentului",
       "all": "Toate"
@@ -69,6 +70,8 @@
       "pickMonth": "Luna",
       "pickYear": "Anul",
       "yearEmpty": "Nimic programat în acest an.",
+      "pageTitle": "Calendar",
+      "pageIntro": "Luna clubului: alergările săptămânale și cursele, pe zile. Poți lua tot calendarul în telefon sau în Google Calendar.",
       "addTitle": "Adaugă în calendarul tău",
       "feedAddress": "Adresa pentru alte aplicații",
       "subscribeGoogle": "Google Calendar",
@@ -141,7 +144,14 @@
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
       "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei.",
-      "anonymous": "Participant anonim"
+      "anonymous": "Participant anonim",
+      "caption": "Participanții confirmați, în ordinea confirmării.",
+      "columnPosition": "#",
+      "columnName": "Nume",
+      "columnClub": "Club",
+      "previous": "← Pagina anterioară",
+      "next": "Pagina următoare →",
+      "pageOf": "Pagina {page} din {pages}"
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
@@ -251,6 +261,7 @@
       "pages": "Pagini",
       "gallery": "Galerie",
       "checkin": "Ziua cursei",
+      "emails": "Emailuri",
       "guide": "Ghid"
     },
     "outbox": {
@@ -536,7 +547,7 @@
       "newTitle": "Eveniment nou",
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
-      "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă și în distribuiri. Excepția: sub evenimentul principal de pe prima pagină, celelalte carduri sunt compacte — doar titlul, data și locul — așa că rezumatul nu apare acolo. Obligatoriu înainte de publicare.",
+      "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă (cu poză, dacă pui una) și în distribuiri. Obligatoriu înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",

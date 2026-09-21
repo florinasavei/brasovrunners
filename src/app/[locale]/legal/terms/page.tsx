@@ -30,7 +30,7 @@ export default async function TermsPage({ params }: Props) {
   const document = await findCurrentApprovedDocument(getDb(), "TERMS", locale, new Date());
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       {document ? (
         <>
           <Typography variant="h1" gutterBottom>

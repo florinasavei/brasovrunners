@@ -47,7 +47,7 @@ export default async function AlbumPage({ params }: Props) {
   const format = await getFormatter();
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       <Typography variant="body2" sx={{ mb: 2 }}>
         <Link href="/gallery">{t("backToGallery")}</Link>
       </Typography>

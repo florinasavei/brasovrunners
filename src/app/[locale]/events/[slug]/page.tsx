@@ -40,7 +40,7 @@ import { env } from "@/shared/config/env";
 import JsonLd from "@/shared/ui/JsonLd";
 import { PAGE_WIDTH } from "@/theme/brand";
 
-type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string }> };
+type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<{ interest?: string; since?: string; lista?: string }> };
 
 /**
  * Rendered per request. Organizers publish and cancel events between deploys, so a build-time
@@ -101,7 +101,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { interest, since } = await searchParams;
+  const { interest, since, lista } = await searchParams;
 
   const event = await findPublishedEventBySlug(getDb(), locale, slug);
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
@@ -126,7 +126,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await getCurrentStaffUser();
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       <JsonLd
         data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"), [
           `${env.APP_BASE_URL}/${locale}/events/${slug}/opengraph-image`,
@@ -286,7 +286,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <EventVideo videoUrl={event.videoUrl} />
 
       {/* Nothing at all unless this event publishes one (BR-REQ-039-01). */}
-      <StartList event={event} />
+      <StartList event={event} page={lista} />
     </Container>
   );
 }
