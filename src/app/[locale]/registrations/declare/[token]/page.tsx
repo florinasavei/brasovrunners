@@ -14,7 +14,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
-import { mergeFieldsIn, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
+import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
 import { declarantValues } from "@/modules/registrations/signed-declaration";
