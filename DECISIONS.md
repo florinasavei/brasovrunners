@@ -11073,3 +11073,37 @@ Tests: `tests/integration/registrations/bot-check.test.ts` — the default, the 
 the audit row, and that all four entry points consult it.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 255. Decided — the tab says how many are signed up, for about one query a minute (2026-09-21)
+
+**Context.** The owner, of the backoffice navigation: "can I see a counter of registered people
+here? but DB efficiently! please note we use a light DB."
+
+I had declined exactly this an hour earlier — a badge in the shell is a query on every
+backoffice page, including the pages that are about something else — and he asked for it with
+the cost named. So the answer is the badge *and* the arithmetic that makes it cheap.
+
+**Decision.** *A memo with a minute's life.* One indexed count, kept for sixty seconds in the
+process. An evening of backoffice work costs a handful of queries instead of several hundred,
+which is the difference that matters on Neon's free plan — it bills compute time (§68). The
+badge may be a minute stale; the list itself is always exact, and nobody reads a tab that way.
+
+*Only for the roles that may open the list*, so for everybody else there is no query at all.
+
+*What it counts is what a club means by "signed up"*: active registrations — waiting for an
+email, waiting to sign, offered a place, on the waiting list, confirmed — of real people, on
+events that have not started. Cancellations are gone, last month's race is history, and a test
+registration is never inside a number the club is given (§12.6).
+
+*The figure is part of the label rather than a badge element.* A badge is absolutely positioned
+and would sit over the tab's own underline at 320 pixels; "Înscrieri 42" is what somebody wants
+to read.
+
+*A failure means no badge.* The shell renders on every backoffice page, including the ones whose
+purpose is to work when something is broken — `/admin/tasks`, `/devs`. A count is not worth a
+500, so an unreachable database renders the tab exactly as it did before this existed.
+
+Tests: `tests/integration/registrations/nav-count.test.ts` — what is counted, what is left out,
+and that the memo answers instead of the database.
+
+Baseline `BR-V1.43-2026-09-21`.

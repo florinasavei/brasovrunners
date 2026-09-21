@@ -15,7 +15,13 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import SettingsIcon from "@mui/icons-material/Settings";
 
-export type AdminTab = { href: string; label: string; section: string };
+export type AdminTab = {
+  href: string;
+  label: string;
+  section: string;
+  /** A figure beside the label — how many are signed up, on "Înscrieri" (§255). */
+  count?: number | null;
+};
 
 /**
  * One icon per section (the owner, 2026-09-18: "icons for each tab"), from the icon package
@@ -100,7 +106,13 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
           <Tab
             key={item.href}
             value={item.href}
-            label={item.label}
+            /*
+              The number is part of the label rather than a `<Badge>` (§255): a badge is
+              absolutely positioned and would sit over the tab's own underline at 320 pixels,
+              and this figure is read rather than noticed — "Înscrieri 42" is what somebody
+              wants to see.
+            */
+            label={typeof item.count === "number" ? `${item.label} ${item.count}` : item.label}
             icon={Icon ? <Icon fontSize="small" /> : undefined}
             iconPosition="start"
             component="a"
