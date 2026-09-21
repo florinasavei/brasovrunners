@@ -366,6 +366,7 @@ export function canManageStaff(role: StaffRole): boolean {
  *     registrations  canManageRegistrations   `admin/registrations/page.tsx`
  *     pages          isEditorial              `admin/pages/page.tsx`
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
+ *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
  *     staff          canManageStaff           `admin/staff/page.tsx`
  *     devs           canSeeDiagnostics        `devs/page.tsx`
  *
@@ -382,6 +383,7 @@ export const ADMIN_SECTIONS = [
   "registrations",
   "tasks",
   "legal",
+  "emails",
   "staff",
   "devs",
 ] as const;
@@ -427,6 +429,18 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // The legal texts are readable by the roles that must know what the club published; only
     // the Administrator writes one (§46, §181, §203).
     ...(canReadContent(role) ? (["legal"] as const) : []),
+    /*
+      The club's email (§250): the messages as they go out and the words in them, which is the
+      Redactor's work (§247) — so the same gate as the club's other content, and the page's own
+      panels ask their own questions behind it. The queue, the plan and who receives a copy of a
+      declaration are Administrator's, and each is read only for a role that may see it (§243,
+      §244).
+
+      It had no entry here at all, which is how a page nobody could navigate to ended up holding
+      the templates, the outbox and the club's copies: reachable from one link in the guide, and
+      from nowhere else (the owner: "I am missing the email templates config … in this navbar").
+    */
+    ...(canReadContent(role) ? (["emails"] as const) : []),
     ...(canManageStaff(role) ? (["staff"] as const) : []),
     ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
   ];

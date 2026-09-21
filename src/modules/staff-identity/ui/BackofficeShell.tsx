@@ -54,6 +54,7 @@ export default async function BackofficeShell({
     registrations: getPathname({ locale, href: "/admin/registrations" }),
     tasks: getPathname({ locale, href: "/admin/tasks" }),
     legal: getPathname({ locale, href: "/admin/legal" }),
+    emails: getPathname({ locale, href: "/admin/emails" }),
     staff: getPathname({ locale, href: "/admin/staff" }),
     // Its own route rather than a backoffice page: it is read by whoever is holding the
     // hosting dashboard (BR-REQ-090-04) — and it wears the same chrome since §119.

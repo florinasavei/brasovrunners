@@ -243,6 +243,9 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       The Organizer sees the same content as the copywriter and changes none of it — "Dani îi
       zice Amaliei să modifice X, Y lucru".
     */
+    // "emails" joins them in §253: the messages and the words in them are the Redactor's work
+    // (§247), and the panels behind that page ask their own questions — the queue and the
+    // club's copies are read only for a role that may see a participant's address (§243, §244).
     expect(visibleAdminSections("COPYWRITER")).toEqual([
       "events",
       "checkin",
@@ -250,6 +253,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "pages",
       "gallery",
       "legal",
+      "emails",
     ]);
     expect(visibleAdminSections("MODERATOR")).toEqual([
       "events",
@@ -258,6 +262,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "pages",
       "gallery",
       "legal",
+      "emails",
     ]);
   });
 
@@ -274,7 +279,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
   it("gives ADMIN the registrations and the legal documents, but not staff administration", () => {
     const sections = visibleAdminSections("ADMIN");
 
-    expect(sections).toEqual(["events", "checkin", "guide", "pages", "gallery", "registrations", "tasks", "legal", "devs"]);
+    expect(sections).toEqual(["events", "checkin", "guide", "pages", "gallery", "registrations", "tasks", "legal", "emails", "devs"]);
     // An Administrator reads every registration and still cannot promote themselves.
     expect(sections).not.toContain("staff");
   });
@@ -289,6 +294,7 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
       "registrations",
       "tasks",
       "legal",
+      "emails",
       "staff",
       "devs",
     ]);

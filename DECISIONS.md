@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -10959,3 +10959,26 @@ grid is one column there and nothing scrolls sideways — and every tap target k
 pixels. `tests/e2e/event-pages.spec.ts` asserts both on the listing.
 
 Baseline `BR-V1.41-2026-09-21`.
+
+## 253. Decided — the club's email has a tab (2026-09-21)
+
+**Context.** The owner, with a screenshot of the backoffice navigation: "I am missing the email
+templates config and email CC/BCC stuff in this navbar."
+
+He was right, and the reason was worse than an ordering mistake: `/admin/emails` had **no entry
+at all**. It was reachable from one link inside `/admin/guide` and from nowhere else — so the
+plan (§100), the contact recipients (§164), the outbox queue (§243), the club's copies (§244)
+and the editable wording (§247) had all been built onto a page nobody could navigate to.
+
+**Decision.** *"Emailuri", after the legal documents*, offered to the roles that may read the
+club's content (`canReadContent`) — because the words in a message are the Redactor's work
+(§103, §247). Each panel on the page keeps asking its own question behind that: the queue and
+the club's copies name recipients, which is participant data, so they are read only for a role
+that may see it (§243, §244), and the plan is an Administrator's to change (§100).
+
+**The lesson worth writing down.** `ADMIN_SECTIONS` is the list the navigation is built from, and
+a page can exist for weeks without being in it. A new backoffice route is not finished until it
+has an entry there and a line in `tests/unit/staff/roles.test.ts`, which asserts that every role
+is offered every section the role below it is.
+
+Baseline `BR-V1.43-2026-09-21`.

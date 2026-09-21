@@ -8,12 +8,16 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
-## BR-V1.41-2026-09-21
+## BR-V1.43-2026-09-21
 
+- **The club's email has a tab.** `/admin/emails` — the templates, the plan, who receives a copy of a declaration, the outbox queue — had no entry in the backoffice navigation at all, only a link buried in the guide. §253.
 - **Every card shows its summary and its picture**, under the featured event as well — which is what the crop (§241) made worth looking at. The list's heading is "Toate evenimentele" now, because that is what it is. §251.
 - **The calendar has its own page and its own tab**, after Events, and no longer sits above the next run on the front page. The menu is Events · Calendar · Gallery · Contact, then a rule, then the club's own pages. §251.
 - **The page is wider and carries less air**: 2040 pixels instead of 1536, a third less vertical padding on every page, 12 pixels inside a card instead of 16 and 24 — and the events are a grid of two or three columns on a wide screen rather than one stripe of full-width cards. Running text keeps its reading measure. §252.
 - **"Cine vine" is a real table now**, with a position, the name and the club, and fifty to a page — the pages are links, so it works with JavaScript off and a list of four hundred is not four hundred rows on a phone. Who is listed has not changed: confirmed participants who did not ask to be left out. §250.
+
+## BR-V1.41-2026-09-21
+
 - **The club writes the emails' own words.** The subject and the paragraphs of any message, in each language, from `/admin/emails`, with the preview right above the box — and a button back to the platform's text. What a message *carries* stays the platform's: the button and its secure link, the QR, the attached declaration and the sign-off. Fields like `{participantName}` are filled in; anything else between braces is refused when you save it. §247.
 - **The calendar feed says what Android needs.** A subscribed calendar shows nothing on a phone until it is switched on in Google Calendar; the note beside the subscribe buttons now names that step, and the calendar, exactly as the phone lists it. §241.
 - **A local end-to-end run no longer blocks the next commit.** Playwright leaves an HTML report whose bundled JavaScript ESLint was reading — three thousand problems in somebody else's minified code — so `yarn check`, and with it the pre-commit hook, refused every commit until the folder was deleted by hand.
