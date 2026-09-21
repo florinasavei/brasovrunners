@@ -332,6 +332,62 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
 }
 
 /**
+ * How many of each state, for the strip above the list (`DECISIONS.md` §246; the owner: "on
+ * the registrations tab I should have a counter… but I wanna make sure it's performant and
+ * light on the DB").
+ *
+ * **One query, and it is the cheapest shape there is**: one grouped scan of the rows the
+ * filters already narrow to — the same `WHERE` the list and the pager use — rather than one
+ * count per state, which is what a strip of five numbers invites. The page therefore costs one
+ * round trip more than it did, not five, and the club stops doing the arithmetic by filtering
+ * the list five times.
+ *
+ * Real and test are counted apart, as the email forecast counts them (§12.6): a synthetic
+ * runner is never inside a number the club is given, and hiding the test rows entirely would
+ * make the strip disagree with the list underneath it, which does show them.
+ */
+export type RegistrationSummary = {
+  /** Real registrations by state; a state nobody is in is absent. */
+  byStatus: Partial<Record<RegistrationStatus, number>>;
+  /** Real registrations in any state — what the club means by "how many have signed up". */
+  real: number;
+  /** Test registrations in any state (§12.6): shown apart, and only when there are any. */
+  test: number;
+};
+
+export async function summariseRegistrationsForAdmin<T extends Record<string, unknown>>(
+  db: Database<T>,
+  filters: RegistrationListFilters = {},
+): Promise<RegistrationSummary> {
+  const conditions = registrationConditions(filters);
+
+  const rows = await db
+    .select({ status: registrations.status, kind: registrations.kind, total: count() })
+    .from(registrations)
+    .innerJoin(participants, eq(participants.id, registrations.participantId))
+    .leftJoin(
+      eventTranslations,
+      and(
+        eq(eventTranslations.eventId, registrations.eventId),
+        eq(eventTranslations.locale, registrations.locale),
+      ),
+    )
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .groupBy(registrations.status, registrations.kind);
+
+  const summary: RegistrationSummary = { byStatus: {}, real: 0, test: 0 };
+  for (const row of rows) {
+    if (row.kind === "TEST") {
+      summary.test += row.total;
+      continue;
+    }
+    summary.real += row.total;
+    summary.byStatus[row.status] = (summary.byStatus[row.status] ?? 0) + row.total;
+  }
+  return summary;
+}
+
+/**
  * How many rows match, which is not the same question as which rows to show.
  *
  * The pager needs the total and the page needs 25 rows; asking one query for both would mean

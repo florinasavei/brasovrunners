@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.40-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.40-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2708,6 +2708,7 @@ DECLARATION_ARCHIVE
 BIB_ASSIGNED
 STAFF_INVITATION
 REGISTRATION_OPENED
+CLUB_CONFIRMATION_NOTICE
 ```
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
@@ -2740,6 +2741,21 @@ adds a colleague on Echipa (`staff:<id>:invitation:<time>`), to the staff addres
 colleague's language — who added them, as what, the sign-in page as the action. No token:
 the sign-in page asserts who they are. Sent again from the row until they first sign in
 (`DECISIONS.md` §141).
+
+`CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
+registration, one row per address the club named under "anunță-ne când cineva confirmă" on
+`/admin/emails` (`registration:<id>:club-confirmed:<address>:<time>`), in Romanian, carrying
+the runner's name, the event and the race number. No token, no QR, no check-in code and no
+attachment: none of it means anything in a club mailbox, and a manage token there would be a
+secret handed to the wrong person (§12.8). Never for a test registration (§12.6), and nothing
+at all when the club has named nobody (`DECISIONS.md` §245).
+
+The club's copy of a signed declaration keeps its own type, `DECLARATION_ARCHIVE`, and since
+`DECISIONS.md` §244 its recipient is a setting rather than `DECLARATIONS_ARCHIVE_TO`: one "to"
+plus a `Cc` and a `Bcc` list, edited by an Administrator on `/admin/emails`, with the variable
+as the fallback for a deployment that has not named one. The copies ride in the row's payload,
+so a list edited later cannot redirect a message already queued, and outside production every
+copy faces the allowlist on its own (`infrastructure/email/delivery.ts`).
 
 `REGISTRATION_OPENED` is the other message with no participant: from the maintenance job,
 the run that first sees an event's window open, to every address left in "Anunță-mă" on

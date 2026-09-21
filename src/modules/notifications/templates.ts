@@ -476,6 +476,15 @@ const T = {
         "Copia pentru arhiva clubului. Se păstrează 3 ani după eveniment, ca în nota de informare; același document este și în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice.",
       ],
     },
+    clubConfirmationNotice: {
+      // Searchable in the club's mailbox by who and for what, like the archive copy above.
+      subject: (d: TemplateData) => `Înscriere confirmată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) => [
+        `${d.participantName || "Un participant"} și-a confirmat înscrierea la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.${d.bibNumber ? ` Numărul de concurs: ${d.bibNumber}.` : ""}`,
+        "Mesaj pentru club: lista completă, filtrele și exportul sunt în backoffice, la Înscrieri. Participantul a primit confirmarea lui separat.",
+      ],
+    },
     staffInvitation: {
       subject: "Ești în echipa Brașov Runners",
       body: (d: TemplateData) => [
@@ -642,6 +651,14 @@ const T = {
         "The club's archive copy. Kept for 3 years after the event, as the privacy notice says; the same document is in the all-declarations PDF on the event's backoffice page.",
       ],
     },
+    clubConfirmationNotice: {
+      subject: (d: TemplateData) => `Registration confirmed: ${d.participantName || "participant"} — ${d.eventTitle ?? "event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => [
+        `${d.participantName || "A participant"} has confirmed their registration for ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.${d.bibNumber ? ` Race number: ${d.bibNumber}.` : ""}`,
+        "A note for the club: the full list, the filters and the export are in the backoffice, under Registrations. The participant received their own confirmation separately.",
+      ],
+    },
     staffInvitation: {
       subject: "You are on the Brașov Runners team",
       body: (d: TemplateData) => [
@@ -744,6 +761,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   BIB_ASSIGNED: "bibAssigned",
   STAFF_INVITATION: "staffInvitation",
   REGISTRATION_OPENED: "registrationOpened",
+  CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
 };
 
 /**
@@ -849,6 +867,9 @@ export function buildOutgoingEmail(params: {
   attachments?: OutgoingEmail["attachments"];
   /** The club's own wording for this message (§247), read once per batch by the caller. */
   overrides?: EmailCopy | null;
+  /** The club's copies of this one message (§244); empty for every other message type. */
+  cc?: readonly string[];
+  bcc?: readonly string[];
 }): OutgoingEmail {
   const { subject, html, text } = renderBilingual(params.messageType, params.locale, params.data, params.actionUrl, params.overrides);
   return {
@@ -859,5 +880,8 @@ export function buildOutgoingEmail(params: {
     locale: params.locale,
     idempotencyKey: params.idempotencyKey,
     ...(params.attachments && params.attachments.length > 0 ? { attachments: params.attachments } : {}),
+    // Absent rather than empty, so a message with no copies is byte-identical to before.
+    ...(params.cc && params.cc.length > 0 ? { cc: params.cc } : {}),
+    ...(params.bcc && params.bcc.length > 0 ? { bcc: params.bcc } : {}),
   };
 }

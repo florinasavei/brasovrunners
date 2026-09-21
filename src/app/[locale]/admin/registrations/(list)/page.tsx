@@ -15,6 +15,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
   countRegistrationsForAdmin,
+  summariseRegistrationsForAdmin,
   listEventsWithRegistrations,
   listRegistrationsForAdmin,
   REGISTRATION_SORT_KEYS,
@@ -135,7 +136,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const eventFilter = defaultEventFilter(eventId, events);
   filters.eventId = eventFilter.eventId;
 
-  const [rows, total] = await Promise.all([
+  const [rows, total, summary] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -143,6 +144,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       dir: query.dir,
     }),
     countRegistrationsForAdmin(db, filters),
+    /*
+      The counter (§246). Deliberately blind to the *status* filter: the strip's job is to say
+      how this event stands, and one that emptied to a single number as soon as somebody
+      filtered by "confirmate" would answer a question nobody asked. One grouped query, the
+      same `WHERE` as the list, so the page costs one round trip more rather than five.
+    */
+    summariseRegistrationsForAdmin(db, { ...filters, status: undefined }),
   ]);
 
   const t = await getTranslations("Admin");
@@ -468,6 +476,37 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             {t("registrations.export")}
           </Button>
         </Stack>
+      </Stack>
+
+      {/*
+        How this event stands, in one line (§246; the owner: "on the registrations tab I should
+        have a counter"). The number the club means by "how many have signed up" first, then
+        each state it is made of, then the test rows apart — a synthetic runner is never inside
+        a number the club is given (§12.6), and the strip would otherwise disagree with the
+        list beneath it, which does show them.
+      */}
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
+        data-testid="registrations-summary"
+      >
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          {t("registrations.summaryTotal", { count: summary.real })}
+        </Typography>
+        {registrationStatus.enumValues
+          .filter((value) => (summary.byStatus[value] ?? 0) > 0)
+          .map((value) => (
+            <Chip
+              key={value}
+              size="small"
+              variant="outlined"
+              label={`${REGISTRATION_STATUS_LABEL[value]}: ${summary.byStatus[value]}`}
+            />
+          ))}
+        {summary.test > 0 && (
+          <Chip size="small" variant="outlined" color="warning" label={t("registrations.summaryTest", { count: summary.test })} />
+        )}
       </Stack>
 
       {/*

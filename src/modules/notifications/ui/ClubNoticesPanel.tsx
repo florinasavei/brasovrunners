@@ -1,0 +1,112 @@
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import { getTranslations } from "next-intl/server";
+import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
+import { formatAddressList } from "@/modules/contact/domain/recipients";
+import type { ClubNoticesState } from "@/modules/notifications/club-notices";
+import type { DeclarationCopies } from "@/modules/notifications/domain/club-notices";
+import type { Locale } from "@/i18n/routing";
+import SubmitButton from "@/shared/ui/SubmitButton";
+
+type Props = {
+  locale: Locale;
+  notices: ClubNoticesState;
+  declarations: DeclarationCopies;
+};
+
+/**
+ * Who at the club receives a copy of a signed declaration, and who is told when somebody
+ * confirms (`DECISIONS.md` §244, §245).
+ *
+ * The shape §100 and §164 set: a Server Component with one form, ordinary text boxes and a
+ * Save, with the list in force printed above it so "I saved it and nothing changed" cannot
+ * happen. The address list format is §164's — commas or semicolons — and it is imported from
+ * there rather than re-implemented, because two parsers for one typed line is two behaviours.
+ *
+ * **The warning above the Bcc box is not decoration.** A signed declaration carries the
+ * participant's name and the identity document they typed at signing. A Bcc delivers that to a
+ * mailbox nobody on the message can see, which is exactly why somebody asks for it and exactly
+ * why the person setting it should be looking at those words when they do.
+ */
+export default async function ClubNoticesPanel({ locale, notices, declarations }: Props) {
+  const t = await getTranslations("Admin");
+
+  return (
+    <Box component="section" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="club-notices">
+      <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 0.5 }}>
+        {t("emails.clubNotices.title")}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        {t("emails.clubNotices.intro")}
+      </Typography>
+
+      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        {t(`emails.clubNotices.source.${declarations.source}`, {
+          to: declarations.to ?? "—",
+          cc: formatAddressList(declarations.cc) || "—",
+          bcc: formatAddressList(declarations.bcc) || "—",
+        })}
+      </Typography>
+      {notices.updatedAt && (
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+          {t("emails.clubNotices.updatedAt", {
+            when: new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+              dateStyle: "medium",
+              timeStyle: "short",
+              hourCycle: "h23",
+              timeZone: "Europe/Bucharest",
+            }).format(notices.updatedAt),
+          })}
+        </Typography>
+      )}
+
+      <Box component="form" action={updateClubNoticesAction} sx={{ mt: 1.5 }}>
+        <input type="hidden" name="uiLocale" value={locale} />
+        <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
+          <TextField
+            name="declarationsTo"
+            label={t("emails.clubNotices.declarationsTo")}
+            defaultValue={notices.declarations.to}
+            size="small"
+            helperText={t("emails.clubNotices.declarationsToHelp")}
+            slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false, inputMode: "email" } }}
+          />
+          <TextField
+            name="declarationsCc"
+            label={t("emails.clubNotices.declarationsCc")}
+            defaultValue={formatAddressList(notices.declarations.cc)}
+            size="small"
+            helperText={t("emails.clubNotices.declarationsCcHelp")}
+            slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
+          />
+          {/* The warning sits above the box it is about, where it is read before it is needed. */}
+          <Alert severity="warning" sx={{ py: 0.5 }}>
+            {t("emails.clubNotices.bccWarning")}
+          </Alert>
+          <TextField
+            name="declarationsBcc"
+            label={t("emails.clubNotices.declarationsBcc")}
+            defaultValue={formatAddressList(notices.declarations.bcc)}
+            size="small"
+            helperText={t("emails.clubNotices.declarationsBccHelp")}
+            slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
+          />
+          <TextField
+            name="confirmationsTo"
+            label={t("emails.clubNotices.confirmationsTo")}
+            defaultValue={formatAddressList(notices.confirmations.to)}
+            size="small"
+            helperText={t("emails.clubNotices.confirmationsToHelp")}
+            slotProps={{ htmlInput: { maxLength: 2000, autoComplete: "off", spellCheck: false } }}
+          />
+          <Box>
+            <SubmitButton label={t("emails.clubNotices.save")} pendingLabel={t("emails.clubNotices.saving")} />
+          </Box>
+        </Stack>
+      </Box>
+    </Box>
+  );
+}

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.40-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.35-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -10575,6 +10575,235 @@ or cancelled on its own stays that way unless the place or the state is what is 
 *The sentence under a repeated event's header said the opposite* and now says this.
 
 Baseline `BR-V1.40-2026-09-21`.
+
+## 241. Decided — the organizer draws the crop, instead of the code guessing it (2026-09-21)
+
+**Context.** The owner: what the organizer sees in the editor is not what the site renders. The
+editor showed the whole photograph; the listing card cut it to 180 pixels from the centre
+(`CARD_EXCERPT_SX`, §73). A portrait photograph of a runner became a slice of their chest, and
+nobody could see that happen while choosing the picture.
+
+**Decision.** *The crop is four fractions on the image node* — `x`, `y`, `w`, `h` of the stored
+photograph — drawn by dragging a box over the picture in the editor's own panel, and honoured by
+everything that renders that picture: the event page, the listing card, and the editor itself.
+
+*Fractions, never pixels.* The same document is drawn in a text column, in a card and at 320
+pixels. A rectangle measured on somebody's laptop means nothing in any of them; four fractions
+mean the same thing in all three.
+
+*The photograph is never touched.* Nothing is re-encoded, no second variant is stored, and
+removing the crop restores the whole picture — the stored file is exactly what was uploaded.
+This is a rendering decision, so it lives in the document, next to the alignment and the width
+share it sits beside in the panel.
+
+*A window, not `object-position`.* `object-fit: cover` can pan a picture inside a box, but the
+visible part always keeps the whole of one dimension — you cannot zoom into a corner with it,
+and a corner is exactly what somebody cropping a group photograph wants. The arrangement that
+can is a window that keeps the rectangle's shape and hides the rest, with the photograph
+magnified inside it: `100 / w` per cent of the window's width, pulled left by `x / w` and up by
+`y / h`. One function, `cropGeometry`, and two rules built from it — as `sx` for the renderer
+and as inline CSS for Tiptap — so the editor cannot drift from the page.
+
+*No dependency.* Every cropper on npm brings a canvas, a zoom gesture, a rotation and an export
+pipeline, and each of them is larger than this editor (§1.5: prefer nothing). What was needed is
+a pointer listener and a box: drag outside the rectangle to draw a new one, drag inside it to
+move it, arrows and `Shift`-arrows for a keyboard, and a line underneath that says in words
+where it is — because a control only a pointer can use is not a control everybody has.
+
+*Absent means the whole picture, and that is what every existing body says.* A rectangle dragged
+back out to the edges is stored as no crop at all (`meaningfulCrop`), and a picture with no crop
+renders the markup it rendered yesterday — a plain `<img>`, no window, byte for byte. A crop is
+also refused for a picture whose own size was never stored: the window is shaped from the
+photograph's ratio, and a guessed one is a band of background under the picture.
+
+*The card's cap survives as a ceiling.* 180 pixels still bounds a card's picture, but it is now
+the exception rather than the rule: a crop wider than about 8:5 never reaches it. The selector
+became a child selector in the same change, or it would have reached the photograph inside the
+window and fought the magnification that draws the crop.
+
+**What this does not do.** The Open Graph card is drawn from the event's facts — the title, the
+date, the place, the distance, in the brand's blue (§90) — and carries no photograph at all, so
+there was no second crop there to honour. Putting the cropped picture on the share card is a
+product decision of its own and is not taken here.
+
+Tests: `tests/unit/content/rich-text-crop.test.ts` — the geometry, the refusals, the defaults,
+and that the editor and the renderer draw from the same function;
+`tests/unit/events/card-excerpt.test.ts` — the card caps the window and never the photograph.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 242. Decided — the dense cards under the hero keep dropping the summary, and the editor says so (2026-09-21)
+
+**Context.** The owner asked whether it was right that the card under the hero drops the short
+description entirely (`underHero`, `SeriesCard.tsx`, `EventCard`), given that the field is
+labelled "apare pe card".
+
+**Decision.** *The density stays.* The list under a featured event is "other events" and exists
+to be scanned: a heading, a title, a date and a place. §78 already decided that the lead event
+must not be followed by a scroll of cards — that is why the list is a disclosure on a phone —
+and a summary with a picture in it on every row is exactly the scroll that decision avoided.
+The summary is not lost, either: the featured event shows it on the hero, the event's own page
+shows it, and the shares carry it.
+
+*The label was the thing that was wrong.* "Apare pe card" promised something that is true on a
+filtered listing and false under a hero, and an organizer who writes a summary and cannot find
+it has been misled by this application. The field now says where it appears, and the help names
+the exception in words.
+
+*What the alternative would have been.* Rendering the excerpt under the hero as words only —
+no picture, clamped to two lines — is a real option and a smaller change than it sounds. It is
+not taken because nobody asked for the front page to grow, and because the honest label costs
+nothing and can be reversed in one line if the club would rather have the words.
+
+Tests: `tests/unit/events/card-excerpt.test.ts` — the rule and the sentence that explains it are
+asserted together, so one cannot change without the other.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 243. Decided — the club can see what is queued, not only how much (2026-09-21)
+
+**Context.** The owner: "the outbox in /admin — not only /devs. What is actually queued:
+message type, recipient, queued at, attempts, last error, and a send now."
+
+The registrations list has had "N waiting" and a "Trimite acum" since §80, and `/devs` has had
+counts since §88. Neither answers the question somebody actually asks at 08:40 on race
+morning, which is *which* message is stuck and why. A count also hides the worst row: a
+`FAILED` message has spent every attempt and will not move again on its own, and it is not
+"waiting" — so a club watching the waiting number would never learn it exists.
+
+**Decision.** *A queue panel on `/admin/emails`*, above the templates: the unsent rows oldest
+first — type, recipient, when it was queued, how many attempts, the provider's last sanitized
+word — with the same "Trimite acum" the list has, bounded by the same allowance.
+
+*Fifty rows, and a sentence for the rest.* The count beside them is the whole queue.
+
+*Rows, not a table.* Five facts about a message do not fit a table at 320 pixels, and a table
+that scrolls sideways is worse than a paragraph — the same reasoning §196 applied to the one
+place a table is unavoidable.
+
+*Administrator only.* The panel names recipients, which is participant data (§15.11), and
+"send now" spends the club's allowance (§80). A Redactor opening the page sees the plan and
+the templates exactly as before, and the read is not even issued for them.
+
+*One service, two doors.* The button posts to its own action on this page, and that action
+calls the same `sendOutboxNow` the list's button calls — the throttle, the ceiling, the audit
+row and the role check are all in one place, and neither door can drift from the other.
+
+**Not included:** no per-row retry, no cancel, no body preview. A body does not exist until
+send time (§14.5), and a row nobody can render is a bug to fix rather than a button to press.
+
+Tests: `tests/integration/notifications/club-notices.test.ts` — the queue holds what is unsent,
+oldest first, with a `FAILED` row in it and a `SENT` row out of it.
+
+Baseline `BR-V1.41-2026-09-21`.
+
+## 244. Decided — who receives a signed declaration is the club's setting, not the deployment's (2026-09-21)
+
+**Context.** The owner: "CC/BCC for the signed declaration, configurable in the backoffice like
+the contact recipients panel (§164), replacing the env-only `DECLARATIONS_ARCHIVE_TO` (§99).
+Warn in the UI: the declaration carries the participant's identity document, so a BCC delivers
+personal data invisibly."
+
+**Decision.** *The same shape §164 already proved*: one `platform_settings` row, an
+Administrator's panel on `/admin/emails`, every address validated by the platform's own
+canonicalizer, an audit row naming who changed it and from what. The mailbox for the
+declarations, plus a `Cc` list and a `Bcc` list.
+
+*The environment stays as the fallback*, exactly as `CONTACT_FORM_TO` did: the setting wins
+when it names a mailbox, `DECLARATIONS_ARCHIVE_TO` answers when it does not, and with neither
+no copy is sent — which is what §99 did before this existed. A deployment nobody touches keeps
+behaving identically, and `declaration-archive.test.ts` is still the proof of it.
+
+*One "to", many copies.* A message has one address it is *for*; a Cc list with no "to" sends
+nothing, because promoting a copy to the recipient would send a participant's declaration
+somewhere the club did not choose.
+
+*The copies travel on the row.* They are resolved when the declaration is signed and stored in
+the outbox payload, so a list edited tomorrow changes tomorrow's copies and not the ones
+already queued. Addresses only — §14.5 keeps bodies and tokens out of the row, and an address
+is neither.
+
+*Every copy faces the allowlist on its own.* Outside production, an unauthorized Cc or Bcc is
+dropped and the rest of the message still goes. The failure this prevents is the quiet one: an
+authorized archive mailbox carrying a colleague's address in Bcc, and QA mailing a real
+participant's signed declaration to somebody nobody authorized.
+
+*The warning is above the box, not in a tooltip.* A Bcc hands the participant's name and the
+identity document they typed at signing to a mailbox nobody on the message can see. That is
+exactly why somebody wants it and exactly why the person setting it should be reading those
+words while they do. The platform allows it; the club decides.
+
+**A copy is a message.** Each address spends one of the Mailgun allowance, and the panel says
+so — the forecast on `/admin/tasks` counts the archive as one, as it always has.
+
+Tests: `tests/unit/notifications/club-notices.test.ts` (the reading order, the deduplication,
+the refusals), `tests/unit/notifications/delivery.test.ts` (the copies face the allowlist),
+`tests/integration/notifications/club-notices.test.ts` (what is queued and what is rendered).
+
+Baseline `BR-V1.41-2026-09-21`.
+
+## 245. Decided — the club is told when somebody confirms (2026-09-21)
+
+**Context.** The owner: "tell the club when somebody confirms — a new message type, and
+`MESSAGES_PER_COMPLETED_REGISTRATION` 5 → 6 so the Mailgun cost table stays true."
+
+**Decision.** *`CLUB_CONFIRMATION_NOTICE`*: queued in the transaction that confirms a real
+registration — by signature or at the desk — to each address the club named on
+`/admin/emails`. Who, which event, which race number, and nothing else.
+
+*One row per address*, unlike the declaration's copies above. These are separate notices to
+separate people: none of them needs to see who else was told, and a mailbox that bounces must
+not hold up another. The address is part of the idempotency key, or the second recipient's row
+would collide with the first's and never be written.
+
+*Nothing a participant could act on.* No token, no QR, no check-in code, no attachment — none
+of it means anything in a club mailbox, and a manage token there is a secret handed to the
+wrong person (§12.8). No test registration, ever (§12.6).
+
+*The cost table follows, and is deliberately one high.* `MESSAGES_PER_COMPLETED_REGISTRATION`
+is six, so 100 messages a day is ~16 registrations rather than 20 — `docs/PLATFORM.md` says
+the same in prose and a test holds the two together. A club that has named nobody actually
+sends five, and the forecast overstating by one is the safe direction for a number whose whole
+job is to answer "is there headroom for the window I am about to open?".
+
+Tests: `tests/integration/notifications/club-notices.test.ts` — one notice per address, the
+right words, nothing for a test registration; `tests/unit/diagnostics/platform-plans.test.ts`
+— the arithmetic the platform document states in prose.
+
+Baseline `BR-V1.41-2026-09-21`.
+
+## 246. Decided — the registrations list opens with a counter, and it costs one query (2026-09-21)
+
+**Context.** The owner: "on the registrations tab I should have a counter! but I wanna make
+sure it's performant and light on the DB."
+
+The list has always said how many rows *match the current filter* — which is the pager's
+number, not the club's. "How many have signed up for the race" meant filtering by state, four
+times, and writing the numbers down.
+
+**Decision.** *A strip above the list*: how many real registrations there are, then each state
+it is made of, then the test rows apart.
+
+*One grouped query, and that is the whole of the performance argument.* A strip of five
+numbers invites five `SELECT count(*)`, each re-scanning the same rows. This is
+`GROUP BY status, kind` over the `WHERE` the list already builds, so the page costs one round
+trip more than it did rather than five — which matters on Neon's free compute-hours (§68) as
+much as it does in milliseconds.
+
+*Blind to the status filter, and only to that one.* The strip answers "how does this event
+stand", so it must not collapse to a single number the moment somebody filters by "confirmate".
+Every other filter — the event, the search, the club member, the bounced — narrows it, because
+those *are* the question being asked.
+
+*Test rows apart, never inside.* §12.6 keeps a synthetic runner out of every number the club is
+given, and hiding them altogether would make the strip disagree with the list underneath, which
+does show them with their own chip. So: counted, labelled, and outside the club's own figure.
+
+**Not the navigation tab.** A badge on the tab would be a query on every backoffice page,
+including the ones that are about something else entirely — the opposite of what was asked for.
+
+Tests: `tests/integration/registrations/admin-list.test.ts` — each state counted once, the test
+rows apart, and the same filters the list uses.
 
 ## 247. Decided — the club writes the words, the platform keeps the machinery (2026-09-21)
 
