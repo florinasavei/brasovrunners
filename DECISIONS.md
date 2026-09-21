@@ -11107,3 +11107,44 @@ Tests: `tests/integration/registrations/nav-count.test.ts` — what is counted, 
 and that the memo answers instead of the database.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 256. Decided — every list has the same verbs in the same place (2026-09-21)
+
+**Context.** The owner: "I wanna be able to do CRUDs everywhere, and have more consistency!"
+
+The audit was the surprise: the verbs were **all there already**. Events, pages, albums, photos,
+staff and registrations each had create, save and delete in their services and their actions.
+What differed was the shape a club member meets:
+
+- the **events** list had a ⋮ with confirmations (§118);
+- the **pages** list had two position arrows and no verbs at all — editing meant opening the
+  row, publishing meant opening it too, deleting meant finding the button inside it;
+- the **albums** list had nothing in the row;
+- the **staff** list had five controls in one row, stacked on a phone, and two of them —
+  "dezactivează contul" and "retrage accesul" — fired on a single press with no question;
+- the **pictures** list had one verb with a proper confirmation.
+
+**Decision.** *One rule, three shapes.* Every list is an `AdminTable`. A row with two or more
+verbs puts them in one shared ⋮ (`shared/ui/RowMenu`, moved out of the events module and given
+the glyphs the other lists need). A row with exactly one verb keeps it as a button that
+confirms — a menu for a single action is a press for nothing. And anything destructive asks,
+wherever it lives.
+
+*So:* pages gained edit, publish/unpublish and delete in the row; albums the same; staff moved
+its four verbs into the menu and each now asks, which is the part that matters — a
+single-press "take their access away" in a table is a mis-tap away from locking somebody out.
+The role select stays inline on the staff row, because a role is a value rather than a verb.
+
+*Two list rows grew a version column* (`pages`, `gallery_albums`) so the list can publish
+without opening the row: the transition already refused a stale version, and that guard is what
+keeps two open tabs from fighting.
+
+**What was not done, deliberately.** No new verbs. "CRUD everywhere" was a request about reach,
+and the reach was there; inventing a verb nobody asked for — a bulk delete on pages, say — would
+be a new rule rather than a consistent surface for the rules that exist.
+
+Tests: `tests/unit/staff/admin-lists.test.ts` — every list an `AdminTable`, the ⋮ wherever a row
+has more than one verb, a confirming button where it has one, and no destructive verb on a plain
+button.
+
+Baseline `BR-V1.43-2026-09-21`.

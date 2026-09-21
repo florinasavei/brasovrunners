@@ -51,6 +51,11 @@ There is no `develop` branch.
 
 The frontend uses **Material UI**, not Tailwind or shadcn, so conventions remain close to Flyward while the visual identity remains specific to Brașov Runners.
 
+Every backoffice list MUST be an `AdminTable` and MUST offer its row's verbs the same way: two
+or more verbs go in `shared/ui/RowMenu` (the ⋮), a single verb stays a `ConfirmSubmitButton`,
+and a verb that deletes, revokes or removes access MUST carry a confirmation wherever it lives
+(`DECISIONS.md` §256). `tests/unit/staff/admin-lists.test.ts` enforces all three.
+
 The anti-bot challenge (Turnstile) MUST be switchable from the backoffice, by an Administrator, without a deployment: `platform_settings.botCheck`, read by both public forms and both of their actions through `modules/registrations/bot-check.ts`, audited as `bot_check.changed` (`DECISIONS.md` §254). Switching it off MUST NOT touch the honeypot, the timing check or the per-address throttle, which are the defences that cost a visitor nothing (§19.4).
 
 Staff authentication is for staff only. Participants do not receive application accounts or passwords.

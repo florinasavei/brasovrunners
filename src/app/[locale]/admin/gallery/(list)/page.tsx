@@ -17,7 +17,9 @@ import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-la
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
 import ButtonLink from "@/shared/ui/ButtonLink";
+import { deleteAlbumAction, transitionAlbumAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -124,6 +126,58 @@ export default async function AdminGalleryPage({ params, searchParams }: Props) 
           sortBy: (column) => t("list.sortBy", { column }),
         }}
         empty={<Typography variant="body1">{t("gallery.empty")}</Typography>}
+        rowActions={(row) => (
+          // The verbs in the same menu every other list uses (§256); the two forms beside it
+          // are the Server Actions it submits, and the server checks the role and the version.
+          <>
+            <form id={`album-publish-${row.id}`} action={transitionAlbumAction} hidden>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="albumId" value={row.id} />
+              <input type="hidden" name="expectedVersion" value={row.version} />
+              <input type="hidden" name="to" value={row.editorialStatus === "PUBLISHED" ? "DRAFT" : "PUBLISHED"} />
+            </form>
+            <form id={`album-delete-${row.id}`} action={deleteAlbumAction} hidden>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="albumId" value={row.id} />
+            </form>
+            <RowMenu
+              ariaLabel={t("gallery.rowActions", { title: row.title })}
+              cancelLabel={t("confirm.cancel")}
+              items={[
+                {
+                  kind: "link",
+                  label: t("gallery.edit"),
+                  icon: "edit",
+                  href: `${getPathname({ locale, href: "/admin/gallery" })}/${row.id}`,
+                },
+                {
+                  kind: "submit",
+                  label: row.editorialStatus === "PUBLISHED" ? t("gallery.unpublish") : t("gallery.publish"),
+                  icon: row.editorialStatus === "PUBLISHED" ? "unpublish" : "publish",
+                  formId: `album-publish-${row.id}`,
+                  color: row.editorialStatus === "PUBLISHED" ? "warning" : "primary",
+                  confirm: {
+                    title: row.editorialStatus === "PUBLISHED" ? t("gallery.unpublishTitle") : t("gallery.publishTitle"),
+                    body: row.editorialStatus === "PUBLISHED" ? t("gallery.unpublishBody") : t("gallery.publishBody"),
+                    confirmLabel: row.editorialStatus === "PUBLISHED" ? t("gallery.unpublish") : t("gallery.publish"),
+                  },
+                },
+                {
+                  kind: "submit",
+                  label: t("gallery.deleteAlbum"),
+                  icon: "delete",
+                  formId: `album-delete-${row.id}`,
+                  color: "error",
+                  confirm: {
+                    title: t("gallery.deleteAlbumTitle"),
+                    body: t("gallery.deleteAlbumBody", { title: row.title }),
+                    confirmLabel: t("gallery.deleteAlbum"),
+                  },
+                },
+              ] satisfies RowMenuItem[]}
+            />
+          </>
+        )}
       />
     </Stack>
   );

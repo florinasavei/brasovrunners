@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **Every backoffice list behaves the same way.** The ⋮ menu the events list had is now on pages, the gallery and the team as well — edit, publish or take off the site, delete — and each of those asks before it acts. The team's row was five buttons stacked on a phone, two of which ended somebody's access without a question; it is one select and a menu now. §256.
 - **The "Înscrieri" tab carries the number of people signed up** — active registrations on events that have not run, real people only. One indexed count a minute rather than one per page view, because the club's database bills compute time. §255.
 - **The anti-bot check is a switch in the backoffice.** `/admin/tasks` — one button, on or off, audited. It was behind two Vercel keys, so turning it off needed a deployment on the very day it was refusing real people. The honeypot, the timing check and the per-address limit stay on either way. §254.
 - **The club's email has a tab.** `/admin/emails` — the templates, the plan, who receives a copy of a declaration, the outbox queue — had no entry in the backoffice navigation at all, only a link buried in the guide. §253.
