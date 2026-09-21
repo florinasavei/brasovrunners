@@ -169,6 +169,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * and matched against the one literal it may be.
    */
   const throttled = (fields ?? "").split(",").includes("throttled");
+  /**
+   * The emergency contact was the runner's own number (§228). A marker rather than a field,
+   * like the two above, so the summary can still link the field while the sentence beneath it
+   * says which of the two rules refused it — "that number is not valid" is untrue and was what
+   * this said (§231).
+   */
+  const emergencySame = (fields ?? "").split(",").includes("emergencySame");
 
   // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
   const latestBirthDate = now.toISOString().slice(0, 10);
@@ -684,8 +691,18 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   locale={locale}
                   required
                   autoComplete="off"
+                  /* The contact must be somebody else (§228), said as it is typed and refused
+                     by the browser rather than by a round trip (§231). */
+                  mustDifferFromName="phone"
+                  mustDifferLabel={t("errors.emergencySame")}
                   error={invalid.has("emergencyContactPhone")}
-                  helperText={invalid.has("emergencyContactPhone") ? t("errors.phone") : undefined}
+                  helperText={
+                    invalid.has("emergencyContactPhone")
+                      ? emergencySame
+                        ? t("errors.emergencySame")
+                        : t("errors.phone")
+                      : undefined
+                  }
                 />
               </Stack>
 

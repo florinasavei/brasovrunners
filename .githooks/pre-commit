@@ -1,12 +1,45 @@
 #!/bin/sh
 # Brasov Runners pre-commit hook.
 #
-# Runs `yarn check`, the same command .github/workflows/docs-check.yml runs, so a
-# commit cannot pass locally and fail in CI. As `check` grows to cover format, lint,
-# typecheck, and tests (SETUP.md section 8), this hook grows with it and needs no edit.
+# Two guards, in this order: the branch, then `yarn check`. The branch comes first
+# because it costs nothing and the other one costs a minute.
 #
 # Installed by `yarn setup`, which sets core.hooksPath to .githooks.
 # Emergency bypass: git commit --no-verify. Fix before pushing; CI still blocks the merge.
+
+# --- 1. Never commit on a protected branch --------------------------------------------
+#
+# CLAUDE.md is explicit: "Commit on a feature branch, push it, open the PR into qa; never
+# push to qa or main." That rule was broken on 2026-09-21 — the working tree was left on
+# `qa` after a merge, a commit was made without re-reading the branch, and it went
+# straight to the shared branch with no review.
+#
+# A rule that lives only in a document is a rule somebody forgets while concentrating on
+# something else. This is the same rule, in the one place that can actually stop it.
+
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+case "$branch" in
+	qa | main)
+		echo ""
+		echo "pre-commit: refusing to commit directly on '$branch'."
+		echo ""
+		echo "  Work goes on a branch and reaches $branch through a pull request"
+		echo "  (CLAUDE.md, Working conventions). To move what you have:"
+		echo ""
+		echo "      git checkout -b <name> --no-track origin/qa"
+		echo ""
+		echo "  Deliberate exception — a release merge, say: git commit --no-verify"
+		echo ""
+		exit 1
+		;;
+esac
+
+# --- 2. The same command CI runs ------------------------------------------------------
+#
+# `yarn check` is what .github/workflows/docs-check.yml runs, so a commit cannot pass
+# locally and fail in CI. As `check` grows to cover format, lint, typecheck and tests
+# (SETUP.md section 8), this hook grows with it and needs no edit.
 
 if ! yarn check; then
 	echo ""

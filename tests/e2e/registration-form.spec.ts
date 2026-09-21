@@ -203,6 +203,47 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await page.keyboard.press("ControlOrMeta+v");
     await expect(confirm).toHaveValue(address);
   });
+  test("will not submit an emergency contact that is the runner's own number", async ({ page }) => {
+    /*
+      §231. The rule (§228) lived only on the server, so the first anybody heard of it was a
+      rejected submission — the owner: "here I put the same number for emergency contact but
+      I only knew that after submitting".
+
+      What is asserted is not the red text: it is that the **browser** refuses. The field
+      carries a custom validity, so `form.checkValidity()` is false and a press never leaves
+      the page — the same machinery that handles a missing required field, in the reader's
+      own language, with none of our JavaScript in the refusal path.
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await fillRequired(page);
+    await page.locator('[name="emergencyContactPhone"]').fill("711111111");
+    await page.locator('[name="phone"]').fill("711111111");
+
+    // Said where the field is, and said correctly — not "that number is not valid".
+    await expect(page.getByText("alt număr decât al tău", { exact: false })).toBeVisible();
+
+    // And the browser will not let the form go.
+    const valid = await page.locator('[name="emergencyContactPhone"]').evaluate(
+      (node) => (node as HTMLInputElement).checkValidity(),
+    );
+    expect(valid).toBe(false);
+
+    await page.waitForTimeout(HUMAN_PAUSE_MS);
+    await page.getByRole("button", { name: "Trimite înscrierea" }).click();
+    // Still on the form: nothing was posted, so there is no success panel and no error summary.
+    await expect(page.getByText("Verifică-ți emailul")).toHaveCount(0);
+
+    // Correct it and the refusal lifts, rather than sticking for ever.
+    await page.locator('[name="emergencyContactPhone"]').fill("722222222");
+    await expect(page.getByText("alt număr decât al tău", { exact: false })).toHaveCount(0);
+    expect(
+      await page.locator('[name="emergencyContactPhone"]').evaluate((node) => (node as HTMLInputElement).checkValidity()),
+    ).toBe(true);
+  });
   test("never scrolls sideways, at either viewport", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

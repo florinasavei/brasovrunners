@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.39-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.40-2026-09-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -9569,7 +9569,7 @@ was centred.
 Tests: `tests/unit/content/rich-text-align.test.ts` (7), including that a body written before
 this parses byte-for-byte to itself and that the default emits no rule at all.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 214. Decided — the race number is reserved when the place is, and settled when registration closes (2026-09-21)
 
@@ -9650,7 +9650,7 @@ and reuse, the unique index, that a test registration gets none, that the settle
 holes, that it runs exactly once however often the job does, and that nothing is emailed before
 it.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 215. Decided — a member's club is the club's own name (2026-09-21)
 
@@ -9678,7 +9678,7 @@ rather than `Site.name` from the catalogue, because what is stored is a fact and
 translation: it must not differ between a Romanian and an English submission. A test asserts
 the constant equals `Site.name` in both catalogues, so the two cannot drift.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 216. Decided — a challenge that cannot run is not a reason to refuse a registration (2026-09-21)
 
@@ -9719,7 +9719,7 @@ section is a second hole found while looking for the first.
 Tests: `tests/unit/registrations/turnstile.test.ts` — each way the check can fail to run, and
 the one way it can fail.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 217. Decided — nobody is told to wait for an email that was never sent (2026-09-21)
 
@@ -9792,7 +9792,7 @@ the passing of a missing render time), `tests/integration/registrations/lifecycl
 trap refuses out loud and creates nothing, and the two verdicts produce the identical answer),
 `tests/integration/contact/service.test.ts` and `tests/integration/registrations/interest.test.ts`.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 218. Decided — the last two silent drops, found by auditing for them (2026-09-21)
 
@@ -9843,7 +9843,7 @@ Tests: `tests/integration/registrations/lifecycle.test.ts` — the sixth submiss
 with a named field and somebody else's hour is untouched; a waitlisted re-submission queues
 `WAITLIST_JOINED`.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 219. Decided — the email header is a white banner, and the message says it is a light document (2026-09-21)
 
@@ -9870,7 +9870,7 @@ it.
 *The card is a full HTML document now rather than a fragment*, for the plain reason that there
 was no `<head>` to put any of this in.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 220. Decided — the audit turned on the code the audit was written for (2026-09-21)
 
@@ -9912,7 +9912,7 @@ Tests: `tests/integration/registrations/provisional-bibs.test.ts` — a lapsed h
 number through the sweep, a final draw never lands on a held provisional one, and a late
 confirmation keeps the number it was shown.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 221. Decided — the club chooses when email leaves (2026-09-21)
 
@@ -9942,7 +9942,7 @@ transaction is closed, so it costs one indexed lookup on a path that was about t
 connection anyway. Nothing is lost when the answer is `scheduled`: the row stays PENDING and
 whoever reaches it first claims it under `FOR UPDATE SKIP LOCKED`.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 222. Decided — §208 finished: every control asks the question its own action asks (2026-09-21)
 
@@ -9976,7 +9976,7 @@ rendered-but-refused control where there had been a locked door. `deletePage` ge
 assert `canEditEventFields`, so delete keeps the wider gate — an Organizer may delete a
 standing page and not edit its words, which is odd and is what §207's deliberate gap says.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 223. Decided — the telephone box takes digits and nothing else (2026-09-21)
 
@@ -10021,7 +10021,7 @@ alert carries the address, then the five minutes in bold, then the spam advice i
 Somebody who does not know a wait is normal fills the form in again within thirty seconds, and
 §218 is what that used to cost them.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 225. Decided — the declaration sets its fill-ins in bold (2026-09-21)
 
@@ -10061,7 +10061,7 @@ callers hand the renderer the template and the values apart instead of a merged 
 Tests: `tests/unit/legal-documents/merge-fields.test.ts` — which spans are filled, the blank
 counting as one, an unknown name staying plain, and the join being exactly `mergeText`.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 226. Decided — two bugs in one field, and only one of them was visible (2026-09-21)
 
@@ -10110,7 +10110,7 @@ Romanian number is written all still compose to the same E.164. The end-to-end s
 label carries MUI's `shrink` class, which is the overlap stated as a fact rather than a
 screenshot.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 227. Decided — the second address is typed, not pasted, and there is a door (2026-09-21)
 
@@ -10140,7 +10140,7 @@ the same act without the keyboard.
 The door is not persisted anywhere. The next form asks again, and the cost of saying so twice
 is one press.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 228. Decided — an emergency contact is somebody else (2026-09-21)
 
@@ -10160,7 +10160,7 @@ comparison is exact rather than a guess about how somebody wrote it.
 number twice and now gives two, because a test row goes through the public schema unchanged —
 that is the whole point of it (§30).
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 229. Decided — the confirmation screen stops asserting a registration it did not make (2026-09-21)
 
@@ -10191,7 +10191,7 @@ as a duplicate-registration bug. The database was never in doubt; the screen was
 proves the constraint holds is now beside the one that proves the service declines, so the next
 person can answer the question in a second rather than an afternoon.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
 
 ## 230. Decided — the screens that hand out numbers had not noticed that numbers arrive earlier now (2026-09-21)
 
@@ -10227,4 +10227,50 @@ two places that decide whether to *offer* a number were missed, because they are
 number, they are questions about its absence. Worth naming: when a column stops meaning what it
 meant, the dangerous callers are the ones testing it for null.
 
-Baseline `BR-V1.39-2026-09-21`.
+Baseline `BR-V1.40-2026-09-21`.
+
+## 231. Decided — a rule the browser can enforce is enforced by the browser (2026-09-21)
+
+**Context.** The owner, with a screenshot of the emergency-contact field refused *after* a round
+trip: "I want validations on the FE first, I should not be able to submit an invalid form. Eg:
+here I put the same number for emergency contact but I only knew that after submitting."
+
+**Two defects, and the second one is mine from an hour earlier.**
+
+*The rule only existed on the server.* §228 put "an emergency contact is somebody else" in the
+submission schema, which is where it has to be — a browser check is a courtesy and the schema
+is the guarantee. But it was *only* there, so the first anybody heard of it was a rejected
+form, after the page had round-tripped and scrolled them to a summary.
+
+*And the sentence was wrong.* The field's helper text is `errors.phone` — "the number is not
+valid, type only the digits" — which about their own correctly-typed number is simply untrue,
+and sends somebody hunting for a formatting mistake that is not there.
+
+**Decision.** *`setCustomValidity`, not a red border.* A message drawn beside a field is a
+picture; a custom validity makes the **browser** refuse the submission, name the control and
+move focus to it — the same machinery that already handles a missing required field, in the
+reader's own language, with none of this application's JavaScript in the refusal path. That is
+what "I should not be able to submit an invalid form" actually asks for, and it is why the
+check is not merely rendered.
+
+It is cleared the moment the numbers differ, or the control stays refused for ever.
+
+*The field is watched, not owned.* `PhoneField` subscribes to the other number's input the way
+`GuardianForMinor` subscribes to the birth date (§188): lifting the other field into this island
+would trade its own validation for a second copy of the rule.
+
+*The comparison is `composePhone`'s, on both sides.* The same discipline as §198: one rule,
+imported, never a regular expression approximating it. `0752189098` and `+40752189098` are the
+same telephone, and a check that could not see that would be a check people learn to ignore.
+
+*A second marker says which rule refused.* The issue keeps the field path, so the error summary
+can still link to the field; a second, non-field marker rides beside it so the page can choose
+the true sentence. The same shape the captcha and the timing check already use (§176, §194).
+
+**The server keeps the rule, unchanged.** With JavaScript off, or from anything that is not
+this form, §228 still refuses. The browser check is the courtesy that makes it not hurt.
+
+Tests: `tests/e2e/registration-form.spec.ts` — the message is the right one, `checkValidity()`
+is false, a press does not leave the page, and correcting the number lifts the refusal.
+
+Baseline `BR-V1.40-2026-09-21`.

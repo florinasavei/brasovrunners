@@ -2,7 +2,7 @@
 
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, splitPhone } from "../phone";
 
 /**
@@ -81,6 +81,8 @@ export default function PhoneField({
   error,
   helperText,
   invalidLabel,
+  mustDifferFromName,
+  mustDifferLabel,
 }: {
   name: string;
   label: string;
@@ -97,6 +99,17 @@ export default function PhoneField({
   helperText?: string;
   /** "That is not a number this country uses" — shown as it is typed (§198). */
   invalidLabel?: string;
+  /**
+   * The name of another telephone field this one must not equal (§231).
+   *
+   * Used for the emergency contact, which is worthless when it is the runner's own number
+   * (§228). The rule lived only on the server, so the first anybody heard of it was a
+   * rejected submission — the owner: "here I put the same number for emergency contact but
+   * I only knew that after submitting".
+   */
+  mustDifferFromName?: string;
+  /** What to say when it does equal it. */
+  mustDifferLabel?: string;
 }) {
   const names = new Intl.DisplayNames([locale], { type: "region" });
   const split = splitPhone(value ?? null);
@@ -126,6 +139,67 @@ export default function PhoneField({
   const liveInvalid =
     hydrated && judged && national.trim() !== "" && composePhone(country, national) === null;
 
+  /**
+   * The other number, watched as it is typed (§231).
+   *
+   * Subscribed to rather than owned, exactly as `GuardianForMinor` watches the birth date:
+   * the other field is somebody else's island and lifting it into this one would trade its
+   * own validation for a second copy of the rule.
+   */
+  const otherSubscribe = useCallback(
+    (onStoreChange: () => void) => {
+      if (!mustDifferFromName) return () => {};
+      const nodes = [
+        document.querySelector(`[name="${mustDifferFromName}"]`),
+        document.querySelector(`[name="${mustDifferFromName}Country"]`),
+      ].filter((node): node is Element => node !== null);
+      for (const node of nodes) {
+        node.addEventListener("input", onStoreChange);
+        node.addEventListener("change", onStoreChange);
+      }
+      return () => {
+        for (const node of nodes) {
+          node.removeEventListener("input", onStoreChange);
+          node.removeEventListener("change", onStoreChange);
+        }
+      };
+    },
+    [mustDifferFromName],
+  );
+
+  const otherComposed = useSyncExternalStore(
+    otherSubscribe,
+    () => {
+      if (!mustDifferFromName) return null;
+      const value = document.querySelector(`[name="${mustDifferFromName}"]`);
+      const country = document.querySelector(`[name="${mustDifferFromName}Country"]`);
+      if (!(value instanceof HTMLInputElement) || !(country instanceof HTMLSelectElement)) return null;
+      return composePhone(country.value, value.value);
+    },
+    // Nothing to compare on the server, where neither field exists yet.
+    () => null,
+  );
+
+  const mine = hydrated ? composePhone(country, national) : null;
+  const sameAsOther = Boolean(mustDifferFromName && mine && otherComposed && mine === otherComposed);
+
+  /**
+   * `setCustomValidity` rather than a red border alone, and that is the whole point (§231).
+   *
+   * The owner asked that an invalid form could not be submitted at all. A message drawn
+   * beside the field is only a picture; a custom validity makes the **browser** refuse the
+   * submission, name the control and move focus to it — the same machinery that already
+   * handles a missing required field, in the reader's own language, with no JavaScript of
+   * ours in the refusal path.
+   *
+   * Cleared the moment the numbers differ, or the control would stay refused for ever.
+   */
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.setCustomValidity(sameAsOther ? (mustDifferLabel ?? "") : "");
+  }, [sameAsOther, mustDifferLabel]);
   const options = PHONE_COUNTRY_CODES.map((code) => ({
     code,
     label: `${names.of(code) ?? code} (+${DIALING_CODES[code]})`,
@@ -191,8 +265,11 @@ export default function PhoneField({
         autoComplete={autoComplete}
         // The server's rejection still wins: it knows things this box cannot, and it is what
         // the error summary at the top of the page is pointing at.
-        error={error || liveInvalid}
-        helperText={liveInvalid && !error ? (invalidLabel ?? helperText) : helperText}
+        inputRef={inputRef}
+        error={error || liveInvalid || sameAsOther}
+        helperText={
+          sameAsOther ? mustDifferLabel : liveInvalid && !error ? (invalidLabel ?? helperText) : helperText
+        }
         slotProps={{
           htmlInput: {
             // `numeric` rather than `tel`: a telephone keypad offers `+ * #`, and none of
