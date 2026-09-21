@@ -74,7 +74,7 @@
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / telefon",
       "downloadLink": "descarcă .ics",
-      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare."
+      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare. Pe Android, calendarul „🏃 BVR” se vede în aplicație abia după ce îl activezi: Google Calendar → Meniu → Setări → 🏃 BVR → Sincronizare."
     },
     "raceWeek": {
       "today": "Azi, {when}",
