@@ -217,7 +217,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       roDomainBound,
       storageConfigured: isStorageConfigured(),
       botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
-      declarationArchiveConfigured: Boolean(env.DECLARATIONS_ARCHIVE_TO),
+      // The club's own setting first, the deployment's variable as the fallback (§244).
+      declarationArchiveConfigured: volume.archiveConfigured,
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
       // Capture counts, like local storage does: on a laptop the form works and nothing is
       // owed. Since §164 the recipients are the club's own, so the row asks the same question
@@ -267,7 +268,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
     emailPlanUsdPerMonth: emailPlanCeilings.usdPerMonth,
     emailPeriod: volume.period,
     emailNextPlan: emailNext ? { name: EMAIL_PLANS[emailNext].name, usdPerMonth: EMAIL_PLANS[emailNext].usdPerMonth } : null,
-    messagesPerRegistration: messagesPerCompletedRegistration(Boolean(env.DECLARATIONS_ARCHIVE_TO)),
+    messagesPerRegistration: messagesPerCompletedRegistration(volume.archiveConfigured),
     hasPaidEvent,
     clubDomainBound,
     jobsHealthy,

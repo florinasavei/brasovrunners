@@ -74,7 +74,7 @@
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / telefon",
       "downloadLink": "descarcă .ics",
-      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare."
+      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare. Pe Android, calendarul „🏃 BVR” se vede în aplicație abia după ce îl activezi: Google Calendar → Meniu → Setări → 🏃 BVR → Sincronizare."
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -271,6 +271,8 @@
       "filterAll": "Toate evenimentele",
       "filter": "Filtrează",
       "statusLabel": "Stare",
+      "summaryTotal": "Înscrieri: {count}",
+      "summaryTest": "De test: {count}",
       "export": "Exportă CSV",
       "backToList": "Înapoi la înscrieri",
       "resend": "Retrimite emailul",
@@ -510,7 +512,7 @@
       "fields": {
         "title": "Titlu",
         "slug": "Adresa paginii",
-        "excerpt": "Rezumat — apare pe card și în distribuiri",
+        "excerpt": "Rezumat — apare pe pagină, pe cardul din listă și în distribuiri",
         "locationName": "Punct de întâlnire",
         "locationAddress": "Adresă",
         "seoTitle": "Titlu pentru motoarele de căutare",
@@ -534,7 +536,7 @@
       "newTitle": "Eveniment nou",
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
-      "excerptHelp": "Una-două fraze: ce se vede pe cardul din listă și în distribuiri (și pe pagină, în același loc, cât timp descrierea completă n-are cuvinte). Obligatorie înainte de publicare.",
+      "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă și în distribuiri. Excepția: sub evenimentul principal de pe prima pagină, celelalte carduri sunt compacte — doar titlul, data și locul — așa că rezumatul nu apare acolo. Obligatoriu înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",
@@ -1273,6 +1275,10 @@
       "imageAlignLeft": "Stânga",
       "imageAlignRight": "Dreapta",
       "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea.",
+      "imageCrop": "Decupaj — ce se vede din fotografie",
+      "imageCropHelp": "Trage un dreptunghi peste fotografie: exact atât se vede pe pagină și pe card. Trage în interiorul lui ca să-l muți; săgețile îl mută, Shift cu ele îl redimensionează.",
+      "imageCropReset": "Fără decupaj",
+      "imageCropPosition": "{w}% × {h}% din fotografie, de la stânga {x}%, de sus {y}%",
       "table": "Tabel",
       "tableAddRow": "Adaugă un rând",
       "tableAddColumn": "Adaugă o coloană",
@@ -1506,7 +1512,8 @@
         "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)",
         "BIB_ASSIGNED": "Numărul de concurs dat de mână",
         "STAFF_INVITATION": "Invitația în echipă",
-        "REGISTRATION_OPENED": "Înscrierile s-au deschis"
+        "REGISTRATION_OPENED": "Înscrierile s-au deschis",
+        "CLUB_CONFIRMATION_NOTICE": "Anunț pentru club: cineva a confirmat"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1525,7 +1532,45 @@
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune.",
         "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
-        "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere."
+        "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere.",
+        "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token."
+      },
+      "clubNotices": {
+        "title": "Copiile clubului",
+        "intro": "Cine primește, la club, copia unei declarații semnate și cine află când cineva își confirmă înscrierea. Adrese ale clubului, nu ale participanților.",
+        "source": {
+          "setting": "În vigoare: declarațiile merg la {to}; copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
+          "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
+          "none": "Nicio adresă: declarațiile semnate nu se trimit nicăieri, se păstrează doar în aplicație."
+        },
+        "updatedAt": "Modificat la {when}.",
+        "declarationsTo": "Declarațiile semnate merg la",
+        "declarationsToHelp": "O singură adresă — cutia de arhivă a clubului. Gol: nu se trimite nicio copie.",
+        "declarationsCc": "Copie vizibilă (Cc)",
+        "declarationsCcHelp": "Adrese separate prin virgulă. Toți destinatarii se văd între ei.",
+        "declarationsBcc": "Copie ascunsă (Bcc)",
+        "declarationsBccHelp": "Adrese separate prin virgulă. Nu apar în mesaj.",
+        "bccWarning": "Declarația conține numele participantului și actul de identitate declarat la semnare. O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
+        "confirmationsTo": "Anunță-ne când cineva confirmă",
+        "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
+        "save": "Salvează",
+        "saving": "Se salvează…",
+        "saved": "Am salvat cine primește copiile clubului."
+      },
+      "queue": {
+        "title": "Coada de trimitere",
+        "intro": "Ce nu a plecat încă: tipul mesajului, destinatarul, când a intrat în coadă, câte încercări au fost și ce a răspuns furnizorul ultima dată. Mesajul în sine nu se păstrează nicăieri — se compune la trimitere.",
+        "count": "În coadă: {count} mesaje.",
+        "facts": "În coadă din {queued} · încercări: {attempts} · următoarea încercare: {next}",
+        "nextAny": "la prima trimitere",
+        "lastError": "Ultimul răspuns al furnizorului: {error}",
+        "manual": "Retrimis manual",
+        "more": "Și încă {count} în coadă, neafișate aici.",
+        "status": {
+          "PENDING": "În așteptare",
+          "PROCESSING": "Se trimite acum",
+          "FAILED": "Oprit după toate încercările"
+        }
       },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",

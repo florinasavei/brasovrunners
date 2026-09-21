@@ -34,8 +34,17 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
   });
 
   it("caps the picture's height and crops it, so the facts stay on the first screen", () => {
-    expect(CARD_EXCERPT_SX["& figure img"].maxHeight).toBe(180);
-    expect(CARD_EXCERPT_SX["& figure img"].objectFit).toBe("cover");
+    expect(CARD_EXCERPT_SX["& figure > img"].maxHeight).toBe(180);
+    expect(CARD_EXCERPT_SX["& figure > img"].objectFit).toBe("cover");
+  });
+
+  it("caps the window of a cropped picture, and never the photograph inside it", () => {
+    // §241: a cropped picture is an <img> inside a window, and the window is what may be
+    // capped — `maxHeight` on the photograph would fight the magnification that draws the
+    // crop and show a slice of the wrong part. Hence the child selector above: `& figure img`
+    // would have reached inside the window.
+    expect(CARD_EXCERPT_SX["& figure > .rt-crop"].maxHeight).toBe(180);
+    expect(Object.keys(CARD_EXCERPT_SX).filter((key) => key.startsWith("& figure ") && !key.includes(">"))).toEqual([]);
   });
 
   it("measures nothing horizontally in pixels or in viewport units", () => {
@@ -56,6 +65,18 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
   it("leaves the event page and the hero exactly as they were", () => {
     // No figure rule at all: on a page, the width the organizer chose is the point.
     expect(Object.keys(PAGE_EXCERPT_SX)).toEqual(["color", "mb", "& p:last-of-type"]);
+  });
+
+  it("says in the editor that the dense cards under the hero carry no summary", () => {
+    // §242: the field is labelled "shown on the card", and the cards under the featured event
+    // deliberately drop it — title, date and place only, so the lead is not followed by a
+    // scroll (§78). The rule stays; the label is what had to change, and this is the pair.
+    const cards = readFileSync(path.join(process.cwd(), "src", "app", "[locale]", "events", "page.tsx"), "utf8");
+    expect(cards).toContain("{!underHero && <EventExcerpt");
+    const ro = JSON.parse(readFileSync(path.join(process.cwd(), "messages", "ro.json"), "utf8"));
+    const en = JSON.parse(readFileSync(path.join(process.cwd(), "messages", "en.json"), "utf8"));
+    expect(ro.Admin.editor.excerptHelp).toContain("compacte");
+    expect(en.Admin.editor.excerptHelp).toContain("dense");
   });
 
   it("is what both cards render the excerpt through", () => {

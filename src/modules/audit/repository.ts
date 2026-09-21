@@ -61,6 +61,8 @@ export type AuditAction =
   | "email_plan.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
+  /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */
+  | "club_notices.changed"
   /**
    * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).
    *

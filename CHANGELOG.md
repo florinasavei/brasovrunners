@@ -8,6 +8,17 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.41-2026-09-21
+
+- **The calendar feed says what Android needs.** A subscribed calendar shows nothing on a phone until it is switched on in Google Calendar; the note beside the subscribe buttons now names that step, and the calendar, exactly as the phone lists it. §241.
+- **A local end-to-end run no longer blocks the next commit.** Playwright leaves an HTML report whose bundled JavaScript ESLint was reading — three thousand problems in somebody else's minified code — so `yarn check`, and with it the pre-commit hook, refused every commit until the folder was deleted by hand.
+- **The organizer draws the crop on a picture, and that is what the site shows.** Drag a box over a photograph in the editor: the event page, the listing card and the editor itself all show that rectangle. Nothing is re-encoded — the stored file is untouched and the crop can be removed — and a picture with no crop renders exactly as it did. §241.
+- **The summary field says where the summary appears.** It is on the event page, on the listing card and in the shares, but not on the dense cards under the featured event, which carry the title, the date and the place alone. The cards were right; the label was not. §242.
+- **`/admin/emails` shows what is actually queued** — which message, to whom, when it was queued, how many attempts it has survived and what the provider last said — with the same "Trimite acum" the registrations list has. A message that has spent every attempt is in the list, which is exactly what a count of "waiting" was hiding. Administrator only. §243.
+- **Who receives a signed declaration is set in the backoffice**, not in the deployment: the club's mailbox plus visible copies (Cc) and hidden ones (Bcc), with the old `DECLARATIONS_ARCHIVE_TO` kept as the fallback. The Bcc box carries a warning, because a declaration holds the participant's identity document and a hidden copy delivers it to a mailbox nobody on the message can see. §244.
+- **The club is told when somebody confirms** — who, which event, which race number — to whichever of its own mailboxes it named. It costs one message per registration, so the Mailgun forecast is six per completed registration now and 100 a day is about 16 rather than 20. §245.
+- **The registrations list opens with a counter**: how many have signed up, each state beside it, the test rows apart. One grouped query, so the page costs one round trip more rather than five. §246.
+
 ## BR-V1.40-2026-09-21
 
 - **The link in the confirmation email confirms it.** No button to press; the page does it on arrival, and still only ever through a POST, so a mail scanner that opens the link cannot spend it. §238.

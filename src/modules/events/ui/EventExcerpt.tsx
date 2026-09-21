@@ -46,7 +46,18 @@ export const CARD_EXCERPT_SX = {
   // One class more specific than the figure's own rule, which is how the chosen width and the
   // chosen side — both media queries from `sm` up — are overridden without `!important`.
   "& figure": { width: "100%", my: 1, float: "none", marginLeft: "auto", marginRight: "auto" },
-  "& figure img": { maxHeight: 180, objectFit: "cover" },
+  /*
+    A picture nobody cropped is capped and cut from the centre, as it always was — the child
+    selector matters now that a cropped picture has a window between the figure and the <img>,
+    and this rule must not reach the photograph inside that window.
+
+    A cropped one (§241) shows the rectangle the organizer drew: the card is the reason the
+    crop exists, since this is where a portrait photograph was being cut by a rule nobody could
+    see. The cap stays as a ceiling rather than a shape — a crop wider than about 8:5 never
+    reaches it, and one close to square is trimmed at the bottom rather than swallowing the card.
+  */
+  "& figure > img": { maxHeight: 180, objectFit: "cover" },
+  "& figure > .rt-crop": { maxHeight: 180 },
   // The caption follows the picture: centred under a band, and every card's picture is a band.
   "& figcaption": { textAlign: "center" },
 } as const;

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import {
+  createEmailSender,
   decideDelivery,
   markSubjectForEnvironment,
   QA_SUBJECT_PREFIX,
@@ -89,5 +91,79 @@ describe("BR-REQ-080-03 the allowlist's escape hatch", () => {
     expect(decideDelivery("allowlist", "stranger@example.org", ["ana@dev.test"])).toBe("capture");
     // Capture still captures, whatever the list says.
     expect(decideDelivery("capture", "ana@dev.test", ["*"])).toBe("capture");
+  });
+});
+
+/**
+ * `DECISIONS.md` §244 — a copy is a recipient.
+ *
+ * The declaration's archive copy may carry a Cc and a Bcc, and outside production each of
+ * those addresses has to face the allowlist on its own. The failure this prevents is the
+ * quiet one: an authorized archive mailbox on the "to" line carrying a colleague's address in
+ * Bcc, and QA mailing a participant's signed declaration to somebody nobody authorized.
+ */
+describe("DECISIONS.md §244 the club's copies face the allowlist too", () => {
+  const authorized = "qa.tester@example.ro";
+  const stranger = "stranger@example.org";
+
+  const senderWith = (mode: "allowlist" | "live" | "capture") => {
+    const sent: OutgoingEmail[] = [];
+    const adapter = {
+      name: "spy",
+      async send(message: OutgoingEmail): Promise<SendResult> {
+        sent.push(message);
+        return { outcome: "sent" as const, providerMessageId: "spy:1" };
+      },
+    };
+    const sender = createEmailSender({
+      appEnv: mode === "live" ? "production" : "qa",
+      mode,
+      allowlist: [authorized],
+      capture: adapter,
+      live: () => adapter,
+    });
+    return { sender, sent };
+  };
+
+  const message = (): OutgoingEmail => ({
+    to: authorized,
+    subject: "Declarație semnată",
+    html: "<p>x</p>",
+    text: "x",
+    locale: "ro",
+    idempotencyKey: "registration:1:declaration-archive",
+    cc: [stranger, authorized],
+    bcc: [stranger],
+  });
+
+  it("drops an unauthorized copy and keeps the authorized one", async () => {
+    const { sender, sent } = senderWith("allowlist");
+    await sender.send(message());
+    expect(sent[0].cc).toEqual([authorized]);
+    expect(sent[0].bcc).toEqual([]);
+  });
+
+  it("sends every copy on production, where the allowlist is not consulted", async () => {
+    const { sender, sent } = senderWith("live");
+    await sender.send(message());
+    expect(sent[0].cc).toEqual([stranger, authorized]);
+    expect(sent[0].bcc).toEqual([stranger]);
+  });
+
+  it("leaves a captured message's lists untouched, so the local record shows what would have gone", async () => {
+    const { sender, sent } = senderWith("capture");
+    await sender.send(message());
+    expect(sent[0].cc).toEqual([stranger, authorized]);
+    expect(sent[0].bcc).toEqual([stranger]);
+  });
+
+  it("says nothing about copies for a message that has none", async () => {
+    const { sender, sent } = senderWith("allowlist");
+    const { cc, bcc, ...plain } = message();
+    void cc;
+    void bcc;
+    await sender.send(plain);
+    expect(sent[0]).not.toHaveProperty("cc");
+    expect(sent[0]).not.toHaveProperty("bcc");
   });
 });

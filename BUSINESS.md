@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.40-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.40-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -737,7 +737,10 @@ Messages include:
 - the signed declaration to the participant, and the club's archive copy;
 - a race number given by hand;
 - a staff invitation: who added the colleague, as what, and where to sign in (`DECISIONS.md` §141);
-- "registration is open", once, to an address left on the event's page before its window — the address kept only until the message is queued (`DECISIONS.md` §146).
+- "registration is open", once, to an address left on the event's page before its window — the address kept only until the message is queued (`DECISIONS.md` §146);
+- "somebody has confirmed", to the club's own mailboxes: who, which event, which race number. Only when the club has named a mailbox for it, never for a test registration (`DECISIONS.md` §245).
+
+Who at the club receives the archive copy of a signed declaration, and who is told when somebody confirms, is set in the backoffice rather than in the deployment: one mailbox for the declarations, plus visible copies (Cc) and hidden ones (Bcc), and a list for the confirmation notices. A hidden copy delivers the participant's name and identity document to a mailbox nobody on the message can see, and the screen that sets it says so (`DECISIONS.md` §244).
 
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
 
