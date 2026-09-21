@@ -1920,6 +1920,9 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele.",
     "emailNoPaste": "Scrie adresa de mână aici — copierea din câmpul de deasupra n-ar verifica nimic.",
     "emailAllowPaste": "Nu poți scrie de mână? Lipește oricum",
+    "emailInvalid": "Asta nu pare o adresă de email. Verifică literele și semnul @.",
+    "emailSuggestion": "Ai vrut să scrii {address}?",
+    "emailUseSuggestion": "Da, corectează",
     "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție."
   },
   "Registrations": {

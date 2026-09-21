@@ -1920,6 +1920,9 @@
     "emailMismatch": "The two addresses are not the same — check the letters.",
     "emailNoPaste": "Type the address here by hand — copying it from the box above would check nothing.",
     "emailAllowPaste": "Cannot type it? Paste it anyway",
+    "emailInvalid": "That does not look like an email address. Check the letters and the @.",
+    "emailSuggestion": "Did you mean {address}?",
+    "emailUseSuggestion": "Yes, fix it",
     "emailHelp": "This is where the confirmation link goes. Type it carefully."
   },
   "Registrations": {

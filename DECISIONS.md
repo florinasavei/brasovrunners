@@ -10305,3 +10305,80 @@ releases the provisional one (§230), and the service still refuses a change onc
 settled (§173).
 
 Baseline `BR-V1.40-2026-09-21`.
+
+## 233. Decided — the email box says what is wrong, and what you probably meant (2026-09-21)
+
+**Context.** "Ar trebui să văd live dacă emailul e invalid sau nu corespunde cu cel reintrodus…
+mailul e cel mai important!"
+
+**Decision, in two halves, and the second is the one that matters.**
+
+*Live invalidity* is the small half: the first box says "that does not look like an address"
+once it has been left, by the platform's own `canonicalizeEmail` rather than a second rule
+approximated in a regular expression (§198's discipline). It waits for the blur, because
+saying it on the fourth character is scolding somebody for typing.
+
+*"Did you mean gmail.com?"* is the half that is worth building. **Every address that has cost
+this club a registration was syntactically perfect.** QA's outbox holds three bounced messages
+to `…@gmail.con`, and one of the owner's own attempts went to `prinicipal33.com`, refused by
+Mailgun with "No MX". A validity check accepts all of them, the server accepts all of them, and
+the person is told to go and read an inbox that will never receive anything. Nothing downstream
+recovers them: a resend goes to the same wrong address, and the club never learns they tried.
+
+So the useful question is not "is this an address" but "is this the address you meant", and the
+only moment it is cheap to ask is while they are looking at it.
+
+*A table, not an edit-distance guess.* The usual approach measures the domain against a list of
+popular ones, and it guesses — it will offer `gmail.com` to somebody at a real company domain
+one letter away, and a suggestion that is wrong once teaches people to dismiss the next one.
+The table only fires on spellings that are **nobody's domain**: `gmail.con` and its like, plus
+endings that are not delegated at all, of which `.con` is the one that matters. It is therefore
+never wrong about a real address, only silent about a typo it has not seen.
+
+*A suggestion, never a refusal.* `prinicipal33.com` is not in the table and cannot be: it is a
+plausible domain, and only DNS knows it has no mail server. Refusing what cannot be verified
+turns a typo into a lockout, which §205 forbids.
+
+*The suggestion does not wait for the blur, and the invalidity does.* One needs the address to
+parse and the other needs it not to, so they are mutually exclusive by construction — and the
+moment a complete address can be questioned is the moment the question is most useful.
+
+*Accepting it corrects both boxes.* The second was typed to match the first, so fixing one
+alone would turn a helpful press into a mismatch error. Written through the DOM, because the
+boxes are uncontrolled (§211).
+
+Tests: `tests/unit/registrations/email-suggestion.test.ts` (8) — most of them assert the
+silence, which is the property that keeps the suggestion worth reading.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 234. Decided — the live email checks had never run (2026-09-21)
+
+**Context.** Found while building §233: the new "not an address" message fired for *every*
+address in the browser, including correct ones.
+
+**What it was.** `canonicalizeEmail` imported `domainToASCII` from `node:url`. There is no
+`node:url` in a browser; Next substitutes a shim whose `domainToASCII` answers `""`, and `""`
+is exactly what this function treats as "domain is not valid". So the canonicalizer threw on
+every address on the client.
+
+**Why nobody saw it.** `EmailTwice` compares the two typed addresses with that function and
+catches a throw as "not an address yet, so nothing to compare" — a sensible-looking guard that
+turns a total failure into silence. The live mismatch check of §206, which the owner asked for
+in as many words, **has never fired in a browser since the day it shipped.** The server-side
+`assertEmailTypedTwice` was carrying the whole feature, which is why no test and no person
+noticed: the rule still worked, just a round trip later than intended.
+
+**Decision.** `new URL("http://" + domain).hostname` does the same IDNA-to-punycode conversion
+in Node and in every browser. One rule that genuinely runs in both, which was the point of
+importing the server's function into the island rather than writing a second one.
+
+*The test is a source-level assertion*, not a behavioural one: vitest runs in Node, where the
+old import worked perfectly. Nothing about the behaviour could catch this, so the test reads
+the module and fails if it imports from `node:` at all.
+
+**The lesson, and it is why this is its own section.** A `catch` that turns an error into a
+benign default will hide a total failure as effectively as it hides the edge case it was
+written for. This one read "not an address yet" and meant "this module cannot run here".
+
+Baseline `BR-V1.40-2026-09-21`.

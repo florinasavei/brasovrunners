@@ -10,6 +10,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.40-2026-09-21
 
+- **The email box offers the address you meant** — “did you mean ana@gmail.com?”, with one press to fix both boxes. Every address that has cost this club a registration was spelled perfectly; “@gmail.con” bounced three times in QA. §233.
+- **And the live email checks now actually run.** The canonicalizer imported a Node-only function, so in a browser it threw on every address — which the mismatch check quietly read as “nothing to compare”. The “two addresses do not match” warning had never once appeared since it shipped. §234.
 - **A registration’s race number is one line again.** Changing it by hand is folded underneath, with the free numbers inside where somebody changing it can read them — instead of four controls stacked up for a question that is almost always just “what number does this person have”. §232.
 - **The form refuses an emergency contact that is your own number before you can send it**, and says so correctly — it used to accept the press, come back from the server, and tell you the number was invalid, which it was not. §231.
 - **The “give this runner a number” box knows they already have one.** Since numbers are reserved at registration, that box was rendering empty for somebody holding number 2 and offering the free numbers with theirs missing. It now says which number they hold, comes prefilled, and is a change rather than a gift — and setting one by hand releases the provisional one instead of stranding it. §230.
