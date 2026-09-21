@@ -107,6 +107,12 @@ export const routing = defineRouting({
     "/admin/events/[id]": "/admin/events/[id]",
     /** Every bib of the event as a picture (`DECISIONS.md` §94). */
     "/admin/events/[id]/bibs": "/admin/events/[id]/bibs",
+    /**
+     * The hard delete's own screen: what would be destroyed, and the typed confirmation
+     * (BR-REQ-037-06). A page rather than a dialog, so it works with JavaScript switched off
+     * and so the refusal has somewhere to land.
+     */
+    "/admin/events/[id]/erase": "/admin/events/[id]/erase",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
     "/admin/tasks": "/admin/tasks",
@@ -123,6 +129,13 @@ export const routing = defineRouting({
     "/admin/legal": "/admin/legal",
     "/admin/legal/new": "/admin/legal/new",
     "/admin/legal/[id]": "/admin/legal/[id]",
+    /**
+     * Deleting an approved version outright (`DECISIONS.md` §151): what goes, that the number
+     * goes with it, and the phrase to type. A page rather than a dialog, for the reasons
+     * `/admin/events/[id]/erase` gives — the consequence does not fit in a `confirm()`, the
+     * form must work with JavaScript off, and a mistyped confirmation needs somewhere to land.
+     */
+    "/admin/legal/[id]/delete": "/admin/legal/[id]/delete",
     "/admin/pages": "/admin/pages",
     "/admin/pages/new": "/admin/pages/new",
     "/admin/pages/[id]": "/admin/pages/[id]",

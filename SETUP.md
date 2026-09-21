@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.39-2026-09-21 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.39-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1197,8 +1197,10 @@ it "Add" creates the account too and Zitadel sends the password link.
    name "Brașov Runners — invitații", access token type **Bearer**. Create.
 2. **Organization → Members → Add**: the service account, role **Org User Manager** (it may
    create users and send their invitation codes; nothing else).
-3. On the service account → **Personal Access Tokens → New**, expiry one year. Copy the token
-   — shown once — into the password manager.
+3. On the service account → **Personal Access Tokens → New**. Zitadel's console offers no
+   expiry field here, and the token it makes does not expire — so it is a secret that has to be
+   revoked by hand when it is no longer wanted, on the same screen. Copy it — shown once —
+   into the password manager, and note there that it has no end date.
 4. Vercel → the production project → Settings → Environment Variables:
    `ZITADEL_MANAGEMENT_PAT` = the token (Production). The same on the QA project. Redeploy
    both.

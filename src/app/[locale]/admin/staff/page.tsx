@@ -19,7 +19,14 @@ import { listStaff } from "@/modules/staff-identity/service";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { changeStaffRoleAction, inviteStaffAction, resendStaffInviteAction, revokeStaffAction } from "../actions";
+import {
+  changeStaffRoleAction,
+  inviteStaffAction,
+  resendStaffInviteAction,
+  revokeStaffAction,
+  sendStaffPasswordResetAction,
+  setStaffAccountActiveAction,
+} from "../actions";
 import { isZitadelInviteConfigured } from "@/modules/staff-identity/zitadel-users";
 import { env } from "@/shared/config/env";
 
@@ -56,7 +63,9 @@ export default async function StaffPage({ params, searchParams }: Props) {
   if (!canManageStaff(actor.role)) notFound();
 
   const current = await searchParams;
-  const { error, saved, invite, reason } = current;
+  const { error, saved, invite, reason, account } = current;
+  /** Whichever of the three account verbs was pressed (§171) — they share their four answers. */
+  const accountVerb = saved === "passwordReset" || saved === "accountDeactivated" || saved === "accountReactivated";
   // Whether "Add" also creates the Zitadel account and sends the invitation (§123).
   const invitesSend = env.STAFF_AUTH_MODE === "provider" && isZitadelInviteConfigured();
 
@@ -122,11 +131,28 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved === "invited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
         {saved === "invited" && invite === "exists" && <Alert severity="success">{t("staff.inviteExists")}</Alert>}
         {saved === "invited" && invite === "unconfigured" && <Alert severity="success">{t("staff.inviteManual")}</Alert>}
-        {(saved === "invited" || saved === "reinvited") && invite === "failed" && (
+        {/* Two different failures, and they were wearing one sentence (§170): adding says the
+            row is on the list and the account was refused; resending says the row is on the
+            list and there is no account to send to. "A refuzat să creeze contul" under a
+            person who has been on the list for a week explains nothing. */}
+        {saved === "invited" && invite === "failed" && (
           <Alert severity="warning">{t("staff.inviteFailed", { reason: reason ?? "" })}</Alert>
+        )}
+        {saved === "reinvited" && invite === "failed" && (
+          <Alert severity="warning">{t("staff.resendFailed", { reason: reason ?? "" })}</Alert>
         )}
         {saved === "reinvited" && invite === "invited" && <Alert severity="success">{t("staff.inviteSent")}</Alert>}
         {saved === "reinvited" && invite === "unconfigured" && <Alert severity="info">{t("staff.inviteManual")}</Alert>}
+        {/* The two account verbs (§171). `missing` is its own answer: there is nothing to act
+            on, which is not a failure and not a success. */}
+        {saved === "passwordReset" && account === "done" && <Alert severity="success">{t("staff.passwordResetSent")}</Alert>}
+        {saved === "accountDeactivated" && account === "done" && <Alert severity="success">{t("staff.accountDeactivated")}</Alert>}
+        {saved === "accountReactivated" && account === "done" && <Alert severity="success">{t("staff.accountReactivated")}</Alert>}
+        {accountVerb && account === "missing" && <Alert severity="warning">{t("staff.accountMissing")}</Alert>}
+        {accountVerb && account === "unconfigured" && <Alert severity="info">{t("staff.accountUnconfigured")}</Alert>}
+        {accountVerb && account === "failed" && (
+          <Alert severity="warning">{t("staff.accountFailed", { reason: reason ?? "" })}</Alert>
+        )}
         {saved && saved !== "invited" && saved !== "reinvited" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
@@ -172,6 +198,21 @@ export default async function StaffPage({ params, searchParams }: Props) {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
           {invitesSend ? t("staff.inviteHelpSends") : t("staff.inviteHelp")}
         </Typography>
+        {/*
+          Without the key, "Adaugă" cannot create the account — and the sentence above used to
+          tell the invitee to make one themselves on the sign-in page (§176; the owner: "that
+          invitation email code does not work, I am still asked to sign in but I don't have the
+          option to create an account").
+          They cannot: the sign-in page is one button that hands off to the provider, and the
+          provider's own login offers no self-registration for this organization. The row said
+          something impossible, so the page says the real step instead — loudly, because until
+          it is done nobody new can get in at all.
+        */}
+        {!invitesSend && env.STAFF_AUTH_MODE === "provider" && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            {t("staff.inviteKeyMissing")}
+          </Alert>
+        )}
       </Box>
 
       <AdminTable
@@ -239,6 +280,36 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   <SubmitButton label={t("staff.resendInvite")} pendingLabel={t("staff.resendInvitePending")} variant="outlined" />
                 </Box>
               )}
+
+              {/* The password, for somebody who has signed in before and cannot now (§171;
+                  the owner: "I can also deactivate, send password resets, etc"). Zitadel
+                  emails the link and owns the code; nothing here touches a password. Offered
+                  only once they have signed in at least once — before that the invitation
+                  above is the right email, and it sets the first password anyway. */}
+              {member.firstSignedInAt && (
+                <Box component="form" action={sendStaffPasswordResetAction}>
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="email" value={member.email} />
+                  <SubmitButton label={t("staff.passwordReset")} pendingLabel={t("staff.passwordResetPending")} variant="outlined" />
+                </Box>
+              )}
+
+              {/* Two different verbs, and the difference matters (§171). "Retrage accesul"
+                  removes the allowlist row and is what stops the backoffice letting somebody
+                  in; this switches the account itself off at the provider, which outlives the
+                  row. An Administrator leaving the club usually wants both; somebody who
+                  changed job inside the club wants only the first. */}
+              <Box component="form" action={setStaffAccountActiveAction}>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="email" value={member.email} />
+                <input type="hidden" name="active" value="0" />
+                <SubmitButton
+                  label={t("staff.deactivateAccount")}
+                  pendingLabel={t("staff.deactivateAccountPending")}
+                  color="warning"
+                  variant="outlined"
+                />
+              </Box>
 
               <Box component="form" action={revokeStaffAction}>
                 <input type="hidden" name="uiLocale" value={locale} />

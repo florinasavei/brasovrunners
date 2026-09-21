@@ -102,6 +102,8 @@ function submissionInput(email: string) {
     email,
     locale: "ro",
     privacyAcknowledged: true,
+    fitnessDeclared: true,
+    rulesAcknowledged: true,
     resultsNameConsent: true,
     listOptOut: false,
     honeypot: "",
@@ -158,7 +160,10 @@ describe("AGENTS.md §16.2 registration maintenance", () => {
     const raceMorning = new Date(desk.startsAt.getTime() - 60 * 60_000);
     const onPaper = await confirmByStaff(db, desk, lateAtDesk.id, { id: volunteer.id }, raceMorning);
     expect(onPaper.status).toBe("CONFIRMED");
-    expect(onPaper.bibNumber).not.toBeNull();
+    // A number, and on race morning it is still the provisional one (§214): this event has no
+    // closing date of its own, so its window shuts at the start and the settle has not run.
+    // What matters to the desk is that the runner has a number, not which column holds it.
+    expect(onPaper.provisionalBibNumber ?? onPaper.bibNumber).not.toBeNull();
   });
 
   it("releases one kept hold per person waiting, oldest deadline first, and no more (§160)", async () => {

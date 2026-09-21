@@ -19,7 +19,7 @@ import EventProgramme from "@/modules/events/ui/EventProgramme";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
-import EventExcerpt from "@/modules/events/ui/EventExcerpt";
+import EventDescription from "@/modules/events/ui/EventDescription";
 import { isDevStaffSwitcherEnabled } from "@/modules/staff-identity/dev-switcher";
 import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
@@ -157,18 +157,14 @@ export default async function PreviewEventPage({ params }: Props) {
         {preview.title}
       </Typography>
 
-      {/* As on the public page (§156): the short description only while there is no long one. */}
-      {isRichTextEmpty(readRichText(preview.bodyJson)) && <EventExcerpt excerptJson={preview.excerptJson} excerpt={preview.excerpt} />}
+      {/* The same component the public page uses, in the same place (§187) — this screen exists
+          to show a draft as it will be read, and it used to render the long description five
+          blocks higher than the page did. */}
+      <EventDescription bodyJson={preview.bodyJson} excerptJson={preview.excerptJson} excerpt={preview.excerpt} />
 
       <Divider sx={{ my: 3 }} />
       <EventFacts event={preview} now={now} stacked />
 
-      {/* The description proper, as the public page shows it (§71). */}
-      {!isRichTextEmpty(readRichText(preview.bodyJson)) && (
-        <Box sx={{ mt: 3 }}>
-          <RichText body={preview.bodyJson} />
-        </Box>
-      )}
       <EventProgramme scheduleItems={preview.scheduleItems} scheduleJson={preview.scheduleJson} timeZone={preview.timezone} heading={t("editor.fields.schedule")} />
       {!isRichTextEmpty(readRichText(preview.rulesJson)) && (
         <Box component="section" id="rules" sx={{ mt: 4 }}>

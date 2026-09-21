@@ -174,6 +174,11 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
         tshirtSize: "NONE",
         healthConsent: false,
         privacyAcknowledged: true,
+        // A test registration goes through the public schema unchanged (§30, `AGENTS.md`
+        // §12.6): whatever a real entrant must tick, this ticks too, or the synthetic row
+        // would stop being a rehearsal of the real path.
+        fitnessDeclared: true,
+        rulesAcknowledged: true,
         resultsNameConsent: false,
         // A synthetic row is never on a public start list anyway (`listPublicStartList`
         // filters `kind = REAL`), and asking it to opt out would state a preference nobody has.

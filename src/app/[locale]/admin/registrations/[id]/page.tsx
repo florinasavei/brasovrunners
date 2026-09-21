@@ -22,6 +22,7 @@ import {
 } from "@/modules/registrations/admin-repository";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
@@ -133,7 +134,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Stack>
       {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"
           column uses, so the page never contradicts the row that led here. */}
-      <StaffJourney journey={journeyOf(registration)} bibNumber={registration.bibNumber} variant="full" />
+      <StaffJourney journey={journeyOf(registration)} bibNumber={raceNumberOf(registration)?.value ?? null} variant="full" />
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>
@@ -216,28 +217,53 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           )}
           {registration.status === "CONFIRMED" && (
             <>
-              <form action={setBibNumberAction}>
-                {deskHidden}
-                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                  <TextField
-                    name="bibNumber"
-                    type="number"
-                    label={tr("registrations.bibNumber")}
-                    size="small"
-                    defaultValue={registration.bibNumber ?? ""}
-                    slotProps={{ htmlInput: { min: 1, max: 99999 } }}
-                    sx={{ width: 140 }}
-                  />
-                  <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-                    {tr("desk.saveBib")}
+              {/* Only where there is a gap to fill (§173): a confirmed runner's number is
+                  settled — they have it in their inbox and it may be printed — so the service
+                  refuses a change, and a box that always refuses invites the press. The number
+                  itself is on the journey above. */}
+              {registration.bibNumber === null ? (
+                <form action={setBibNumberAction}>
+                  {deskHidden}
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                    <TextField
+                      name="bibNumber"
+                      type="number"
+                      label={tr("registrations.bibNumber")}
+                      size="small"
+                      slotProps={{ htmlInput: { min: 1, max: 99999 } }}
+                      sx={{ width: 140 }}
+                    />
+                    <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                      {tr("desk.saveBib")}
+                    </Button>
+                  </Stack>
+                  {/* A preferential number is picked among the free ones (§105): the first free
+                      numbers, and the runner is emailed the one that is saved. */}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                    {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                  </Typography>
+                </form>
+              ) : (
+                <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {tr("registrations.bibSettled", { number: registration.bibNumber })}
+                  </Typography>
+                  {/*
+                    This one bib, on its own A4 page (§180). The same route the event's sheet
+                    uses, asked for a range of exactly one and the one-per-page layout — so
+                    there is one renderer, one authorization check and one design, and a
+                    volunteer who has to reprint a single number does not download two hundred.
+                  */}
+                  <Button
+                    component="a"
+                    href={`/api/admin/events/${registration.eventId}/bibs?locale=${locale}&from=${registration.bibNumber}&to=${registration.bibNumber}&layout=one`}
+                    variant="outlined"
+                    sx={{ minHeight: 44 }}
+                  >
+                    {tr("registrations.downloadBib")}
                   </Button>
                 </Stack>
-                {/* A preferential number is picked among the free ones (§105): the first free
-                    numbers, and the runner is emailed the one that is saved. */}
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                  {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
-                </Typography>
-              </form>
+              )}
               <form action={checkInAction}>
                 {deskHidden}
                 <input type="hidden" name="direction" value={registration.checkedInAt ? "undo" : "in"} />
@@ -361,13 +387,26 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               />
             </Stack>
           </form>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {tr("registrations.cancelHelp")}
+          </Typography>
+        </Box>
+      )}
 
-          {/*
-            Erasure, not withdrawal (BR-REQ-037-06). Deliberately below cancel and styled as the
-            heavier of the two: for a runner who simply drops out, cancelling is right and keeps
-            the record. This is for the case cancelling cannot answer — somebody asking to be
-            removed — and it takes the declaration with it.
-          */}
+      {/*
+        Erasure, not withdrawal (BR-REQ-037-06), and on its own gate (§179).
+
+        Deliberately below cancel and styled as the heavier of the two: for a runner who simply
+        drops out, cancelling is right and keeps the record. This is for the case cancelling
+        cannot answer — somebody asking to be removed, or a row somebody made while testing.
+
+        It used to sit inside the cancel section, which is shown only while the registration can
+        still be cancelled — so a registration that was already cancelled or expired could never
+        be erased, which is exactly the row most likely to need it. The service has always
+        handled either case: it releases the place only when there is one to release.
+      */}
+      {canManageRegistrations(actor.role) && (
+        <Box component="section">
           <Box component="details" sx={{ mt: 3, border: 1, borderColor: "error.light", borderRadius: 1, px: 2, "& > summary": { cursor: "pointer", py: 1.5, listStyle: "revert" } }}>
             <Typography component="summary" variant="subtitle2" color="error.main">
               {tr("registrations.deleteTitle")}
@@ -391,9 +430,6 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               </Stack>
             </form>
           </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            {tr("registrations.cancelHelp")}
-          </Typography>
         </Box>
       )}
 

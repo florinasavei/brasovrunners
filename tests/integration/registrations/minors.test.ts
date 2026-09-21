@@ -74,6 +74,8 @@ const submission = (overrides: Record<string, unknown>) => ({
   email: "maria@example.ro",
   locale: "ro",
   privacyAcknowledged: true,
+  fitnessDeclared: true,
+  rulesAcknowledged: true,
   resultsNameConsent: false,
   listOptOut: false,
   honeypot: "",

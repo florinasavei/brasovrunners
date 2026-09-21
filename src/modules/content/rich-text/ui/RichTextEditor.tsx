@@ -9,14 +9,22 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { Node } from "@tiptap/core";
+import { Extension, Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
 import { useRef, useState } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
-import { EMPTY_DOC, IMAGE_WIDTH_PERCENTS, readRichText } from "../domain/schema";
+import {
+  BLOCK_ALIGNMENTS,
+  EMPTY_DOC,
+  IMAGE_ALIGNMENTS,
+  IMAGE_WIDTH_PERCENTS,
+  readRichText,
+  type BlockAlignment,
+} from "../domain/schema";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -71,6 +79,15 @@ export default function RichTextEditor({
     bulletList: string;
     orderedList: string;
     quote: string;
+    /** Where a paragraph or a heading sits in the column (§213): the full name, and the letter. */
+    align: Record<BlockAlignment, string>;
+    alignShort: Record<BlockAlignment, string>;
+    table: string;
+    tableAddRow: string;
+    tableAddColumn: string;
+    tableDeleteRow: string;
+    tableDeleteColumn: string;
+    tableDelete: string;
     link: string;
     linkUrl: string;
     linkApply: string;
@@ -85,6 +102,12 @@ export default function RichTextEditor({
     imageAltHelp: string;
     imageCaption: string;
     imageSize: string;
+    /** Where the picture sits: a band across the column, or floated with the text beside it. */
+    imageAlign: string;
+    imageAlignBlock: string;
+    imageAlignLeft: string;
+    imageAlignRight: string;
+    imageAlignHelp: string;
     imageRemove: string;
     imageDone: string;
     /**
@@ -162,6 +185,21 @@ export default function RichTextEditor({
        * nothing but the id.
        */
       YoutubeNode,
+      /*
+        Left, centred or right, on a paragraph or a heading (§213). A global attribute rather
+        than a dependency: `@tiptap/extension-text-align` is this object with a command around
+        it, and the standing instruction is to prefer nothing over a package (§1.5). The
+        alignment is written as it will render, so the editor shows the page's own arrangement.
+      */
+      BlockAlign,
+      /*
+        Tables (§196). `TableKit` is the table node with its row, cell and header in one import;
+        `resizable: false` because a column width is a pixel measurement made on somebody's
+        laptop and this site's hard target is a 320-pixel column — the renderer decides widths,
+        and the schema drops `colwidth` on the way in, so a handle here would only produce a
+        value that is thrown away.
+      */
+      TableKit.configure({ table: { resizable: false } }),
       Image.configure({ inline: false, allowBase64: false }).extend({
         parseHTML() {
           return [];
@@ -179,6 +217,21 @@ export default function RichTextEditor({
             widthPercent: {
               default: 100,
               renderHTML: (attrs) => ({ style: `width: ${attrs.widthPercent ?? 100}%` }),
+            },
+            /**
+             * Where the picture sits in the column: a band across it, or floated left or right
+             * with the text wrapping around. Shown here as the page will show it on a wide
+             * screen — `mergeAttributes` merges this `style` with the width's, declaration by
+             * declaration — so what the organizer sees is what the page does (§73's rule, kept).
+             */
+            align: {
+              default: "block",
+              renderHTML: (attrs) =>
+                attrs.align === "left" || attrs.align === "right"
+                  ? {
+                      style: `float: ${attrs.align}; clear: both; margin-${attrs.align === "left" ? "right" : "left"}: 24px`,
+                    }
+                  : {},
             },
           };
         },
@@ -236,7 +289,7 @@ export default function RichTextEditor({
       editor
         ?.chain()
         .focus()
-        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100 } as never)
+        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100, align: "block" } as never)
         .run();
       setImageState("idle");
     } catch {
@@ -286,7 +339,7 @@ export default function RichTextEditor({
     editor
       ?.chain()
       .focus()
-      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100 } as never)
+      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block" } as never)
       .run();
     setGallery(null);
   };
@@ -301,6 +354,26 @@ export default function RichTextEditor({
     editor?.chain().focus().insertContent({ type: "youtube", attrs: { videoId: id, caption: "" } }).run();
     setYoutubeDraft(null);
   };
+
+  /**
+   * Align every paragraph and heading the selection touches, in one transaction.
+   *
+   * One `command` holding both `updateAttributes` calls rather than a chain of them: a chain
+   * stops at the first step that answers false, and a selection inside a paragraph has no
+   * heading to update — so the chain would align the paragraph and then, on a selection that
+   * spans both, silently do half the job depending on which came first. `left` is written as
+   * `null`, because the default is the absence of the attribute, not a third value.
+   */
+  const setAlign = (align: BlockAlignment) =>
+    editor
+      ?.chain()
+      .focus()
+      .command(({ commands }) => {
+        const value = align === "left" ? null : align;
+        for (const type of ALIGNABLE) commands.updateAttributes(type, { align: value });
+        return true;
+      })
+      .run();
 
   const applyLink = () => {
     const href = (linkDraft ?? "").trim();
@@ -373,6 +446,69 @@ export default function RichTextEditor({
             active={editor?.isActive("blockquote") ?? false}
             onClick={() => editor?.chain().focus().toggleBlockquote().run()}
           />
+          {/*
+            Left, centred, right (§213) — letters from the catalogue rather than glyphs, for the
+            reason the whole toolbar has words on it: the picture emoji rendered as a broken box
+            on the owner's own machine, and three broken boxes side by side would be worse than
+            three letters. The full name is the accessible name and the tooltip.
+          */}
+          {BLOCK_ALIGNMENTS.map((align) => (
+            <Control
+              key={align}
+              label={labels.align[align]}
+              text={labels.alignShort[align]}
+              active={align === "left" ? !editor?.isActive({ align: "center" }) && !editor?.isActive({ align: "right" }) : (editor?.isActive({ align }) ?? false)}
+              onClick={() => setAlign(align)}
+            />
+          ))}
+          {/*
+            One button inserts a table; the rest of the verbs appear only while the caret is
+            inside one (§196). A toolbar that showed "add a row" to somebody writing a paragraph
+            is four dead controls, and this toolbar already has words on it rather than icons
+            precisely so that what it offers is legible.
+          */}
+          <Control
+            label={labels.table}
+            text="⊞"
+            active={editor?.isActive("table") ?? false}
+            onClick={() =>
+              editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+            }
+          />
+          {editor?.isActive("table") && (
+            <>
+              <Control
+                label={labels.tableAddRow}
+                text="+↓"
+                active={false}
+                onClick={() => editor?.chain().focus().addRowAfter().run()}
+              />
+              <Control
+                label={labels.tableAddColumn}
+                text="+→"
+                active={false}
+                onClick={() => editor?.chain().focus().addColumnAfter().run()}
+              />
+              <Control
+                label={labels.tableDeleteRow}
+                text="−↓"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteRow().run()}
+              />
+              <Control
+                label={labels.tableDeleteColumn}
+                text="−→"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteColumn().run()}
+              />
+              <Control
+                label={labels.tableDelete}
+                text="⊟"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteTable().run()}
+              />
+            </>
+          )}
           <Control
             label={labels.link}
             text="🔗"
@@ -554,6 +690,9 @@ export default function RichTextEditor({
               p: 2,
               outline: "none",
               "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: -2 },
+              // A floated picture at the end of the body would otherwise hang out of the
+              // writing area and over whatever the form puts beneath it.
+              "&::after": { content: '""', display: "table", clear: "both" },
             },
             // A picture is never wider than the column, here as on the page; the selected one
             // is outlined so the panel beside it is plainly about *this* picture.
@@ -652,6 +791,41 @@ export default function RichTextEditor({
                 ))}
               </ToggleButtonGroup>
             </Box>
+            <Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                {labels.imageAlign}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={String(imageAttrs?.align ?? "block")}
+                onChange={(_event, align: string | null) => {
+                  if (align === null) return;
+                  /**
+                   * Floating a picture that takes the whole column leaves no column to write in,
+                   * so the two controls move together: choosing left or right from a full-width
+                   * picture halves it, in the same transaction, and the four widths stay there
+                   * to change afterwards. The alternative — letting the organizer press "left"
+                   * and see nothing happen — is the worse of the two surprises.
+                   */
+                  const widthPercent =
+                    align !== "block" && Number(imageAttrs?.widthPercent ?? 100) === 100
+                      ? 50
+                      : undefined;
+                  setImageAttr(widthPercent ? { align, widthPercent } : { align });
+                }}
+                aria-label={labels.imageAlign}
+              >
+                {IMAGE_ALIGNMENTS.map((align) => (
+                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
+                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                {labels.imageAlignHelp}
+              </Typography>
+            </Box>
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.imageRemove}
@@ -711,6 +885,54 @@ export default function RichTextEditor({
     </Box>
   );
 }
+
+/**
+ * Alignment for a paragraph or a heading (§213; the owner: "centrare / aliniere elemente în rich
+ * text editor").
+ *
+ * ## Why this is eleven lines rather than a package
+ *
+ * `@tiptap/extension-text-align` is exactly one `addGlobalAttributes` block and a command that
+ * calls `updateAttributes`. The standing instruction is to prefer nothing over a dependency
+ * (`AGENTS.md` §1.5), and §196 took the table package precisely because *that* one is selection
+ * and transform work nobody should re-implement. This is an attribute.
+ *
+ * ## The two fences
+ *
+ * **`parseHTML` clamps to the closed set.** A paste from Word or Google Docs carries
+ * `text-align: justify`, `start`, `end` or an inherited value, and anything but the three words
+ * the schema knows would be a body the server then refuses to save — a refusal the organizer
+ * meets at the end of a long edit. Anything unrecognised reads as no alignment at all.
+ *
+ * **`renderHTML` says nothing for the default**, so the editor's own DOM carries a
+ * `text-align` declaration only where somebody chose one — the same discipline the renderer
+ * keeps, and the reason the two look identical.
+ */
+const ALIGNABLE = ["paragraph", "heading"] as const;
+
+const BlockAlign = Extension.create({
+  name: "blockAlign",
+  addGlobalAttributes() {
+    return [
+      {
+        types: [...ALIGNABLE],
+        attributes: {
+          align: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              attrs.align === "center" || attrs.align === "right"
+                ? { style: `text-align: ${attrs.align}` }
+                : {},
+            parseHTML: (element: HTMLElement) => {
+              const value = element.style.textAlign;
+              return value === "center" || value === "right" ? value : null;
+            },
+          },
+        },
+      },
+    ];
+  },
+});
 
 /**
  * The YouTube block (§110): an atom, so the caret never enters it; selectable, so a click opens

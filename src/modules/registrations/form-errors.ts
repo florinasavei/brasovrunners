@@ -34,6 +34,11 @@ export const REGISTRATION_FORM_FIELDS = [
   "instagramHandle",
   "healthNotes",
   "healthConsent",
+  // Both are `z.literal(true)`, so an unticked one is a rejection the summary must be able to
+  // name and link to — unlike the optional boxes, which cannot fail (§171).
+  "fitnessDeclared",
+  "rulesAcknowledged",
+  "emailConfirm",
   "privacyAcknowledged",
 ] as const;
 

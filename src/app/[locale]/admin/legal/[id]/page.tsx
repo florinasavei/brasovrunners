@@ -90,7 +90,12 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
           {t(`legal.keys.${document.key}`)} · v{document.version}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {document.isApproved ? t("legal.approved") : t("legal.draft")} ·{" "}
+          {document.withdrawnAt
+            ? t("legal.withdrawn")
+            : document.isApproved
+              ? t("legal.approved")
+              : t("legal.draft")}{" "}
+          ·{" "}
           {t("legal.effectiveAt")}: {format.dateTime(document.effectiveAt, { dateStyle: "medium" })}
         </Typography>
         {/*
@@ -180,6 +185,18 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
         </>
       ) : (
         <>
+          {/*
+            A withdrawn version reached from the fold on the list. Saying so here is the whole
+            difference between withdrawal and deletion being legible: the text is still on this
+            page, unchanged, and the page has to explain why nothing else offers it any more.
+          */}
+          {document.withdrawnAt && (
+            <Alert severity="warning">
+              {t("legal.withdrawnNotice", {
+                date: format.dateTime(document.withdrawnAt, { dateStyle: "medium" }),
+              })}
+            </Alert>
+          )}
           <Alert severity="info">{t("legal.readOnlyNotice")}</Alert>
           <Box>
             <ButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} variant="contained">

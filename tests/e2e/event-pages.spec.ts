@@ -142,10 +142,21 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
     const count = await links.count();
     expect(count).toBeGreaterThan(0);
 
+    /*
+      44 on a phone, which is the design target and where a finger is the pointer; 24 — WCAG
+      2.2's own minimum — on a desktop, where it is not (§175).
+
+      The criterion is about the *event* links, and those are whole cards: comfortably over 44
+      at either width, and this loop exists to catch a redesign that shrinks one to a text link.
+      What sits beside them on the listing is the calendar and share row, and eight
+      finger-sized pills across a desktop page were the loudest thing on it — the owner:
+      "aceste butoane sunt mult prea mari", "these buttons must be smaller as well".
+    */
+    const minimum = test.info().project.name === "mobile" ? 44 : 24;
     for (let i = 0; i < count; i += 1) {
       const box = await links.nth(i).boundingBox();
       if (!box) continue; // not rendered, e.g. visually hidden
-      expect.soft(box.height, `link ${i} height`).toBeGreaterThanOrEqual(44);
+      expect.soft(box.height, `link ${i} height`).toBeGreaterThanOrEqual(minimum);
     }
   });
 });

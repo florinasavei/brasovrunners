@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.39-2026-09-21 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.39-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -87,6 +87,7 @@ lasting decision updates every affected one and bumps that marker in the same pu
 | [`scripts/smoke.mjs`](./scripts/smoke.mjs) | `yarn smoke <base-url>` — turns `/api/health` into an exit code. Ends every deployment: a green build is not a working site |
 | [`scripts/wait-for-migration.mjs`](./scripts/wait-for-migration.mjs) | First step of `yarn build`: on a Vercel production deployment, waits until the environment's database has applied the migration the build was compiled against, so new code never goes live against an old schema. Applies nothing (`AGENTS.md` §7.6, `DECISIONS.md` §62) |
 | [`scripts/migration-check.mjs`](./scripts/migration-check.mjs) | `yarn migrations:check` — refuses a migration that both expands and contracts, and a contract migration without its `-- contract:` line; runs in `yarn check` (`AGENTS.md` §7.6) |
+| [`scripts/brand-assets.mjs`](./scripts/brand-assets.mjs) | `node scripts/brand-assets.mjs` — rasterises the club's lockup from `public/brand/*.svg` into the two places that cannot take an SVG: the PDFs (flat, no alpha — an alpha channel reaches a PDF as a soft mask and prints as an outline) and the email header. Outputs are committed; run it after changing the source (`DECISIONS.md` §174) |
 | [`scripts/docs-check.mjs`](./scripts/docs-check.mjs) | Enforces documentation synchronization; runs in `yarn check` and CI |
 | [`scripts/secrets-check.mjs`](./scripts/secrets-check.mjs) | Refuses a commit carrying a provider credential — the repository is public; runs in `yarn check` and CI (`DECISIONS.md` §98) |
 | [`scripts/release.mjs`](./scripts/release.mjs) | `yarn release`: versioned folder, archive, and standalone versioned copies under `dist/` |

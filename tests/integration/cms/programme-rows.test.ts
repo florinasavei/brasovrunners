@@ -63,7 +63,7 @@ beforeEach(async () => {
   await resetTables(db);
   [organizer] = await db
     .insert(staffUsers)
-    .values({ email: "organizer@dev.test", displayName: "Organizer", role: "MODERATOR" })
+    .values({ email: "organizer@dev.test", displayName: "Organizer", role: "ADMIN" })
     .returning();
 });
 

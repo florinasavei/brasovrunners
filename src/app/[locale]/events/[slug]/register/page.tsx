@@ -1,3 +1,6 @@
+import FemaleIcon from "@mui/icons-material/Female";
+import MaleIcon from "@mui/icons-material/Male";
+import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
@@ -12,8 +15,10 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
+import LegalLink from "@/shared/ui/LegalLink";
 import { routing } from "@/i18n/routing";
+import ReadAndAgree from "@/modules/registrations/ui/ReadAndAgree";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
@@ -24,14 +29,25 @@ import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/fo
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import {
+  OPTION_GLYPH_SX,
+  OPTION_LABEL_SX,
+  OPTION_ROW_SX,
+  SELECT_WITH_GLYPHS_SX,
+} from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
+import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
+import EmailTwice from "@/modules/registrations/ui/EmailTwice";
+import ClubForMember from "@/modules/registrations/ui/ClubForMember";
+import Flag from "@/shared/ui/Flag";
+import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import Script from "next/script";
-import { TURNSTILE_SCRIPT_URL, turnstileSiteKey } from "@/modules/registrations/turnstile";
+import { turnstileSiteKey } from "@/modules/registrations/turnstile";
+import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
-import { PAGE_WIDTH } from "@/theme/brand";
+import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 
 type Props = {
@@ -47,6 +63,7 @@ export const metadata: Metadata = {
 
 /** The anchor a field is reached by from the error summary. Prefixed so it cannot collide. */
 const fieldId = (name: string) => `f-${name}`;
+
 
 /**
  * An optional group, **open by default** since 2026-09-17. It was collapsed to shorten the page
@@ -102,6 +119,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!event) notFound();
 
   const now = new Date();
+  // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
+  const siteKey = turnstileSiteKey();
   const state = registrationState(
     {
       registrationMode: event.registrationMode,
@@ -130,6 +149,24 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   const rejected = parseInvalidFields(fields);
   const invalid = new Set<string>(rejected);
+  /**
+   * The anti-bot check is a rejection about nothing the person typed (§176), so it is not one
+   * of the form's fields and `parseInvalidFields` drops it. Read from the raw parameter, matched
+   * against the one literal it may be — anybody can type into a URL.
+   */
+  const captchaFailed = (fields ?? "").split(",").includes("captcha");
+  /**
+   * The timing check asked again rather than discarding the submission (§194). Like the captcha
+   * above it is a rejection about nothing the person typed, so it is read from the raw parameter
+   * and matched against the one literal it may be.
+   */
+  const tooFast = (fields ?? "").split(",").includes("tooFast");
+  /**
+   * The per-address throttle, refused out loud since §217 closed the last silent drop. Like
+   * the two above it is about nothing the person typed, so it is read from the raw parameter
+   * and matched against the one literal it may be.
+   */
+  const throttled = (fields ?? "").split(",").includes("throttled");
 
   // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
   const latestBirthDate = now.toISOString().slice(0, 10);
@@ -198,12 +235,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {t("facts.rules")}
             </Link>
           )}
-          <Link href="/legal/terms" style={factLink}>
+          {/* The two reference texts open in a tab of their own (§197): a half-filled form
+               must not depend on the browser restoring it after a Back. */}
+          <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")} style={factLink}>
             {t("facts.terms")}
-          </Link>
-          <Link href="/legal/privacy" style={factLink}>
+          </LegalLink>
+          <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")} style={factLink}>
             {t("facts.privacy")}
-          </Link>
+          </LegalLink>
         </Box>
       </Box>
 
@@ -221,7 +260,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {submitted ? (
         <Stack spacing={2}>
-          <Alert severity="success">{t("submitted")}</Alert>
+          {/*
+            "Check your email", and then — in the same panel, in the same weight — how long it
+            may take. The owner asked for the second sentence to be highlighted here rather than
+            left where it was, three lines down in the stepper's prose: this screen is where
+            somebody stands with their inbox open, and a person who does not know a wait is
+            normal fills the form again within thirty seconds (§199 is the reason that is not
+            free, and §205 is what it costs the club when they give up instead).
+
+            One caveat worth knowing rather than guessing at: the outbox drains after the
+            request that queued it, so the usual delay is seconds. Five minutes is the honest
+            outer bound for the common path; a message that misses its drain waits for the
+            pinger, which by day is a quarter of an hour (§68).
+          */}
+          <Alert severity="success">
+            <AlertTitle>{t("submitted")}</AlertTitle>
+            {t("submittedDelay")}
+          </Alert>
           {/*
             The one thing a person needs when the message does not arrive, offered at the
             moment they would first notice — carrying the event so the resend knows which
@@ -231,6 +286,31 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             {t("resend.prompt")}{" "}
             <Link href={{ pathname: "/registrations/resend", query: { event: slug } }}>
               {t("resend.linkLabel")}
+            </Link>
+          </Typography>
+          {/*
+            The second way out, and it exists because the first one can fail (§205).
+
+            The owner, after two people in one evening got no message: "trebuie să lăsăm oamenii
+            să se înscrie cu orice preț!!! Asta e scopul principal al site-ului. Dacă nu primesc
+            mail trebuie să le apară opțiunea de retrimite sau să ne dea mail prin formularul de
+            contact."
+
+            He is right about the order of importance. A resend helps when a message was lost in
+            transit, and does nothing when the address itself cannot be reached — a spam filter
+            that swallows every one, a provider refusing the sending domain, a typo in the
+            address they cannot now correct. In all of those the person is stuck on this screen
+            with no way to tell anybody, and the club never learns they tried.
+
+            So: a link to the contact form, carrying the event, which reaches a human. It is
+            deliberately second and quieter than the resend — most people need the resend — and
+            it is deliberately present, because "the message never arrives" is not a rare case on
+            a club's first season with a new sending domain.
+          */}
+          <Typography variant="body2" color="text.secondary">
+            {t("resend.stillNothing")}{" "}
+            <Link href={{ pathname: "/contact", query: { about: slug } }}>
+              {t("resend.contactLinkLabel")}
             </Link>
           </Typography>
         </Stack>
@@ -256,8 +336,40 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               tabIndex={-1}
               sx={{ mb: 2 }}
             >
-              <AlertTitle>{t("errors.title")}</AlertTitle>
-              {rejected.length > 0 ? (
+              <AlertTitle>
+                {throttled ? t("errors.throttledTitle") : tooFast ? t("errors.tooFastTitle") : t("errors.title")}
+              </AlertTitle>
+              {/*
+                The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
+                înscrie man!").
+
+                A token Cloudflare does not confirm — a widget that never rendered, a challenge
+                that timed out while somebody filled a long form, a bad minute on the network —
+                comes back as `fields=captcha`. `captcha` is not one of the form's fields, so
+                the summary filtered it out and fell through to "verifică datele completate",
+                which sends a person hunting through twenty inputs that are all correct. It is
+                the one rejection that is about nothing they typed, so it is said first and on
+                its own, and the catalogue already had the sentence for it.
+              */}
+              {captchaFailed ? (
+                t("errors.captcha")
+              ) : throttled ? (
+                // Their own address, their own count: this tells them about themselves and
+                // nothing about who else is registered, which is the oracle §19.4 forbids.
+                t("errors.throttled")
+              ) : tooFast ? (
+                /*
+                  The anti-bot refusal, said **here** and not only beside the button (§217).
+
+                  This is where the browser lands and where focus goes, and `tooFast` is not one
+                  of the form's fields — so the summary used to fall through to "verifică datele
+                  completate", which is the same trap the captcha comment above describes: a red
+                  box telling somebody to check twenty inputs that are all correct, while the one
+                  sentence that explains what happened sat at the far end of a long form. The
+                  owner: "they need visuals on this! so that they know!"
+                */
+                t("errors.tooFast")
+              ) : rejected.length > 0 ? (
                 <>
                   {t("errors.fieldsIntro")}
                   <Box component="ul" sx={{ m: 0, mt: 1, pl: 3 }}>
@@ -286,6 +398,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {t("requiredLegend")}
           </Typography>
+          {/*
+            What is published and what is not, before the first field asks for anything (§171;
+            the owner: "la formularul de înscriere trebuie să fie clar ce date sunt publice și
+            ce date sunt confidențiale").
+
+            A form that asks for a birth date, a phone number, a next of kin and a health note
+            owes the person reading it one sentence about where any of that goes — and the
+            answer here is unusually good, so it is worth saying: nothing is published unless
+            the event has a start list *and* the box below is ticked, and then only the name.
+            The two section markers repeat it where each block of fields is.
+          */}
+          <Alert severity="info" icon={false} sx={{ mb: 2 }}>
+            {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
+          </Alert>
           <form action={submitRegistrationAction}>
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
@@ -323,6 +449,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Stack spacing={2} sx={{ minWidth: 0 }}>
               <Typography component="h2" variant="h6" sx={{ mt: 1 }}>
                 {t("sections.about")}
+              </Typography>
+              {/* The marker under each block (§171): where these answers go. */}
+              <Typography variant="caption" color="text.secondary">
+                {t("confidentialNote")}
               </Typography>
 
               {/*
@@ -370,10 +500,40 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   required
                   fullWidth
                   defaultValue={typed("sex", "UNSPECIFIED")}
+                  sx={SELECT_WITH_GLYPHS_SX}
                 >
-                  <MenuItem value="FEMALE">{t("sexOptions.FEMALE")}</MenuItem>
-                  <MenuItem value="MALE">{t("sexOptions.MALE")}</MenuItem>
-                  <MenuItem value="UNSPECIFIED">{t("sexOptions.UNSPECIFIED")}</MenuItem>
+                  {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
+                      sex"). As **children** of the item, never as a prop across the boundary —
+                      see `CheckboxField` for what an element-valued prop costs — and MUI shows
+                      the chosen item's children in the closed field, so the mark stays.
+
+                      Which is also why the row is declared twice: the children travel to the
+                      closed field, the item's own `sx` does not. `select-option.ts` says what
+                      that cost before it was laid out in both places. */}
+                  <MenuItem value="FEMALE" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <FemaleIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.FEMALE")}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="MALE" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <MaleIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.MALE")}
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="UNSPECIFIED" sx={OPTION_ROW_SX}>
+                    <Box component="span" sx={OPTION_GLYPH_SX}>
+                      <PersonIcon fontSize="small" aria-hidden="true" />
+                    </Box>
+                    <Box component="span" sx={OPTION_LABEL_SX}>
+                      {t("sexOptions.UNSPECIFIED")}
+                    </Box>
+                  </MenuItem>
                 </TextField>
 
                 <TextField
@@ -383,10 +543,29 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   required
                   fullWidth
                   defaultValue={typed("nationality", "RO")}
+                  sx={SELECT_WITH_GLYPHS_SX}
                 >
+                  {/*
+                    The flag before the name (§171), from the set `scripts/sync-flags.mjs`
+                    already copies into `public/flags/` — which that script's own comment
+                    anticipated for exactly this ("will show many when a participant can state
+                    their country"). Normalised to 4:3, so a column of two hundred names does
+                    not wobble between Romania's 2:3 and the United Kingdom's 1:2.
+
+                    Not the regional-indicator emoji, which Windows draws as two boxed capitals
+                    — and Windows is what the club's own laptop runs.
+                  */}
                   {countries.map((country) => (
-                    <MenuItem key={country.code} value={country.code}>
-                      {country.label}
+                    <MenuItem key={country.code} value={country.code} sx={OPTION_ROW_SX}>
+                      {/* The flag is `display: block` and 20×15; the fixed box is what stops it
+                          taking a line of its own in the closed field and what keeps every
+                          country name starting at the same x. */}
+                      <Box component="span" sx={OPTION_GLYPH_SX}>
+                        <Flag code={country.code} width={20} />
+                      </Box>
+                      <Box component="span" sx={OPTION_LABEL_SX}>
+                        {country.label}
+                      </Box>
                     </MenuItem>
                   ))}
                 </TextField>
@@ -402,17 +581,32 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               <Typography component="h2" variant="h6" sx={{ mt: 2 }}>
                 {t("sections.contact")}
               </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t("contactNote")}
+              </Typography>
 
-              <TextField
-                {...field("email")}
-                type="email"
+              {/*
+                The address, twice, typed by hand (§206). QA's outbox holds three bounced
+                messages to "…@gmail.con": one letter, and the confirmation link goes nowhere
+                while the screen says to check the inbox.
+              */}
+              <EmailTwice
+                name="email"
+                confirmName="emailConfirm"
+                fieldId={fieldId("email")}
+                confirmFieldId={fieldId("emailConfirm")}
                 label={t("email")}
-                required
-                autoComplete="email"
-                slotProps={{ htmlInput: { inputMode: "email" } }}
+                confirmLabel={t("emailConfirm")}
+                mismatchLabel={t("emailMismatch")}
+                help={t("emailHelp")}
+                defaultValue={typed("email")}
+                defaultConfirmValue={typed("emailConfirm")}
+                error={invalid.has("email") || invalid.has("emailConfirm")}
+                helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
+                invalidLabel={t("phoneInvalid")}
                 name="phone"
                 draft={draft ? { country: draft.phoneCountry, national: draft.phone } : undefined}
                 id={fieldId("phone")}
@@ -439,6 +633,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   autoComplete="off"
                 />
                 <PhoneField
+                  invalidLabel={t("phoneInvalid")}
                   name="emergencyContactPhone"
                   draft={draft ? { country: draft.emergencyContactPhoneCountry, national: draft.emergencyContactPhone } : undefined}
                   id={fieldId("emergencyContactPhone")}
@@ -507,6 +702,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   */}
                   <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={typed("clubMemberDeclared") === "on"}>
                     {t("clubMemberDeclared")}
+                    {/* What the claim means, where it is claimed (§189): "grup" rather than
+                        "echipă", because the club is a group somebody runs with and not a squad
+                        somebody is selected for, and the tooltip says where the line is. */}
+                    <Hint text={t("clubMemberHint")} />
                   </CheckboxField>
 
                   <TextField
@@ -523,21 +722,41 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     ))}
                   </TextField>
 
-                  <TextField
+                  {/*
+                    The club, filled in and locked while the tick above is on (§215; the owner:
+                    "if people check that they are brasov runners members, the club input must be
+                    auto-filled and readonly"). The same fact was being written three ways —
+                    "BRASOV RUNNERS", "Brasov runners", "BvR" — and the export read them as three
+                    clubs. The tick still grants nothing (§48); the service writes the same name
+                    whatever the browser did, so a form filled with JavaScript off records it too.
+                  */}
+                  <ClubForMember
                     {...field("clubName", t("optional"))}
                     label={t("clubName")}
-                    autoComplete="organization"
+                    memberCheckboxId={fieldId("clubMemberDeclared")}
+                    clubName={CLUB_NAME}
+                    lockedHelperText={t("clubNameFromMembership")}
                   />
                 </Stack>
               </Box>
 
-              {/* A minor's parent or guardian (§108): folded, named for the one case it is
-                  required in, and the server refuses a minor without it. */}
-              <Box component="details" sx={disclosureSx} open={invalid.has("guardianName")}>
-                <Typography component="summary" variant="body2">
-                  {t("disclosure.guardian")}
-                </Typography>
-                <Stack spacing={2} sx={{ pb: 2 }}>
+              {/*
+                A minor's parent or guardian (§108, §185, §188): shown when the birth date says so.
+
+                It was a fold — "Părinte sau tutore" — and the owner read an opened fold as a
+                question he now had to answer: "mă disperă faza cu tutorele!". He was right about
+                the shape. §185 made it a tick, which was the right shape and the wrong question:
+                the form already asks for the birth date, and the birth date is the answer, so
+                asking twice only invites the two answers to disagree — and the server would then
+                refuse an unticked minor over a field nobody had been shown.
+
+                The rule has not moved: the server requires a guardian when the birth date gives
+                under eighteen, whatever the browser drew. `forceOpen` is that verdict coming
+                back — a rejection naming the field opens the block whatever the date box now
+                holds, so an error never points at something invisible.
+              */}
+              <GuardianForMinor birthDateId={fieldId("birthDate")} forceOpen={invalid.has("guardianName")}>
+                <Stack spacing={2}>
                   <Typography variant="body2" color="text.secondary">
                     {t("guardianHelp")}
                   </Typography>
@@ -548,7 +767,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     slotProps={{ htmlInput: { maxLength: 200 } }}
                   />
                 </Stack>
-              </Box>
+              </GuardianForMinor>
 
               {/* Socials, optional and folded (§106): the club follows back and tags; never
                   published by the platform. Closed by default — it is the one section a
@@ -585,12 +804,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 disclosure rather than a line inside the group above, its own consent, and
                 wording that says plainly it may be left empty. The server refuses text without
                 the tick rather than silently dropping either one.
+
+                Closed now, and second (§171; the owner: "nu e clar cu informațiile medicale,
+                trebuie să bifeze doar «declar că sunt apt»"). The block asked for free text
+                first and a consent under it, which reads as "tell us your conditions" — so the
+                one thing the club actually needs from everybody, the fitness statement, was
+                nowhere and this was everywhere. The statement is a required tick down in the
+                consents; this is the optional note for the person who wants the medical team
+                to know something, and it says so.
               */}
-              <Box component="details" open sx={disclosureSx}>
+              <Box component="details" sx={disclosureSx} open={invalid.has("healthConsent")}>
                 <Typography component="summary" variant="body2">
                   {t("disclosure.health")}
                 </Typography>
                 <Stack spacing={2} sx={{ pb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("healthIntro")}
+                  </Typography>
                   <TextField
                     {...field("healthNotes", t("healthNotesHelp"))}
                     label={t("healthNotes")}
@@ -621,8 +851,51 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 rendered "nota de confidențialitate * *" on the form. The two consents below
                 say "optional" in words, so the difference is legible without pressing anything.
               */}
+              {/*
+                "Declar că sunt apt" (§171), required, and first among the consents because it
+                is the one every entrant makes about themselves. It is a statement, not health
+                data: no condition, no diagnosis, nothing Article 9 covers — which is why it can
+                be insisted on where the note above cannot. The declaration signed later says
+                the same thing at length; this is it asked at the moment of entering.
+              */}
+              {/*
+                The race's own conditions, read before they can be agreed to (§195).
+
+                Only when this event wrote any. An event with no rules of its own has nothing to
+                open, so the tick points at the club's terms as a plain link — the requirement is
+                the same, the panel would just be an empty box.
+              */}
+              {hasRules ? (
+                <ReadAndAgree
+                  name="rulesAcknowledged"
+                  fieldId={fieldId("rulesAcknowledged")}
+                  title={t("rules.panelTitle", { event: event.title })}
+                  openLabel={t("rules.open")}
+                  readingLabel={t("rules.reading")}
+                  agreedLabel={t("rules.agreed")}
+                  agreeButtonLabel={t("rules.agreeButton")}
+                  keepReadingLabel={t("rules.keepReading")}
+                  closeLabel={t("rules.close")}
+                  plainLabel={t("rules.plain")}
+                  href={`${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } })}#rules`}
+                  document={event.rulesJson}
+                />
+              ) : (
+                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required>
+                  {t("rules.plain")}{" "}
+                  <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
+                    {t("facts.terms")}
+                  </LegalLink>
+                </CheckboxField>
+              )}
+              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
+                {t("fitnessDeclared")}
+              </CheckboxField>
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
-                {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
+                {t("privacyPrefix")}{" "}
+                <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
+                  {t("privacyLinkLabel")}
+                </LegalLink>
               </CheckboxField>
               <CheckboxField name="resultsNameConsent" defaultChecked={typed("resultsNameConsent") === "on"}>
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
@@ -667,17 +940,25 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>
               </TextField>
 
-              {/* Cloudflare Turnstile, when the club switched it on (§97). */}
-              {turnstileSiteKey() && (
+              {/* Cloudflare Turnstile, when the club switched it on (§97), drawn and reset by
+                  its own island (§185) — the implicit widget could not survive a re-render. */}
+              {siteKey && (
                 <Box id={fieldId("captcha")}>
-                  <div className="cf-turnstile" data-sitekey={turnstileSiteKey()} data-language={locale} />
-                  {invalid.has("captcha") && (
+                  <TurnstileWidget siteKey={siteKey} locale={locale} attempt={now.toISOString()} />
+                  {captchaFailed && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                       {t("errors.captcha")}
                     </Typography>
                   )}
-                  <Script src={TURNSTILE_SCRIPT_URL} async defer strategy="afterInteractive" />
                 </Box>
+              )}
+              {/* Said where the press happened, in the plain second person: the form is whole, the
+                  answers are still in it, and pressing again is all there is to do (§194). */}
+              {tooFast && (
+                <Alert severity="warning">
+                  <AlertTitle>{t("errors.tooFastTitle")}</AlertTitle>
+                  {t("errors.tooFast")}
+                </Alert>
               )}
               <SubmitButton
                 label={t("submit")}

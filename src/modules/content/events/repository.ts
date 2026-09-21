@@ -2,7 +2,7 @@ import { and, asc, count, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { eventTranslations, events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
-import type { Locale } from "@/i18n/routing";
+import { type Locale, routing } from "@/i18n/routing";
 
 /**
  * Backoffice reads (BR-REQ-050-01, BR-REQ-051-01, BR-REQ-051-02).
@@ -55,13 +55,19 @@ export async function listEventsForBackoffice<T extends Record<string, unknown>>
  */
 export async function countRegistrationsByEvent<T extends Record<string, unknown>>(
   db: Database<T>,
-): Promise<Map<string, number>> {
+): Promise<Map<string, { total: number; test: number }>> {
   const rows = await db
-    .select({ eventId: registrations.eventId, total: count() })
+    .select({
+      eventId: registrations.eventId,
+      total: count(),
+      // Split out since §176: an event blocked only by test rows is deleted with them, and the
+      // row must say that rather than "archive it instead" to somebody who already has.
+      test: sql<number>`count(*) FILTER (WHERE ${registrations.kind} = 'TEST')`.mapWith(Number),
+    })
     .from(registrations)
     .groupBy(registrations.eventId);
 
-  return new Map(rows.map((row) => [row.eventId, row.total]));
+  return new Map(rows.map((row) => [row.eventId, { total: row.total, test: row.test }]));
 }
 
 /**
@@ -199,6 +205,70 @@ export async function listSeriesDates<T extends Record<string, unknown>>(db: Dat
     .from(events)
     .where(or(eq(events.id, sourceId), eq(events.repeatOf, sourceId)))
     .orderBy(asc(events.startsAt));
+}
+
+/**
+ * Exactly what a hard delete would destroy, read before anything is pressed (BR-REQ-037-06).
+ *
+ * The screen that asks for a typed confirmation has to be able to state the consequence, and
+ * the consequence is four numbers and a fact: how many registrations there are, how many of
+ * them are confirmed people who expect to run, how many are `TEST` rows, and — the one that
+ * decides whether this is a mistake being tidied up or a season being destroyed — whether any
+ * of them is a real participant at all (`DECISIONS.md` §30). A count of "2" means nothing on
+ * its own; "2, both of them real people, one confirmed" is a sentence somebody can act on.
+ *
+ * `titles` is every language's title *with its locale*, because that is what the confirmation
+ * field compares against: the organizer types the title they can see, the event has two, and
+ * which one they can see depends on the language the backoffice is in.
+ */
+export type EventErasurePlan = {
+  eventId: string;
+  titles: Array<{ locale: Locale; title: string }>;
+  startsAt: Date;
+  editorialStatus: EditableEvent["editorialStatus"];
+  total: number;
+  confirmed: number;
+  real: number;
+  test: number;
+};
+
+export async function readEventErasurePlan<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<EventErasurePlan | undefined> {
+  const [event] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+  if (!event) return undefined;
+
+  const titles = await db
+    .select({ locale: eventTranslations.locale, title: eventTranslations.title })
+    .from(eventTranslations)
+    .where(eq(eventTranslations.eventId, eventId))
+    .orderBy(asc(eventTranslations.locale));
+
+  const [counts] = await db
+    .select({
+      total: count(),
+      confirmed: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED')`.mapWith(Number),
+      real: sql<number>`count(*) FILTER (WHERE ${registrations.kind} = 'REAL')`.mapWith(Number),
+      test: sql<number>`count(*) FILTER (WHERE ${registrations.kind} = 'TEST')`.mapWith(Number),
+    })
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId));
+
+  return {
+    eventId: event.id,
+    titles: titles
+      .filter((row) => row.title.trim() !== "")
+      // The default locale first, so a plan read without a reader — a test, an audit row — gets
+      // the club's own language rather than whichever locale sorts first.
+      .sort((a, b) => routing.locales.indexOf(a.locale) - routing.locales.indexOf(b.locale)),
+    startsAt: event.startsAt,
+    editorialStatus: event.editorialStatus,
+    total: counts?.total ?? 0,
+    confirmed: counts?.confirmed ?? 0,
+    real: counts?.real ?? 0,
+    test: counts?.test ?? 0,
+  };
 }
 
 /** The title of an event in one language — for the note on a series' date (§122); the other language if that one is missing. */

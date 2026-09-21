@@ -19,7 +19,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
 
   test("a volunteer enters a walk-in, gives a number, checks them in, and opens their QR page", async ({ page }) => {
     // An organizer opens registration on the featured event (the seed configures none).
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.getByRole("button", { name: "Ieși din cont" }).click();
     // Wait for the sign-out to land before signing in as somebody else: a `goto` fired while
@@ -65,13 +65,15 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
     const code = (await row.locator("span, p").filter({ hasText: /^[A-HJ-NP-Z2-9]{10}$/ }).first().textContent()) as string;
     expect(code).toMatch(/^[A-HJ-NP-Z2-9]{10}$/);
 
-    // A number by hand — distinct per project and per run, since both share the event and a
-    // number once given stays with its registration.
-    const bib = String((test.info().project.name === "mobile" ? 10_000 : 20_000) + (Date.now() % 9_000));
-    await row.getByRole("spinbutton", { name: "Număr de concurs" }).fill(bib);
-    await row.getByRole("button", { name: "Salvează" }).click();
-    await expect(page.locator("#admin-alert")).toContainText("Numărul a fost salvat", { timeout: 15_000 });
-    await hydrated(page);
+    /*
+      The number came with the confirmation (§87) and is settled (§173): a confirmed runner has
+      it in their inbox and it may be printed, so the desk offers no box to change it — a
+      control that always refuses is worse than none, and this is the screen where being told
+      "ceva nu este valid" in front of a queue is expensive.
+    */
+    const bib = (await row.locator("p, span").filter({ hasText: /^\d{1,5}$/ }).first().textContent()) as string;
+    expect(bib).toMatch(/^\d{1,5}$/);
+    await expect(row.getByRole("spinbutton", { name: "Număr de concurs" })).toHaveCount(0);
 
     // Here.
     const rowAgain = page.getByTestId("desk-row").filter({ hasText: suffix });

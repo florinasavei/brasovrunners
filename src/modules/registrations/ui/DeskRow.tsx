@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import {
   checkInAction,
@@ -57,6 +58,10 @@ export default async function DeskRow({
     row.status === "PENDING_DECLARATION" ||
     row.status === "WAITLIST_OFFERED";
 
+  // Whichever number this runner has, and whether it is the settled one (§214). On race
+  // morning most of them are provisional, and the desk has to show those or it shows a dash.
+  const number = raceNumberOf(row);
+
   const hidden = (
     <>
       <input type="hidden" name="uiLocale" value={locale} />
@@ -84,12 +89,22 @@ export default async function DeskRow({
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" } }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
-            {/* The number first and large: it is what the volunteer reaches for on the table. */}
+            {/*
+              The number first and large: it is what the volunteer reaches for on the table.
+
+              Digits alone, with no marker for a provisional one (§214) — unlike the
+              registrations list, which is a planning screen and marks it. A volunteer at a desk
+              with a queue in front of them reads a number off a screen and matches it to a
+              number on a bib, and anything else in that field is something to decode. What
+              tells them a number is not settled is the absence of the bib picture below, which
+              is only ever drawn for a settled one; the tooltip says it in words.
+            */}
             <Typography
               component="span"
-              sx={{ fontWeight: 700, fontSize: "1.25rem", minWidth: 48, color: row.bibNumber ? "text.primary" : "text.disabled" }}
+              title={number && !number.settled ? t("desk.bibProvisional") : undefined}
+              sx={{ fontWeight: 700, fontSize: "1.25rem", minWidth: 48, color: number ? "text.primary" : "text.disabled" }}
             >
-              {row.bibNumber ?? "—"}
+              {number ? number.value : "—"}
             </Typography>
             <Typography component="span" sx={{ fontWeight: 600, fontSize: "1.05rem" }}>
               {row.registeredName}
@@ -133,6 +148,32 @@ export default async function DeskRow({
               {format.dateTime(row.eventStartsAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" })}
             </Typography>
           )}
+          {/*
+            The number as the paper shows it (§184). Folded, because the desk's own job is the
+            large digits above and a picture would push the buttons off a phone; open, it is the
+            same PNG the club previewed and printed from, so a volunteer holding an envelope can
+            check the two against each other without leaving the row.
+
+            Loaded only when the fold is opened — `<details>` does not fetch what it does not
+            render — which matters on a phone at a start line.
+          */}
+          {number !== null && number.settled && row.kind === "REAL" && (
+            <Box component="details" sx={{ mt: 1, "& > summary": { cursor: "pointer", minHeight: 44, py: 1 } }}>
+              <Typography component="summary" variant="body2" color="text.secondary">
+                {t("desk.showBib")}
+              </Typography>
+              {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
+              <img
+                src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}
+                alt={t("desk.bibAlt", { number: number.value })}
+                width={900}
+                height={600}
+                loading="lazy"
+                decoding="async"
+                style={{ display: "block", width: "100%", maxWidth: 360, height: "auto", border: "1px solid #ddd", borderRadius: 4 }}
+              />
+            </Box>
+          )}
           {row.checkinCode && (
             <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
               {row.checkinCode}
@@ -165,23 +206,36 @@ export default async function DeskRow({
           )}
           {!readOnly && row.status === "CONFIRMED" && (
             <>
-              <form action={setBibNumberAction}>
-                {hidden}
-                <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-                  <TextField
-                    name="bibNumber"
-                    type="number"
-                    size="small"
-                    label={t("desk.bibField")}
-                    defaultValue={row.bibNumber ?? ""}
-                    slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
-                    sx={{ width: 120 }}
-                  />
-                  <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
-                    {t("desk.saveBib")}
-                  </Button>
-                </Stack>
-              </form>
+              {/*
+                The field only where there is a number to give (§173; the owner: "nu ar trebui
+                să mai pot schimba numărul de concurs odată confirmat!").
+
+                A confirmed runner has the number in their inbox and possibly on a bib in an
+                envelope, so the service refuses a change — and a box that always refuses is
+                worse than no box: it invites the press, and the desk is the one screen where
+                being told "ceva nu este valid" in front of a queue is expensive. What stays is
+                filling a gap, which is the one case that still arises: a row confirmed before
+                a number was drawn automatically. The number itself is already shown large at
+                the head of the row.
+              */}
+              {number === null && (
+                <form action={setBibNumberAction}>
+                  {hidden}
+                  <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                    <TextField
+                      name="bibNumber"
+                      type="number"
+                      size="small"
+                      label={t("desk.bibField")}
+                      slotProps={{ htmlInput: { min: 1, max: 99999 }, inputLabel: { shrink: true } }}
+                      sx={{ width: 120 }}
+                    />
+                    <Button type="submit" variant="text" size="small" sx={{ minHeight: 44 }}>
+                      {t("desk.saveBib")}
+                    </Button>
+                  </Stack>
+                </form>
+              )}
               <form action={checkInAction}>
                 {hidden}
                 <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />

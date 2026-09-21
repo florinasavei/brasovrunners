@@ -210,6 +210,74 @@ export async function readActionTokenContext<T extends Record<string, unknown>>(
 }
 
 /**
+ * The scope of a token that has *already been spent*, and nothing else.
+ *
+ * Separate from `readActionTokenContext` on purpose. That function's contract is "this token
+ * may be acted on"; this one's is "this token was used, and here is whose registration it
+ * belonged to", which is the only thing a status page needs in order to read the current state
+ * and say where the person is (`registrations/domain/link-status.ts`).
+ *
+ * Three properties, all load-bearing:
+ *
+ * 1. **It answers for exactly one rejection reason.** Anything other than `ALREADY_USED` —
+ *    including a purpose mismatch, which must stay indistinguishable from a token that does
+ *    not exist — returns null. The evaluation is re-run here rather than trusted from the
+ *    caller, so a caller that passed the wrong reason cannot widen the disclosure.
+ * 2. **It is still a read.** Same read-only transaction as the context read; PostgreSQL
+ *    refuses a write inside it, so a mail scanner fetching a spent link changes nothing.
+ * 3. **It reveals no more than the link already did.** The row was found by an exact match on
+ *    a SHA-256 of 32 random bytes, so the caller is holding the secret from the email, and
+ *    what comes back is the scope that secret was issued against — not the address, not the
+ *    name, not another participant.
+ *
+ * Called only on the path where the context read already returned `ALREADY_USED`, so the extra
+ * query is not on the hot path, and the per-link throttle the route charged for this request
+ * still bounds how often it can run.
+ */
+export type SpentActionTokenScope = {
+  participantId: string;
+  registrationId: string | null;
+  purpose: EmailActionTokenPurpose;
+};
+
+export async function readSpentActionTokenScope<T extends Record<string, unknown>>(
+  db: Database<T>,
+  params: { secret: string; purpose: EmailActionTokenPurpose; now: Date },
+): Promise<SpentActionTokenScope | null> {
+  const { secret, purpose, now } = params;
+
+  if (!isWellFormedTokenSecret(secret)) return null;
+
+  const tokenHash = hashTokenSecret(secret);
+
+  return inReadOnlyTransaction(db, async (tx) => {
+    const [row] = await tx
+      .select({
+        participantId: emailActionTokens.participantId,
+        registrationId: emailActionTokens.registrationId,
+        purpose: emailActionTokens.purpose,
+        expiresAt: emailActionTokens.expiresAt,
+        usedAt: emailActionTokens.usedAt,
+        invalidatedAt: emailActionTokens.invalidatedAt,
+      })
+      .from(emailActionTokens)
+      .where(eq(emailActionTokens.tokenHash, tokenHash))
+      .limit(1);
+
+    if (!row) return null;
+
+    const evaluation = evaluateActionToken(row, purpose, now);
+    if (evaluation.ok || evaluation.reason !== "ALREADY_USED") return null;
+
+    return {
+      participantId: row.participantId,
+      registrationId: row.registrationId,
+      purpose: row.purpose,
+    };
+  });
+}
+
+/**
  * Spend a token. One statement, one winner (BR-REQ-036-02 criteria 2, 3 and the single-use
  * half of criterion 1's purpose).
  *

@@ -7,6 +7,8 @@ import {
   type RichTextBlock,
   type RichTextText,
 } from "../domain/schema";
+import { imageCaptionSx, imageFigureSx } from "./image-layout";
+import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
 
 /**
@@ -25,17 +27,31 @@ import RichTextVideo from "./RichTextVideo";
  */
 export default function RichText({ body }: { body: unknown }) {
   const doc = readRichText(body);
+  const blocks = doc.content ?? [];
+  /**
+   * A float that runs past the last block would reach into whatever the page puts after the
+   * body — the registration panel, the programme, the next section — and pull it up beside the
+   * picture. One clearing element, rendered only when the body actually floats something, so a
+   * document written before 2026-09-20 emits exactly the markup it emitted yesterday.
+   */
+  const floats = blocks.some((block) => block.type === "image" && block.attrs.align !== "block");
 
   return (
     <>
-      {(doc.content ?? []).map((block, index) => (
-        <Fragment key={index}>{renderBlock(block)}</Fragment>
+      {blocks.map((block, index) => (
+        <Fragment key={index}>{renderBlock(block, floats)}</Fragment>
       ))}
+      {floats && <Box sx={{ clear: "both" }} />}
     </>
   );
 }
 
-function renderBlock(block: RichTextBlock): ReactNode {
+/**
+ * `floats` is whether *this document* floats a picture anywhere. It is false for every body
+ * written before the alignment existed, and a false one emits exactly the styles it emitted
+ * before: the clearing rules are not merely no-ops there, they are absent.
+ */
+function renderBlock(block: RichTextBlock, floats = false): ReactNode {
   switch (block.type) {
     case "youtube":
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
@@ -43,20 +59,11 @@ function renderBlock(block: RichTextBlock): ReactNode {
       return <RichTextVideo videoId={block.attrs.videoId} caption={block.attrs.caption} />;
     case "image":
       // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
-      // address was validated to be one of this site's own variants (§72). The figure takes
-      // the chosen share of the column on a wide screen and the whole width on a phone (§73)
-      // — a block in the flow, never floated, so two pictures are never side by side.
+      // address was validated to be one of this site's own variants (§72). Where the figure
+      // sits in the column — a band, or floated with the text beside it — is `image-layout.ts`,
+      // which is also where the reversal of §73's "never floated" is argued.
       return (
-        <Box
-          component="figure"
-          sx={{
-            m: 0,
-            my: 2,
-            mx: "auto",
-            width: { xs: "100%", sm: `${block.attrs.widthPercent}%` },
-            maxWidth: "100%",
-          }}
-        >
+        <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
           <Box
             component="img"
             src={block.attrs.src}
@@ -67,15 +74,17 @@ function renderBlock(block: RichTextBlock): ReactNode {
             sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1 }}
           />
           {block.attrs.caption !== "" && (
-            <Typography component="figcaption" variant="body2" color="text.secondary" sx={{ mt: 1, textAlign: "center" }}>
+            <Typography component="figcaption" variant="body2" color="text.secondary" sx={imageCaptionSx(block.attrs)}>
               {block.attrs.caption}
             </Typography>
           )}
         </Box>
       );
     case "paragraph":
+      // `textAlign` is emitted only when the organizer chose one (§213): a body written before
+      // alignment existed renders the markup it rendered yesterday, not a rule that says "left".
       return (
-        <Typography variant="body1" sx={{ mb: 2 }}>
+        <Typography variant="body1" sx={{ mb: 2, ...blockAlignSx(block.attrs) }}>
           {renderInline(block.content)}
         </Typography>
       );
@@ -85,7 +94,7 @@ function renderBlock(block: RichTextBlock): ReactNode {
       return (
         <Typography
           component={block.attrs.level === 2 ? "h2" : "h3"}
-          sx={{ fontSize: block.attrs.level === 2 ? "1.25rem" : "1.0625rem", fontWeight: 700, mt: 4, mb: 1 }}
+          sx={{ fontSize: block.attrs.level === 2 ? "1.25rem" : "1.0625rem", fontWeight: 700, mt: 4, mb: 1, ...blockAlignSx(block.attrs) }}
         >
           {renderInline(block.content)}
         </Typography>
@@ -123,6 +132,73 @@ function renderBlock(block: RichTextBlock): ReactNode {
               {renderInline(paragraph.content)}
             </Typography>
           ))}
+        </Box>
+      );
+
+    case "table":
+      /*
+        A table (§196), and the whole of the difficulty is that this site's hard target is a
+        320-pixel column.
+
+        A table cannot reflow: four columns of times and distances are four columns whatever the
+        screen. So the table keeps its shape and the *wrapper* scrolls sideways — one element
+        that scrolls, inside a page that does not, which is the one arrangement a phone handles
+        without the whole layout sliding under the reader's thumb. `maxWidth: 100%` on the
+        wrapper is what keeps the page from growing to the table's width.
+
+        `tabIndex={0}` on the scrolling box is not decoration: a region that scrolls and cannot
+        be reached from a keyboard is unreadable to anybody not using a pointer, and browsers do
+        not make it focusable on their own.
+
+        Header cells become `<th scope>` — a column header says which column, a row header which
+        row — so a screen reader announces "Ora de start, 10:00" rather than "10:00".
+      */
+      return (
+        <Box
+          tabIndex={0}
+          role="region"
+          sx={{ maxWidth: "100%", overflowX: "auto", mb: 2, WebkitOverflowScrolling: "touch" }}
+        >
+          <Box
+            component="table"
+            sx={{
+              borderCollapse: "collapse",
+              // Never narrower than it needs to be, never forced wider than the column.
+              minWidth: "min(100%, 28rem)",
+              "& td, & th": {
+                border: 1,
+                borderColor: "divider",
+                px: 1.5,
+                py: 1,
+                textAlign: "left",
+                verticalAlign: "top",
+              },
+              "& th": { fontWeight: 700, backgroundColor: "action.hover" },
+              "& p:last-of-type": { mb: 0 },
+            }}
+          >
+            <Box component="tbody">
+              {block.content.map((row, rowIndex) => (
+                <Box component="tr" key={rowIndex}>
+                  {row.content.map((cell, cellIndex) => (
+                    <Box
+                      component={cell.type === "tableHeader" ? "th" : "td"}
+                      key={cellIndex}
+                      scope={
+                        cell.type === "tableHeader" ? (rowIndex === 0 ? "col" : "row") : undefined
+                      }
+                      colSpan={cell.attrs?.colspan}
+                      rowSpan={cell.attrs?.rowspan}
+                    >
+                      {cell.content.map((inner, innerIndex) => (
+                        <Fragment key={innerIndex}>{renderBlock(inner)}</Fragment>
+                      ))}
+                    </Box>
+                  ))}
+                </Box>
+              ))}
+            </Box>
+          </Box>
         </Box>
       );
   }

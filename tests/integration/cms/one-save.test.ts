@@ -70,7 +70,7 @@ beforeEach(async () => {
   await resetTables(db);
   [editor] = await db
     .insert(staffUsers)
-    .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
+    .values({ email: "moderator@dev.test", displayName: "Editor", role: "ADMIN" })
     .returning();
   [author] = await db
     .insert(staffUsers)
@@ -138,6 +138,43 @@ describe("BR-REQ-051-01 one save writes the event row and every language", () =>
     expect((await reloadTranslation(ro.id)).title).toBe("Alergare");
     expect((await reloadTranslation(en.id)).title).toBe("A run");
     expect((await reloadTranslation(ro.id)).version).toBe(ro.version + 1);
+  });
+
+  /**
+   * §177 — the race's band reaches the row. Both fields were parsed and validated from the day
+   * §173 added them and then dropped by `eventColumnsFrom`, so the editor's two controls posted
+   * into nothing; review caught it. An empty colour is the club's own, stored as null.
+   */
+  it("stores where the numbers start and what colour they print, and null for the club's own colour", async () => {
+    const { event, ro, en } = await createDraft();
+
+    await saveEventAndTranslations(db, {
+      actor: editor,
+      eventId: event.id,
+      expectedVersion: event.version,
+      fields: { ...EVENT_FIELDS, bibStartNumber: "500", bibColour: "#1B8A3A" },
+      translations: [
+        { translationId: ro.id, expectedVersion: ro.version, fields: translationFields("Alergare") },
+        { translationId: en.id, expectedVersion: en.version, fields: translationFields("A run") },
+      ],
+      now: NOW,
+    });
+    const banded = await reloadEvent(event.id);
+    expect(banded.bibStartNumber).toBe(500);
+    // Lower-cased on the way in, so two spellings of one colour are one colour.
+    expect(banded.bibColour).toBe("#1b8a3a");
+
+    await saveEventAndTranslations(db, {
+      actor: editor,
+      eventId: event.id,
+      expectedVersion: banded.version,
+      fields: { ...EVENT_FIELDS, bibStartNumber: "", bibColour: "" },
+      translations: [],
+      now: NOW,
+    });
+    const plain = await reloadEvent(event.id);
+    expect(plain.bibStartNumber).toBe(1);
+    expect(plain.bibColour).toBeNull();
   });
 
   it("fails the whole save when one language's version is stale, and writes nothing", async () => {

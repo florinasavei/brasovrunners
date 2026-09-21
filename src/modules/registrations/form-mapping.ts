@@ -67,6 +67,12 @@ export function readRegistrationForm(
     displayName: options.displayName ? optional(form, "displayName") : undefined,
 
     email: text(form, "email"),
+    /*
+      The second box (§206). Absent from a staff entry, which asks once — and `text` answers a
+      missing field with an empty string, which `z.email().optional()` refuses, so the empty
+      case has to become `undefined` rather than "".
+    */
+    emailConfirm: text(form, "emailConfirm") || undefined,
 
     birthDate: text(form, "birthDate"),
     sex: text(form, "sex"),
@@ -88,6 +94,9 @@ export function readRegistrationForm(
     // BR-REQ-031-05 — the text is refused without its own consent, in the schema.
     healthNotes: optional(form, "healthNotes"),
     healthConsent: checked(form, "healthConsent"),
+    // "Declar că sunt apt" (§171) — required on the public form, absent on a staff entry.
+    fitnessDeclared: checked(form, "fitnessDeclared"),
+    rulesAcknowledged: checked(form, "rulesAcknowledged"),
 
     // The language of the emails and the declaration (§97): chosen on the form, the page's
     // language until chosen — a runner on the Romanian site may still want English.

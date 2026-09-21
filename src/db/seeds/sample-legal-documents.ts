@@ -5,7 +5,11 @@ import {
   type LegalDocumentTranslationInput,
 } from "@/modules/legal-documents/domain/content-hash";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
-import { findLatestVersion, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import {
+  findLatestVersion,
+  insertLegalDocumentVersion,
+  nextVersionNumber,
+} from "@/modules/legal-documents/repository";
 
 /**
  * Sample privacy notice, terms and event declaration — complete in structure, blank in
@@ -108,7 +112,10 @@ export async function seedSampleLegalDocuments(now: Date = new Date()): Promise<
       continue;
     }
 
-    const version = (latest?.version ?? 0) + 1;
+    // Through `nextVersionNumber`, not `latest.version + 1`: since §151 a number whose row was
+    // deleted stays retired, and the seed must step over it like every other writer. `latest` is
+    // still what answers "is this text already the newest one", which is a different question.
+    const version = await nextVersionNumber(db, document.key);
     await insertLegalDocumentVersion(db, {
       key: document.key,
       version,

@@ -24,7 +24,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
   test("walks hero → register → submitted, and shows the free places on the way", async ({
     page,
   }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
 
     await page.goto("/ro/evenimente");
@@ -60,6 +60,8 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.locator('[name="firstName"]').fill("Ana");
     await page.locator('[name="lastName"]').fill("Popescu");
     await page.locator('[name="email"]').fill(address);
+    // The same address again (§206): the form asks for it twice and the action refuses a mismatch.
+    await page.locator('[name="emailConfirm"]').fill(address);
     await page.locator('[name="birthDate"]').fill("1990-05-17");
     await page.locator('[name="city"]').fill("Brașov");
 
@@ -71,6 +73,11 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.locator('[name="emergencyContactName"]').fill("Ion Popescu");
     await page.locator('[name="emergencyContactPhone"]').fill("+40722222222");
     await page.locator('[name="privacyAcknowledged"]').check();
+    // The race conditions (§195): the seeded events carry none of their own, so this is the
+    // plain-checkbox branch rather than the panel.
+    await page.locator('[name="rulesAcknowledged"]').check();
+    // Required since §171, beside the privacy acknowledgment.
+    await page.locator('[name="fitnessDeclared"]').check();
 
     // BR-REQ-039-02: the display name is behind a collapsed <details>, closed by default,
     // and left alone here — a submission that never opens it must still be accepted, and the
@@ -87,7 +94,7 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
   });
 
   test("offers the same door on the event's own page", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
 
     await page.goto(`/ro/evenimente/${FEATURED.slug}`);

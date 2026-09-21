@@ -52,7 +52,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     englishSlug = `about-${suffix}`;
     title = `Despre clubul ${suffix}`;
 
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/pages/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
@@ -143,7 +143,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
   test("refuses to publish a page whose other language is empty", async ({ page }) => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
 
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/pages/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);

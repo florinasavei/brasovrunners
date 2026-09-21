@@ -24,6 +24,7 @@ import {
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -40,6 +41,16 @@ import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { bulkCancelRegistrationsAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
+import {
+  cancelRegistrationAction,
+  checkInAction,
+  confirmRegistrationNowAction,
+  eraseRegistrationFromListAction,
+  promoteRegistrationAction,
+} from "../actions";
+import { ALL_EVENTS, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
+import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
+import RegistrationRowMenu, { type RegistrationMenuItem } from "@/modules/registrations/ui/RegistrationRowMenu";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -87,7 +98,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canManageRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent, erase } = current;
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -96,8 +107,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     defaultDir: "desc",
   });
 
-  const filters = {
-    eventId: eventId || undefined,
+  const filters: {
+    eventId?: string;
+    status?: RegistrationStatus;
+    clubMemberDeclared?: true;
+    emailBounced?: true;
+    search?: string;
+  } = {
     status: isRegistrationStatus(status) ? status : undefined,
     // One-way: it narrows to the people who ticked the box and never to the ones who did not
     // (`admin-repository.ts` says why).
@@ -107,8 +123,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   };
 
   const db = getDb();
-  const volume = await readEmailVolumeToday(db, new Date());
-  const [rows, total, events] = await Promise.all([
+  /*
+    The events come first now, because the default filter is derived from them (§178): with no
+    eventId in the query the list is about the club's featured event, which is the one anybody
+    opening this page is asking about. "Toate evenimentele" stays one press away as `all`.
+  */
+  const [volume, events] = await Promise.all([
+    readEmailVolumeToday(db, new Date()),
+    listEventsWithRegistrations(db),
+  ]);
+  const eventFilter = defaultEventFilter(eventId, events);
+  filters.eventId = eventFilter.eventId;
+
+  const [rows, total] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -116,7 +143,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       dir: query.dir,
     }),
     countRegistrationsForAdmin(db, filters),
-    listEventsWithRegistrations(db),
   ]);
 
   const t = await getTranslations("Admin");
@@ -125,7 +151,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const basePath = getPathname({ locale, href: "/admin/registrations" });
   /** Only the list-shaping keys travel with a sort link or a page link. */
   const listParams = {
-    eventId,
+    eventId: eventFilter.selected,
     status,
     clubMember,
     bounced,
@@ -137,6 +163,29 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
   const hasFilters = Boolean(eventId || status || clubMember || bounced || q);
+
+  /*
+    Where the erase panel opens, and where it closes back to (§180).
+
+    `page` is patched in explicitly on both, because `buildListHref` drops it by default — right
+    for a filter or a sort, which should land you on the first page of the new list, and wrong
+    here: erasing the third row of page four must come back to page four, not to page one.
+  */
+  const eraseHref = (registrationId: string): string =>
+    `${buildListHref(basePath, listParams, { erase: registrationId, page: current.page })}#erase-panel`;
+  const eraseReturnQuery = buildListHref("", listParams, { page: current.page }).replace(/^\?/, "");
+
+  /*
+    The row the panel is about — found among the rows already fetched, never fetched by id.
+
+    That is the whole guard on the query parameter, and it is enough: a row that is not on the
+    page in front of you cannot be named, so `?erase=<some other id>` opens nothing, and the
+    name the panel asks to have typed is a name that is genuinely on screen. `requireStaffRole`
+    in the action is what actually refuses the erasure (BR-REQ-060-01); this decides only what
+    is drawn.
+  */
+  const eraseTarget = erase ? (rows.find((row) => row.id === erase) ?? null) : null;
+  const mayErase = canManageRegistrations(actor.role);
 
   const columns: readonly AdminColumn<RegistrationListRow>[] = [
     {
@@ -168,6 +217,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               label={t("registrations.clubMemberChip")}
             />
           )}
+          {/* "Is my name on the site?" is asked of the club, not of the platform (§186). Marked
+              only when the answer is no: on an event that publishes a list most rows are on it,
+              and a chip on every row is a chip nobody reads. On an event with no published list
+              the mark is still true — it says what this person asked for, whatever the club
+              later switches on. */}
+          {row.listOptOut && (
+            <Chip
+              size="small"
+              variant="outlined"
+              label={t("registrations.notOnPublicList")}
+            />
+          )}
         </Stack>
       ),
     },
@@ -183,7 +244,51 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       // Not sortable — the status column beside it is the ordered one.
       key: "journey",
       label: t("registrations.columnJourney"),
-      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={row.bibNumber} variant="compact" />,
+      // "3/6" cannot say what the six are (§200).
+      hint: t("registrations.journey.legend"),
+      // The number the runner has, settled or not (§214): the chip said "nr. 42" and would
+      // otherwise say nothing at all for everybody registered before the window closes.
+      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)?.value ?? null} variant="compact" />,
+    },
+    {
+      /*
+        The race number, as its own column (§173; the owner: "și nu văd BID-ul"). It was inside
+        the journey chip, which is where somebody looks for "how far along are they" and not for
+        "which number is this". On race morning it is the column the list is read by.
+      */
+      key: "bib",
+      label: t("registrations.columnBib"),
+      sortable: true,
+      /*
+        Whichever number the runner has (§214). Before the window closes it is the provisional
+        one, shown in a lighter weight with an asterisk and explained by the column's own hint:
+        the club needs to see it — that is the whole reason it exists — and also needs to know
+        it is not the one to print.
+      */
+      render: (row) => {
+        const number = raceNumberOf(row);
+        if (number === null) {
+          return (
+            <Box component="span" sx={{ color: "text.disabled" }}>
+              —
+            </Box>
+          );
+        }
+        return (
+          <Box
+            component="span"
+            title={number.settled ? undefined : t("registrations.bibProvisional")}
+            sx={{
+              fontVariantNumeric: "tabular-nums",
+              fontWeight: number.settled ? 700 : 500,
+              color: number.settled ? "text.primary" : "text.secondary",
+            }}
+          >
+            {number.value}
+            {number.settled ? "" : "*"}
+          </Box>
+        );
+      },
     },
     {
       key: "event",
@@ -230,10 +335,92 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         {saved === "outboxSent" && (
           <Alert severity="success">{t("outbox.sentNow", { count: Number(sent ?? "0") })}</Alert>
         )}
-        {saved && saved !== "registrationsCancelled" && saved !== "outboxSent" && (
-          <Alert severity="success">{t("saved")}</Alert>
+        {saved === "registrationDeleted" && (
+          <Alert severity="success">{t("registrations.registrationDeleted")}</Alert>
         )}
+        {saved &&
+          saved !== "registrationsCancelled" &&
+          saved !== "outboxSent" &&
+          saved !== "registrationDeleted" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
+
+      {/*
+        The erase panel (§180). The owner, three times: "vreau sa pot sterge si participantii".
+
+        Why it is a panel on the page and not a dialog in the row menu. Erasing is the one verb
+        here that cannot be undone — it takes the declaration, the address and, when this was
+        their last registration, the participant. A dialog with a button is answered yes by
+        reflex, and in a list where the row you meant and the row above it are one line apart,
+        the reflex is how the wrong person gets erased. So the confirmation is a transcription:
+        the name on the row, typed. You cannot type it by reflex and you cannot type it while
+        looking at the wrong row.
+
+        And why it is a *page*, reached by a plain link with the row's id in the query, rather
+        than state inside the client island. With JavaScript off the "⋮" menu never opens, so a
+        dialog inside it would make erasure unreachable — the rule is that a form works without
+        JavaScript, and a confirmation is part of the form. This is a link, a server-rendered
+        form and a redirect: identical with JavaScript and without it. The `<noscript>` link in
+        the row is only there because the *menu* needs JavaScript to open; the panel it leads to
+        never did.
+      */}
+      {mayErase && eraseTarget && (
+        <Box
+          component="section"
+          id="erase-panel"
+          tabIndex={-1}
+          sx={{ border: 1, borderColor: "error.main", borderRadius: 1, px: 2, py: 2, scrollMarginTop: 16 }}
+        >
+          <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1, color: "error.main" }}>
+            {t("registrations.eraseTitle", { name: eraseTarget.registeredName })}
+          </Typography>
+          <Box component="form" action={eraseRegistrationFromListAction}>
+            <input type="hidden" name="uiLocale" value={locale} />
+            <input type="hidden" name="registrationId" value={eraseTarget.id} />
+            {/* Only the query, never a path: `actions.ts` rebuilds the path from `getPathname`,
+                so this field can choose which rows come back and nothing else. */}
+            <input type="hidden" name="listQuery" value={eraseReturnQuery} />
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary">
+                {t("registrations.deleteHelp")}
+              </Typography>
+              <TextField
+                name="reason"
+                label={t("registrations.deleteReason")}
+                required
+                size="small"
+                sx={{ maxWidth: 480 }}
+              />
+              <TextField
+                name="confirmName"
+                label={t("registrations.eraseTypeName")}
+                helperText={t("registrations.eraseTypeNameHelp", { name: eraseTarget.registeredName })}
+                required
+                size="small"
+                autoComplete="off"
+                sx={{ maxWidth: 480 }}
+              />
+              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+                <SubmitButton
+                  label={t("registrations.eraseAction")}
+                  pendingLabel={t("registrations.erasePending")}
+                  color="error"
+                  variant="contained"
+                />
+                {/* A link, not a button: leaving the panel is a navigation, and it must work
+                    for the same reader the panel itself was built for. */}
+                <Button
+                  component="a"
+                  href={buildListHref(basePath, listParams, { erase: undefined, page: current.page })}
+                  variant="text"
+                  sx={TAP_TARGET}
+                >
+                  {t("confirm.cancel")}
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Box>
+      )}
 
       <Stack
         direction="row"
@@ -255,12 +442,26 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Button>
           {/*
             The export takes the filters and not the page: a spreadsheet of whichever 25 rows
-            happened to be on screen would be a quietly wrong file (§15.10).
+            happened to be on screen would be a quietly wrong file (§15.10). Set the event
+            filter and the file is that race's start list, named after it (§172).
+
+            Excel first, because that is what somebody opens: a bold frozen header, columns
+            wide enough to read, dates that sort as dates. The comma-separated file stays for
+            whoever is feeding it to something else.
           */}
           <Button
             component="a"
-            href={`/api/admin/registrations/export${listQueryString ? `?${listQueryString}` : ""}`}
+            href={`/api/admin/registrations/export?format=xlsx${listQueryString ? `&${listQueryString}` : ""}`}
             variant="outlined"
+            size="small"
+            sx={TAP_TARGET}
+          >
+            {t("registrations.exportExcel")}
+          </Button>
+          <Button
+            component="a"
+            href={`/api/admin/registrations/export${listQueryString ? `?${listQueryString}` : ""}`}
+            variant="text"
             size="small"
             sx={TAP_TARGET}
           >
@@ -334,10 +535,10 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             select
             name="eventId"
             label={t("nav.events")}
-            defaultValue={eventId ?? ""}
+            defaultValue={eventFilter.selected}
             sx={{ minWidth: 220 }}
           >
-            <MenuItem value="">{t("registrations.filterAll")}</MenuItem>
+            <MenuItem value={ALL_EVENTS}>{t("registrations.filterAll")}</MenuItem>
             {events.map((event) => (
               <MenuItem key={event.id} value={event.id}>
                 {event.title ?? event.id}
@@ -452,9 +653,147 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   ariaLabel={row.status === "CONFIRMED" ? t("registrations.resendQrLong") : t("registrations.resend")}
                   variant="outlined"
+                  // One per row, in a narrow column: the 44-pixel floor and a wrapping label
+                  // together made every row seventy pixels tall in a list whose whole purpose
+                  // is to make eighty of them scannable. The full sentence is still the
+                  // accessible name.
+                  compact
                 />
               </Box>
             )}
+            {/*
+              The rest of the verbs behind "⋮" (§178). Each is a hidden form the Server Component
+              renders, already carrying its action and its fields; the menu only decides which one
+              to submit. Which verbs appear is `rowVerbsFor`, a pure function tested against the
+              state machine — and every one of them is authorized again in its own service, so
+              this is a courtesy and not a gate (BR-REQ-060-01).
+            */}
+            {(() => {
+              const verbs = rowVerbsFor(row.status, actor.role, { checkedIn: row.checkedInAt !== null });
+              const hidden = (
+                <>
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="registrationId" value={row.id} />
+                </>
+              );
+              const items: RegistrationMenuItem[] = [
+                {
+                  kind: "link",
+                  icon: "open",
+                  label: t("registrations.openRow"),
+                  href: getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } }),
+                },
+              ];
+              if (verbs.includes("confirmOnPaper")) {
+                items.push({
+                  kind: "submit",
+                  icon: "confirm",
+                  label: t("desk.confirmOnPaper"),
+                  formId: `confirm-${row.id}`,
+                  confirm: {
+                    title: t("desk.confirmOnPaper"),
+                    body: t("registrations.confirmOnPaperBody"),
+                    confirmLabel: t("desk.confirmOnPaper"),
+                  },
+                });
+              }
+              if (verbs.includes("givePlace")) {
+                items.push({ kind: "submit", icon: "place", label: t("desk.givePlace"), formId: `place-${row.id}` });
+              }
+              if (verbs.includes("checkIn")) {
+                items.push({ kind: "submit", icon: "checkIn", label: t("desk.checkIn"), formId: `checkin-${row.id}` });
+              }
+              if (verbs.includes("undoCheckIn")) {
+                items.push({ kind: "submit", icon: "undo", label: t("desk.undoCheckIn"), formId: `checkin-${row.id}` });
+              }
+              if (verbs.includes("cancel")) {
+                items.push({
+                  kind: "submit",
+                  icon: "cancel",
+                  label: t("registrations.cancel"),
+                  formId: `cancel-${row.id}`,
+                  color: "error",
+                  confirm: {
+                    title: t("registrations.cancel"),
+                    body: t("registrations.cancelBody"),
+                    confirmLabel: t("registrations.cancel"),
+                  },
+                });
+              }
+              /*
+                Last, below a rule, in the error colour (§180). A link and not a submit: there is
+                no hidden form to post, because erasing asks for two things nobody can put in a
+                hidden field — a reason and the row's name, typed. It opens the panel at the top
+                of this page instead, which is a plain server-rendered form and therefore the
+                same experience with JavaScript and without it.
+              */
+              if (verbs.includes("erase")) {
+                items.push({
+                  kind: "link",
+                  icon: "erase",
+                  label: t("registrations.erase"),
+                  href: eraseHref(row.id),
+                  color: "error",
+                  separated: true,
+                });
+              }
+              return (
+                <>
+                  {verbs.includes("confirmOnPaper") && (
+                    <Box component="form" id={`confirm-${row.id}`} action={confirmRegistrationNowAction} sx={{ display: "none" }}>
+                      {hidden}
+                    </Box>
+                  )}
+                  {verbs.includes("givePlace") && (
+                    <Box component="form" id={`place-${row.id}`} action={promoteRegistrationAction} sx={{ display: "none" }}>
+                      {hidden}
+                    </Box>
+                  )}
+                  {(verbs.includes("checkIn") || verbs.includes("undoCheckIn")) && (
+                    <Box component="form" id={`checkin-${row.id}`} action={checkInAction} sx={{ display: "none" }}>
+                      {hidden}
+                      <input type="hidden" name="direction" value={row.checkedInAt ? "undo" : "in"} />
+                    </Box>
+                  )}
+                  {verbs.includes("cancel") && (
+                    <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationAction} sx={{ display: "none" }}>
+                      {hidden}
+                    </Box>
+                  )}
+                  <RegistrationRowMenu
+                    ariaLabel={t("registrations.rowActions", { name: row.registeredName })}
+                    cancelLabel={t("confirm.cancel")}
+                    items={items}
+                  />
+                  {/*
+                    Erasing is the one verb on this row that has to survive JavaScript being off,
+                    because it is the one the owner reached for and could not find. The "⋮" menu
+                    is a client island: with no JavaScript it never opens, and every verb inside
+                    it is reachable instead from the registration's own page — every verb except
+                    this one, which is the point of the work.
+
+                    `<noscript>` is markup the server already sent, so this costs no bytes of
+                    JavaScript and nothing at all when JavaScript is on, where the browser does
+                    not render it. It points at the same href the menu item does, and the panel
+                    it opens is the same panel. Nothing is duplicated but the way in.
+
+                    An element inside `<noscript>` is safe here, which is worth writing down
+                    because it does not look it: with scripting enabled a browser parses the
+                    contents of `<noscript>` as plain text rather than as DOM, which is the shape
+                    a hydration mismatch is usually made of. React 19 handles it deliberately —
+                    `shouldSetTextContent` is true for `noscript`, so `beginWork` reconciles it
+                    with `null` children and never builds fibers for what is inside, and the
+                    hydration-diff warning is skipped for the same elements. The server renders
+                    the real `<a>`, checked, and the client never looks at it.
+                  */}
+                  {verbs.includes("erase") && (
+                    <noscript>
+                      <a href={eraseHref(row.id)}>{t("registrations.erase")}</a>
+                    </noscript>
+                  )}
+                </>
+              );
+            })()}
           </Stack>
         )}
       />

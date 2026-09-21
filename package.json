@@ -45,6 +45,7 @@
     "@mui/material": "9.4.0",
     "@mui/material-nextjs": "9.4.0",
     "@tiptap/extension-image": "3.31.3",
+    "@tiptap/extension-table": "3.31.3",
     "@tiptap/pm": "3.31.3",
     "@tiptap/react": "3.31.3",
     "@tiptap/starter-kit": "3.31.3",
@@ -60,6 +61,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "sharp": "0.35.4",
+    "write-excel-file": "4.1.1",
     "zod": "4.5.4"
   },
   "devDependencies": {

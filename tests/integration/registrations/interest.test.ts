@@ -114,9 +114,18 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
   it("answers a bot exactly like a person — the form's honeypot and timing check, no row", async () => {
     const event = await seedEvent();
     await expect(registerInterest(db, event, form("bot@example.ro", { honeypot: "http://spam" }), NOW)).resolves.toBeUndefined();
-    await expect(registerInterest(db, event, form("fast@example.ro", { renderedAt: new Date(NOW.getTime() - 1000).toISOString() }), NOW)).resolves.toBeUndefined();
-    await expect(registerInterest(db, event, { email: "stripped@example.ro", locale: "ro" }, NOW)).resolves.toBeUndefined();
+    // Inside the one-second floor (§217): a second ago is now on the passing side of it.
+    await expect(registerInterest(db, event, form("fast@example.ro", { renderedAt: NOW.toISOString() }), NOW)).resolves.toBeUndefined();
     expect(await rows(event.id)).toHaveLength(0);
+  });
+
+  it("keeps an address that arrived with no render time (§217)", async () => {
+    // A stripped or missing timestamp is not evidence of anything: there is nothing to time.
+    // The honeypot still guards this form, and the cost of a wrong guess here is somebody who
+    // never hears that registration opened.
+    const event = await seedEvent();
+    await registerInterest(db, event, { email: "stripped@example.ro", locale: "ro" }, NOW);
+    expect(await rows(event.id)).toHaveLength(1);
   });
 
   it("takes no address while no approved privacy notice describes it — the form's own gate", async () => {
@@ -260,6 +269,7 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
     expect(message.text).not.toMatch(/\/inregistrari\//);
     expect(message.html).not.toContain("Salut, ,");
     expect(message.html).toContain("Salut,");
-    expect(message.html).not.toContain("<img");
+    // Below the header band, which carries the club lockup on every message (§174).
+    expect(message.html.slice(message.html.indexOf("</div>") + 6)).not.toContain("<img");
   });
 });

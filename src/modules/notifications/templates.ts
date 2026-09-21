@@ -1,6 +1,7 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { COLOR } from "@/theme/brand";
+import { env } from "@/shared/config/env";
 
 /**
  * The twelve message types of AGENTS.md §16.3 (BR-REQ-080-01), in Romanian and English.
@@ -59,7 +60,8 @@ export function renderContent(
     ...(content.facts
       ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
       : []),
-    ...content.paragraphs,
+    // The plain-text half drops the bold markers rather than printing them (§189).
+    ...content.paragraphs.map((text) => text.replace(/\*\*([^*]+)\*\*/g, "$1")),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
@@ -69,6 +71,13 @@ export function renderContent(
     ...(content.footer ? ["", content.footer] : []),
   ];
 
+  /**
+   * `**like this**` becomes bold, applied **after** escaping so the marker can only ever wrap
+   * text this codebase wrote (§189). The owner, of a confirmation: "in mail, numarul de concurs
+   * trebuie facut bold, e super important!" — and it is: it is the one thing a runner reads on
+   * a phone at the desk. The plain-text part strips the markers rather than printing them.
+   */
+  const emphasise = (escaped: string) => escaped.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   const paragraph = (inner: string) => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5">${inner}</p>`;
   const htmlParts = [
     paragraph(escapeHtml(content.greeting)),
@@ -82,7 +91,7 @@ export function renderContent(
           ),
         ]
       : []),
-    ...content.paragraphs.map((text) => paragraph(escapeHtml(text))),
+    ...content.paragraphs.map((text) => paragraph(emphasise(escapeHtml(text)))),
     // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
     // does not render is a participant at the desk with nothing to show.
     ...(content.image
@@ -119,12 +128,63 @@ export function renderContent(
  */
 function card(blocks: string[][]): string {
   const rule = `<hr style="border:0;border-top:1px solid ${COLOR.line};margin:24px 0">`;
+  /**
+   * The club's lockup on the band, not its name in letters (§174; the owner: "în mailul de
+   * înregistrare am nevoie de logoul BVR").
+   *
+   * A hosted **PNG**, because half the mail clients in use refuse SVG, and the white-on-blue
+   * raster is generated from the same source the site serves (`scripts/brand-assets.mjs`). The
+   * `alt` is the club's name, so a client with images off shows exactly what the band said
+   * before — nothing is lost when the picture is blocked, which is the common case on a first
+   * message from an unknown sender.
+   *
+   * The address derives from `APP_BASE_URL` like every other absolute URL here (`AGENTS.md`
+   * §8): no hostname is written in `src/`.
+   */
+  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email.png" alt="Bra&#536;ov Runners" width="180" height="74" style="display:block;width:180px;height:74px;border:0">`;
+  /**
+   * The header is a **white banner**, and the message declares itself a light-scheme document
+   * (§218; Dani: "this email header looks ugly! it should be a banner with white background").
+   *
+   * ## What was actually wrong, because the card was already white
+   *
+   * `COLOR.surface` is `#ffffff`, so in an ordinary inbox the band and the logo were the same
+   * colour and nothing showed. The screenshot was Gmail's **dark mode**, which re-colours what
+   * it can and cannot re-colour a raster: the card went dark, the logo's own white rectangle
+   * did not, and the lockup ended up looking like a sticker on a dark wall — the exact thing
+   * §189 changed the blue band to avoid.
+   *
+   * ## The two halves of the fix
+   *
+   * `color-scheme: light` in both the meta and a `:root` rule is what tells Apple Mail, Outlook
+   * and Gmail's webmail to leave the colours alone. It is declared twice on purpose: the meta
+   * is what most clients read, and Gmail strips `<head>` but keeps a `<style>` block.
+   *
+   * And the banner is a **table cell with a `bgcolor` attribute**, not a styled `<div>`. A
+   * client that inverts anyway has to fight an HTML attribute rather than a CSS declaration,
+   * which is the one lever that still works in the clients that ignore `color-scheme`; the
+   * logo is centred in it so a band wider than the picture still reads as a letterhead rather
+   * than as a picture with space beside it.
+   *
+   * A full document rather than a fragment, for the same reason: there was no `<head>` to put
+   * any of this in.
+   */
   return [
+    "<!DOCTYPE html>",
+    '<html lang="ro"><head>',
+    '<meta charset="utf-8">',
+    '<meta name="color-scheme" content="light">',
+    '<meta name="supported-color-schemes" content="light">',
+    "<style>:root{color-scheme:light;supported-color-schemes:light}</style>",
+    "</head>",
+    `<body style="margin:0;padding:0;background:${COLOR.surface}">`,
     `<div style="max-width:600px;margin:0 auto;font-family:Roboto,Helvetica,Arial,sans-serif;color:${COLOR.ink}">`,
-    `<div style="background:${COLOR.blueInk};color:${COLOR.surface};padding:16px 24px;border-radius:12px 12px 0 0;font-weight:700;letter-spacing:3px;font-size:14px">BRA&#536;OV RUNNERS</div>`,
-    `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background:${COLOR.surface}">`,
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse">`,
+    `<tr><td bgcolor="${COLOR.surface}" align="center" style="background-color:${COLOR.surface};padding:20px 24px;border:1px solid ${COLOR.line};border-bottom:0;border-radius:12px 12px 0 0">${logo}</td></tr>`,
+    "</table>",
+    `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background-color:${COLOR.surface}">`,
     ...blocks.flatMap((parts, index) => (index > 0 ? [rule, ...parts] : parts)),
-    "</div></div>",
+    "</div></div></body></html>",
   ].join("\n");
 }
 
@@ -265,7 +325,7 @@ const T = {
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `Înscrierea ta la ${d.eventTitle ?? "eveniment"} este confirmată. Te așteptăm!`,
-        ...(d.bibNumber ? [`Numărul tău de concurs: ${d.bibNumber}. Îl primești la masă, în ziua cursei.`] : []),
+        ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**. Îl primești la masă, în ziua cursei.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`La ridicarea numărului de concurs arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
@@ -288,7 +348,7 @@ const T = {
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "Evenimentul"} este peste două zile. Iată ce ai nevoie.`,
         ...(d.eventProgramme?.length ? [`Programul: ${d.eventProgramme.join("; ")}.`] : []),
-        ...(d.bibNumber ? [`Numărul tău de concurs: ${d.bibNumber}.`] : []),
+        ...(d.bibNumber ? [`Numărul tău de concurs: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`Ce să aduci: ${d.eventChecklist}`] : []),
         ...(d.checkinCode
           ? [`La masă arată codul QR de mai jos sau spune codul ${d.checkinCode}.`]
@@ -326,7 +386,7 @@ const T = {
       subject: (d: TemplateData) => `Numărul tău de concurs: ${d.bibNumber ?? "—"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Ți-am dat numărul ${d.bibNumber ?? "—"} la ${d.eventTitle ?? "eveniment"}. Îl ridici la masă în ziua cursei${d.checkinCode ? `, cu codul QR de mai jos sau spunând codul ${d.checkinCode}` : ""}.`,
+        `Ți-am dat numărul **${d.bibNumber ?? "—"}** la ${d.eventTitle ?? "eveniment"}. Îl ridici la masă în ziua cursei${d.checkinCode ? `, cu codul QR de mai jos sau spunând codul ${d.checkinCode}` : ""}.`,
         "Dacă ai primit deja un alt număr prin email, acesta îl înlocuiește.",
       ],
       action: "Vezi înscrierea",
@@ -443,7 +503,7 @@ const T = {
       body: (d: TemplateData) => [
         `${d.eventTitle ?? "The event"} is two days away. Here is what you need.`,
         ...(d.eventProgramme?.length ? [`The programme: ${d.eventProgramme.join("; ")}.`] : []),
-        ...(d.bibNumber ? [`Your race number: ${d.bibNumber}.`] : []),
+        ...(d.bibNumber ? [`Your race number: **${d.bibNumber}**.`] : []),
         ...(d.eventChecklist ? [`What to bring: ${d.eventChecklist}`] : []),
         ...(d.checkinCode ? [`At the desk show the QR code below or say the code ${d.checkinCode}.`] : []),
         "Can't come? Cancel with the link below — your place goes to somebody on the waiting list.",
@@ -479,7 +539,7 @@ const T = {
       subject: (d: TemplateData) => `Your race number: ${d.bibNumber ?? "—"}`,
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `You have number ${d.bibNumber ?? "—"} at ${d.eventTitle ?? "the event"}. Collect it at the desk on race day${d.checkinCode ? `, with the QR code below or by saying the code ${d.checkinCode}` : ""}.`,
+        `You have number **${d.bibNumber ?? "—"}** at ${d.eventTitle ?? "the event"}. Collect it at the desk on race day${d.checkinCode ? `, with the QR code below or by saying the code ${d.checkinCode}` : ""}.`,
         "If an earlier email gave you a different number, this one replaces it.",
       ],
       action: "See your registration",

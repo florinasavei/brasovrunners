@@ -62,7 +62,7 @@ describe("BR-REQ-053-02 legal document editing", () => {
       .returning();
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "ADMIN" })
       .returning();
   });
 

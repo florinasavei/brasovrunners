@@ -1,4 +1,4 @@
-import { count, eq } from "drizzle-orm";
+import { asc, count, eq } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -13,6 +13,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus } from "./domain/state-machine";
 import {
@@ -380,6 +381,15 @@ export async function promoteRegistrationByStaff<T extends Record<string, unknow
 /**
  * One race number by hand, or none (BR-REQ-038-01 criterion 7). The partial unique index is
  * what refuses two runners with one number; here that surfaces as a sentence.
+ *
+ * **A confirmed registration's number is settled** (§173; the owner: "nu ar trebui să mai pot
+ * schimba numărul de concurs odată confirmat!"). §105 put a preferential number in an
+ * organizer's hands, and that stays — before confirmation, which is when there is nothing
+ * printed and nobody has been told. Once a registration is confirmed the runner has been
+ * emailed their number, it is on a sheet, and quite possibly on a bib in an envelope; changing
+ * it there produces two runners who each believe they are 214. The one exception is giving a
+ * number to a confirmed registration that has none, which is filling a gap rather than moving
+ * anybody.
  */
 export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -395,6 +405,12 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
   if (current.bibNumber === bibNumber) return current;
+  if (current.status === "CONFIRMED" && current.bibNumber !== null) {
+    throw new DomainError(
+      "VALIDATION_ERROR",
+      "this registration is confirmed and already has a race number; it cannot be changed",
+    );
+  }
 
   let updated: Registration;
   try {
@@ -588,6 +604,20 @@ export async function cancelRegistrationByStaff<T extends Record<string, unknown
  *
  * Tokens and outbox rows cascade at the database. Nothing here writes email: a deletion is not
  * a message, and the participant who asked for it does not want one.
+ *
+ * ## `confirmName` (§180)
+ *
+ * Optional, and supplied by exactly one caller: the erase panel on the registrations *list*.
+ * On the registration's own page you arrived by choosing this person and their name is on the
+ * screen; in a list of twenty-five rows that re-sort under you, the row you meant and the row
+ * above it are one line apart and the menu is identical for both. So the list makes the
+ * Administrator transcribe the row's name, and the check happens **here**, against `current` —
+ * the same read the deletion itself is built on — rather than in the action against a second
+ * fetch that could disagree with it.
+ *
+ * It is a slip guard, not an authorization one: `assertAdministrator` above is the gate, and
+ * this argument cannot be used to grant anything. That is why it is optional and why leaving it
+ * out is not an error.
  */
 export async function deleteRegistrationByStaff<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -595,18 +625,53 @@ export async function deleteRegistrationByStaff<T extends Record<string, unknown
   registrationId: string,
   reason: string,
   now: Date,
+  options: { confirmName?: string } = {},
 ): Promise<void> {
   assertAdministrator(actor);
 
   const current = await findRegistrationById(db, registrationId);
   if (!current) throw new DomainError("NOT_FOUND", "no such registration");
 
+  // Order matters: the role first, then existence, then the typed name. A mismatch must not be
+  // the way somebody learns a registration exists, and `NOT_FOUND` before this line is the same
+  // answer an Administrator gets for a row that is genuinely gone.
+  if (options.confirmName !== undefined && !eraseConfirmationMatches(options.confirmName, current.registeredName)) {
+    throw new DomainError("VALIDATION_ERROR", "typed name does not match the registration", [
+      "confirmName",
+    ]);
+  }
+
+  await eraseRegistration(db, actor, current, reason, now);
+}
+
+/**
+ * The erasure itself, with the authorization and the lookup already done by the caller.
+ *
+ * Split out of `deleteRegistrationByStaff` so that the second caller — erasing a whole event
+ * with everyone on it (`content/events/service.ts` `hardDeleteEvent`) — runs the *same* path
+ * rather than a second one that reimplements it. Two implementations of "remove a person from
+ * the system" is exactly how one of them ends up forgetting the declaration acceptance, or the
+ * audit row, or the release of the place.
+ *
+ * `db` is deliberately a `Database` and not a `Transaction`: a `Transaction` satisfies
+ * `Database`, so the single-registration caller passes the pool and gets today's behaviour
+ * unchanged, while the event caller passes its open transaction and every write below — the
+ * cancellation, the audit row, the deletes — lands inside it. Drizzle turns the inner
+ * `transaction()` calls into savepoints when that happens.
+ */
+async function eraseRegistration<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  current: Registration,
+  reason: string,
+  now: Date,
+): Promise<void> {
   // Releasing the place is a capacity decision, so it goes through `unregister` and takes the
   // event lock the same way every other one does (§10.6). Only for a row that holds a place:
   // a lapsed or already-cancelled registration holds nothing to give back.
   if (canTransition(current.status, "CANCELLED")) {
     const event = await eventForRegistration(db, current.eventId);
-    await unregister(db, event, registrationId, "ADMIN", now);
+    await unregister(db, event, current.id, "ADMIN", now);
   }
 
   await recordAuditEvent(db, {
@@ -614,7 +679,7 @@ export async function deleteRegistrationByStaff<T extends Record<string, unknown
     participantId: current.participantId,
     action: "registration.deleted_by_staff",
     entityType: "registration",
-    entityId: registrationId,
+    entityId: current.id,
     // The status it was in, and why — not who it was. The row exists to show that a deletion
     // happened and who authorised it, not to keep a copy of what was deleted.
     metadata: { from: current.status, reason: reason.trim().slice(0, 500) },
@@ -622,8 +687,8 @@ export async function deleteRegistrationByStaff<T extends Record<string, unknown
   });
 
   await db.transaction(async (tx) => {
-    await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, registrationId));
-    await tx.delete(registrations).where(eq(registrations.id, registrationId));
+    await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
+    await tx.delete(registrations).where(eq(registrations.id, current.id));
     // Erased means gone (`DECISIONS.md` §88): when this was the person's last registration,
     // the participant row goes too — and with it, by cascade, their action tokens and outbox
     // rows (the address). The audit row above keeps `participant_id` as null from here, which
@@ -636,4 +701,49 @@ export async function deleteRegistrationByStaff<T extends Record<string, unknown
       await tx.delete(participants).where(eq(participants.id, current.participantId));
     }
   });
+}
+
+/**
+ * Erase every registration of one event, one at a time, through the path a single erasure
+ * takes (BR-REQ-037-06). Used only by `hardDeleteEvent`, which calls it inside its own
+ * transaction and deletes the event row after it.
+ *
+ * It asserts nothing and reads no role: the caller has already decided, and its own gate is
+ * heavier than this one's would be. Keeping the assertion in one place rather than two is the
+ * point of the split — a second `assertAdministrator` here would read as a guard and would in
+ * fact be dead code, which is worse than no guard at all.
+ *
+ * The order is `created_at, id`, which is the order the queue itself is in. That matters only
+ * for what happens in between: cancelling a confirmed registration offers its place to whoever
+ * is next on the waiting list, and that person is erased a moment later in the same
+ * transaction, taking the offer and its queued email with them. The churn is invisible outside
+ * the transaction, and going through it is what guarantees nothing is left holding a place.
+ */
+export async function eraseAllRegistrationsOfEvent<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  eventId: string,
+  reason: string,
+  now: Date,
+): Promise<number> {
+  const rows = await db
+    .select()
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId))
+    .orderBy(asc(registrations.createdAt), asc(registrations.id));
+
+  let erased = 0;
+  for (const row of rows) {
+    // Re-read: an earlier erasure in this loop may have promoted this row off the waiting
+    // list, and the status decides whether a place is released.
+    const current = await findRegistrationById(db, row.id);
+    if (!current) continue;
+    await eraseRegistration(db, actor, current, reason, now);
+    erased += 1;
+  }
+
+  // What was erased, not what was listed. The two are the same today — nothing else writes
+  // inside this transaction — and the number is shown to a person, so it says the true thing
+  // rather than the convenient one.
+  return erased;
 }

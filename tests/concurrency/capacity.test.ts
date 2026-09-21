@@ -259,6 +259,8 @@ describe("BR-REQ-034-02/034-03 capacity under real concurrency", () => {
               email: person.email,
               locale: "ro",
               privacyAcknowledged: true,
+              fitnessDeclared: true,
+              rulesAcknowledged: true,
               resultsNameConsent: false,
               listOptOut: true,
               honeypot: "",

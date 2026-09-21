@@ -48,17 +48,52 @@ export type AuditAction =
   | "outbox.sent_by_staff"
   /** The thank-you sent once per event to everyone checked in — the event and the count, never who (§82). */
   | "event.thanks_sent"
+  /**
+   * An event erased outright, with everyone registered for it (BR-REQ-037-06). Like
+   * `registration.deleted_by_staff` it outlives what it describes, and like it, it names the
+   * thing and never the people: the event's title and date, how many registrations went with
+   * it, and the reason the Administrator typed. One of these, plus one
+   * `registration.deleted_by_staff` per registration, is the whole record that the event and
+   * its queue ever existed.
+   */
+  | "event.hard_deleted"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
-  | "contact_recipients.changed";
+  | "contact_recipients.changed"
+  /**
+   * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).
+   *
+   * The second action whose row outlives what it describes, in the sense that matters: the
+   * `legal_documents` row stays, but nothing in the application will offer, render or resolve
+   * it again, so this is the only place that still says the club once published those words,
+   * under that number, and who decided it should stop. The metadata carries the key, the
+   * version, its effective date and the content hashes — never the text itself (§12.12).
+   */
+  | "legal_document.withdrawn"
+  /**
+   * An approved legal version deleted outright (`DECISIONS.md` §151).
+   *
+   * The strongest case of a row that outlives what it describes: the `legal_documents` row, its
+   * text and both translations are gone, so this entry is the *only* record that the club ever
+   * published those words under that number — the key, the version, the date it took effect,
+   * who approved it, the SHA-256 of each language's text and the reason typed by the person who
+   * removed it. Never the text itself (§12.12): the hash is what makes the row checkable
+   * against a copy rather than a copy in its own right.
+   *
+   * The number is retired in the same transaction, so nothing will ever be issued this
+   * version's number again; `versionNumberRetired` says so on the row rather than leaving it to
+   * be inferred from another table.
+   */
+  | "legal_document.deleted";
 
 export type RecordAuditInput = {
   actorStaffUserId: string | null;
   participantId?: string | null;
   action: AuditAction;
   // `event` for the one action that is about a whole event's registrations at once;
-  // `email_outbox` for the one that is about the queue itself.
-  entityType: "registration" | "event" | "email_outbox" | "platform_setting";
+  // `email_outbox` for the one that is about the queue itself; `legal_document` for the one
+  // that is about a version of the club's own text.
+  entityType: "registration" | "event" | "email_outbox" | "platform_setting" | "legal_document";
   entityId: string;
   /**
    * The shape of the change, never a copy of what it was about. §12.12: no email body, no raw

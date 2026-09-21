@@ -256,6 +256,36 @@ export const registrations = pgTable(
     healthConsentVersion: integer("health_consent_version"),
     healthConsentAt: timestamp("health_consent_at", { withTimezone: true }),
 
+    /**
+     * "I declare I am medically fit to take part" (§171; the owner: "nu e clar cu informațiile
+     * medicale, trebuie să bifeze doar «declar că sunt apt»").
+     *
+     * **Not health data.** It is a statement the participant makes about themselves, the same
+     * kind of thing the declaration they sign later says, and it carries no diagnosis, no
+     * condition and nothing an Article 9 category covers — which is exactly why it can be
+     * required where `health_notes` cannot. The free text and its own consent stay where they
+     * were, optional and folded: somebody who wants the medical team to know something still
+     * has somewhere to write it.
+     *
+     * Null for every registration taken before this existed, and for a row a staff member
+     * entered at the desk on a paper declaration — there the paper carries the statement.
+     */
+    fitnessDeclaredAt: timestamp("fitness_declared_at", { withTimezone: true }),
+
+    /**
+     * When the entrant confirmed they had read the race's conditions (`DECISIONS.md` §195).
+     *
+     * The tick is behind a reading: the conditions open in a panel, the button that agrees is
+     * dead until the text has been scrolled to its end, and only then does the box become
+     * tickable. What is *recorded* is this timestamp and nothing else — scrolling cannot be
+     * proved and this column does not pretend to prove it. It says the person was shown the
+     * text and said they had read it, at this moment, which is what a paper form records too.
+     *
+     * Null for every registration taken before this existed, and for a desk entry: there the
+     * paper declaration carries the same sentence, signed (§67).
+     */
+    rulesAcknowledgedAt: timestamp("rules_acknowledged_at", { withTimezone: true }),
+
     privacyNoticeVersion: integer("privacy_notice_version").notNull(),
     privacyAcknowledgedAt: timestamp("privacy_acknowledged_at", { withTimezone: true }).notNull(),
 
@@ -291,6 +321,28 @@ export const registrations = pgTable(
      * the column safe exists and is tested.
      */
     bibNumber: integer("bib_number"),
+
+    /**
+     * The number held for this registration while it can still change (`DECISIONS.md` §214).
+     *
+     * The owner, looking at his own row stuck on "waiting for the email": "I need the BID to be
+     * reserved ASAP". A number that arrives only at confirmation arrives after the two steps
+     * most likely to strand somebody — an email that does not come, a declaration nobody has
+     * read yet — so the club cannot plan and the runner cannot ask about a number they do not
+     * have.
+     *
+     * **It is the opposite of `bib_number` in the one way that matters: it is released.** A
+     * provisional number belongs to a registration *while it occupies a place*, and the moment
+     * the place goes — cancelled, expired, pushed onto the waiting list — the number goes back
+     * into the pool for the next person. That is safe precisely because it is never printed and
+     * never emailed: nothing exists in the world that has to keep matching it. `bib_number`
+     * is the opposite and stays so — once given it is never reissued, because two people
+     * wearing 17 is the failure that rule exists to prevent.
+     *
+     * Unique per event while it is set, like `bib_number` and for the same reason, and drawn
+     * under the event row's lock — the serialization point capacity already uses (§10.6).
+     */
+    provisionalBibNumber: integer("provisional_bib_number"),
 
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     emailConfirmedAt: timestamp("email_confirmed_at", { withTimezone: true }),
@@ -360,6 +412,18 @@ export const registrations = pgTable(
     uniqueIndex("registrations_event_bib_number_unique")
       .on(t.eventId, t.bibNumber)
       .where(sql`${t.bibNumber} IS NOT NULL`),
+
+    check(
+      "registrations_provisional_bib_number_positive",
+      sql`${t.provisionalBibNumber} IS NULL OR ${t.provisionalBibNumber} > 0`,
+    ),
+    // The same guarantee for the number held before confirmation (§214). It is released when
+    // the place is, so this index is what makes a released number safe to hand to the next
+    // person: the release and the draw both happen under the event row's lock, and this is
+    // what would surface a mistake rather than let two rows quietly share a number.
+    uniqueIndex("registrations_event_provisional_bib_unique")
+      .on(t.eventId, t.provisionalBibNumber)
+      .where(sql`${t.provisionalBibNumber} IS NOT NULL`),
 
     // NOT NULL permits '', and an empty display name on a published start list is the legal
     // name leaking or a blank row. Neither is acceptable, so the emptiness is refused here too.

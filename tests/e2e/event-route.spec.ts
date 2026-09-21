@@ -39,7 +39,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     slug = `traseu-${suffix}`;
 
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
 
@@ -124,7 +124,7 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
   });
 
   test("says nothing about a route when the club has not drawn one", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     // Straight to this test's own event. Matching by title would be a substring match against
     // every "Cursa cu traseu …" an earlier run left behind, and `.first()` would pick one of
     // those rather than the row this spec just published.

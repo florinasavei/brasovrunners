@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.39-2026-09-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -7720,3 +7720,2196 @@ lenient read), `events/ical.test.ts` (several partners, the label said once),
 on it is no change).
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 170. Decided — the editor reads like an editor, and every refusal names what it wants (2026-09-20)
+
+**Context.** The owner asked for a WordPress-like event editor on 2026-09-20 and the work
+never happened — the run that was to do it stopped on a credit limit. What was there instead
+was a single column of roughly forty inputs under two headings, in the order the columns had
+been added to the `events` table, with publication at the very top and the words the organizer
+came to write about two screens below it. The same session's walkthrough turned up the rest,
+and they are not separate complaints: "aparent nu pot publica un eveniment" (the alert reads
+`Lipsesc: RO: excerpt` — a *column* name, for a box labelled "Rezumat" that sits under nothing
+and above the long description that dwarfs it); "aparent nu pot șterge evenimente" (the button
+fires and `VALIDATION_ERROR` comes back, where the list has explained the same refusal with a
+count since §114); "textul ăsta trebuie să fie collapsed" (six lines describing all seven event
+types, under every type); "repetă evenimentul trebuie să fie o bifă și abia apoi pot să setez
+frecvența"; "am nevoie de iconițe și aici" on the publication row; "și butoanele astea au
+nevoie de iconițe și trebe să fie active doar dacă selectez ceva" on the bulk bar; "this part
+should be sticky" on the language tabs; "aceste butoane sunt mult prea mari" on the share
+pills; and "«Deschide la masă» e confusing? ce e asta? e gen check-in?".
+
+Every one of them is the same defect in a different place: **the screen knows something it
+does not say.** It knows which field is missing and says a column name; it knows the event has
+three registrations and says nothing until you press; it knows you are choosing a type and
+explains the other six; it knows nothing is ticked and offers three live buttons.
+
+**Decision.**
+
+*The words first, the settings in named panels, publication in its own column.* The editor is
+two columns from `md` up and one on a phone. The main column is the single save form it has
+been since §28 — one `<form>`, one button, one transaction — and inside it the **content**
+panel comes first, then four settings panels: "Când și unde", "Înscrieri", "Traseu și detalii",
+"Film". The second column is "Publicare": the state and version chips, the live-edit warning,
+what is still missing, the transition buttons, the series header with its date chips, and
+repeat. On a phone that column is **first**, because on a phone it is what somebody opened the
+page to check. The two are siblings and never nested: the save is one form and every
+publication verb is a form of its own, and a form inside a form is not a thing HTML has.
+
+Nothing was renamed. Every field posts the name it posted before, so `eventFieldsFrom` and
+`translationFieldsFrom` read exactly what they read yesterday and every end-to-end locator
+still finds what it looked for. This is a rearrangement, and it is written down as one so that
+the next person does not go looking for the migration.
+
+*Within a language: the order somebody writes in.* Title, then the long description
+("Conținut — apare pe pagina evenimentului"), then the summary under it ("Rezumat — apare pe
+card și în distribuiri"), then rules, programme, what to bring. The page address and the two
+search-engine fields are folded at the bottom: set once, never looked at again. The summary
+was **above** the description, which asked for a one-sentence summary of something not yet
+written — and an empty summary is precisely what refuses publication. The labels now say where
+each one shows up, because "Descriere scurtă" and "Descriere completă" differ by one adjective
+and nothing about what they are for.
+
+*A refusal names the field on the screen, not the column in the table.* "Not ready to publish"
+maps every key `missingPublicFields` and `missingPublicEventFields` return through
+`editor.fields.*`, and names the language in its own endonym: `Română: Rezumat — apare pe card
+și în distribuiri`, not `RO: excerpt`. The service's own message keeps the column names; it is
+a developer's log line, and this is the sentence a person reads.
+
+*Delete explains itself before it is pressed.* The editor counts the registrations against the
+event and replaces the button with the reason, exactly as the list has. When every row in the
+way is test data it says so and points at the button that clears them, one section above,
+because "three registrations" on a QA event the organizer filled themselves is a dead end and
+"three registrations, all of them test data" is a next step.
+
+*Race numbers say why there are none.* A queue made entirely of test registrations gets no
+numbers and never will (§30, `AGENTS.md` §12.6). The screen said "no numbers yet", which reads
+as a broken button. It now says the rule and names the way to rehearse: a walk-in at the desk,
+which writes a real row.
+
+*The type note is about the type you chose.* One sentence for the chosen type, under the
+select; the comparison of all seven folded beside it. A comparison is for choosing and belongs
+one press away; the description of six types you did not choose is noise on every event.
+
+*Recurrence is a tick.* "Repetă evenimentul" is a checkbox, and the cadence, the weekdays, the
+end date and the button appear under it once it is ticked. The `NONE` cadence existed only
+because the control was always shown; the creation form and the event page both read the tick
+now, and both actions refuse a series without it. The fields are hidden, never unmounted, so a
+date typed and then unticked is still there when the box goes back on.
+
+*Glyphs on the verbs, dimmed when there is nothing to act on.* One registry,
+`shared/ui/action-icons.ts`, keyed by name — because an icon passed from a Server Component as
+an element-valued prop is the defect `CheckboxField` documents, and the fix is the same: the
+name crosses, the client makes the element. The bulk bar's three buttons dim while nothing is
+ticked, and the test for "this island is running" is `total > 0`: without JavaScript the count
+is never taken, the buttons stay live, and the server answers "nothing ticked" as it always
+did. No guard moved to the client.
+
+*The language tabs stay put.* The content panel is the tallest thing on the page, and by the
+bottom of the Romanian text the way to the English one was a page and a half above.
+
+*Two sizes for a pill.* The share and calendar buttons are 44 pixels on a touch screen and 32
+from `sm` up. A finger needs the 44; a pointer does not, and eight finger-sized pills across a
+desktop row are the loudest thing on a page where they are the least important. 32 is still
+well over the 24 WCAG 2.2 asks for.
+
+*A link says where it goes.* "Deschide la masă" is "Deschide la masa din ziua cursei
+(check-in)".
+
+**Rejected.** *Folding the settings panels.* A `<details>` would hide a required field from
+somebody who has never seen this screen, and the whole of this section is about a publication
+refusal naming a field nobody was shown. The panels are boxes, not folds; the folds are for
+what is genuinely optional — SEO, the type comparison, how a series works.
+
+*Showing the type help only for `RACE`*, which is the literal reading of "trebuie să apară
+doar la concurs, nu la toate". It would hide the explanation of what a race is from somebody
+sitting on `GROUP_RUN` wondering which to pick. The substance of the ask — do not show me six
+paragraphs about types I did not choose — is met by the one-line note, and the comparison stays
+reachable.
+
+*Moving the featured and special marks into "Publicare"*, where they belong by meaning. They
+are `event.*` columns and post with the save form; the publication column holds the transition
+forms, which are separate forms. Putting them there would have meant either a form inside a
+form or a second save, and both are worse than a mark at the bottom of "Traseu și detalii".
+
+**Consequences.** `EventFieldsForm` returns four `EditorPanel`s instead of one `Stack`;
+`TranslationFieldsForm` is reordered and gains a fold; the event page's `return` is a grid with
+two children. `RepeatFields` loses `withNone` and both actions gain a tick to read, so a form
+posted by an older cached page creates no series — which is the safe direction. Two message
+keys change wording (`editor.fields.body`, `editor.fields.excerpt`) and one link does
+(`registrations.openDesk`); the rest are additions. `tests/e2e/series-edit.spec.ts` ticks the
+new box before it fills the cadence.
+
+Tests: `tests/e2e/series-edit.spec.ts` (the repeat tick), `tests/unit/i18n/messages.test.ts`
+(both catalogues carry every new key), `tests/integration/cms/workflow.test.ts` (the excerpt
+derivation the reordered panel now makes obvious).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 171. Decided — the whole account workflow, and a form that says where its answers go (2026-09-20)
+
+**Context.** Two clusters from the same walkthrough, and they meet in the same place: a screen
+that knows something it does not say, and a workflow that stops one step short of being usable.
+
+*The accounts.* The owner: "but the zitadel workflow is not complete… I need to invite users to
+create accounts man! and set passwords and stuff", then "I must invite users and stuff, and I
+can also deactivate, send password resets, etc". What existed was half of it — create the human
+user, ask Zitadel for an invite code — with three holes. An account that already existed
+returned 409 and the story ended there: the row joined the allowlist, the screen said "they
+already have an account", and **nobody ever sent them the link that sets a password**, which is
+the common case rather than the rare one. There was no way to send a password reset to somebody
+who had signed in before and could not now. And there was no way to switch an account off at
+the provider — "Retrage accesul" removes the `staff_users` row, which is what stops the
+*backoffice* letting somebody in, and says nothing about whether they can still sign in at all.
+
+*The form.* "La formularul de înscriere trebuie să fie clar ce date sunt publice și ce date sunt
+confidențiale"; "nu e clar cu informațiile medicale, trebuie să bifeze doar «declar că sunt
+apt»"; "pune iconițe chiar și la sex"; "și la cetățenie pune steaguri man". The registration
+form asks for a birth date, a phone number, a next of kin and a health note, and said nothing
+anywhere about where any of it goes — while the answer is unusually good and worth saying. The
+medical block asked for free text first with a consent under it, which reads as "tell us your
+conditions", so the one thing the club actually needs from everybody — that they consider
+themselves fit — was nowhere and the Article 9 box was everywhere.
+
+**Decision.**
+
+*An existing account is invited, not skipped.* A 409 on create falls through to the same
+invitation a new account gets, so the person receives the link that sets their password either
+way. The outcome still reports `exists`, because the screen should say "they already had an
+account" rather than claim one was made.
+
+*Two more verbs, each its own button.* **"Trimite resetare de parolă"** asks Zitadel to email a
+reset link (`POST /v2/users/{id}/password_reset` with `sendLink`) — offered only to somebody who
+has signed in at least once, because before that the invitation is the right email and it sets
+the first password anyway. **"Dezactivează contul"** deactivates at the provider
+(`/deactivate`, with `/reactivate` behind the same function). It is deliberately *not* folded
+into "Retrage accesul": they answer two different questions — "may they use the backoffice" and
+"may they sign in at all" — and a colleague who changed job inside the club wants the first
+without the second. Nothing here ever holds a password or a code; Zitadel sends, Zitadel owns.
+
+*Every lookup is by email.* One `findZitadelUserId`, shared by all three verbs, because each is
+"find the person, then do one thing to them" and a lookup that disagreed between two of them
+would be the same defect twice. It searches `emailQuery` first and `loginNameQuery` second —
+the fix §170 made for the resend, now the only implementation there is.
+
+*The form says where its answers go.* One sentence above the first field, in two versions: the
+ordinary one ("nothing you write here appears anywhere on the site") and the one for an event
+that publishes a start list, which names the single exception and says what is *not* published
+even then. Each block of fields carries its own marker underneath — "Confidențial. Nu se
+publică." — so somebody who skipped the banner still meets the answer beside the question.
+
+*The medical block becomes a statement and a note.* **"Declar pe propria răspundere că sunt apt
+medical să particip"** is a required tick among the consents, stored as `fitness_declared_at`.
+It is **not health data**: no condition, no diagnosis, nothing Article 9 covers — which is
+exactly why it can be required where `health_notes` cannot, and why it needs no separate
+consent. The free text and its own consent stay, folded and closed, under a sentence saying it
+is optional, what it is for and that it is deleted seven days after the event. A test
+registration ticks it like everything else (§30); a staff entry and a desk walk-in do not —
+there the paper declaration carries it, and no staff member declares fitness on somebody's
+behalf (`AGENTS.md` §15.11).
+
+That fold **reverses §59 for this one group**, and only this one. §59 opened the optional
+sections because "a field nobody sees is a field nobody fills", and that argument is right for
+the runner's own club — the field people reported as missing. It is wrong here: the thing that
+must be filled is the tick, which is now among the consents where nothing hides it, and an open
+free-text box asking about conditions was reading as an instruction rather than an offer. Every
+other optional group stays open.
+
+*Glyphs on the closed sets.* Female, male and person beside the three answers for sex; the
+country's flag before its name, from the set `scripts/sync-flags.mjs` already copies into
+`public/flags/` — which that script was written for ("will show many when a participant can
+state their country"), normalised to 4:3 so a column of two hundred names does not wobble
+between Romania's 2:3 and the United Kingdom's 1:2. A regional-indicator emoji was tried first
+and dropped: Windows draws it as two boxed capitals, and Windows is what the club's laptop runs.
+Both as **children** of the menu item, never as an element-valued prop — the defect
+`CheckboxField` documents. The flags degrade to boxed letters on Windows, which is accepted:
+the country's name is the label and this is the mark beside it.
+
+**Rejected.** *Making the fitness statement part of the privacy acknowledgment.* They are
+different things — one is "I have read what you do with my data", the other is "I am fit to run"
+— and a single box covering both would let a refusal of either be read as agreement to the
+other.
+
+*Shipping flag images.* 249 SVGs, or a package, to fix a rendering choice one desktop platform
+makes, on a page every phone loads. The name is the label; the flag is decoration.
+
+*Deactivating the account inside "Retrage accesul".* It would make the common case (somebody
+moving between roles) destructive, and the destructive case is one extra press away.
+
+**Consequences.** Migration `0049_fitness_declared` adds one nullable column — expand only,
+null for every row taken before it existed. `registrationSubmissionSchema` gains a
+`z.literal(true)`, so every fixture that builds a valid public submission carries it, and
+`REGISTRATION_FORM_FIELDS` carries it too, because an unticked literal is a rejection the error
+summary must be able to name and link to. The CSV export gains a "Medically fit (declared)"
+column. `zitadel-users.ts` goes from two exported functions to four, over one connection helper
+and one lookup.
+
+Tests: `tests/unit/staff/zitadel-users.test.ts` (an existing account is invited; the reset asks
+for a link and never a code; deactivate and reactivate; each verb without the key),
+`tests/unit/registrations/*` and `tests/integration/registrations/*` (the new required tick, and
+that a test registration makes it like a real one).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 172. Decided — the start list as a spreadsheet, named after its race (2026-09-20)
+
+**Context.** The owner: "the participants list must be exported to an excel (nicely formatted)
+and also re-imported", then, flatly: "CSV is stupid! I want excel! and export just for a
+particular race!"
+
+He is right about the file and half right about the filter. The per-race export already
+existed — the button carries the list's filters, so setting "Evenimente" and pressing it
+produces that race's entrants and nothing else (§15.10) — but the file it produced was called
+`registrations.csv` whichever race it was about, which is how three of them end up in a
+downloads folder telling you nothing. And a comma-separated file is not what a volunteer opens
+on race morning: a Romanian Excel splits on semicolons rather than commas, renders `07` as `7`,
+reads a timestamp as whatever the machine's locale thinks it is, and arrives with no header
+frozen and every column one character wide. The club's actual use — sort by club, scan down the
+numbers, tick people off — is a spreadsheet's job, and the file was making it hard.
+
+**Decision.**
+
+*The same rows, as a real `.xlsx`.* `format=xlsx` on the same route, and the button on the list
+asks for it; the comma-separated file stays behind a quieter link, because it is what a script
+reads and the one format nothing can misinterpret. The sheet has a bold header frozen at the
+top, columns wide enough to read, dates written as dates so they sort as dates, and the race
+number as a number so it sorts as one. Two columns the CSV never had: the registration's `id`,
+first and narrow, and the runner's own club — the thing a start list is actually sorted by.
+
+*The file is named after the race.* The event's title as filtered for, plus the day, so two
+exports of one race a week apart are two files. The sheet inside carries the same name, reduced
+to what Excel accepts: at most 31 characters and none of `: \ / ? * [ ]`.
+
+*`write-excel-file`, not ExcelJS.* 1.8 MB against 21, in a function whose whole bundle has a
+ceiling on the plan this runs on. ExcelJS is the better-known answer and would have been the
+lazy one. This writes; it does not read, and the reader — the other half of what was asked —
+is chosen on its own merits when the import is built, because reading somebody's edited
+spreadsheet is a different problem from writing a clean one.
+
+*Every cell is typed, and that is the formula guard.* A name beginning with `=` is a formula to
+a spreadsheet, and a start list is exactly where one arrives from a public form. The CSV
+prefixes an apostrophe (`neutralizeCsvValue`); here the cell is declared as text, which is the
+stronger version of the same guarantee — a text cell is never evaluated, whatever it starts
+with — and the test asserts that no `<f>` element exists anywhere in the sheet.
+
+*The tests read the bytes.* Not a round trip through the same library, which would agree with
+itself and with nothing else: the test opens the ZIP through its central directory, checks the
+four parts without which no spreadsheet opens the file, and reads the sheet's own XML for the
+header, the frozen pane and the values. A writer that passes this produces a file Excel opens.
+
+**Deferred — the re-import, deliberately, and it needs a decision the owner has to make.**
+Reading the file back is easy; deciding what it is *allowed to do* is not. An imported row must
+never create a registration, because a place comes from the allocator under lock (§10.6,
+BR-REQ-034-01) and a spreadsheet row that becomes a confirmed entrant is an overbooking with
+extra steps. It must never set a status, because a confirmation requires an approved declaration
+somebody signed (§10.8). So an import can only be "update these columns on rows that already
+exist, matched by the `id` the export wrote" — a spelling corrected, a club filled in, a t-shirt
+size — with a preview of exactly what would change before anything is written. That is the
+shape; which columns are editable is the owner's call, and building it before that answer would
+be building the wrong thing.
+
+**Rejected.** *Replacing the CSV.* It costs nothing to keep, it is what anything automated
+should consume, and the one property it has that the workbook does not — being readable by
+every tool ever written — is worth a second button.
+
+*Putting the filters in the filename beyond the event.* "Confirmate" and "necăutate" are how
+the file was made, not what it is about; the event is what it is about.
+
+**Consequences.** One dependency, pinned. `RegistrationListRow` carries `clubName`. The export
+route grows a branch rather than a second route, because everything before the branch — the
+role check, the filters, the omission of test rows — is identical and must stay identical.
+
+Tests: `tests/unit/registrations/workbook.test.ts` (the container and its parts, every header,
+the frozen pane, a number that stays a number, a name that never becomes a formula, a sheet
+name Excel would refuse, and an empty list that still produces a file).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 173. Decided — race numbers in order, from the race's own band (2026-09-20, reversing §94)
+
+**Context.** The owner, having asked for a random draw on 2026-09-18 ("the bibs must be
+generated randomly", §94), reversed it: "cred că ar fi mai ușor să dăm numerele de concurs în
+ordinea înscrierii, așa se face de obicei, dar există un prefix de cursă — spre exemplu numerele
+pot începe cu 1 acum dar la alte curse sunt de la 100 în funcție de distanță și au altă
+culoare". And, separately: "nu ar trebui să mai pot schimba numărul de concurs odată
+confirmat!"; and "nu văd BID-ul" of the registrations list.
+
+He is right, and the reasons are not aesthetic. A random number is a number nobody can check
+off: a volunteer with an envelope of pre-printed bibs hands them out in order, a start list is
+read down a column, and "is 47 here yet" is a question a sequential list answers and a scattered
+one does not. The band is the other half: a club running a 5 km and a 10 km gives one 100–199
+and the other 500–599, in two colours, and the number a runner wears says which start line they
+belong on before anybody reads a name.
+
+**Decision.**
+
+*Numbers run in order, from the event's own start.* `pickBibNumber` returns the lowest free
+number at or above `events.bib_start_number`, which defaults to 1. Not "the last one plus one":
+the lowest free one, so a gap left by a number typed by hand out of order is filled by the next
+registration rather than skipped past. Everything that made §94 safe is untouched — the draw
+happens under the event row's lock, the same serialization point capacity uses (§10.6); a number
+once given is never renumbered; a cancelled registration keeps its number so it is not handed to
+somebody else.
+
+*Two columns on the event: the band and its colour.* `bib_start_number` (1 by default, at most
+99000) and `bib_colour` (a hex triplet, or nothing for the club's own). Both on the event
+because the club runs one distance per event today — multi-distance races are M2 — so an event
+is exactly the unit a band belongs to. Both are checked at the database: a start that a
+four-digit bib can reach, and a colour that is six hex digits after a hash, because the sheet
+paints the value straight into the printed band and a stored `red; background: url(…)` would be
+a style injection into a PDF the club hands to two hundred people.
+
+*A confirmed runner's number is settled.* §105 put a preferential number in an organizer's
+hands; that stays, before confirmation, which is when nothing is printed and nobody has been
+told. Once a registration is confirmed the runner has the number in their inbox, it is on a
+sheet and possibly on a bib in an envelope, and changing it there produces two people who each
+believe they are 214. The one exception is a confirmed registration with **no** number: filling
+that gap is not moving anybody, and it is what a row confirmed before §87 looks like.
+
+*The number is a column of the list.* It was inside the journey chip, which is where somebody
+looks for "how far along is this person" and not for "which number is this". It sorts, nulls
+last — a row with no number is not "before 1", it is not in the list the sort is about — and the
+step column is called "Unde a ajuns" rather than "Etapă", which named the concept and not the
+question.
+
+**Rejected.** *Keeping the random draw behind a setting.* Two allocation strategies is two
+things to reason about at the one point in the system where two organizers press a button at
+once, for a choice nobody will change twice.
+
+*A band per distance rather than per event.* It is the right model and it is M2's, when an event
+can hold several races. Building the column now would mean a shape with one row in it forever
+and a migration anyway when the real thing arrives.
+
+*Letting an Administrator override the lock.* Every override becomes the normal path within a
+month. The desk can already give a number to somebody who has none, which is the case that
+actually arises.
+
+**Consequences.** Migration `0050_bib_band`, expand only: two nullable-or-defaulted columns and
+two checks. `suggestFreeBibNumbers` counts from the event's band unless the caller says
+otherwise, so the backoffice stops offering 1, 2, 3 at a race whose numbers start at 500.
+`assignBibNumbers` reads the band once under the lock it already takes.
+
+Tests: `tests/integration/registrations/race-day.test.ts` — numbers in order from 1 and from
+100, a confirmed number that cannot be changed or cleared, a preferential number before
+confirmation with its duplicate and nonsense refusals, the gap-filling exception with its email,
+and suggestions that start where the race does.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 174. Decided — the lockup where it belongs, and the event in the runner's calendar (2026-09-20)
+
+**Context.** The owner, of the declaration PDF: "logo-ul nu apare colorat frumos cu albastru în
+declarație", with a picture of the club's mark drawn as a thin hollow outline; then, with the
+filled mark attached: "logo trebuie să apară așa: și în mail și în declarații și peste tot!".
+Separately: "în mailul de înregistrare am nevoie de logoul BVR și de link către eveniment și
+site", "și de iCal ca să poată pune în calendar".
+
+Two different defects wearing one complaint.
+
+*The PDF.* `src/theme/pdf/logo.png` was already the filled blue lockup — but it carried an
+**alpha channel**. An alpha PNG does not reach a PDF as one image: pdfkit writes the colour and
+a separate soft mask, and the viewer composites them. Several viewers, and most printers,
+composite that badly, and what comes out is edges — the outline the owner photographed. The
+file was also 600×248 against the `495/1200` ratio the three renderers use to place what
+follows it, so the layouts were each off by a hair.
+
+*The email.* The card's header was the club's name as letter-spaced text on a blue band. No
+logo anywhere, in the one message a runner keeps.
+
+**Decision.**
+
+*One script, two rasters, both committed.* `scripts/brand-assets.mjs` renders
+`public/brand/logo.svg` and its white twin into the two places that cannot take an SVG: the
+PDFs, and the email. The SVG stays the source of truth — it is what the site serves and what a
+review can read as text. The outputs are committed rather than built, because rasterising at
+build time would put a native dependency in front of `next build` for a file that changes once
+a year.
+
+*The PDF raster is flattened onto white.* No alpha, so there is no soft mask and nothing to
+composite: no viewer and no printer can get it wrong. White because every page these are drawn
+on is white. And 1200×495, which is finally the ratio the code already assumed.
+
+*The email header carries the lockup as a PNG.* White on the club's blue, hosted under
+`APP_BASE_URL` — a **raster**, because half the mail clients in use refuse SVG, and hosted
+rather than inlined, because a data URI is what the rest of them strip. Its `alt` is the club's
+name, so a reader with images off sees exactly what the band said before: nothing is lost when
+the picture is blocked, which is the common case on a first message from an unknown sender.
+
+*The confirmation and the reminder carry the event as a calendar file.* The same `.ics` the
+event page offers (§107, §159), from the same function, attached. Every phone and desktop
+client opens it with one tap, including the ones that will not follow a link out to the site —
+which on race week is the point. **Published events only**: an `.ics` for a draft would put an
+unpublished page's details into somebody's calendar, and a message for an unpublished event
+simply goes without one. It rides beside the signed declaration on the confirmation, never
+instead of it.
+
+*A translator without a request.* The outbox renderer drains from the scheduler, long after the
+request that queued a row has gone, so `getTranslations` is not available to it —
+`calendarLabels` uses next-intl's own `createTranslator` over the statically imported
+catalogues. The public routes keep `getTranslations`; both produce the same words.
+
+**Rejected.** *Keeping the alpha and fixing the viewer.* There is no viewer to fix; the file is
+handed to whoever the club hands it to.
+
+*Inlining the logo as a data URI.* Gmail and Outlook both strip them, which trades a picture
+that renders badly in some clients for one that renders in none.
+
+*Attaching the `.ics` to every message.* The verification email is about confirming an address,
+not about a date; the state notice is about a place being lost. Two messages carry it, and both
+are ones somebody acts on.
+
+**Consequences.** `findPublishedEventBySlug` becomes generic in its schema, like its neighbours,
+because the renderer reaches it with the application's own database handle. Three test
+assertions that said "this message has no image" or "no link" now ask that of the **body**: the
+header band has a picture on every message, and the claim was always about the content.
+`README.md` indexes the new script.
+
+Tests: `tests/integration/registrations/signed-declaration.test.ts` (the confirmation carries
+both attachments; the calendar file is a real VCALENDAR naming the event), and the three scoped
+assertions above.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 175. Decided — the QA calendar says so, and a tick that cannot be untied is not offered (2026-09-20)
+
+**Context.** Two findings from the owner's walkthrough, both about a control saying something
+untrue about itself.
+
+"The QA iCal needs to be named differently!" — the `.ics` files two deployments produce carry
+different UIDs, because a UID takes its host from the site's own address, so a QA copy and a
+production copy of the Sunday run never merge into one entry. What they do instead is sit side
+by side in the same calendar app, same title, same hour, with nothing on screen to say which
+one is real. The club's own people subscribe to both while rehearsing, which is exactly the
+situation §163 already solved for email with the `[QA]` subject mark.
+
+"E ciudat că aici nu pot deselecta ediția curentă, e un pic redundant sincer" — the series
+header shows every date as a chip with a tick box, and the date whose editor is open is ticked
+and cannot be unticked (§134: the save always reaches it). A box that refuses to change is not
+a choice; it is a picture of one, and it invites the press that does nothing.
+
+**Decision.**
+
+*The environment goes on the calendar's name **and** on every entry.* `[QA] ` in front of
+`X-WR-CALNAME` and in front of each `SUMMARY`, idempotent, QA only — production is never
+marked, and local and test never leave the machine. Both halves are needed: a subscribed feed
+shows its calendar name, while a single event added from the confirmation's attachment lands in
+a calendar that already has a name of its own, and the only thing on screen is the entry's
+title.
+
+*The current date's chip drops its box.* It stays filled, keeps `aria-current="page"` and keeps
+the arrow that opens it; the checkbox role and the tick belong to the dates where ticking is a
+decision. Nothing about the rule changed — a save still reaches the date whose editor is open —
+only the claim the control was making about itself.
+
+*A tap target is 44 pixels on a phone and 24 on a desktop.* The owner, twice: "aceste butoane
+sunt mult prea mari", "these buttons must be smaller as well and have icons". The share row, the
+add-to-calendar row and the month/year pickers are 44 on a touch screen and 32 from `sm` up.
+BR-REQ-041-01 criterion 6 asks for 44 on **event links**, and those are whole cards —
+comfortably over it at either width. The end-to-end check that enforces it measured *every* link
+in `main` at 44, on both projects, which is stricter than the criterion and is what caught this:
+it now asks 44 of the phone, which is the design target and where a finger is the pointer, and
+WCAG 2.2's own 24 of the desktop, where it is not. The cards are unchanged and still measured.
+
+**Rejected.** *Marking the QA `.ics` by UID alone.* Already true, and invisible: a UID is not
+something anybody reads.
+
+*Leaving every control at 44 on a desktop.* Eight finger-sized pills across a desktop page are
+the loudest thing on it, and they are the least important thing on it.
+
+*Letting the current date be unticked.* It would mean "save this event, but not this event".
+
+**Consequences.** `qaMarked` lives in `ical.ts` beside the builder, because both the feed and
+the per-event file pass through it. The one test that asserts the mark sets `APP_ENV` around a
+fresh import rather than mutating a module's view of the environment behind its back.
+
+Tests: `tests/unit/events/ical.test.ts` (production unmarked, QA marked on the calendar name
+and on the entry).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 176. Decided — three things that were silently impossible (2026-09-20)
+
+**Context.** Three reports in one afternoon, on the day the owner meant to finish and test the
+site. Each is the same failure: the platform knew exactly what was wrong and said something
+else, or nothing.
+
+*Registration.* "Trebuie să ne putem înscrie man!" — the form returned "Înscrierea nu a putut fi
+trimisă. Verifică datele completate", on a form where every field was correct. The rejection was
+Turnstile: a token Cloudflare will not confirm redirects with `fields=captcha`, and `captcha` is
+not one of the form's fields, so `parseInvalidFields` dropped it and the summary fell through to
+the generic sentence. The catalogue has had the right words (`errors.captcha`) since §97 and
+nothing could reach them. A visitor is sent hunting through twenty correct inputs for a failure
+that is about none of them — and the club cannot register anybody.
+
+*Deleting an event.* "Încerc să șterg un eveniment și nu merge! E destul de grav! Asta o să îmi
+umple baza de date." The refusal was correct — an event with registrations is archived, not
+deleted — and its advice was a dead end: it said "arhivează-l" to somebody looking at an event
+that was **already archived**, about rows he had created himself to rehearse with. A QA database
+fills with events nobody can remove.
+
+*Pictures.* "Pictures look really bad and compressed now", then "în continuare imaginile sunt
+super pixelate, hyper-comprimate, big issue."
+
+*Staff sign-in.* "That invitation email code does not work, I am still asked to sign in but I
+don't have the option to create an account." The invitation said the colleague makes their own
+account on the sign-in page. They cannot: that page is one button that hands off to the
+provider, and the provider offers no self-registration for this organization. Without
+`ZITADEL_MANAGEMENT_PAT` nothing creates the account, so the sentence described something
+impossible.
+
+**Decision.**
+
+*The anti-bot refusal says what it is.* `captcha` is read from the raw parameter — it is a
+rejection about nothing the person typed, so it is deliberately not a form field — and the
+summary shows `errors.captcha` first and alone, with the same sentence under the widget. The
+check itself is unchanged: an unconfirmed token is still refused, in every environment. What
+changed is that the person is told, and the club is not left thinking the form is broken.
+
+*An event takes its own test registrations with it.* When every registration blocking a delete
+is `kind = TEST`, they are removed and the event goes. Nothing new is permitted: clearing test
+rows is already an Administrator's verb on the event page, already refused in production, and
+already exactly this code (`removeTestRegistrations`) — this is the two presses in one. **A
+single real registration still blocks the delete**, and the count in the list now names the real
+ones only, so "3 persoane sunt înscrise" never again means three rows the organizer invented.
+The evidence rule is untouched: a real registration carries the privacy notice its participant
+acknowledged and, once signed, their declaration (`AGENTS.md` §10.8).
+
+*A picture is encoded lossily once, not twice, and at a size a screen actually has.* The browser
+re-encoded every upload to WebP at 0.86 before sending it, and the server decoded that and
+re-encoded to WebP at 80 — two lossy generations, the second working from detail the first had
+already discarded. The browser now sends the file **untouched** when the server will accept it,
+and shrinks only what is too large, at 0.95, because that output is an intermediate whose
+artefacts become permanent. The stored width goes from 1600 to **2400** and quality from 80 to
+**88** with `effort: 6`: the editor and the event page render a picture across about a thousand
+CSS pixels, and every screen the club uses is 2×, so 1600 was being *upscaled* — magnifying the
+artefacts of a double encode. The thumbnail follows, 480 → 640.
+
+*Echipa says the real step when it cannot create an account.* A warning names
+`ZITADEL_MANAGEMENT_PAT`, and the help text stops promising self-registration: it says to set
+the key or to create the account in the provider's console. Nothing about the auth model
+changed — `staff_users` is still the allowlist (`AGENTS.md` §13).
+
+**Rejected.** *Waving through a missing Turnstile token outside production.* It would make QA
+disagree with production about whether a registration succeeds, which hides the problem until
+the day it matters. The owner can switch the keys off in thirty seconds if he wants the form
+open, and the honeypot and the timing check stay in front of it either way (§19.4).
+
+*Letting a delete clear real registrations.* That is the evidence the platform exists to keep.
+
+*Fixing the pictures by raising quality alone.* The double encode was the larger half; quality 95
+on a twice-encoded 1600px file is a bigger file that still looks soft.
+
+**Consequences.** `countRegistrationsByEvent` returns `{total, test}` per event, so the list can
+say how many real registrations are in the way. `deleteEvent` calls `removeTestRegistrations`,
+which brings the environment gate with it — in production the refusal is unchanged whatever the
+rows are. Pictures already stored keep the artefacts they were given; re-uploading is what fixes
+them, and the owner has been told so.
+
+Tests: `tests/integration/cms/crud.test.ts` (an event with only test rows is deleted with them;
+one real row still refuses, and nothing is cleared on the way to being refused).
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 177. Decided — the review's pass over the band, the banner and the message count (2026-09-20)
+
+**Context.** An adversarial survey of the day's work, run before the next batch, found three
+things the tests had not.
+
+*The band never reached the row.* §173 added `bib_start_number` and `bib_colour` to the event,
+the editor's two controls, the zod fields and the migration — and `eventColumnsFrom`, the one
+place the event's columns are written, was not touched. Both values were parsed, validated and
+dropped. SPECS BR-REQ-038-01 criterion 12 ("both are stored on the event") was false on the
+day it was written; the integration test that would have caught it inserted the column by hand.
+
+*The banner lied by omission.* §171's "Nimic altceva nu se publică: nici emailul, nici telefonul,
+nici data nașterii" on the registration form — while `club_name` has been on the public start
+list since §85. The tick was consent to one field where two are published.
+
+*The message count was one too many.* `MESSAGES_PER_COMPLETED_REGISTRATION = 5` counted
+`DECLARATION_SIGNED`, which nothing has enqueued since §126 folded the PDF into the
+confirmation (§171 confirmed it). Every headroom and cost figure on `/devs` and
+`/admin/tasks` over-projected by a quarter.
+
+**Decision.** Both band columns are written by `eventColumnsFrom` and carried by a series save
+(`SERIES_COLUMNS`): one race, one band, on every date. The colour control becomes a **palette**
+rather than `<input type="color">`, which has no empty state — every save would have written a
+colour whether or not the organizer chose one, and null, §173's "the club's own", would have
+been unreachable. Six print-safe colours plus the club's own; a stored colour outside the palette
+is kept as its own option so a save never silently changes it. The banner names the club. The
+constant is four, and its comment says why.
+
+**Consequences.** `tests/integration/cms/one-save.test.ts` saves the band and reads it back, and
+saves it empty and reads null. The next batch's builders start from this commit — the review
+also found their worktrees had been cut from an old `main`, which is recorded here so the next
+run checks its base before it writes a line.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 178. Decided — the registrations list gets verbs, not a status select (2026-09-20)
+
+**Context.** The owner, of the registrations screen: "trebe sa pot face management de inscrieri
+mai eficient!", "CRUD participants", "and statuses should be drop-down", and separately "aș vrea
+să filtrez by default după evenimentul principal (pt că ar trebui să existe doar unul la un
+moment dat)".
+
+Everything he is asking for already exists as a verb — confirm on paper, give a place, check in,
+undo, resend, cancel — on the registration's *own* page, one at a time, behind a click into the
+row and a click back. Eighty registrations on race morning is eighty round trips. What the list
+offered was a resend button and nothing else.
+
+The sentence that needed a decision is "statuses should be drop-down".
+
+**Decision.** *The drop-down is a menu of verbs, never a status select.* Picking a state and
+saving would be a second write path into `registrations`, and it would go past three things at
+once: the allocator that hands out places while holding the event row (`AGENTS.md` §10.6), the
+approved declaration a confirmation requires (§10.8), and §15.11's closed list of what staff may
+do, which ends "there is no fourth". A free select could confirm somebody who never signed
+anything — quietly, with no audit row naming who did it and no place taken from the queue in the
+proper order. So each row carries a "⋮" holding the verbs that apply to *that* row, each one
+submitting a hidden form the Server Component already rendered, each reaching the same Server
+Action and the same service as the registration's own page, each authorized there again
+(BR-REQ-060-01).
+
+*Which verbs appear is one pure function.* `rowVerbsFor(status, role, {checkedIn})` — tested
+against `state-machine.ts` rather than against a list copied into a test. The assertion that
+matters: it never offers to confirm a registration the state machine cannot move to CONFIRMED,
+which is precisely how "no confirmation without a signed declaration" survives a new surface.
+Spread across JSX, that property would have been something a reader had to reconstruct.
+
+*The list is about the featured event unless told otherwise.* `defaultEventFilter` is pure and
+shared by the page and the export link, because a filter applied on screen but not in the
+download hands the club a spreadsheet of a different set than it was looking at (§15.10). "Toate
+evenimentele" is the literal `all`, one press away — a default that cannot be escaped is not a
+default. An id no longer in the list falls back rather than showing an empty page filtered by
+something the select cannot display.
+
+**Rejected.** *A status select, as asked.* See above. The owner's underlying complaint —
+too many clicks — is answered without it.
+
+*Inline editing of a participant's details in the row.* The detail page owns the name correction
+and its audit trail; a second editor for the same field is a second place for it to be wrong.
+
+**Consequences.** `listEventsWithRegistrations` returns `featured` so the default can be
+derived without a second query. The row's actions cell grows one icon button; the resend button
+stays where it was, because on race week it is the one verb pressed most and a menu would cost it
+a click.
+
+Tests: `tests/unit/registrations/row-verbs.test.ts` (never a verb the state machine refuses;
+never confirm before the declaration; check-in only for confirmed; the destructive verbs withheld
+from a role that may not manage registrations; resend exactly where a message exists) and
+`tests/unit/registrations/default-event-filter.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 179. Decided — erase is gated on the role, not on "can this still be cancelled" (2026-09-20)
+
+**Context.** Twice over, an hour apart: "tot nu pot sterge evenimente!" and then "nu pot sterge
+inscrieri!". The second explains the first. He had two registrations he had made himself while
+walking the form, the event refused to be deleted because of them, the refusal told him to
+archive the event instead — and when he went to remove the registrations, the screen that erases
+one was not there.
+
+It was not there because the whole destructive section of a registration's page — cancel *and*
+erase — sat behind one condition: `canTransition(status, "CANCELLED")`. A registration that is
+already CANCELLED or EXPIRED has no such edge. So the verb disappeared from exactly the rows most
+likely to need it, and the more carefully somebody cleaned up after a test — cancel first, then
+remove — the more certainly he locked himself out.
+
+The service never had that limitation. `deleteRegistrationByStaff` releases the place only
+`if (canTransition(current.status, "CANCELLED"))` and erases either way. This was the UI hiding
+a verb the domain supports, which is the failure mode §15.11 is written against from the other
+direction: a screen must not offer what the domain refuses, and it must not withhold what the
+domain allows either.
+
+**Decision.** *Erase is its own section, on its own gate:* `canManageRegistrations(actor.role)`
+— the same condition the Server Action asserts (BR-REQ-060-01). Cancel keeps its own gate, and
+the two are no longer nested, because they answer different questions. Cancel asks "can this
+registration still be withdrawn"; erase asks "may this person remove a person's data at all"
+(BR-REQ-037-06). Nesting them made the second a special case of the first, which it never was.
+
+*The two refusals now name the path.* "Nu se poate șterge: {count} înscrieri reale" used to end
+"arhivează evenimentul" and stop — advice for a club with a real field of runners, addressed to
+somebody looking at three rows he had typed himself. Both messages now name the way through:
+open the registrations, erase each one with a reason, then delete the event. A refusal that does
+not say what would work is a dead end, and the owner walked into it twice.
+
+**Rejected.** *Letting the event delete take its registrations with it.* §176 already sweeps
+`kind = TEST` rows, which is safe because a test registration is not a person. A real one is,
+and erasing it is a decision with an audit row and a reason attached — it does not belong
+underneath a button labelled "delete the event".
+
+**Consequences.** `registrations/[id]/page.tsx` has two sections where it had one nested pair.
+The cancel help text sits with cancel rather than after both.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 180. Decided — a race number is a picture, and the picture is the same everywhere (2026-09-20)
+
+**Context.** "Ar trebui să văd BID-ul ca și poză! BID-urile sunt super importante!", then "trebuie
+să pot descărca BID-ul!", then "trebe să pot descărca toate BID-urile pentru a le printa!", and
+"folosește termenul «Număr de concurs (BID)»".
+
+**Decision.** *One module decides what a bib looks like; two renderers draw it.* `bib-design.ts`
+holds the band colour and the footer line and imports nothing but the palette — no `node:`
+builtin, no pdfkit, no React — because `bibs-pdf.ts` draws A4 with pdfkit and `bib-image.tsx`
+draws 900×600 with `next/og`, and the picture is the club's preview of the paper. They must
+agree; a shared constant is how, and it is pure for the same reason `media/limits.ts` is (§178).
+
+*Three ways out, one route.* The event's whole sheet, one participant's own page, and the picture
+— the same handler, the same design, authorized the same way. A volunteer printing a replacement
+at the desk and an Administrator printing eighty the night before are the same act at different
+counts.
+
+*The term is "Număr de concurs (BID)" wherever the club reads it*, because that is what the club
+says out loud on race morning.
+
+**Consequences.** `bibs.ts`, `csv.ts` and `workbook.ts` follow the same wording. Tests:
+`bib-design.test.ts` (the fallback colour, a malformed hex), `bib-image.test.ts`,
+`bibs-pdf.test.ts`, `bibs.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 181. Decided — an approved legal version is withdrawn, never deleted (2026-09-20)
+
+**Context.** "Trebuie să pot șterge documente! Trebuie să le refac cu placeholders!"
+
+**Decision.** *Almost yes.* §46 and `AGENTS.md` §12.5 say an approved version is never deleted,
+and underneath the principle sits arithmetic that makes it load-bearing:
+`registrations.privacy_notice_version` is a plain integer with no foreign key, and
+`createDraftVersion` takes `max(version) + 1`. Delete version 4 and the next draft is version 4
+again, with different words — and every registration that recorded "privacy notice 4" becomes a
+consent to text nobody was ever shown, with nothing in the database able to notice.
+
+So: **withdrawal.** The row, the number and the words stay; what goes is the offering. A withdrawn
+version is not resolved as current, not offered to the event editor, not counted as "this key
+already has approved text", and not on the club's list unless the club asks. What withdrawal can
+never touch is a version something relied on, or the text the site is serving right now —
+`assertWithdrawable` is the whole of that rule, and it is called twice: once outside the
+transaction so the screen names the actual obstacle, once inside it so the decision is taken on
+rows nothing can have changed underneath. Two calls of the same function, never a cheap check and
+a thorough one, because a guard that differs between them is a guard that can be talked past.
+
+*A draft is still deleted outright.* Nothing ever relied on it.
+
+**Consequences.** Migration `0051_legal_withdrawal` adds `withdrawn_at` and
+`withdrawn_by_staff_user_id` — expand-only. Test:
+`tests/integration/legal/withdrawal.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 182. Decided — a select that is centred in both places MUI renders it (2026-09-20)
+
+**Context.** "Aceste inputuri sunt super descentrate!!", of the sex and citizenship fields, after
+§171 put a mark before each option's words.
+
+**Decision.** *Lay the row out twice, deliberately.* The cause is MUI's own mechanism, not a stray
+margin: a `Select` shows the chosen option by reusing the matching `MenuItem`'s **children** —
+`SelectInput.js` computes `displaySingle = child.props.children` — and the item's `sx` is not
+among them. A row laid out only on the `MenuItem` is laid out nowhere in the closed field, where
+the glyph falls back to an inline box on the text's baseline, about five pixels below the middle
+of a 56-pixel field. A flag was worse: `Flag` renders `display: block` and took a line of its
+own. So `shared/ui/select-option.ts` lays the row out on the item *and* through the Select's own
+slot class.
+
+*A picture written into the short description shows on the card.* The cards rendered `excerpt`,
+the plain-text shadow of the document, which drops exactly what the owner had put there.
+
+**Consequences.** `select-option.ts` is shared by the two fields that have marks. Tests:
+`select-options.test.ts`, `card-excerpt.test.ts`, `registration-panel.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 183. Decided — the bucket's pictures are a tab, not a grey line of text (2026-09-20)
+
+**Context.** "I should be able to see and manage the pictures stored in Cloudflare as well." The
+list existed. It was reachable through one grey line under the albums' intro paragraph, which is
+where a link goes to be missed.
+
+**Decision.** *Two buttons at the top of both pages*, the current one filled — albums, and every
+picture the bucket holds. A Server Component with no pathname lookup: `AdminTabs` is a client
+island because a layout cannot know which page it wraps, but there are two pages here and each
+knows which it is. No icons: an icon element passed from a Server Component to a client one is the
+defect `shared/ui/action-icons.ts` documents, and a two-word label needs no glyph.
+
+*Each row carries the absolute address as well as the stored one.* A body stores a path when the
+bucket is this app, because a body outlives a hostname (§8, BR-REQ-101-02) — and somebody pasting
+a picture into a newsletter needs the whole address. *The total is summed from the rows the page
+already read*, never asked of the database again, so the figure at the top and the rows under it
+cannot disagree.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 184. Decided — the bib is visible where the bib is handed over (2026-09-20)
+
+**Context.** "Numerele de concurs sunt frumoase, dar trebuie să le văd și din zona de înscrieri și
+din ziua cursei."
+
+**Decision.** *The desk shows the picture, folded.* A volunteer holding an envelope checks it
+against the screen; the desk's own job is the large digits and the buttons, so the picture sits
+behind a summary and is fetched only when the fold is opened — `<details>` does not load what it
+does not render, which matters on a phone at a start line.
+
+*Every desk role may ask for one participant's picture.* The preview route was Administrator-only,
+like the sheet. It is now `canWorkTheDesk`, and the sheet is not: the picture carries a name and
+a number, which is exactly what `AGENTS.md` §15.11 already says every staff role sees at the
+desk. One registration at a time, by id, on the event it belongs to — this is not the list, and
+two hundred single requests is not the export.
+
+**Rejected.** *Putting the printable sheet at the desk too.* A volunteer needs the one envelope in
+front of them; the whole field is the club's print run, and it carries every name at once.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 185. Decided — the anti-bot check is rendered explicitly, and the guardian is a tick (2026-09-20)
+
+**Context.** Two screenshots an hour apart, the registration form and the contact form, both
+showing "Verificarea anti-bot nu a reușit. Bifează din nou căsuța «Nu sunt robot»" printed above
+**nothing to tick**. "Plus faza asta cu robotul man!!! implementează corect!!"
+
+**Decision.** *Turnstile renders explicitly, from its own client island, and resets on every
+attempt.* The implicit mode — `<div class="cf-turnstile">` in the server's markup and `api.js`
+loaded beside it — works exactly once. `api.js` scans the document when it loads and never
+again, and the token it produces is single use. So the first thing that goes wrong with a
+submission takes the widget with it: the server re-renders the form, React reuses the same empty
+div, no script load happens, no challenge is drawn, and every further attempt fails on a missing
+token whatever else the person fixes. The instruction to tick the box again was, by then, an
+instruction to tick nothing.
+
+`TurnstileWidget` injects `api.js?render=explicit` once per document, draws the widget into its
+own element when the script is ready, and calls `reset()` whenever `attempt` changes — the
+server passes its render time, a new value on every response. Thirty lines of client island,
+which §1.5 asks a client island to justify: what is being fixed is what happens to the DOM
+*after* the server has answered, and nothing on the server can reach that.
+
+*The guardian is a tick, not a fold.* "Mă disperă faza cu tutorele! Aparent dacă expandez acel
+câmp deja trebe să completez!!! Vreau să fie o bifă acolo man." He was right about the shape even
+though the field was never required by the browser: a fold asks "is there more here", while the
+actual question — "is the runner under eighteen" — has an answer, and the answer decides whether
+anything under it applies. The tick reveals the name field through `:has()`, with no client
+island and with JavaScript switched off.
+
+*The rule does not move.* The server still requires a guardian when the birth date gives under
+eighteen, whatever the box says: a legal requirement cannot be untickable. The tick is checked for
+them when a rejection names the field, which is how somebody who is a minor and did not tick is
+shown the box they have to fill.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 186. Decided — a participant who opted out is counted, never named (2026-09-20)
+
+**Context.** "Trebuie să văd care participanți sunt vizibili pe site și care nu! Și cumva să îi
+afișez cenzurați… gen «participanți surpriză»… sau «participanți anonimi»."
+
+**Decision.** *The public list gains a row per opted-out runner, reading "Participant anonim".*
+The list had been dropping them silently, so an event with forty-two confirmed runners showed
+thirty-nine names under a heading that said forty-two — a page contradicting itself, and the
+count is what most readers came for.
+
+*It is a count, never a row.* `countAnonymousStartListEntries` selects a number and nothing
+else: no name, no club, no identifier, so there is nothing to leak and
+`tests/privacy/public-surface.test.ts` keeps its grip on `listPublicStartList` exactly as it
+was. One row each rather than "and 3 others", because "a person is coming and asked not to be
+named" is true of each of them individually.
+
+*The backoffice marks the ones who are not on the list.* Only those: on an event that publishes a
+list most rows are on it, and a chip on every row is a chip nobody reads. The mark is shown
+whatever the event's own visibility, because it records what the person asked for, not what the
+club has switched on today.
+
+**Rejected.** *Initials, or a censored name.* "M. P." on a start list of a hundred is a name to
+somebody who knows the field, and §32 puts the participant's refusal ahead of the page's
+symmetry. The platform holds their name; the page does not have to.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 187. Decided — one description slot, under the title, on the page and in its preview (2026-09-20)
+
+**Context.** The owner, straight out of the editor he had just asked for: "pagina de edit event și
+main e diferită… rezumatul apare înainte descrierii full! Fi consistent man!"
+
+Four readers went over every surface that renders either field — the page, the preview, the
+listing and its hero, the cards, the Open Graph description, the JSON-LD, the calendar feed, the
+emails — and three reviewers were asked to refute what they concluded. All three refuted the first
+proposal, on file and line; what survived is smaller than what was proposed and is recorded here.
+Three separate things were true at once, and one edit answers all three.
+
+**1. The order contradicted the editor.** §170 put *Conținut* first and *Rezumat* under it, because
+asking somebody to summarise what they have not written yet is what left summaries empty — and an
+empty summary is what refuses publication. The page kept the summary's slot under the title and
+rendered the long description eighty lines and six rendered blocks lower: after the divider, the
+facts, the registration call to action, the interest box, the five-step panel, the share and
+calendar row and the street address.
+
+**2. The one description moved half a page depending on which field was filled.** With only a
+summary, the page's prose sat under the title. With a long description, it sat below the address.
+Same editorial role, two positions — and the more an organizer wrote, the further down the reader
+had to scroll to find any prose at all.
+
+**3. A long description that was only a picture or only a film was silently dropped.** The page
+guarded *both* of its slots with `isRichTextEmpty`, which is defined over the plain text;
+`EventExcerpt` has always guarded itself with `hasRichTextContent`, which counts a picture. So a
+picture-only *Conținut* was "empty": it did not render, and the *Rezumat* rendered in its place.
+That is the owner's sentence exactly — the summary where the full description should have been.
+
+**Decision.** *One slot, directly under the title, shared by one component.* `EventDescription`
+renders it and the page and the preview both call it, because the preview is the only way to read
+a draft before publication and it had been showing the body five blocks higher than the live page
+did — an organizer checked one layout and shipped another.
+
+*The rule takes two predicates, and that is the point.* `planEventDescription` is pure and
+tested: `hasRichTextContent` decides whether the long description renders at all,
+`isRichTextEmpty` decides whether it contributed any **words**, and the summary stands in when it
+did not. So a picture-only *Conținut* now renders *under* its summary rather than instead of it —
+the page keeps its prose and the organizer keeps his picture. Reading one question with one
+predicate is what produced defect 3, so the pair lives in a function with a test rather than in
+two JSX guards eighty lines apart.
+
+*The editor's order stands; the page moves to meet it.* §170 is one day old and has a reason
+behind it. The page's order was never decided — it is where the body block happened to sit when
+§71 added it. Reversing the editor would restore the empty-summary trap §170 removed, and it would
+not even answer the complaint, because the *Conținut* would still render below the address.
+
+**Rejected.** *Changing the calendar entry.* The `.ics` carries the summary and then the long
+description's first six hundred characters, which is the owner's sentence in a file the page's own
+button hands him — but §159 decided that deliberately, and the change breaks three golden-string
+tests whose fixtures the first proposal had not read. It is a separate decision with a separate
+cost, and it is named here so it is not lost rather than folded in quietly.
+
+*Changing the structured data to prefer `seoDescription`.* §156 says the metadata, the Open Graph
+card, the structured data and the emails keep the short one. They do.
+
+*Using `hasRichTextContent` for both questions.* That is what loses the summary: an event with a
+sentence in *Rezumat* and a picture in *Conținut* would render the picture and no words at all,
+while its own card, hero, search result and share preview all carried the sentence.
+
+**Consequences.** `AGENTS.md` §11.3 said the full description is "rendered on the event page
+under the short description" — stale since §156 and wrong after this; amended. `SPECS.md`
+BR-REQ-011-01 criterion 11 now states the position and the words-not-content distinction. The
+long description now pushes the facts and the registration button down the page: on a phone a
+long one puts "Înscrie-te" below the prose. That is the one visible trade, and it is the order the
+editor implies. Publication is untouched — `REQUIRED_PUBLIC_TRANSLATION_FIELDS` is still title,
+slug and excerpt, and `bodyJson` is still optional.
+
+Test: `tests/unit/events/event-description.test.ts` — including the property that there is no
+document for which the page renders neither field.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 188. Decided — the guardian's name appears when the birth date says minor (2026-09-20)
+
+**Context.** §185 had turned a fold into a tick, because the fold read as a demand. The owner,
+the same evening: "aș vrea ca asta cu «Participantul are sub 18 ani» să apară doar când data
+nașterii indică faptul că e minor… sau să fie ceva bifă doar atunci."
+
+**Decision.** *No tick. The birth date is the answer.* The form already asks for it, and asking
+the same question twice only invites the two answers to disagree — with the server then refusing
+an unticked minor over a field nobody had been shown. `GuardianForMinor` subscribes to the
+birth-date input and opens when it gives under eighteen.
+
+*The rule does not move.* The server still requires a guardian when the birth date says so,
+whatever the browser drew, and `forceOpen` is that verdict coming back: a rejection naming the
+field opens the block whatever the date box now holds, so an error never points at something
+invisible.
+
+*Without JavaScript the field is simply always there.* A `<noscript>` rule forces it open. The
+alternative — hidden and unreachable — would lock out exactly the person who has to fill it, and
+`AGENTS.md` §1.5 says this form works with JavaScript off.
+
+*It subscribes to the input rather than owning it.* `useSyncExternalStore`, not an effect
+writing state: the date field is a Server Component's MUI `TextField` carrying native validation
+(`min`, `max`, `required`), and lifting it into the island would trade all of that for
+hand-written validation on the one form that has to work everywhere.
+
+**Consequences.** `isMinorOn` moved to `registrations/domain/age.ts`, which imports nothing, so
+the browser gets four lines of date arithmetic instead of the form's whole Zod schema — the
+reasoning of `media/limits.ts` in §178. `fields.ts` re-exports it, so nothing else moved.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 189. Decided — three small things the owner asked for, and why each is where it is (2026-09-20)
+
+**The claim is about a group, and it says where its line is.** "Sunt membru al echipei Brașov
+Runners" became "…al **grupului**…", with a "?" beside it reading "Am fost la cel puțin 3 alergări
+de grup în ultimul an." The club is a group somebody runs with, not a squad somebody is selected
+for; and the claim decides nothing on its own (§48) but the club reads it, so it needs a
+definition. A definition printed under every tick would lengthen the form whose length is the
+thing people complain about, so it is a tooltip: `shared/ui/Hint`, which opens on hover, on
+focus and — `enterTouchDelay={0}` — on a tap, because a `title` attribute does none of those on
+a phone. The icon is imported inside the island; a Server Component passing `<Icon />` as a prop
+is the defect `CheckboxField` documents.
+
+**The whole field's numbers download from the page that shows the whole field.** The link already
+existed, several folds down in the event's editor, and the owner — standing on the bib page,
+looking at every number he wanted to print — asked for it again: "vreau să pot exporta toate
+BID-urile!". A verb belongs where its object is. A plain link to the same route, so it works with
+JavaScript off.
+
+**The race number is bold, and the email's header is white.** "În mail, numărul de concurs trebuie
+făcut bold, e super important!" — it is the one line a runner reads on a phone at the desk. The
+card's paragraphs are escaped plain strings, so bold arrives as `**like this**` converted
+**after** escaping: the marker can therefore only ever wrap text this codebase wrote, and a
+participant whose name contains asterisks or angle brackets gets asterisks and angle brackets.
+The plain-text half strips the markers rather than printing them.
+
+"Nu îmi place headerul ăsta albastru, nu se potrivește cu logo-ul BVR." He is right about what it
+looked like: the lockup already contains a blue field, so a blue band around a blue field reads as
+a sticker on a wall rather than as a letterhead. The band is white now, with the lockup in its own
+colours — which is what the site's own header does — and `scripts/brand-assets.mjs` grows the
+matching `logo-email.png`, without alpha, because several mail clients composite a transparent
+PNG onto whatever they please.
+
+Tests: `tests/unit/notifications/emphasis.test.ts`, including the assertion that nothing a
+participant typed can ask for bold.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 191. Decided — an event can be erased with everyone on it, once its title is typed (2026-09-20)
+
+**Context.** Three times, an hour apart: "tot nu pot sterge evenimente!" The club's own data
+controller had an archived event carrying two registrations he had entered himself, and no way to
+remove either. "It cannot be deleted" is not an answer a controller can be given about his own
+records.
+
+**Decision.** *A second verb, not the same one made permissive.* `deleteEvent` still refuses an
+event with registrations against it; `hardDeleteEvent` takes the event **and** everyone on it,
+and it is a different button in a different place with a different colour.
+
+*Administrator, not Superadministrator.* `canHardDeleteEvent` is `canDeleteEvent &&
+canManageRegistrations`. The hierarchy's line is personal data and that line is ADMIN — an
+Administrator may already erase each of these rows one at a time, so the gate answers "may this
+person erase participants", which is the question actually being asked.
+
+*The confirmation is the event's exact title, typed, plus a reason.* Checked on the server, no
+`window.confirm`, and the screen works with JavaScript off. A dialog with a button is answered
+yes by reflex; a transcription cannot be.
+
+*Every registration leaves through the path a single erasure takes.* `eraseRegistration` is
+factored out of `deleteRegistrationByStaff` rather than copied — the place released through the
+allocator, the declaration acceptance with the row, one audit row each naming who and why and
+never who was erased — plus one audit row for the event carrying its title, its date and the
+counts, written first, all in one transaction. Two implementations of "remove a person from the
+system" is how one of them forgets the audit row.
+
+*The screen says what will be destroyed before anything is pressed*: how many registrations, how
+many confirmed, and how many are real people rather than test rows.
+
+**Rejected.** *A bulk hard delete over ticked rows.* That is how somebody loses a season.
+
+Tests: `tests/integration/events/hard-delete.test.ts` (11).
+
+## 192. Decided — erase from the registrations list, with the name typed (2026-09-20)
+
+**Context.** "Vreau să pot șterge și participanții!", also three times. Erasing existed only on a
+registration's own page, so clearing eighty test rows meant eighty round trips through a list that
+re-sorts underneath you.
+
+**Decision.** Erase is the last verb on the row menu, below a rule, in the error colour,
+Administrator-only. *It is not a one-press verb*: it opens a panel at the top of the list asking
+for a reason and for that row's name, typed. In a list where the row you meant and the row above
+it are one line apart, a confirm dialog is answered by reflex — and the reflex is how the wrong
+person gets erased.
+
+*One erase path, not two.* `deleteRegistrationByStaff` does exactly what it did and gains one
+optional argument, the typed name, checked against the row the deletion is already built on rather
+than against a second fetch. The panel is a link, a server-rendered form and a redirect, so it
+behaves the same with JavaScript and without; a `<noscript>` link covers the only part that
+needs JavaScript, which is opening the menu.
+
+## 193. Decided — a picture the text flows around, reversing "never floated" (2026-09-20)
+
+**Context.** "Vreau să pot seta imaginile ca și «inline» ca să pot scrie text în stânga sau
+dreapta lor! Adică vreau un rich text editor mai smart!" §73 decided the opposite in as many
+words: four widths, "and a picture is a block in the flow, **never floated**, so two pictures are
+never side by side."
+
+**Decision.** The image node gains `align`: `block` (the default), `left`, `right` — a closed
+set of three literals in the allowlist, exactly as `widthPercent` is a closed set of four
+numbers, so the attribute names a rendering the renderer knows rather than a CSS value somebody
+typed. Absent means `block`, so every stored document renders unchanged and no migration is
+needed.
+
+Three fences keep the reversal from becoming the layout tool §72 refused:
+
+1. **A phone never floats.** The float is a media query from `sm` up. 320 pixels is a hard target
+   here, and a third of 320 beside a paragraph is two words a line.
+2. **Two pictures are never side by side.** Every figure in a body that floats anything also
+   clears, so a second picture drops below the first instead of forming a row. §73's invariant
+   survives its own reversal.
+3. **The float ends with the body.** One clearing element after the last block, so a float never
+   reaches the registration panel or the programme — and a body that floats nothing emits no
+   clearing rules at all, not rules that happen to be no-ops.
+
+*What is left of "never floated" is a habit.* §73's argument was about narrow columns, which is
+now a breakpoint rather than a ban on everybody; its consequence was two pictures in a row, which
+is now `clear` rather than never floating at all.
+
+*The listing card puts every picture back in the flow* — a card has one column and a cropped,
+capped picture, so a float there is two words a line, and a float at the end of an excerpt would
+reach into the date beneath it.
+
+Tests: `tests/unit/content/rich-text-image-layout.test.ts`, `rich-text.test.ts`,
+`card-excerpt.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 194. Decided — a guess about a person is a question, not a silent refusal (2026-09-20)
+
+**Context.** Somebody the owner had asked to test QA registered, saw "Ți-am trimis un email cu un
+link de confirmare", and nothing arrived. He did not appear in the registrations list either. The
+owner reported it as an email problem — "Dani nu a primit mail", and then, reasonably, "so Yahoo
+doesn't receive registrations but Gmail does".
+
+It was not an email problem. A query against QA's `email_outbox` returned **zero rows** for his
+address: nothing had ever been queued for him, because no registration had ever been created. The
+only path in the codebase that produces exactly that — the confirmation page, and nothing written
+anywhere — is `service.ts`'s answer to a suspected bot: `if (origin.source === "PUBLIC" &&
+looksLikeSpam(input, now)) return { ok: true };`
+
+He has autofill. The form went back in under three seconds. He was classified as a script and
+discarded, silently, and the club was told he had been sent a link.
+
+**What made it expensive** was not the rule but its silence: no registration, no outbox row, no
+log line, nothing on any screen. Which of the two checks had fired could not be established from
+the data at all — it had to be reasoned out of the source by eliminating every other path.
+
+**Decision.** *The two defences answer separately, because they are not equally certain.*
+
+- **The trap keeps its silence.** A hidden field is filled by a machine and by nothing else, so a
+  distinct error would only tell a script what to stop doing (BR-REQ-031-01 criterion 3). It now
+  writes a log line naming the event and the verdict — never the address.
+- **The timing check asks again.** Under three seconds, or with no render time at all, is a
+  *guess* about a person — one that is wrong about anybody who types quickly, uses autofill, or
+  comes back to a cached page. The submission is refused with a field marker rather than
+  swallowed, the form comes back whole with every answer in it (§142), and one sentence says to
+  press again. A script that posts instantly gets the same sentence and still has to wait, which
+  is the entire benefit a timing check ever offered. What it no longer buys is a vanished
+  participant.
+
+**Rejected.** *Loading screens*, which the owner suggested and which would change nothing: the
+three seconds are measured from when the page rendered to when it was posted, so a spinner after
+the press is on the wrong side of the measurement.
+
+*Dropping the timing check.* It is cheap and it works on the submissions it was written for; what
+was wrong was the penalty, not the test.
+
+*Recording the dropped submission's address so the club could recover the person.* That would
+store personal data from a submission the platform decided not to accept. The log line carries the
+event and the verdict, and the participant is now told to press again, which recovers them without
+keeping anything.
+
+**Consequences.** `classifySubmission` replaces `looksLikeSpam` at the registration form;
+`looksLikeSpam` stays as a wrapper for the contact and interest forms (§146, §149), which keep
+the older single answer. `AGENTS.md` §19.4's "answered exactly like success" now describes the
+trap alone.
+
+Tests: `tests/unit/registrations/submission-verdict.test.ts` (6, including the boundary at
+exactly three seconds), and `lifecycle.test.ts`, whose single test became two — the trap still
+answers like success and creates nothing; the quick submission is refused and creates nothing.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 195. Decided — the race's conditions are opened before they can be agreed to (2026-09-20)
+
+**Context.** The owner: "oamenii trebuie să deschidă condițiile concursului într-un pop-up, să dea
+scroll până jos și să confirme, **dar fă safe!** Adică unii oameni nu sunt așa tech-savvy
+(afișează «dă click aici») mai întâi, ca să poată bifa că sunt de acord."
+
+Two requirements in one sentence, and the second is the harder one. A gate that keeps somebody
+out of a race because a script did not load is a worse failure than the one it prevents.
+
+**Decision.** *Before anything is read there is a button, not a box.* A checkbox beside a link
+asks somebody to notice the link, decide to follow it, come back, and then tick — four steps,
+three of them skippable, and every one invisible to a person who does not already know how forms
+work. "Citește condițiile concursului" is one step with one meaning. The box appears in its
+place, already ticked, once the text has been read to its end.
+
+*The gate is an enhancement, never a requirement.* `ReadAndAgree` renders the **plain, tickable
+checkbox** on the server and on the first client render, and takes over only after React has
+hydrated. No JavaScript, a script that failed to load, a browser the dialog does not suit — the
+entrant gets an ordinary required checkbox and an ordinary link, and registers. This is the whole
+of "fă safe", and it is the reason the island uses `useSyncExternalStore` rather than an effect:
+the server's own markup has to be the usable one.
+
+*The scroll rule is a pure function with its own test* (`domain/read-gate.ts`), because the
+interesting case is not scrolling to the end — it is the two ways the measurement can be wrong.
+A short set of rules on a tall screen has nothing to scroll, so the button opens at once; a gate
+waiting for a gesture that cannot happen is a gate nobody passes. And the last pixel is forgiven
+by eight, because zoom, device pixel ratio and an overlay scrollbar each land
+`scrollTop + clientHeight` a little short of `scrollHeight` while the reader is looking at the
+final line.
+
+*What is recorded is a timestamp, and it claims only what it can.* `rules_acknowledged_at`
+(migration 0052, expand-only) says the person was shown the text and said they had read it, at
+that moment. Scrolling is a measurement of a browser and is not evidence of reading; the column
+does not pretend otherwise. It is the same thing a paper form records, and it is what lets the
+club answer "was this person shown the conditions" with a row rather than a recollection.
+
+*Required on the public path only.* Like §171's fitness statement, and for the same reason: at
+the desk the participant signs a paper declaration that already says they have read the rules
+(§67, `AGENTS.md` §15.11), and a staff member does not make the statement on somebody's behalf.
+
+*An event with no rules of its own gets the plain checkbox and a link to the club's terms.* There
+is nothing to open, and a panel containing an empty document would be worse than a link.
+
+**Rejected.** *Enforcing the reading server-side.* It cannot be done — nothing in an HTTP request
+distinguishes a page that was read from one that was scrolled past — and a check that cannot be
+performed should not be implied by the record it writes.
+
+*Disabling the checkbox until the panel is closed.* A disabled input posts nothing, so a browser
+that never ran the script would post nothing either, and the refusal would be silent. The input
+exists from the start, unticked: the browser's own validation refuses the form and names the
+control, with no JavaScript involved in producing the refusal.
+
+**Consequences.** Every fixture that builds a public submission learnt the new tick — the same
+sweep §171 needed, fifteen test files and the synthetic-registration generator.
+`form-errors.ts` names it, so a rejection can point at it, and both catalogues carry the name.
+
+Tests: `tests/unit/registrations/read-gate.test.ts` (6),
+`tests/integration/registrations/rules-acknowledgement.test.ts` (3).
+
+**Also, from the same sitting:** the calendar feed's address on the listing is a link now, not
+only a string to copy ("ăsta trebuia să fie link"). It is still selected whole by one click for
+the applications that want it pasted, and the anchor is `webcal://` — the same address handed to
+the operating system as a subscription rather than as a file downloaded once, which is the
+difference between a calendar that keeps up and a snapshot of today.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 196. Decided — tables in the editor, and the one dependency they cost (2026-09-20)
+
+**Context.** "Ar fi fain să pot face tabele în editor!", twice. What a running club puts in one is
+a schedule of waves, a price list, a table of cut-offs — a few columns of short facts that a
+paragraph cannot hold straight.
+
+**Decision.** *One package, and it is the platform's own.* `@tiptap/extension-table` at the
+version already installed for everything else, pinned exact. The standing instruction is to prefer
+nothing over a dependency; the alternative here is a table editor written by hand against
+ProseMirror's transforms, which is a worse trade by a wide margin. It has **no dependencies of its
+own** — its peers, `@tiptap/core` and `@tiptap/pm`, are already here — and its `./kit` export
+carries the row, the cell and the header, so the count really is one.
+
+*The allowlist is the smallest table that carries those facts.* A cell holds a paragraph or a
+list, which is what a fact with a note under it looks like. **No table inside a table**: nesting is
+where a text editor becomes a spreadsheet, and where a phone runs out of width. `colspan` and
+`rowspan` are kept and bounded, because Tiptap emits them for a merged header and a table that
+lost its merges on the way through the allowlist would be silently rearranged. `colwidth` is
+dropped: it is a pixel width chosen on somebody's laptop, and the hard target here is a 320-pixel
+column — so the editor's resize handles are switched off rather than left to produce a value that
+is thrown away.
+
+*The table keeps its shape and the wrapper scrolls.* A table cannot reflow — four columns of times
+and distances are four columns whatever the screen — so one element scrolls sideways inside a page
+that does not, which is the single arrangement a phone handles without the whole layout sliding
+under a thumb. The scrolling box is focusable, because a region that scrolls and cannot be reached
+from a keyboard is unreadable to anybody not using a pointer, and browsers do not make it focusable
+on their own.
+
+*Header cells are `<th scope>`* — "col" on the first row, "row" elsewhere — so a screen reader
+announces "Ora de start, 10:00" rather than "10:00".
+
+*In plain text a table becomes lines, cells separated by a tab.* The excerpt, the calendar entry
+and the search index are single-column text; a tab is what a spreadsheet takes if somebody pastes
+the line, and it is invisible where the line is only being counted for words.
+
+*The toolbar shows the table verbs only inside a table.* One button inserts one; add and delete
+row and column appear when the caret is in one. Four dead controls beside somebody writing a
+paragraph is the opposite of a toolbar with words on it rather than icons.
+
+**Rejected.** *Column resizing.* See `colwidth` above.
+
+*Writing the extension by hand to avoid the dependency.* Table editing is selection and transform
+work — merging, splitting, navigating with the keyboard — and a hand-rolled version would be a
+worse table and a larger thing to keep.
+
+Tests: `tests/unit/content/rich-text-table.test.ts` (9), including the refusals — a nested
+table, an empty row, a span that is not a small positive number — and the assertion that a body
+written before tables existed parses to exactly itself.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 197. Decided — the two legal texts open in a tab of their own (2026-09-20)
+
+**Context.** "Termenii de concurs și nota de confidențialitate trebe să se deschidă în ceva pop-up
+sau new tab (iconiță diferită pt new tab)."
+
+**Decision.** *A new tab, marked as one.* Both links sit in the middle of a registration form
+somebody has half filled in, and a privacy notice is a long text — the platform's own runs to a
+dozen sections. A reader who follows it in the same tab and presses Back is relying on the browser
+to restore a form it never stored. The race's **conditions** do open in a panel (§195), and that is
+right *there*: they are short, they are about this race, and reading them is a step in the flow.
+These two are reference texts, read out of order and sometimes at length, so they get a place of
+their own and the form stays exactly as it was left.
+
+*The icon is the honest part.* A link that opens a new tab without saying so is a small trap:
+somebody presses Back, finds the page unchanged, and presses again. The accessible name carries
+the same fact in words — an `aria-label`, not a `title`, because a title attribute is invisible
+on a touch screen, which is most of this form's traffic. `rel="noreferrer"` keeps the new tab
+from reaching back through `window.opener`.
+
+## 198. Decided — a telephone number is judged as it is typed, by the server's own rule (2026-09-20)
+
+**Context.** "Faptul că telefonul nu e valid trebuie să fie vizibil instant."
+
+**Decision.** `PhoneField` becomes a client island that runs `composePhone` — *the function the
+server validates with* — on every keystroke. It was a Server Component with a `pattern`
+attribute, so the browser said nothing until submission, and the pattern is not the real rule
+anyway: `composePhone` strips the separators people type, handles a `00` prefix and a repeated
+country code, drops a trunk zero everywhere except Italy, and then insists on four to fourteen
+digits. A pattern loose enough to admit all of that cannot tell somebody their number is too short.
+
+*One rule, imported, never a second one approximated in a regular expression* — which is how the
+two drift and a form starts refusing what the server accepts.
+
+*Before hydration and without JavaScript, nothing changes.* The same markup with the same
+`pattern`, `minLength` and `required`; the live verdict is consulted only once hydrated, so the
+server renders what it always rendered and nothing shifts under somebody already typing.
+
+*The message waits until the field is left, or until six digits have been typed.* Turning a box
+red on the first digit of a number that is obviously unfinished is scolding somebody for typing.
+
+## 199. Decided — filling the form again always sends something to the address (2026-09-20)
+
+**Context.** "De asemenea trebuie să verificăm dacă acel email a mai fost folosit pt înscrieri."
+
+**Decision.** *Not on the screen.* Telling a visitor "this address is already registered" turns
+the public form into a way to ask who is entered, which is the oracle `AGENTS.md` §19.4 exists to
+refuse. The screen's answer stays the one everybody gets.
+
+*In the inbox, which only its owner reads* — and now for every state, not one. A second submission
+used to re-send the verification link **only** while the first registration was still waiting for
+it; everybody past that point got "we have sent you a confirmation link" and no message at all.
+Somebody who confirmed a month ago, forgot, and filled the form again saw exactly what a failure
+looks like — and so did every re-entered test registration, which is what the owner kept hitting.
+
+It now sends whatever the state can offer, through the same `deriveAllowedResendMessageType` the
+backoffice's "send it again" uses: the verification link, the declaration, the waiting-list offer,
+or the confirmation with its QR. A state with nothing to resend still sends nothing. The throttle
+in front of the form is what keeps this from being a mailer.
+
+Tests: `tests/integration/registrations/resubmitted.test.ts` (3).
+
+## 200. Decided — a column whose values are shorthand explains itself (2026-09-20)
+
+**Context.** Of "3/6 · Loc rezervat" in the registrations list: "de asemenea trebuie să fie clar
+un pic ce sunt acești pași 3/6".
+
+**Decision.** `AdminColumn` takes an optional `hint`, shown behind a "?" beside the heading
+(`shared/ui/Hint`, §189). A heading cannot say what six steps are, and a legend above the table
+is a legend nobody reads twice — where the reader's question is, the answer is one press away and
+out of the way otherwise.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 201. Decided — crossing into public view is the Administrator's (2026-09-20)
+
+**Context.** The owner, naming his two colleagues: "Organizatorul trebuie să primească aprobare de
+la Administrator pt orice. Amalia e Administrator, Dani e Organizator dar poate face prostii, deci
+trebuie manageuit de Amalia."
+
+"Pt orice" is the hard part, and the honest answer is that this codebase has no approval queue: a
+change an Organizer makes takes effect when they make it. Building one — a pending revision beside
+every live record, a screen where Amalia reads the difference, an apply-on-approve path, a story
+for two pending revisions of the same page — is a feature, not a flag.
+
+**Decision.** *The line that is available today, and it is a true one: below Administrator,
+nothing crosses into or out of public view.* Four rows of `TRANSITIONS` move to `ADMIN` —
+IN_REVIEW → PUBLISHED, PUBLISHED → DRAFT, PUBLISHED → ARCHIVED — and everything that never touches
+the public stays with the Organizer: writing, submitting, returning a submission to its author,
+archiving a draft that was never live.
+
+That is the smallest possible change to the table, and the table is the right place: its
+interesting property has always been which moves are *absent*, and this adds "absent below
+Administrator" to the three that matter.
+
+**What was deliberately not done, and why it is written here rather than decided here.** Editing
+the **words** of an already-published page is the remaining way something reaches the public
+without the Administrator. Closing it is one line —
+`if (isLiveContent(status)) return atLeast(role, "ADMIN")` in `canEditTranslation`. It was
+written, tested, and then taken out again, because it reverses BR-REQ-051-01 criterion 3 in as
+many words: "a copywriter edits live text with the acknowledgement; a volunteer never" (§103). The
+club asked for the *Organizer* to be managed by the Administrator, and the Organizer sits **above**
+the copywriter in the hierarchy, so the restriction cannot be applied to one without the other. A
+Redactor losing the ability to fix a typo on a live page is a decision about how the club works.
+It waits for the club.
+
+What stands in the meantime is criterion 4's acknowledgement, which the server checks rather than
+merely displaying.
+
+**Rejected.** *An approval queue over every write.* It is the literal reading of "pt orice" and it
+is a large, separate piece of work; it is named here so that choosing it later is a decision and
+not a rediscovery. Roughly: a `pending_revisions` row carrying the proposed fields and who
+proposed them, a diff screen, an apply that re-runs the same validation the direct save runs, and
+a rule for what happens when a pending revision is overtaken by a direct one.
+
+*Raising `canEditEventFields` and `canCreateEvent` as well.* Neither is public until something
+is published, which is now gated.
+
+**Consequences.** Five test suites drove their whole flow with an Organizer, because publishing
+was theirs; they drive it with the Administrator now, and the role boundary is asserted where it
+belongs — `roles.test.ts`, from both sides, and `boundary.test.ts`. BR-REQ-051-01 criterion 2
+is narrowed in `SPECS.md` and says what criterion 3 still allows.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 202. Decided — a spent email link says where you are, not that you failed (2026-09-20)
+
+**Context.** QA. A tester registered; the rows say what happened:
+
+```
+19:29:37  VERIFY_REGISTRATION_EMAIL   queued, SENT
+19:36:36  that token used
+19:36:39  COMPLETE_DECLARATION        queued, SENT
+21:37     she opened the SAME verify link again
+```
+
+Her confirmation had worked. Two hours later the same link answered "Acest link nu mai este
+valabil". She read it as failure, reported that the button did not work, and **never signed her
+declaration** — whose token is still unused, because the screen had told her she had failed and
+she had no reason to open the second email. The owner: "ar trebui să fie refolosibil acel link…
+să fie stupid proof", and then: "trebe să știe userul că a confirmat deja".
+
+**Decision.** *The link is not made reusable, and that refusal is half the decision.* An email
+sits in an inbox for years, gets forwarded, and turns up on a phone somebody loses. A verify or
+manage link that still worked would be a standing authorization to confirm or cancel somebody's
+place, held by whoever ends up with the message. Single use stays (`AGENTS.md` §12.8,
+BR-REQ-036-02).
+
+*What is added is idempotence at the level of the page.* Pressing a spent link performs nothing;
+it reports the registration's **current** state — read from the registration, never inferred from
+the token — and names the next step.
+
+*`ALREADY_USED`, and only that, gets the status page.* This amends `AGENTS.md` §13.2's single
+generic response for exactly one refusal reason on four purposes, and the argument is structural:
+that reason is reachable only by an exact match on `token_hash`, a SHA-256 of 32 random bytes,
+so whoever got there holds the secret from the email and learns nothing the link in their hand
+did not already say. NOT_FOUND has no state to report; PURPOSE_MISMATCH must stay
+indistinguishable from it, or a link issued for one thing could be confirmed as real by aiming it
+at another; EXPIRED was never used, so the work was never done; INVALIDATED is not the holder's
+business.
+
+**What review found and what was changed because of it.** Three adversarial passes; no critical
+finding, and four that were fixed here:
+
+- **The stepper told a waitlisted person they were confirmed.** `stepForSpentLink` mapped
+  WAITLISTED to the last step, which carries "Înscrierea ta este confirmată. Ne vedem la start!"
+  in the largest text on the page. It draws no stepper now.
+- **The declaration page charged the throttle twice per request** — it reads the same token as a
+  declaration link and as a waiting-list offer — and an exhausted bucket answers NOT_FOUND, which
+  is not eligible for the status page. So reloading a spent link five times restored exactly the
+  message this feature exists to remove. One request now pays one attempt.
+- **A live token with a failed press was reported as a dead link**, with an offer to send a new
+  one. The press failed because a box was unticked; the link is fine. Said where the press
+  happened.
+- **The event's slug could come from the other language's translation**, producing a link that
+  404s. This locale's words or none.
+
+Tests: `tests/unit/tokens/spent-link-status.test.ts`,
+`tests/integration/tokens/spent-link-page.test.ts` (81 together), including that a second GET
+performs nothing — no token spent, no email queued, no row changed.
+
+## 203. Decided — an approved legal version can be deleted, and its number never comes back (2026-09-20)
+
+**Context.** "Am zis că vreau să fac curățenie în documente și să le pot șterge, mă refer la
+astea!", of five approved versions made while testing. Withdrawal (§181) keeps the row for ever,
+folded away, which is not what "curățenie" means.
+
+**Decision.** *Deletion is allowed, and the hazard that forbade it is removed at its root rather
+than tolerated.* `registrations.privacy_notice_version` and its two siblings are plain integers
+with no foreign key, and the next version number was `max(version) + 1` — so deleting version 4
+made the next draft version 4 again, with different words, and every registration that recorded
+"privacy notice 4" silently became a consent to text nobody was shown.
+
+Migration `0053` adds `legal_document_numbering`: one retired-number floor per key, upserted
+with `GREATEST` inside the delete's own transaction. `nextVersionNumber` is now the single
+place a number is derived, and it reads `max(max(version), highest_retired_version) + 1`. A
+draft's deletion retires nothing: its number never left the backoffice.
+
+*The same guard as withdrawal*, extracted so the two verbs cannot come to disagree about what
+"unused" means, plus the typed confirmation (`GDPR 2`) and a reason, on a page rather than a
+dialog — the consequence is four sentences, the form must work with JavaScript off, and a
+mistyped confirmation needs somewhere to land.
+
+**What review found, and the guard it produced.** *For TERMS there is no dependant signal at
+all.* The three counts are real for two keys and vacuous for the third: acceptances and events
+only ever see the declaration, and the acknowledgement count is restricted to the privacy notice
+— because **a registration records no terms version**. Every TERMS row therefore reads as unused,
+including one a hundred people accepted.
+
+So a terms version that has **ever been in force** is refused deletion. The refusal sits on the
+deletion path alone, not in the shared guard, because the two verbs ask different questions:
+withdrawal keeps the row, its number and its words, so nothing is lost if the counts are blind;
+deletion destroys the words, and afterwards the audit row's hash is the only evidence of what the
+club published — so it has to be able to show nobody relied on them, and for this key it cannot.
+A terms version that never took effect was accepted by nobody and may go.
+
+*The proper repair is a `terms_version` on the registration* — a migration and a change to what
+the form records. Until it exists, this refusal is the honest answer.
+
+Tests: `tests/integration/legal/hard-deletion.test.ts` (18), including the terms refusal, the
+retired number, and that deleting a middle version leaves numbering alone.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 204. Decided — the Administrator creates events (2026-09-21)
+
+**Context.** "Administratorul crează evenimente", in the same breath as §201.
+
+**Decision.** `canCreateEvent` moves to `ADMIN`. It had been the same power as configuring one,
+on the reasoning that both decide what the club advertises — and that reasoning holds for
+*configuring*, which stays with the Organizer. Creating is the act that decides there is a race
+at all, and because the registration block lives on the same row, it decides whether the club
+takes entries.
+
+An Organizer opens an event the Administrator created and does everything to it: the date, the
+place, the route, the capacity, the registration window, the queue, the desk. What they cannot do
+is invent a race, publish one, or take a published one down (§201).
+
+**Consequences.** Twenty test suites created their fixtures with an Organizer, because creating
+was theirs. They create with the Administrator now; the files that *assert* the boundary — an
+author refused, an organizer refused — keep their Organizer, and that is where the boundary is
+tested.
+
+## 205. Decided — somebody who gets no email must still be able to register (2026-09-21)
+
+**Context.** Two people in one evening got no message. The owner: "trebuie să lăsăm oamenii să se
+înscrie cu orice preț!!! Asta e scopul principal al site-ului. Dacă nu primesc mail trebuie să le
+apară opțiunea de retrimite sau să ne dea mail prin formularul de contact."
+
+**Decision.** *A second way out, beside the resend.* The resend answers the case where a message
+was lost in transit. It does nothing for the cases that actually strand somebody: a spam filter
+swallowing every one, a provider refusing the sending domain, or an address typed wrongly and no
+longer correctable. In all three the person sits on "check your email" with no way to tell
+anybody, and the club never learns they tried.
+
+So the screen carries a link to the contact form, which reaches a human, and it carries the event
+— `?about=<slug>` — so the message box opens with the sentence they would otherwise compose
+while annoyed: which event, and that nothing arrived. They can delete every word of it; what it
+saves is the blank page, which is where somebody gives up. The slug is matched against the club's
+published events rather than printed, because anybody can type one into a URL and this text goes
+into an email the club reads.
+
+It is deliberately second and quieter than the resend — most people need the resend — and
+deliberately present, because "the message never arrives" is not a rare case in a club's first
+season on a new sending domain.
+
+## 206. Decided — the address is typed twice, and the match is the form's business (2026-09-21)
+
+**Context.** "În formularul de înscriere și de contact, pune oamenii să reintroducă mailul de
+mână, fără auto-complete, și fă verificarea live ca mailurile să se potrivească."
+
+The evidence was already in QA's outbox: three BOUNCED messages to `…@gmail.con`. One letter,
+and the person is gone — the link is sent into nothing, the screen says to check the inbox, and
+the club never learns. A resend does not help, because it resends to the same wrong address.
+
+**Decision.** *Two boxes, both `autoComplete="off"`.* The point of the second is a second act of
+typing, and a browser filling it from the first defeats the exercise. **Paste is left alone**: a
+password manager holds the address somebody uses everywhere, and refusing a paste pushes them to
+type from memory, which is worse than pasting the right thing.
+
+*The comparison is the canonicalizer's, not `===`.* `canonicalizeEmail` is what the platform
+uses to decide whether two addresses are the same person (`AGENTS.md` §10.4), so
+`Ana@Gmail.com` matches `ana@gmail.com` — the same row once stored — while two Gmail spellings
+differing in dots do not, because the club treats those as two people (§74). Comparing raw
+strings would refuse the first pair and accept the second: wrong in both directions.
+
+*The check lives in the action, not in the submission schema.* This is the part worth recording,
+because it was built the other way first. Putting `emailConfirm` in
+`registrationSubmissionSchema` made every caller of the service carry a field only one screen
+has — the desk, the telephone entry, the synthetic queue and forty fixtures — for a check none of
+them can fail, and it turned a form concern into a domain one. `assertEmailTypedTwice` runs in
+the public action, where the two boxes exist; the service's schema is unchanged. A missing second
+box means "this form does not ask twice", which is exactly true of the desk.
+
+*Live, but not nagging:* the mismatch is silent until the second box has something in it, and the
+verdict is consulted only once hydrated, so the server's markup is what it always was and nothing
+shifts under somebody already typing.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 207. Decided — one deliberate gap in the role ladder: the Organizer is not a Redactor (2026-09-21)
+
+**Context.** The owner, after §201 raised publication to the Administrator: "e ok ca redactorul să
+aprobe, tot ce vreau e ca organizatorul să nu fie și redactor… Redactorul scrie, Organizatorul
+organizează", and then, asked to confirm what that costs: "da, așa vreau".
+
+**Decision.** `canEditTexts` becomes a **set** — `COPYWRITER`, `ADMIN`, `SUPERADMIN` — where
+every other capability in `roles.ts` is a threshold.
+
+That is worth stating plainly, because the file's own comment says why thresholds are used: "a
+rule written as a list of roles is a rule somebody forgets to add a new role to". A gap has to
+earn itself, and this one does: the club is asking for two jobs that do not contain each other. A
+rank ladder cannot express that. Rank would hand the Organizer the Redactor's work simply for
+sitting above them, which is exactly what the club asked not to happen.
+
+*`DEV` is out too*, for the reason it is out of everything editorial: "Tehnic" is diagnostics,
+and it sits where it does in the ladder only so `canSeeDiagnostics` can stay a threshold.
+*`ADMIN` and `SUPERADMIN` keep it*, because the Administrator is who both of the others ask.
+
+**Consequences.** An Organizer no longer writes an event's title, its description, its rules or a
+standing page. The suites that wrote text with an Organizer now write it with a role that may, and
+`roles.test.ts` asserts both halves of the gap. One existing invariant — "a higher role is
+offered every section a lower one is" — survives, but only because of §208.
+
+## 208. Decided — reading the club's content is its own question (2026-09-21)
+
+**Context.** Immediately after §207: "organizatorul vede cam tot (dar în readonly), practic Dani
+îi zice Amaliei să modifice X, Y lucru."
+
+And §207 had just made that impossible by accident. Every capability in `roles.ts` answered "may
+you change this", the backoffice navigation was built out of those answers, and so the moment the
+Organizer stopped writing texts he also stopped being able to **see** the events list. A person
+who cannot see what the club publishes cannot tell the Administrator which line is wrong.
+
+**Decision.** `canReadContent` — the capability this file did not have. The navigation asks it,
+and the pages that show the club's own content open on it: the events, the standing pages, the
+gallery, the legal texts. Every control inside continues to ask its own question, and every
+Server Action asserts again (BR-REQ-060-01). That the pages needed almost no change is the
+happier half of this: they were already written with a capability check per button rather than one
+gate at the top, so separating the two questions was a change to the *gates*, not to the screens.
+
+*It stops at the club's content, deliberately.* The participant list, the export and
+`/admin/tasks` stay behind `canManageRegistrations`, because the line this hierarchy actually
+draws is personal data and that line is ADMIN (§10.2). "Vede cam tot" is not an instruction to
+hand a volunteer four hundred addresses. What every staff role does see of a participant is the
+desk: a name, a state and a number, never an address (`AGENTS.md` §15.11).
+
+**Rejected.** *An approval queue*, again — §201 records what it would take. A read-only observer
+who asks the Administrator is what the club actually described, and it needs no pending-revision
+machinery at all.
+
+**Consequences.** The section list for a Redactor and an Organizer is now the same five plus the
+desk; the difference between them is what the buttons do, not what the navigation shows. The
+invariant "a higher role is offered every section a lower one is" holds again, and it holds for a
+better reason than before.
+
+**Not finished, and said rather than implied:** the read-only screens were verified by reading the
+gates, not by walking every control on every page. A button that is still rendered for a reader
+and then refuses on the server is a rough edge, not a hole — the server refuses either way — and
+the remaining pages are worth a pass.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 209. Decided — a pull request runs one viewport, a release runs both (2026-09-21)
+
+**Context.** "These e2e tests in the pipeline take way too long, we need a lighter pipeline
+suite", and then, when asked: "da, dar nu scoate de tot, consideră rulează alt suite in
+pipeline."
+
+Measured rather than guessed. `docs-check.yml` has two jobs: `docs-check` runs `yarn check`
+(docs, secrets, migrations, typecheck, lint, 1550 unit and integration tests) plus `yarn build`
+plus a probe that the app serves on `PORT` — and `e2e`, which stands up PostgreSQL and Chromium
+and runs `test:concurrency` and `test:e2e`. The e2e job is the long pole: **9.5 minutes** of
+Playwright alone, on 163 specs across two projects, on every pull request and every push.
+
+**Decision.** *A pull request runs the `desktop` project; a push to `qa` or `main` runs both.*
+
+The two projects are the same specs at two viewports, so a pull request was paying twice for one
+set of behaviours. The second pass is also the one that catches least often: what differs at 320
+pixels is layout, and layout is what the mobile project's own assertions are *about* — the
+sideways-scroll checks, the 44-pixel tap targets — rather than something the other specs discover
+as a side effect. A release is where both run, and a push to `qa` or `main` is not a moment
+anybody is waiting on.
+
+*`yarn test:concurrency` stays on every pull request.* Five tests, seconds, and they guard the
+one rule that cannot be tested any other way: no overbooking under real concurrent load, on two
+real connections, which PGlite cannot express (BR-REQ-051-01 criterion 5, `AGENTS.md` §10.6).
+That is a rule CLAUDE.md lists among the ones that carry trust, and it is cheap.
+
+*`docs-check` is untouched and still runs on every commit.* 1550 tests in fifty seconds is the
+best value in this repository, and it catches most regressions before a browser is involved.
+
+**Rejected.** *Deleting or skipping any spec.* The owner asked for this explicitly — "nu scoate
+de tot" — and he is right: a spec that stops running is a spec that rots. Nothing is deleted,
+nothing is marked skip, and `yarn test:e2e` with no argument is still the whole suite locally,
+which is what runs before a PR is opened.
+
+*Sharding across parallel runners.* It would halve the wall clock without giving anything up, and
+it is the better answer for a repository with a larger budget. Here it doubles the number of
+containers that must each install Chromium and migrate a database, for a suite whose real cost is
+those two steps as much as the specs.
+
+**Consequences.** A pull request's e2e job drops from about 9.5 minutes of Playwright to about
+half that. A mobile-only regression is caught at the release rather than at the pull request,
+which is the trade being made, and it is named here so that somebody who finds one knows where to
+look.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 210. Decided — a newer build is offered, never taken (2026-09-21)
+
+**Context.** "Site-ul trebuie să își dea refresh automat când apare o versiune nouă, și trebuie
+ceva banner când s-a făcut deploy", and then the correction that made it safe: "vreau de fapt
+banner cu confirmare de auto-refresh, proiectul flyward are așa ceva."
+
+He was right to correct it. This site's purpose is a registration form with twenty fields, a
+signature drawn with a finger and a declaration somebody is reading; a reload nobody asked for
+destroys exactly the work the platform exists to collect, and the club deploys several times an
+evening.
+
+**Decision.** *A notice with a control, and no automatic reload by any path.*
+`GET /api/build-id` answers one twelve-character identity and nothing else — its only import is
+`build-info.ts`, which imports nothing, so the poll can never wake the database. Deliberately
+**not** `/api/health`: that one opens a connection, reads the schema version and the email
+allowance, answers 503 on any of it, and is the club's cron-job.org alarm.
+
+*The identity is the commit **and** the deployment, hashed.* `BUILD_COMMIT` alone cannot answer
+the question, because this club redeploys the same commit with changed environment variables —
+a Turnstile key arriving, a contact address being set — and that is a genuinely different running
+site. Hashing keeps it opaque, fixed-length and, the load-bearing part, **deterministic**: a build
+timestamp would differ between the several processes `next build` evaluates the config in, and
+would inline two identities into one build.
+
+*The running build arrives as a string prop from a Server Component*, never a value the client
+bundle computed for itself — that would be the identity of whichever chunk the browser happens to
+hold, which is the very thing suspected of being stale.
+
+**What review found, and what changed because of it.** Three lenses, no critical finding, three
+majors — all fixed here:
+
+- **The notice could never be retracted.** The store moved one way, on the reasoning that a
+  deployment cannot un-happen. True, and the wrong conclusion: what a tab compares itself against
+  is "does this address serve something else now", which **can** go back — a rollback does it, and
+  so does an alias moved by hand. Once raised it told somebody to reload onto the build they were
+  already running.
+- **The reload cooldown could never fire.** It was one minute and the poll interval was one
+  minute, so the first check of a reloaded document always landed past it. Five minutes now: a
+  guard that cannot be reached is not a guard.
+- **The notice occupied a band of the viewport at every scroll position.** It was absolutely
+  positioned inside the header's *sticky* box, which reads well — it tracks the header — and
+  behaves badly, because a positioned descendant of a sticky element travels with it. It covered
+  whatever the reader had scrolled to, including a field they were reaching for. It is in the flow
+  below the header now, and a slim bar rather than a card: one layout shift when it appears, and
+  then nothing covered, ever. The shift is momentary; the occlusion was permanent.
+
+## 211. Decided — an island must not take the value back (2026-09-21)
+
+**Context.** Found by the e2e suite, not by review, and it is the most valuable thing the suite
+did all night. Two specs failed with an empty *first* field and every later field intact.
+
+`EmailTwice` (§206) and `PhoneField` (§198) were written as **controlled** inputs —
+`value={state}` with state starting at the server's default. The server's HTML carries the
+fields, somebody starts typing immediately, React hydrates a moment later, and a controlled input
+rendered from state that began empty **replaces what they typed with nothing**. It is invisible in
+development, where hydration is instant, and it is exactly what happens to the first visitor on a
+cold edge.
+
+`GuardianForMinor` (§188) had a second form of the same fault: a `<noscript>` element with JSX
+children. With scripting enabled — every case React hydrates in — the browser parses the inside of
+a `<noscript>` as **text**, not as elements, so the two trees disagreed about its contents and
+React answered the mismatch by discarding the subtree, taking the typed values with it.
+
+**Decision.** *An island that sits over a form lets the DOM own the value.* `defaultValue`, never
+`value`; state exists for the comparison and for nothing else, so it can never contradict what is
+on screen. And a `<noscript>` is written with `dangerouslySetInnerHTML`, which is the form both
+sides agree about.
+
+*The specs wait for hydration before typing*, which the suite already does for the backoffice and
+documents there: "a form submitted mid-hydration is queued by React and sometimes lost". A person
+takes seconds to reach the first field; Playwright takes milliseconds, and that difference is the
+bug's whole surface.
+
+## 212. Decided — CI runs the end-to-end suite one spec at a time (2026-09-21)
+
+**Context.** After §209 halved the work, six specs still failed in CI and two failed locally under
+two workers — and every one of them passed alone.
+
+**Decision.** `workers: 1` in CI. The cause is the fixture, not the machine: several suites drive
+the **same** featured event — `ensureRegistrationIsOpen` sets its mode, its window and its fifty
+places, and then a spec registers against it — so two workers on one database interleave. One
+opens registration while another submits; one fills the last place another is counting. A handful
+of specs that pass alone and fail together is the most expensive kind of red, because it teaches
+people to re-run rather than to read.
+
+*The honest fix is a fixture per worker* — an event of its own, created and torn down — and that
+is a change to every backoffice spec's setup rather than a line of configuration. It is named here
+so it is a known debt rather than a rediscovery. Until then CI is serial and says why.
+
+It costs little: since §209 a pull request runs one viewport, so serial-desktop is roughly what
+parallel-both-projects cost before. Measured: **91 specs, 2.7 minutes.**
+
+Baseline `BR-V1.38-2026-09-18`.
+
+
+## 213. Decided — a paragraph or a heading can be centred (2026-09-21)
+
+**Context.** "Centrare / aliniere elemente în rich text editor."
+
+**Decision.** A closed set of three words — `left`, `center`, `right` — on the two nodes that
+hold prose, exactly as a picture's `align` is a closed set of three (§193) and its
+`widthPercent` a closed set of four numbers. `justify` is deliberately not in it: justified
+text in a 320-pixel column is rivers of white space, and that column is a hard target here.
+
+*No dependency.* `@tiptap/extension-text-align` is one `addGlobalAttributes` block and a
+command around `updateAttributes`, and the standing instruction is to prefer nothing over a
+package (`AGENTS.md` §1.5). §196 took the table package on the opposite reasoning and the two
+are consistent: table editing is selection and transform work nobody should re-implement, and
+this is an attribute.
+
+**Two silences, and they are the whole of the care taken here.**
+
+*`attrs` is optional on a paragraph*, so every body written before today parses to exactly
+itself — no `align: "left"` appears, no migration is needed, and the next save does not rewrite
+every page the club has ever written. The heading keeps its required `attrs` for `level` and
+gains an optional `align` beside it, with the same property.
+
+*The renderer emits `text-align` only where somebody chose one.* Left is already what the theme
+does, so declaring it would put a rule on every paragraph on every page and change no pixel.
+The same discipline as §193's clearing rules, which are absent rather than no-ops in a body
+that floats nothing.
+
+*The editor's `parseHTML` clamps to the same three words.* A paste from Word or Google Docs
+carries `text-align: justify`, `start`, or an inherited value, and a body the server then
+refuses is a refusal the organizer meets at the end of a long edit. Anything unrecognised
+reads as no alignment at all.
+
+*Alignment is a rendering, not content.* The plain-text projection is untouched, so the
+excerpt, the `.ics`, the Open Graph description and the search index do not learn that a line
+was centred.
+
+Tests: `tests/unit/content/rich-text-align.test.ts` (7), including that a body written before
+this parses byte-for-byte to itself and that the default emits no rule at all.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 214. Decided — the race number is reserved when the place is, and settled when registration closes (2026-09-21)
+
+**Context.** The owner, looking at his own registration stuck on "waiting for the email":
+"I need the BID to be reserved ASAP because I still did not receive this email." And Dani,
+on why it cannot be a manual step: "procesul trebuie să fie automat, să nu pierdem timp să
+facem noi înscrieri manuale… ca nimeni nu face așa ceva. Și mai ales că vor fi gratis, cu nr
+limitat de înscrieri… să vezi ce discuții și hate ne luăm dacă nu l-am înscris pe unul la
+timp și i-a luat altul locul."
+
+§87 drew the number at confirmation — "the moment the place is certain". That was true when
+nothing existed earlier, and it put the number behind the two steps most likely to strand
+somebody: an email that does not arrive, and a declaration nobody has read yet. The club could
+not plan and the runner could not ask.
+
+**Decision.** *Two columns, and the difference between them is the whole design.*
+
+`provisional_bib_number` is drawn **at submission**, under the event row's lock, for any real
+registration that occupies a place. `bib_number` is the settled one: printed, emailed, never
+reissued, never renumbered.
+
+*The provisional number is released.* It belongs to a registration **exactly while it occupies
+a place**, so cancelling, expiring or being pushed back onto the waiting list hands it straight
+back to the next person. That is safe only because it is printed nowhere and emailed to nobody
+— nothing in the world has to keep matching it — and it is what keeps the sequence dense, which
+is what makes most people's number survive the settle unchanged. `bib_number` stays the
+opposite and always will: a cancelled runner keeps theirs, because reuse is how two people end
+up wearing 17.
+
+The release lives in `transitionRegistration`, the one guarded transition every state change
+already goes through, so there is no path that moves a registration out of a place and forgets.
+The *draw* cannot live there — it needs the event lock and the band — so it sits in the
+allocator's own paths, which hold both. Losing a release is the failure that matters: a number
+nobody holds that nobody can take.
+
+*A place is held from submission, and always was.* `PENDING_EMAIL_CONFIRMATION` is in
+`ACTIVE_REGISTRATION_STATUSES`, so nobody waiting on an email can have their place taken by
+somebody faster. What was missing was anything the runner or the club could **see**. That is
+also why the insert now takes the event lock: the row occupies a place from the instant it
+exists, so the number that goes with the place has to be drawn under the same serialization
+point capacity uses (§10.6, §151), and it was the one door into the allocator that took no lock.
+
+*Confirmation draws nothing while the window is open.* The provisional number stands, and
+`REGISTRATION_CONFIRMED` carries no number before the close — which is the trade: a number that
+is emailed is a number that cannot move afterwards. Once the window has shut, confirmation
+draws immediately, because a late paper signature or a walk-in on race day needs a bib within
+the minute and the sequence is settled by then.
+
+*The settle is a recompaction, and it is the one moment a number moves.* The provisional
+sequence is dense while it is handed out and full of holes by the end — cancellations, lapsed
+confirmations, expired holds. Printing that is a sheet reading 1, 2, 5, 6, 9 and a box of bibs
+a volunteer cannot count off. So at the close every runner still holding a place is renumbered
+into one unbroken run from the event's own band, in provisional order, which is registration
+order. A number already given by hand (§105) is kept and the sequence closes around it.
+`events.bibs_settled_at` makes it once-only: the job sees the same closed event every few
+minutes, and a second pass would renumber people who have already been told.
+
+*Everybody holding a place is numbered, not only the confirmed.* A declaration can be signed on
+paper at the desk on race morning (§67), so an unsigned registration is a person who may well
+run, and a race with no bib for them is the failure this is trying to avoid.
+
+**Consequences.** `findEventsNeedingMaintenance` gains a fourth clause, and it is load-bearing:
+an event that filled up cleanly has no expired hold and no waiting list, so none of the three
+existing conditions would ever name it and the settle would never run on the event that needs
+it most. `suggestFreeBibNumbers` now skips provisional numbers too, or it would offer an
+organizer a number somebody is already looking at. Every screen reads `raceNumberOf`, one
+accessor over the two columns, because answering "which number does this runner have" in eight
+places is how one of them ends up showing a dash on race morning. The printed bib and its
+picture stay on the settled column alone — a provisional number is never printed.
+
+**Rejected.** *Keeping one column and letting its value change.* It cannot be told apart from a
+settled number by any reader, so nothing downstream could know whether it was safe to print or
+send. *Two visible numbers per runner* — a provisional one beside a final one — which is what a
+naive second column gives, and what the settle's clearing of the provisional column avoids.
+
+Tests: `tests/integration/registrations/provisional-bibs.test.ts` (9), including the release
+and reuse, the unique index, that a test registration gets none, that the settle closes the
+holes, that it runs exactly once however often the job does, and that nothing is emailed before
+it.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 215. Decided — a member's club is the club's own name (2026-09-21)
+
+**Context.** "If people check that they are brasov runners members, the club input must be
+auto-filled and readonly", with a screenshot of `BRASOV RUNNERS` typed in by hand.
+
+**Decision.** The tick and the club box are the same question asked twice (BR-REQ-031-06), and
+typing the answer by hand is how one club becomes "BRASOV RUNNERS", "Brasov runners" and "BvR"
+— three clubs in the export, sorted apart on the start list. Ticking the box fills the field
+with the club's own name and makes it read-only; unticking gives back whatever was typed before.
+
+*The tick still grants nothing.* §48 is untouched: this writes a name, not a capability.
+
+*`readOnly`, never `disabled`.* A disabled input posts nothing, so ticking the box would
+silently clear the club from the submission.
+
+*The value is written imperatively and the input stays uncontrolled* (§211). A controlled input
+over a server-rendered form wipes what somebody typed before hydration; the box keeps its
+`defaultValue`, the DOM owns the value, and the island writes only in response to the checkbox
+changing, which is after hydration by definition.
+
+*The same rule runs on the server*, so a submission with JavaScript off — or from anything that
+is not this form — records the same string. `CLUB_NAME` is a constant in `theme/brand.ts`
+rather than `Site.name` from the catalogue, because what is stored is a fact and not a
+translation: it must not differ between a Romanian and an English submission. A test asserts
+the constant equals `Site.name` in both catalogues, so the two cannot drift.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 216. Decided — a challenge that cannot run is not a reason to refuse a registration (2026-09-21)
+
+**Context.** Dani could not register, on two different addresses. Diagnosing it turned up
+something worse than the bug being looked for: `verifyTurnstile` answered `failed` for **no
+token at all** and for **Cloudflare not answering**, and the action refused the submission on
+`failed`.
+
+So anybody whose browser never ran the widget could not register: a content blocker or a
+privacy browser that refuses `challenges.cloudflare.com`, a corporate proxy, a phone on a bad
+connection, JavaScript switched off. They were told to tick a box that was not on their screen.
+And a bad five seconds at Cloudflare locked out every visitor at once.
+
+**Decision.** *Three verdicts where there were two.* `failed` is a token Cloudflare looked at
+and rejected — evidence, and it still stops a submission. `unavailable` is the **absence** of
+evidence: no token, a 5xx, a timeout. It refuses nobody, and it is logged so the club can see
+how often the widget does not run. The line never carries an address, as §194's does not.
+
+The original comment argued the other way — "a bot's token is not waved through on a bad day" —
+and it was wrong about which failure costs more. A bot that omits the token still has to get
+past the honeypot, the timing check and the per-identity throttle (`AGENTS.md` §19.4). A person
+who cannot register is the thing this site exists to prevent, and §205 says so in the owner's
+own words: "trebuie să lăsăm oamenii să se înscrie cu orice preț!!! Asta e scopul principal al
+site-ului."
+
+An over-long token stays `failed`: nothing legitimate produces one, and it *was* submitted.
+
+*The contact form and the interest box are fixed by the same change*, because both already
+refused only on `failed`.
+
+**This was not Dani's bug**, and the distinction is worth recording. His widget ticks itself,
+so Turnstile was passing for him all along. What discarded him is §194's silent drop, which is
+fixed on `qa` and has never been deployed — production still runs `if (looksLikeSpam(input,
+now)) return { ok: true }`, which writes no registration, queues no email, and tells the person
+to check their inbox. The evidence was in the registrations list: no row for him at all. This
+section is a second hole found while looking for the first.
+
+Tests: `tests/unit/registrations/turnstile.test.ts` — each way the check can fail to run, and
+the one way it can fail.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 217. Decided — nobody is told to wait for an email that was never sent (2026-09-21)
+
+**Context.** Dani could not register. On the same afternoon he registered successfully in
+DuckDuckGo and failed repeatedly in Edge, which is the whole diagnosis in one sentence: Edge
+holds his details and fills the form instantly, and production answers an instant submission
+with the confirmation page and nothing else.
+
+The owner, on being shown why: "people need to know that they were identified as bots! it's
+very bad for a user to tell him he is waiting for an email but he never receives it!" And then:
+"so the anti-spam/bot verification must be way more loose... so that we don't mistakenly mark
+real people as spam and they never receive the mail! and they need visuals on this!"
+
+**Decision, stated as an invariant because that is what it is:** *nothing may show the "check
+your email" screen unless a message was actually queued.*
+
+Three changes carry it.
+
+**1. Neither defence is answered with silence.** §194 moved the timing check from silence to a
+visible refusal and deliberately left the honeypot silent, on the argument — a good one — that
+a distinct error tells a script exactly what to stop doing (BR-REQ-031-01 criterion 3). The
+argument is sound and it is outweighed: a hidden field is filled by machines and, rarely, by a
+password manager or an accessibility tool that does not know the field is hidden, and that
+person was told to wait for an email nobody had sent.
+
+What a script still cannot learn is *which* check fired. Both verdicts throw the same error
+with the same field marker, so the trap and the timer are indistinguishable from outside, and a
+bot that omits the honeypot still has to wait out the timer — which is the whole of what a
+timing check ever bought. The log keeps the distinction, by event and reason, never by address.
+
+**2. The timing check is much looser.** One second, not three, and **a missing or unreadable
+render time is no longer suspicious at all**. Three seconds is well inside what somebody with
+autofill takes; one second is not reachable by hand and slows a script exactly as much. And the
+things that lose the timestamp are a page restored from the back-forward cache, an extension
+that rewrites the DOM, a proxy that strips a hidden field and a tab left open since yesterday —
+all of them people. There is nothing to time, so there is nothing to judge.
+
+The asymmetry is the argument. A lost registration is the thing this site exists to prevent; a
+spam registration is a row an Administrator deletes in two seconds. The real defences on this
+form are the honeypot, Turnstile (§97, §216) and the per-identity throttle (§19.4); the timer
+is the cheapest of the four and the only one that has ever refused a real person.
+
+**3. The refusal is where the person is looking.** `tooFast` is not one of the form's fields, so
+the error summary — the element the redirect anchors to and moves focus to — filtered it out and
+fell through to "verifică datele completate", a red box sending somebody hunting through twenty
+inputs that are all correct, while the sentence that explains what happened sat at the far end
+of a long form beside the button. That is the same trap §176 fixed for the captcha, and it is
+fixed the same way: said first, on its own, with its own title. The sentence names a second
+press and then the contact form, because a person whose password manager fills the trap will
+trip it again on the retry and would otherwise have a new dead end. The honeypot is in
+`form-draft.ts`'s `SKIPPED` set, so its value never travels back into the retry.
+
+**Consequences.** BR-REQ-031-01 criterion 3's "answered exactly like success" now describes
+neither check; `AGENTS.md` §15.1 is amended and states the invariant above it. The contact form
+and the interest box follow the same loosened rule through `looksLikeSpam`, and the contact form
+matters most of the three: it is the escape hatch somebody reaches for *because* the rest of the
+site would not take them (§205), so refusing it silently is the worst failure on the one page
+that exists to catch the others.
+
+**The second finding, and it is the expensive one.** While looking for what blocked Dani it
+turned out that **production has never had §194**: `main` is forty-one commits behind `qa` and
+still runs the silent drop. Every symptom matched — the widget ticked itself, the form
+submitted, the page said to check the inbox, no email arrived, and there was no row for him in
+the registrations list at all, because none was ever created. A fix that is written, tested and
+undeployed is not a fix, and nothing in this repository was measuring the distance between the
+two branches.
+
+Tests: `tests/unit/registrations/submission-verdict.test.ts` (6 — the one-second boundary and
+the passing of a missing render time), `tests/integration/registrations/lifecycle.test.ts` (the
+trap refuses out loud and creates nothing, and the two verdicts produce the identical answer),
+`tests/integration/contact/service.test.ts` and `tests/integration/registrations/interest.test.ts`.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 218. Decided — the last two silent drops, found by auditing for them (2026-09-21)
+
+**Context.** §217 stated the invariant — nothing shows "check your email" unless a message was
+queued — and fixed the two anti-bot checks. An audit run immediately afterwards, seven readers
+over the public journey with three adversarial verifiers each, found that the invariant was
+still false in two more places. Both were missed for the same reason: §217 fixed the paths
+that had just failed in front of somebody, and these two had not failed yet.
+
+**1. The per-address throttle.** `submitRegistration` refused the sixth submission in an hour
+with `return { ok: true }` — no row, no message, no log line, and the confirmation screen. Its
+own comment justified the silence in these words: *"Refused the same way the honeypot and the
+timing check are refused"* — pointing at two behaviours §217 had reversed thirty lines above
+it. A comment that cites a rule which no longer exists is how a fix half-lands.
+
+It now refuses out loud, with its own sentence and its own field marker.
+
+*It leaks nothing, and that is why this is allowed.* The bucket is keyed on the canonical
+identity of the address the person has just typed, so telling them "we have had several of
+these from you" tells them about themselves. The oracle `AGENTS.md` §19.4 forbids is one that
+answers *whether somebody else is registered*, which this cannot. The contact form has
+answered this way from the start, and `rate-limit/service.ts` already said why: "the sixth is
+told so plainly, because a person is not a bot."
+
+*Five an hour is reachable by ordinary use* — a re-test, two family members on one mailbox,
+somebody who cancelled and registered again — which is exactly the population that must not
+meet silence. The sentence names the hour and then the contact form, because somebody who
+needs to register now cannot wait one.
+
+**2. A waiting-list entry re-submitting the form.** `deriveAllowedResendMessageType` returns
+null for `WAITLISTED`, so §199's already-registered branch queued nothing and returned, and the
+screen said to check an inbox nothing had been sent to.
+
+The null is **right for the backoffice** and stays: "send it again" hands somebody a link they
+must act on, and a queued person has none. It is wrong for the public form, where the question
+being asked is not "send me the link again" but "did my registration go through at all". That
+question has an answer and a message type for it, so the public path re-sends
+`WAITLIST_JOINED`. The throttle in front of the form is what stops it being a mailer.
+
+**What the audit cost, and what it is worth saying about it.** Seven finders produced findings
+across the whole journey; the verification pass was cut short by an account limit, so 150 of
+172 agents died and most findings are **swept but unverified**. The two recorded here are the
+ones that survived three independent adversarial lenses with quoted code. The rest are a
+backlog, not a clean bill of health, and this paragraph exists so that nobody reads §218 as
+"the journey was audited and found sound".
+
+Tests: `tests/integration/registrations/lifecycle.test.ts` — the sixth submission is refused
+with a named field and somebody else's hour is untouched; a waitlisted re-submission queues
+`WAITLIST_JOINED`.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 219. Decided — the email header is a white banner, and the message says it is a light document (2026-09-21)
+
+**Context.** Dani, of the verification email: "this email header looks ugly! it should be a
+banner with white background", with a screenshot of the lockup sitting in a white rectangle on
+a dark card.
+
+**Decision.** The card was **already** `#ffffff`, so in an ordinary inbox nothing was wrong.
+The screenshot was Gmail's dark mode, which re-colours what it can and cannot re-colour a
+raster: the card went dark, the logo's own white background did not, and the lockup ended up
+looking like a sticker on a dark wall — which is the exact failure §189 changed the blue band
+to avoid, arriving by a different route.
+
+*The message now declares itself a light-scheme document*, in a `<meta>` and again in a
+`:root` rule, because most clients read the meta and Gmail strips `<head>` but keeps a
+`<style>`. That is what stops Apple Mail, Outlook and Gmail's webmail inverting it at all.
+
+*The banner is a table cell with a `bgcolor` attribute*, not a styled `<div>`. A client that
+inverts anyway has to override an HTML attribute rather than a CSS declaration, which is the
+last lever that still works where `color-scheme` is ignored. The logo is centred in it, so a
+band wider than the picture reads as a letterhead rather than as a picture with space beside
+it.
+
+*The card is a full HTML document now rather than a fragment*, for the plain reason that there
+was no `<head>` to put any of this in.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 220. Decided — the audit turned on the code the audit was written for (2026-09-21)
+
+**Context.** §218 recorded two silent drops the audit found in old code. It found two more in
+the code written the same afternoon — §214, the provisional race number — and those are worse,
+because they shipped with twelve passing tests and a decision record asserting the very
+invariant they broke.
+
+**1. The three bulk expiry sweeps never released the number.** §214 put the release inside
+`transitionRegistration`, "the one guarded transition every state change already goes through",
+and said so in as many words. Three state changes do not go through it:
+`expireStalePendingEmailConfirmations`, `expireStaleHolds` and `closeWaitlistForStartedEvent`
+are bulk `UPDATE ... SET status = 'EXPIRED'` statements — which is exactly why they are fast,
+and exactly why they were missed. An expired row kept its provisional number for ever, and
+`pickProvisionalBibNumber` treats any non-null provisional as taken, so the sequence this whole
+design exists to keep dense would grow a permanent hole every time somebody let a hold lapse.
+
+Invisible until somebody counts, which is the kind of defect that survives a release.
+
+**2. `pickBibNumber` was blind to the provisional column.** It reads the numbers already worn,
+and since §214 that is only half of the numbers that are spoken for. Reachable after the
+settle: registration has closed, two walk-ins are entered at the desk and each is given a
+provisional number, and the first of them to be confirmed draws a final one — which, reading
+`bib_number` alone, is the number the *other* one is looking at. The partial unique index
+cannot catch it, because the two numbers live in different columns, so the first anybody would
+know is two runners at one start line wearing 51.
+
+It reads both columns now. And a late confirmation **adopts its own provisional number** rather
+than drawing a fresh one — which it would otherwise now skip, the number being held by the very
+person asking for it. Adopting is also what the runner expects, because the desk has been
+showing them that number since they registered.
+
+**What this says about the method, and it is why the section exists.** Both defects are in code
+that passed its own tests. Tests written by the author of a change cover the cases the author
+thought of; an adversarial reader given the *invariant* rather than the diff found both in one
+pass, and found them on the day the code was written rather than on the morning of a race.
+
+Tests: `tests/integration/registrations/provisional-bibs.test.ts` — a lapsed hold releases its
+number through the sweep, a final draw never lands on a held provisional one, and a late
+confirmation keeps the number it was shown.
+
+Baseline `BR-V1.39-2026-09-21`.

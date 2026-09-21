@@ -21,7 +21,8 @@ import {
 import {
   canCreateEvent,
   canDeleteEvent,
-  canEditTexts,
+  canReadContent,
+  canHardDeleteEvent,
   canManageRegistrations,
 } from "@/modules/staff-identity/domain/roles";
 import {
@@ -64,6 +65,8 @@ type EventRow = {
   event: EditableEvent;
   translations: EditableTranslation[];
   entries: number;
+  /** How many of those are test rows (§176): an event blocked only by those is deleted with them. */
+  testEntries: number;
   /** Confirmed and here, shown on race day (§83): the desk's own two numbers. */
   desk: { confirmed: number; checkedIn: number } | null;
 };
@@ -115,9 +118,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const staffUser = await requireStaff();
   // A volunteer's backoffice is the desk (§103): `/admin` takes them there rather than to a list
   // of events they may neither write nor configure. The tabs offer them the same two sections.
-  if (!canEditTexts(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
+  // Seeing the club's events is `canReadContent`; every control below asks its own question
+  // (§208). A volunteer, who may read nothing, still lands on the desk.
+  if (!canReadContent(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
   const current = await searchParams;
-  const { error, saved, archived, failed, created, published, deleted } = current;
+  const { error, saved, archived, failed, created, published, deleted, erased } = current;
 
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
@@ -135,7 +140,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const DAY = 24 * 60 * 60_000;
   const rows: EventRow[] = events.map((row) => ({
     ...row,
-    entries: entriesByEvent.get(row.event.id) ?? 0,
+    entries: entriesByEvent.get(row.event.id)?.total ?? 0,
+    testEntries: entriesByEvent.get(row.event.id)?.test ?? 0,
     desk:
       Math.abs(row.event.startsAt.getTime() - now.getTime()) <= DAY && row.event.registrationMode === "INTERNAL"
         ? (deskByEvent.get(row.event.id) ?? { confirmed: 0, checkedIn: 0 })
@@ -365,7 +371,11 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {t("events.eventsDeleted", { deleted: deleted ?? "0", failed: failed ?? "0" })}
           </Alert>
         )}
-        {saved && !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted"].includes(saved) && (
+        {saved === "eventErased" && (
+          <Alert severity="success">{t("events.eventErased", { erased: erased ?? "0" })}</Alert>
+        )}
+        {saved &&
+          !["eventsArchived", "eventsRepeated", "eventsPublished", "eventsDeleted", "eventErased"].includes(saved) && (
           <Alert severity="success">{t("saved")}</Alert>
         )}
       </Box>
@@ -442,6 +452,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         rowActions={({ members, next }) => {
           const { event, translations } = next;
           const entries = members.reduce((sum, member) => sum + member.entries, 0);
+          const testEntries = members.reduce((sum, member) => sum + member.testEntries, 0);
           const isSeries = members.length > 1;
           return (
           <Stack
@@ -507,7 +518,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="eventId" value={event.id} />
                 </form>
-                {canDeleteEvent(staffUser.role) && entries === 0 && !isSeries && (
+                {canDeleteEvent(staffUser.role) && (entries === 0 || entries === testEntries) && !isSeries && (
                   <form id={`delete-${event.id}`} action={deleteEventAction} hidden>
                     <input type="hidden" name="uiLocale" value={locale} />
                     <input type="hidden" name="eventId" value={event.id} />
@@ -547,8 +558,8 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                     ...(canDeleteEvent(staffUser.role)
                       ? isSeries
                         ? [{ kind: "note" as const, label: t("events.seriesDeleteNote") }]
-                        : entries > 0
-                        ? [{ kind: "note" as const, label: t("events.deleteBlocked", { count: entries }) }]
+                        : entries > testEntries
+                        ? [{ kind: "note" as const, label: t("events.deleteBlocked", { count: entries - testEntries }) }]
                         : [
                             {
                               kind: "submit" as const,
@@ -563,6 +574,32 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                               },
                             },
                           ]
+                      : []),
+                    /*
+                      The hard delete, and it is deliberately the last item and a *link* rather
+                      than a verb: it opens a screen that says what would be destroyed and asks
+                      for the event's title to be typed (BR-REQ-037-06). It sits directly under
+                      the note above, so the organizer who has just been told "2 people have
+                      registered" has the one answer to that on the same menu, instead of no
+                      answer at all — which is where this started.
+
+                      Not offered for a series: this erases one date, and a ⋮ that belongs to a
+                      folded group of dates could not say which. Not in the bulk bar either, at
+                      any count: a bulk hard delete is how somebody loses a season.
+                    */
+                    ...(canHardDeleteEvent(staffUser.role) && !isSeries
+                      ? [
+                          {
+                            kind: "link" as const,
+                            icon: "delete" as const,
+                            color: "error" as const,
+                            label: t("events.hardDelete"),
+                            href: getPathname({
+                              locale,
+                              href: { pathname: "/admin/events/[id]/erase", params: { id: event.id } },
+                            }),
+                          },
+                        ]
                       : []),
                   ]}
                 />

@@ -10,6 +10,7 @@ const FULL: BuildInfo = {
   baseline: "BR-V1.16-2026-09-04",
   commit: "a1b2c3d",
   committedAt: "2026-09-04T18:30:00.000Z",
+  id: "a1b2c3d4e5f6",
 };
 
 describe("formatVersion", () => {
@@ -27,7 +28,7 @@ describe("formatVersion", () => {
   });
 
   it("says dev when it knows nothing, rather than rendering an empty badge", () => {
-    expect(formatVersion({ baseline: "", commit: "", committedAt: "" })).toBe("dev");
+    expect(formatVersion({ baseline: "", commit: "", committedAt: "", id: "" })).toBe("dev");
   });
 });
 

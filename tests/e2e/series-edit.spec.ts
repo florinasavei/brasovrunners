@@ -42,8 +42,12 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await expect(page).toHaveURL(/\/admin\/events\/[0-9a-f-]{36}/);
     await hydrated(page);
 
-    // The event's own day is ticked and locked (§128); Wednesday is added, until four weeks on.
+    // Recurrence is a tick first and the frequency after it (§169): nothing below is on the
+    // page until the box is ticked.
     const main = page.locator("#main");
+    await main.getByRole("checkbox", { name: "Repetă evenimentul" }).check();
+
+    // The event's own day is ticked and locked (§128); Wednesday is added, until four weeks on.
     const sunday = main.getByRole("checkbox", { name: "Du" });
     await expect(sunday).toBeChecked();
     await expect(sunday).toBeDisabled();

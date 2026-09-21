@@ -72,13 +72,37 @@ export function isEditorial(role: StaffRole): boolean {
 }
 
 /**
- * The copywriter's whole job (§103): the words of any event and any page, at any status —
- * the title, the description, the rules, the programme, the SEO fields, a page's body — and
- * nothing that is not words: no event setting, no publication, no gallery, no registration.
- * The volunteer (`CONTRIBUTOR`) is below this line: the desk, and only the desk.
+ * The words of any event and any page, at any status — the title, the description, the rules, the
+ * programme, the SEO fields, a page's body — and nothing that is not words: no event setting, no
+ * publication, no gallery, no registration (§103).
+ *
+ * ## The one deliberate gap in the ladder (§207)
+ *
+ * **This is a set, not a threshold, and it is the only capability in this file that is.** Every
+ * other one reads `atLeast(role, …)`, which makes the hierarchy real: a rule written as a list
+ * of roles is a rule somebody forgets to add a new role to. So a gap here has to earn itself.
+ *
+ * The owner, of his two colleagues: "tot ce vreau e ca organizatorul să nu fie și redactor…
+ * Redactorul scrie, Organizatorul organizează", and then, asked to confirm the consequence: "da,
+ * așa vreau". An Organizer sets the date, the place, the route, the capacity, the registration
+ * window, the queue and the desk. A Redactor writes the words. Neither does the other's job, and
+ * a rank ladder cannot express that — rank would give the Organizer the Redactor's work simply
+ * for being above them, which is what the club is asking not to happen.
+ *
+ * `DEV` is out for the same reason it is out of everything editorial: "Tehnic" is diagnostics,
+ * and it sits where it does in the ladder only so that `canSeeDiagnostics` can be a threshold.
+ * `ADMIN` and `SUPERADMIN` keep it, because the Administrator is who both of the others ask.
+ *
+ * The volunteer (`CONTRIBUTOR`) is below all of it: the desk, and only the desk.
  */
+const MAY_EDIT_TEXTS: ReadonlySet<StaffRole> = new Set<StaffRole>([
+  "COPYWRITER",
+  "ADMIN",
+  "SUPERADMIN",
+]);
+
 export function canEditTexts(role: StaffRole): boolean {
-  return atLeast(role, "COPYWRITER");
+  return MAY_EDIT_TEXTS.has(role);
 }
 
 /**
@@ -96,10 +120,27 @@ export function canEditTranslation(
   actorId: string,
 ): boolean {
   // Since §103 the answer no longer depends on whose draft it is: a copywriter edits every
-  // text and a volunteer none. The status and the author stay in the signature because the
-  // callers pass them and a future rule (a locked piece under review, say) would read them.
-  void translation;
+  // text and a volunteer none. The author stays in the signature because the callers pass it
+  // and a future rule — a piece locked while under review, say — would read it.
   void actorId;
+  /*
+    **Live text is still editorial, and that is a question left open on purpose (§201).**
+
+    §201 made every move that crosses public view an Administrator's. Editing the *words* of an
+    already-published page is the remaining way something reaches the public without her, and
+    closing it is one line here — `if (isLiveContent(...)) return atLeast(role, "ADMIN")`.
+
+    It is not written, because it would reverse BR-REQ-051-01 criterion 3 in as many words: "a
+    copywriter edits live text with the acknowledgement; a volunteer never" (§103). The club
+    asked for the *organizer* to be managed by the Administrator, and the organizer sits above
+    the copywriter, so the restriction cannot be applied to one without the other. That is a
+    decision about how the club works, not about how this function is written, and it waits for
+    the club rather than being taken here.
+
+    What stands in the meantime: BR-REQ-051-01 criterion 4's acknowledgement, which the server
+    checks, "because a warning the server does not check is a decoration".
+  */
+  void translation;
   return canEditTexts(role);
 }
 
@@ -129,12 +170,25 @@ type Transition = { from: EditorialStatus; to: EditorialStatus; minimum: StaffRo
 export const TRANSITIONS: readonly Transition[] = [
   // Submit for approval: the one move a copywriter may make (§103).
   { from: "DRAFT", to: "IN_REVIEW", minimum: "COPYWRITER" },
-  // Return to the contributor.
+  // Return to the contributor. Nothing public moves, so the organizer still does it.
   { from: "IN_REVIEW", to: "DRAFT", minimum: "MODERATOR" },
-  { from: "IN_REVIEW", to: "PUBLISHED", minimum: "MODERATOR" },
+  /*
+    **Crossing into or out of public view is an Administrator's act since §201.**
+
+    The owner, of his two colleagues: "Amalia e Administrator, Dani e Organizator dar poate face
+    prostii, deci trebuie manageuit de Amalia". These four rows are the whole of what the public
+    can see changing — a page appearing, a page disappearing, a live page being taken down or
+    put back — so raising exactly these four is what "nothing Dani does goes live on its own"
+    means, expressed as the smallest possible change to the table.
+
+    The organizer keeps everything that does not cross that line: writing, submitting, returning
+    a draft, archiving something that was never published.
+  */
+  { from: "IN_REVIEW", to: "PUBLISHED", minimum: "ADMIN" },
   // Unpublish: back to a draft, so the public page 404s again.
-  { from: "PUBLISHED", to: "DRAFT", minimum: "MODERATOR" },
-  { from: "PUBLISHED", to: "ARCHIVED", minimum: "MODERATOR" },
+  { from: "PUBLISHED", to: "DRAFT", minimum: "ADMIN" },
+  { from: "PUBLISHED", to: "ARCHIVED", minimum: "ADMIN" },
+  // Neither of these was ever public: a draft and a submission are invisible either way.
   { from: "DRAFT", to: "ARCHIVED", minimum: "MODERATOR" },
   { from: "IN_REVIEW", to: "ARCHIVED", minimum: "MODERATOR" },
   { from: "ARCHIVED", to: "DRAFT", minimum: "MODERATOR" },
@@ -173,12 +227,20 @@ export function canEditEventFields(role: StaffRole): boolean {
 }
 
 /**
- * Creating and duplicating an event is the same power as configuring one: what the club
- * advertises, and — since the registration block is part of the same row — whether it takes
- * entries at all.
+ * **The Administrator creates events (§204).**
+ *
+ * The owner: "administratorul crează evenimente". It had been the same power as configuring one,
+ * on the reasoning that both decide what the club advertises — and the reasoning holds for
+ * *configuring*, which stays with the Organizer. Creating is the act that decides there is a
+ * race at all, and since the registration block is part of the same row, it decides whether the
+ * club takes entries. That is the club's decision, not the organizer's preparation of it.
+ *
+ * An Organizer opens an event the Administrator created and does everything to it: the date, the
+ * place, the route, the capacity, the registration window, the queue, the desk. What they cannot
+ * do is invent a race, publish one, or take a published one down (§201).
  */
 export function canCreateEvent(role: StaffRole): boolean {
-  return isEditorial(role);
+  return atLeast(role, "ADMIN");
 }
 
 /** A page is words; a copywriter starts one as a draft. Deleting and ordering stay editorial. */
@@ -194,6 +256,30 @@ export function canCreatePage(role: StaffRole): boolean {
  */
 export function canDeleteEvent(role: StaffRole): boolean {
   return atLeast(role, "ADMIN");
+}
+
+/**
+ * Erasing an event **and everyone registered for it** — the hard delete (BR-REQ-037-06,
+ * BR-REQ-060-01).
+ *
+ * Two powers at once, so it asks for both: it destroys club content (`canDeleteEvent`) and it
+ * destroys participant data (`canManageRegistrations`). Writing it as the conjunction rather
+ * than as `atLeast(role, "ADMIN")` is not decoration — it means that if either boundary is
+ * ever moved, this moves with it instead of quietly keeping the old one.
+ *
+ * **Why not SUPERADMIN.** The tempting answer is "the most destructive verb belongs to the
+ * highest role", and it is the wrong one. SUPERADMIN is defined by exactly one capability —
+ * deciding who is on the staff and what they may do — and it is deliberately *not* a general
+ * "dangerous things" tier; the hierarchy's real line is personal data, and that line is ADMIN
+ * (see the header of this file). An Administrator may already erase every registration on an
+ * event, one at a time, and then delete the event: gating the single-step version behind a
+ * higher role would not protect one row, it would only make the safe path slower than the
+ * unsafe one. What actually protects the data is the confirmation the service demands — the
+ * event's exact title typed by hand, and a reason — the audit rows it leaves, and the fact
+ * that this verb is absent from every bulk control.
+ */
+export function canHardDeleteEvent(role: StaffRole): boolean {
+  return canDeleteEvent(role) && canManageRegistrations(role);
 }
 
 /**
@@ -301,21 +387,46 @@ export const ADMIN_SECTIONS = [
 ] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
+/**
+ * **Whether a role may *look* at the club's own content (§208).**
+ *
+ * The capability this file did not have. Every other function here answers "may you change
+ * this", and the navigation was built out of those answers — so the day the Organizer stopped
+ * writing texts (§207) they also stopped being able to *see* the events list, which is not what
+ * anybody asked for.
+ *
+ * The owner: "organizatorul vede cam tot (dar în readonly), practic Dani îi zice Amaliei să
+ * modifice X, Y lucru." So the Organizer is an observer with the desk: they read the events, the
+ * pages, the gallery and the legal texts, and they ask the Administrator for every change. A
+ * person who cannot see what the club publishes cannot tell her which line is wrong.
+ *
+ * It stops at the club's **content**. The participant list, the export and the tasks stay behind
+ * `canManageRegistrations`, because the line this hierarchy actually draws is personal data and
+ * that line is ADMIN (§10.2) — "vede cam tot" is not an instruction to hand somebody four
+ * hundred addresses. What every staff role does see of a participant is the desk: a name, a
+ * state and a number, never an address (`AGENTS.md` §15.11).
+ */
+export function canReadContent(role: StaffRole): boolean {
+  return atLeast(role, "COPYWRITER");
+}
+
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
   return [
-    // The events list, for everyone who writes or configures one; a volunteer's backoffice
-    // is the desk and the guide, nothing else (§103).
-    ...(canEditTexts(role) ? (["events"] as const) : []),
+    // The events list, for everyone who may look at it — writing is a separate question and
+    // a separate gate (§208). A volunteer's backoffice is the desk and the guide (§103).
+    ...(canReadContent(role) ? (["events"] as const) : []),
     // The desk: a volunteer's whole backoffice (BR-REQ-037-08), and the guide that explains it.
     ...(canWorkTheDesk(role) ? (["checkin", "guide"] as const) : []),
-    // Standing pages are words, so the copywriter writes them (BR-REQ-050-03, §103); the
-    // gallery is pictures and stays with the roles that configure an event.
-    ...(canEditTexts(role) ? (["pages"] as const) : []),
-    ...(isEditorial(role) ? (["gallery"] as const) : []),
+    // Standing pages are words and the gallery is pictures; both are the club's content, so
+    // both are offered to whoever may read it and guarded on the way in (§208).
+    ...(canReadContent(role) ? (["pages"] as const) : []),
+    ...(canReadContent(role) ? (["gallery"] as const) : []),
     ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
     // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
     ...(canManageRegistrations(role) ? (["tasks"] as const) : []),
-    ...(atLeast(role, "ADMIN") ? (["legal"] as const) : []),
+    // The legal texts are readable by the roles that must know what the club published; only
+    // the Administrator writes one (§46, §181, §203).
+    ...(canReadContent(role) ? (["legal"] as const) : []),
     ...(canManageStaff(role) ? (["staff"] as const) : []),
     ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
   ];

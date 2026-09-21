@@ -28,6 +28,11 @@
       "gallery": "Galerie",
       "more": "Meniu",
       "contact": "Contact"
+    },
+    "newBuild": {
+      "body": "S-a publicat o versiune nouă a site-ului — reîncarcă pagina când vrei, dar vei pierde ce ai completat în formularele deschise.",
+      "reload": "Reîncarcă pagina",
+      "dismiss": "Închide anunțul despre versiunea nouă"
     }
   },
   "Home": {
@@ -107,7 +112,7 @@
     "distance": "Distanță",
     "distanceKm": "{km} km",
     "elevation": "Diferență de nivel",
-    "elevationM": "{m} m urcare",
+    "elevationM": "{m} m diferență de nivel",
     "difficulty": "Dificultate",
     "cost": "Cost",
     "registration": "Înscriere",
@@ -135,7 +140,8 @@
       "title": "Cine vine",
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
-      "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei."
+      "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei.",
+      "anonymous": "Participant anonim"
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
@@ -330,7 +336,7 @@
       "deleteAction": "Șterge definitiv",
       "deleteConfirm": "Confirm că această ștergere este definitivă",
       "registrationDeleted": "Înscrierea a fost ștearsă definitiv.",
-      "rowActions": "Acțiuni",
+      "rowActions": "Acțiuni pentru {name}",
       "clubMemberLabel": "Membri Brașov Runners",
       "bouncedLabel": "Email",
       "bouncedOnly": "Doar email respins",
@@ -338,7 +344,7 @@
       "clubMemberChip": "Membru (declarat)",
       "columnName": "Nume",
       "columnStatus": "Stare",
-      "columnJourney": "Etapă",
+      "columnJourney": "Unde a ajuns",
       "columnEvent": "Eveniment",
       "columnEmail": "E-mail",
       "columnSubmitted": "Trimisă",
@@ -353,15 +359,15 @@
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
       "searchHelp": "Caută după nume, cu sau fără diacritice.",
       "resendShort": "Retrimite",
-      "resendQr": "Retrimite QR-ul",
+      "resendQr": "Retrimite QR",
       "sendReminder": "Trimite reminderul",
       "resendQrLong": "Trimite din nou confirmarea, cu codul QR și linkul de gestionare",
       "raceDayTitle": "Ziua cursei",
-      "bibNumber": "Număr de concurs",
+      "bibNumber": "Număr de concurs (BIB)",
       "checkinCode": "Cod de ridicare",
       "checkinCodeHelp": "Codul din emailul de confirmare; QR-ul de mai jos îl conține. Se folosește la masa de ridicare a numerelor.",
       "qrAlt": "Cod QR {code}",
-      "openDesk": "Deschide la masă",
+      "openDesk": "Deschide la masa din ziua cursei (check-in)",
       "notCheckedIn": "Nu a fost marcat prezent.",
       "checkedIn": "Prezent: {time} · {who}",
       "idDocument": "Act de identitate",
@@ -382,8 +388,25 @@
         "expiredAt": "Expirată la {date}",
         "progress": "{done} din {total} pași",
         "next": "urmează: {step}",
-        "complete": "Toți pașii parcurși"
-      }
+        "complete": "Toți pașii parcurși",
+        "legend": "Cei șase pași ai unei înscrieri: 1 formularul trimis · 2 emailul confirmat · 3 locul rezervat · 4 declarația semnată · 5 locul confirmat · 6 numărul ridicat la masă. Cifra arată la care a ajuns persoana."
+      },
+      "exportExcel": "Exportă Excel",
+      "columnBib": "Număr de concurs (BIB)",
+      "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
+      "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
+      "openRow": "Deschide înscrierea",
+      "cancel": "Anulează înscrierea",
+      "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
+      "confirmOnPaperBody": "Confirmi că participantul a semnat declarația pe hârtie, la masă. Primește locul și numărul de concurs, iar în jurnal rămâi tu ca cel care a înregistrat semnătura. Se folosește doar când ai hârtia semnată în față.",
+      "downloadBib": "Descarcă numărul de concurs (BIB)",
+      "notOnPublicList": "Nu apare public",
+      "erase": "Șterge definitiv",
+      "eraseTitle": "Ștergi definitiv înscrierea lui {name}?",
+      "eraseTypeName": "Scrie numele înscrisului",
+      "eraseTypeNameHelp": "Scrie exact „{name}”, ca să fim siguri că este rândul pe care îl vrei. Majusculele și diacriticele nu contează.",
+      "eraseAction": "Șterge definitiv",
+      "erasePending": "Se șterge…"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -411,7 +434,7 @@
       "bulkArchiveAction": "Arhivează cele bifate",
       "bulkArchivePending": "Se arhivează…",
       "eventsArchived": "{archived} evenimente arhivate. {failed} nu au putut fi arhivate.",
-      "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul în locul ștergerii.",
+      "deleteBlocked": "Nu se poate șterge: {count} persoane sunt înscrise. Arhivează evenimentul, sau folosește „Ștergere definitivă…” de mai jos, care șterge și înscrierile.",
       "deleteBlockedShort": "{count} înscrieri",
       "eventsRepeated": "{created} ediții create.",
       "bulkSelectAll": "Toate",
@@ -419,8 +442,10 @@
       "bulkHelp": "Bifează evenimente din listă, sau toate. „Publică” le trece prin verificare și le publică pe cele complete în ambele limbi — o serie întreagă deodată; „Arhivează” le scoate de pe site; „Șterge” le elimină pe cele la care nu s-a înscris nimeni.",
       "bulkPublishAction": "Publică cele bifate",
       "bulkDeleteAction": "Șterge cele bifate",
-      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși; arhivează-le pe acelea.",
-      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate)."
+      "eventsDeleted": "{deleted} evenimente șterse. {failed} nu s-au putut șterge — au înscriși. Arhivează-le, sau folosește „Ștergere definitivă…” din meniul ⋮ al rândului, care șterge și înscrierile.",
+      "eventsPublished": "{published} evenimente publicate. {failed} nu au putut fi publicate (limbă incompletă sau deja modificate).",
+      "hardDelete": "Ștergere definitivă…",
+      "eventErased": "Eveniment șters definitiv, împreună cu {erased} înscrieri."
     },
     "confirm": {
       "cancel": "Renunță",
@@ -439,7 +464,7 @@
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
-      "bibsBody": "Fiecare înscriere confirmată fără număr primește un număr liber, ales la întâmplare. Numerele deja date rămân."
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -448,7 +473,10 @@
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
       "VALIDATION_ERROR": "Verifică datele introduse; ceva nu este valid.",
-      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris."
+      "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
+      "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
+      "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
+      "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -479,7 +507,7 @@
       "fields": {
         "title": "Titlu",
         "slug": "Adresa paginii",
-        "excerpt": "Descriere scurtă",
+        "excerpt": "Rezumat — apare pe card și în distribuiri",
         "locationName": "Punct de întâlnire",
         "locationAddress": "Adresă",
         "seoTitle": "Titlu pentru motoarele de căutare",
@@ -487,7 +515,7 @@
         "difficulty": "Dificultate",
         "costType": "Cost",
         "checklist": "Ce să aduci (o linie, în emailuri și în calendar)",
-        "body": "Descriere completă",
+        "body": "Conținut — apare pe pagina evenimentului, sub titlu",
         "rules": "Regulamentul evenimentului",
         "schedule": "Programul evenimentului"
       },
@@ -503,7 +531,7 @@
       "newTitle": "Eveniment nou",
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
-      "excerptHelp": "Una-două fraze: ce se vede pe cardul din listă (și pe pagină doar cât nu există descriere completă). Obligatorie înainte de publicare.",
+      "excerptHelp": "Una-două fraze: ce se vede pe cardul din listă și în distribuiri (și pe pagină, în același loc, cât timp descrierea completă n-are cuvinte). Obligatorie înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",
@@ -641,10 +669,46 @@
       "stravaEventUrlHelp": "Opțional. Adresa evenimentului din clubul Strava (strava.com/clubs/…/group_events/…), pentru cine confirmă acolo. Doar pentru această ediție; nu se copiază.",
       "facebookEventUrl": "Link către evenimentul Facebook",
       "facebookEventUrlHelp": "Opțional. Adresa evenimentului de pe Facebook (facebook.com/events/…), pentru cine dă „Particip” acolo. Doar pentru această ediție; nu se copiază.",
-      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului — descrierea scurtă rămâne pe card.",
+      "bodyHelp": "Descrierea completă a evenimentului, cu titluri, liste și linkuri — programul zilei, ce aduci, unde parchezi. Apare pe pagina evenimentului, sus, direct sub titlu; descrierea scurtă rămâne pe card.",
       "confirmationOpensDaysBefore": "Confirmarea participării: cu câte zile înainte se cere",
       "confirmationDeadlineDaysBefore": "…și cu câte zile înainte expiră",
-      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână."
+      "confirmationWindowHelp": "Pentru evenimente mai departe decât prima cifră, cine își confirmă emailul păstrează locul până la termen și semnează declarația (= confirmarea participării) în acea fereastră; cu prima cifră primește emailul de reamintire. Pune 0 la prima ca să ceri semnătura pe loc (30 de minute), ca la antrenamentele săptămânale — care oricum sunt mai aproape de o săptămână.",
+      "panels": {
+        "when": "Când și unde",
+        "registration": "Înscrieri",
+        "details": "Traseu și detalii",
+        "video": "Film"
+      },
+      "seoSection": "Adresa paginii și motoarele de căutare",
+      "typeHelpSummary": "Ce înseamnă fiecare tip?",
+      "typeNotes": {
+        "GROUP_RUN": "Alergare de grup: se vine pur și simplu — fără înscriere, fără participanți, fără program.",
+        "RACE": "Cursă: înscriere, declarație, numere de concurs și program al zilei.",
+        "HIKE": "Drumeție: poate avea înscriere și program, dacă locurile sunt limitate.",
+        "COFFEE": "Cafea: poate avea înscriere, pentru rezervarea mesei. Fără program.",
+        "GEAR_TEST": "Testare de echipament: poate avea înscriere și program.",
+        "MEETUP": "Eveniment special: ediția aparte, cu un partener sau cu o ocazie. Poate avea înscriere și program.",
+        "EXTERNAL": "Eveniment extern: e al altcuiva, iar înscrierea se face pe pagina organizatorului."
+      },
+      "repeatOn": "Repetă evenimentul",
+      "repeatHelpSummary": "Cum funcționează o serie",
+      "tabMissing": "textul întreg",
+      "deleteBlockedByTest": "Nu se poate șterge: are {count} înscrieri, toate de test. Șterge-le mai întâi, la „Înscrieri de test” mai sus.",
+      "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
+      "bibStartNumber": "Numerele de concurs (BIB) încep de la",
+      "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
+      "bibColour": "Culoarea numerelor de concurs (BIB)",
+      "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
+      "bibColours": {
+        "club": "Culoarea clubului",
+        "green": "Verde",
+        "red": "Roșu",
+        "orange": "Portocaliu",
+        "purple": "Violet",
+        "teal": "Turcoaz",
+        "black": "Negru"
+      },
+      "confirmationWindowTitle": "Confirmarea participării"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -664,11 +728,11 @@
       "role": "Rol",
       "preferredLocale": "Limbă preferată",
       "invite": "Adaugă",
-      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare și-l face singur din pagina de autentificare, cu exact această adresă; cu cheia Zitadel pusă (To do → „Invită echipa”, SETUP.md §37) i-l creăm noi și primește și linkul pentru parolă. Accesul începe la prima autentificare.",
+      "inviteHelp": "Aici adaugi adresa pe lista celor din echipă și îi trimiți pe email invitația: cine l-a adăugat, cu ce rol și linkul de autentificare. Contul de autentificare nu se creează singur — pune cheia Zitadel (To do → „Invită echipa”, SETUP.md §37) și îl creăm noi, cu link pentru parolă; până atunci creează-l din consola Zitadel. Accesul începe la prima autentificare.",
       "inviteHelpSends": "Aici adaugi adresa pe lista celor din echipă, îi creezi contul de autentificare și îi trimiți pe email invitația — cine l-a adăugat, cu ce rol, linkul de autentificare — și linkul pentru alegerea parolei. Apoi se autentifică la /admin.",
       "inviteSent": "Adăugat. Invitația e pe drum către căsuța lui de email, cu linkul pentru alegerea parolei.",
       "inviteExists": "Adăugat, invitația e pe drum. Are deja un cont de autentificare cu această adresă — se poate autentifica la /admin imediat.",
-      "inviteManual": "Adăugat. Invitația e pe drum către căsuța lui de email: își face contul din pagina de autentificare, cu exact această adresă. (Cu cheia Zitadel pusă — To do → „Invită echipa” — i-am crea contul noi.)",
+      "inviteManual": "Adăugat și invitația e pe drum. Contul de autentificare nu s-a creat — nu e pusă cheia Zitadel. Creează-i contul din consola Zitadel cu exact această adresă, sau pune cheia (SETUP.md §37) și apasă „Retrimite invitația”.",
       "inviteFailed": "Adăugat și invitația e pe drum, dar furnizorul de autentificare a refuzat să creeze contul ({reason}). Își poate face contul din pagina de autentificare, cu exact această adresă.",
       "resendInvite": "Retrimite invitația",
       "resendInvitePending": "Se trimite…",
@@ -692,7 +756,19 @@
         "DEV": "plus pagina tehnică /devs. Fără datele participanților.",
         "ADMIN": "plus înscrierile, exportul, textele legale, emailurile, sarcinile.",
         "SUPERADMIN": "plus echipa: cine are acces și cu ce rol."
-      }
+      },
+      "resendFailed": "Invitația nu a plecat: la furnizorul de autentificare nu există cont cu această adresă ({reason}). Verifică adresa din tabel — dacă e greșită, retrage accesul și adaugă persoana din nou cu adresa corectă.",
+      "passwordReset": "Trimite resetare de parolă",
+      "passwordResetPending": "Se trimite…",
+      "passwordResetSent": "Gata. I-am trimis pe email linkul cu care își pune o parolă nouă.",
+      "deactivateAccount": "Dezactivează contul",
+      "deactivateAccountPending": "Se dezactivează…",
+      "accountDeactivated": "Contul de autentificare a fost dezactivat: nu se mai poate autentifica nicăieri. Rândul din echipă rămâne — ca să-i iei și accesul, folosește „Retrage accesul”.",
+      "accountReactivated": "Contul de autentificare a fost reactivat.",
+      "accountMissing": "La furnizorul de autentificare nu există niciun cont cu această adresă, deci nu era nimic de schimbat. Verifică adresa din tabel.",
+      "accountUnconfigured": "Nu putem face asta fără cheia Zitadel (To do → „Invită echipa”, SETUP.md §37). Până atunci, din consola Zitadel.",
+      "accountFailed": "Furnizorul de autentificare a refuzat ({reason}).",
+      "inviteKeyMissing": "Nu putem crea conturi de autentificare: lipsește cheia Zitadel (ZITADEL_MANAGEMENT_PAT, SETUP.md §37). Fără ea, „Adaugă” pune persoana pe listă și îi trimite invitația noastră, dar contul nu se creează — iar în pagina de autentificare nu există „fă-ți cont”, așa că persoana rămâne blocată. Până pui cheia, creează-i contul manual din consola Zitadel, cu exact adresa din tabel."
     },
     "queue": {
       "title": "Coada de înscrieri",
@@ -806,6 +882,58 @@
         "consequence": "Apăsând, iei răspunderea pentru aceste texte ca reprezentant al clubului: din acel moment ele sunt în vigoare pe site, iar o corectare este o versiune nouă. Poți citi fiecare text înainte, din linkurile de mai jos.",
         "button": "Aprobă cele trei texte acum",
         "pending": "Se aprobă…"
+      },
+      "withdraw": "Retrage versiunea",
+      "withdrawTitle": "Retragi versiunea?",
+      "withdrawBody": "Nu se șterge nimic: versiunea rămâne în evidență, cu numărul și cu textul ei, iar numărul rămâne ocupat, ca să nu ajungă niciodată pe alt text. Se oprește doar din a mai fi oferită — nu mai apare public, nu se mai poate alege pe un eveniment și dispare din listă.",
+      "withdrawBlockedCurrent": "În vigoare acum — nu se poate retrage. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage.",
+      "withdrawBlockedReferenced": "Nu se poate retrage: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "withdrawn": "Retrasă",
+      "withdrawnOn": "Retrasă la {date}",
+      "withdrawnNotice": "Versiunea a fost retrasă la {date}. Textul rămâne aici, în evidență, cu numărul lui, dar nu mai apare public și nu se mai poate alege pe un eveniment.",
+      "showWithdrawn": "Arată și versiunile retrase ({count})",
+      "hideWithdrawn": "Ascunde versiunile retrase",
+      "legalVersionWithdrawn": "Versiunea a fost retrasă. Rămâne în evidență, cu numărul ei, dar nu mai este oferită nicăieri.",
+      "startFrom": {
+        "title": "Pornește de la textul platformei",
+        "intro": "Alege documentul și primești textul complet, cu denumirea clubului, CIF-ul, sediul și adresa de contact deja scrise. Îl citești, îl schimbi cât vrei, apoi îl aprobi.",
+        "orBlank": "Sau scrie de la zero în formularul de mai jos."
+      },
+      "tokens": {
+        "title": "Câmpurile care se completează singure",
+        "intro": "Numai în declarație. Le lași exact așa cum sunt în text — se înlocuiesc la semnare, pentru fiecare persoană și fiecare cursă. Datele clubului nu sunt aici: acelea sunt deja scrise în text.",
+        "inText": "în text",
+        "participant": "Numele cu care s-a înscris participantul",
+        "declarant": "Cine semnează: participantul, sau părintele ori tutorele, pentru un minor",
+        "guardian": "Părintele sau tutorele, când participantul e minor; altfel o liniuță",
+        "idDocument": "Actul de identitate tastat la semnare — nu se scanează niciodată",
+        "event": "Titlul evenimentului",
+        "eventDate": "Data evenimentului, în fusul lui",
+        "eventLocation": "Locul de întâlnire",
+        "signedAt": "Momentul semnării"
+      },
+      "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune.",
+      "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
+      "deletePermanently": "Șterge definitiv",
+      "deleteMeans": "Ștergerea este definitivă: textul dispare cu totul, iar numărul {version} rămâne retras pentru totdeauna.",
+      "legalVersionErased": "{phrase} a fost ștearsă definitiv. Numărul ei rămâne retras: nu va mai fi dat niciodată altei versiuni.",
+      "erase": {
+        "backToVersion": "Înapoi la versiune",
+        "title": "Ștergere definitivă: {document}, versiunea {version}",
+        "whatGoes": "Dispar definitiv {document}, versiunea {version}, în vigoare din {date}: textul în ambele limbi, titlurile și rândul din evidență. Nu se poate recupera.",
+        "numberRetired": "Numărul {version} rămâne retras pentru totdeauna. Următoarea versiune a acestui document va primi numărul următor, niciodată {version}, ca să nu ajungă pe alt text un număr pe care oamenii l-au bifat deja la înscriere.",
+        "auditOnly": "Rămâne o singură urmă: o linie în jurnal cu documentul, numărul, data intrării în vigoare, cine a aprobat-o, amprenta SHA-256 a fiecărei limbi și motivul scris de tine. Textul nu se păstrează nicăieri.",
+        "nothingDepends": "Se poate șterge pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este textul în vigoare acum.",
+        "alreadyWithdrawn": "Ai retras deja această versiune, pe {date}. Ștergerea este al doilea pas și ultimul: acum dispare și din evidență.",
+        "notWithdrawn": "Această versiune nu a fost retrasă. Dacă vrei doar să nu mai fie oferită nicăieri, retrage-o din listă: rămâne în evidență, cu textul și numărul ei. Ștergerea nu se poate anula.",
+        "phraseLabel": "Confirmarea",
+        "phraseHelp": "Scrie exact „{phrase}”, ca să confirmi. Orice altceva oprește ștergerea.",
+        "reasonLabel": "Motivul",
+        "reasonHelp": "Rămâne în jurnal. Este singurul lucru care supraviețuiește ștergerii.",
+        "action": "Șterge definitiv versiunea",
+        "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
+        "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
+        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge."
       }
     },
     "tasks": {
@@ -1101,6 +1229,12 @@
       "bulletList": "Listă cu puncte",
       "orderedList": "Listă numerotată",
       "quote": "Citat",
+      "alignLeft": "Aliniere la stânga",
+      "alignCenter": "Centrat",
+      "alignRight": "Aliniere la dreapta",
+      "alignLeftShort": "S",
+      "alignCenterShort": "C",
+      "alignRightShort": "D",
       "link": "Legătură",
       "linkUrl": "Adresă web",
       "linkApply": "Aplică",
@@ -1130,7 +1264,18 @@
       "youtubeApply": "Adaugă filmul",
       "youtubeInvalid": "Nu e o adresă de YouTube. Copiază linkul din bara browserului sau din „Distribuie” (youtube.com/watch?v=… sau youtu.be/…).",
       "youtubeCaption": "Legendă (sub film)",
-      "youtubeRemove": "Scoate filmul"
+      "youtubeRemove": "Scoate filmul",
+      "imageAlign": "Poziția în text",
+      "imageAlignBlock": "În flux",
+      "imageAlignLeft": "Stânga",
+      "imageAlignRight": "Dreapta",
+      "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea.",
+      "table": "Tabel",
+      "tableAddRow": "Adaugă un rând",
+      "tableAddColumn": "Adaugă o coloană",
+      "tableDeleteRow": "Șterge rândul",
+      "tableDeleteColumn": "Șterge coloana",
+      "tableDelete": "Șterge tabelul"
     },
     "pages": {
       "title": "Pagini",
@@ -1190,7 +1335,9 @@
       "size": "{width}×{height} px, {kb} KB",
       "delete": "Șterge",
       "deleteConfirm": "Ștergi imaginea definitiv?",
-      "tableCaption": "Imaginile încărcate, cele mai noi primele"
+      "tableCaption": "Imaginile încărcate, cele mai noi primele",
+      "total": "{count, plural, one {# imagine} few {# imagini} other {# de imagini}} · {size} MB în stocare",
+      "totalHelp": "Suma variantelor mari; fiecare imagine mai are o miniatură, de câteva zeci de kiloocteți."
     },
     "gallery": {
       "title": "Galerie foto",
@@ -1237,7 +1384,9 @@
         "title": "Titlu",
         "slug": "Adresă (slug)",
         "description": "Descriere"
-      }
+      },
+      "tabAlbums": "Albume",
+      "tabPictures": "Imagini"
     },
     "thanks": {
       "title": "După cursă",
@@ -1250,21 +1399,22 @@
       "sentOn": "Mulțumirile au fost trimise pe {date}."
     },
     "bibs": {
-      "title": "Numere de concurs",
+      "title": "Numere de concurs (BIB)",
       "assign": "Alocă numerele",
       "assigned": "{assigned} numere alocate ({total} în total).",
       "thanksSent": "Mulțumirile au fost trimise: {recipients} emailuri.",
       "from": "De la",
       "to": "Până la",
-      "download": "Descarcă foaia (PDF)",
+      "download": "Descarcă toate numerele (PDF)",
       "preview": "Vezi numerele ({count})",
       "previewTitle": "Numerele de concurs — {event} ({count})",
       "backToEvent": "← Înapoi la eveniment",
       "previewAlt": "Numărul {number} — {name}",
       "downloadOnePerPage": "Câte unul pe pagină",
       "page": "Pagina {n} din {total}",
-      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment.",
-      "helpSome": "{total} numere date. Fiecare înscriere primește un număr aleatoriu în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, cu logo, nume și eveniment."
+      "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
+      "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
+      "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat"
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -1304,7 +1454,8 @@
       "idDocument": "Act de identitate",
       "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu l-ai alocat deja) → Salvează; când persoana a ajuns → Prezent. Cine nu a confirmat emailul semnează declarația pe hârtie → Confirmă pe hârtie.",
       "givePlace": "Dă-i un loc",
-      "bibField": "Număr de concurs",
+      "bibField": "Număr de concurs (BIB)",
+      "bibProvisional": "Număr provizoriu: se stabilește definitiv la închiderea înscrierilor.",
       "saveBib": "Salvează nr.",
       "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
@@ -1321,7 +1472,10 @@
         "checkinUndone": "Prezența a fost anulată."
       },
       "bibFree": "Numere libere la acest eveniment: {numbers}. Numărul salvat ajunge la participant pe email, cu codul QR; un număr deja purtat de altcineva este refuzat.",
-      "guardian": "Minor — părinte/tutore: {name}"
+      "guardian": "Minor — părinte/tutore: {name}",
+      "confirmOnPaper": "Confirmă pe hârtie",
+      "showBib": "Vezi numărul de concurs (BID)",
+      "bibAlt": "Numărul de concurs (BID) {number}"
     },
     "emails": {
       "title": "Emailurile trimise participanților",
@@ -1529,6 +1683,20 @@
         }
       ],
       "yours": "Rolul tău: {role}. Secțiunile tale sunt primele și deschise; restul sunt ale colegilor."
+    },
+    "erase": {
+      "backToEvent": "Înapoi la eveniment",
+      "title": "Ștergere definitivă: {event}",
+      "whatGoes": "Se șterge definitiv evenimentul „{event}” din {date}, în ambele limbi, împreună cu cele {count} înscrieri ale lui și cu datele persoanelor din spatele lor.",
+      "breakdown": "Dintre ele: {confirmed} confirmate, {real} reale, {test} de test.",
+      "realPeople": "{count} dintre înscrieri sunt ale unor persoane reale. Dispar cu tot cu declarațiile semnate și cu adresele lor, și nu se pot recupera.",
+      "noRealPeople": "Nicio înscriere reală: nimeni nu pierde un loc.",
+      "alternative": "Dacă evenimentul a avut loc, arhivează-l în locul ștergerii: rămâne în evidențe și dispare de pe site. Ștergerea definitivă este pentru un eveniment care nu ar fi trebuit să existe.",
+      "typeTitleLabel": "Scrie titlul evenimentului",
+      "typeTitleHelp": "Scrie exact „{title}”, ca să confirmi. Orice altceva oprește ștergerea.",
+      "reasonLabel": "Motivul",
+      "reasonHelp": "Rămâne în jurnalul de audit. Este singurul lucru care supraviețuiește ștergerii; numele celor șterși nu se păstrează nicăieri.",
+      "action": "Șterge definitiv evenimentul și înscrierile"
     }
   },
   "NotFound": {
@@ -1565,13 +1733,18 @@
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
+    "submittedDelay": "Emailul poate ajunge în până la 5 minute. Verifică și folderul de spam înainte să te înscrii din nou.",
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
       "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
-      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou."
+      "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
+      "tooFastTitle": "Mai încearcă o dată",
+      "throttledTitle": "Ai trimis deja formularul de câteva ori",
+      "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
+      "tooFast": "Verificarea automată nu a trecut din prima — o facem ca să ținem roboții afară și uneori dă greș pentru oameni reali. Datele tale sunt toate aici: apasă din nou „Trimite înscrierea”. Dacă nici a doua oară nu merge, scrie-ne prin formularul de contact și te înscriem noi."
     },
     "sections": {
       "about": "Despre tine",
@@ -1636,7 +1809,10 @@
       "captcha": "Verificarea anti-bot",
       "stravaUrl": "Profilul de Strava",
       "instagramHandle": "Instagram",
-      "guardianName": "Părinte / tutore"
+      "guardianName": "Părinte / tutore",
+      "fitnessDeclared": "Declarația că ești apt medical",
+      "rulesAcknowledged": "condițiile concursului",
+      "emailConfirm": "adresa scrisă a doua oară"
     },
     "requiredLegend": "Câmpurile marcate cu * sunt obligatorii. Restul sunt opționale — lasă-le goale dacă preferi să nu răspunzi.",
     "optionalSuffix": "opțional",
@@ -1647,7 +1823,9 @@
       "submit": "Trimite linkul",
       "sent": "Dacă există o înscriere pe această adresă, tocmai am trimis linkul acolo. Verifică inclusiv folderul de spam.",
       "prompt": "Nu a ajuns mesajul?",
-      "linkLabel": "Trimite-l din nou"
+      "linkLabel": "Trimite-l din nou",
+      "stillNothing": "Nici după ce l-ai cerut din nou nu a ajuns nimic?",
+      "contactLinkLabel": "Scrie-ne și te înscriem noi"
     },
     "steps": {
       "title": "Cum funcționează înscrierea",
@@ -1686,7 +1864,7 @@
       "now": {
         "details": "Completează formularul. După trimitere îți scriem pe email ca să confirmi adresa.",
         "confirm": "Ți-am trimis un email cu un link de confirmare. Poate dura până la 5 minute să ajungă — verifică și folderul de spam înainte să te înscrii din nou.",
-        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat.",
+        "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }
     },
@@ -1696,7 +1874,8 @@
       "socials": "Rețele sociale — opțional",
       "guardian": "Înscriu un minor — părinte sau tutore legal"
     },
-    "clubMemberDeclared": "Sunt membru al echipei Brașov Runners",
+    "clubMemberDeclared": "Sunt membru al grupului Brașov Runners",
+    "clubNameFromMembership": "Completat automat, pentru că ai bifat că ești membru. Debifează ca să scrii alt club.",
     "facts": {
       "details": "Detaliile evenimentului",
       "rules": "Regulamentul",
@@ -1710,10 +1889,32 @@
     "instagramHandleHelp": "Cu sau fără @.",
     "guardianHelp": "Un participant sub 18 ani este înscris de părinte sau de tutorele legal, care semnează și declarația pe proprie răspundere în numele lui și ridică kitul. Pentru un adult, lasă secțiunea goală.",
     "guardianName": "Numele complet al părintelui / tutorelui",
-    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar."
+    "guardianNameHelp": "Obligatoriu sub 18 ani. Acest nume apare pe declarație ca semnatar.",
+    "privacyBanner": "Datele tale nu apar nicăieri pe site. Le vede doar echipa care organizează, pentru această cursă, iar declarația și emailurile merg doar la tine.",
+    "privacyBannerWithList": "Datele tale nu apar pe site — cu o singură excepție: la acest eveniment există o listă publică de participanți, iar acolo apar numele tău și clubul pe care l-ai scris, doar dacă bifezi tu, mai jos. Nimic altceva nu se publică: nici emailul, nici telefonul, nici data nașterii.",
+    "confidentialNote": "Confidențial. Nu se publică.",
+    "contactNote": "Confidențial. Folosit doar ca să te anunțăm și ca să sunăm pe cineva dacă ți se întâmplă ceva în cursă.",
+    "healthIntro": "Opțional, și numai dacă vrei. Scrie aici doar ce ar trebui să știe echipa medicală în ziua cursei — alergii, un tratament, o afecțiune. Se șterge la șapte zile după eveniment.",
+    "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip.",
+    "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an.",
+    "rules": {
+      "open": "Citește condițiile concursului",
+      "reading": "Apasă butonul de mai sus. Se deschid aici, le citești până la capăt, și abia apoi poți confirma.",
+      "panelTitle": "Condițiile concursului — {event}",
+      "keepReading": "Derulează până la sfârșit ca să poți confirma.",
+      "agreeButton": "Am citit și sunt de acord",
+      "close": "Închide",
+      "agreed": "Ai citit condițiile concursului și ești de acord cu ele.",
+      "plain": "Am citit și sunt de acord cu condițiile concursului:"
+    },
+    "opensInNewTab": "se deschide într-o filă nouă",
+    "phoneInvalid": "Numărul nu pare complet pentru țara aleasă — verifică cifrele.",
+    "emailConfirm": "Scrie adresa încă o dată *",
+    "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele.",
+    "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție."
   },
   "Registrations": {
-    "invalidOrExpired": "Acest link nu mai este valabil. Poți solicita unul nou de la pagina evenimentului.",
+    "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
     "confirm": {
       "title": "Confirmă adresa de email",
       "prompt": "Apasă butonul de mai jos pentru a confirma adresa de email și a continua înscrierea.",
@@ -1747,7 +1948,8 @@
         "Ești pe lista de așteptare; dacă se eliberează un loc, primești un email cu un link de confirmare.",
         "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
         "Poți renunța oricând din emailul primit."
-      ]
+      ],
+      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă."
     },
     "mine": {
       "title": "Înscrierile mele",
@@ -1760,6 +1962,7 @@
       "empty": "Nu ai nicio înscriere activă în acest moment.",
       "code": "Cod de acces",
       "bib": "Număr de concurs",
+      "bibProvisional": "Număr provizoriu. Se stabilește definitiv la închiderea înscrierilor și îl primești atunci pe email.",
       "cancel": "Renunț la această înscriere",
       "cancelledTitle": "Înscrierea a fost anulată",
       "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",
@@ -1788,6 +1991,38 @@
       "selfCheckInDone": "Ești marcat prezent. Ridică-ți numărul de la masă.",
       "selfCheckInClosed": "Marcarea prezenței se deschide din {date}.",
       "selfCheckInFailed": "Nu am putut marca prezența. Spune la masă, se rezolvă acolo."
+    },
+    "spent": {
+      "event": "Pentru evenimentul: {event}",
+      "resendHelp": "Linkul din email se folosește o singură dată, așa că acesta nu mai deschide nimic. Dacă ai nevoie de pasul următor, ți-l trimitem din nou pe aceeași adresă.",
+      "resendAction": "Trimite-mi din nou linkul",
+      "registerAgainHelp": "Dacă te răzgândești, te poți înscrie din nou de pe pagina evenimentului.",
+      "registerAgainAction": "Vezi evenimentul",
+      "waitHelp": "Nu trebuie să faci nimic acum. Dacă se eliberează un loc, primești un email cu un link de confirmare.",
+      "CONFIRM_EMAIL": {
+        "title": "Mai e un pas: confirmarea adresei",
+        "body": "Linkul acesta s-a folosit deja, dar înscrierea ta încă așteaptă confirmarea adresei de email."
+      },
+      "SIGN_DECLARATION": {
+        "title": "Adresa e confirmată — urmează declarația",
+        "body": "Linkul acesta și-a făcut treaba și nu se mai deschide a doua oară. Locul tău este rezervat, iar înscrierea e completă după ce semnezi declarația pe proprie răspundere — linkul ei ți-a fost trimis pe email."
+      },
+      "WAITLISTED": {
+        "title": "Ești pe lista de așteptare",
+        "body": "Linkul acesta s-a folosit deja. Înscrierea ta este în lista de așteptare a evenimentului."
+      },
+      "CONFIRMED": {
+        "title": "Înscrierea ta este confirmată",
+        "body": "Linkul acesta s-a folosit deja și nu mai deschide nimic — dar nu trebuie: ai loc la cursă. Codul de acces și codul QR sunt în emailul de confirmare."
+      },
+      "CANCELLED": {
+        "title": "Înscrierea a fost anulată",
+        "body": "Linkul acesta s-a folosit pentru anulare. Locul a fost eliberat și înscrierea nu mai este activă."
+      },
+      "LAPSED": {
+        "title": "Înscrierea nu mai este activă",
+        "body": "Linkul acesta s-a folosit deja, iar între timp înscrierea a expirat — fie a trecut termenul, fie evenimentul a început."
+      }
     }
   },
   "Devs": {
@@ -2054,7 +2289,8 @@
       "name": "Numele",
       "email": "Adresa de e-mail",
       "message": "Mesajul",
-      "captcha": "Verificarea anti-bot"
+      "captcha": "Verificarea anti-bot",
+      "emailConfirm": "adresa scrisă a doua oară"
     },
     "errors": {
       "title": "Mesajul nu a plecat",
@@ -2066,6 +2302,11 @@
       "DELIVERY": "Nu am putut trimite. Scrie-ne direct la",
       "DELIVERY_NO_ADDRESS": "Nu am putut trimite. Încearcă din nou peste câteva minute.",
       "UNAVAILABLE": "Formularul de contact nu este disponibil pe acest site."
-    }
+    },
+    "prefill": {
+      "noEmail": "Bună! Am încercat să mă înscriu la {event}, dar nu a ajuns emailul de confirmare — nici după ce l-am cerut din nou. Vă rog să mă ajutați.\n\n(Scrie mai jos numele cu care vrei să te înscrii, dacă e altul decât cel de sus.)"
+    },
+    "emailConfirm": "Scrie adresa încă o dată *",
+    "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   }
 }

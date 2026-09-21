@@ -1,3 +1,6 @@
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import DownloadIcon from "@mui/icons-material/Download";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -16,6 +19,7 @@ import { getDb } from "@/db/client";
 import { hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import EventExcerpt from "@/modules/events/ui/EventExcerpt";
 import EventFacts from "@/modules/events/ui/EventFacts";
 import EventKindChips from "@/modules/events/ui/EventKindChips";
 import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
@@ -81,6 +85,19 @@ async function loadListing(db: Db, locale: EventLocale, now: Date) {
 }
 
 type Listing = Awaited<ReturnType<typeof loadListing>>;
+
+/**
+ * The three calendar buttons (§175; the owner: "these buttons must be smaller as well and have
+ * icons"). A finger's 44 pixels on a touch screen, a pointer's 32 from `sm` up — the same two
+ * sizes the share pills take — and the glyph as a child of the Button, never an element-valued
+ * prop across the server/client boundary.
+ */
+const CALENDAR_BUTTON_SX = {
+  minHeight: { xs: 44, sm: 32 },
+  gap: 0.5,
+  px: { xs: 1.5, sm: 1.25 },
+  fontSize: { sm: "0.78rem" },
+} as const;
 
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
@@ -197,14 +214,17 @@ export default async function EventsPage({ params, searchParams }: Props) {
               rel="noopener noreferrer"
               size="small"
               variant="outlined"
-              sx={{ minHeight: 44 }}
+              sx={CALENDAR_BUTTON_SX}
             >
+              <EventAvailableIcon sx={{ fontSize: 18 }} aria-hidden="true" />
               {t("calendar.subscribeGoogle")}
             </Button>
-            <Button component="a" href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+            <Button component="a" href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
+              <CalendarMonthIcon sx={{ fontSize: 18 }} aria-hidden="true" />
               {t("calendar.subscribeApple")}
             </Button>
-            <Button component="a" href={`/${locale}/events/calendar.ics`} size="small" variant="outlined" sx={{ minHeight: 44 }}>
+            <Button component="a" href={`/${locale}/events/calendar.ics`} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
+              <DownloadIcon sx={{ fontSize: 18 }} aria-hidden="true" />
               {t("calendar.downloadLink")}
             </Button>
             <InfoTip text={t("calendar.refreshNote")} />
@@ -214,7 +234,27 @@ export default async function EventsPage({ params, searchParams }: Props) {
               Chrome and Safari — the owner: "it's not clear that this is expandable". */}
           <Box component="details" sx={{ mt: 0.5, ...DISCLOSURE_SX, "& > summary": { ...DISCLOSURE_SUMMARY_SX, fontSize: "0.8125rem", color: "text.secondary" } }}>
             <summary>{t("calendar.feedAddress")}</summary>
-            <Box component="code" sx={{ fontSize: "0.8125rem", userSelect: "all", wordBreak: "break-all" }}>{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
+            {/*
+              A link, not only a string to copy (§195; the owner, of the address: "ăsta trebuia
+              să fie link"). It is still selected whole by one click — `userSelect: all` — for
+              the calendar apps that want it pasted, and it is now also pressable for the ones
+              that subscribe from the browser. `webcal://` rather than `https://` on the anchor:
+              the same address handed to the operating system as a subscription rather than as a
+              file to download once, which is the difference between a calendar that updates and
+              a snapshot of today.
+            */}
+            <Box
+              component="a"
+              href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)}
+              sx={{
+                display: "inline-block",
+                fontFamily: "monospace",
+                fontSize: "0.8125rem",
+                userSelect: "all",
+                wordBreak: "break-all",
+                minHeight: 44,
+              }}
+            >{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
           </Box>
         </Box>
       </Box>
@@ -406,11 +446,11 @@ async function EventCard({
             {event.title}
           </Typography>
 
-          {event.excerpt && !underHero && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {event.excerpt}
-            </Typography>
-          )}
+          {/* The short description as it was written, picture and all (§73) — the card used to
+              render the plain-text shadow of it, so a picture in a short description showed on
+              the event page and nowhere else. `EventExcerpt` renders nothing when there is
+              nothing, which is what the old `event.excerpt &&` did. */}
+          {!underHero && <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />}
 
           {/* No links inside: the card is the link. */}
           <EventFacts event={event} now={now} variant="compact" links={false} />

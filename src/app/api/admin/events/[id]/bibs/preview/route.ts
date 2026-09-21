@@ -7,14 +7,21 @@ import { registrations } from "@/db/schema/registrations";
 import { routing } from "@/i18n/routing";
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { findEventForBibs } from "@/modules/registrations/bibs";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
  * One participant's bib as a PNG, for the preview grid on the event page (`DECISIONS.md`
- * §94). `GET /api/admin/events/<id>/bibs/preview?registration=<id>&locale=ro`. Administrator
- * only, like the sheet: a bib carries a name. A GET that reads and writes nothing.
+ * §94) and for the race-day desk (§184). `GET /api/admin/events/<id>/bibs/preview?registration=<id>&locale=ro`.
+ * A GET that reads and writes nothing.
+ *
+ * **Every desk role may ask for one**, unlike the sheet, which stays Administrator-only. The
+ * picture carries a name and a number and nothing else — which is exactly what `AGENTS.md`
+ * §15.11 says every staff role already sees at the desk, and precisely what a volunteer holding
+ * the right envelope needs. One registration at a time, by its id, on the event it belongs to:
+ * this is not the list, and asking for two hundred of them one at a time is not the export.
  */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
   let actor;
@@ -24,7 +31,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canManageRegistrations(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  if (!canWorkTheDesk(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
 
   const { id } = await context.params;
   const url = new URL(request.url);
@@ -51,6 +58,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     registeredName: row.registeredName,
     eventTitle: event.title,
     eventDate: format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" }),
+    // The same three the sheet prints (§180), so the preview is a preview of the paper.
+    bandColour: event.bibColour,
+    partners: event.coHosts.map((host) => host.name),
+    replyTo: env.EMAIL_REPLY_TO,
   });
   // A number and a name change rarely; the browser may keep the picture for an hour.
   image.headers.set("Cache-Control", "private, max-age=3600");

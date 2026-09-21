@@ -89,7 +89,24 @@ jobs:
       - run: yarn test:concurrency
 
       - run: yarn db:seed
-      - run: yarn test:e2e
+
+      # A pull request runs the desktop project; a push to `qa` or `main` runs both (§209).
+      #
+      # The two projects are the same 163 specs at two viewports, so a pull request pays twice
+      # for one set of behaviours — and the second pass is the one that catches least often,
+      # because what differs at 320 pixels is layout, and layout is what the mobile project's
+      # own assertions are about rather than a side effect of the others. The release is where
+      # both run: a push to `qa` or `main` is not a moment anybody is waiting on.
+      #
+      # Nothing is skipped for ever and nothing is deleted: every spec still runs on every
+      # release, and `yarn test:e2e` with no argument is still the whole suite locally.
+      - name: End-to-end (desktop only on a pull request)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            yarn test:e2e --project=desktop
+          else
+            yarn test:e2e
+          fi
 
       - if: failure()
         uses: actions/upload-artifact@v4

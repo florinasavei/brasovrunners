@@ -19,7 +19,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
     slug = `album-${suffix}`;
 
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/gallery/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
@@ -85,7 +85,7 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
   });
 
   test("removes the album and its photo from the site and the store", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     const thumbSrc = (await page.locator("main img[src*='/api/media/']").first().getAttribute("src")) as string;
 

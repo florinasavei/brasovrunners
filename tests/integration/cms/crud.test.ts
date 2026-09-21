@@ -5,6 +5,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { listTranslationsForEvent } from "@/modules/content/events/repository";
+import { countRegistrationsForEvent } from "@/modules/registrations/repository";
 import {
   createEvent,
   deleteEvent,
@@ -26,6 +27,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
   let close: () => Promise<void>;
   let author: StaffUser;
   let editor: StaffUser;
+  /** Since §201 only an Administrator may put something in front of the public. */
   let admin: StaffUser;
 
   beforeAll(async () => {
@@ -105,20 +107,20 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
 
   describe("creating", () => {
     it("creates the event with a translation in every locale, as a draft", async () => {
-      const created = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      const created = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 
       expect(created.editorialStatus).toBe("DRAFT");
       expect(created.publishedAt).toBeNull();
-      expect(created.createdByStaffUserId).toBe(editor.id);
+      expect(created.createdByStaffUserId).toBe(admin.id);
 
       const translations = await listTranslationsForEvent(db, created.id);
       // `locale` is a database enum, so ascending is the enum's own order: ro, then en.
       expect(translations.map((t) => t.locale)).toEqual(["ro", "en"]);
-      expect(translations.every((t) => t.authorStaffUserId === editor.id)).toBe(true);
+      expect(translations.every((t) => t.authorStaffUserId === admin.id)).toBe(true);
     });
 
     it("is publishable straight away, because both languages were required", async () => {
-      const created = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      const created = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 
       const reviewed = await transitionEvent(db, {
         actor: editor,
@@ -127,7 +129,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         to: "IN_REVIEW",
       });
       const published = await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: created.id,
         expectedVersion: reviewed.version,
         to: "PUBLISHED",
@@ -142,11 +144,11 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
 
     it("clears the previously featured event rather than colliding with the index", async () => {
       const first = await createEvent(db, {
-        actor: editor,
+        actor: admin,
         fields: { ...NEW_EVENT, featured: true },
       });
       const second = await createEvent(db, {
-        actor: editor,
+        actor: admin,
         fields: {
           ...NEW_EVENT,
           featured: true,
@@ -167,7 +169,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
   describe("duplicating", () => {
     it("copies the configuration but never the publication, the date or the flag", async () => {
       const source = await createEvent(db, {
-        actor: editor,
+        actor: admin,
         fields: {
           ...NEW_EVENT,
           featured: true,
@@ -182,13 +184,13 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         to: "IN_REVIEW",
       });
       await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: source.id,
         expectedVersion: reviewed.version,
         to: "PUBLISHED",
       });
 
-      const copy = await duplicateEvent(db, { actor: editor, eventId: source.id });
+      const copy = await duplicateEvent(db, { actor: admin, eventId: source.id });
 
       expect(copy.distanceMeters).toBe(10000);
       // BR-REQ-011-01 criterion 8: last year's race is run on last year's route, which is the
@@ -200,10 +202,10 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
     });
 
     it("gives each language a free slug of its own rather than failing on the unique index", async () => {
-      const source = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      const source = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 
-      const first = await duplicateEvent(db, { actor: editor, eventId: source.id });
-      const second = await duplicateEvent(db, { actor: editor, eventId: source.id });
+      const first = await duplicateEvent(db, { actor: admin, eventId: source.id });
+      const second = await duplicateEvent(db, { actor: admin, eventId: source.id });
 
       const slugsOf = async (eventId: string) =>
         (await listTranslationsForEvent(db, eventId)).map((t) => t.slug).sort();
@@ -213,7 +215,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
     });
 
     it("refuses an Author", async () => {
-      const source = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      const source = await createEvent(db, { actor: admin, fields: NEW_EVENT });
       expect(await codeOf(duplicateEvent(db, { actor: author, eventId: source.id }))).toBe(
         "FORBIDDEN",
       );
@@ -222,7 +224,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
 
   describe("deleting", () => {
     it("removes an event nobody has registered for, and its translations with it", async () => {
-      const created = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      const created = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 
       await deleteEvent(db, { actor: admin, eventId: created.id });
 
@@ -234,7 +236,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
       ["an author", () => author],
       ["an editor", () => editor],
     ])("refuses %s: deletion is the Administrator's alone", async (_name, actorOf) => {
-      const created = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      const created = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 
       expect(await codeOf(deleteEvent(db, { actor: actorOf(), eventId: created.id }))).toBe(
         "FORBIDDEN",
@@ -248,7 +250,7 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
      * would destroy evidence AGENTS.md §10.8 exists to keep.
      */
     it("refuses an event that has a registration, whoever asks", async () => {
-      const created = await createEvent(db, { actor: editor, fields: NEW_EVENT });
+      const created = await createEvent(db, { actor: admin, fields: NEW_EVENT });
 
       const [participant] = await db
         .insert(participants)
@@ -281,6 +283,79 @@ describe("BR-REQ-050-01 event creation, duplication and deletion", () => {
         "VALIDATION_ERROR",
       );
       expect(await db.select().from(events).where(eq(events.id, created.id))).toHaveLength(1);
+    });
+
+    /**
+     * §176 — an event whose only registrations are **test** rows is deleted with them.
+     *
+     * The refusal was right and its advice was a dead end: "archive it instead", said to
+     * somebody looking at an event that was already archived, about rows he had created himself
+     * to rehearse with. Nothing new is permitted — clearing test rows is already an
+     * Administrator's verb on the event page and already refused in production; this is the two
+     * presses in one. A single real registration still blocks it, which is the rule that matters
+     * (`AGENTS.md` §10.8).
+     *
+     * The rows are inserted directly rather than through `addTestRegistrations`, which would
+     * need an event that takes registrations and an approved declaration: what is under test
+     * here is what `deleteEvent` does about `kind`, and nothing else.
+     */
+    it("takes its own test registrations with it, and still refuses for a real one", async () => {
+      const enter = async (eventId: string, kind: "REAL" | "TEST", email: string) => {
+        const [participant] = await db
+          .insert(participants)
+          .values({
+            deliveryEmail: email,
+            normalizedEmail: email,
+            canonicalEmail: email,
+            canonicalizationVersion: 1,
+            defaultName: "Cineva",
+          })
+          .returning();
+        await db.insert(registrations).values({
+          eventId,
+          participantId: participant.id,
+          kind,
+          status: "CONFIRMED",
+          locale: "ro",
+          registeredName: "Cineva",
+          displayName: "Cineva",
+          privacyNoticeVersion: 1,
+          privacyAcknowledgedAt: new Date(),
+          raceId: null,
+          resultsNameConsent: false,
+          listOptOut: false,
+          resultsConsentVersion: 1,
+        });
+      };
+
+      const onlyTests = await createEvent(db, { actor: admin, fields: NEW_EVENT });
+      await enter(onlyTests.id, "TEST", "t1@test.invalid");
+      await enter(onlyTests.id, "TEST", "t2@test.invalid");
+      expect(await countRegistrationsForEvent(db, onlyTests.id)).toBe(2);
+
+      await deleteEvent(db, { actor: admin, eventId: onlyTests.id });
+      expect(await db.select().from(events).where(eq(events.id, onlyTests.id))).toHaveLength(0);
+      // The synthetic rows went with it rather than being left orphaned.
+      expect(await countRegistrationsForEvent(db, onlyTests.id)).toBe(0);
+
+      // One real registration beside the test ones, and the whole delete is refused.
+      const mixed = await createEvent(db, {
+        actor: admin,
+        fields: {
+          ...NEW_EVENT,
+          translations: {
+            ro: { ...NEW_EVENT.translations.ro, slug: "cros-mixt" },
+            en: { ...NEW_EVENT.translations.en, slug: "mixed-cross" },
+          },
+        },
+      });
+      await enter(mixed.id, "TEST", "t3@test.invalid");
+      await enter(mixed.id, "REAL", "ana@example.test");
+
+      expect(await codeOf(deleteEvent(db, { actor: admin, eventId: mixed.id }))).toBe("VALIDATION_ERROR");
+      expect(await db.select().from(events).where(eq(events.id, mixed.id))).toHaveLength(1);
+      // And nothing was cleared on the way to being refused.
+      expect(await countRegistrationsForEvent(db, mixed.id)).toBe(2);
     });
   });
 });

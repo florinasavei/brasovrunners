@@ -236,7 +236,8 @@ describe("BR-REQ-080-01 outbox renderer", () => {
       NOW,
     );
 
-    expect(message.html).not.toContain("http");
+    // Below the header band, which links nothing and only shows the lockup (§174).
+    expect(message.html.slice(message.html.indexOf("</div>") + 6)).not.toContain("http");
     const tokens = await db.select().from(emailActionTokens).where(eq(emailActionTokens.registrationId, registrationId));
     expect(tokens).toHaveLength(0);
   });

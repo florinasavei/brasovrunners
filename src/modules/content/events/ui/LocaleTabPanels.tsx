@@ -42,7 +42,23 @@ export default function LocaleTabPanels({ panels }: { panels: readonly LocalePan
         onChange={(_, value: number) => setActive(value)}
         variant="scrollable"
         scrollButtons={false}
-        sx={{ mb: 2, borderBottom: 1, borderColor: "divider", minHeight: 44 }}
+        /*
+          Sticky at the top of the panel while the language's text scrolls past (§170; the
+          owner: "this part should be sticky"). The content panel is the tallest thing on the
+          page — two rich-text editors, the rules, the programme — and by the time somebody is
+          at the bottom of the Romanian text, the way to the English one is a page and a half
+          above. It carries the panel's own background, or the text would scroll through it.
+        */
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 3,
+          bgcolor: "background.paper",
+          mb: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          minHeight: 44,
+        }}
       >
         {panels.map((panel, index) => (
           <Tab

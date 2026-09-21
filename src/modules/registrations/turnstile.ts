@@ -20,16 +20,46 @@ export function turnstileSiteKey(): string | undefined {
   return env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY ? env.TURNSTILE_SITE_KEY : undefined;
 }
 
-export type TurnstileVerdict = "passed" | "failed" | "not_configured";
+/**
+ * What the check concluded (`DECISIONS.md` §216).
+ *
+ * `unavailable` is the one that matters, and it is separate from `failed` because the two are
+ * not the same event and must not have the same consequence:
+ *
+ * - **`failed`** is a token Cloudflare looked at and rejected. That is evidence.
+ * - **`unavailable`** is no token at all, or Cloudflare not answering. That is the *absence*
+ *   of evidence, and it happens to real people constantly: a content blocker or a privacy
+ *   browser that refuses `challenges.cloudflare.com`, a corporate proxy, a phone on a bad
+ *   connection, JavaScript switched off, or Cloudflare itself having a bad five seconds.
+ */
+export type TurnstileVerdict = "passed" | "failed" | "unavailable" | "not_configured";
 
-/** Ask Cloudflare whether the token is genuine. A network failure counts as a failure: a bot's token is not waved through on a bad day. */
+/**
+ * Ask Cloudflare whether the token is genuine.
+ *
+ * **This used to answer `failed` when there was no token and when Cloudflare could not be
+ * reached**, with the reasoning that "a bot's token is not waved through on a bad day". The
+ * reasoning was wrong about which failure costs more. A bot that omits the token still has to
+ * get past the honeypot, the timing check and the per-identity throttle (`AGENTS.md` §19.4);
+ * a *person* whose browser never loaded the widget was simply unable to register, with a
+ * message telling them to tick a box that was not on their screen. It happened: Dani could not
+ * register on 2026-09-21, on two different addresses, and the address was never the problem.
+ *
+ * The owner's standing rule decides it (§205): "trebuie să lăsăm oamenii să se înscrie cu orice
+ * preț!!! Asta e scopul principal al site-ului." A challenge that cannot run is not a reason to
+ * refuse a registration; a challenge that ran and said no is.
+ *
+ * An over-long token is still `failed` — nothing legitimate produces one, and it is a token
+ * that *was* submitted rather than one that was not.
+ */
 export async function verifyTurnstile(
   token: string | null | undefined,
   remoteIp: string | null,
   fetchImpl: typeof fetch = fetch,
 ): Promise<TurnstileVerdict> {
   if (!env.TURNSTILE_SECRET_KEY || !env.TURNSTILE_SITE_KEY) return "not_configured";
-  if (!token || token.length > 2048) return "failed";
+  if (!token) return "unavailable";
+  if (token.length > 2048) return "failed";
   const body = new URLSearchParams({ secret: env.TURNSTILE_SECRET_KEY, response: token });
   if (remoteIp) body.set("remoteip", remoteIp);
   try {
@@ -38,10 +68,12 @@ export async function verifyTurnstile(
       body,
       signal: AbortSignal.timeout(5_000),
     });
-    if (!response.ok) return "failed";
+    // Cloudflare answering 5xx is Cloudflare having a bad day, not this visitor failing one.
+    if (!response.ok) return "unavailable";
     const result = (await response.json()) as { success?: boolean };
     return result.success === true ? "passed" : "failed";
   } catch {
-    return "failed";
+    // Timed out or could not be reached. The same reasoning as above.
+    return "unavailable";
   }
 }

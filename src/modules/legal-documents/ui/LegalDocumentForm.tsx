@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { bodyToText } from "../domain/body-text";
+import TokenLegend from "./TokenLegend";
 import type { LegalDocumentBody } from "../domain/content-hash";
 
 export type LegalDocumentFormValues = {
@@ -75,6 +76,11 @@ export default async function LegalDocumentForm({
         </TextField>
         {/* A disabled select posts nothing, and the action still needs to know the key. */}
         {keyLocked && <input type="hidden" name="key" value={values?.key} />}
+
+        {/* What every `{{token}}` becomes, beside the boxes rather than under them (§190).
+            Shown whatever the document is, because the key can still be changed above and a
+            legend that appears only after the choice is a legend nobody sees in time. */}
+        <TokenLegend body={values ? bodyToText(values.ro.body) : undefined} />
 
         {(["ro", "en"] as const).map((locale) => (
           <Paper key={locale} variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>

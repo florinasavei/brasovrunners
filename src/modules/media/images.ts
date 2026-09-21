@@ -18,12 +18,31 @@ import { DomainError } from "@/shared/errors/domain-error";
  * can carry script, and §17 says it needs its own sanitizer before it may be served.
  */
 
-export const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
-/** Below this a "photo" is an icon; above the upper bound a phone did not take it. */
-export const MIN_DIMENSION = 200;
-export const MAX_DIMENSION = 12_000;
-export const WEB_MAX = 1600;
-export const THUMB_MAX = 480;
+/**
+ * The bounds live in `limits.ts`, which imports nothing (§178): the browser half of the upload
+ * needs `MAX_UPLOAD_BYTES`, and importing it from here dragged `sharp` into the client bundle
+ * and broke `next build`. Re-exported so every existing importer of this module keeps working.
+ *
+ * Why 2400 and 640 (§176; the owner, three times: "pictures look really bad and compressed
+ * now", "în continuare imaginile sunt super pixelate, hyper-comprimate"): 1600 was the width of
+ * a full-bleed image on a 1× laptop and nothing else. The editor and the event page render a
+ * picture across roughly 1000 CSS pixels, and every laptop and phone the club uses has a 2×
+ * screen — so the browser was **upscaling a 1600px file to 2000 physical pixels** and the
+ * reader saw WebP artefacts magnified.
+ */
+import { MAX_UPLOAD_BYTES, MAX_DIMENSION, MIN_DIMENSION, THUMB_MAX, WEB_MAX } from "./limits";
+
+export { MAX_UPLOAD_BYTES, MIN_DIMENSION, MAX_DIMENSION, WEB_MAX, THUMB_MAX };
+
+/**
+ * WebP quality. 80 is the number one reaches for when the file has been encoded once; this one
+ * has been encoded **twice** — the browser shrinks and re-encodes before upload (§176 changed
+ * that too, but every picture already stored went through it) — and lossy generations stack.
+ * 88 with `effort: 6` costs roughly a third more bytes and removes the blocking the owner saw
+ * around flags, shirts and grass, which is exactly where a low-effort WebP falls apart.
+ */
+const WEB_QUALITY = 88;
+const THUMB_QUALITY = 78;
 
 const ACCEPTED = new Set(["jpeg", "png", "webp"]);
 
@@ -65,12 +84,15 @@ export async function processUploadedImage(input: Buffer): Promise<ProcessedImag
   const { data: web, info } = await upright
     .clone()
     .resize({ width: WEB_MAX, height: WEB_MAX, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 80 })
+    // `effort: 6` is WebP's own quality/time dial and costs milliseconds on an upload nobody is
+    // waiting on; `smartSubsample` keeps colour detail where a photo has hard edges — a race
+    // number on a shirt, a flag, lettering on a banner — which is where the artefacts showed.
+    .webp({ quality: WEB_QUALITY, effort: 6, smartSubsample: true })
     .toBuffer({ resolveWithObject: true });
   const thumb = await upright
     .clone()
     .resize({ width: THUMB_MAX, height: THUMB_MAX, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 72 })
+    .webp({ quality: THUMB_QUALITY, effort: 6 })
     .toBuffer();
 
   return { web, thumb, width: info.width, height: info.height };

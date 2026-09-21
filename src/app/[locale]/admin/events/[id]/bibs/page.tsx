@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -41,6 +42,28 @@ export default async function EventBibsPage({ params }: Props) {
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
         {t("bibs.previewTitle", { event: event?.title ?? id, count: bibs.length })}
       </Typography>
+      {/*
+        The whole field on one A4 sheet, on the page that shows the whole field (§189).
+
+        The download already existed on the event's own editor, several folds down, and the owner
+        — standing on this page, looking at every number he wanted to print — asked for it again:
+        "vreau să pot exporta toate BID-urile!". A verb belongs where its object is.
+
+        A plain link to the route, so it works with JavaScript off and so the browser handles the
+        PDF the way the reader's browser handles PDFs.
+      */}
+      {bibs.length > 0 && (
+        <Box>
+          <Button
+            component="a"
+            href={`/api/admin/events/${id}/bibs?locale=${locale}`}
+            variant="contained"
+            sx={{ minHeight: 44 }}
+          >
+            {t("bibs.downloadAll", { count: bibs.length })}
+          </Button>
+        </Box>
+      )}
       {bibs.length === 0 ? (
         <Typography color="text.secondary">{t("bibs.helpNone")}</Typography>
       ) : (

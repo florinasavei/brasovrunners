@@ -80,11 +80,11 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
       );
       expect(parsed.content?.[0]).toEqual({
         type: "image",
-        attrs: { src: ours, alt: "Startul", caption: "Startul, 2025", width: 1600, height: 1067, widthPercent: 50 },
+        attrs: { src: ours, alt: "Startul", caption: "Startul, 2025", width: 1600, height: 1067, widthPercent: 50, align: "block" },
       });
-      // Defaults (§73): no alt, no caption, the whole column. Never the file name.
+      // Defaults (§73): no alt, no caption, the whole column, a band across it. Never the file name.
       expect(parseRichText(doc({ type: "image", attrs: { src: local } })).content?.[0]).toMatchObject({
-        attrs: { alt: "", caption: "", widthPercent: 100 },
+        attrs: { alt: "", caption: "", widthPercent: 100, align: "block" },
       });
       // Its words are the alt and the caption; a width share is one of four, never a free number.
       expect(richTextToPlainText(parsed)).toBe("Startul\nStartul, 2025");
@@ -104,6 +104,67 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
       }
       // Never inline: a picture inside a paragraph is a layout, not a body.
       expect(() => parseRichText(doc(paragraph({ type: "image", attrs: { src: ours } } as never)))).toThrow();
+    });
+
+    /**
+     * Where the picture sits in the column (2026-09-20), which reverses `DECISIONS.md` §73's
+     * "never floated". The attribute is the same shape as `widthPercent`: a closed set of
+     * literals, so what reaches the renderer is a word the renderer has a rule for and never a
+     * CSS value somebody typed into the network panel.
+     */
+    describe("alignment", () => {
+      it("accepts the three alignments and nothing else", () => {
+        for (const align of ["block", "left", "right"] as const) {
+          expect(parseRichText(doc({ type: "image", attrs: { src: ours, align } })).content?.[0], align).toMatchObject({
+            attrs: { align },
+          });
+        }
+        for (const align of ["centre", "float: left", "LEFT", "inline", "", 1, true, { side: "left" }]) {
+          expect(() => parseRichText(doc({ type: "image", attrs: { src: ours, align } })), String(align)).toThrow();
+        }
+      });
+
+      it("reads a document written before it existed as a band across the column", () => {
+        // Every stored document. The attribute is absent, and absent means what the page did
+        // yesterday — not a migration, the same read-time default `widthPercent` has (§73).
+        const old = doc({ type: "image", attrs: { src: ours, alt: "Startul", width: 1600, height: 1067 } });
+        expect(readRichText(old).content?.[0]).toMatchObject({ attrs: { align: "block", widthPercent: 100 } });
+        expect(parseRichText(old).content?.[0]).toMatchObject({ attrs: { align: "block" } });
+        // `null` too: a column written by an older build, or a body round-tripped through one.
+        expect(parseRichText(doc({ type: "image", attrs: { src: ours, align: null } })).content?.[0]).toMatchObject({
+          attrs: { align: "block" },
+        });
+      });
+
+      it("changes nothing about the document's words", () => {
+        // The plain-text projection is what the excerpt column, the search index, the `.ics`
+        // description and the meta description are built from. A picture's words are its alt
+        // and its caption; where it sits is not a word.
+        const floated = parseRichText(
+          doc(
+            { type: "image", attrs: { src: ours, alt: "Startul", caption: "Startul, 2025", align: "left", widthPercent: 33 } },
+            { type: "paragraph", content: [text("Lângă imagine.")] },
+          ),
+        );
+        const band = parseRichText(
+          doc(
+            { type: "image", attrs: { src: ours, alt: "Startul", caption: "Startul, 2025" } },
+            { type: "paragraph", content: [text("Lângă imagine.")] },
+          ),
+        );
+        expect(richTextToPlainText(floated)).toBe(richTextToPlainText(band));
+        expect(richTextToPlainText(floated)).toBe("Startul\nStartul, 2025\nLângă imagine.");
+        expect(countImagesWithoutAlt(floated)).toBe(0);
+      });
+
+      it("may carry a width share as well, and the two are independent", () => {
+        // "How big" and "where" are two questions. Floating a picture does not re-answer the
+        // first, and the schema refuses a width that is not one of the four either way.
+        expect(
+          parseRichText(doc({ type: "image", attrs: { src: ours, align: "right", widthPercent: 33 } })).content?.[0],
+        ).toMatchObject({ attrs: { align: "right", widthPercent: 33 } });
+        expect(() => parseRichText(doc({ type: "image", attrs: { src: ours, align: "left", widthPercent: 40 } }))).toThrow();
+      });
     });
   });
 

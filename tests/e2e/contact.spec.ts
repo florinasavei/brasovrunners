@@ -77,7 +77,14 @@ test.describe("BR-REQ-070-04 the contact form", () => {
 
   test("lands a rejection on a focusable summary that names the box", async ({ page }) => {
     await page.goto("/ro/contact?error=VALIDATION_ERROR&fields=email,notAField#contact-errors");
-    const summary = page.getByRole("alert");
+    /*
+      By id, not by role. Next renders its own route announcer as `role="alert"`, so
+      `getByRole("alert")` matches two elements and fails strict mode — intermittently, because
+      whether the announcer is in the DOM yet depends on how the page was reached. A locator
+      that is flaky for a reason unrelated to what the test is about is the most expensive kind
+      of red (§212): it teaches people to re-run rather than to read.
+    */
+    const summary = page.locator("#contact-errors");
     await expect(summary).toBeVisible();
     await expect(summary.getByRole("link", { name: "Adresa de e-mail" })).toBeVisible();
     // The unknown name is dropped rather than echoed.
@@ -86,7 +93,7 @@ test.describe("BR-REQ-070-04 the contact form", () => {
 
     // A whole-form answer is one sentence, and the boxes stay.
     await page.goto("/ro/contact?error=LIMITED");
-    await expect(page.getByRole("alert")).toContainText("Prea multe mesaje");
+    await expect(page.locator("#contact-errors")).toContainText("Prea multe mesaje");
     await expect(page.locator('[name="message"]')).toBeVisible();
   });
 });

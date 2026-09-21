@@ -12,6 +12,7 @@ import {
   listMediaAssetsForAdmin,
   ORPHAN_ASSET_DAYS,
   sweepOrphanAssets,
+  totalMediaBytes,
 } from "@/modules/media/references";
 import { uploadBodyImage } from "@/modules/media/service";
 import { objectKey, readLocalObject } from "@/modules/media/storage";
@@ -40,7 +41,7 @@ describe("§17 the orphan picture sweep and the pictures list", () => {
     await resetTables(db);
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "mod@dev.test", displayName: "Mod", role: "MODERATOR" })
+      .values({ email: "mod@dev.test", displayName: "Mod", role: "ADMIN" })
       .returning();
   });
 
@@ -155,5 +156,33 @@ describe("§17 the orphan picture sweep and the pictures list", () => {
       .returning();
     const forbidden = await deleteMediaAsset(db, { actor: author, assetId: photo.assetId }).catch((e: unknown) => e);
     expect(isDomainError(forbidden) && forbidden.code).toBe("FORBIDDEN");
+  });
+
+  it("gives the page an address to copy and the total the bucket holds", async () => {
+    const first = await upload("first.jpg");
+    await upload("second.jpg");
+
+    const rows = await listMediaAssetsForAdmin(db, "ro");
+    const [row] = rows.filter((candidate) => candidate.id === first.assetId);
+    expect(row).toBeDefined();
+
+    // The two addresses are deliberately different shapes: a body stores a site-relative path
+    // so it survives a change of hostname (§8), and the page shows the whole address, which is
+    // what somebody pasting the picture into a newsletter needs.
+    expect(row.webUrl).toMatch(/^\/api\/media\/.+\/web\.webp$/);
+    expect(row.publicWebUrl).toMatch(/^https?:\/\/.+\/web\.webp$/);
+    expect(row.publicWebUrl.endsWith(row.webUrl)).toBe(true);
+
+    // The figure at the top of the page: every picture, not the page of them the table shows.
+    expect(rows).toHaveLength(2);
+    expect(totalMediaBytes(rows)).toBe(rows[0].byteSize + rows[1].byteSize);
+    expect(totalMediaBytes(rows)).toBeGreaterThan(0);
+    expect(totalMediaBytes([])).toBe(0);
+
+    // And it follows a deletion, because it is summed from the rows rather than remembered.
+    await deleteMediaAsset(db, { actor: editor, assetId: first.assetId });
+    expect(totalMediaBytes(await listMediaAssetsForAdmin(db, "ro"))).toBe(
+      totalMediaBytes(rows) - row.byteSize,
+    );
   });
 });

@@ -117,7 +117,14 @@ test.describe("legal documents: a version downloads as a PDF", () => {
     expect((await response.body()).subarray(0, 5).toString()).toBe("%PDF-");
   });
 
-  test("refuses a Moderator, who may not read legal versions at all", async ({ page }) => {
+  test("refuses a Moderator the PDF of a version, which is the text itself (§208)", async ({ page }) => {
+    /*
+      Since §208 an Organizer *may* open the legal list — they must be able to see what the club
+      published in order to say which line is wrong. The document itself is another matter: the
+      PDF route is the text, and writing, approving, withdrawing and deleting are the
+      Administrator's. So the list opens and this route refuses, which is the whole point of
+      separating the two questions.
+    */
     await signIn(page, "Dev Moderator");
     // Any well-formed id: the role is checked before the row is looked for (BR-REQ-060-01).
     const response = await page.request.get(

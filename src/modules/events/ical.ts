@@ -3,6 +3,25 @@ import type { CoHost } from "./domain/co-hosts";
 import { distanceInKm, type EventSurface, type EventType } from "./domain/event-type";
 import { type RegistrationWindowInput, registrationState } from "./domain/registration-window";
 import { type ProgrammeRow, programmeLines } from "./domain/schedule";
+import { env } from "@/shared/config/env";
+
+/**
+ * The environment on a calendar name and on every entry, QA only (§174; the owner: "the QA
+ * iCal needs to be named differently!").
+ *
+ * The UIDs already differ between deployments — each carries its own site's host — so two
+ * copies of an event never merge into one. What they do instead is sit side by side in one
+ * calendar app, same title, same hour, with nothing on screen to say which is the real Sunday
+ * run: the club's own people subscribe to both while rehearsing. The same mark an email
+ * subject carries on QA (`QA_SUBJECT_PREFIX`), and idempotent for the same reason.
+ *
+ * Production is never marked; local and test never leave the machine.
+ */
+const QA_MARK = "[QA] ";
+function qaMarked(value: string): string {
+  if (env.APP_ENV !== "qa" || value.startsWith(QA_MARK)) return value;
+  return `${QA_MARK}${value}`;
+}
 
 /**
  * Events as a calendar (`DECISIONS.md` §107; BR-REQ-020-01 criterion 7): one `.ics` per event for "add to
@@ -429,7 +448,10 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: Calen
     `DTSTART:${icalUtc(event.startsAt)}`,
     `DTEND:${icalUtc(event.endsAt ?? event.startsAt)}`,
     ...status,
-    `SUMMARY:${icalText(event.title)}`,
+    // The environment on the entry itself, not only on the calendar's name (§174): a single
+    // event added from an attachment lands in a calendar that already has its own name, and
+    // the only thing on screen is this line.
+    `SUMMARY:${icalText(qaMarked(event.title))}`,
     `DESCRIPTION:${icalText(calendarDescription(event, labels))}`,
     // The HTML twin is a TEXT value too: escaped and folded like the rest (RFC 5545 §3.3.11).
     `X-ALT-DESC;FMTTYPE=text/html:${icalText(calendarDescriptionHtml(event, labels))}`,
@@ -452,7 +474,7 @@ export function buildVEvent(event: CalendarEvent, baseUrl: string, labels: Calen
       `DTSTART:${icalUtc(row.startsAt)}`,
       `DTEND:${icalUtc(row.endsAt ?? row.startsAt)}`,
       ...status,
-      `SUMMARY:${icalText(`${event.title} — ${row.label}`)}`,
+      `SUMMARY:${icalText(qaMarked(`${event.title} — ${row.label}`))}`,
       `DESCRIPTION:${icalText(event.url)}`,
       `URL:${event.url}`,
     );
@@ -472,13 +494,27 @@ export function buildCalendar(params: {
   /** The subscriber's refresh hint: an hour (§129). Outlook reads it; Google and Apple keep their own clock. */
   refreshHours?: number;
 }): string {
+  /**
+   * The environment on the name, on QA only (§174; the owner: "the QA iCal needs to be named
+   * differently!").
+   *
+   * The UIDs already differ between deployments — they carry the site's own host — so two
+   * copies of an event never merge into one. What they *do* is sit side by side in the same
+   * calendar app, under the same name, with the same title and the same hour: the club's own
+   * people subscribe to both while rehearsing, and there is nothing on screen to say which is
+   * the real Sunday run. The same mark an email subject carries on QA (`QA_SUBJECT_PREFIX`),
+   * and for the same reason.
+   *
+   * Production is not marked, and local and test never leave the machine.
+   */
+  const name = qaMarked(params.name);
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     `PRODID:${PRODID}`,
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    `X-WR-CALNAME:${icalText(params.name)}`,
+    `X-WR-CALNAME:${icalText(name)}`,
     `REFRESH-INTERVAL;VALUE=DURATION:PT${params.refreshHours ?? 1}H`,
     `X-PUBLISHED-TTL:PT${params.refreshHours ?? 1}H`,
     ...params.events.flatMap((event) => buildVEvent(event, params.baseUrl, params.labels)),

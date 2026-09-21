@@ -76,7 +76,7 @@ beforeEach(async () => {
   await resetTables(db);
   [organizer] = await db
     .insert(staffUsers)
-    .values({ email: "organizer@dev.test", displayName: "Organizer", role: "MODERATOR" })
+    .values({ email: "organizer@dev.test", displayName: "Organizer", role: "ADMIN" })
     .returning();
   const translations = [
     { locale: "ro" as const, title: "Declarație", body: { sections: [{ paragraphs: ["Declar."] }] } },

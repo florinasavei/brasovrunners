@@ -18,8 +18,9 @@ import { mergeFieldsIn, mergeLegalBody } from "@/modules/legal-documents/domain/
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
 import { declarantValues } from "@/modules/registrations/signed-declaration";
+import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
-import { readRegistrationTokenContext } from "@/modules/registrations/token-actions";
+import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { signDeclarationAction } from "./actions";
 
@@ -70,10 +71,42 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     );
   }
 
-  let context = invalid ? { ok: false as const } : await readRegistrationTokenContext(token, "COMPLETE_DECLARATION");
-  if (!context.ok) {
-    context = invalid ? { ok: false as const } : await readRegistrationTokenContext(token, "WAITLIST_OFFER");
-  }
+  /**
+   * One link, two purposes (§15.7), and the token is read even after a failed POST.
+   *
+   * `invalid=1` used to skip the read entirely, which is why somebody who signed and then
+   * pressed the same email again was told the link was dead rather than that the declaration
+   * was already signed. Both refusals are kept: whichever of them is `ALREADY_USED` is the
+   * token's real purpose, and the other is the `PURPOSE_MISMATCH` that proves it.
+   */
+  const declarationRead = await readRegistrationTokenContext(token, "COMPLETE_DECLARATION");
+  const offerRead = declarationRead.ok
+    ? undefined
+    // The same secret, already presented in this request: it costs no further attempt (§202).
+    : await readRegistrationTokenContext(token, "WAITLIST_OFFER", { charge: false });
+  const context = declarationRead.ok ? declarationRead : (offerRead ?? declarationRead);
+
+  const refusals = [
+    declarationRead.ok ? null : { purpose: "COMPLETE_DECLARATION" as const, reason: declarationRead.reason },
+    offerRead && !offerRead.ok ? { purpose: "WAITLIST_OFFER" as const, reason: offerRead.reason } : null,
+  ].filter((refusal) => refusal !== null);
+
+  const spent = context.ok ? null : await readSpentRegistrationLink(token, refusals, locale, new Date());
+
+  /**
+   * A live token plus `invalid=1` means the press failed for a reason that is **not** the token
+   * — an unticked box bypassed on the client, which rolls the whole transaction back and spends
+   * nothing.
+   *
+   * That is not a dead link, and it must not be reported as one (§202, found in review): the
+   * notice for a dead link carries "we can send you a new one", and sending a new link to
+   * somebody whose link works would be an instruction to wait for an email they do not need.
+   * The form is refused — the press genuinely failed — and the reason is said where the press
+   * happened.
+   */
+  const blocked = !context.ok;
+  const pressFailed = context.ok && Boolean(invalid);
+  const journeyStep = spent ? spent.step : ("declare" as const);
 
   const db = getDb();
   const declaration = context.ok
@@ -136,12 +169,25 @@ export default async function DeclarePage({ params, searchParams }: Props) {
         {t("declare.title")}
       </Typography>
 
-      <RegistrationJourney current="declare" />
+      {/* Where the registration actually is when the link is spent; the declaration step
+          otherwise. Cancelled and lapsed get no stepper: there is no journey left. */}
+      {journeyStep && <RegistrationJourney current={journeyStep} />}
 
-      {!context.ok || !declaration ? (
-        <Alert severity="warning">{t("invalidOrExpired")}</Alert>
+      {blocked || !declaration ? (
+        <ActionLinkNotice locale={locale} status={spent} />
       ) : (
         <>
+          {/*
+            The press failed and the link did not (§202): the box was not ticked, or the server
+            refused the form for a reason of its own. Said here, above the text, rather than by
+            replacing the page with "this link is no longer valid" — which would send somebody
+            whose link works to wait for an email they do not need.
+          */}
+          {pressFailed && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {t("declare.pressFailed")}
+            </Alert>
+          )}
           {/*
             Above the declaration body, because a person scrolling a wall of legal text must
             not have to reach the end of it to learn how long they have. `role="status"` marks

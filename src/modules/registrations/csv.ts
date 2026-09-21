@@ -8,6 +8,8 @@
  * treats as "the rest of this is literal text" and does not print.
  */
 
+import { raceNumberOf } from "./domain/race-number";
+
 const FORMULA_PREFIXES = ["=", "+", "-", "@"];
 
 export function neutralizeCsvValue(value: string): string {
@@ -40,6 +42,8 @@ export type RegistrationCsvRow = {
    * the data actually is.
    */
   clubMemberDeclared: boolean;
+  /** When the entrant ticked "I am medically fit" (§171); empty for a desk or phone entry. */
+  fitnessDeclaredAt: string | null;
   /** The optional socials (§106), empty when not given. */
   stravaUrl: string;
   instagramHandle: string;
@@ -49,6 +53,8 @@ export type RegistrationCsvRow = {
   confirmedAt: string;
   /** The race number, once assigned (BR-REQ-038-01); empty until then, never 0. */
   bibNumber?: number | null;
+  /** The number held before the settle (§214). */
+  provisionalBibNumber?: number | null;
   /** Race day and the provider's verdict, the two columns an organizer sorts by afterwards (§83). */
   checkedInAt: string;
   emailBounced: boolean;
@@ -63,12 +69,18 @@ const HEADER = [
   "Email",
   "Status",
   "Club member (declared)",
+  "Medically fit (declared)",
   "Strava",
   "Instagram",
   "Guardian",
   "Submitted",
   "Confirmed",
-  "Bib",
+  // "Race number (BIB)", not "Bib": the club calls it that everywhere else in the backoffice
+  // (§180), and a spreadsheet column is the one place a volunteer meets the word cold.
+  "Race number (BIB)",
+  // Whether that number is the settled one (§214). Its own column rather than a marker
+  // inside the number, because the number column is read as a number by every spreadsheet.
+  "Number settled",
   "Checked in",
   "Email bounced",
 ];
@@ -88,12 +100,14 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.email,
         row.status,
         row.clubMemberDeclared ? "Yes" : "",
+        row.fitnessDeclaredAt ?? "",
         row.stravaUrl,
         row.instagramHandle,
         row.guardianName,
         row.submittedAt,
         row.confirmedAt,
-        row.bibNumber ? String(row.bibNumber) : "",
+        String(raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.value ?? ""),
+        raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.settled ? "Yes" : "",
         row.checkedInAt,
         row.emailBounced ? "Yes" : "",
       ]

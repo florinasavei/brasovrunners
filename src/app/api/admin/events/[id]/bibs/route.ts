@@ -7,6 +7,7 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
@@ -66,6 +67,11 @@ export async function GET(
     rows,
     eventTitle: event.title,
     eventDate: format.dateTime(event.startsAt, { timeZone: event.timezone, dateStyle: "long" }),
+    // The band in the event's own colour, and the foot naming its partners and the club's
+    // mailbox (§180) — the same three the preview picture draws from.
+    bandColour: event.bibColour,
+    partners: event.coHosts.map((host) => host.name),
+    replyTo: env.EMAIL_REPLY_TO,
     pageLabel: (n, total) => t("bibs.page", { n, total }),
     generatedAt: now,
     layout,

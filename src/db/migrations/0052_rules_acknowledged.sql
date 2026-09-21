@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "rules_acknowledged_at" timestamp with time zone;

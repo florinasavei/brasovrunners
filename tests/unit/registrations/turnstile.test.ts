@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-/** `DECISIONS.md` §97 — the bot check is off without both keys, and strict with them. */
+/**
+ * `DECISIONS.md` §97, §216 — the bot check is off without both keys, and with them it refuses
+ * only what Cloudflare actually rejected.
+ *
+ * The distinction these tests exist for: a rejected token is evidence and stops a submission;
+ * no token, or no answer from Cloudflare, is the *absence* of evidence and must not. §216
+ * records why — a person whose browser never loaded the widget could not register at all,
+ * which happened on 2026-09-21, and §205 says people must be able to register at all costs.
+ */
 describe("Cloudflare Turnstile", () => {
   afterEach(() => {
     vi.resetModules();
@@ -15,7 +23,7 @@ describe("Cloudflare Turnstile", () => {
     expect(await verifyTurnstile("anything", null)).toBe("not_configured");
   });
 
-  it("verifies the token with the secret once configured, and treats an outage as a failure", async () => {
+  it("verifies the token with the secret once configured, and refuses only what was rejected", async () => {
     process.env.TURNSTILE_SITE_KEY = "1x000";
     process.env.TURNSTILE_SECRET_KEY = "2x000";
     const { turnstileSiteKey, verifyTurnstile } = await import("@/modules/registrations/turnstile");
@@ -32,13 +40,29 @@ describe("Cloudflare Turnstile", () => {
     expect(calls[0].body.get("response")).toBe("token-123");
     expect(calls[0].body.get("remoteip")).toBe("203.0.113.5");
 
+    // Cloudflare looked at the token and said no. This is the one thing that stops a person.
     const refused = (async () => new Response(JSON.stringify({ success: false }), { status: 200 })) as typeof fetch;
     expect(await verifyTurnstile("token-123", null, refused)).toBe("failed");
+
+    /*
+      Everything below is "we could not ask", and none of it refuses anybody (§216).
+
+      Each one is something that happens to real people rather than to bots: a content blocker
+      or a privacy browser that will not load `challenges.cloudflare.com`, a corporate proxy, a
+      phone on a bad connection, JavaScript off — and Cloudflare itself having a bad five
+      seconds, which takes out every visitor at once.
+    */
     const down = (async () => {
       throw new Error("network");
     }) as typeof fetch;
-    expect(await verifyTurnstile("token-123", null, down)).toBe("failed");
-    // No token at all — the widget never ran, or a script posted the form.
-    expect(await verifyTurnstile("", null, ok)).toBe("failed");
+    expect(await verifyTurnstile("token-123", null, down)).toBe("unavailable");
+    const bad = (async () => new Response("", { status: 503 })) as typeof fetch;
+    expect(await verifyTurnstile("token-123", null, bad)).toBe("unavailable");
+    // No token at all — the widget never ran.
+    expect(await verifyTurnstile("", null, ok)).toBe("unavailable");
+    expect(await verifyTurnstile(null, null, ok)).toBe("unavailable");
+
+    // An over-long token *was* submitted, and nothing legitimate produces one.
+    expect(await verifyTurnstile("x".repeat(2049), null, ok)).toBe("failed");
   });
 });

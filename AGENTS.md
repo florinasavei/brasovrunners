@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.39-2026-09-21 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.39-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1421,6 +1421,10 @@ Canonical body is JSON produced by allowlisted schema. Required nodes/marks:
 
 - document/paragraph/text;
 - headings;
+- text alignment on a paragraph or a heading — `align`, one of `left`, `center`, `right` and
+  nothing else, absent meaning `left` so every stored body is unchanged. `justify` is
+  deliberately excluded: justified text in a 320-pixel column is rivers of white space. Built
+  2026-09-21, `DECISIONS.md` §213;
 - bold/italic;
 - link;
 - bullet/ordered list/list item;
@@ -1456,8 +1460,9 @@ server — a node type it has no case for cannot reach a page whatever is stored
 `ui/RichTextEditor.tsx` is the one client island, which switches off everything StarterKit ships
 beyond the list above. Bodies written before it existed are read through the same module and need
 no migration. **Events write it too since 2026-09-18** (`DECISIONS.md` §71): each language's
-"full description" is the same editor and the same allowlist, rendered on the event page under
-the short description — the day's schedule, what to bring, where to park — and validated as
+"full description" is the same editor and the same allowlist, rendered on the event page in the
+short description's own slot, directly under the title — the summary stands there only while the
+full description has no words (§187) — the day's schedule, what to bring, where to park — and validated as
 `body` in `translationFieldsSchema` on the way in. Legal documents keep the
 plain-text shape, because `content_sha256` is published under a version number and computed over
 it (§12.5).
@@ -1837,7 +1842,8 @@ registrations
 - results_consent_version integer NOT NULL
 - list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
-- bib_number integer null              -- BR-REQ-038-01; assigned as a batch under the event-row lock, unique per event (partial index); per race across distances is M2
+- bib_number integer null              -- BR-REQ-038-01; the settled number: written when registration closes (§214), unique per event (partial index), never reissued or renumbered; per race across distances is M2
+- provisional_bib_number integer null  -- §214; held with the place from submission, unique per event (partial index), released the moment the place is, never printed and never emailed
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null
@@ -2351,7 +2357,23 @@ the answer travels in a URL that every proxy in between logs (§14.5). The names
 against the form's own list on the way back in — the parameter is a string anybody can type —
 and the page is entered at the error summary rather than at the top (§18.2). Nothing past step
 3 is ever reported that way: from canonicalization onward the response is the generic one
-whatever the address turns out to mean, honeypot, timing check and throttle included.
+whatever the address turns out to mean, honeypot and throttle included.
+
+**The two anti-bot checks are the exception, since §194 and — for the honeypot — §217.**
+
+The invariant, stated first because it is the reason: **nothing may show the "check your email"
+screen unless a message was actually queued.** Telling somebody to wait for an email that was
+never sent is the worst answer this form can give; they wait, they give up, and the club never
+learns they tried. It cost a real participant once (§194) and a second time while §217 was being
+written, on production, which still ran the older code.
+
+So neither verdict is answered with silence. The three-second floor is a *guess* about a person
+and was wrong about somebody with autofill; the honeypot is tripped by a machine and, rarely, by
+a password manager or an accessibility tool that does not know the field is hidden. Both now
+refuse with the **same** field marker and the same sentence, so a script learns only "refused"
+and still has to wait out the timer — which is all a timing check ever bought — while the form
+comes back with every answer in it and offers the contact form if a second press also fails.
+Both verdicts are logged by event and reason, never by address.
 
 ### 15.2 Email confirmation
 

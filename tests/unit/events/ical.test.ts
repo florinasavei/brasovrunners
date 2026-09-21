@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import {
@@ -194,7 +194,7 @@ describe("the calendar file", () => {
         "Ediția a treia a crosului nostru.\nTraseul urcă pe Tâmpa.",
         "",
         "întâlnire la 09:00 · start la 10:00",
-        "Concurs · 🏃 10 km · ↗ 300 m urcare · Trail · Mediu · Gratuit",
+        "Concurs · 🏃 10 km · ↗ 300 m diferență de nivel · Trail · Mediu · Gratuit",
         "",
         "Înscrierile sunt deschise — https://example.test/ro/evenimente/crosul-aniversar/inscriere",
         "",
@@ -216,7 +216,7 @@ describe("the calendar file", () => {
     );
     // The same words in English, with the English separator for 14,5 km.
     const english = calendarDescription({ ...full, distanceMeters: 14_500 }, labelsEn);
-    expect(english).toContain("gather at 09:00 · start at 10:00\nRace · 🏃 14.5 km · ↗ 300 m climb · Trail · Moderate · Free");
+    expect(english).toContain("gather at 09:00 · start at 10:00\nRace · 🏃 14.5 km · ↗ 300 m elevation gain · Trail · Moderate · Free");
     expect(english).toContain("Registration is open — ");
     expect(english).toContain("Event page: ");
     expect(english).toContain("Watch the event film: ");
@@ -427,6 +427,37 @@ describe("the calendar file", () => {
     expect(short.match(/Pagina evenimentului/g)).toHaveLength(1);
     expect(short).not.toContain("…");
     expect(short.endsWith('<a href="https://alpin.example.test">Împreună cu Clubul Alpin</a>')).toBe(true);
+  });
+
+  /**
+   * §174 — the QA calendar says it is QA. The UIDs already differ per deployment, so two copies
+   * never merge; what they do is sit side by side under the same name at the same hour, and the
+   * club's own people subscribe to both while rehearsing.
+   */
+  it("marks the calendar and every entry on QA, and leaves production alone", async () => {
+    const build = () =>
+      buildCalendar({ events: [event], baseUrl: "https://example.test", name: "BVR", labels: labelsRo });
+
+    // The module reads `env.APP_ENV` at call time, so the environment is set around a fresh
+    // import rather than mutated behind the module's back.
+    const previous = process.env.APP_ENV;
+    try {
+      expect(build()).toContain("X-WR-CALNAME:BVR");
+      expect(build()).not.toContain("[QA]");
+
+      process.env.APP_ENV = "qa";
+      vi.resetModules();
+      const qa = await import("@/modules/events/ical");
+      const marked = qa.buildCalendar({ events: [event], baseUrl: "https://example.test", name: "BVR", labels: labelsRo });
+      expect(marked).toContain("X-WR-CALNAME:[QA] BVR");
+      // And on the entry itself: a single event added from an attachment lands in a calendar
+      // that already has a name, and the only thing on screen is its title.
+      expect(marked).toContain("SUMMARY:[QA] ");
+    } finally {
+      if (previous === undefined) delete process.env.APP_ENV;
+      else process.env.APP_ENV = previous;
+      vi.resetModules();
+    }
   });
 
   it("builds Google's add-event address and the webcal scheme", () => {
