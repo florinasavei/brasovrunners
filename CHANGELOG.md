@@ -10,6 +10,9 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.39-2026-09-21
 
+- **The sixth registration attempt in an hour is told why**, instead of the check-your-email screen with nothing sent. The per-address throttle was the last place still answering a real person with silence — its own comment justified it by pointing at two checks that had already been changed. §218.
+- **Somebody on the waiting list who fills the form again gets an answer**, rather than a promise of an email that had nothing to send. §218.
+- **The email header is a white banner**, and the message now tells mail clients it is a light-scheme document — Gmail dark mode was inverting the card around a logo it could not invert, which is what made it look like a sticker. §219.
 - **Nobody is told to wait for an email that was never sent.** The two anti-bot checks used to answer a suspected bot with the confirmation page and create nothing: no registration, no email, nothing on any screen, and no row for the club to find them by. Both now refuse out loud, with the same sentence, so a script still learns nothing about which check it tripped. §217.
 - **The anti-bot timing check is much looser.** One second instead of three — three is well inside what somebody with autofill takes, and it cost two real people — and a submission that arrives with no render time at all is no longer suspected of anything. §217.
 - **The anti-bot refusal is said where you are looking**, at the top of the form with its own heading, instead of a red box telling you to check twenty fields that are all correct. It names a second press, and then the contact form if that fails too. §217.

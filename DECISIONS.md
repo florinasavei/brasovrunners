@@ -9793,3 +9793,81 @@ trap refuses out loud and creates nothing, and the two verdicts produce the iden
 `tests/integration/contact/service.test.ts` and `tests/integration/registrations/interest.test.ts`.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 218. Decided — the last two silent drops, found by auditing for them (2026-09-21)
+
+**Context.** §217 stated the invariant — nothing shows "check your email" unless a message was
+queued — and fixed the two anti-bot checks. An audit run immediately afterwards, seven readers
+over the public journey with three adversarial verifiers each, found that the invariant was
+still false in two more places. Both were missed for the same reason: §217 fixed the paths
+that had just failed in front of somebody, and these two had not failed yet.
+
+**1. The per-address throttle.** `submitRegistration` refused the sixth submission in an hour
+with `return { ok: true }` — no row, no message, no log line, and the confirmation screen. Its
+own comment justified the silence in these words: *"Refused the same way the honeypot and the
+timing check are refused"* — pointing at two behaviours §217 had reversed thirty lines above
+it. A comment that cites a rule which no longer exists is how a fix half-lands.
+
+It now refuses out loud, with its own sentence and its own field marker.
+
+*It leaks nothing, and that is why this is allowed.* The bucket is keyed on the canonical
+identity of the address the person has just typed, so telling them "we have had several of
+these from you" tells them about themselves. The oracle `AGENTS.md` §19.4 forbids is one that
+answers *whether somebody else is registered*, which this cannot. The contact form has
+answered this way from the start, and `rate-limit/service.ts` already said why: "the sixth is
+told so plainly, because a person is not a bot."
+
+*Five an hour is reachable by ordinary use* — a re-test, two family members on one mailbox,
+somebody who cancelled and registered again — which is exactly the population that must not
+meet silence. The sentence names the hour and then the contact form, because somebody who
+needs to register now cannot wait one.
+
+**2. A waiting-list entry re-submitting the form.** `deriveAllowedResendMessageType` returns
+null for `WAITLISTED`, so §199's already-registered branch queued nothing and returned, and the
+screen said to check an inbox nothing had been sent to.
+
+The null is **right for the backoffice** and stays: "send it again" hands somebody a link they
+must act on, and a queued person has none. It is wrong for the public form, where the question
+being asked is not "send me the link again" but "did my registration go through at all". That
+question has an answer and a message type for it, so the public path re-sends
+`WAITLIST_JOINED`. The throttle in front of the form is what stops it being a mailer.
+
+**What the audit cost, and what it is worth saying about it.** Seven finders produced findings
+across the whole journey; the verification pass was cut short by an account limit, so 150 of
+172 agents died and most findings are **swept but unverified**. The two recorded here are the
+ones that survived three independent adversarial lenses with quoted code. The rest are a
+backlog, not a clean bill of health, and this paragraph exists so that nobody reads §218 as
+"the journey was audited and found sound".
+
+Tests: `tests/integration/registrations/lifecycle.test.ts` — the sixth submission is refused
+with a named field and somebody else's hour is untouched; a waitlisted re-submission queues
+`WAITLIST_JOINED`.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 219. Decided — the email header is a white banner, and the message says it is a light document (2026-09-21)
+
+**Context.** Dani, of the verification email: "this email header looks ugly! it should be a
+banner with white background", with a screenshot of the lockup sitting in a white rectangle on
+a dark card.
+
+**Decision.** The card was **already** `#ffffff`, so in an ordinary inbox nothing was wrong.
+The screenshot was Gmail's dark mode, which re-colours what it can and cannot re-colour a
+raster: the card went dark, the logo's own white background did not, and the lockup ended up
+looking like a sticker on a dark wall — which is the exact failure §189 changed the blue band
+to avoid, arriving by a different route.
+
+*The message now declares itself a light-scheme document*, in a `<meta>` and again in a
+`:root` rule, because most clients read the meta and Gmail strips `<head>` but keeps a
+`<style>`. That is what stops Apple Mail, Outlook and Gmail's webmail inverting it at all.
+
+*The banner is a table cell with a `bgcolor` attribute*, not a styled `<div>`. A client that
+inverts anyway has to override an HTML attribute rather than a CSS declaration, which is the
+last lever that still works where `color-scheme` is ignored. The logo is centred in it, so a
+band wider than the picture reads as a letterhead rather than as a picture with space beside
+it.
+
+*The card is a full HTML document now rather than a fragment*, for the plain reason that there
+was no `<head>` to put any of this in.
+
+Baseline `BR-V1.39-2026-09-21`.

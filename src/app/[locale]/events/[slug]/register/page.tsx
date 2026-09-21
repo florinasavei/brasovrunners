@@ -161,6 +161,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * and matched against the one literal it may be.
    */
   const tooFast = (fields ?? "").split(",").includes("tooFast");
+  /**
+   * The per-address throttle, refused out loud since §217 closed the last silent drop. Like
+   * the two above it is about nothing the person typed, so it is read from the raw parameter
+   * and matched against the one literal it may be.
+   */
+  const throttled = (fields ?? "").split(",").includes("throttled");
 
   // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
   const latestBirthDate = now.toISOString().slice(0, 10);
@@ -330,7 +336,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               tabIndex={-1}
               sx={{ mb: 2 }}
             >
-              <AlertTitle>{tooFast ? t("errors.tooFastTitle") : t("errors.title")}</AlertTitle>
+              <AlertTitle>
+                {throttled ? t("errors.throttledTitle") : tooFast ? t("errors.tooFastTitle") : t("errors.title")}
+              </AlertTitle>
               {/*
                 The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
                 înscrie man!").
@@ -345,6 +353,10 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {captchaFailed ? (
                 t("errors.captcha")
+              ) : throttled ? (
+                // Their own address, their own count: this tells them about themselves and
+                // nothing about who else is registered, which is the oracle §19.4 forbids.
+                t("errors.throttled")
               ) : tooFast ? (
                 /*
                   The anti-bot refusal, said **here** and not only beside the button (§217).

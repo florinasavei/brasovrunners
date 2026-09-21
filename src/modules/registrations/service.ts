@@ -643,10 +643,25 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    * typed — otherwise `ana.pop+1@`, `ana.pop+2@` and `anapop@` are three allowances for one
    * mailbox, which is the flood this exists to stop.
    *
-   * Refused the same way the honeypot and the timing check are refused: the generic success of
-   * BR-REQ-031-01 criterion 3. A distinct "you are being rate limited" would tell a script
-   * exactly which defence it tripped and how long to wait, and the participant whose first
-   * submission worked has already had their email.
+   * **Refused out loud, like everything else on this form since §217** — and this one was
+   * missed when the rest was fixed, which is the whole reason it is worth a paragraph.
+   *
+   * It used to return the generic success, justified in these words: "refused the same way the
+   * honeypot and the timing check are refused". §217 reversed both of those, and left this
+   * pointing at a rule that no longer existed. So the sixth submission in an hour produced no
+   * registration, no email, no log line, and the "check your email" screen — the precise
+   * failure that cost two participants, still live on the one guard nobody looked at.
+   *
+   * It leaks nothing. The bucket is keyed on the canonical identity of the address they have
+   * just typed, so being told "you have sent several of these" is being told about themselves;
+   * it says nothing about whether anybody else is registered, which is the oracle §19.4
+   * actually forbids. The contact form has answered this way from the start, and
+   * `rate-limit/service.ts` says why in as many words: "the sixth is told so plainly, because
+   * a person is not a bot."
+   *
+   * Five an hour is also reachable by ordinary use — a re-test, a second family member on one
+   * mailbox, somebody who cancelled and signed up again — which is exactly who must not be
+   * met with silence.
    *
    * Staff-entered registrations skip it, like the spam checks above: an Administrator adding
    * people at a desk is the case this must not obstruct, and they are already authenticated
@@ -654,7 +669,15 @@ export async function submitRegistration<T extends Record<string, unknown>>(
    */
   if (origin.source === "PUBLIC") {
     const verdict = await consumeRateLimit(db, "registration-submit", identity.canonicalEmail, now);
-    if (!verdict.allowed) return { ok: true };
+    if (!verdict.allowed) {
+      // The event and the verdict, never the address (§14.5) — as the anti-bot refusals log.
+      console.warn(`[registration] refused as throttled, event ${event.id}`);
+      throw new DomainError(
+        "VALIDATION_ERROR",
+        `too many submissions from this identity; retry after ${verdict.retryAfter}s`,
+        ["throttled"],
+      );
+    }
   }
 
   /**
@@ -737,7 +760,23 @@ export async function submitRegistration<T extends Record<string, unknown>>(
         The throttle in front of the form is what keeps this from being a mailer: the same person
         can only ask so often (§19.4), and each message goes to the address that asked for it.
       */
-      const messageType = deriveAllowedResendMessageType(existing.status);
+      /*
+        A waiting-list entry has nothing to *re-send* and still owes an answer (§217).
+
+        `deriveAllowedResendMessageType` returns null for WAITLISTED, and it is right to: the
+        backoffice's "send it again" hands somebody a link they have to act on, and a person
+        queued for a place has no link and nothing to do. But this is not the backoffice — it
+        is somebody typing their address into the form a second time because they are not sure
+        the first time worked, and answering that with the "check your email" screen and no
+        message is the §217 failure exactly.
+
+        So the public path sends `WAITLIST_JOINED` again, which is the message that answers the
+        question actually being asked: you are on the list, this is your position, nothing is
+        owed from you. The throttle above is what keeps this from becoming a mailer.
+      */
+      const messageType = existing.status === "WAITLISTED"
+        ? ("WAITLIST_JOINED" as const)
+        : deriveAllowedResendMessageType(existing.status);
       if (messageType === "VERIFY_REGISTRATION_EMAIL") {
         await enqueueVerificationEmail(tx, participant, existing, now);
       } else if (messageType) {
