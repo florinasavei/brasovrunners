@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildTemplateContent } from "@/modules/notifications/templates";
 import { renderBilingual } from "@/modules/notifications/templates";
 
 /**
@@ -39,5 +40,39 @@ describe("§189 the race number is bold, and only this codebase can ask for bold
     expect(html).toContain("&lt;b&gt;");
     expect(html).not.toContain("<b>Popescu</b>");
     expect(html).not.toContain("<strong>Ana</strong>");
+  });
+});
+
+/**
+ * §237 — the race number is in the message, and says when it can still change.
+ *
+ * §214 stopped writing `bib_number` until registration closes, and the renderer read only
+ * that column — so a confirmation went out with a QR, a check-in code and no number, to
+ * somebody who had been looking at their number since the day they registered. Absent reads
+ * as "you have not been given one".
+ */
+describe("§237 the number in the message", () => {
+  it("prints the provisional number and qualifies it", () => {
+    const content = buildTemplateContent(
+      "REGISTRATION_CONFIRMED",
+      "ro",
+      { participantName: "Anna", eventTitle: "Cros", bibNumber: 2, bibProvisional: true },
+      undefined,
+    );
+    const text = content.paragraphs.join(" ");
+    expect(text).toContain("2");
+    expect(text).toContain("provizoriu");
+  });
+
+  it("says nothing about provisionality once the number is settled", () => {
+    // After the close the number cannot move, so qualifying it would be noise — and worse,
+    // it would invite somebody to wait for a second number that is never coming.
+    const content = buildTemplateContent(
+      "REGISTRATION_CONFIRMED",
+      "ro",
+      { participantName: "Anna", eventTitle: "Cros", bibNumber: 2 },
+      undefined,
+    );
+    expect(content.paragraphs.join(" ")).not.toContain("provizoriu");
   });
 });

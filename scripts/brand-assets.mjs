@@ -56,6 +56,32 @@ const OUTPUTS = [
     background: "#ffffff",
   },
   {
+    source: "public/brand/logo.svg",
+    target: "public/brand/logo-email-banner.png",
+    width: 1200,
+    background: "#ffffff",
+    /*
+      The email's letterhead, edge to edge (§239; the owner: "the email banner must be
+      edge-to-edge").
+
+      The header used to be a white table cell with a 180-pixel logo centred in it, and in
+      Gmail's dark theme that is not what arrives: the client re-colours the cell and cannot
+      re-colour the raster, so the white band shrank to a white rectangle the size of the
+      picture — a sticker on a dark wall, which is the exact thing §189 and §218 each tried
+      to be rid of. The band cannot be defended with CSS in a client that ignores
+      `color-scheme`.
+
+      So the band *is* the picture. White canvas, lockup centred, the full width of the
+      600-pixel card at 2× for a retina screen. A client may invert everything around it;
+      it cannot invert the inside of a PNG, and there is no longer any edge between the two
+      whites for it to expose.
+
+      With images blocked the `alt` reads the club's name and the cell's own white
+      `bgcolor` is still underneath, which is where this started.
+    */
+    canvas: { height: 340, inner: { width: 620, height: 210 } },
+  },
+  {
     source: "public/brand/logo-white.svg",
     target: "src/theme/pdf/logo-white.png",
     width: 720,
@@ -77,9 +103,23 @@ const OUTPUTS = [
   },
 ];
 
-for (const { source, target, width, background } of OUTPUTS) {
+for (const { source, target, width, background, canvas } of OUTPUTS) {
   const svg = await readFile(source);
-  const raster = sharp(svg, { density: 600 }).resize({ width, fit: "inside" });
+  const raster = canvas
+    ? // A banner: the lockup fitted inside its own box, then centred on the full canvas, so
+      // the white margin around it belongs to the image rather than to a mail client's CSS.
+      sharp(
+        await sharp(svg, { density: 600 })
+          .resize({ width: canvas.inner.width, height: canvas.inner.height, fit: "inside" })
+          .png()
+          .toBuffer(),
+      ).resize({
+        width,
+        height: canvas.height,
+        fit: "contain",
+        background,
+      })
+    : sharp(svg, { density: 600 }).resize({ width, fit: "inside" });
   if (background) raster.flatten({ background });
   const png = await raster.png({ compressionLevel: 9, palette: background !== null }).toBuffer();
   await writeFile(target, png);

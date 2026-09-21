@@ -48,7 +48,27 @@ function followingIds(dates: readonly SeriesDate[], currentId: string): string[]
 }
 
 export function SeriesScopeProvider({ dates, currentId, children }: { dates: readonly SeriesDate[]; currentId: string; children: ReactNode }) {
-  const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set());
+  /*
+    Every other date is ticked when the editor opens (§240; the owner: "by default when I
+    edit a repeated event, I wanna edit all!").
+
+    It opened on "just this date", which is what a calendar does — and which is wrong for
+    what this club actually edits. A weekly run is one event repeated: the description, the
+    place, the rules and the programme are the series, not the date. Fixing a typo on one
+    Monday and leaving it on the other seven is the mistake that is easy to make and hard to
+    notice, and the club has eight Mondays on the board.
+
+    The reverse mistake is louder, which is the reason this is the safer default: the ticks
+    are in the header, above the save, and the box over the button says in words how many
+    dates the save reaches. Somebody who means one date unticks the rest, or presses
+    "Niciuna", and is told what they chose before they press Save.
+
+    What travels is still only what was changed, and a date moved or cancelled on its own
+    stays that way — the scope widens, the merge rules do not (§131).
+  */
+  const [ticked, setTicked] = useState<ReadonlySet<string>>(
+    () => new Set(dates.filter((date) => date.id !== currentId).map((date) => date.id)),
+  );
   const value = useMemo<ScopeState>(() => {
     const others = dates.filter((date) => date.id !== currentId).map((date) => date.id);
     const following = followingIds(dates, currentId);

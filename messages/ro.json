@@ -395,7 +395,9 @@
       "columnBib": "Număr de concurs (BIB)",
       "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
       "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
-      "bibHeldNow": "Are rezervat numărul {number}. Scrie altul mai jos ca să îl schimbi — numărul devine definitiv și îi ajunge pe email.",
+      "bibHeldNow": "Numărul de concurs: {number} — provizoriu până la închiderea înscrierilor.",
+      "bibNone": "Nu are încă un număr de concurs.",
+      "bibChange": "Schimbă numărul",
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
       "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
@@ -620,7 +622,7 @@
         "selectNone": "Niciuna",
         "open": "Deschide data de {date}"
       },
-      "repeatOfNote": "Ce schimbi aici — o anulare, alt loc, altă oră — privește doar această dată, dacă nu alegi altfel la Salvează.",
+      "repeatOfNote": "Salvarea ajunge, din start, pe toate datele seriei — bifele de sus și caseta de la Salvează arată exact pe care. O anulare, alt loc sau altă oră rămân doar aici dacă le debifezi pe celelalte.",
       "series": {
         "kicker": "Seria „{title}”",
         "editing": "Editezi data de {date}",
@@ -1918,14 +1920,18 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele.",
     "emailNoPaste": "Scrie adresa de mână aici — copierea din câmpul de deasupra n-ar verifica nimic.",
     "emailAllowPaste": "Nu poți scrie de mână? Lipește oricum",
+    "emailInvalid": "Asta nu pare o adresă de email. Verifică literele și semnul @.",
+    "emailSuggestion": "Ai vrut să scrii {address}?",
+    "emailUseSuggestion": "Da, corectează",
     "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
     "confirm": {
       "title": "Confirmă adresa de email",
-      "prompt": "Apasă butonul de mai jos pentru a confirma adresa de email și a continua înscrierea.",
+      "prompt": "Îți confirmăm adresa de email. Dacă nu se întâmplă nimic în câteva secunde, apasă butonul.",
       "action": "Confirmă",
+      "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată"
     },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
-import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
+import { buildOutgoingEmail, buildTemplateContent, type TemplateData } from "@/modules/notifications/templates";
 
 /**
  * BR-REQ-080-01 — message coverage. Criterion 3: "no message type lacks a template in either
@@ -138,5 +138,62 @@ describe("BR-REQ-080-01 message templates", () => {
     });
 
     expect(email.html).not.toContain("<script>");
+  });
+});
+
+/**
+ * §239 — every participant message ends with the same links.
+ *
+ * They were built per template, so which links a message carried depended on which message it
+ * was, and the address confirmation — the first mail anybody gets — carried none. The owner: "I
+ * need more links in that email."
+ */
+describe("§239 the links every message carries", () => {
+  const WITH_URLS: TemplateData = {
+    ...DATA,
+    eventUrl: "https://example.test/ro/evenimente/cros",
+    eventRulesUrl: "https://example.test/ro/evenimente/cros#rules",
+    eventScheduleUrl: "https://example.test/ro/evenimente/cros#schedule",
+    eventsUrl: "https://example.test/ro/evenimente",
+    contactUrl: "https://example.test/ro/contact",
+  };
+
+  it("puts them on the address confirmation, which had none", () => {
+    const content = buildTemplateContent(
+      "VERIFY_REGISTRATION_EMAIL",
+      "ro",
+      WITH_URLS,
+      "https://example.test/ro/confirm/x",
+    );
+    const urls = (content.links ?? []).map((link) => link.url);
+    expect(urls).toContain(WITH_URLS.eventUrl);
+    expect(urls).toContain(WITH_URLS.eventRulesUrl);
+    expect(urls).toContain(WITH_URLS.eventsUrl);
+    expect(urls).toContain(WITH_URLS.contactUrl);
+  });
+
+  it("names each destination once, keeping the template's own wording", () => {
+    // The reminder already links the event page in words that fit its sentence; the shared
+    // list must not append a second link to the same address under a different label.
+    const content = buildTemplateContent("EVENT_REMINDER", "ro", WITH_URLS, undefined);
+    const urls = (content.links ?? []).map((link) => link.url);
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it("drops what there is nothing to point at", () => {
+    // No rules written and no programme on this event: neither link is invented.
+    const content = buildTemplateContent(
+      "VERIFY_REGISTRATION_EMAIL",
+      "ro",
+    { ...DATA, eventsUrl: WITH_URLS.eventsUrl },
+      undefined,
+    );
+    expect((content.links ?? []).every((link) => !link.url.includes("#"))).toBe(true);
+  });
+
+  it("leaves the club's archive copy alone", () => {
+    // Not a participant's message: a manage link here would open somebody else's registration.
+    const content = buildTemplateContent("DECLARATION_ARCHIVE", "ro", WITH_URLS, undefined);
+    expect((content.links ?? []).some((link) => link.url === WITH_URLS.contactUrl)).toBe(false);
   });
 });

@@ -222,47 +222,57 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
                   refuses a change, and a box that always refuses invites the press. The number
                   itself is on the journey above. */}
               {registration.bibNumber === null ? (
-                <form action={setBibNumberAction}>
-                  {deskHidden}
-                  {/*
-                    The number this runner already holds, said before the box that changes it
-                    (§230; the owner: "this input does not make any sense now! Amalia already
-                    has number 2 reserved").
+                /*
+                  The number, and the way to change it folded underneath (§232; the owner: "I
+                  wanna simplify that part with the BID changing").
 
-                    Since §214 a place-holding registration carries a **provisional** number
-                    from the moment it is made, and `bib_number` stays empty until the window
-                    closes — so this branch, which asks "has a number been settled", was
-                    rendering an empty "give this runner a number" box to somebody who had one
-                    reserved and was showing them the free numbers with theirs left out of the
-                    list. The box is right to be here — a preferential number is still typed by
-                    hand (§105) — and it is a *change*, not a gift, so it says so and shows
-                    what it would replace.
-                  */}
-                  {registration.provisionalBibNumber !== null && (
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      {tr("registrations.bibHeldNow", { number: registration.provisionalBibNumber })}
-                    </Typography>
-                  )}
-                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                    <TextField
-                      name="bibNumber"
-                      type="number"
-                      label={tr("registrations.bibNumber")}
-                      size="small"
-                      defaultValue={registration.provisionalBibNumber ?? ""}
-                      slotProps={{ htmlInput: { min: 1, max: 99999 } }}
-                      sx={{ width: 140 }}
-                    />
-                    <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
-                      {tr("desk.saveBib")}
-                    </Button>
-                  </Stack>
-                  {/* A preferential number is picked among the free ones (§105): the first free
-                      numbers, and the runner is emailed the one that is saved. */}
-                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                    {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                  It had grown into four things stacked up — a sentence, a prefilled box, a
+                  button and a list of every free number at the event — for a screen whose
+                  question is almost always just "what number does this person have". So the
+                  answer is one line, and the change is a `<details>` that opens on the rare
+                  occasion somebody wants it: the same idiom the registrations list uses for
+                  its destructive verbs and the public form for its optional groups, which
+                  costs no client island and opens with JavaScript off.
+
+                  Changing it by hand is still §105's preferential number, and still settles
+                  it (§230) — which is why the free numbers stay, inside, where somebody who
+                  has decided to change it can read them.
+                */
+                <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
+                  <Typography variant="body2">
+                    {registration.provisionalBibNumber !== null
+                      ? tr("registrations.bibHeldNow", { number: registration.provisionalBibNumber })
+                      : tr("registrations.bibNone")}
                   </Typography>
-                </form>
+                  <Box
+                    component="details"
+                    sx={{ "& > summary": { cursor: "pointer", py: 1, minHeight: 44 } }}
+                  >
+                    <Typography component="summary" variant="body2" color="primary">
+                      {tr("registrations.bibChange")}
+                    </Typography>
+                    <form action={setBibNumberAction}>
+                      {deskHidden}
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center", mt: 1 }}>
+                        <TextField
+                          name="bibNumber"
+                          type="number"
+                          label={tr("registrations.bibNumber")}
+                          size="small"
+                          defaultValue={registration.provisionalBibNumber ?? ""}
+                          slotProps={{ htmlInput: { min: 1, max: 99999 } }}
+                          sx={{ width: 140 }}
+                        />
+                        <Button type="submit" variant="outlined" sx={{ minHeight: 44 }}>
+                          {tr("desk.saveBib")}
+                        </Button>
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+                        {tr("desk.bibFree", { numbers: freeBibs.join(", ") })}
+                      </Typography>
+                    </form>
+                  </Box>
+                </Stack>
               ) : (
                 <Stack spacing={1} sx={{ alignItems: "flex-start" }}>
                   <Typography variant="body2" color="text.secondary">

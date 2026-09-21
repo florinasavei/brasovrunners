@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CANONICALIZATION_VERSION,
@@ -158,5 +160,29 @@ describe("validation", () => {
     expect(canonicalizeEmail(`ana@${unicode.canonicalEmail.split("@")[1]}`).canonicalEmail).toBe(
       unicode.canonicalEmail,
     );
+  });
+});
+
+/**
+ * `DECISIONS.md` §234 — this module runs in a browser, and nothing in it may assume Node.
+ *
+ * It imported `domainToASCII` from `node:url`. Next substitutes a shim whose version answers
+ * `""`, which this function reads as "domain is not valid" — so every address threw on the
+ * client. `EmailTwice` catches that throw as "not an address yet, nothing to compare", so the
+ * live mismatch check of §206 could never fire in the one place it runs. It shipped dead and
+ * nothing noticed, because its failure mode is silence.
+ *
+ * A source-level assertion rather than a behavioural one, because the behaviour is correct
+ * under vitest — which runs in Node, where the import works. The only thing that can catch it
+ * here is the import itself.
+ */
+describe("§234 the canonicalizer is browser-safe", () => {
+  it("imports nothing from node:", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/modules/participants/domain/canonical-email.ts"),
+      "utf8",
+    );
+    const nodeImports = [...source.matchAll(/from\s+"(node:[^"]+)"/g)].map((match) => match[1]);
+    expect(nodeImports, "this module is bundled into a client island").toEqual([]);
   });
 });
