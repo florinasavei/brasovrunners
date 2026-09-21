@@ -21,7 +21,8 @@ import {
 import type { LegalDocumentBody as LegalBody } from "@/modules/legal-documents/domain/content-hash";
 import LegalDocumentForm from "@/modules/legal-documents/ui/LegalDocumentForm";
 import { approveLegalVersionAction, updateLegalVersionAction } from "../actions";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { canManageStaff, canReadContent } from "@/modules/staff-identity/domain/roles";
+import { requireStaff } from "@/modules/staff-identity/session";
 import ButtonLink from "@/shared/ui/ButtonLink";
 
 type Props = {
@@ -64,7 +65,19 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  await requireStaffRole("ADMIN");
+  /*
+    Opened on **reading** (§208, §222), because the list that links here already is.
+
+    The list offers every version to anybody with `canReadContent`, and the version number is
+    the only way in to the text — so gating this page on ADMIN made the list a wall of links
+    that 404 for the very role §208 exists for. The club's published words are the thing an
+    Organizer most needs to read before telling the Administrator which line is wrong.
+
+    Each write control below asks the capability its own Server Action asserts.
+  */
+  const actor = await requireStaff();
+  if (!canReadContent(actor.role)) notFound();
+  const mayWrite = canManageStaff(actor.role);
 
   const t = await getTranslations("Admin");
   const format = await getFormatter();
@@ -198,11 +211,13 @@ export default async function LegalDocumentVersionPage({ params, searchParams }:
             </Alert>
           )}
           <Alert severity="info">{t("legal.readOnlyNotice")}</Alert>
-          <Box>
-            <ButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} variant="contained">
-              {t("legal.nextVersion")}
-            </ButtonLink>
-          </Box>
+          {mayWrite && (
+            <Box>
+              <ButtonLink href={{ pathname: "/admin/legal/new", query: { from: document.id } }} variant="contained">
+                {t("legal.nextVersion")}
+              </ButtonLink>
+            </Box>
+          )}
 
           {document.translations.length === 0 ? (
             <Alert severity="warning">{t("legal.noTranslations")}</Alert>

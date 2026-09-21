@@ -40,3 +40,36 @@ describe("telephone numbers", () => {
     for (const [, dialing] of Object.entries(DIALING_CODES)) expect(dialing).toMatch(/^[1-9]\d{0,3}$/);
   });
 });
+
+/**
+ * §226 — what the box lets through, and why the plus is the one character that must survive.
+ *
+ * The digit filter was written to strip everything that is not a number, and stripping the
+ * leading `+` turned a refusal into a wrong number: `composePhone` reads the plus as "this is
+ * the international form" and then insists on the selected country's dialing code, so a French
+ * number entered under Romania was refused and the person fixed the country. Without it the
+ * same digits fall into the national branch, which prefixes the chosen country blindly.
+ *
+ * A wrong telephone number is worse than a rejected one: nothing ever tells the club.
+ */
+describe("§226 the digits the box keeps", () => {
+  it("keeps a leading plus, so an international number is still judged against the country", () => {
+    // Romania selected, a French number pasted in. Refused — which is the answer that makes
+    // somebody change the country, rather than a number nobody can ring.
+    expect(composePhone("RO", "+33712345678")).toBeNull();
+  });
+
+  it("would have stored a number belonging to nobody without it", () => {
+    // The same digits with the plus gone: this is what the first version of the filter
+    // produced, and it is accepted. Kept as a test so the regression is named rather than
+    // rediscovered — `composePhone` is doing the right thing for a national number here.
+    expect(composePhone("RO", "33712345678")).toBe("+4033712345678");
+  });
+
+  it("is unchanged for every ordinary way a Romanian number is written", () => {
+    // The plus surviving costs nothing: each of these still composes to the same number.
+    for (const typed of ["+40711111111", "0711111111", "0040711111111", "40711111111", "711111111"]) {
+      expect(composePhone("RO", typed), typed).toBe("+40711111111");
+    }
+  });
+});

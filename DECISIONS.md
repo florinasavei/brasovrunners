@@ -9913,3 +9913,201 @@ number through the sweep, a final draw never lands on a held provisional one, an
 confirmation keeps the number it was shown.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 221. Decided — the club chooses when email leaves (2026-09-21)
+
+**Context.** The owner asked for a switch: messages go out instantly, or only through the
+scheduler.
+
+**Decision.** One `platform_settings` row, `immediate` by default, read by the drain.
+
+The two failure modes are opposite and the club cannot know in advance which one it is in.
+`immediate` is what has always happened — `drainOutboxAfterResponse` sends after the response,
+so a confirmation link arrives in seconds, which is why a registration feels instant. Its cost
+is a burst: eighty people registering when a popular race opens is eighty sends in a few
+minutes, which is where a daily allowance goes fastest and where a provider's rate limiter
+answers 429. `scheduled` sends nothing from the web request and leaves it all to the pinger —
+late by up to fifteen minutes by day (§68), and in exchange paced, predictable, and unable to
+take the site's own response times with it.
+
+*Superadministrator only*, unlike the Mailgun plan beside it, which is the Administrator's
+(§100). The plan is a fact about the club's account that its data controller knows; this is an
+operational trade that makes **every** message on the platform arrive later, and getting it
+wrong is invisible until somebody asks why their link took a quarter of an hour.
+
+*The setting is read inside `after()`, never at the call site.* `enqueueEmail` calls the drain
+from within the caller's transaction, and a settings read there would put one more query
+between a registration and its commit. Inside `after()` the response has gone and the
+transaction is closed, so it costs one indexed lookup on a path that was about to open a
+connection anyway. Nothing is lost when the answer is `scheduled`: the row stays PENDING and
+whoever reaches it first claims it under `FOR UPDATE SKIP LOCKED`.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 222. Decided — §208 finished: every control asks the question its own action asks (2026-09-21)
+
+**Context.** §208 said it plainly and left it: "the read-only screens were verified by reading
+the gates, not by walking every control on every page… the remaining pages are worth a pass."
+This is the pass — one reader per admin page, twenty-four of them, each finding then attacked
+by a verifier that had to refute it against `roles.ts`. Thirty findings, seventeen survived.
+
+**What it found, and the two shapes it came in.**
+
+*A control rendered and then refused.* The Mailgun plan form and the contact-recipients form on
+`/admin/emails`, the "create album" button, the withdraw and delete buttons on the legal list,
+"start the next version", and three event-series controls. None is a security hole — every
+action asserts again on the server (BR-REQ-060-01) — and each is a person pressing a button on
+a screen they were invited to open and being told their role does not permit it.
+
+*A screen an Organizer may read and could not open*, which is worse, because the work simply
+cannot be done. `/admin/pages/[id]` and `/admin/legal/[id]` both gated on **writing**, so the
+one role §208 exists for could see the list and open nothing on it. "Organizatorul vede cam tot
+(dar în readonly), practic Dani îi zice Amaliei să modifice X" is impossible if X cannot be
+read.
+
+**Decision.** *Every screen opens on `canReadContent`; every control inside is guarded on the
+capability its own Server Action asserts.* Stated that way rather than as a list of fixes,
+because the list is what drifts — the general rule is the thing worth keeping.
+
+The standing-page editor is the case that proves it. One flag, `mayEdit`, answered two
+questions, and answered one of them wrongly: it read `canEditEventFields`, while `savePage`
+asserts `canEditTexts`. Opening the screen without splitting that flag would have *created* a
+rendered-but-refused control where there had been a locked door. `deletePage` genuinely does
+assert `canEditEventFields`, so delete keeps the wider gate — an Organizer may delete a
+standing page and not edit its words, which is odd and is what §207's deliberate gap says.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 223. Decided — the telephone box takes digits and nothing else (2026-09-21)
+
+**Context.** "In the phone field I should be able to type only numbers!"
+
+**Decision.** Non-digits are **stripped as they are typed**, not refused. The country code is
+chosen in the select beside the box, so what belongs in it is the national number; and a person
+pasting `0721 234 567` or `+40 721-234-567` out of their own contacts keeps the digits and
+loses the punctuation, where a refusal would leave them retyping a number they had correctly in
+the clipboard. `composePhone` on the server already strips exactly this, so the box now shows
+the answer the server would have reached.
+
+*The `pattern` still admits separators, and that is deliberate.* With JavaScript off nothing
+strips anything, and the server accepts a number written with spaces. A pattern narrowed to
+digits would make the browser refuse, without JavaScript, a number the server would have taken
+— the form working worse for the person least able to recover from it (`AGENTS.md` §1.5).
+
+`inputMode` moves from `tel` to `numeric`: a telephone keypad offers `+ * #`, and none of them
+can be typed here any more.
+
+## 224. Decided — the screen that says "check your email" says which one (2026-09-21)
+
+**Context.** "On this page I should show the email again", and "I should underline that 5
+minutes rule".
+
+**Decision.** The address is the one fact that screen was missing, and it is the cheapest catch
+there is. "Check your email" is useless to somebody who typed `@gmail.con` — they check the
+inbox they meant, find nothing, and conclude the site is broken. QA's outbox holds three bounced
+messages to that exact misspelling (§206), and one of the owner's own registrations went to a
+domain with a letter added. Reading their own address back is what stops them walking away.
+
+*In a sealed cookie of its own, never the URL.* Nothing a participant typed goes into a URL,
+which every proxy in between logs (§14.5), so the redirect's query string is out. It is not the
+draft cookie either: that one is cleared on a successful submit and carries twenty fields
+including health notes. This carries one field, is written only on success, and uses the same
+key and the same ten minutes, because an address is still personal data sitting in a browser.
+
+*The wait is bold, and said once.* It was on the screen three times — the stepper's sentence,
+the alert, and the resend prompt beneath — which is how a sentence stops being read. The
+stepper keeps "we have sent you a confirmation link" and gives up its copy of the delay; the
+alert carries the address, then the five minutes in bold, then the spam advice in plain text.
+Somebody who does not know a wait is normal fills the form in again within thirty seconds, and
+§218 is what that used to cost them.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 225. Decided — the declaration sets its fill-ins in bold (2026-09-21)
+
+**Context.** "În declarație trebuie să fac bold la datele care sunt din binding (datele
+participantului, datele concursului)."
+
+**Decision.** He is right, and the reason is not decoration. A declaration is one approved,
+hashed text with a handful of named blanks filled in for one person and one race (§95). What
+the signer has to check before signing is exactly the blanks — their own name, who declares,
+the identity document, the race, its date and its place. Everything around them was approved
+once and reads the same for everybody. Setting the two apart is the difference between reading
+a contract and checking a form.
+
+*The merge returns segments now, not a string.* `mergeTextSegments` says which spans came out
+of a `{{field}}`, and `mergeText` is that function joined back together — defined as such, so
+the two cannot come to disagree about what a merge produces.
+
+*The dotted blank counts as filled*, because it occupies a field too. On the blank form the
+desk prints, the emphasised parts are then the gaps somebody writes into, which is what a
+paper form does with a rule under a space.
+
+*Nothing about the signature changes.* `content_sha256` is computed over the **unmerged**
+template (§12.5, §46) and that is what an acceptance binds to. This is a rendering of the same
+template; no approved text and no recorded signature is touched.
+
+**A hardening that came free.** On screen the merge now happens **inside** `LegalDocumentBody`,
+after the inline marks are parsed rather than before. Merging first fed a participant's own
+name to `parseInline`, so a name written with the square-bracket link mark was read as a link — the parser
+restricts the protocol, so it was never script, but a person's own data has no business
+becoming markup. A filled-in value is plain text now, always, and a `{{field}}` written inside
+a link's label still merges inside that link, where the author put it.
+
+**In the PDF** the paragraph is drawn a run at a time with pdfkit's `continued`, so the line
+breaking and the justification stay the paragraph's rather than each run's, and the two
+callers hand the renderer the template and the values apart instead of a merged body.
+
+Tests: `tests/unit/legal-documents/merge-fields.test.ts` — which spans are filled, the blank
+counting as one, an unknown name staying plain, and the join being exactly `mergeText`.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 226. Decided — two bugs in one field, and only one of them was visible (2026-09-21)
+
+**Context.** The owner, with a screenshot: "the brasov runners text is overlapping with the
+placeholder here". Looking into it turned up a second bug underneath, which nobody had seen and
+which was much worse.
+
+**1. The label sat on top of the text.** MUI floats a label by watching the input's own events,
+and `ClubForMember` writes the value **imperatively** through a ref — which fires none of them.
+So the field had the club's name in it and the label was still in its resting position, the two
+drawn over each other. That is the price of letting the DOM own the value, and §211 is why
+holding it in state is not an option here.
+
+`shrink` is forced only when there is something to shrink for, and left undefined otherwise so
+MUI keeps deciding on focus and blur as it does everywhere else. Forcing `false` would be worse
+than the bug: the label would refuse to move even while somebody typed.
+
+**2. The digit filter was silently corrupting telephone numbers.** §223 stripped every
+non-digit as it was typed, the `+` among them. `composePhone` reads a leading plus as "the
+international form was typed" and then *insists* the number carries the selected country's
+dialing code — so Romania selected and a French `+33712345678` pasted in was **refused**, and
+the person fixed the country. With the plus gone the same digits fall into the national-number
+branch, which bolts the chosen country's code onto whatever it is given: the refusal became a
+silently accepted `+4033712345678`, a number belonging to nobody.
+
+A wrong telephone number is worse than a rejected one, because nothing ever tells the club —
+they find out on race morning, ringing somebody who does not answer. The filter keeps a leading
+plus now and strips everything else, which is still "only numbers" to anybody typing and is the
+one character that changes what the rest of them mean.
+
+*It was found by a test the owner had already patched.* The end-to-end spec asserted the box
+held `+40711111111`; the filter made it `40711111111`, and the natural repair was to update the
+expectation — which he did, and which was correct for the code as it then stood. That assertion
+was the only thing in the repository pointing at the plus disappearing, so the note beside it
+now says that a failure there is a stored-number bug rather than a test to adjust.
+
+**Worth stating once, because it has happened twice in two days.** §211, §215's missing ref and
+this label are all the same trade: an island over a server-rendered form must let the DOM own
+the value, and every consequence of that — the label, the validation state, anything MUI infers
+from events — has to be driven by hand. That is the cost of the rule, and it is still cheaper
+than wiping what somebody typed before hydration.
+
+Tests: `tests/unit/registrations/phone.test.ts` — the French number under Romania stays
+refused, the corrupted form is pinned as what the bug produced, and the five ordinary ways a
+Romanian number is written all still compose to the same E.164. The end-to-end spec asserts the
+label carries MUI's `shrink` class, which is the overlap stated as a fact rather than a
+screenshot.
+
+Baseline `BR-V1.39-2026-09-21`.

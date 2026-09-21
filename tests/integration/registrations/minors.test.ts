@@ -11,6 +11,7 @@ import { declarantValues, findSignedDeclaration, signedDeclarationEntry } from "
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
 
 /**
  * BR-REQ-031-04 criterion 9 (`DECISIONS.md` §108) — a parent registers a minor online.
@@ -126,7 +127,11 @@ describe("a minor registered by a parent (§108)", () => {
     const signed = await findSignedDeclaration(db, minor.id);
     expect(signed?.guardianName).toBe("Ion Popescu");
     const entry = await signedDeclarationEntry(db, signed!, event.id, LABELS);
-    const text = entry!.body.sections.flatMap((s) => s.paragraphs).join(" ");
+    // The entry carries the approved template and its fill-ins apart, so the PDF can set the
+    // filled-in parts in bold (§225). What a reader sees is the two merged, which is what is
+    // asserted here — the same function the renderer and the screen both use.
+    const merged = mergeLegalBody(entry!.body, entry!.values ?? {});
+    const text = merged.sections.flatMap((s) => s.paragraphs).join(" ");
     expect(text).toContain("Subsemnatul/a Ion Popescu (părinte/tutore legal al minorului Maria Popescu), posesor/posesoare al actului de identitate BV 654321");
     expect(text).not.toContain("{{");
 

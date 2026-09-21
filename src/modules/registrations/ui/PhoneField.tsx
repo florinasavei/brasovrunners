@@ -54,6 +54,20 @@ import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, splitPhone } from "..
  * turning a box red on the first digit of a number that is obviously not finished yet is
  * scolding somebody for typing.
  */
+/**
+ * Everything but the digits, with one exception: a `+` at the very front (§223, §226).
+ *
+ * It is the one non-digit that changes what the number *means*. `composePhone` reads a leading
+ * plus as "the international form was typed" and then requires the chosen country's dialing
+ * code, which is what refuses a French number entered under Romania — and without the plus the
+ * same digits fall into the national branch and get that country's code bolted on instead.
+ * A `+` anywhere else is punctuation and goes with the rest.
+ */
+function onlyDigits(value: string): string {
+  const plus = value.startsWith("+") ? "+" : "";
+  return plus + value.replace(/\D+/g, "");
+}
+
 export default function PhoneField({
   name,
   label,
@@ -143,7 +157,34 @@ export default function PhoneField({
         type="tel"
         label={label}
         defaultValue={initialNational}
-        onChange={(event) => setNational(event.target.value)}
+        /*
+          Digits only, in the box — **and a leading `+` survives** (§223, §226; the owner: "in
+          the phone field I should be able to type only numbers!").
+
+          The country code is chosen in the select beside this, so what belongs here is the
+          national number and nothing else. Anything that is not a digit is **stripped as it
+          is typed** rather than refused: a person pasting "0721 234 567" or "+40 721-234-567"
+          from their own contacts gets the digits kept and the punctuation dropped, where a
+          refusal would leave them re-typing a number they had correctly in the clipboard.
+          `composePhone` on the server already does exactly this stripping — this only makes
+          the box show the same answer the server would reach.
+
+          **The leading `+` is kept, and dropping it corrupted numbers** (§226). `composePhone`
+          reads it as "this is the international form" and then *insists* the number starts
+          with the chosen country's code — so Romania selected and a French `+33…` pasted in
+          was refused, and the person fixed the country. Without the plus the same digits fall
+          into the national-number branch, which prefixes the chosen country blindly: the
+          refusal became a silently stored `+4033…`, a number that belongs to nobody. A wrong
+          telephone number is worse than a rejected one, because nothing ever tells the club.
+
+          Written to the DOM, never through state (§211): the input stays uncontrolled, so
+          nothing can replace what somebody typed before hydration.
+        */
+        onChange={(event) => {
+          const digits = onlyDigits(event.target.value);
+          if (event.target.value !== digits) event.target.value = digits;
+          setNational(digits);
+        }}
         onBlur={() => setTouched(true)}
         required={required}
         fullWidth
@@ -154,8 +195,18 @@ export default function PhoneField({
         helperText={liveInvalid && !error ? (invalidLabel ?? helperText) : helperText}
         slotProps={{
           htmlInput: {
-            inputMode: "tel",
-            // Digits, with the separators people type; the server strips them and checks the count.
+            // `numeric` rather than `tel`: a telephone keypad offers `+ * #`, and none of
+            // them can be typed here any more (§223).
+            inputMode: "numeric",
+            /*
+              Digits only — and the pattern still has to admit the separators.
+
+              With JavaScript off nothing strips anything, and `composePhone` on the server
+              accepts a number written with spaces or dashes. A pattern narrowed to `[0-9]`
+              would make the browser refuse, without JavaScript, a number the server would
+              have taken — which is the form working *worse* for the person least able to
+              recover from it (`AGENTS.md` §1.5).
+            */
             pattern: "[0-9+()./\\s-]{4,20}",
             minLength: 4,
             maxLength: 20,

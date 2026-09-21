@@ -1733,7 +1733,9 @@
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
-    "submittedDelay": "Emailul poate ajunge în până la 5 minute. Verifică și folderul de spam înainte să te înscrii din nou.",
+    "submittedTo": "L-am trimis la adresa:",
+    "submittedDelay": "Poate dura până la 5 minute să ajungă.",
+    "submittedSpam": "Dacă nu îl vezi, verifică și folderul de spam înainte să te înscrii din nou.",
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
@@ -1863,7 +1865,7 @@
       },
       "now": {
         "details": "Completează formularul. După trimitere îți scriem pe email ca să confirmi adresa.",
-        "confirm": "Ți-am trimis un email cu un link de confirmare. Poate dura până la 5 minute să ajungă — verifică și folderul de spam înainte să te înscrii din nou.",
+        "confirm": "Ți-am trimis un email cu un link de confirmare.",
         "declare": "Mai rămâne un pas: citește și semnează declarația — aici, sau pe hârtie la masa de înscrieri în ziua cursei. Locul tău este rezervat. După ce semnezi, îți trimitem pe email declarația semnată (PDF) și numărul de concurs — de obicei în câteva minute, cel târziu într-o oră.",
         "done": "Înscrierea ta este confirmată. Ne vedem la start!"
       }

@@ -128,6 +128,40 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     // The group is open as the page loads; the tick is reachable without opening anything.
     await page.locator('[name="clubMemberDeclared"]').check();
 
+    /*
+      Ticking it fills the club in and locks it (§215) — and this assertion exists because the
+      first version shipped the wrong half of that.
+
+      `ClubForMember` writes the name through a ref onto the real input. MUI forks `inputRef`
+      onto the `<input>`; a missing one leaves `inputRef.current` null, so the write goes
+      nowhere while the field still turns read-only. On screen that is an empty box nobody can
+      type into, under a caption saying it was filled in automatically. Nothing in the type
+      system or the unit suite can see it: the ref is only ever null at runtime, in a browser.
+    */
+    const club = page.locator('[name="clubName"]');
+    await expect(club).toHaveValue("Brașov Runners");
+    await expect(club).toHaveAttribute("readonly", /.*/);
+
+    /*
+      And the label has moved out of the way (§226).
+
+      MUI floats a label from the input's own events, which an imperative write does not fire —
+      so the field had the club's name in it and the label was still drawn across the top of it.
+      `MuiInputLabel-shrink` is the class MUI adds when the label is in its raised position, so
+      asserting it is asserting that the two are not on top of each other.
+    */
+    const clubLabel = page.locator('label[for="f-clubName"]');
+    await expect(clubLabel).toHaveClass(/MuiInputLabel-shrink/);
+
+    // Unticking gives the field back, empty and editable, rather than leaving the club's name
+    // behind in a box that now reads as the entrant's own answer.
+    await page.locator('[name="clubMemberDeclared"]').uncheck();
+    await expect(club).toHaveValue("");
+    await expect(club).not.toHaveAttribute("readonly", /.*/);
+
+    await page.locator('[name="clubMemberDeclared"]').check();
+    await expect(club).toHaveValue("Brașov Runners");
+
     // The timing check answers a too-fast form with the same generic success it gives a real
     // one, so submitting immediately would pass without creating anything.
     await page.waitForTimeout(HUMAN_PAUSE_MS);
@@ -263,6 +297,16 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     // What was typed is still there (`DECISIONS.md` §142) — and not in the address.
     await expect(page.locator('[name="lastName"]')).toHaveValue("Popescu");
     await expect(page.locator('[name="city"]')).toHaveValue("Brașov");
+    /*
+      With its plus. The digit filter (§223) strips punctuation as it is typed and **keeps a
+      leading `+`** (§226), because that character decides how `composePhone` reads the rest:
+      with it, the number must carry the selected country's dialing code; without it, the
+      country's code is bolted on to whatever was typed. Dropping the plus briefly turned a
+      refused French number under Romania into a silently stored `+4033…`.
+
+      So this is `+40711111111` and not `40711111111` — if it ever fails again, the filter has
+      started eating the plus, which is a stored-number bug and not a test to adjust.
+    */
     await expect(page.locator('[name="phone"]')).toHaveValue("+40711111111");
     await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");
     expect(page.url()).not.toContain("Popescu");

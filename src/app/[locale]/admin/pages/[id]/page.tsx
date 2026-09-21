@@ -18,6 +18,7 @@ import {
   allowedTransitions,
   canEditEventFields,
   canEditTexts,
+  canReadContent,
 } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
@@ -49,7 +50,18 @@ export default async function EditPagePage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const actor = await requireStaff();
-  if (!canEditTexts(actor.role)) notFound();
+  /*
+    Opened on **reading**, not on writing (§208, §222).
+
+    This gate was `canEditTexts`, which is a set that deliberately excludes the Organizer
+    (§207) — so the one role §208 was written for could see the pages list and could not open
+    a single page on it. "Organizatorul vede cam tot (dar în readonly), practic Dani îi zice
+    Amaliei să modifice X" is impossible if X cannot be read.
+
+    Every control below asks its own question, and each asks the one its own Server Action
+    asserts — which is the other half of the fix, because they did not.
+  */
+  if (!canReadContent(actor.role)) notFound();
 
   const found = await findPageForEditor(getDb(), id);
   if (!found) notFound();
@@ -61,7 +73,17 @@ export default async function EditPagePage({ params, searchParams }: Props) {
   const isOwnDraft = translations.some((row) => row.authorStaffUserId === actor.id);
   const transitions = allowedTransitions(actor.role, page.editorialStatus, isOwnDraft);
   const incomplete = describeIncompletePageLocales(translations);
-  const mayEdit = canEditEventFields(actor.role);
+  /*
+    Two questions, two capabilities, because the two actions assert different things (§222).
+
+    One flag answered both and answered one of them wrongly: `savePage` asserts
+    `canEditTexts` (service.ts) while this read `canEditEventFields`, which an Organizer has —
+    so the day the screen opened for them they would have been shown the editor and refused on
+    save. `deletePage` really does assert `canEditEventFields`, which is the wider of the two
+    and is left exactly as it is.
+  */
+  const maySave = canEditTexts(actor.role);
+  const mayDelete = canEditEventFields(actor.role);
 
   return (
     <Stack spacing={3}>
@@ -115,7 +137,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
 
       <Divider />
 
-      {mayEdit ? (
+      {maySave ? (
         <form action={savePageAction}>
           <Stack spacing={3}>
             <input type="hidden" name="uiLocale" value={locale} />
@@ -144,7 +166,7 @@ export default async function EditPagePage({ params, searchParams }: Props) {
         off it: an event carries somebody's registration, a page carries only what its author
         typed. Behind a confirmation all the same, because it cannot be undone.
       */}
-      {mayEdit && (
+      {mayDelete && (
         <Box>
           <form action={deletePageAction}>
             <input type="hidden" name="uiLocale" value={locale} />

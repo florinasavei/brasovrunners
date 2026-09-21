@@ -27,11 +27,52 @@ const FIELD_PATTERN = /\{\{\s*([a-zA-Z]+)\s*\}\}/g;
 
 /** Substitute every `{{field}}` in one string; an unknown name is left as written. */
 export function mergeText(text: string, values: MergeValues): string {
-  return text.replace(FIELD_PATTERN, (whole, name: string) => {
-    if (!isMergeField(name)) return whole;
+  return mergeTextSegments(text, values)
+    .map((segment) => segment.text)
+    .join("");
+}
+
+/**
+ * One piece of merged text, and whether it came out of a `{{field}}` (`DECISIONS.md` §225).
+ *
+ * The owner: "în declarație trebuie să fac bold la datele care sunt din binding (datele
+ * participantului, datele concursului)". He is right, and the reason is not decoration. A
+ * declaration is one fixed approved text with a handful of blanks filled in for one person and
+ * one race; what the signer has to check before signing is exactly the filled-in part — their
+ * own name, their identity document, the race and its date. Everything around it is the same
+ * for everybody and was approved once. Setting the fill-ins apart is the difference between
+ * reading a contract and checking a form.
+ *
+ * `mergeText` above is this function joined back together, so the two cannot disagree about
+ * what a merge produces.
+ *
+ * **The dotted blank counts as filled**, because it occupies a `{{field}}` too: on the blank
+ * paper form the desk prints, the places somebody must write by hand are then the emphasised
+ * ones, which is what a paper form does with a rule under a gap.
+ *
+ * None of this touches `content_sha256`. The hash is computed over the **unmerged** template
+ * (§12.5, §46), which is what a signature binds to; this is a rendering of that template and
+ * changes nothing that was approved or signed.
+ */
+export type MergedSegment = { text: string; filled: boolean };
+
+export function mergeTextSegments(text: string, values: MergeValues): MergedSegment[] {
+  const segments: MergedSegment[] = [];
+  let index = 0;
+
+  for (const match of text.matchAll(FIELD_PATTERN)) {
+    const name = match[1];
+    const at = match.index ?? 0;
+    // An unknown name is left as written, and left plain: it is not a blank anybody filled.
+    if (!isMergeField(name)) continue;
+    if (at > index) segments.push({ text: text.slice(index, at), filled: false });
     const value = values[name];
-    return value && value.trim() ? value.trim() : BLANK;
-  });
+    segments.push({ text: value && value.trim() ? value.trim() : BLANK, filled: true });
+    index = at + match[0].length;
+  }
+
+  if (index < text.length) segments.push({ text: text.slice(index), filled: false });
+  return segments;
 }
 
 /** Takes the stored `body_json` as is — an unreadable body merges to no sections, as the renderer shows none. */

@@ -10,6 +10,12 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.39-2026-09-21
 
+- **A telephone number pasted with its country code is judged again, not quietly re-prefixed.** Yesterday's digits-only filter ate the leading plus, which turned “that is a French number, fix the country” into a silently stored number belonging to nobody. And the club field's label no longer sits on top of the club's name. §226.
+- **The declaration sets in bold everything filled in for you** — your name, your identity document, the race and its date — so what a signer has to check stands out from the text that was approved once for everybody. On screen and in the signed PDF. §225.
+- **The “check your email” screen says which address it went to**, and gives the five-minute wait its own bold line instead of repeating it three times. An address read back is what catches “@gmail.con” in the second before somebody walks away. §224.
+- **The telephone box takes digits only**, stripping anything else as it is typed — so a number pasted out of your contacts keeps its digits and loses the punctuation. §223.
+- **An Organizer can open the standing pages and the legal texts at last**, which is what §208 was for and what it did not finish: both screens were gated on *writing*, so the one role meant to read everything could see the lists and open nothing. Every screen opens on reading now, and every button asks the question its own action asks. §222.
+- **The Superadministrator chooses when email leaves** — instantly after the request that queued it, or only on the scheduler. §221.
 - **Two defects in the new race-number code, found by auditing it the same day it was written**: a lapsed hold never gave its number back, so the sequence would have grown permanent holes; and a late confirmation at the desk could be handed a number another walk-in was already holding. §220.
 - **The sixth registration attempt in an hour is told why**, instead of the check-your-email screen with nothing sent. The per-address throttle was the last place still answering a real person with silence — its own comment justified it by pointing at two checks that had already been changed. §218.
 - **Somebody on the waiting list who fills the form again gets an answer**, rather than a promise of an email that had nothing to send. §218.
