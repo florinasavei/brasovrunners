@@ -10274,3 +10274,34 @@ Tests: `tests/e2e/registration-form.spec.ts` — the message is the right one, `
 is false, a press does not leave the page, and correcting the number lifts the refusal.
 
 Baseline `BR-V1.40-2026-09-21`.
+
+## 232. Decided — the race number is one line, and changing it is folded away (2026-09-21)
+
+**Context.** "I wanna simplify that part with the BID changing."
+
+**Decision.** The block had grown, one correct addition at a time, into four things stacked up:
+a sentence explaining what the runner holds, a prefilled input, a save button, and a list of
+every free number at the event. Each was added for a reason — §105's preferential number, §230's
+"say what you would be replacing" — and together they answered a question nobody was asking. The
+question this screen is almost always open for is *what number does this person have*.
+
+So the answer is one line, and the change is a `<details>` underneath it.
+
+*The same idiom the rest of the backoffice uses* for a rare verb: the registrations list folds
+its destructive actions this way and the public form its optional groups. It costs no client
+island, it opens with JavaScript off, and the disclosure triangle says there is more without
+spending a line saying so.
+
+*The free numbers stay — inside.* They are exactly what somebody who has decided to change a
+number needs, and noise to everybody else. Hiding them behind the same press that reveals the
+box puts them where the decision is.
+
+*The sentences are shorter too*, which is half of what "simplify" meant. "Numărul de concurs: 2
+— provizoriu până la închiderea înscrierilor" replaces a sentence that also explained what
+would happen if you typed another one; the box below says that by existing.
+
+Nothing about the rules moved: changing by hand is still §105, it still settles the number and
+releases the provisional one (§230), and the service still refuses a change once the number is
+settled (§173).
+
+Baseline `BR-V1.40-2026-09-21`.

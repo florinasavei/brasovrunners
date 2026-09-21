@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.40-2026-09-21
 
+- **A registration’s race number is one line again.** Changing it by hand is folded underneath, with the free numbers inside where somebody changing it can read them — instead of four controls stacked up for a question that is almost always just “what number does this person have”. §232.
 - **The form refuses an emergency contact that is your own number before you can send it**, and says so correctly — it used to accept the press, come back from the server, and tell you the number was invalid, which it was not. §231.
 - **The “give this runner a number” box knows they already have one.** Since numbers are reserved at registration, that box was rendering empty for somebody holding number 2 and offering the free numbers with theirs missing. It now says which number they hold, comes prefilled, and is a change rather than a gift — and setting one by hand releases the provisional one instead of stranding it. §230.
 - **The confirmation screen no longer claims a registration it did not make.** Filling the form again with an address that is already registered creates nothing — the database forbids a second row — but it re-sends the confirmation with its QR, and the screen said “check your email to confirm your registration”. It now says, to everybody alike, that an email to an address already registered is the existing confirmation. §229.
