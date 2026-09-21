@@ -117,8 +117,8 @@ export async function renderBibImage(input: {
               background: band,
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws the data URI */}
             {design.showLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element -- Satori draws the data URI
               <img src={await logo()} alt="" width={LOGO_WIDTH} height={84} style={{ objectFit: "contain" }} />
             ) : (
               <div style={{ display: "flex" }} />
