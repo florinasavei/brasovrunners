@@ -61,6 +61,8 @@ export type AuditAction =
   | "email_plan.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
+  /** A message's own words, rewritten by the club (§247). */
+  | "email_copy.changed"
   /**
    * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).
    *

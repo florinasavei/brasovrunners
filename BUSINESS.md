@@ -739,6 +739,8 @@ Messages include:
 - a staff invitation: who added the colleague, as what, and where to sign in (`DECISIONS.md` §141);
 - "registration is open", once, to an address left on the event's page before its window — the address kept only until the message is queued (`DECISIONS.md` §146).
 
+The club writes its own wording for any message — the subject and the paragraphs, in each language, from the backoffice, with a preview of the result. What a message *carries* is not editable: the button and its secure link, the QR code, the attached declaration and the sign-off are the platform's, because they are what makes the message work rather than what it says (`DECISIONS.md` §247).
+
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
 
 Newsletters and promotional campaigns require a separate consent model and decision.

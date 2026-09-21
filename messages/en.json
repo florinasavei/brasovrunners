@@ -1527,6 +1527,20 @@
         "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
         "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form."
       },
+      "copy": {
+        "title": "The message's words ({lang}) — the platform's",
+        "editedTitle": "The message's words ({lang}) — written by the club",
+        "subject": "Subject",
+        "paragraphs": "Paragraphs",
+        "paragraphsHelp": "A blank line between paragraphs. **Bold** is written between two asterisks.",
+        "placeholders": "You may use: {list}. A field this message does not carry is left empty — see the preview above.",
+        "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the platform's: they carry tokens and files, not words.",
+        "save": "Save the words",
+        "saving": "Saving…",
+        "reset": "Back to the platform's text",
+        "saved": "The message's words are saved.",
+        "resetDone": "The message uses the platform's text again."
+      },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",
         "intro": "The platform cannot read from Mailgun which plan the account is on, so you say it here — and from here it computes what can still go out today, on /admin/tasks, on /devs and at “Send now”. When you pay for a month of Basic before a race, change it here; when you cancel, change it back.",

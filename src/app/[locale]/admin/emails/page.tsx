@@ -9,14 +9,18 @@ import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbo
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
-import { renderBilingual, type TemplateData } from "@/modules/notifications/templates";
+import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 import { getDb } from "@/db/client";
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
+import { copyFor } from "@/modules/notifications/domain/email-copy";
+import { readEmailCopy } from "@/modules/notifications/email-copy";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
+import EmailCopyEditor from "@/modules/notifications/ui/EmailCopyEditor";
 import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
@@ -45,7 +49,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  await requireStaff();
+  const staff = await requireStaff();
   const { lang, saved, error } = await searchParams;
   const emailLocale: EmailLocale = lang === "en" ? "en" : lang === "ro" ? "ro" : locale;
 
@@ -53,11 +57,17 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // thing anybody opening this page on race day wants to know.
   const db = getDb();
   const now = new Date();
-  const [plan, volume, recipients] = await Promise.all([
+  const [plan, volume, recipients, written] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
     readContactRecipients(db),
+    /*
+      The club's own wording (§247). Read straight through rather than from the send path's
+      half-minute memo: this page is where somebody presses Save and immediately looks at the
+      preview, and showing them what they saved thirty seconds ago would read as a lost edit.
+    */
+    readEmailCopy(db),
   ]);
   const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
@@ -98,6 +108,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
+        {saved === "emailCopy" && <Alert severity="success">{t("emails.copy.saved")}</Alert>}
+        {saved === "emailCopyReset" && <Alert severity="success">{t("emails.copy.resetDone")}</Alert>}
       </Box>
 
       <EmailPlanPanel locale={locale} plan={plan} volume={volume} />
@@ -126,9 +138,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
       </Box>
 
       {types.map((messageType) => {
-        // Bilingual, as it goes out (§96): the chosen language first, the other under a rule.
-        const content = renderBilingual(messageType, emailLocale, sample, actionUrl);
+        // Bilingual, as it goes out (§96): the chosen language first, the other under a rule —
+        // and through the club's own words where it has written some (§247), so the preview is
+        // what a participant will actually receive rather than what the platform ships.
+        const content = renderBilingual(messageType, emailLocale, sample, actionUrl, written.copy);
         const { html } = content;
+        // The platform's own text for this message, as the editor's starting point.
+        const shipped = buildTemplateContent(messageType, emailLocale, sample, actionUrl);
         return (
           <Box
             key={messageType}
@@ -157,6 +173,16 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
               title={t(`emails.types.${messageType}`)}
               sx={{ width: "100%", height: 620, border: 1, borderColor: "divider", borderRadius: 1, mb: 2 }}
             />
+            {/* The words, for whoever writes them (§103, §247). Under the preview it changes. */}
+            {canEditTexts(staff.role) && (
+              <EmailCopyEditor
+                locale={locale}
+                emailLocale={emailLocale}
+                messageType={messageType}
+                written={copyFor(written.copy, messageType, emailLocale)}
+                shipped={{ subject: shipped.subject, paragraphs: shipped.paragraphs }}
+              />
+            )}
           </Box>
         );
       })}

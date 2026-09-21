@@ -1,0 +1,128 @@
+import { z } from "zod";
+import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import type { EmailLocale } from "@/infrastructure/email/adapter";
+
+/**
+ * The club's own wording for a message (`DECISIONS.md` §247; Dani's ask: the templates should
+ * be editable in the backoffice).
+ *
+ * ## What is editable, and what is not
+ *
+ * **The words: the subject and the paragraphs.** Everything else the message is made of stays
+ * in code — the greeting, the facts line, the action button and the token behind it, the QR,
+ * the attachments, the links under the button, the sign-off and the layout. That line is not
+ * timidity: those are the parts that carry trust (`AGENTS.md` §1.5 rule 1). A club that could
+ * edit the button's address could send a participant to a link this platform never minted, and
+ * a club that could edit the QR could send them to the desk with nothing to scan.
+ *
+ * **A closed set of placeholders**, written `{participantName}`, and no URL among them. A URL
+ * in the words would be a link outside the one the message was built with, which is exactly
+ * what the action button exists to be. Anything else between braces is refused at save time,
+ * naming itself, rather than reaching a participant as literal text.
+ *
+ * **Both languages, separately.** A message is bilingual (§96), and a club that edits only the
+ * Romanian half keeps the platform's English one — the override is per type *and* locale.
+ *
+ * ## Why this is a setting and not a table
+ *
+ * The same shape §100, §164 and §244 already proved: one `platform_settings` row, an
+ * Administrator's — here a Redactor's — panel, an audit row naming who changed what. Seventeen
+ * message types in two languages is a few kilobytes of JSON, read once per send batch and once
+ * per preview; a table would be a migration and a join for the same answer.
+ */
+
+/** Written `{likeThis}` in the words, and substituted at send time. */
+export const EMAIL_COPY_PLACEHOLDERS = [
+  "participantName",
+  "eventTitle",
+  "eventLocationName",
+  "eventStartsAtFormatted",
+  "bibNumber",
+  "checkinCode",
+  "currentStatus",
+  "holdExpiresAtFormatted",
+  "signedAtFormatted",
+  "eventChecklist",
+  "staffRole",
+  "inviterName",
+] as const;
+
+export type EmailCopyPlaceholder = (typeof EMAIL_COPY_PLACEHOLDERS)[number];
+
+/** Enough for any message this platform sends; the longest shipped one has four. */
+export const EMAIL_COPY_MAX_PARAGRAPHS = 8;
+
+const PLACEHOLDER = /\{([A-Za-z0-9_]*)\}/g;
+
+/** Every `{name}` in a piece of text, in the order they were written. */
+export function placeholdersIn(text: string): string[] {
+  return [...text.matchAll(PLACEHOLDER)].map((match) => match[1]);
+}
+
+/** The ones this platform cannot fill — what the save refuses, naming each one. */
+export function unknownPlaceholders(text: string): string[] {
+  const known = new Set<string>(EMAIL_COPY_PLACEHOLDERS);
+  return [...new Set(placeholdersIn(text).filter((name) => !known.has(name)))];
+}
+
+/**
+ * Put the message's own facts into the club's words.
+ *
+ * A placeholder this message does not carry — `{bibNumber}` on a message sent before a number
+ * exists — becomes nothing, and the spaces around it are closed up so the sentence still reads
+ * as a sentence. It is visible in the preview under the editor, which is where somebody
+ * notices they have asked for a fact this message never has.
+ */
+export function fillPlaceholders(text: string, data: Record<string, unknown>): string {
+  return text
+    .replace(PLACEHOLDER, (whole, name: string) => {
+      if (!(EMAIL_COPY_PLACEHOLDERS as readonly string[]).includes(name)) return whole;
+      const value = data[name];
+      return value === undefined || value === null || value === "" ? "" : String(value);
+    })
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/ +([.,;:!?])/g, "$1")
+    .trim();
+}
+
+const copy = z
+  .object({
+    subject: z.string().trim().min(1).max(200),
+    paragraphs: z.array(z.string().trim().min(1).max(1200)).min(1).max(EMAIL_COPY_MAX_PARAGRAPHS),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    for (const text of [value.subject, ...value.paragraphs]) {
+      for (const name of unknownPlaceholders(text)) {
+        ctx.addIssue({
+          code: "custom",
+          message: `{${name}} is not a field this platform can fill`,
+          path: [text === value.subject ? "subject" : "paragraphs"],
+        });
+      }
+    }
+  });
+
+export type EmailCopyEntry = z.infer<typeof copy>;
+
+/** `TYPE:locale` — one key, so the stored object is flat and a diff reads as one line. */
+export function emailCopyKey(messageType: EmailMessageType, locale: EmailLocale): string {
+  return `${messageType}:${locale}`;
+}
+
+const KEY = new RegExp(`^(${emailMessageType.enumValues.join("|")}):(ro|en)$`);
+
+export const emailCopySchema = z.record(z.string().regex(KEY, "not a message type and language"), copy);
+
+export type EmailCopy = z.infer<typeof emailCopySchema>;
+
+export const DEFAULT_EMAIL_COPY: EmailCopy = {};
+
+/** The club's words for this message and language, or `null` for the platform's own. */
+export function copyFor(
+  stored: EmailCopy | null | undefined,
+  messageType: EmailMessageType,
+  locale: EmailLocale,
+): EmailCopyEntry | null {
+  return stored?.[emailCopyKey(messageType, locale)] ?? null;
+}

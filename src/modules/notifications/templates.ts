@@ -1,5 +1,6 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { COLOR } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 
@@ -209,8 +210,10 @@ export function renderBilingual(
   locale: EmailLocale,
   data: TemplateData,
   actionUrl: string | undefined,
+  /** The club's own wording (§247); both halves read it, each in its own language. */
+  overrides?: EmailCopy | null,
 ): { subject: string; html: string; text: string } {
-  const first = buildTemplateContent(messageType, locale, data, actionUrl);
+  const first = buildTemplateContent(messageType, locale, data, actionUrl, overrides);
   // The second language repeats the words, not the picture: one QR per message is enough —
   // and its date is its own ("Sunday 11 October", not "duminică").
   const otherData: TemplateData = {
@@ -218,7 +221,7 @@ export function renderBilingual(
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
   };
-  const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl), image: undefined };
+  const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
   const a = renderContent(first, locale);
   const b = renderContent(second, OTHER_LOCALE[locale]);
   return {
@@ -754,6 +757,8 @@ export function buildTemplateContent(
   locale: EmailLocale,
   data: TemplateData,
   actionUrl: string | undefined,
+  /** The club's own wording for this message, when it has written some (§247). */
+  overrides?: EmailCopy | null,
 ): TemplateContent {
   const copy = T[locale];
   const key = KEY_BY_MESSAGE_TYPE[messageType];
@@ -770,8 +775,25 @@ export function buildTemplateContent(
     links?: (d: TemplateData) => TemplateContent["links"];
   };
 
+  /*
+    The club's own words, where it has written some (§247).
+
+    Only the subject and the body. The greeting, the facts line, the action button and its
+    token, the QR, the links and the sign-off are the message's machinery and stay in code —
+    and so do the two sentences below that the platform adds *around* a body: "you were already
+    registered" (§235) and "this number is provisional" (§237). Both are statements about the
+    state of a registration rather than about how the club likes to write, and a club that
+    rewrote the confirmation would otherwise silently lose them.
+  */
+  const written = copyFor(overrides, messageType, locale);
+  const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
+
   return {
-    subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
+    subject: written
+      ? fill(written.subject)
+      : typeof entry.subject === "function"
+        ? entry.subject(data)
+        : entry.subject,
     greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
     facts: entry.facts?.(data),
     /*
@@ -794,7 +816,7 @@ export function buildTemplateContent(
     */
     paragraphs: [
       ...(data.alreadyRegistered ? [copy.alreadyRegistered] : []),
-      ...entry.body(data),
+      ...(written ? written.paragraphs.map(fill) : entry.body(data)),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
@@ -825,8 +847,10 @@ export function buildOutgoingEmail(params: {
   data: TemplateData;
   actionUrl?: string;
   attachments?: OutgoingEmail["attachments"];
+  /** The club's own wording for this message (§247), read once per batch by the caller. */
+  overrides?: EmailCopy | null;
 }): OutgoingEmail {
-  const { subject, html, text } = renderBilingual(params.messageType, params.locale, params.data, params.actionUrl);
+  const { subject, html, text } = renderBilingual(params.messageType, params.locale, params.data, params.actionUrl, params.overrides);
   return {
     to: params.to,
     subject,

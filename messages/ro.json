@@ -1527,6 +1527,20 @@
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
         "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere."
       },
+      "copy": {
+        "title": "Textul mesajului ({lang}) — al platformei",
+        "editedTitle": "Textul mesajului ({lang}) — scris de club",
+        "subject": "Subiect",
+        "paragraphs": "Paragrafe",
+        "paragraphsHelp": "Un rând gol între paragrafe. **Îngroșat** se scrie între două steluțe.",
+        "placeholders": "Poți folosi: {list}. Un câmp pe care mesajul acesta nu îl are rămâne gol — vezi previzualizarea de mai sus.",
+        "machinery": "Butonul, linkul din el, codul QR, atașamentele, salutul și semnătura rămân ale platformei: ele duc token-uri și fișiere, nu cuvinte.",
+        "save": "Salvează textul",
+        "saving": "Se salvează…",
+        "reset": "Revino la textul platformei",
+        "saved": "Am salvat textul mesajului.",
+        "resetDone": "Mesajul folosește din nou textul platformei."
+      },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",
         "intro": "Platforma nu poate citi de la Mailgun pe ce plan e contul, așa că îi spui tu aici — și de aici se calculează cât mai poate pleca azi, pe /admin/tasks, pe /devs și la „Trimite acum”. Când plătești o lună de Basic înainte de cursă, schimbi aici; când o anulezi, schimbi înapoi.",
