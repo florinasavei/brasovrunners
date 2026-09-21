@@ -170,7 +170,10 @@ export async function addTestRegistrations<T extends Record<string, unknown>>(
         city: "Brașov",
         phone: "+40000000000",
         emergencyContactName: "Test Contact",
-        emergencyContactPhone: "+40000000000",
+        // A different number from the participant's, because the schema now refuses a contact
+        // who is the runner (§228) — and a synthetic row goes through the public schema
+        // unchanged, which is the whole point of it (§30).
+        emergencyContactPhone: "+40000000001",
         tshirtSize: "NONE",
         healthConsent: false,
         privacyAcknowledged: true,

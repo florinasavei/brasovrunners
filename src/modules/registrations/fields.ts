@@ -212,6 +212,36 @@ const guardianRule = (
   }
 };
 
+/**
+ * An emergency contact is somebody **else** (`DECISIONS.md` §228).
+ *
+ * Amalia, testing: "și poți pune la persoana de contact numele tău și nr tău". You could, and
+ * the field was then worth nothing — the whole point of it is a number somebody can ring when
+ * the runner cannot answer their own. A contact who is the runner is not a contact; it is a
+ * blank the form let through.
+ *
+ * *The number is the rule, and the name is not.* Both are compared, and only the number is
+ * refused: two people at one race genuinely share a surname and sometimes a full name — a
+ * father and son, two Ion Popescus — and refusing that would turn a real entry away. Nobody
+ * shares a telephone that answers in an emergency, and by this point both numbers are E.164,
+ * so the comparison is exact rather than a guess about formatting.
+ *
+ * The name match is worth *saying* and not worth refusing, so the form says it live (§198's
+ * shape) and the server lets it through.
+ */
+const emergencyContactRule = (
+  value: { phone?: string; emergencyContactPhone?: string },
+  ctx: z.RefinementCtx,
+): void => {
+  if (value.phone && value.emergencyContactPhone && value.phone === value.emergencyContactPhone) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["emergencyContactPhone"],
+      message: "the emergency contact must be somebody other than the participant",
+    });
+  }
+};
+
 const healthConsentRule = (
   value: { healthNotes?: string; healthConsent?: boolean },
   ctx: z.RefinementCtx,
@@ -265,7 +295,8 @@ export function assertEmailTypedTwice(input: { email?: string; emailConfirm?: st
 
 export const registrationSubmissionSchema = submissionFields
   .superRefine(healthConsentRule)
-  .superRefine(guardianRule);
+  .superRefine(guardianRule)
+  .superRefine(emergencyContactRule);
 
 /**
  * The same form as an organizer fills it in for somebody who telephoned (BR-REQ-031-04
@@ -293,7 +324,8 @@ export const staffRegistrationSubmissionSchema = submissionFields
     rulesAcknowledged: true,
   })
   .superRefine(healthConsentRule)
-  .superRefine(guardianRule);
+  .superRefine(guardianRule)
+  .superRefine(emergencyContactRule);
 
 export type RegistrationSubmissionInput = z.infer<typeof registrationSubmissionSchema>;
 

@@ -1736,6 +1736,7 @@
     "submittedTo": "L-am trimis la adresa:",
     "submittedDelay": "Poate dura până la 5 minute să ajungă.",
     "submittedSpam": "Dacă nu îl vezi, verifică și folderul de spam înainte să te înscrii din nou.",
+    "submittedAlready": "Dacă erai deja înscris la acest eveniment, emailul conține confirmarea ta existentă — nu s-a creat o a doua înscriere.",
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
@@ -1913,6 +1914,8 @@
     "phoneInvalid": "Numărul nu pare complet pentru țara aleasă — verifică cifrele.",
     "emailConfirm": "Scrie adresa încă o dată *",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele.",
+    "emailNoPaste": "Scrie adresa de mână aici — copierea din câmpul de deasupra n-ar verifica nimic.",
+    "emailAllowPaste": "Nu poți scrie de mână? Lipește oricum",
     "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție."
   },
   "Registrations": {

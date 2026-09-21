@@ -297,6 +297,25 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {t("submittedDelay")}
             </Typography>
             <Typography variant="body2">{t("submittedSpam")}</Typography>
+            {/*
+              And the sentence that stops this screen lying (§229).
+
+              Amalia, testing: "te poți înscrie cu fix același mail de 2 ori, primești și QR și
+              tot". No second registration was ever created — the database refuses one — but
+              re-submitting an address that is already confirmed re-sends the confirmation, QR
+              and all (§199), while this screen said "check your email to confirm your
+              registration". Two emails with a QR and a screen asserting a new registration is
+              indistinguishable from having registered twice.
+
+              It cannot be fixed by saying "you are already registered" here: that would answer
+              a question about somebody else's address to anybody who types it, which is the
+              oracle `AGENTS.md` §19.4 forbids. So the sentence is made **true for everybody**
+              instead — it reads the same whether or not the address was registered, and the
+              person who owns the inbox is the only one who learns which case they are in.
+            */}
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {t("submittedAlready")}
+            </Typography>
           </Alert>
           {/*
             The one thing a person needs when the message does not arrive, offered at the
@@ -619,6 +638,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 label={t("email")}
                 confirmLabel={t("emailConfirm")}
                 mismatchLabel={t("emailMismatch")}
+                noPasteLabel={t("emailNoPaste")}
+                allowPasteLabel={t("emailAllowPaste")}
                 help={t("emailHelp")}
                 defaultValue={typed("email")}
                 defaultConfirmValue={typed("emailConfirm")}

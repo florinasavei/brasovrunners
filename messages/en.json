@@ -1736,6 +1736,7 @@
     "submittedTo": "We sent it to:",
     "submittedDelay": "It can take up to 5 minutes to arrive.",
     "submittedSpam": "If you cannot see it, check your spam folder before registering again.",
+    "submittedAlready": "If you were already registered for this event, that email is your existing confirmation — no second registration was created.",
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
@@ -1913,6 +1914,8 @@
     "phoneInvalid": "That does not look like a complete number for the country chosen — check the digits.",
     "emailConfirm": "Type the address once more *",
     "emailMismatch": "The two addresses are not the same — check the letters.",
+    "emailNoPaste": "Type the address here by hand — copying it from the box above would check nothing.",
+    "emailAllowPaste": "Cannot type it? Paste it anyway",
     "emailHelp": "This is where the confirmation link goes. Type it carefully."
   },
   "Registrations": {

@@ -170,6 +170,39 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(page.getByText("Verifică-ți emailul")).toBeVisible();
   });
 
+  test("refuses a paste into the second address box, and offers a way through", async ({ page }) => {
+    /*
+      §227. The paste that matters is from the box above — copy, paste, and the second box has
+      confirmed nothing. The block is an enhancement with a door in it (§195's "fă safe"), so
+      this asserts both halves: the paste is refused and says why, and the door lets somebody
+      who cannot type by hand through.
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    const address = `e2e-paste-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;
+    await page.locator('[name="email"]').fill(address);
+
+    // Put it on the clipboard the way a person would: select the first box and copy it.
+    await page.locator('[name="email"]').selectText();
+    await page.keyboard.press("ControlOrMeta+c");
+
+    const confirm = page.locator('[name="emailConfirm"]');
+    await confirm.click();
+    await page.keyboard.press("ControlOrMeta+v");
+
+    // Nothing arrived, and the refusal is on screen rather than silent (§217).
+    await expect(confirm).toHaveValue("");
+    await expect(page.getByText("Scrie adresa de mână aici", { exact: false })).toBeVisible();
+
+    // The door: once pressed, the same paste works.
+    await page.getByRole("button", { name: /Lipește oricum/i }).click();
+    await confirm.click();
+    await page.keyboard.press("ControlOrMeta+v");
+    await expect(confirm).toHaveValue(address);
+  });
   test("never scrolls sideways, at either viewport", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
