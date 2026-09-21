@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.41-2026-09-21
 
+- **"Cine vine" is a real table now**, with a position, the name and the club, and fifty to a page — the pages are links, so it works with JavaScript off and a list of four hundred is not four hundred rows on a phone. Who is listed has not changed: confirmed participants who did not ask to be left out. §250.
 - **The club writes the emails' own words.** The subject and the paragraphs of any message, in each language, from `/admin/emails`, with the preview right above the box — and a button back to the platform's text. What a message *carries* stays the platform's: the button and its secure link, the QR, the attached declaration and the sign-off. Fields like `{participantName}` are filled in; anything else between braces is refused when you save it. §247.
 - **The calendar feed says what Android needs.** A subscribed calendar shows nothing on a phone until it is switched on in Google Calendar; the note beside the subscribe buttons now names that step, and the calendar, exactly as the phone lists it. §241.
 - **A local end-to-end run no longer blocks the next commit.** Playwright leaves an HTML report whose bundled JavaScript ESLint was reading — three thousand problems in somebody else's minified code — so `yarn check`, and with it the pre-commit hook, refused every commit until the folder was deleted by hand.

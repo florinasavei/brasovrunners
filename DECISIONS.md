@@ -10854,3 +10854,40 @@ only the words move; `tests/integration/notifications/email-copy.test.ts` — wh
 the worker renders, the audit row, and the reset.
 
 Baseline `BR-V1.41-2026-09-21`.
+
+## 250. Decided — the entry list is a table, and a long one is paged (2026-09-21)
+
+**Context.** The owner, looking at "Cine vine" on an event page: "I want the participants table
+to be a real table! with pagination."
+
+It was two columns of flowing names — which is what a class list looks like, not what an entry
+list looks like — and it rendered every confirmed runner at once. At forty names that is a
+paragraph; at four hundred it is four hundred rows on a phone, fetched in full on every view of
+the event page.
+
+**Decision.** *Three columns*: the position in the confirmed order, the name, the club. That is
+what somebody scans an entry list for — am I on it, and who else from my club is — and the
+position is also what tells two runners with the same name apart.
+
+*Fifty to a page, and the page is a link.* `?lista=2` on the event's own address, server-side,
+plain anchors: no JavaScript, and the disclosure renders **open** when a page is asked for, or
+a reader following a page link would arrive at a closed box.
+
+*Two counts, then one slice.* The page asks how many are named and how many are unnamed, works
+out what it holds, and fetches only those rows. A list of four hundred costs fifty rows, not
+four hundred — the same discipline the registrations counter took (§246).
+
+*The unnamed runners come last, and keep their line each.* §186's rule is unchanged: somebody
+who asked to be left off is counted, never named, and gets a row of their own rather than being
+summed into "and 3 others". They sit after the named rows so that nobody *else* changes page
+when one more runner opts out.
+
+**What did not change, deliberately.** Who is listed (confirmed, real, opted in — §32, §143),
+and what a row may carry: the display name and the club, which is the repository's select list
+and what `tests/privacy/public-surface.test.ts` refuses to let widen. No race number, no state,
+no address. A public list is a disclosure and this widened the *format*, not the disclosure.
+
+Tests: `tests/unit/registrations/start-list-page.test.ts` — the slice each page asks for, the
+boundary where named rows give way to unnamed ones, and a page number typed by anybody.
+
+Baseline `BR-V1.41-2026-09-21`.

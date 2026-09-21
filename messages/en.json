@@ -141,7 +141,14 @@
       "titleCount": "Who's coming ({count})",
       "empty": "Nobody has confirmed a place yet.",
       "note": "Only people who confirmed their registration and did not ask to be left out are listed here.",
-      "anonymous": "Anonymous participant"
+      "anonymous": "Anonymous participant",
+      "caption": "The confirmed participants, in the order they confirmed.",
+      "columnPosition": "#",
+      "columnName": "Name",
+      "columnClub": "Club",
+      "previous": "← Previous page",
+      "next": "Next page →",
+      "pageOf": "Page {page} of {pages}"
     },
     "cta": {
       "register": "Register for this event",

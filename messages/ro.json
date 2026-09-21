@@ -141,7 +141,14 @@
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
       "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei.",
-      "anonymous": "Participant anonim"
+      "anonymous": "Participant anonim",
+      "caption": "Participanții confirmați, în ordinea confirmării.",
+      "columnPosition": "#",
+      "columnName": "Nume",
+      "columnClub": "Club",
+      "previous": "← Pagina anterioară",
+      "next": "Pagina următoare →",
+      "pageOf": "Pagina {page} din {pages}"
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
