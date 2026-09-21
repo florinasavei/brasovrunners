@@ -60,12 +60,13 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await hydrated(page);
 
     // The header (§131, §134): which date this is, every date as a chip — this one current,
-    // the others tickable — and "Toate" in front of them.
+    // the others tickable. The editor opens on the whole series (§240), so every other date
+    // is ticked already and the chip in front of them offers "Niciuna", not "Toate".
     await expect(main.getByRole("heading", { name: new RegExp(`Editezi data de ${escape(long(first))}(,| la) 08:00`) })).toBeVisible();
     await expect(main.getByText("Data 1 din 9 ale seriei")).toBeVisible();
     await expect(main.locator(".MuiChip-root[aria-current='page']")).toHaveText(short(first));
-    await expect(main.getByRole("checkbox", { name: short(plus(3)), exact: true })).toHaveAttribute("aria-checked", "false");
-    await expect(main.getByRole("button", { name: "Toate", exact: true })).toBeVisible();
+    await expect(main.getByRole("checkbox", { name: short(plus(3)), exact: true })).toHaveAttribute("aria-checked", "true");
+    await expect(main.getByRole("button", { name: "Niciuna", exact: true })).toBeVisible();
 
     // The second date — the Wednesday after — one press on its arrow away.
     await main.getByLabel(`Deschide data de ${short(plus(3))}`, { exact: true }).click();
@@ -73,11 +74,12 @@ test.describe("BR-REQ-050-02 a series: its own day, the header, and a save for t
     await expect(main.getByText("Data 2 din 9 ale seriei")).toBeVisible();
     await hydrated(page);
 
-    // 08:50 for this date and the following ones (§130, §134): the preset in the folded box
-    // ticks the six chips after this one; the two before it stay unticked.
+    // 08:50 for this date and the following ones (§130, §134): the box opens on the whole
+    // series (§240) and the preset narrows it to the seven dates after this one; the one
+    // before it — the source Sunday — is unticked by the same press.
     await field("event.startsAtTime").fill("08:50");
     const scopeBox = main.locator("details").filter({ hasText: "Salvează pentru" });
-    await expect(scopeBox.locator("summary")).toContainText("Doar această dată");
+    await expect(scopeBox.locator("summary")).toContainText("Toate datele seriei (8)");
     await scopeBox.locator("summary").click();
     await scopeBox.getByRole("button", { name: "Această dată și următoarele", exact: true }).click();
     await expect(scopeBox.locator("summary")).toContainText("Această dată și următoarele (7)");

@@ -805,7 +805,9 @@ export async function submitRegistration<T extends Record<string, unknown>>(
           // The registration's language, not the page's: the row records what they chose.
           locale: existing.locale,
           recipientEmail: participant.deliveryEmail,
-          payload: {},
+          // Says, in the one place it may be said, that this is the registration they already
+          // have rather than a new one (§235). The screen stays generic for everybody (§19.4).
+          payload: { alreadyRegistered: true },
           // Per submission, so two genuine attempts an hour apart are two messages; the throttle
           // bounds them rather than a key collision silently swallowing the second.
           idempotencyKey: `registration:${existing.id}:resubmitted:${now.toISOString()}`,

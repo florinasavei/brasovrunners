@@ -102,6 +102,18 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     eventUrl: eventDetails?.slug
       ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
       : undefined,
+    /*
+      The listing and the contact page, on every participant message (§239; the owner: "I
+      need more links in that email").
+
+      Unconditional, unlike the ones above: they do not depend on an event, on a token or on
+      anything the organizer wrote, so there is no state in which the reader cannot use them.
+      Both go through `getPathname` in the message's own language, so a Romanian message
+      links to /evenimente and an English one to /events (`AGENTS.md` §8: the host comes from
+      `APP_BASE_URL` and appears nowhere in `src/`).
+    */
+    eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
+    contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
   };
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   // The hold's deadline on the declaration email (§104), and whether it is the window's — a
@@ -133,6 +145,14 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       data.thanksUrl = url;
       payloadActionUrl = url;
     }
+  }
+  /*
+    A message re-sent because the form was filled in again (§199, §235). The flag is in the
+    payload rather than derived here: only the caller knows why this row was queued, and the
+    row is the record of that.
+  */
+  if ((row.payloadJson as { alreadyRegistered?: unknown } | null)?.alreadyRegistered === true) {
+    data.alreadyRegistered = true;
   }
   // The staff invitation (§141): everything it says is in the payload — there is no
   // participant and no token; the action is the sign-in page, which asserts who they are.
@@ -169,7 +189,22 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     }
     data.checkinCode = code;
     data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
-    data.bibNumber = registration.bibNumber ?? undefined;
+    /*
+      The number the runner has, settled or not (§237; the owner: "peste tot trebuie să
+      apară BID-ul!!").
+
+      §214 stopped writing `bib_number` until the window closes, and this line read only
+      that column — so the confirmation went out with a QR, a check-in code and no number,
+      for a runner who had been looking at number 2 on their own page since they
+      registered. Absent is worse than provisional: it reads as "you have not been given
+      one", and the desk is where they find out otherwise.
+
+      So it is sent, and it is **labelled** when it can still move — which is the condition
+      §214 attached to emailing it at all. The settle sends `BIB_ASSIGNED` with the final
+      one, so nobody is left holding only the provisional figure.
+    */
+    data.bibNumber = registration.bibNumber ?? registration.provisionalBibNumber ?? undefined;
+    data.bibProvisional = registration.bibNumber === null && registration.provisionalBibNumber !== null;
   }
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];

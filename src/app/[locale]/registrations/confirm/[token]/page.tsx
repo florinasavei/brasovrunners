@@ -1,5 +1,4 @@
 import Alert from "@mui/material/Alert";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
@@ -8,9 +7,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
+import ConfirmOnArrival from "@/modules/registrations/ui/ConfirmOnArrival";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { readRegistrationTokenContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { confirmEmailAction } from "./actions";
 
 type Props = {
@@ -27,6 +26,10 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * context — `readRegistrationTokenContext` runs inside a read-only transaction — so a mail
  * scanner fetching this link before a human sees it cannot confirm anything; only the explicit
  * POST below can.
+ *
+ * The POST is then pressed for them (§238; the owner: "when I click from the mail I wanna
+ * auto-confirm the email") — by `ConfirmOnArrival`, on the client, once the page has
+ * hydrated. A scanner issues the GET and runs no JavaScript, so it never reaches the press.
  */
 export default async function ConfirmEmailPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
@@ -92,9 +95,12 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="token" value={token} />
           <Typography sx={{ mb: 2 }}>{t("confirm.prompt")}</Typography>
-          <Button type="submit" variant="contained" sx={TAP_TARGET}>
-            {t("confirm.action")}
-          </Button>
+          {/* Presses itself as soon as the page has hydrated (§238). The POST is still a
+              POST, which is what keeps a mail scanner's GET from spending the token. */}
+          <ConfirmOnArrival
+            label={t("confirm.action")}
+            pendingLabel={t("confirm.pending")}
+          />
         </form>
       )}
     </Container>

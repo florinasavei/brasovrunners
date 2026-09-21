@@ -63,6 +63,20 @@ import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, splitPhone } from "..
  * same digits fall into the national branch and get that country's code bolted on instead.
  * A `+` anywhere else is punctuation and goes with the rest.
  */
+/**
+ * The flag for an ISO 3166-1 alpha-2 code, as the two regional-indicator characters.
+ *
+ * Text, so it can live inside an `<option>`, which an image cannot. Where a platform draws
+ * no flag — Windows — it falls back to rendering the pair as the letters themselves, which
+ * is the country code, and is exactly as useful here.
+ */
+function flagEmoji(code: string): string {
+  const FIRST = 0x1f1e6; // REGIONAL INDICATOR SYMBOL LETTER A
+  return [...code.toUpperCase()]
+    .map((letter) => String.fromCodePoint(FIRST + letter.charCodeAt(0) - 65))
+    .join("");
+}
+
 function onlyDigits(value: string): string {
   const plus = value.startsWith("+") ? "+" : "";
   return plus + value.replace(/\D+/g, "");
@@ -200,11 +214,29 @@ export default function PhoneField({
     if (!input) return;
     input.setCustomValidity(sameAsOther ? (mustDifferLabel ?? "") : "");
   }, [sameAsOther, mustDifferLabel]);
+  /*
+    The flag and the dialling code, and nothing else (§236; the owner, on a phone: "pe mobil
+    nu arată bine aceste selectoare, scrie doar codul țării prescurtat, și steagul").
+
+    At 132 pixels "România (+40)" renders as "România (+4…" — the one part of it worth
+    reading is the part that gets cut. Flag first, then the code, and both always fit.
+
+    An emoji rather than the `Flag` component this form uses elsewhere: that one is an
+    `<img>`, and an `<option>` may contain text and nothing else. It degrades exactly where
+    it has to — Windows draws no flag glyph for a regional-indicator pair and falls back to
+    the letters, so a desktop reads "RO +40", which is the abbreviated code he asked for.
+
+    Still sorted by the country's name in the reader's language, Romania first. The names are
+    no longer drawn, but the order they give is the one somebody scanning flags expects;
+    sorting by the emoji would order by codepoint, which is ISO order and looks arbitrary to
+    anybody not reading the letters.
+  */
   const options = PHONE_COUNTRY_CODES.map((code) => ({
     code,
-    label: `${names.of(code) ?? code} (+${DIALING_CODES[code]})`,
+    name: names.of(code) ?? code,
+    label: `${flagEmoji(code)} +${DIALING_CODES[code]}`,
   })).sort((a, b) =>
-    a.code === "RO" ? -1 : b.code === "RO" ? 1 : a.label.localeCompare(b.label, locale),
+    a.code === "RO" ? -1 : b.code === "RO" ? 1 : a.name.localeCompare(b.name, locale),
   );
 
   return (
@@ -217,7 +249,9 @@ export default function PhoneField({
         onChange={(event) => setCountry(event.target.value)}
         size="medium"
         slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-        sx={{ width: { xs: 132, sm: 200 }, flexShrink: 0 }}
+        // Six characters now, not a country name, so it stops stealing width from the number
+        // itself — which on a phone was the field being squeezed (§236).
+        sx={{ width: { xs: 104, sm: 120 }, flexShrink: 0 }}
       >
         {options.map((option) => (
           <option key={option.code} value={option.code}>

@@ -397,7 +397,9 @@
       "columnBib": "Race number (BIB)",
       "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
-      "bibHeldNow": "Holds number {number}. Type another below to change it — the number becomes final and is emailed to them.",
+      "bibHeldNow": "Race number: {number} — provisional until registration closes.",
+      "bibNone": "No race number yet.",
+      "bibChange": "Change the number",
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
       "cancelBody": "The place is released through the allocator and offered at once to the first person waiting. An audit row records who cancelled. It cannot be undone: if they change their mind, they register again.",
@@ -622,7 +624,7 @@
         "selectNone": "None",
         "open": "Open the date {date}"
       },
-      "repeatOfNote": "Changes here — a cancellation, another place, another time — are this date's alone, unless you choose otherwise at Save.",
+      "repeatOfNote": "A save reaches every date of the series by default — the ticks above and the box by Save show exactly which. A cancellation, a different place or a different time stay here alone if you untick the others.",
       "series": {
         "kicker": "Series “{title}”",
         "editing": "Editing the date {date}",
@@ -1963,14 +1965,18 @@
     "emailMismatch": "The two addresses are not the same — check the letters.",
     "emailNoPaste": "Type the address here by hand — copying it from the box above would check nothing.",
     "emailAllowPaste": "Cannot type it? Paste it anyway",
+    "emailInvalid": "That does not look like an email address. Check the letters and the @.",
+    "emailSuggestion": "Did you mean {address}?",
+    "emailUseSuggestion": "Yes, fix it",
     "emailHelp": "This is where the confirmation link goes. Type it carefully."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
     "confirm": {
       "title": "Confirm your email address",
-      "prompt": "Press the button below to confirm your email address and continue your registration.",
+      "prompt": "We are confirming your email address. If nothing happens in a few seconds, press the button.",
       "action": "Confirm",
+      "pending": "Confirming…",
       "done": "Your email address has been confirmed.",
       "doneTitle": "Your email address is confirmed"
     },

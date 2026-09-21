@@ -141,7 +141,7 @@ function card(blocks: string[][]): string {
    * The address derives from `APP_BASE_URL` like every other absolute URL here (`AGENTS.md`
    * §8): no hostname is written in `src/`.
    */
-  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email.png" alt="Bra&#536;ov Runners" width="180" height="74" style="display:block;width:180px;height:74px;border:0">`;
+  const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email-banner.png" alt="Bra&#536;ov Runners" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0">`;
   /**
    * The header is a **white banner**, and the message declares itself a light-scheme document
    * (§218; Dani: "this email header looks ugly! it should be a banner with white background").
@@ -160,7 +160,15 @@ function card(blocks: string[][]): string {
    * and Gmail's webmail to leave the colours alone. It is declared twice on purpose: the meta
    * is what most clients read, and Gmail strips `<head>` but keeps a `<style>` block.
    *
-   * And the banner is a **table cell with a `bgcolor` attribute**, not a styled `<div>`. A
+   * And the band is **the picture**, edge to edge (§239; the owner: "the email banner must
+   * be edge-to-edge"). A white cell with a small logo centred in it is not what arrives in
+   * Gmail's dark theme: the cell is re-coloured, the raster is not, and the white band
+   * shrinks to a white rectangle the size of the lockup. A client cannot invert the inside
+   * of a PNG, so the white margin now belongs to `logo-email-banner.png` and there is no
+   * edge between two whites left to expose. The cell keeps its `bgcolor` underneath for the
+   * common case of a first message with images blocked, and pads nothing.
+   *
+   * It is still a **table cell with a `bgcolor` attribute**, not a styled `<div>`. A
    * client that inverts anyway has to fight an HTML attribute rather than a CSS declaration,
    * which is the one lever that still works in the clients that ignore `color-scheme`; the
    * logo is centred in it so a band wider than the picture still reads as a letterhead rather
@@ -180,7 +188,7 @@ function card(blocks: string[][]): string {
     `<body style="margin:0;padding:0;background:${COLOR.surface}">`,
     `<div style="max-width:600px;margin:0 auto;font-family:Roboto,Helvetica,Arial,sans-serif;color:${COLOR.ink}">`,
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse">`,
-    `<tr><td bgcolor="${COLOR.surface}" align="center" style="background-color:${COLOR.surface};padding:20px 24px;border:1px solid ${COLOR.line};border-bottom:0;border-radius:12px 12px 0 0">${logo}</td></tr>`,
+    `<tr><td bgcolor="${COLOR.surface}" align="center" style="background-color:${COLOR.surface};padding:0;font-size:0;line-height:0;border:1px solid ${COLOR.line};border-bottom:0;border-radius:12px 12px 0 0">${logo}</td></tr>`,
     "</table>",
     `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background-color:${COLOR.surface}">`,
     ...blocks.flatMap((parts, index) => (index > 0 ? [rule, ...parts] : parts)),
@@ -223,6 +231,17 @@ export function renderBilingual(
 /** What every template needs beyond the locale — never a rendered body, never a token. */
 export type TemplateData = {
   participantName: string;
+  /**
+   * This message is a re-send, because the form was filled in again with an address that is
+   * already registered (§199, §235). One sentence goes in front of the body saying so.
+   */
+  alreadyRegistered?: boolean;
+  /**
+   * The race number in this message is the provisional one (§214, §237): it is shown so
+   * the runner has it, and said to be provisional because the settle at the close may
+   * move it.
+   */
+  bibProvisional?: boolean;
   eventTitle?: string;
   eventLocationName?: string;
   eventStartsAtFormatted?: string;
@@ -264,6 +283,15 @@ export type TemplateData = {
   /** True when the hold is the participation window's (§104), not the thirty minutes. */
   confirmLater?: boolean;
   manageUrl?: string;
+  /**
+   * The listing and the contact page (§239; the owner: "I need more links in that email").
+   *
+   * Set on every participant message, so the footer list is the same wherever somebody
+   * lands in the journey — the event, its rules, its programme, their own registrations,
+   * the other races, and a way to reach a human.
+   */
+  eventsUrl?: string;
+  contactUrl?: string;
   /** The staff invitation (§141): who is invited, as what, by whom, and where to sign in. */
   staffRole?: string;
   inviterName?: string;
@@ -282,9 +310,49 @@ function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
   return { line, links };
 }
 
+/**
+ * The links every participant message ends with (§239; the owner, of a confirmation: "I need
+ * more links in that email").
+ *
+ * They were per-template, so which of them a message carried depended on which message it
+ * was: the confirmation of an address — the first mail anybody gets, and the one most likely
+ * to be the only one they read carefully — carried none at all. Somebody who wants to check
+ * the start time, re-read the rules or say they cannot come should not have to find a
+ * different email to do it.
+ *
+ * Each one is dropped when there is nothing to point at: no rules written, no programme, no
+ * manage token on this message. The list is deduplicated against whatever the template
+ * already named, by URL and with the template's own label winning — the reminder calls the
+ * event page something of its own, and that wording is the one that fits its sentence.
+ *
+ * Not on the club's own copies (`DECLARATION_ARCHIVE`) or the staff invitation: neither is a
+ * participant's message, and a manage link in either would be a link to somebody else's
+ * registration.
+ */
+function standardLinks(
+  d: TemplateData,
+  labels: { event: string; rules: string; schedule: string; manage: string; events: string; contact: string },
+) {
+  return [
+    ...(d.eventUrl ? [{ label: labels.event, url: d.eventUrl }] : []),
+    ...(d.eventRulesUrl ? [{ label: labels.rules, url: d.eventRulesUrl }] : []),
+    ...(d.eventScheduleUrl ? [{ label: labels.schedule, url: d.eventScheduleUrl }] : []),
+    ...(d.manageUrl ? [{ label: labels.manage, url: d.manageUrl }] : []),
+    ...(d.eventsUrl ? [{ label: labels.events, url: d.eventsUrl }] : []),
+    ...(d.contactUrl ? [{ label: labels.contact, url: d.contactUrl }] : []),
+  ];
+}
 const T = {
   ro: {
     hi: (name: string) => `Salut, ${name},`,
+    moreLinks: {
+      event: "Pagina evenimentului",
+      rules: "Regulamentul evenimentului",
+      schedule: "Programul evenimentului",
+      manage: "Înscrierile mele",
+      events: "Toate evenimentele",
+      contact: "Scrie-ne",
+    },
     verify: {
       subject: "Confirmă adresa de email",
       body: (d: TemplateData) => [
@@ -467,10 +535,24 @@ const T = {
       ],
     },
     closing: "Alergare plăcută,",
+    /** In front of a message re-sent because the form was filled in again (§235). */
+    alreadyRegistered:
+      "Erai deja înscris la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
+    /** Appended when the number in this message can still change (§237). */
+    bibProvisional: (n: number) =>
+      `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
     footer: "Răspunde la acest email pentru întrebări.",
   },
   en: {
     hi: (name: string) => `Hi ${name},`,
+    moreLinks: {
+      event: "The event's page",
+      rules: "The event's rules",
+      schedule: "The event's programme",
+      manage: "My registrations",
+      events: "All our events",
+      contact: "Write to us",
+    },
     verify: {
       subject: "Confirm your email address",
       body: (d: TemplateData) => [
@@ -648,6 +730,12 @@ const T = {
       ],
     },
     closing: "Happy running,",
+    /** In front of a message re-sent because the form was filled in again (§235). */
+    alreadyRegistered:
+      "You were already registered for this event, so no second registration was created — below is the registration you already have.",
+    /** Appended when the number in this message can still change (§237). */
+    bibProvisional: (n: number) =>
+      `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
     footer: "Reply to this email with questions.",
   },
 } as const;
@@ -704,10 +792,44 @@ export function buildTemplateContent(
     subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
     greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
     facts: entry.facts?.(data),
-    paragraphs: entry.body(data),
+    /*
+      The re-send says it is one (§235).
+
+      Filling the form again with an address that is already registered creates nothing and
+      re-sends whatever the state can offer (§199) — for a confirmed entrant, the confirmation,
+      QR and all. That arrived reading exactly like a first confirmation, so the owner read two
+      of them as two registrations and said so: "te poți înscrie cu fix același mail de 2 ori,
+      primești și QR și tot". No second registration exists; only the message was ambiguous.
+
+      One sentence in front of the body, and it is **here** rather than in one template because
+      the re-send picks its type from the state: confirmed gets the confirmation, unsigned gets
+      the declaration, queued gets the waiting-list notice. All three needed the same sentence.
+
+      This is the whole of what may be said. The screen stays generic whatever the state,
+      because answering "is this address registered" there would answer it about *anybody*'s
+      address ( §19.4); the inbox is the one place the question can be answered to
+      the only person entitled to the answer.
+    */
+    paragraphs: [
+      ...(data.alreadyRegistered ? [copy.alreadyRegistered] : []),
+      ...entry.body(data),
+      // After the body, not before it: the number is in the body already, and this only
+      // qualifies it (§237).
+      ...(data.bibProvisional && data.bibNumber !== undefined
+        ? [copy.bibProvisional(data.bibNumber)]
+        : []),
+    ],
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
-    links: entry.links?.(data),
+    links: (() => {
+      const own = entry.links?.(data) ?? [];
+      // The club's archive copy and the staff invitation are not a participant's message.
+      if (messageType === "DECLARATION_ARCHIVE" || messageType === "STAFF_INVITATION") {
+        return own.length > 0 ? own : undefined;
+      }
+      const seen = new Set(own.map((link) => link.url));
+      return [...own, ...standardLinks(data, copy.moreLinks).filter((link) => !seen.has(link.url))];
+    })(),
     closing: copy.closing,
     footer: data.replyTo ? copy.footer : undefined,
   };
