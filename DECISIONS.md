@@ -10062,3 +10062,52 @@ Tests: `tests/unit/legal-documents/merge-fields.test.ts` — which spans are fil
 counting as one, an unknown name staying plain, and the join being exactly `mergeText`.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 226. Decided — two bugs in one field, and only one of them was visible (2026-09-21)
+
+**Context.** The owner, with a screenshot: "the brasov runners text is overlapping with the
+placeholder here". Looking into it turned up a second bug underneath, which nobody had seen and
+which was much worse.
+
+**1. The label sat on top of the text.** MUI floats a label by watching the input's own events,
+and `ClubForMember` writes the value **imperatively** through a ref — which fires none of them.
+So the field had the club's name in it and the label was still in its resting position, the two
+drawn over each other. That is the price of letting the DOM own the value, and §211 is why
+holding it in state is not an option here.
+
+`shrink` is forced only when there is something to shrink for, and left undefined otherwise so
+MUI keeps deciding on focus and blur as it does everywhere else. Forcing `false` would be worse
+than the bug: the label would refuse to move even while somebody typed.
+
+**2. The digit filter was silently corrupting telephone numbers.** §223 stripped every
+non-digit as it was typed, the `+` among them. `composePhone` reads a leading plus as "the
+international form was typed" and then *insists* the number carries the selected country's
+dialing code — so Romania selected and a French `+33712345678` pasted in was **refused**, and
+the person fixed the country. With the plus gone the same digits fall into the national-number
+branch, which bolts the chosen country's code onto whatever it is given: the refusal became a
+silently accepted `+4033712345678`, a number belonging to nobody.
+
+A wrong telephone number is worse than a rejected one, because nothing ever tells the club —
+they find out on race morning, ringing somebody who does not answer. The filter keeps a leading
+plus now and strips everything else, which is still "only numbers" to anybody typing and is the
+one character that changes what the rest of them mean.
+
+*It was found by a test the owner had already patched.* The end-to-end spec asserted the box
+held `+40711111111`; the filter made it `40711111111`, and the natural repair was to update the
+expectation — which he did, and which was correct for the code as it then stood. That assertion
+was the only thing in the repository pointing at the plus disappearing, so the note beside it
+now says that a failure there is a stored-number bug rather than a test to adjust.
+
+**Worth stating once, because it has happened twice in two days.** §211, §215's missing ref and
+this label are all the same trade: an island over a server-rendered form must let the DOM own
+the value, and every consequence of that — the label, the validation state, anything MUI infers
+from events — has to be driven by hand. That is the cost of the rule, and it is still cheaper
+than wiping what somebody typed before hydration.
+
+Tests: `tests/unit/registrations/phone.test.ts` — the French number under Romania stays
+refused, the corrupted form is pinned as what the bug produced, and the five ordinary ways a
+Romanian number is written all still compose to the same E.164. The end-to-end spec asserts the
+label carries MUI's `shrink` class, which is the overlap stated as a fact rather than a
+screenshot.
+
+Baseline `BR-V1.39-2026-09-21`.
