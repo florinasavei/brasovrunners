@@ -28,6 +28,11 @@
       "gallery": "Gallery",
       "more": "Menu",
       "contact": "Contact"
+    },
+    "newBuild": {
+      "body": "A new version of the site has been deployed — reload the page whenever you are ready, but anything you have typed into an open form will be lost.",
+      "reload": "Reload the page",
+      "dismiss": "Dismiss the new-version notice"
     }
   },
   "Home": {

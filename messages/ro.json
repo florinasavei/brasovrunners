@@ -28,6 +28,11 @@
       "gallery": "Galerie",
       "more": "Meniu",
       "contact": "Contact"
+    },
+    "newBuild": {
+      "body": "S-a publicat o versiune nouă a site-ului — reîncarcă pagina când vrei, dar vei pierde ce ai completat în formularele deschise.",
+      "reload": "Reîncarcă pagina",
+      "dismiss": "Închide anunțul despre versiunea nouă"
     }
   },
   "Home": {

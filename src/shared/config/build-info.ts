@@ -15,12 +15,23 @@ export type BuildInfo = {
   commit: string;
   /** ISO-8601 commit date, or empty when unknown. */
   committedAt: string;
+  /**
+   * An opaque twelve-character identity for **this deployment**, or empty when the build had
+   * nothing to derive one from.
+   *
+   * Not the commit: the club redeploys the same commit with changed environment variables, and
+   * that is a different running site. `next.config.ts` explains how it is derived and why it is
+   * a hash. Read by `/api/build-id`, which is what a tab compares itself against
+   * (`shared/ui/new-build.ts`).
+   */
+  id: string;
 };
 
 export const buildInfo: BuildInfo = {
   baseline: process.env.BUILD_BASELINE ?? "",
   commit: process.env.BUILD_COMMIT ?? "",
   committedAt: process.env.BUILD_COMMITTED_AT ?? "",
+  id: process.env.BUILD_ID ?? "",
 };
 
 /**

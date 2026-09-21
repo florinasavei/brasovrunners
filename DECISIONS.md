@@ -9434,3 +9434,97 @@ which is the trade being made, and it is named here so that somebody who finds o
 look.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 210. Decided — a newer build is offered, never taken (2026-09-21)
+
+**Context.** "Site-ul trebuie să își dea refresh automat când apare o versiune nouă, și trebuie
+ceva banner când s-a făcut deploy", and then the correction that made it safe: "vreau de fapt
+banner cu confirmare de auto-refresh, proiectul flyward are așa ceva."
+
+He was right to correct it. This site's purpose is a registration form with twenty fields, a
+signature drawn with a finger and a declaration somebody is reading; a reload nobody asked for
+destroys exactly the work the platform exists to collect, and the club deploys several times an
+evening.
+
+**Decision.** *A notice with a control, and no automatic reload by any path.*
+`GET /api/build-id` answers one twelve-character identity and nothing else — its only import is
+`build-info.ts`, which imports nothing, so the poll can never wake the database. Deliberately
+**not** `/api/health`: that one opens a connection, reads the schema version and the email
+allowance, answers 503 on any of it, and is the club's cron-job.org alarm.
+
+*The identity is the commit **and** the deployment, hashed.* `BUILD_COMMIT` alone cannot answer
+the question, because this club redeploys the same commit with changed environment variables —
+a Turnstile key arriving, a contact address being set — and that is a genuinely different running
+site. Hashing keeps it opaque, fixed-length and, the load-bearing part, **deterministic**: a build
+timestamp would differ between the several processes `next build` evaluates the config in, and
+would inline two identities into one build.
+
+*The running build arrives as a string prop from a Server Component*, never a value the client
+bundle computed for itself — that would be the identity of whichever chunk the browser happens to
+hold, which is the very thing suspected of being stale.
+
+**What review found, and what changed because of it.** Three lenses, no critical finding, three
+majors — all fixed here:
+
+- **The notice could never be retracted.** The store moved one way, on the reasoning that a
+  deployment cannot un-happen. True, and the wrong conclusion: what a tab compares itself against
+  is "does this address serve something else now", which **can** go back — a rollback does it, and
+  so does an alias moved by hand. Once raised it told somebody to reload onto the build they were
+  already running.
+- **The reload cooldown could never fire.** It was one minute and the poll interval was one
+  minute, so the first check of a reloaded document always landed past it. Five minutes now: a
+  guard that cannot be reached is not a guard.
+- **The notice occupied a band of the viewport at every scroll position.** It was absolutely
+  positioned inside the header's *sticky* box, which reads well — it tracks the header — and
+  behaves badly, because a positioned descendant of a sticky element travels with it. It covered
+  whatever the reader had scrolled to, including a field they were reaching for. It is in the flow
+  below the header now, and a slim bar rather than a card: one layout shift when it appears, and
+  then nothing covered, ever. The shift is momentary; the occlusion was permanent.
+
+## 211. Decided — an island must not take the value back (2026-09-21)
+
+**Context.** Found by the e2e suite, not by review, and it is the most valuable thing the suite
+did all night. Two specs failed with an empty *first* field and every later field intact.
+
+`EmailTwice` (§206) and `PhoneField` (§198) were written as **controlled** inputs —
+`value={state}` with state starting at the server's default. The server's HTML carries the
+fields, somebody starts typing immediately, React hydrates a moment later, and a controlled input
+rendered from state that began empty **replaces what they typed with nothing**. It is invisible in
+development, where hydration is instant, and it is exactly what happens to the first visitor on a
+cold edge.
+
+`GuardianForMinor` (§188) had a second form of the same fault: a `<noscript>` element with JSX
+children. With scripting enabled — every case React hydrates in — the browser parses the inside of
+a `<noscript>` as **text**, not as elements, so the two trees disagreed about its contents and
+React answered the mismatch by discarding the subtree, taking the typed values with it.
+
+**Decision.** *An island that sits over a form lets the DOM own the value.* `defaultValue`, never
+`value`; state exists for the comparison and for nothing else, so it can never contradict what is
+on screen. And a `<noscript>` is written with `dangerouslySetInnerHTML`, which is the form both
+sides agree about.
+
+*The specs wait for hydration before typing*, which the suite already does for the backoffice and
+documents there: "a form submitted mid-hydration is queued by React and sometimes lost". A person
+takes seconds to reach the first field; Playwright takes milliseconds, and that difference is the
+bug's whole surface.
+
+## 212. Decided — CI runs the end-to-end suite one spec at a time (2026-09-21)
+
+**Context.** After §209 halved the work, six specs still failed in CI and two failed locally under
+two workers — and every one of them passed alone.
+
+**Decision.** `workers: 1` in CI. The cause is the fixture, not the machine: several suites drive
+the **same** featured event — `ensureRegistrationIsOpen` sets its mode, its window and its fifty
+places, and then a spec registers against it — so two workers on one database interleave. One
+opens registration while another submits; one fills the last place another is counting. A handful
+of specs that pass alone and fail together is the most expensive kind of red, because it teaches
+people to re-run rather than to read.
+
+*The honest fix is a fixture per worker* — an event of its own, created and torn down — and that
+is a change to every backoffice spec's setup rather than a line of configuration. It is named here
+so it is a known debt rather than a rediscovery. Until then CI is serial and says why.
+
+It costs little: since §209 a pull request runs one viewport, so serial-desktop is roughly what
+parallel-both-projects cost before. Measured: **91 specs, 2.7 minutes.**
+
+Baseline `BR-V1.38-2026-09-18`.

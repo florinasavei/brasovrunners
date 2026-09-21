@@ -7,11 +7,13 @@ import { listPublishedAlbums } from "@/modules/content/gallery/repository";
 import { listPublishedPages } from "@/modules/content/pages/repository";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipientsOrNull } from "@/modules/contact/recipients";
+import { buildInfo } from "@/shared/config/build-info";
 import { env } from "@/shared/config/env";
 import { HEADER_MARK_HEIGHT, HEADER_MARK_HEIGHT_PX, LOGO, PAGE_WIDTH } from "@/theme/brand";
 import { KEYFRAMES, MOTION_OK } from "@/theme/motion";
 import LocaleSwitcher from "./LocaleSwitcher";
 import LogoLink from "./LogoLink";
+import NewBuildNotice from "./NewBuildNotice";
 import SiteNav from "./SiteNav";
 
 /**
@@ -110,6 +112,7 @@ export default async function SiteHeader() {
     contactFormReaches(env, await readContactRecipientsOrNull());
 
   return (
+    <>
     <Box
       component="header"
       sx={{
@@ -238,5 +241,32 @@ export default async function SiteHeader() {
         </Box>
       </Container>
     </Box>
+      {/*
+        "A newer version is deployed", offered and never taken (`NewBuildNotice.tsx`).
+
+        **Below the sticky header and in the flow, since §210.** It was an absolutely positioned
+        child of the header's sticky box, which reads well and behaves badly: a positioned
+        descendant of a sticky element travels with it, so the notice sat in a fixed band of the
+        viewport at *every* scroll position and covered whatever the reader had scrolled to —
+        including, on a phone, a field they were trying to reach. Found in review.
+
+        In the flow it costs one layout shift when it appears and then covers nothing, ever. That
+        is the right way round: the shift is momentary and the occlusion was permanent. The card
+        is a slim bar for the same reason — the smaller the shift, the less it costs somebody
+        mid-form.
+
+        `buildInfo.id` as a **string prop**: the identity of the deployment that rendered this
+        document, which is the only thing that answers "is this tab out of date?". A value the
+        client bundle computed for itself would be the identity of a chunk the browser may have
+        had for an hour. And a string, never an element — `CheckboxField.tsx` records what an
+        element-valued prop across this boundary costs.
+
+        The backoffice gets it too, because `[locale]/admin` renders inside the same chrome, and
+        that is deliberate: the event editor saves both languages in one form, and the race-day
+        desk is a phone somebody is working on. Both need to be told and neither may be
+        interrupted.
+      */}
+      <NewBuildNotice build={buildInfo.id} />
+    </>
   );
 }
