@@ -74,7 +74,7 @@
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / phone",
       "downloadLink": "download the .ics",
-      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read."
+      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read. On Android the 🏃 BVR calendar only appears in the app once you switch it on: Google Calendar → Menu → Settings → 🏃 BVR → Sync."
     },
     "raceWeek": {
       "today": "Today, {when}",
