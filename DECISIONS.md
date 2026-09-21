@@ -9388,3 +9388,49 @@ and then refuses on the server is a rough edge, not a hole — the server refuse
 the remaining pages are worth a pass.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 209. Decided — a pull request runs one viewport, a release runs both (2026-09-21)
+
+**Context.** "These e2e tests in the pipeline take way too long, we need a lighter pipeline
+suite", and then, when asked: "da, dar nu scoate de tot, consideră rulează alt suite in
+pipeline."
+
+Measured rather than guessed. `docs-check.yml` has two jobs: `docs-check` runs `yarn check`
+(docs, secrets, migrations, typecheck, lint, 1550 unit and integration tests) plus `yarn build`
+plus a probe that the app serves on `PORT` — and `e2e`, which stands up PostgreSQL and Chromium
+and runs `test:concurrency` and `test:e2e`. The e2e job is the long pole: **9.5 minutes** of
+Playwright alone, on 163 specs across two projects, on every pull request and every push.
+
+**Decision.** *A pull request runs the `desktop` project; a push to `qa` or `main` runs both.*
+
+The two projects are the same specs at two viewports, so a pull request was paying twice for one
+set of behaviours. The second pass is also the one that catches least often: what differs at 320
+pixels is layout, and layout is what the mobile project's own assertions are *about* — the
+sideways-scroll checks, the 44-pixel tap targets — rather than something the other specs discover
+as a side effect. A release is where both run, and a push to `qa` or `main` is not a moment
+anybody is waiting on.
+
+*`yarn test:concurrency` stays on every pull request.* Five tests, seconds, and they guard the
+one rule that cannot be tested any other way: no overbooking under real concurrent load, on two
+real connections, which PGlite cannot express (BR-REQ-051-01 criterion 5, `AGENTS.md` §10.6).
+That is a rule CLAUDE.md lists among the ones that carry trust, and it is cheap.
+
+*`docs-check` is untouched and still runs on every commit.* 1550 tests in fifty seconds is the
+best value in this repository, and it catches most regressions before a browser is involved.
+
+**Rejected.** *Deleting or skipping any spec.* The owner asked for this explicitly — "nu scoate
+de tot" — and he is right: a spec that stops running is a spec that rots. Nothing is deleted,
+nothing is marked skip, and `yarn test:e2e` with no argument is still the whole suite locally,
+which is what runs before a PR is opened.
+
+*Sharding across parallel runners.* It would halve the wall clock without giving anything up, and
+it is the better answer for a repository with a larger budget. Here it doubles the number of
+containers that must each install Chromium and migrate a database, for a suite whose real cost is
+those two steps as much as the specs.
+
+**Consequences.** A pull request's e2e job drops from about 9.5 minutes of Playwright to about
+half that. A mobile-only regression is caught at the release rather than at the pull request,
+which is the trade being made, and it is named here so that somebody who finds one knows where to
+look.
+
+Baseline `BR-V1.38-2026-09-18`.

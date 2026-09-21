@@ -43,7 +43,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
   test("shows the required questions, the consents, and the optional groups open", async ({
     page,
   }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
 
@@ -97,7 +97,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
   });
 
   test("accepts a registration from somebody who says they are in the club", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
 
@@ -114,7 +114,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
   });
 
   test("never scrolls sideways, at either viewport", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
 
@@ -136,7 +136,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 
 test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb", () => {
   test("gives the submit button and the required consent at least 44 pixels", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
 
@@ -165,7 +165,7 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
 
 test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes there", () => {
   test("lands on the error summary and links to the field it names", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
 
@@ -209,7 +209,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
   });
 
   test("keeps a chosen option and says a phone number is not valid", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
     await hydrated(page);
@@ -238,7 +238,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
   });
 
   test("does not render a field name it does not recognize", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
 
     // Anybody can type this parameter. Unknown names are dropped rather than looked up, so the

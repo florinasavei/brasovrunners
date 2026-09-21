@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **A pull request runs the end-to-end suite at one viewport; a release runs both.** The two projects are the same 163 specs at two sizes, so a pull request was paying twice for one set of behaviours. Nothing is deleted and nothing is skipped: every spec still runs on every push to `qa` and `main`, and `yarn test:e2e` is still the whole suite locally. §209.
 - **The Redactor writes, the Organizer organises.** The role ladder gains one deliberate gap: an Organizer no longer inherits the Redactor's texts simply for sitting above them, because the club asked for two jobs that do not contain each other. §207.
 - **The Organizer sees the club's content and changes none of it.** Reading is now its own capability, separate from every write one — the navigation used to be built out of the write gates, so the moment the Organizer stopped writing he also stopped being able to look. The participant list stays behind the Administrator, because the line this hierarchy draws is personal data. §208.
 - **The address is typed twice, by hand, and checked as it is typed** — QA's outbox held three bounced messages to “…@gmail.con”, and one letter is enough to lose somebody for good, because the resend goes to the same wrong address. The comparison is the one the platform uses to decide whether two addresses are the same person, so capitals match and Gmail dots do not. §206.

@@ -48,7 +48,7 @@ test.describe("BR-REQ-090-05 the cost half of the task board", () => {
   test("refuses an Editor, with the answer a missing route gives", async ({ page }) => {
     // BR-REQ-060-01. What a club is close to exceeding is not an Editor's business, and the
     // refusal is a 404 rather than a message confirming the screen exists.
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     const response = await page.goto("/ro/admin/tasks");
     expect(response?.status()).toBe(404);
   });

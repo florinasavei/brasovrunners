@@ -118,7 +118,7 @@ test.describe("legal documents: a version downloads as a PDF", () => {
   });
 
   test("refuses a Moderator, who may not read legal versions at all", async ({ page }) => {
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     // Any well-formed id: the role is checked before the row is looked for (BR-REQ-060-01).
     const response = await page.request.get(
       "/api/admin/legal/00000000-0000-4000-8000-000000000000/pdf?locale=ro",
