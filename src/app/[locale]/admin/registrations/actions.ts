@@ -14,6 +14,7 @@ import {
   promoteRegistrationByStaff,
   setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
+import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -290,6 +291,61 @@ export async function cancelRegistrationAction(form: FormData): Promise<void> {
  * One failure does not abandon the rest: a row somebody else already cancelled would otherwise
  * silently strand the remaining ones, so each is attempted and the outcome is counted.
  */
+/**
+ * "These bibs are on paper now" (§264; the owner: "să pot marca 'BID printat'").
+ *
+ * A press of its own, next to the download and not inside it: the sheet is a `GET` and a GET
+ * does not mutate (`AGENTS.md` §12.8) — and a PDF that downloaded is not a bib that printed.
+ *
+ * The scope is the event's, not a selection: `only=unprinted` marks exactly the batch the button
+ * beside it downloads, which is the club's actual weekly job. Marking is idempotent, so pressing
+ * it twice does not rewrite when the first batch was printed (`markBibsPrinted`).
+ */
+export async function markBibsPrintedAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const eventId = text(form, "eventId");
+  const printed = text(form, "printed") !== "0";
+  const only = text(form, "only") === "unprinted" ? ("unprinted" as const) : undefined;
+
+  const listPath = getPathname({ locale, href: "/admin/registrations" });
+  // The query and never a path, exactly as the bulk cancel below: a form-supplied path is an
+  // open redirect, and this field can only choose which rows come back.
+  const listQuery = text(form, "listQuery");
+  const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
+
+  let outcome: { error?: string; saved?: string; marked?: string };
+  try {
+    const actor = await requireStaff();
+    const { marked } = await markBibsPrinted(getDb(), { actor, eventId, scope: { only }, printed });
+    outcome = { saved: printed ? "bibsPrinted" : "bibsUnprinted", marked: String(marked) };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  const separator = returnTo.includes("?") ? "&" : "?";
+  const query = new URLSearchParams(
+    Object.entries(outcome).filter(([, value]) => value !== undefined) as [string, string][],
+  ).toString();
+  redirect(`${returnTo}${separator}${query}#admin-alert`);
+}
+
+/** One bib, marked printed or not — the reprint of a single creased number (§264). */
+export async function setBibPrintedAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const registrationId = text(form, "registrationId");
+  const printed = text(form, "printed") !== "0";
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaff();
+    await setBibPrinted(getDb(), { actor, registrationId, printed });
+    outcome = { saved: printed ? "bibsPrinted" : "bibsUnprinted" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+  backToDesk(form, locale, registrationId, outcome);
+}
+
 export async function bulkCancelRegistrationsAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const ids = form

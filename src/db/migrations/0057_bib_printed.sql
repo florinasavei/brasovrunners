@@ -1,0 +1,1 @@
+ALTER TABLE "registrations" ADD COLUMN "bib_printed_at" timestamp with time zone;

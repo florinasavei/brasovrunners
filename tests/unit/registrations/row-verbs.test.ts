@@ -155,3 +155,42 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
     }
   });
 });
+
+/**
+ * §264 — the printing mark, which is the one verb on this row that depends on the bib rather
+ * than on the status.
+ */
+describe("§264 the bib's printing mark", () => {
+  it("is offered only where there is something to print", () => {
+    // No settled number: nothing exists on paper, whatever the status says.
+    expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false })).not.toContain("markBibPrinted");
+    expect(
+      rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } }),
+    ).not.toContain("markBibPrinted");
+    // A provisional number is exactly this case (§214): the club sees it, nobody prints it.
+    expect(
+      rowVerbsFor("PENDING_EMAIL_CONFIRMATION", "ADMIN", { checkedIn: false, bib: { settled: false, printed: false } }),
+    ).not.toContain("markBibPrinted");
+  });
+
+  it("offers the mark or its undoing, never both", () => {
+    const unprinted = rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: true, printed: false } });
+    expect(unprinted).toContain("markBibPrinted");
+    expect(unprinted).not.toContain("unmarkBibPrinted");
+
+    const printed = rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: true, printed: true } });
+    expect(printed).toContain("unmarkBibPrinted");
+    expect(printed).not.toContain("markBibPrinted");
+  });
+
+  it("belongs to whoever may manage registrations, like the sheet itself", () => {
+    const bib = { settled: true, printed: false } as const;
+    expect(rowVerbsFor("CONFIRMED", "CONTRIBUTOR", { checkedIn: false, bib })).not.toContain("markBibPrinted");
+    expect(rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib })).toContain("markBibPrinted");
+  });
+
+  it("stays before erase, which is always last (§180)", () => {
+    const verbs = rowVerbsFor("CONFIRMED", "ADMIN", { checkedIn: false, bib: { settled: true, printed: false } });
+    expect(verbs.indexOf("markBibPrinted")).toBeLessThan(verbs.indexOf("erase"));
+  });
+});

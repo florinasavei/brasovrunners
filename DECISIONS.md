@@ -11359,3 +11359,47 @@ table drawn in the editor, restyled, saved, published, and the computed border w
 cell read back as zero.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 264. Decided — the bibs are downloaded in batches from the registrations list, and the club marks them printed (2026-09-21)
+
+**Context.** The owner: "ar trebui să pot descărca BID-urile din pagina de înscrieri ca și batch!
+și să pot marca 'BID printat'". The sheet existed — `/api/admin/events/<id>/bibs`, with a preview
+page of its own since §180 — but only from the event's own screen, and it had no memory. Numbers
+arrive in waves: somebody registers on Thursday, the sheet went to the printer on Wednesday. The
+club's only choices were reprinting everything or remembering.
+
+**Decision.** *One column and one scope.*
+
+- `registrations.bib_printed_at` — **a timestamp, not a flag**, because "when" answers what a
+  flag cannot: a bib printed before the design changed has to be printed again.
+- `only=unprinted` on the sheet route, and `countBibs` for the two numbers the list shows. The
+  scope is one `WHERE` used by the list, the count and the marking, so they cannot drift apart.
+
+*The mark is its own press, beside the download and not inside it.* The sheet is a `GET` so it can
+be opened in a tab, saved, mailed to whoever has the printer and opened again — and a GET does not
+mutate (`AGENTS.md` §12.8). It is also honest: a PDF that downloaded is not a bib that printed,
+and only the club knows whether the printer had paper.
+
+*Marking is idempotent over the scope.* A row already marked keeps the timestamp it had, so a
+second press does not rewrite when the first batch went out — which is the fact that distinguishes
+"printed with Wednesday's sheet" from "printed just now". One audit row per batch, naming the
+event, the scope and the count and **no participant**: a printing record is not a record of who
+was printed (§67's rule about what an audit row may carry).
+
+*On the registrations list*, because that is the screen the club works from on race week: how many
+of the event's bibs are printed, a button for the unprinted batch, one for all of them, and the
+mark. Only with a single event selected — "all events" has no sheet — and only when it has numbers.
+
+*On the row*, a green tick beside a settled number with the date in its title, and the verb in the
+⋮ to mark one printed or not, which is the reprint of a single creased bib. Never on a provisional
+number (§214): that one is printed nowhere by design.
+
+*Who:* whoever may manage registrations, asserted in the service — the sheet is already
+Administrator-only, and the record of having printed it is the same information.
+
+Tests: `tests/integration/registrations/bibs-printed.test.ts` (the unprinted scope, the
+idempotence with two dated batches, the single-bib mark, the refusals, the role) and
+`tests/unit/registrations/row-verbs.test.ts` (offered only with a settled number, one direction
+at a time, before erase).
+
+Baseline `BR-V1.43-2026-09-21`.

@@ -403,30 +403,154 @@ export async function suggestFreeBibNumbers<T extends Record<string, unknown>>(
 export type BibRow = { id: string; bibNumber: number; registeredName: string };
 
 /**
- * The numbers to print, lowest first, optionally a range — for a reprint, or for the batch that
- * arrived after the first sheet went to the printer. Real registrations only; a cancelled
- * registration keeps its number but is not printed.
+ * Which bibs a sheet is being asked for (`DECISIONS.md` §264).
+ *
+ * A range is for a reprint — "numbers 1 to 50 again" — and `only: "unprinted"` is the club's
+ * actual weekly job: people registered after the last sheet went to the printer, and those are
+ * the bibs to print now. Both together are allowed and mean what they say.
+ */
+export type BibScope = { from?: number; to?: number; only?: "unprinted" };
+
+/** The scope as one `WHERE`, so the list, the count and the marking cannot drift apart. */
+const bibScopeWhere = (eventId: string, scope: BibScope) =>
+  and(
+    eq(registrations.eventId, eventId),
+    eq(registrations.status, "CONFIRMED"),
+    eq(registrations.kind, "REAL"),
+    isNotNull(registrations.bibNumber),
+    scope.from !== undefined ? sql`${registrations.bibNumber} >= ${scope.from}` : undefined,
+    scope.to !== undefined ? sql`${registrations.bibNumber} <= ${scope.to}` : undefined,
+    scope.only === "unprinted" ? isNull(registrations.bibPrintedAt) : undefined,
+  );
+
+/**
+ * The numbers to print, lowest first — for a reprint, or for the batch that arrived after the
+ * first sheet went to the printer. Real registrations only; a cancelled registration keeps its
+ * number but is not printed.
  */
 export async function listBibs<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-  range: { from?: number; to?: number } = {},
+  scope: BibScope = {},
 ): Promise<BibRow[]> {
   const rows = await db
     .select({ id: registrations.id, bibNumber: registrations.bibNumber, registeredName: registrations.registeredName })
     .from(registrations)
-    .where(
-      and(
-        eq(registrations.eventId, eventId),
-        eq(registrations.status, "CONFIRMED"),
-        eq(registrations.kind, "REAL"),
-        isNotNull(registrations.bibNumber),
-        range.from !== undefined ? sql`${registrations.bibNumber} >= ${range.from}` : undefined,
-        range.to !== undefined ? sql`${registrations.bibNumber} <= ${range.to}` : undefined,
-      ),
-    )
+    .where(bibScopeWhere(eventId, scope))
     .orderBy(asc(registrations.bibNumber));
   return rows.map((row) => ({ id: row.id, bibNumber: row.bibNumber as number, registeredName: row.registeredName }));
+}
+
+/**
+ * How many bibs there are and how many are still unprinted (§264).
+ *
+ * One grouped query, because this is read on every load of the registrations list and the club's
+ * database bills compute time (§68) — the same discipline as the counter in §255.
+ */
+export async function countBibs<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<{ total: number; unprinted: number }> {
+  const [row] = await db
+    .select({
+      total: sql<number>`count(*)`.mapWith(Number),
+      unprinted: sql<number>`count(*) FILTER (WHERE ${registrations.bibPrintedAt} IS NULL)`.mapWith(Number),
+    })
+    .from(registrations)
+    .where(bibScopeWhere(eventId, {}));
+  return { total: row?.total ?? 0, unprinted: row?.unprinted ?? 0 };
+}
+
+/**
+ * "These are on paper now" (§264; the owner: "să pot marca 'BID printat'").
+ *
+ * **A separate press from the download, and that is deliberate.** The sheet is a `GET` so it can
+ * be opened in a tab, saved, mailed to whoever has the printer and opened again — and a GET must
+ * not mutate (`AGENTS.md` §12.8). It is also honest: a PDF that downloaded is not a bib that
+ * printed, and the club is the only one who knows whether the printer had paper.
+ *
+ * Idempotent over the scope: rows already marked keep the timestamp they had, so marking twice
+ * does not rewrite when the first batch was printed. One audit row for the batch, naming the
+ * scope and the count — never the people, for the same reason an erasure's row does not (§67).
+ */
+export async function markBibsPrinted<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; eventId: string; scope?: BibScope; printed?: boolean; now?: Date },
+): Promise<{ marked: number }> {
+  const now = input.now ?? new Date();
+  if (!canManageRegistrations(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not mark bibs printed`);
+  }
+  const printed = input.printed ?? true;
+  const scope = input.scope ?? {};
+
+  return db.transaction(async (tx) => {
+    const marked = await tx
+      .update(registrations)
+      .set({ bibPrintedAt: printed ? now : null, updatedAt: now })
+      .where(
+        and(
+          bibScopeWhere(input.eventId, printed ? { ...scope, only: "unprinted" } : scope),
+          printed ? undefined : isNotNull(registrations.bibPrintedAt),
+        ),
+      )
+      .returning({ id: registrations.id });
+
+    if (marked.length > 0) {
+      await recordAuditEvent(tx, {
+        actorStaffUserId: input.actor.id,
+        action: printed ? "registration.bibs_printed" : "registration.bibs_unprinted",
+        entityType: "event",
+        entityId: input.eventId,
+        metadata: { count: marked.length, from: scope.from ?? null, to: scope.to ?? null },
+        now,
+      });
+    }
+
+    return { marked: marked.length };
+  });
+}
+
+/**
+ * One registration's bib, marked printed or not (§264) — the reprint of a single bib, which is
+ * what happens when one comes out of the printer creased.
+ *
+ * The same rule as the batch: the row must have a settled number, be confirmed and be real. A
+ * registration with only a provisional number has nothing to print (§214).
+ */
+export async function setBibPrinted<T extends Record<string, unknown>>(
+  db: Database<T>,
+  input: { actor: Actor; registrationId: string; printed: boolean; now?: Date },
+): Promise<void> {
+  const now = input.now ?? new Date();
+  if (!canManageRegistrations(input.actor.role)) {
+    throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not mark bibs printed`);
+  }
+
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(registrations)
+      .set({ bibPrintedAt: input.printed ? now : null, updatedAt: now })
+      .where(
+        and(
+          eq(registrations.id, input.registrationId),
+          eq(registrations.status, "CONFIRMED"),
+          eq(registrations.kind, "REAL"),
+          isNotNull(registrations.bibNumber),
+        ),
+      )
+      .returning({ id: registrations.id, eventId: registrations.eventId });
+    if (!row) throw new DomainError("NOT_FOUND", "no printable bib on that registration");
+
+    await recordAuditEvent(tx, {
+      actorStaffUserId: input.actor.id,
+      action: input.printed ? "registration.bibs_printed" : "registration.bibs_unprinted",
+      entityType: "registration",
+      entityId: row.id,
+      metadata: { count: 1 },
+      now,
+    });
+  });
 }
 
 /**

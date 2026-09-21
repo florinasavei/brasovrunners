@@ -37,6 +37,15 @@ export type AuditAction =
   | "registration.bibs_assigned"
   /** One number typed by hand, or cleared (BR-REQ-038-01 criterion 7). */
   | "registration.bib_set"
+  /**
+   * Bibs the club says are on paper, or no longer are (§264).
+   *
+   * The batch's row names the event, the scope and the count and no participant — a printing
+   * record is not a record of who was printed, and the count is what answers "did somebody
+   * already print these".
+   */
+  | "registration.bibs_printed"
+  | "registration.bibs_unprinted"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */

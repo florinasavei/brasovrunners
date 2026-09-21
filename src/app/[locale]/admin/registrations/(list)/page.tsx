@@ -40,7 +40,8 @@ import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminT
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
-import { bulkCancelRegistrationsAction, sendOutboxNowAction } from "../actions";
+import { countBibs } from "@/modules/registrations/bibs";
+import { bulkCancelRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 import {
   cancelRegistrationAction,
@@ -48,6 +49,7 @@ import {
   confirmRegistrationNowAction,
   eraseRegistrationFromListAction,
   promoteRegistrationAction,
+  setBibPrintedAction,
 } from "../actions";
 import { ALL_EVENTS, defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
@@ -99,7 +101,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canManageRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent, erase } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent, erase, marked } = current;
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -136,7 +138,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const eventFilter = defaultEventFilter(eventId, events);
   filters.eventId = eventFilter.eventId;
 
-  const [rows, total, summary] = await Promise.all([
+  const [rows, total, summary, bibs] = await Promise.all([
     listRegistrationsForAdmin(db, filters, {
       limit: query.limit,
       offset: query.offset,
@@ -151,6 +153,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       same `WHERE` as the list, so the page costs one round trip more rather than five.
     */
     summariseRegistrationsForAdmin(db, { ...filters, status: undefined }),
+    /*
+      How many bibs this event has and how many are still unprinted (§264). One grouped count,
+      and only when the list is about a single event — "all events" has no sheet to print, and
+      the club's database bills compute time (§68).
+    */
+    filters.eventId ? countBibs(db, filters.eventId) : Promise.resolve({ total: 0, unprinted: 0 }),
   ]);
 
   const t = await getTranslations("Admin");
@@ -294,6 +302,25 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           >
             {number.value}
             {number.settled ? "" : "*"}
+            {/*
+              Whether this bib is on paper (§264). A tick rather than a printer glyph, for the
+              reason the editor's toolbar has words on it: the printer emoji renders as a broken
+              box on the owner's own machine. It is the club's own record — set by the mark, never
+              by a download — and it is only ever shown on a settled number, because a provisional
+              one is printed nowhere.
+            */}
+            {number.settled && row.bibPrintedAt !== null && (
+              <Box
+                component="span"
+                title={t("registrations.bibPrintedOn", {
+                  date: format.dateTime(row.bibPrintedAt, { dateStyle: "medium", timeStyle: "short", hourCycle: "h23" }),
+                })}
+                sx={{ ml: 0.5, color: "success.main", fontWeight: 700 }}
+                aria-label={t("registrations.bibPrinted")}
+              >
+                ✓
+              </Box>
+            )}
           </Box>
         );
       },
@@ -346,10 +373,21 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         {saved === "registrationDeleted" && (
           <Alert severity="success">{t("registrations.registrationDeleted")}</Alert>
         )}
+        {/* How many bibs the mark actually touched (§264) — "Salvat." would leave the club
+            wondering whether it hit the batch it had just downloaded. */}
+        {(saved === "bibsPrinted" || saved === "bibsUnprinted") && (
+          <Alert severity="success">
+            {t(saved === "bibsPrinted" ? "registrations.bibsPrintedAlert" : "registrations.bibsUnprintedAlert", {
+              count: Number(marked ?? "0"),
+            })}
+          </Alert>
+        )}
         {saved &&
           saved !== "registrationsCancelled" &&
           saved !== "outboxSent" &&
-          saved !== "registrationDeleted" && <Alert severity="success">{t("saved")}</Alert>}
+          saved !== "registrationDeleted" &&
+          saved !== "bibsPrinted" &&
+          saved !== "bibsUnprinted" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
       {/*
@@ -477,6 +515,81 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Button>
         </Stack>
       </Stack>
+
+      {/*
+        The bibs of this event, as a batch (§264; the owner: "ar trebui să pot descărca BID-urile
+        din pagina de înscrieri ca și batch! și să pot marca 'BID printat'").
+
+        Here rather than only on the event's own bib page, because this is the screen the club
+        works from on race week. Two presses, in the order the job is done: download the ones
+        nobody has printed, then say they are printed. Deliberately not one press — the sheet is
+        a GET so it can be saved, mailed to whoever has the printer and opened again, and a PDF
+        that downloaded is not a bib that printed.
+
+        Only with an event selected and only when it has numbers: an empty toolbar row would be
+        two dead buttons on the screen the club uses most.
+      */}
+      {filters.eventId && bibs.total > 0 && (
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
+          data-testid="registrations-bibs"
+        >
+          <Typography variant="body2" color="text.secondary">
+            {t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
+          </Typography>
+          {bibs.unprinted > 0 && (
+            <Button
+              component="a"
+              href={`/api/admin/events/${filters.eventId}/bibs?locale=${locale}&only=unprinted`}
+              variant="contained"
+              size="small"
+              sx={TAP_TARGET}
+            >
+              {t("registrations.bibsDownloadUnprinted", { count: bibs.unprinted })}
+            </Button>
+          )}
+          <Button
+            component="a"
+            href={`/api/admin/events/${filters.eventId}/bibs?locale=${locale}`}
+            variant="outlined"
+            size="small"
+            sx={TAP_TARGET}
+          >
+            {t("registrations.bibsDownloadAll", { count: bibs.total })}
+          </Button>
+          {bibs.unprinted > 0 && (
+            <Box component="form" action={markBibsPrintedAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={filters.eventId} />
+              <input type="hidden" name="only" value="unprinted" />
+              <input type="hidden" name="listQuery" value={listQueryString} />
+              <SubmitButton
+                label={t("registrations.bibsMarkPrinted", { count: bibs.unprinted })}
+                pendingLabel={t("registrations.bibsMarkPrintedPending")}
+                variant="text"
+                compact
+              />
+            </Box>
+          )}
+          {bibs.unprinted < bibs.total && (
+            <Box component="form" action={markBibsPrintedAction}>
+              <input type="hidden" name="uiLocale" value={locale} />
+              <input type="hidden" name="eventId" value={filters.eventId} />
+              <input type="hidden" name="printed" value="0" />
+              <input type="hidden" name="listQuery" value={listQueryString} />
+              <SubmitButton
+                label={t("registrations.bibsMarkAllUnprinted")}
+                pendingLabel={t("registrations.bibsMarkPrintedPending")}
+                variant="text"
+                color="inherit"
+                compact
+              />
+            </Box>
+          )}
+        </Stack>
+      )}
 
       {/*
         How this event stands, in one line (§246; the owner: "on the registrations tab I should
@@ -708,7 +821,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               this is a courtesy and not a gate (BR-REQ-060-01).
             */}
             {(() => {
-              const verbs = rowVerbsFor(row.status, actor.role, { checkedIn: row.checkedInAt !== null });
+              const verbs = rowVerbsFor(row.status, actor.role, {
+                checkedIn: row.checkedInAt !== null,
+                // A settled number is the only printable one (§214, §264).
+                bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
+              });
               const hidden = (
                 <>
                   <input type="hidden" name="uiLocale" value={locale} />
@@ -744,6 +861,22 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               }
               if (verbs.includes("undoCheckIn")) {
                 items.push({ kind: "submit", icon: "undo", label: t("desk.undoCheckIn"), formId: `checkin-${row.id}` });
+              }
+              if (verbs.includes("markBibPrinted")) {
+                items.push({
+                  kind: "submit",
+                  icon: "confirm",
+                  label: t("registrations.bibMarkPrinted"),
+                  formId: `bib-printed-${row.id}`,
+                });
+              }
+              if (verbs.includes("unmarkBibPrinted")) {
+                items.push({
+                  kind: "submit",
+                  icon: "undo",
+                  label: t("registrations.bibMarkUnprinted"),
+                  formId: `bib-printed-${row.id}`,
+                });
               }
               if (verbs.includes("cancel")) {
                 items.push({
@@ -797,6 +930,12 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   {verbs.includes("cancel") && (
                     <Box component="form" id={`cancel-${row.id}`} action={cancelRegistrationAction} sx={{ display: "none" }}>
                       {hidden}
+                    </Box>
+                  )}
+                  {(verbs.includes("markBibPrinted") || verbs.includes("unmarkBibPrinted")) && (
+                    <Box component="form" id={`bib-printed-${row.id}`} action={setBibPrintedAction} sx={{ display: "none" }}>
+                      {hidden}
+                      <input type="hidden" name="printed" value={row.bibPrintedAt ? "0" : "1"} />
                     </Box>
                   )}
                   <RegistrationRowMenu
