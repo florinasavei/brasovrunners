@@ -143,7 +143,26 @@ export default function PhoneField({
         type="tel"
         label={label}
         defaultValue={initialNational}
-        onChange={(event) => setNational(event.target.value)}
+        /*
+          Digits only, in the box (§223; the owner: "in the phone field I should be able to
+          type only numbers!").
+
+          The country code is chosen in the select beside this, so what belongs here is the
+          national number and nothing else. Anything that is not a digit is **stripped as it
+          is typed** rather than refused: a person pasting "0721 234 567" or "+40 721-234-567"
+          from their own contacts gets the digits kept and the punctuation dropped, where a
+          refusal would leave them re-typing a number they had correctly in the clipboard.
+          `composePhone` on the server already does exactly this stripping — this only makes
+          the box show the same answer the server would reach.
+
+          Written to the DOM, never through state (§211): the input stays uncontrolled, so
+          nothing can replace what somebody typed before hydration.
+        */
+        onChange={(event) => {
+          const digits = event.target.value.replace(/\D+/g, "");
+          if (event.target.value !== digits) event.target.value = digits;
+          setNational(digits);
+        }}
         onBlur={() => setTouched(true)}
         required={required}
         fullWidth
@@ -154,8 +173,18 @@ export default function PhoneField({
         helperText={liveInvalid && !error ? (invalidLabel ?? helperText) : helperText}
         slotProps={{
           htmlInput: {
-            inputMode: "tel",
-            // Digits, with the separators people type; the server strips them and checks the count.
+            // `numeric` rather than `tel`: a telephone keypad offers `+ * #`, and none of
+            // them can be typed here any more (§223).
+            inputMode: "numeric",
+            /*
+              Digits only — and the pattern still has to admit the separators.
+
+              With JavaScript off nothing strips anything, and `composePhone` on the server
+              accepts a number written with spaces or dashes. A pattern narrowed to `[0-9]`
+              would make the browser refuse, without JavaScript, a number the server would
+              have taken — which is the form working *worse* for the person least able to
+              recover from it (`AGENTS.md` §1.5).
+            */
             pattern: "[0-9+()./\\s-]{4,20}",
             minLength: 4,
             maxLength: 20,

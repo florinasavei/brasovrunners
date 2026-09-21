@@ -4,6 +4,7 @@ import {
   MERGE_FIELDS,
   mergeFieldsIn,
   mergeLegalBody,
+  mergeTextSegments,
   mergeText,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { declarationEn, declarationRo } from "@/modules/legal-documents/templates/declaration";
@@ -71,5 +72,48 @@ describe("the declaration's merge fields", () => {
         expect(text.length, `${key} ${locale}`).toBeLessThan(key === "EVENT_DECLARATION" ? 4000 : 11000);
       }
     }
+  });
+
+  /**
+   * §225 — the fill-ins are bold, so the merge has to say which span was one.
+   *
+   * The signer checks exactly the filled-in parts: their own name, their identity document,
+   * the race and its date. Everything around them was approved once and reads the same for
+   * everybody, which is why setting the two apart is worth a shape rather than a flat string.
+   */
+  it("says which spans came out of a field, and which are the approved words", () => {
+    const segments = mergeTextSegments("Subsemnatul/a {{participant}} declar la {{event}}.", {
+      participant: "Ana Popescu",
+      event: "Crosul Tâmpei",
+    });
+    expect(segments).toEqual([
+      { text: "Subsemnatul/a ", filled: false },
+      { text: "Ana Popescu", filled: true },
+      { text: " declar la ", filled: false },
+      { text: "Crosul Tâmpei", filled: true },
+      { text: ".", filled: false },
+    ]);
+  });
+
+  it("marks an unfilled blank as filled too, because it is still the place somebody writes", () => {
+    // On the blank form the desk prints, the emphasised parts are the gaps to write in.
+    expect(mergeTextSegments("CI {{idDocument}}", {})).toEqual([
+      { text: "CI ", filled: false },
+      { text: BLANK, filled: true },
+    ]);
+  });
+
+  it("leaves an unknown name written, and plain", () => {
+    // Not a field, so not a blank anybody filled — it is the text's own words.
+    expect(mergeTextSegments("see {{nonsense}} here", {})).toEqual([
+      { text: "see {{nonsense}} here", filled: false },
+    ]);
+  });
+
+  it("joins back to exactly what mergeText produces", () => {
+    // The two cannot disagree about what a merge is: one is defined as the other, joined.
+    const text = "{{participant}} at {{event}} on {{eventDate}}, {{nonsense}}.";
+    const values = { participant: "Ana", event: "Cros" };
+    expect(mergeTextSegments(text, values).map((s) => s.text).join("")).toBe(mergeText(text, values));
   });
 });

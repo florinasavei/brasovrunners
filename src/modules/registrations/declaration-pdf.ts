@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { mergeTextSegments, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { plainInline } from "@/modules/legal-documents/domain/inline";
 import path from "node:path";
 import PDFDocument from "pdfkit";
@@ -21,8 +22,15 @@ import { COLOR } from "@/theme/brand";
  */
 export type DeclarationEntry = {
   title: string;
-  /** Already merged (`mergeLegalBody`): the fill-ins are in the text, or the dotted blanks are. */
+  /**
+   * The template as approved, **unmerged**. The blanks are filled while drawing, so the
+   * filled-in parts can be set in bold (§225) — a signer checks their own name, their
+   * identity document and the race, and everything around those was approved once and reads
+   * the same for everybody. Pre-merging would have thrown away which span was which.
+   */
   body: LegalDocumentBody;
+  /** What fills the blanks; absent on the blank form the desk prints, which shows the dots. */
+  values?: MergeValues;
   eventTitle: string;
   /** The version's facts, under the signature and in the document's subject. */
   version: number;
@@ -152,11 +160,32 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     }
     for (const paragraph of section.paragraphs) {
       const bullet = /^[•\-–]\s/.test(paragraph);
-      doc
-        .font("body")
-        .fontSize(10.5)
-        .fillColor(COLOR.ink)
-        .text(plainInline(paragraph), bullet ? MARGIN.left + 14 : MARGIN.left, doc.y, { width: bullet ? TEXT_WIDTH - 14 : TEXT_WIDTH, lineGap: 2, align: "justify" });
+      const width = bullet ? TEXT_WIDTH - 14 : TEXT_WIDTH;
+      const left = bullet ? MARGIN.left + 14 : MARGIN.left;
+      /*
+        Drawn a run at a time so the fill-ins can be bold (§225).
+
+        `continued: true` is how pdfkit lays several runs into one justified paragraph: each
+        call adds to the same block and only the last one ends it, so the line breaking and
+        the justification are the paragraph's, not each run's. The last run must therefore
+        carry `continued: false`, or the next paragraph joins this one.
+
+        The marks are stripped per run rather than over the whole string, which is the same
+        order the screen uses (`LegalDocumentBody`): a value is plain text and never markup.
+      */
+      const runs = mergeTextSegments(paragraph, entry.values ?? {});
+      doc.fontSize(10.5).fillColor(COLOR.ink);
+      runs.forEach((run, index) => {
+        const last = index === runs.length - 1;
+        doc
+          .font(run.filled ? "bold" : "body")
+          .text(plainInline(run.text), index === 0 ? left : undefined, index === 0 ? doc.y : undefined, {
+            width,
+            lineGap: 2,
+            align: "justify",
+            continued: !last,
+          });
+      });
       doc.x = MARGIN.left;
       doc.moveDown(bullet ? 0.3 : 0.6);
     }

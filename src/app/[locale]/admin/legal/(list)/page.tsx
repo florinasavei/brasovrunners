@@ -431,6 +431,10 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
                         date: format.dateTime(version.withdrawnAt, { dateStyle: "medium" }),
                       }),
                     )
+                  ) : !mayDestroy ? (
+                    // Withdrawing is the Superadministrator's, like deleting beside it (§222): the
+                    // service asserts it, so a reader is shown the state and not a button.
+                    reason(t("legal.deleteMeans", { version: version.version }))
                   ) : (
                     <Box component="form" action={withdrawLegalVersionAction}>
                       <input type="hidden" name="uiLocale" value={locale} />
@@ -464,6 +468,9 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
             }
 
             if (relied) return reason(t("legal.deleteBlockedReferenced", reliance));
+
+            // A draft nothing relied on can go, and only by the role the service lets (§222).
+            if (!mayDestroy) return reason(t("legal.deleteMeans", { version: version.version }));
 
             return (
               <Box component="form" action={deleteLegalVersionAction}>

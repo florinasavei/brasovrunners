@@ -14,7 +14,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findEventNotificationDetails } from "@/modules/events/repository";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
-import { mergeFieldsIn, mergeLegalBody } from "@/modules/legal-documents/domain/merge-fields";
+import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { countEligibleWaitlisted, findRegistrationById } from "@/modules/registrations/repository";
 import { declarantValues } from "@/modules/registrations/signed-declaration";
@@ -207,7 +207,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             it lands when printed. What is signed is the template, by id and hash.
           */}
           <LegalDocumentBody
-            body={mergeLegalBody(declaration.body, {
+            body={declaration.body}
+            /* The blanks, passed rather than pre-merged, so the filled-in parts render bold (§225). */
+            values={{
               participant: registration?.registeredName,
               ...(registration ? declarantValues(registration.registeredName, registration.guardianName, locale) : {}),
               event: eventDetails?.title,
@@ -215,7 +217,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)
                 : undefined,
               eventLocation: eventDetails?.locationName,
-            })}
+            }}
           />
 
           {changed && (

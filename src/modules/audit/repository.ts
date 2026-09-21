@@ -59,6 +59,7 @@ export type AuditAction =
   | "event.hard_deleted"
   /** The Mailgun plan the club says it is on, from and to, with the note (§100). */
   | "email_plan.changed"
+  | "delivery_timing.changed"
   | "contact_recipients.changed"
   /**
    * An approved legal version taken out of circulation (`DECISIONS.md` §46, §53).

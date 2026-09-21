@@ -83,6 +83,20 @@ export default function ClubForMember({
         onStoreChange();
       };
 
+      /*
+        Fill it on mount too, but only when the box is already ticked and the field is empty.
+
+        That is the form coming back from a server rejection with the tick still on: the value
+        belongs there and nothing has been typed since, so writing it takes nothing away. The
+        emptiness check is what keeps this clear of §211 — an island over a server-rendered
+        form must never replace something a person typed before hydration, and here it cannot,
+        because it writes only into a blank field.
+      */
+      if (box.checked && inputRef.current && inputRef.current.value === "") {
+        previous.current = "";
+        inputRef.current.value = clubName;
+      }
+
       box.addEventListener("change", apply);
       return () => box.removeEventListener("change", apply);
     },
@@ -104,6 +118,16 @@ export default function ClubForMember({
       id={id}
       name={name}
       label={label}
+      /*
+        The ref has to be here, and forgetting it is what shipped the field empty and locked.
+
+        `inputRef` is the prop MUI forks onto the real `<input>` (`InputBase` merges it with its
+        own through `useForkRef`); a plain `ref` would land on the wrapper. Without it
+        `inputRef.current` stayed null, the handler below wrote the club's name into nothing,
+        and ticking the box produced exactly the wrong half of the feature: read-only, with no
+        value in it.
+      */
+      inputRef={inputRef}
       defaultValue={defaultValue}
       error={error}
       autoComplete="organization"

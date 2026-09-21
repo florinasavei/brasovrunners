@@ -1733,7 +1733,9 @@
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
     "submitted": "Check your email to confirm your registration.",
-    "submittedDelay": "The email can take up to 5 minutes to arrive. Check your spam folder too before you register again.",
+    "submittedTo": "We sent it to:",
+    "submittedDelay": "It can take up to 5 minutes to arrive.",
+    "submittedSpam": "If you cannot see it, check your spam folder before registering again.",
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
@@ -1863,7 +1865,7 @@
       },
       "now": {
         "details": "Fill in the form. We will then email you to confirm your address.",
-        "confirm": "We have sent you a confirmation link. It can take up to 5 minutes to arrive — check your spam folder before registering again.",
+        "confirm": "We have sent you a confirmation link.",
         "declare": "One step left: read and sign the declaration — here, or on paper at the registration desk on race day. Your place is held. Once you sign, we email you the signed declaration (PDF) and your race number — usually within a few minutes, within the hour at the latest.",
         "done": "Your registration is confirmed. See you at the start!"
       }

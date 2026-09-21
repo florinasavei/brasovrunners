@@ -93,3 +93,43 @@ export async function readFormDraft(): Promise<FormDraft | null> {
   const sealed = (await cookies()).get(COOKIE)?.value;
   return sealed ? openFormDraft(sealed) : null;
 }
+
+/**
+ * The address a submission was sent to, for the screen that says to go and read it
+ * (`DECISIONS.md` §224; the owner: "on this page I should show the email again").
+ *
+ * It is the one fact that screen is missing. "Check your email" is useless to somebody who
+ * typed `@gmail.con` — they check the inbox they meant, find nothing, and conclude the site
+ * is broken. Three BOUNCED messages in QA's outbox went to that exact misspelling, and one
+ * of the owner's own registrations went to a domain with a typo in it. Showing the address
+ * back is the cheapest possible catch: they read it, see it is wrong, and register again.
+ *
+ * **Its own cookie, not the draft's, and not the URL.** Nothing a participant typed goes into
+ * a URL (§14.5), which rules out the redirect's query string. The draft cookie is cleared on
+ * a successful submit and carries twenty fields including health notes; this carries one
+ * field, is written only on success, and is sealed with the same key and the same ten minutes
+ * because an address is still personal data sitting in a browser.
+ */
+const SUBMITTED_COOKIE = "br_submitted_to";
+
+export async function stashSubmittedAddress(email: string, path: string): Promise<void> {
+  const sealed = sealFormDraft({ email });
+  if (!sealed) return;
+  const jar = await cookies();
+  jar.set(SUBMITTED_COOKIE, sealed, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: env.APP_BASE_URL.startsWith("https://"),
+    path,
+    maxAge: MAX_AGE_SECONDS,
+  });
+}
+
+/** The address the confirmation screen names, or null when the cookie has gone. */
+export async function readSubmittedAddress(): Promise<string | null> {
+  const sealed = (await cookies()).get(SUBMITTED_COOKIE)?.value;
+  if (!sealed) return null;
+  const opened = openFormDraft(sealed);
+  const email = opened?.email;
+  return typeof email === "string" && email !== "" ? email : null;
+}
