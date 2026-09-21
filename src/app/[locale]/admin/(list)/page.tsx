@@ -22,6 +22,7 @@ import {
   canCreateEvent,
   canDeleteEvent,
   canEditTexts,
+  canReadContent,
   canHardDeleteEvent,
   canManageRegistrations,
 } from "@/modules/staff-identity/domain/roles";
@@ -118,7 +119,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const staffUser = await requireStaff();
   // A volunteer's backoffice is the desk (§103): `/admin` takes them there rather than to a list
   // of events they may neither write nor configure. The tabs offer them the same two sections.
-  if (!canEditTexts(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
+  // Seeing the club's events is `canReadContent`; every control below asks its own question
+  // (§208). A volunteer, who may read nothing, still lands on the desk.
+  if (!canReadContent(staffUser.role)) redirect(getPathname({ locale, href: "/admin/checkin" }));
   const current = await searchParams;
   const { error, saved, archived, failed, created, published, deleted, erased } = current;
 

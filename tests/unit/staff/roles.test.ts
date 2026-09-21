@@ -117,7 +117,7 @@ describe("BR-REQ-051-01 criterion 2 the Administrator publishes", () => {
     }
   });
 
-  it("still lets the copywriter and the organizer edit text at any status, live included", () => {
+  it("lets the copywriter edit text at any status, live included, and refuses the organizer (§207)", () => {
     /*
       The open half of §201. Editing the words of a published page is the remaining way
       something reaches the public without the Administrator, and closing it would reverse
@@ -126,13 +126,21 @@ describe("BR-REQ-051-01 criterion 2 the Administrator publishes", () => {
       That is the club's decision to take, so this asserts what is true today and will be
       changed the day the club takes it.
     */
+    /*
+      §207 broke the ladder at exactly one capability. "Tot ce vreau e ca organizatorul să nu fie
+      și redactor… Redactorul scrie, Organizatorul organizează." A rank hierarchy cannot express
+      that — rank would hand the Organizer the Redactor's work simply for sitting above them — so
+      `canEditTexts` is a set, and this is both halves of it.
+    */
     for (const status of EDITORIAL_STATUSES) {
-      for (const role of ["COPYWRITER", "MODERATOR"] as const) {
-        expect(
-          canEditTranslation(role, { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
-          `${role} editing ${status}`,
-        ).toBe(true);
-      }
+      expect(
+        canEditTranslation("COPYWRITER", { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
+        `copywriter editing ${status}`,
+      ).toBe(true);
+      expect(
+        canEditTranslation("MODERATOR", { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
+        `organizer editing ${status}`,
+      ).toBe(false);
     }
   });
 });
@@ -229,11 +237,28 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
     // volunteer's whole backoffice: a person handing out numbers is not offered the events.
     expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
-    // The copywriter: the events (their texts), the desk, the pages — no gallery, no settings.
-    expect(visibleAdminSections("COPYWRITER")).toEqual(["events", "checkin", "guide", "pages"]);
-    // An Organizer gains the gallery (BR-REQ-050-03): pictures sit with the roles that
-    // configure an event, where an event's own settings already sit.
-    expect(visibleAdminSections("MODERATOR")).toEqual(["events", "checkin", "guide", "pages", "gallery"]);
+    /*
+      From the copywriter up, the sections are what a role may *look* at (§208): reading the
+      club's content and changing it are two questions now, and the navigation asks the first.
+      The Organizer sees the same content as the copywriter and changes none of it — "Dani îi
+      zice Amaliei să modifice X, Y lucru".
+    */
+    expect(visibleAdminSections("COPYWRITER")).toEqual([
+      "events",
+      "checkin",
+      "guide",
+      "pages",
+      "gallery",
+      "legal",
+    ]);
+    expect(visibleAdminSections("MODERATOR")).toEqual([
+      "events",
+      "checkin",
+      "guide",
+      "pages",
+      "gallery",
+      "legal",
+    ]);
   });
 
   it("gives DEV the configuration report and no participant data", () => {

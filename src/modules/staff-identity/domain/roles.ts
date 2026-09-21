@@ -72,13 +72,37 @@ export function isEditorial(role: StaffRole): boolean {
 }
 
 /**
- * The copywriter's whole job (§103): the words of any event and any page, at any status —
- * the title, the description, the rules, the programme, the SEO fields, a page's body — and
- * nothing that is not words: no event setting, no publication, no gallery, no registration.
- * The volunteer (`CONTRIBUTOR`) is below this line: the desk, and only the desk.
+ * The words of any event and any page, at any status — the title, the description, the rules, the
+ * programme, the SEO fields, a page's body — and nothing that is not words: no event setting, no
+ * publication, no gallery, no registration (§103).
+ *
+ * ## The one deliberate gap in the ladder (§207)
+ *
+ * **This is a set, not a threshold, and it is the only capability in this file that is.** Every
+ * other one reads `atLeast(role, …)`, which makes the hierarchy real: a rule written as a list
+ * of roles is a rule somebody forgets to add a new role to. So a gap here has to earn itself.
+ *
+ * The owner, of his two colleagues: "tot ce vreau e ca organizatorul să nu fie și redactor…
+ * Redactorul scrie, Organizatorul organizează", and then, asked to confirm the consequence: "da,
+ * așa vreau". An Organizer sets the date, the place, the route, the capacity, the registration
+ * window, the queue and the desk. A Redactor writes the words. Neither does the other's job, and
+ * a rank ladder cannot express that — rank would give the Organizer the Redactor's work simply
+ * for being above them, which is what the club is asking not to happen.
+ *
+ * `DEV` is out for the same reason it is out of everything editorial: "Tehnic" is diagnostics,
+ * and it sits where it does in the ladder only so that `canSeeDiagnostics` can be a threshold.
+ * `ADMIN` and `SUPERADMIN` keep it, because the Administrator is who both of the others ask.
+ *
+ * The volunteer (`CONTRIBUTOR`) is below all of it: the desk, and only the desk.
  */
+const MAY_EDIT_TEXTS: ReadonlySet<StaffRole> = new Set<StaffRole>([
+  "COPYWRITER",
+  "ADMIN",
+  "SUPERADMIN",
+]);
+
 export function canEditTexts(role: StaffRole): boolean {
-  return atLeast(role, "COPYWRITER");
+  return MAY_EDIT_TEXTS.has(role);
 }
 
 /**
@@ -363,21 +387,46 @@ export const ADMIN_SECTIONS = [
 ] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
+/**
+ * **Whether a role may *look* at the club's own content (§208).**
+ *
+ * The capability this file did not have. Every other function here answers "may you change
+ * this", and the navigation was built out of those answers — so the day the Organizer stopped
+ * writing texts (§207) they also stopped being able to *see* the events list, which is not what
+ * anybody asked for.
+ *
+ * The owner: "organizatorul vede cam tot (dar în readonly), practic Dani îi zice Amaliei să
+ * modifice X, Y lucru." So the Organizer is an observer with the desk: they read the events, the
+ * pages, the gallery and the legal texts, and they ask the Administrator for every change. A
+ * person who cannot see what the club publishes cannot tell her which line is wrong.
+ *
+ * It stops at the club's **content**. The participant list, the export and the tasks stay behind
+ * `canManageRegistrations`, because the line this hierarchy actually draws is personal data and
+ * that line is ADMIN (§10.2) — "vede cam tot" is not an instruction to hand somebody four
+ * hundred addresses. What every staff role does see of a participant is the desk: a name, a
+ * state and a number, never an address (`AGENTS.md` §15.11).
+ */
+export function canReadContent(role: StaffRole): boolean {
+  return atLeast(role, "COPYWRITER");
+}
+
 export function visibleAdminSections(role: StaffRole): AdminSection[] {
   return [
-    // The events list, for everyone who writes or configures one; a volunteer's backoffice
-    // is the desk and the guide, nothing else (§103).
-    ...(canEditTexts(role) ? (["events"] as const) : []),
+    // The events list, for everyone who may look at it — writing is a separate question and
+    // a separate gate (§208). A volunteer's backoffice is the desk and the guide (§103).
+    ...(canReadContent(role) ? (["events"] as const) : []),
     // The desk: a volunteer's whole backoffice (BR-REQ-037-08), and the guide that explains it.
     ...(canWorkTheDesk(role) ? (["checkin", "guide"] as const) : []),
-    // Standing pages are words, so the copywriter writes them (BR-REQ-050-03, §103); the
-    // gallery is pictures and stays with the roles that configure an event.
-    ...(canEditTexts(role) ? (["pages"] as const) : []),
-    ...(isEditorial(role) ? (["gallery"] as const) : []),
+    // Standing pages are words and the gallery is pictures; both are the club's content, so
+    // both are offered to whoever may read it and guarded on the way in (§208).
+    ...(canReadContent(role) ? (["pages"] as const) : []),
+    ...(canReadContent(role) ? (["gallery"] as const) : []),
     ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
     // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
     ...(canManageRegistrations(role) ? (["tasks"] as const) : []),
-    ...(atLeast(role, "ADMIN") ? (["legal"] as const) : []),
+    // The legal texts are readable by the roles that must know what the club published; only
+    // the Administrator writes one (§46, §181, §203).
+    ...(canReadContent(role) ? (["legal"] as const) : []),
     ...(canManageStaff(role) ? (["staff"] as const) : []),
     ...(canSeeDiagnostics(role) ? (["devs"] as const) : []),
   ];

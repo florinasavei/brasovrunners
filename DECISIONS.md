@@ -9325,3 +9325,66 @@ verdict is consulted only once hydrated, so the server's markup is what it alway
 shifts under somebody already typing.
 
 Baseline `BR-V1.38-2026-09-18`.
+
+## 207. Decided — one deliberate gap in the role ladder: the Organizer is not a Redactor (2026-09-21)
+
+**Context.** The owner, after §201 raised publication to the Administrator: "e ok ca redactorul să
+aprobe, tot ce vreau e ca organizatorul să nu fie și redactor… Redactorul scrie, Organizatorul
+organizează", and then, asked to confirm what that costs: "da, așa vreau".
+
+**Decision.** `canEditTexts` becomes a **set** — `COPYWRITER`, `ADMIN`, `SUPERADMIN` — where
+every other capability in `roles.ts` is a threshold.
+
+That is worth stating plainly, because the file's own comment says why thresholds are used: "a
+rule written as a list of roles is a rule somebody forgets to add a new role to". A gap has to
+earn itself, and this one does: the club is asking for two jobs that do not contain each other. A
+rank ladder cannot express that. Rank would hand the Organizer the Redactor's work simply for
+sitting above them, which is exactly what the club asked not to happen.
+
+*`DEV` is out too*, for the reason it is out of everything editorial: "Tehnic" is diagnostics,
+and it sits where it does in the ladder only so `canSeeDiagnostics` can stay a threshold.
+*`ADMIN` and `SUPERADMIN` keep it*, because the Administrator is who both of the others ask.
+
+**Consequences.** An Organizer no longer writes an event's title, its description, its rules or a
+standing page. The suites that wrote text with an Organizer now write it with a role that may, and
+`roles.test.ts` asserts both halves of the gap. One existing invariant — "a higher role is
+offered every section a lower one is" — survives, but only because of §208.
+
+## 208. Decided — reading the club's content is its own question (2026-09-21)
+
+**Context.** Immediately after §207: "organizatorul vede cam tot (dar în readonly), practic Dani
+îi zice Amaliei să modifice X, Y lucru."
+
+And §207 had just made that impossible by accident. Every capability in `roles.ts` answered "may
+you change this", the backoffice navigation was built out of those answers, and so the moment the
+Organizer stopped writing texts he also stopped being able to **see** the events list. A person
+who cannot see what the club publishes cannot tell the Administrator which line is wrong.
+
+**Decision.** `canReadContent` — the capability this file did not have. The navigation asks it,
+and the pages that show the club's own content open on it: the events, the standing pages, the
+gallery, the legal texts. Every control inside continues to ask its own question, and every
+Server Action asserts again (BR-REQ-060-01). That the pages needed almost no change is the
+happier half of this: they were already written with a capability check per button rather than one
+gate at the top, so separating the two questions was a change to the *gates*, not to the screens.
+
+*It stops at the club's content, deliberately.* The participant list, the export and
+`/admin/tasks` stay behind `canManageRegistrations`, because the line this hierarchy actually
+draws is personal data and that line is ADMIN (§10.2). "Vede cam tot" is not an instruction to
+hand a volunteer four hundred addresses. What every staff role does see of a participant is the
+desk: a name, a state and a number, never an address (`AGENTS.md` §15.11).
+
+**Rejected.** *An approval queue*, again — §201 records what it would take. A read-only observer
+who asks the Administrator is what the club actually described, and it needs no pending-revision
+machinery at all.
+
+**Consequences.** The section list for a Redactor and an Organizer is now the same five plus the
+desk; the difference between them is what the buttons do, not what the navigation shows. The
+invariant "a higher role is offered every section a lower one is" holds again, and it holds for a
+better reason than before.
+
+**Not finished, and said rather than implied:** the read-only screens were verified by reading the
+gates, not by walking every control on every page. A button that is still rendered for a reader
+and then refuses on the server is a rough edge, not a hole — the server refuses either way — and
+the remaining pages are worth a pass.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -94,7 +94,7 @@ describe("BR-REQ-050-03 standing pages", () => {
   beforeEach(async () => resetTables(db));
 
   it("creates a draft with both languages, and publishes neither until asked", async () => {
-    const editor = await seedStaff(db, "MODERATOR");
+    const editor = await seedStaff(db, "ADMIN");
     const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
     expect(page.editorialStatus).toBe("DRAFT");
@@ -133,7 +133,7 @@ describe("BR-REQ-050-03 standing pages", () => {
   });
 
   it("refuses a second page claiming an address already in use, naming the field", async () => {
-    const editor = await seedStaff(db, "MODERATOR");
+    const editor = await seedStaff(db, "ADMIN");
     await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
     expect(await codeOf(createPage(db, { actor: editor, fields: fields(), now: NOW }))).toBe(
@@ -144,7 +144,7 @@ describe("BR-REQ-050-03 standing pages", () => {
   it.each([["ADMIN"], ["/pagina"], ["Despre Noi"], ["despre noi"]])(
     "refuses %s as a page address",
     async (slug) => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const input = fields();
       input.translations.ro.slug = slug;
       expect(await codeOf(createPage(db, { actor: editor, fields: input, now: NOW }))).toBe(
@@ -154,7 +154,7 @@ describe("BR-REQ-050-03 standing pages", () => {
   );
 
   it("refuses a reserved address even when it is well formed", async () => {
-    const editor = await seedStaff(db, "MODERATOR");
+    const editor = await seedStaff(db, "ADMIN");
     const input = fields();
     input.translations.ro.slug = "admin";
     expect(await codeOf(createPage(db, { actor: editor, fields: input, now: NOW }))).toBe(
@@ -296,7 +296,7 @@ describe("BR-REQ-050-03 standing pages", () => {
 
   describe("saving", () => {
     it("writes the page row and both translations, or none of it", async () => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
       const input = fields({ navOrder: "3" });
@@ -319,7 +319,7 @@ describe("BR-REQ-050-03 standing pages", () => {
     });
 
     it("refuses a save carrying a version somebody else already superseded", async () => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
       await savePage(db, {
@@ -345,7 +345,7 @@ describe("BR-REQ-050-03 standing pages", () => {
     });
 
     it("lets a page keep its own address rather than reporting it as taken", async () => {
-      const editor = await seedStaff(db, "MODERATOR");
+      const editor = await seedStaff(db, "ADMIN");
       const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
       // The slug is unchanged, and the row that holds it is this page's own.
@@ -361,7 +361,7 @@ describe("BR-REQ-050-03 standing pages", () => {
   });
 
   it("deletes a page and its translations together", async () => {
-    const editor = await seedStaff(db, "MODERATOR");
+    const editor = await seedStaff(db, "ADMIN");
     const page = await createPage(db, { actor: editor, fields: fields(), now: NOW });
 
     await deletePage(db, { actor: editor, pageId: page.id });

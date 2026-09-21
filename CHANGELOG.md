@@ -10,6 +10,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.38-2026-09-18
 
+- **The Redactor writes, the Organizer organises.** The role ladder gains one deliberate gap: an Organizer no longer inherits the Redactor's texts simply for sitting above them, because the club asked for two jobs that do not contain each other. §207.
+- **The Organizer sees the club's content and changes none of it.** Reading is now its own capability, separate from every write one — the navigation used to be built out of the write gates, so the moment the Organizer stopped writing he also stopped being able to look. The participant list stays behind the Administrator, because the line this hierarchy draws is personal data. §208.
 - **The address is typed twice, by hand, and checked as it is typed** — QA's outbox held three bounced messages to “…@gmail.con”, and one letter is enough to lose somebody for good, because the resend goes to the same wrong address. The comparison is the one the platform uses to decide whether two addresses are the same person, so capitals match and Gmail dots do not. §206.
 - **Somebody who gets no email can still reach the club.** Beside “send it again” there is now a link to the contact form, carrying the event, with the message already written — because a resend answers a message lost in transit and does nothing for a spam filter that swallows every one. §205.
 - **The Administrator creates events.** An Organizer opens one and does everything to it: the date, the place, the route, the capacity, the window, the queue, the desk. §204.

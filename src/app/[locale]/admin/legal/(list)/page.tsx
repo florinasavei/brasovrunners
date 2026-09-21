@@ -25,7 +25,8 @@ import {
 } from "@/modules/legal-documents/repository";
 import { isReliedOn } from "@/modules/legal-documents/service";
 import { canManageStaff } from "@/modules/staff-identity/domain/roles";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { requireStaff } from "@/modules/staff-identity/session";
+import { canReadContent } from "@/modules/staff-identity/domain/roles";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import ButtonLink from "@/shared/ui/ButtonLink";
@@ -92,7 +93,14 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const actor = await requireStaffRole("ADMIN");
+  /*
+    Reading what the club published is not writing it (§208). The Organizer must be able to see
+    the texts in force — "Dani îi zice Amaliei să modifice X, Y lucru" cannot be said about a
+    document he cannot read. Writing, approving, withdrawing and deleting each assert their own
+    role below and again in the service (§46, §181, §203).
+  */
+  const actor = await requireStaff();
+  if (!canReadContent(actor.role)) notFound();
   // Creating a version is a Superadministrator's act (BR-REQ-053-02); an Administrator reads.
   // Offered here rather than only from an existing version's page, because an environment with
   // no version yet — production, by design — has no such page to start from, and the create

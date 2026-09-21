@@ -492,7 +492,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: editor,
+            actor: admin,
             translationId: translation.id,
             expectedVersion: translation.version,
             fields: { ...FIELDS, title: "Titlu nou" },
@@ -508,7 +508,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { translation } = await seedEvent({ status: "PUBLISHED" });
 
       const saved = await saveEventTranslation(db, {
-        actor: editor,
+        actor: admin,
         translationId: translation.id,
         expectedVersion: translation.version,
         acknowledgeLiveEdit: true,
@@ -648,7 +648,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: editor,
+            actor: admin,
             translationId: translation.id,
             expectedVersion: translation.version,
             acknowledgeLiveEdit: true,
@@ -671,7 +671,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: editor,
+            actor: admin,
             translationId: translation.id,
             expectedVersion: translation.version,
             fields: { ...FIELDS, slug: "alta-adresa" },
