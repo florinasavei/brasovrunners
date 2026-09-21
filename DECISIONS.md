@@ -11277,3 +11277,36 @@ Tests: `tests/unit/events/calendar.test.ts` — the dense case keeps the tooltip
 returns before it, and the accessible name is on the link either way.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 262. Decided — the phone's header row carries all three sections; the language moves to the bottom bar (2026-09-21)
+
+**Context.** The owner, with a screenshot of his own phone: "ar putea oare încăpea 'evenimente,
+calendar, contact' în toolbarul de sus pe mobil? ar fi fain să le avem pe toate, eventual mutăm
+selectorul de limbi în dreapta jos?" The row showed Evenimente and Calendar; Contact was in the ☰.
+
+The row is measured rather than broken at a breakpoint (2026-09-17), so this was never a rule to
+change — it was a width to find. At 393 pixels the container is 361 of which the lockup takes 63
+and the stacked RO/EN switcher 46.
+
+**Decision.** *The language switcher is the header's on a desktop and the footer's on a phone.*
+It goes in the bottom-right corner of the bar whose bottom-left corner already holds the scheme
+switch (§115), positioned on the bar for the same reason the social marks are — the line belongs
+to the `<summary>`, and a flex row cannot put a sibling between a summary and its panel. The
+build badge is `static` on a phone, so nothing else wants that corner at that width.
+
+*Two instances, one announced.* The header's copy is `display: none` below `sm` and the footer's
+above it, which keeps each in the tree exactly where it is drawn — so a screen reader finds one
+"Limbă" navigation at every width, and no page has two ways to change the language.
+
+*The sections' words are 14 pixels on a phone* rather than 15 (§158 set the step). Fifteen pixels
+across three labels, spent on whether "Contact" is on the row.
+
+*What did not change:* the lockup's size — 30 pixels tall on a phone is already the floor at which
+the club's own lettering inside it still reads (§158) — and the folding itself, which still decides
+from measurement. At 320 pixels three sections genuinely do not fit and the ☰ is the right answer.
+
+Tests: `tests/e2e/header-nav.spec.ts` — the three sections visible on the row at 393, nothing
+overflowing sideways at 320, and exactly one language switcher, in the footer on a phone and in
+the header on a desktop.
+
+Baseline `BR-V1.43-2026-09-21`.
