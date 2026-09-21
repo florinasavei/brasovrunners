@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.42-2026-09-21
+
+- **The club designs its own race number.** What is printed on the bib — the runner's name, the event, the date, the club's logo — how large the number is, whether the name sits above it or below, a picture of your own instead of the coloured band, a strip of sponsors, and cut marks on the sheet. The preview on the event's page is the sheet that prints. §249.
+- **The text on a coloured band is readable whatever colour you pick.** White on the club's blue, ink on yellow, worked out rather than assumed. §249.
+
 ## BR-V1.41-2026-09-21
 
 - **The calendar feed says what Android needs.** A subscribed calendar shows nothing on a phone until it is switched on in Google Calendar; the note beside the subscribe buttons now names that step, and the calendar, exactly as the phone lists it. §241.

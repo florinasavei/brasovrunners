@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.42-2026-09-21 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.42-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1053,8 +1053,10 @@ way through every step, and none of them is a way around the allocator.
 10. Given an event, when a registration is confirmed or the batch runs, then it is given the lowest free race number at or above that event's own `bib_start_number` (1 by default) — in order, never at random (2026-09-20, `DECISIONS.md` §173, reversing §94) — under the same event-row lock capacity uses; a number once given is never renumbered and a cancelled registration keeps it.
 11. Given a confirmed registration that already has a race number, when a staff member tries to change or clear it, then it is refused: the runner has been emailed it and it may already be printed. Given a confirmed registration with no number, then one may still be given by hand and the runner is told. Given a registration that is not yet confirmed, then a preferential number may be set among the free ones, and no email goes out until confirmation carries it (2026-09-20, `DECISIONS.md` §173, §105).
 12. Given an event, when an organizer sets where its numbers start and what colour they print, then both are stored on the event and checked at the database — a start a four-digit bib can reach, and a colour that is six hex digits after a hash — and the free-number suggestions count from that start rather than from 1 (2026-09-20, `DECISIONS.md` §173).
+13. Given an event's page, when an organizer opens "cum arată numărul de concurs" and saves, then the event stores what is printed (the runner's name, the event's title, the date, the club's logo), the number's size, where the name sits, a header picture, a sponsors' strip and whether the sheet carries cut marks; the A4 sheet and the preview picture both render exactly that, and a form that does not carry the panel — the create form, an older caller — leaves the stored design untouched (2026-09-21, `DECISIONS.md` §249).
+14. Given a header or sponsors' picture, when it is chosen, then it must be one this site stored — its own WebP variant, on the store's public host or the local media route — and anything else is refused or dropped; when the sheet prints, each picture is fetched with a five-second deadline and a four-megabyte ceiling, and one that cannot be fetched prints the coloured band rather than failing the sheet. The band's own text is white or ink, whichever can be read on the chosen colour (2026-09-21, `DECISIONS.md` §249).
 
-**Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`; unit `registrations/bibs-pdf.test.ts`
+**Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`
 
 ### 4.8 Public runner profiles
 

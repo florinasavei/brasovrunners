@@ -3,7 +3,16 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import { COLOR } from "@/theme/brand";
 import { brandFonts } from "@/theme/pdf/fonts";
-import { bibBandColour, bibFooterLine } from "./bib-design";
+import { env } from "@/shared/config/env";
+import {
+  bandTextColour,
+  type BibDesign,
+  bibBandColour,
+  bibFooterLine,
+  bibPictureUrl,
+  DEFAULT_BIB_DESIGN,
+  numberScaleFactor,
+} from "./bib-design";
 
 /**
  * One race number as a picture (`DECISIONS.md` §94, §180; the owner: "I should be able to
@@ -46,13 +55,37 @@ export async function renderBibImage(input: {
   bandColour?: string | null;
   partners?: readonly string[];
   replyTo?: string | null;
+  /** What the club decided this bib shows (§249); absent is the platform's own design. */
+  design?: BibDesign;
 }): Promise<ImageResponse> {
   const { width, height } = BIB_IMAGE;
+  const design = input.design ?? DEFAULT_BIB_DESIGN;
   const digits = String(input.bibNumber);
-  const numberSize = digits.length >= 5 ? 218 : digits.length === 4 ? 273 : 312;
+  const numberSize = Math.round((digits.length >= 5 ? 218 : digits.length === 4 ? 273 : 312) * numberScaleFactor(design));
   const nameSize = input.registeredName.length > 26 ? 30 : 37;
   const band = bibBandColour(input.bandColour);
+  const bandText = bandTextColour(band);
   const footer = bibFooterLine(input.partners ?? [], input.replyTo);
+  // A picture the club uploaded, made absolute for the renderer (§249); the band when there is
+  // none. Satori fetches it itself, from this site's own store — nowhere else is accepted.
+  const header = bibPictureUrl(design.headerImageSrc, env.APP_BASE_URL);
+  const sponsors = bibPictureUrl(design.sponsorImageSrc, env.APP_BASE_URL);
+  /** The name, above the number or below it — and nowhere when the club switched it off. */
+  const name = design.showName ? (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        padding: "0 30px",
+        fontSize: nameSize,
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+      }}
+    >
+      {input.registeredName}
+    </div>
+  ) : null;
   return new ImageResponse(
     (
       <div
@@ -67,23 +100,36 @@ export async function renderBibImage(input: {
           border: `2px solid ${COLOR.line}`,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            height: BAND_HEIGHT,
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 30px",
-            background: band,
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws the data URI */}
-          <img src={await logo()} alt="" width={LOGO_WIDTH} height={84} style={{ objectFit: "contain" }} />
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", color: COLOR.surface }}>
-            <div style={{ display: "flex", fontWeight: 700, fontSize: 20 }}>{input.eventTitle}</div>
-            <div style={{ display: "flex", fontSize: 17 }}>{input.eventDate}</div>
+        {/* The club's own header picture across the top (§249), or the coloured band with the
+            lockup and the race on it. The picture replaces the band whole: a band *and* a
+            picture is two headers, and the club chose the picture. */}
+        {header ? (
+          // eslint-disable-next-line @next/next/no-img-element -- Satori fetches it
+          <img src={header} alt="" width={width} height={BAND_HEIGHT} style={{ objectFit: "cover" }} />
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              height: BAND_HEIGHT,
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "0 30px",
+              background: band,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws the data URI */}
+            {design.showLogo ? (
+              <img src={await logo()} alt="" width={LOGO_WIDTH} height={84} style={{ objectFit: "contain" }} />
+            ) : (
+              <div style={{ display: "flex" }} />
+            )}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", color: bandText }}>
+              {design.showEventTitle && <div style={{ display: "flex", fontWeight: 700, fontSize: 20 }}>{input.eventTitle}</div>}
+              {design.showDate && <div style={{ display: "flex", fontSize: 17 }}>{input.eventDate}</div>}
+            </div>
           </div>
-        </div>
+        )}
+        {design.namePosition === "above" ? name : null}
         <div
           style={{
             display: "flex",
@@ -99,19 +145,13 @@ export async function renderBibImage(input: {
         >
           {digits}
         </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            padding: "0 30px",
-            fontSize: nameSize,
-            fontWeight: 700,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-          }}
-        >
-          {input.registeredName}
-        </div>
+        {design.namePosition === "below" ? name : null}
+        {/* The sponsors' strip, when the club has one (§249): above the small print, across
+            the card, its own proportion kept. */}
+        {sponsors ? (
+          // eslint-disable-next-line @next/next/no-img-element -- Satori fetches it
+          <img src={sponsors} alt="" width={width - 60} height={64} style={{ margin: "0 30px", objectFit: "contain" }} />
+        ) : null}
         <div
           style={{
             display: "flex",

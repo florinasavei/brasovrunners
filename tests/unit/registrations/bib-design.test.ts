@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { BIB_BAND_FALLBACK, bibBandColour, bibFooterLine } from "@/modules/registrations/bib-design";
+import {
+  bandTextColour,
+  BIB_BAND_FALLBACK,
+  bibBandColour,
+  bibDesignSchema,
+  bibFooterLine,
+  bibPictureUrl,
+  DEFAULT_BIB_DESIGN,
+  numberScaleFactor,
+  readBibDesign,
+} from "@/modules/registrations/bib-design";
 import { COLOR } from "@/theme/brand";
 
 /**
@@ -42,5 +52,82 @@ describe("§180 what a bib looks like", () => {
     expect(bibFooterLine([" ", ""], undefined)).toBe("");
     expect(bibFooterLine([], "contact@example.test")).toBe("contact@example.test");
     expect(bibFooterLine(["Salvamont"], null)).toBe("Salvamont");
+  });
+});
+
+/**
+ * BR-REQ-038-01, `DECISIONS.md` §249 — the club designs its own race number.
+ *
+ * Everything here is read by two renderers that cannot share a font size: `bibs-pdf.ts` prints
+ * points on A4 and `bib-image.tsx` draws pixels for the screen. What they share is this file,
+ * so the preview is a preview of the paper — and the rules below are the ones that would let
+ * them drift, or let a bib fail to print at all.
+ */
+describe("DECISIONS.md §249 the bib's design", () => {
+  it("reads an event nobody has designed as the platform's own", () => {
+    expect(readBibDesign(null)).toEqual(DEFAULT_BIB_DESIGN);
+    expect(readBibDesign(undefined)).toEqual(DEFAULT_BIB_DESIGN);
+    expect(readBibDesign("nonsense")).toEqual(DEFAULT_BIB_DESIGN);
+  });
+
+  it("falls back setting by setting rather than refusing to print", () => {
+    // A column written by an older release, a migration, or by hand. A bib that prints plainly
+    // beats a bib that does not print, so nothing here throws.
+    expect(readBibDesign({ numberScale: "enormous", showName: "yes", cutMarks: 1 })).toEqual(DEFAULT_BIB_DESIGN);
+    expect(readBibDesign({ numberScale: "large", showDate: false })).toEqual({
+      ...DEFAULT_BIB_DESIGN,
+      numberScale: "large",
+      showDate: false,
+    });
+  });
+
+  it("takes a picture this site stored, and nothing else", () => {
+    const ours = "https://pub-example.r2.dev/qa/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
+    const local = "/api/media/local/3f2a1b4c-0000-4000-8000-000000000000/web.webp";
+    expect(readBibDesign({ headerImageSrc: ours }).headerImageSrc).toBe(ours);
+    expect(readBibDesign({ sponsorImageSrc: local }).sponsorImageSrc).toBe(local);
+    // A third party's address would be a request to somebody else's server on every print, and
+    // a way to make this application fetch an arbitrary URL.
+    for (const wrong of [
+      "https://evil.example/logo.png",
+      "https://pub-example.r2.dev/qa/not-a-uuid/web.webp",
+      "data:image/png;base64,AAAA",
+      "/api/media/local/3f2a1b4c-0000-4000-8000-000000000000/thumb.webp",
+    ]) {
+      expect(readBibDesign({ headerImageSrc: wrong }).headerImageSrc, wrong).toBeNull();
+    }
+  });
+
+  it("refuses a setting nobody defined when the editor posts it", () => {
+    // The panel posts exactly these fields; anything else is a form built by hand.
+    expect(bibDesignSchema.safeParse({ ...DEFAULT_BIB_DESIGN, watermark: true }).success).toBe(false);
+    expect(bibDesignSchema.safeParse(DEFAULT_BIB_DESIGN).success).toBe(true);
+  });
+
+  it("scales the number by a factor, so both renderers keep their own base size", () => {
+    expect(numberScaleFactor({ ...DEFAULT_BIB_DESIGN, numberScale: "medium" })).toBe(1);
+    expect(numberScaleFactor({ ...DEFAULT_BIB_DESIGN, numberScale: "small" })).toBeLessThan(1);
+    expect(numberScaleFactor({ ...DEFAULT_BIB_DESIGN, numberScale: "large" })).toBeGreaterThan(1);
+  });
+
+  it("puts readable text on whatever colour the band is", () => {
+    // A colour picker offers yellow, and white on yellow is the race nobody can read.
+    expect(bandTextColour("#ffe14d")).toBe(COLOR.ink);
+    expect(bandTextColour("#1a3a6b")).toBe(COLOR.surface);
+    // The club's own blue, and anything that is not a colour at all, read as the fallback band.
+    expect(bandTextColour(BIB_BAND_FALLBACK)).toBe(COLOR.surface);
+    expect(bandTextColour("not a colour")).toBe(bandTextColour(BIB_BAND_FALLBACK));
+  });
+
+  it("makes a local picture absolute for a renderer, and leaves a stored address alone", () => {
+    const base = "https://example.test";
+    expect(bibPictureUrl("/api/media/local/x/web.webp", base)).toBe("https://example.test/api/media/local/x/web.webp");
+    expect(bibPictureUrl("https://pub.example/x/web.webp", base)).toBe("https://pub.example/x/web.webp");
+    expect(bibPictureUrl(null, base)).toBeNull();
+  });
+
+  it("still prints no telephone number in the footer", () => {
+    // §180's rule, unchanged by anything above: a bib is worn in public.
+    expect(bibFooterLine(["Primăria Brașov"], "contact@example.test")).toBe("Primăria Brașov  ·  contact@example.test");
   });
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { bibDesignSchema } from "@/modules/registrations/bib-design";
 import { isYoutubeLink } from "@/modules/events/domain/video";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
 import { EMPTY_DOC, parseRichText } from "@/modules/content/rich-text/domain/schema";
@@ -354,6 +355,16 @@ export const eventFieldsSchema = z
       .regex(/^(#[0-9a-fA-F]{6})?$/, { message: "a colour is six hex digits after a hash, such as #1a73e8" })
       .optional()
       .transform((value) => (value ? value.toLowerCase() : null)),
+    /**
+     * The rest of the bib's design (§249): what is printed, the number's size, where the name
+     * sits, the two pictures, the cut marks.
+     *
+     * **Optional, and absent means "this caller is not editing the design"** — the same
+     * discipline the partners' rows follow. The create form does not render the panel, and a
+     * missing key there must leave an event on the platform's design rather than writing every
+     * switch off.
+     */
+    bibDesign: bibDesignSchema.optional(),
     /**
      * The participation window (§104), in days before the start: when the confirmation is
      * asked and when it is owed. Absent (an older form, a test fixture) means the defaults; an

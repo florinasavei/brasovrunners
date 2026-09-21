@@ -702,6 +702,32 @@
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "bibDesign": {
+        "title": "What the race number looks like",
+        "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
+        "showName": "The runner's name",
+        "showEventTitle": "The event's name",
+        "showDate": "The date",
+        "showLogo": "The club's logo",
+        "cutMarks": "Cut marks on the sheet",
+        "numberScale": "The number's size",
+        "namePosition": "Where the name sits",
+        "scales": {
+          "small": "Small",
+          "medium": "Normal",
+          "large": "Large"
+        },
+        "positions": {
+          "below": "Under the number",
+          "above": "Above the number"
+        },
+        "headerImageSrc": "A picture instead of the coloured band",
+        "headerImageSrcHelp": "It runs the full width across the top. With one chosen, the band, the logo and the text on it are not printed — the picture is the header.",
+        "sponsorImageSrc": "A sponsors' strip",
+        "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
+        "noPicture": "No picture",
+        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview and the PDF follow a save."
+      },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
       "bibColours": {

@@ -1,5 +1,7 @@
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
+import { readBibDesign } from "@/modules/registrations/bib-design";
+import BibDesignPanel from "./BibDesignPanel";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -425,6 +427,11 @@ export default async function EventFieldsForm({
                 )}
               </TextField>
             </Stack>
+
+            {/* The rest of the bib (§249): what is printed, the number's size, where the name
+                sits, a picture instead of the band, a sponsors' strip, cut marks. Only on an
+                event that exists — the create form asks for a date and a title, not a design. */}
+            {event && <BibDesignPanel design={readBibDesign(event.bibDesign)} />}
 
             {/*
               A choice among approved versions, never an editor. AGENTS.md §11.1 keeps legal text

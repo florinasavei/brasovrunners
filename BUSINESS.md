@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.42-2026-09-21 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.42-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -741,6 +741,8 @@ Messages include:
 - "somebody has confirmed", to the club's own mailboxes: who, which event, which race number. Only when the club has named a mailbox for it, never for a test registration (`DECISIONS.md` §245).
 
 Who at the club receives the archive copy of a signed declaration, and who is told when somebody confirms, is set in the backoffice rather than in the deployment: one mailbox for the declarations, plus visible copies (Cc) and hidden ones (Bcc), and a list for the confirmation notices. A hidden copy delivers the participant's name and identity document to a mailbox nobody on the message can see, and the screen that sets it says so (`DECISIONS.md` §244).
+
+The club designs its own race number: what is printed on it — the runner's name, the event, the date, the club's logo — how large the number is, where the name sits, a picture of its own instead of the coloured band, a strip of sponsors, and cut marks on the printed sheet. The preview in the backoffice is the sheet that prints (`DECISIONS.md` §249).
 
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
 

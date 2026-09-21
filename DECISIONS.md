@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.41-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.42-2026-09-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.41-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.42-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -10806,3 +10806,54 @@ Tests: `tests/integration/registrations/admin-list.test.ts` — each state count
 rows apart, and the same filters the list uses.
 
 Baseline `BR-V1.41-2026-09-21`.
+
+## 249. Decided — the club designs its own race number (2026-09-21)
+
+**Context.** The owner: "I wanna be able to design the BIDs." A bib had exactly one decision on
+it — the band's colour (§173) — and everything else was `bib-design.ts`'s opinion: the club's
+lockup at the left, the race and the date at the right, the number filling the card, the name
+under it, the partners along the foot.
+
+**Decision.** *Three things at once, because they are one question.* What is printed (the
+runner's name, the event, the date, the logo, cut marks); how large the number is and where the
+name sits; and a picture of the club's own instead of the coloured band, with a strip of
+sponsors above the small print.
+
+*One JSON column, `events.bib_design`.* None of it is ever queried — a bib is drawn, never
+filtered — and eight columns would be eight migrations before the ninth setting. `readBibDesign`
+is the only reader and it **never throws**: every field falls back on its own, and a column
+written by an older release reads as the platform's design. A bib that prints plainly beats a
+bib that does not print.
+
+*The two renderers stay in step through a factor, not a font size.* `bibs-pdf.ts` measures in
+points on A4 and `bib-image.tsx` in pixels for the screen, so a shared size is impossible; a
+shared **multiplier** is not. That is what keeps the preview a preview of the paper, which is
+the property §180 bought and this must not spend.
+
+*A picture is one this site stored.* The same rule the editorial body's images follow. A third
+party's address would be a request to somebody else's server every time the club prints, and a
+way to make this application fetch an arbitrary URL on an operator's behalf. The sheet fetches
+each picture with a five-second deadline and a four-megabyte ceiling, and anything that fails
+prints the coloured band — the sheet is what a volunteer is waiting for at a printer.
+
+*White or ink on the band, worked out rather than assumed.* The palette offers yellow, and a
+white event title on yellow was a race nobody could read at the start line.
+
+*The panel posts a marker.* A checkbox that is off posts nothing, so a form without the panel —
+the create form, an older caller — would read as "every switch off" and silently redesign a
+bib. `present=1` says the design was on screen; without it the save writes no column at all,
+exactly as the partners' list has done since §169. The integration test is what caught this:
+the first version wrote `null` whenever the key was absent.
+
+*No JavaScript.* Checkboxes, two selects and radio buttons over the pictures already uploaded.
+The preview is the picture the bibs page already draws, after a save.
+
+**What is not offered.** Free positioning, fonts, a colour per element: a bib is read across a
+field, and the decisions that matter are the ones above. Portrait bibs and a design per distance
+wait for multi-distance races (M2).
+
+Tests: `tests/unit/registrations/bib-design.test.ts` — the fallbacks, the picture rule, the
+contrast, the factor; `tests/integration/cms/bib-design.test.ts` — saved, read back by what the
+renderers call, and left alone by a form without the panel.
+
+Baseline `BR-V1.42-2026-09-21`.
