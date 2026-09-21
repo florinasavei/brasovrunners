@@ -509,6 +509,38 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     expect(after.at(-1)?.messageType).toBe("WAITLIST_JOINED");
   });
 
+  it("refuses an emergency contact who is the participant (§228)", async () => {
+    /*
+      Amalia, testing: "și poți pune la persoana de contact numele tău și nr tău". You could,
+      and the field was then worth nothing — its whole purpose is a number somebody can ring
+      when the runner cannot answer their own.
+
+      The number is the rule and the name is not: two people at one race genuinely share a
+      name — a father and a son, two Ion Popescus — and refusing that would turn a real entry
+      away. Nobody shares a telephone that answers in an emergency.
+    */
+    const event = await createInternalEvent(db);
+
+    const refused = await submitRegistration(
+      db,
+      event,
+      submissionInput({ phone: "+40711111111", emergencyContactPhone: "+40711111111" }),
+      NOW,
+    ).catch((error: unknown) => error);
+    expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(refused) && refused.fields).toContain("emergencyContactPhone");
+    expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toHaveLength(0);
+
+    // The same name on both is allowed, because it is not evidence of anything.
+    await expect(
+      submitRegistration(
+        db,
+        event,
+        submissionInput({ emergencyContactName: "Ana Pop", emergencyContactPhone: "+40722222222" }),
+        NOW,
+      ),
+    ).resolves.toEqual({ ok: true });
+  });
   it("asks a too-fast submission again instead of discarding it (§194)", async () => {
     /*
       This is the case that cost a real participant: he had autofill, the form went back under

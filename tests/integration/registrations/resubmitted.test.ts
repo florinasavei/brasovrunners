@@ -13,6 +13,7 @@ import {
   type EventForRegistration,
   submitRegistration,
 } from "@/modules/registrations/service";
+import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -113,6 +114,41 @@ describe("§199 the form filled a second time with the same address", () => {
     expect(rows).toHaveLength(1);
   });
 
+  it("is refused by the database, not only by the service (§199)", async () => {
+    /*
+      The owner asked whether two registrations on one address are actually impossible.
+      `creates no second registration` above proves the *service* declines to make one, which
+      is the path a person takes. This proves the guarantee underneath it.
+
+      The difference matters under a race: two submissions arriving together both read "no
+      existing registration" before either has committed, and then both insert. Only the
+      constraint decides that, and a constraint nothing tests is a constraint somebody drops
+      in a migration to make an unrelated error go away. The bib index is tested the same way
+      for the same reason.
+    */
+    const event = await createInternalEvent();
+    await submitRegistration(db, event, submission(NOW), NOW);
+    const [existing] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+
+    await expectViolation(
+      db.insert(registrations).values({
+        eventId: existing.eventId,
+        participantId: existing.participantId,
+        status: "PENDING_EMAIL_CONFIRMATION",
+        kind: "REAL",
+        locale: existing.locale,
+        registeredName: existing.registeredName,
+        displayName: existing.displayName,
+        privacyNoticeVersion: existing.privacyNoticeVersion,
+        privacyAcknowledgedAt: existing.privacyAcknowledgedAt,
+        resultsNameConsent: existing.resultsNameConsent,
+        resultsConsentVersion: existing.resultsConsentVersion,
+      }),
+      { code: SQLSTATE.UNIQUE_VIOLATION, constraint: "registrations_event_participant_unique" },
+    );
+
+    expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toHaveLength(1);
+  });
   it("sends the verification link again while the first is still unconfirmed", async () => {
     const event = await createInternalEvent();
     await submitRegistration(db, event, submission(NOW), NOW);
