@@ -8,7 +8,7 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
-## BR-V1.38-2026-09-18
+## BR-V1.39-2026-09-21
 
 - **Nobody is told to wait for an email that was never sent.** The two anti-bot checks used to answer a suspected bot with the confirmation page and create nothing: no registration, no email, nothing on any screen, and no row for the club to find them by. Both now refuse out loud, with the same sentence, so a script still learns nothing about which check it tripped. §217.
 - **The anti-bot timing check is much looser.** One second instead of three — three is well inside what somebody with autofill takes, and it cost two real people — and a submission that arrives with no render time at all is no longer suspected of anything. §217.
@@ -19,6 +19,9 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 - **A paragraph or a heading can be centred or set to the right** in the editor. §213.
 - **The “check your email” screen says the email can take up to five minutes**, in the panel itself rather than three lines down — because somebody who does not know a wait is normal fills the form in again within thirty seconds.
 - **The resend button in the registrations list is a row button again**, not a two-line block that made every row seventy pixels tall.
+
+## BR-V1.38-2026-09-18
+
 - **A tab left open across a deploy says so**, in one line with a button that reloads — and nothing reloads until somebody presses it. A reload nobody asked for would destroy a half-filled registration, which is the work this platform exists to collect. §210.
 - **Typing into the form before the page finished loading no longer loses what you typed.** Two of the new fields were written so that React replaced their contents a moment after they arrived, and a third discarded the whole form's contents through a hydration mismatch. Found by the end-to-end suite. §211.
 - **A pull request runs the end-to-end suite at one viewport; a release runs both.** The two projects are the same 163 specs at two sizes, so a pull request was paying twice for one set of behaviours. Nothing is deleted and nothing is skipped: every spec still runs on every push to `qa` and `main`, and `yarn test:e2e` is still the whole suite locally. §209.

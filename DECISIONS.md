@@ -1,4 +1,4 @@
-<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.39-2026-09-21 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
@@ -9569,7 +9569,7 @@ was centred.
 Tests: `tests/unit/content/rich-text-align.test.ts` (7), including that a body written before
 this parses byte-for-byte to itself and that the default emits no rule at all.
 
-Baseline `BR-V1.38-2026-09-18`.
+Baseline `BR-V1.39-2026-09-21`.
 
 ## 214. Decided — the race number is reserved when the place is, and settled when registration closes (2026-09-21)
 
@@ -9650,7 +9650,7 @@ and reuse, the unique index, that a test registration gets none, that the settle
 holes, that it runs exactly once however often the job does, and that nothing is emailed before
 it.
 
-Baseline `BR-V1.38-2026-09-18`.
+Baseline `BR-V1.39-2026-09-21`.
 
 ## 215. Decided — a member's club is the club's own name (2026-09-21)
 
@@ -9678,7 +9678,7 @@ rather than `Site.name` from the catalogue, because what is stored is a fact and
 translation: it must not differ between a Romanian and an English submission. A test asserts
 the constant equals `Site.name` in both catalogues, so the two cannot drift.
 
-Baseline `BR-V1.38-2026-09-18`.
+Baseline `BR-V1.39-2026-09-21`.
 
 ## 216. Decided — a challenge that cannot run is not a reason to refuse a registration (2026-09-21)
 
@@ -9719,7 +9719,7 @@ section is a second hole found while looking for the first.
 Tests: `tests/unit/registrations/turnstile.test.ts` — each way the check can fail to run, and
 the one way it can fail.
 
-Baseline `BR-V1.38-2026-09-18`.
+Baseline `BR-V1.39-2026-09-21`.
 
 ## 217. Decided — nobody is told to wait for an email that was never sent (2026-09-21)
 
@@ -9792,4 +9792,4 @@ the passing of a missing render time), `tests/integration/registrations/lifecycl
 trap refuses out loud and creates nothing, and the two verdicts produce the identical answer),
 `tests/integration/contact/service.test.ts` and `tests/integration/registrations/interest.test.ts`.
 
-Baseline `BR-V1.38-2026-09-18`.
+Baseline `BR-V1.39-2026-09-21`.
