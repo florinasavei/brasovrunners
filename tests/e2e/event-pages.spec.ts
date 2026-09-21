@@ -24,7 +24,8 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
   // BR-REQ-041-01 criterion 5 (`DECISIONS.md` §137): the month is the grid on every width,
   // the list one press away, and the choice is kept by the month links.
   test("shows the month as a grid, and as a list when asked", async ({ page }) => {
-    await page.goto("/ro/evenimente");
+    // The calendar is its own page since §251; the listing is the events themselves.
+    await page.goto("/ro/calendar");
     const main = page.locator("#main");
     await expect(main.getByRole("table")).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -94,7 +95,7 @@ test.describe("BR-REQ-041-01 the event list on a phone", () => {
    * geometry assertions teeth.
    */
   test("changes month without moving the controls or reflowing the grid", async ({ page }) => {
-    await page.goto("/ro/evenimente");
+    await page.goto("/ro/calendar");
     const main = page.locator("#main");
     await expect(main.getByRole("table")).toBeVisible();
     // Every streamed region has arrived: a fallback still on screen would be measured as the

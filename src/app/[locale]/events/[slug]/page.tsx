@@ -126,7 +126,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await getCurrentStaffUser();
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       <JsonLd
         data={sportsEventJsonLd(event, eventUrl(locale, slug), tSite("name"), [
           `${env.APP_BASE_URL}/${locale}/events/${slug}/opengraph-image`,

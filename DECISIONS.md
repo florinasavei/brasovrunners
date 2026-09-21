@@ -10891,3 +10891,71 @@ Tests: `tests/unit/registrations/start-list-page.test.ts` — the slice each pag
 boundary where named rows give way to unnamed ones, and a page number typed by anybody.
 
 Baseline `BR-V1.41-2026-09-21`.
+
+## 251. Decided — the front page is the events; the calendar is a tab (2026-09-21)
+
+**Context.** Three instructions in one evening, all about the same page. "On the event card I
+wanna be able to see pictures in the preview." "The calendar should be a tab, after events, and
+not show on the homepage." "The hardcoded pages should be: Events, Calendar, Contact, then
+separators and the rest of the custom pages."
+
+**Decisions.**
+
+*Every card carries the summary, pictures and all — §242 is reversed.* §242 kept the list under
+the featured event dense, on §78's reasoning that a lead event must not be followed by a scroll.
+That reasoning was sound when a picture in a summary was whatever height the photograph
+happened to be; §241 gave the organizer the crop, so the card's picture is now a decision rather
+than an accident. With that, the owner wants the pictures, and the honest label — "apare pe
+card" — is true again on every card. The list's heading follows: "Toate evenimentele", not
+"Alte evenimente", because with the summaries back it is simply the list.
+
+*The calendar is `/calendar`.* It lived at the top of the listing, which is the site's front
+page, above the events themselves — so the first thing a visitor met was a grid of squares
+rather than the next run. The grid is what somebody planning a month wants, and that is worth
+an address of its own and a bookmark. `CalendarSection` is the whole of it, moved unchanged;
+what *did* change is that every control inside it takes the page it is on as a prop. They were
+written against `/events` and would otherwise navigate away from the calendar — which the e2e
+caught, pressing "next month" and landing on a page with no calendar at all.
+
+*The menu is the platform's sections, then a rule, then the club's pages.* Events, Calendar,
+Gallery, Contact — the four this application ships, in that order — a hairline, and then
+whatever the club has written. The gallery stays with the four rather than with the pages
+because it is a section this application ships, and it is still offered only when a published
+album exists. The rule is an item in the row like any other, so the priority+ fold measures its
+width and folds it with everything else; in the folded menu it is a divider.
+
+Tests: `tests/unit/events/card-excerpt.test.ts` — the summary is on every card and the editor's
+help text no longer claims otherwise; `tests/e2e/event-pages.spec.ts` — the month, the list and
+the arrows on their new page; `tests/integration/cms/boundary.test.ts` — the route list.
+
+Baseline `BR-V1.41-2026-09-21`.
+
+## 252. Decided — a wider page that carries less air (2026-09-21)
+
+**Context.** The owner, with a screenshot of a 2560-pixel screen: "the website can span a bit
+wider and there is too much whitespace overall and padding", then "pagina poate fi chiar și mai
+lată", then "folosește spațiul mai eficient".
+
+**Decision.** *One number for the width.* `PAGE_WIDTH` is `xl` and every page reads it, so the
+page's width is the theme's `xl` breakpoint: **2040 pixels**, up from MUI's 1536. Nineteen
+`maxWidth` props stay exactly as they are.
+
+*Prose does not get wider.* `PROSE_MEASURE` still holds anything read line by line to about
+seventy-five characters. What gained room is what benefits from it: the cards, the calendar grid
+and the backoffice tables.
+
+*A third less vertical padding*, everywhere at once: every page's `py` went from 3/6 to 2/3, and
+a card's inside from MUI's 16 and 24 to 12 — one theme override rather than a number in each
+card.
+
+*And the listing is a grid.* One column on a phone, two from `md`, three at `xl`. A single
+column of full-width cards on a 2040-pixel page is a stripe of text with a field of nothing
+beside it, which is exactly what "folosește spațiul mai eficient" was pointing at. A CSS grid,
+so the rows line up whatever length the summaries are, and still a `<ul>` of `<li>` cards for a
+screen reader and for a reader with no CSS.
+
+**What this must not break**, and what the tests hold: 320 pixels stays the hard target — the
+grid is one column there and nothing scrolls sideways — and every tap target keeps its 44
+pixels. `tests/e2e/event-pages.spec.ts` asserts both on the listing.
+
+Baseline `BR-V1.41-2026-09-21`.

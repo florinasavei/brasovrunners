@@ -31,13 +31,11 @@ export default async function SeriesCard({
   members,
   index,
   now,
-  underHero = false,
 }: {
   /** Soonest first; at least two. */
   members: readonly PublicEvent[];
   index: number;
   now: Date;
-  underHero?: boolean;
 }) {
   const t = await getTranslations("Event");
   const format = await getFormatter();
@@ -92,7 +90,8 @@ export default async function SeriesCard({
 
         {/* The short description as written, picture and all (§73) — the same excerpt the
             single-event card renders, constrained to the card by `EventExcerpt`. */}
-        {!underHero && <EventExcerpt place="card" excerptJson={next.excerptJson} excerpt={next.excerpt} />}
+        {/* The summary, pictures and all, on every card since §251. */}
+        <EventExcerpt place="card" excerptJson={next.excerptJson} excerpt={next.excerpt} />
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.25 }}>
           {t("series.nextLabel")}

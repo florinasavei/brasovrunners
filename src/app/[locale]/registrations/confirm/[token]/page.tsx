@@ -41,7 +41,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
 
   if (done) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
         {/* Every page in this journey opens with an h1, this one included. A page whose only
             content is an alert leaves a screen-reader heading list with a gap where the
             outcome should be, and "what happened" is the one thing somebody arriving here
@@ -79,7 +79,7 @@ export default async function ConfirmEmailPage({ params, searchParams }: Props) 
   const journeyStep = spent ? spent.step : ("confirm" as const);
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("confirm.title")}
       </Typography>

@@ -35,7 +35,7 @@ export default async function MyRegistrationsRequestPage({ params, searchParams 
   const t = await getTranslations("Registrations.mine");
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("title")}
       </Typography>

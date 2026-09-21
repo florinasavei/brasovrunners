@@ -54,8 +54,11 @@ export default async function EventCalendar({
   now,
   query = {},
   layout = "grid",
+  pathname = "/calendar",
 }: {
   view: CalendarView;
+  /** The page the calendar is on (§251): a day links back to it, never to the listing. */
+  pathname?: "/calendar" | "/events";
   /** Awaited here, so the boundary above suspends on the query rather than the page doing it. */
   events: PublicEvent[] | Promise<PublicEvent[]>;
   now: Date;
@@ -162,7 +165,7 @@ export default async function EventCalendar({
                 >
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", px: 1.5, bgcolor: "action.hover", borderBottom: 1, borderColor: "divider" }}>
                     <Typography component="h3" variant="h3" sx={{ fontSize: "1rem", fontWeight: 600, textTransform: "capitalize" }}>
-                      <Link href={{ pathname: "/events", query: { ...query, month: monthParam(ym) } }} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+                      <Link href={{ pathname, query: { ...query, month: monthParam(ym) } }} style={{ color: "inherit", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
                         {monthNames[ym.month - 1]}
                       </Link>
                     </Typography>

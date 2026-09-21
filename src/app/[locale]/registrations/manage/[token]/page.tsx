@@ -41,7 +41,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
 
   if (done) {
     return (
-      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
         {/* An outcome page still opens with a heading: a document whose only content is an
             alert gives a screen reader nothing to navigate to. */}
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
@@ -74,7 +74,7 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
     context !== null && context.ok && !invalid && context.registration.status === "CONFIRMED" ? context : null;
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
         {t("manage.title")}
       </Typography>

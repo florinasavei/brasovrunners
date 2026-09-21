@@ -43,7 +43,7 @@ export default async function ResendPage({ params, searchParams }: Props) {
   const t = await getTranslations("Registration");
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
       <Typography variant="h1" gutterBottom>
         {t("resend.title")}
       </Typography>

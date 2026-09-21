@@ -67,7 +67,7 @@ export default async function BackofficeShell({
   }));
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 5 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}

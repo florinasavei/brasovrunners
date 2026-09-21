@@ -25,6 +25,7 @@
     "nav": {
       "label": "Main navigation",
       "events": "Events",
+      "calendar": "Calendar",
       "gallery": "Gallery",
       "more": "Menu",
       "contact": "Contact"
@@ -50,7 +51,7 @@
     "featured": "Featured event",
     "featuredCallToAction": "See the race details",
     "others": "Other events",
-    "othersCount": "Other events ({count})",
+    "othersCount": "All events ({count})",
     "filter": {
       "label": "Event type",
       "all": "All"
@@ -69,6 +70,8 @@
       "pickMonth": "Month",
       "pickYear": "Year",
       "yearEmpty": "Nothing scheduled this year.",
+      "pageTitle": "Calendar",
+      "pageIntro": "The club's month: the weekly runs and the races, day by day. You can take the whole calendar into your phone or your Google Calendar.",
       "addTitle": "Add to your calendar",
       "feedAddress": "The address for other apps",
       "subscribeGoogle": "Google Calendar",
@@ -543,7 +546,7 @@
       "newTitle": "New event",
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
-      "excerptHelp": "One or two sentences: what the event page, the listing card and the shares carry. The exception: under the featured event on the front page the other cards are dense — title, date and place only — so the summary is not shown there. Required before publication.",
+      "excerptHelp": "One or two sentences: what the event page, the listing card (with a picture, if you put one in) and the shares carry. Required before publication.",
       "rulesEmpty": "(none yet — press to write)",
       "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
       "programmeSection": "Programme",
