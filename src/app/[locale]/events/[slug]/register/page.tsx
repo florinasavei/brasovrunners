@@ -38,6 +38,7 @@ import {
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
+import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
@@ -46,7 +47,7 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
-import { PAGE_WIDTH } from "@/theme/brand";
+import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 
 type Props = {
@@ -160,6 +161,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    * and matched against the one literal it may be.
    */
   const tooFast = (fields ?? "").split(",").includes("tooFast");
+  /**
+   * The per-address throttle, refused out loud since §217 closed the last silent drop. Like
+   * the two above it is about nothing the person typed, so it is read from the raw parameter
+   * and matched against the one literal it may be.
+   */
+  const throttled = (fields ?? "").split(",").includes("throttled");
 
   // BR-REQ-031-04 criterion 4, expressed where the browser can enforce it too.
   const latestBirthDate = now.toISOString().slice(0, 10);
@@ -253,7 +260,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {submitted ? (
         <Stack spacing={2}>
-          <Alert severity="success">{t("submitted")}</Alert>
+          {/*
+            "Check your email", and then — in the same panel, in the same weight — how long it
+            may take. The owner asked for the second sentence to be highlighted here rather than
+            left where it was, three lines down in the stepper's prose: this screen is where
+            somebody stands with their inbox open, and a person who does not know a wait is
+            normal fills the form again within thirty seconds (§199 is the reason that is not
+            free, and §205 is what it costs the club when they give up instead).
+
+            One caveat worth knowing rather than guessing at: the outbox drains after the
+            request that queued it, so the usual delay is seconds. Five minutes is the honest
+            outer bound for the common path; a message that misses its drain waits for the
+            pinger, which by day is a quarter of an hour (§68).
+          */}
+          <Alert severity="success">
+            <AlertTitle>{t("submitted")}</AlertTitle>
+            {t("submittedDelay")}
+          </Alert>
           {/*
             The one thing a person needs when the message does not arrive, offered at the
             moment they would first notice — carrying the event so the resend knows which
@@ -313,7 +336,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               tabIndex={-1}
               sx={{ mb: 2 }}
             >
-              <AlertTitle>{t("errors.title")}</AlertTitle>
+              <AlertTitle>
+                {throttled ? t("errors.throttledTitle") : tooFast ? t("errors.tooFastTitle") : t("errors.title")}
+              </AlertTitle>
               {/*
                 The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
                 înscrie man!").
@@ -328,6 +353,22 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {captchaFailed ? (
                 t("errors.captcha")
+              ) : throttled ? (
+                // Their own address, their own count: this tells them about themselves and
+                // nothing about who else is registered, which is the oracle §19.4 forbids.
+                t("errors.throttled")
+              ) : tooFast ? (
+                /*
+                  The anti-bot refusal, said **here** and not only beside the button (§217).
+
+                  This is where the browser lands and where focus goes, and `tooFast` is not one
+                  of the form's fields — so the summary used to fall through to "verifică datele
+                  completate", which is the same trap the captcha comment above describes: a red
+                  box telling somebody to check twenty inputs that are all correct, while the one
+                  sentence that explains what happened sat at the far end of a long form. The
+                  owner: "they need visuals on this! so that they know!"
+                */
+                t("errors.tooFast")
               ) : rejected.length > 0 ? (
                 <>
                   {t("errors.fieldsIntro")}
@@ -681,10 +722,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     ))}
                   </TextField>
 
-                  <TextField
+                  {/*
+                    The club, filled in and locked while the tick above is on (§215; the owner:
+                    "if people check that they are brasov runners members, the club input must be
+                    auto-filled and readonly"). The same fact was being written three ways —
+                    "BRASOV RUNNERS", "Brasov runners", "BvR" — and the export read them as three
+                    clubs. The tick still grants nothing (§48); the service writes the same name
+                    whatever the browser did, so a form filled with JavaScript off records it too.
+                  */}
+                  <ClubForMember
                     {...field("clubName", t("optional"))}
                     label={t("clubName")}
-                    autoComplete="organization"
+                    memberCheckboxId={fieldId("clubMemberDeclared")}
+                    clubName={CLUB_NAME}
+                    lockedHelperText={t("clubNameFromMembership")}
                   />
                 </Stack>
               </Box>

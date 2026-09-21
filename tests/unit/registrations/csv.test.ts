@@ -69,7 +69,7 @@ describe("CSV formula neutralization", () => {
 
   it("includes the header row and uses CRLF line endings", () => {
     const csv = buildRegistrationsCsv([]);
-    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Guardian,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced");
+    expect(csv).toBe("Event,Name,First name,Last name,Identity document,Email,Status,Club member (declared),Medically fit (declared),Strava,Instagram,Guardian,Submitted,Confirmed,Race number (BIB),Number settled,Checked in,Email bounced");
 
     const withRow = buildRegistrationsCsv([
       {
@@ -126,13 +126,13 @@ describe("CSV formula neutralization", () => {
     ]);
     // Race day and the provider's verdict as the last two columns (§83): a time, and Yes or empty.
     expect(member.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,2026-09-04T10:00:00.000Z,,17,2026-10-11T06:40:00.000Z,Yes",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,Yes,,https://www.strava.com/athletes/12345,ana.pop,,2026-09-04T10:00:00.000Z,,17,Yes,2026-10-11T06:40:00.000Z,Yes",
     );
 
     // No number yet is an empty cell, never 0 (BR-REQ-038-01).
     const other = buildRegistrationsCsv([row]);
     expect(other.split("\r\n")[1]).toBe(
-      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,2026-09-04T10:00:00.000Z,,,,",
+      "Test,Ana,Ana,Pop,BV 123456,ana@example.ro,CONFIRMED,,,,,,2026-09-04T10:00:00.000Z,,,,,",
     );
     expect(other).not.toContain("No");
   });

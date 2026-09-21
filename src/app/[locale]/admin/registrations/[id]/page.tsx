@@ -22,6 +22,7 @@ import {
 } from "@/modules/registrations/admin-repository";
 import { suggestFreeBibNumbers } from "@/modules/registrations/bibs";
 import { journeyOf } from "@/modules/registrations/domain/journey";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { canResendReminder, deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import { canTransition } from "@/modules/registrations/domain/state-machine";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
@@ -133,7 +134,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Stack>
       {/* Where this person is, as steps (§145): the same derivation the list's "Etapă"
           column uses, so the page never contradicts the row that led here. */}
-      <StaffJourney journey={journeyOf(registration)} bibNumber={registration.bibNumber} variant="full" />
+      <StaffJourney journey={journeyOf(registration)} bibNumber={raceNumberOf(registration)?.value ?? null} variant="full" />
       <Typography variant="body2" color="text.secondary">
         {registration.participantEmail} · {registration.eventTitle ?? registration.eventId}
       </Typography>

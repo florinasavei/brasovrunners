@@ -142,12 +142,49 @@ function card(blocks: string[][]): string {
    * §8): no hostname is written in `src/`.
    */
   const logo = `<img src="${env.APP_BASE_URL}/brand/logo-email.png" alt="Bra&#536;ov Runners" width="180" height="74" style="display:block;width:180px;height:74px;border:0">`;
+  /**
+   * The header is a **white banner**, and the message declares itself a light-scheme document
+   * (§218; Dani: "this email header looks ugly! it should be a banner with white background").
+   *
+   * ## What was actually wrong, because the card was already white
+   *
+   * `COLOR.surface` is `#ffffff`, so in an ordinary inbox the band and the logo were the same
+   * colour and nothing showed. The screenshot was Gmail's **dark mode**, which re-colours what
+   * it can and cannot re-colour a raster: the card went dark, the logo's own white rectangle
+   * did not, and the lockup ended up looking like a sticker on a dark wall — the exact thing
+   * §189 changed the blue band to avoid.
+   *
+   * ## The two halves of the fix
+   *
+   * `color-scheme: light` in both the meta and a `:root` rule is what tells Apple Mail, Outlook
+   * and Gmail's webmail to leave the colours alone. It is declared twice on purpose: the meta
+   * is what most clients read, and Gmail strips `<head>` but keeps a `<style>` block.
+   *
+   * And the banner is a **table cell with a `bgcolor` attribute**, not a styled `<div>`. A
+   * client that inverts anyway has to fight an HTML attribute rather than a CSS declaration,
+   * which is the one lever that still works in the clients that ignore `color-scheme`; the
+   * logo is centred in it so a band wider than the picture still reads as a letterhead rather
+   * than as a picture with space beside it.
+   *
+   * A full document rather than a fragment, for the same reason: there was no `<head>` to put
+   * any of this in.
+   */
   return [
+    "<!DOCTYPE html>",
+    '<html lang="ro"><head>',
+    '<meta charset="utf-8">',
+    '<meta name="color-scheme" content="light">',
+    '<meta name="supported-color-schemes" content="light">',
+    "<style>:root{color-scheme:light;supported-color-schemes:light}</style>",
+    "</head>",
+    `<body style="margin:0;padding:0;background:${COLOR.surface}">`,
     `<div style="max-width:600px;margin:0 auto;font-family:Roboto,Helvetica,Arial,sans-serif;color:${COLOR.ink}">`,
-    `<div style="background:${COLOR.surface};padding:16px 24px;border:1px solid ${COLOR.line};border-bottom:0;border-radius:12px 12px 0 0">${logo}</div>`,
-    `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background:${COLOR.surface}">`,
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse">`,
+    `<tr><td bgcolor="${COLOR.surface}" align="center" style="background-color:${COLOR.surface};padding:20px 24px;border:1px solid ${COLOR.line};border-bottom:0;border-radius:12px 12px 0 0">${logo}</td></tr>`,
+    "</table>",
+    `<div style="padding:24px;border:1px solid ${COLOR.line};border-top:0;border-radius:0 0 12px 12px;background-color:${COLOR.surface}">`,
     ...blocks.flatMap((parts, index) => (index > 0 ? [rule, ...parts] : parts)),
-    "</div></div>",
+    "</div></div></body></html>",
   ].join("\n");
 }
 

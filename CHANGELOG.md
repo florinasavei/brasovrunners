@@ -8,6 +8,22 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.39-2026-09-21
+
+- **Two defects in the new race-number code, found by auditing it the same day it was written**: a lapsed hold never gave its number back, so the sequence would have grown permanent holes; and a late confirmation at the desk could be handed a number another walk-in was already holding. §220.
+- **The sixth registration attempt in an hour is told why**, instead of the check-your-email screen with nothing sent. The per-address throttle was the last place still answering a real person with silence — its own comment justified it by pointing at two checks that had already been changed. §218.
+- **Somebody on the waiting list who fills the form again gets an answer**, rather than a promise of an email that had nothing to send. §218.
+- **The email header is a white banner**, and the message now tells mail clients it is a light-scheme document — Gmail dark mode was inverting the card around a logo it could not invert, which is what made it look like a sticker. §219.
+- **Nobody is told to wait for an email that was never sent.** The two anti-bot checks used to answer a suspected bot with the confirmation page and create nothing: no registration, no email, nothing on any screen, and no row for the club to find them by. Both now refuse out loud, with the same sentence, so a script still learns nothing about which check it tripped. §217.
+- **The anti-bot timing check is much looser.** One second instead of three — three is well inside what somebody with autofill takes, and it cost two real people — and a submission that arrives with no render time at all is no longer suspected of anything. §217.
+- **The anti-bot refusal is said where you are looking**, at the top of the form with its own heading, instead of a red box telling you to check twenty fields that are all correct. It names a second press, and then the contact form if that fails too. §217.
+- **A registration is no longer refused because the anti-bot widget could not run.** A blocked script, a privacy browser, a corporate proxy or a bad five seconds at Cloudflare used to lock somebody out of the form entirely. Only a challenge that actually ran and failed stops a submission now. §216.
+- **The race number is reserved the moment the place is** — at submission, before the email is confirmed and before the declaration is signed — so the runner can see it and the club can plan. It is released if the place goes, so the sequence stays dense; it settles into one unbroken run when registration closes, and only the settled number is ever emailed or printed. §214.
+- **Ticking “I am a member of the Brașov Runners group” fills in the club and locks it.** The same fact was being typed three ways and read as three clubs in the export. Unticking gives back whatever was there. §215.
+- **A paragraph or a heading can be centred or set to the right** in the editor. §213.
+- **The “check your email” screen says the email can take up to five minutes**, in the panel itself rather than three lines down — because somebody who does not know a wait is normal fills the form in again within thirty seconds.
+- **The resend button in the registrations list is a row button again**, not a two-line block that made every row seventy pixels tall.
+
 ## BR-V1.38-2026-09-18
 
 - **A tab left open across a deploy says so**, in one line with a button that reloads — and nothing reloads until somebody presses it. A reload nobody asked for would destroy a half-filled registration, which is the work this platform exists to collect. §210.

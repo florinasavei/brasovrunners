@@ -1,5 +1,6 @@
 import writeExcelFile from "write-excel-file/node";
 import type { RegistrationCsvRow } from "./csv";
+import { raceNumberOf } from "./domain/race-number";
 
 /**
  * The start list as a spreadsheet the club can actually work in (§172; the owner: "CSV is
@@ -54,7 +55,10 @@ const COLUMNS: Array<{
   { header: "ID", width: 38, cell: (row) => ({ value: row.id, type: String }) },
   // Named as the backoffice names it (§180), and wide enough for the heading rather than the
   // number: a column headed by a truncated word is what makes somebody widen it by hand.
-  { header: "Race number (BIB)", width: 18, cell: (row) => ({ value: row.bibNumber ?? null, type: Number }) },
+  { header: "Race number (BIB)", width: 18, cell: (row) => ({ value: raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.value ?? null, type: Number }) },
+  // Whether that number is settled (§214): a provisional one is the club's planning figure
+  // and not the one to send to the printer, and a sheet has to say which it is looking at.
+  { header: "Number settled", width: 16, cell: (row) => ({ value: raceNumberOf({ bibNumber: row.bibNumber ?? null, provisionalBibNumber: row.provisionalBibNumber ?? null })?.settled ? "Yes" : "", type: String }) },
   { header: "Name", width: 28, cell: (row) => ({ value: row.registeredName, type: String }) },
   { header: "First name", width: 18, cell: (row) => ({ value: row.firstName, type: String }) },
   { header: "Last name", width: 18, cell: (row) => ({ value: row.lastName, type: String }) },

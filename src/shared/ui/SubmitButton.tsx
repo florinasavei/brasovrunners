@@ -25,6 +25,19 @@ type Props = {
   size?: "small" | "medium" | "large";
   fullWidth?: boolean;
   /**
+   * A button in a dense backoffice table: no 44-pixel floor, and the label never wraps.
+   *
+   * `tap-target.ts` already draws this line and gives the reason — "a `MuiButton` default would
+   * silently enlarge every control in the backoffice too, where density is worth more than
+   * reach". The registrations list is where that bites: one button per row, in a narrow column,
+   * with a label long enough to wrap, makes every row seventy pixels tall (the owner, looking at
+   * the list: "these buttons are HUGE!"). The rule it steps around is BR-REQ-041-01 criterion 6,
+   * which is about the participant journeys on a phone; this is an Administrator's table.
+   *
+   * Not for the race-day desk, which is a phone in somebody's hand and keeps the floor.
+   */
+  compact?: boolean;
+  /**
    * The accessible name, when the visible label cannot be one — an arrow in a row of pages is
    * "↓" to everybody who can see which row it is in, and nothing at all to anybody who cannot.
    */
@@ -76,6 +89,7 @@ export default function SubmitButton({
   size = "small",
   fullWidth,
   ariaLabel,
+  compact,
 }: Props) {
   const { pending } = useFormStatus();
   const ref = useRef<HTMLButtonElement>(null);
@@ -128,7 +142,11 @@ export default function SubmitButton({
         aria-disabled={pending}
         aria-busy={pending}
         aria-describedby={dimmed ? "submit-incomplete" : undefined}
-        sx={{ ...TAP_TARGET, ...(variant === "contained" && color === "primary" ? accentOnHover : {}), ...(dimmed ? { opacity: 0.55 } : {}) }}
+        sx={{
+          ...(compact ? { whiteSpace: "nowrap", py: 0.25, px: 1 } : TAP_TARGET),
+          ...(variant === "contained" && color === "primary" ? accentOnHover : {}),
+          ...(dimmed ? { opacity: 0.55 } : {}),
+        }}
         // The club's runner rather than MUI's ring (§166; the owner: "I need a runner showing
         // as a loader"). `color="inherit"` so it takes the button's own foreground on a
         // contained button and the brand blue on a text one, and it carries no accessible

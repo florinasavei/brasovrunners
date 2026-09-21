@@ -204,6 +204,19 @@ export const FONT = {
 export const WORDMARK = "BRASOV RUNNERS";
 
 /**
+ * The club's name as it is **stored in a record** — a runner's club on their registration, and
+ * whatever else has to hold the name as data rather than show it as words (`DECISIONS.md` §215).
+ *
+ * A constant and not `Site.name`, although the two are the same string and a test asserts they
+ * stay so. The reason is the difference between a translation and a fact: `Site.name` is read
+ * per request in the reader's locale and is free to differ between them one day, while a club
+ * written into a registration must be the same string for a Romanian and an English submission
+ * or the export has two clubs again. The same distinction `WORDMARK` draws above, from the
+ * other side.
+ */
+export const CLUB_NAME = "Brașov Runners";
+
+/**
  * The logo assets and their intrinsic proportions.
  *
  * Dimensions are here so a layout can reserve the right space before the SVG loads; a logo

@@ -74,6 +74,8 @@ export type MyRegistration = {
   checkedInAt: Date | null;
   /** The race number, once given (§87). */
   bibNumber: number | null;
+  /** The number held before the settle (§214); what the runner is shown until then. */
+  provisionalBibNumber: number | null;
   /** "I am here" is offered from the day before the start, confirmed registrations only. */
   selfCheckinOpen: boolean;
 };
@@ -97,6 +99,7 @@ export async function listActiveRegistrationsForParticipant<T extends Record<str
       checkinCode: registrations.checkinCode,
       checkedInAt: registrations.checkedInAt,
       bibNumber: registrations.bibNumber,
+      provisionalBibNumber: registrations.provisionalBibNumber,
     })
     .from(registrations)
     .innerJoin(events, eq(events.id, registrations.eventId))

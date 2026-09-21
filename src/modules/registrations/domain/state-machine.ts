@@ -58,3 +58,22 @@ export const ACTIVE_STATUSES: readonly RegistrationStatus[] = [
 export function isActiveStatus(status: RegistrationStatus): boolean {
   return (ACTIVE_STATUSES as readonly string[]).includes(status);
 }
+
+/**
+ * The statuses that hold a place, as opposed to having priority for one (`DECISIONS.md` §214).
+ *
+ * `ACTIVE_STATUSES` minus `WAITLISTED`, and the difference is the whole reason this exists: a
+ * person on the waiting list counts against the queue and does not occupy a place. It is what
+ * decides whether a registration carries a provisional race number, because a number is a thing
+ * that exists at the start line and handing one out says "you are in".
+ */
+export const PLACE_HOLDING_STATUSES: readonly RegistrationStatus[] = [
+  "PENDING_EMAIL_CONFIRMATION",
+  "PENDING_DECLARATION",
+  "WAITLIST_OFFERED",
+  "CONFIRMED",
+];
+
+export function holdsAPlace(status: RegistrationStatus): boolean {
+  return (PLACE_HOLDING_STATUSES as readonly string[]).includes(status);
+}

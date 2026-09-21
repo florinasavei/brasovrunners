@@ -14,6 +14,7 @@ import {
   submitRegistration,
   unregister,
 } from "@/modules/registrations/service";
+import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { signingInput } from "../../helpers/declaration-signing";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -403,19 +404,109 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     );
   });
 
-  it("answers a honeypot-tripped submission exactly like success, and creates nothing", async () => {
+  it("refuses a honeypot-tripped submission out loud, and creates nothing (§217)", async () => {
+    /*
+      §194 answered the trap with the success page, so a script could not learn which check it
+      tripped. The owner overruled it: "people need to know that they were identified as bots!
+      it's very bad for a user to tell him he is waiting for an email but he never receives
+      it!" A hidden field is filled by machines and, rarely, by a password manager that does
+      not know it is hidden — and that person was being told to wait for an email nobody sent.
+
+      What a script learns is still only "refused": this throws the *same* error with the same
+      marker as a too-fast submission, so neither the caller nor a bot can tell them apart.
+    */
     const event = await createInternalEvent(db);
 
-    const spamResult = await submitRegistration(
-      db,
-      event,
-      submissionInput({ honeypot: "http://spam.example" }),
-      NOW,
+    await expect(
+      submitRegistration(db, event, submissionInput({ honeypot: "http://spam.example" }), NOW),
+    ).rejects.toSatisfy(
+      (error: unknown) =>
+        isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields?.includes("tooFast") === true,
     );
-    expect(spamResult).toEqual({ ok: true });
 
     const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(rows).toHaveLength(0);
+  });
+
+  it("gives the trap and the timing check the same answer, so neither can be told apart (§217)", async () => {
+    // The whole of what the old silence bought, kept: a script gets one sentence for both and
+    // still has to wait out the timer. What it no longer costs is a vanished participant.
+    const event = await createInternalEvent(db);
+
+    const codes: string[] = [];
+    for (const bad of [
+      submissionInput({ honeypot: "http://spam.example" }),
+      { ...submissionInput(), renderedAt: new Date(NOW.getTime() - 500).toISOString() },
+    ]) {
+      await submitRegistration(db, event, bad, NOW).catch((error: unknown) => {
+        if (isDomainError(error)) codes.push(`${error.code}:${(error.fields ?? []).join(",")}`);
+      });
+    }
+    expect(codes).toHaveLength(2);
+    expect(codes[0]).toBe(codes[1]);
+  });
+
+  it("tells the sixth submission in an hour why, instead of the check-your-email screen (§217)", async () => {
+    /*
+      The last silent drop, and it survived the fix that removed the other two — its own
+      comment still justified the silence by pointing at the honeypot and the timing check,
+      which §217 had already reversed.
+
+      Five an hour is reachable by ordinary use: a re-test, a second person on one mailbox,
+      somebody who cancelled and signed up again. The sixth used to get a registration that
+      was never written, an email that was never queued, and a screen telling them to wait for
+      it — with no log line to find them by afterwards.
+
+      It leaks nothing: the bucket is keyed on the canonical identity of the address they just
+      typed, so this tells them about themselves and not about who else is registered.
+    */
+    const event = await createInternalEvent(db);
+    const { limit } = RATE_LIMITS["registration-submit"];
+
+    for (let i = 0; i < limit; i += 1) {
+      await submitRegistration(db, event, submissionInput({ email: "ana@example.ro" }), NOW);
+    }
+    const accepted = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    expect(accepted).toHaveLength(1); // one row: the same person, not five (§199)
+
+    const refused = await submitRegistration(db, event, submissionInput({ email: "ana@example.ro" }), NOW).catch(
+      (error: unknown) => error,
+    );
+    expect(isDomainError(refused) && refused.code).toBe("VALIDATION_ERROR");
+    expect(isDomainError(refused) && refused.fields).toContain("throttled");
+
+    // Somebody else's hour is their own.
+    await expect(
+      submitRegistration(db, event, submissionInput({ email: "ion@example.ro" }), NOW),
+    ).resolves.toEqual({ ok: true });
+  });
+
+  it("answers a waitlisted person who fills the form again, instead of promising an email (§217)", async () => {
+    /*
+      `deriveAllowedResendMessageType` returns null for WAITLISTED and is right to — the
+      backoffice's "send it again" hands over a link, and a queued person has none. But this
+      is somebody typing their address a second time because they are not sure the first
+      worked, and the answer to that is the message that says they are on the list.
+    */
+    const event = await createInternalEvent(db, { capacity: 1 });
+    await submitRegistration(db, event, submissionInput({ email: "first@example.ro" }), NOW);
+    const [taken] = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    await confirmEmail(db, event, taken.id, NOW);
+
+    const later = new Date(NOW.getTime() + 60_000);
+    await submitRegistration(db, event, submissionInput({ email: "queued@example.ro" }), later);
+    const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
+    const queued = rows.find((row) => row.id !== taken.id)!;
+    await confirmEmail(db, event, queued.id, later);
+    const [waitlisted] = await db.select().from(registrations).where(eq(registrations.id, queued.id));
+    expect(waitlisted.status).toBe("WAITLISTED");
+
+    const before = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, queued.id));
+    await submitRegistration(db, event, submissionInput({ email: "queued@example.ro" }), new Date(later.getTime() + 60_000));
+    const after = await db.select().from(emailOutbox).where(eq(emailOutbox.registrationId, queued.id));
+
+    expect(after.length).toBeGreaterThan(before.length);
+    expect(after.at(-1)?.messageType).toBe("WAITLIST_JOINED");
   });
 
   it("asks a too-fast submission again instead of discarding it (§194)", async () => {

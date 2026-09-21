@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, exists, inArray, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
@@ -15,7 +15,7 @@ import type { Locale } from "@/i18n/routing";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied } from "./domain/capacity";
-import { allowedFromStatuses } from "./domain/state-machine";
+import { allowedFromStatuses, holdsAPlace, PLACE_HOLDING_STATUSES } from "./domain/state-machine";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
 /**
@@ -272,7 +272,29 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
   const fromStatuses = params.fromStatuses ?? allowedFromStatuses(params.to);
   const [row] = await db
     .update(registrations)
-    .set({ ...params.changes, status: params.to, updatedAt: params.now })
+    .set({
+      /**
+       * The provisional number is released here, and here only (§214).
+       *
+       * It belongs to a registration *while it occupies a place*, so the moment the place goes
+       * — cancelled, expired, or pushed back onto the waiting list — the number returns to the
+       * pool for the next person. Putting it in the one guarded transition every state change
+       * already goes through is the point: there is no path that moves a registration out of a
+       * place and forgets, and no second implementation to drift.
+       *
+       * It cannot be written the other way round — a *draw* needs the event row's lock and a
+       * read of the band, which this function has neither of — so the draw lives in the
+       * allocator's own paths, which hold both. Releasing needs nothing, and losing a release
+       * is the failure that matters: a number nobody holds but nobody can take.
+       *
+       * `bib_number` is untouched. A cancelled runner keeps the final number they were given,
+       * which is how two people avoid both wearing 17.
+       */
+      ...(holdsAPlace(params.to) ? {} : { provisionalBibNumber: null }),
+      ...params.changes,
+      status: params.to,
+      updatedAt: params.now,
+    })
     .where(and(eq(registrations.id, params.id), inArray(registrations.status, fromStatuses)))
     .returning();
   return row;
@@ -407,7 +429,10 @@ export async function expireStalePendingEmailConfirmations<T extends Record<stri
   const staleBefore = new Date(now.getTime() - EMAIL_CONFIRMATION_HOLD_HOURS * 60 * 60_000);
   const rows = await db
     .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EMAIL_CONFIRMATION_LAPSED", updatedAt: now })
+    // The provisional number goes with the place (§214, §220). These bulk sweeps do not go
+    // through `transitionRegistration`, which is where the release lives, so each one has to
+    // say it — a number held by an expired row is a number nobody can ever be given.
+    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EMAIL_CONFIRMATION_LAPSED", provisionalBibNumber: null, updatedAt: now })
     .where(
       and(
         eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
@@ -494,7 +519,8 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   // kept declaration hold, and the count below must see it as free.
   await db
     .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "WAITLIST_OFFER_LAPSED", updatedAt: now })
+    // As above (§220): the place goes, so the number goes.
+    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "WAITLIST_OFFER_LAPSED", provisionalBibNumber: null, updatedAt: now })
     .where(
       and(
         eq(registrations.eventId, event.id),
@@ -574,6 +600,23 @@ export async function findEventsNeedingMaintenance<T extends Record<string, unkn
             or(somebodyWaits, sql`${events.eventStatus} <> 'SCHEDULED'`),
           ),
           and(inArray(registrations.status, ["PENDING_DECLARATION", "WAITLISTED"]), lte(events.startsAt, now)),
+          /*
+            An event whose registration has closed and whose numbers have not been settled
+            (§214).
+
+            Without this clause the settle would never happen on the event that needs it most:
+            a race that filled up cleanly has no expired hold and no waiting list, so none of
+            the three conditions above ever names it, and the job would close the window and
+            leave everybody holding a provisional number for ever.
+
+            `bibs_settled_at IS NULL` is what keeps this from selecting every past event on
+            every run — it is true once per event, and the settle's own write makes it false.
+          */
+          and(
+            isNull(events.bibsSettledAt),
+            lte(sql`coalesce(${events.registrationClosesAt}, ${events.startsAt})`, now),
+            inArray(registrations.status, [...PLACE_HOLDING_STATUSES]),
+          ),
         ),
       ),
     );
@@ -591,7 +634,8 @@ export async function closeWaitlistForStartedEvent<T extends Record<string, unkn
 ): Promise<number> {
   const rows = await db
     .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EVENT_STARTED", updatedAt: now })
+    // As above (§220): the place goes, so the number goes.
+    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EVENT_STARTED", provisionalBibNumber: null, updatedAt: now })
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLISTED")))
     .returning({ id: registrations.id });
   return rows.length;

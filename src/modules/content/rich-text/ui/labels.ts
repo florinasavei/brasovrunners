@@ -17,6 +17,16 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     bulletList: rt("bulletList"),
     orderedList: rt("orderedList"),
     quote: rt("quote"),
+    align: {
+      left: rt("alignLeft"),
+      center: rt("alignCenter"),
+      right: rt("alignRight"),
+    },
+    alignShort: {
+      left: rt("alignLeftShort"),
+      center: rt("alignCenterShort"),
+      right: rt("alignRightShort"),
+    },
     table: rt("table"),
     tableAddRow: rt("tableAddRow"),
     tableAddColumn: rt("tableAddColumn"),

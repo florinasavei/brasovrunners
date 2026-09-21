@@ -359,7 +359,7 @@
       "registrationsCancelled": "{cancelled} înscrieri anulate. {failed} nu au putut fi anulate.",
       "searchHelp": "Caută după nume, cu sau fără diacritice.",
       "resendShort": "Retrimite",
-      "resendQr": "Retrimite QR-ul",
+      "resendQr": "Retrimite QR",
       "sendReminder": "Trimite reminderul",
       "resendQrLong": "Trimite din nou confirmarea, cu codul QR și linkul de gestionare",
       "raceDayTitle": "Ziua cursei",
@@ -393,6 +393,7 @@
       },
       "exportExcel": "Exportă Excel",
       "columnBib": "Număr de concurs (BIB)",
+      "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
       "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
@@ -1228,6 +1229,12 @@
       "bulletList": "Listă cu puncte",
       "orderedList": "Listă numerotată",
       "quote": "Citat",
+      "alignLeft": "Aliniere la stânga",
+      "alignCenter": "Centrat",
+      "alignRight": "Aliniere la dreapta",
+      "alignLeftShort": "S",
+      "alignCenterShort": "C",
+      "alignRightShort": "D",
       "link": "Legătură",
       "linkUrl": "Adresă web",
       "linkApply": "Aplică",
@@ -1448,6 +1455,7 @@
       "rowHelp": "Pe fiecare rând: scrie numărul de concurs (dacă nu l-ai alocat deja) → Salvează; când persoana a ajuns → Prezent. Cine nu a confirmat emailul semnează declarația pe hârtie → Confirmă pe hârtie.",
       "givePlace": "Dă-i un loc",
       "bibField": "Număr de concurs (BIB)",
+      "bibProvisional": "Număr provizoriu: se stabilește definitiv la închiderea înscrierilor.",
       "saveBib": "Salvează nr.",
       "checkIn": "Marchează prezent",
       "undoCheckIn": "Anulează prezența",
@@ -1725,6 +1733,7 @@
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
     "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
+    "submittedDelay": "Emailul poate ajunge în până la 5 minute. Verifică și folderul de spam înainte să te înscrii din nou.",
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
@@ -1733,7 +1742,9 @@
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",
       "tooFastTitle": "Mai încearcă o dată",
-      "tooFast": "Formularul a plecat foarte repede după ce s-a deschis pagina, iar noi verificăm asta ca să ținem roboții afară. Datele tale sunt toate aici — apasă din nou „Trimite înscrierea” și gata."
+      "throttledTitle": "Ai trimis deja formularul de câteva ori",
+      "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
+      "tooFast": "Verificarea automată nu a trecut din prima — o facem ca să ținem roboții afară și uneori dă greș pentru oameni reali. Datele tale sunt toate aici: apasă din nou „Trimite înscrierea”. Dacă nici a doua oară nu merge, scrie-ne prin formularul de contact și te înscriem noi."
     },
     "sections": {
       "about": "Despre tine",
@@ -1864,6 +1875,7 @@
       "guardian": "Înscriu un minor — părinte sau tutore legal"
     },
     "clubMemberDeclared": "Sunt membru al grupului Brașov Runners",
+    "clubNameFromMembership": "Completat automat, pentru că ai bifat că ești membru. Debifează ca să scrii alt club.",
     "facts": {
       "details": "Detaliile evenimentului",
       "rules": "Regulamentul",
@@ -1950,6 +1962,7 @@
       "empty": "Nu ai nicio înscriere activă în acest moment.",
       "code": "Cod de acces",
       "bib": "Număr de concurs",
+      "bibProvisional": "Număr provizoriu. Se stabilește definitiv la închiderea înscrierilor și îl primești atunci pe email.",
       "cancel": "Renunț la această înscriere",
       "cancelledTitle": "Înscrierea a fost anulată",
       "cancelled": "Locul tău a fost eliberat. Linkul acesta s-a consumat; pentru altă modificare, cere unul nou.",

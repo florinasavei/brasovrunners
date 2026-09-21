@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.38-2026-09-18 -->
+<!-- PROJECT_BASELINE: BR-V1.39-2026-09-21 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.39-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1421,6 +1421,10 @@ Canonical body is JSON produced by allowlisted schema. Required nodes/marks:
 
 - document/paragraph/text;
 - headings;
+- text alignment on a paragraph or a heading — `align`, one of `left`, `center`, `right` and
+  nothing else, absent meaning `left` so every stored body is unchanged. `justify` is
+  deliberately excluded: justified text in a 320-pixel column is rivers of white space. Built
+  2026-09-21, `DECISIONS.md` §213;
 - bold/italic;
 - link;
 - bullet/ordered list/list item;
@@ -1838,7 +1842,8 @@ registrations
 - results_consent_version integer NOT NULL
 - list_opt_out boolean NOT NULL DEFAULT false  -- §10.10; "keep my name off the public start list"
 - club_member_declared boolean NOT NULL DEFAULT false  -- BR-REQ-031-06; a claim, never verified
-- bib_number integer null              -- BR-REQ-038-01; assigned as a batch under the event-row lock, unique per event (partial index); per race across distances is M2
+- bib_number integer null              -- BR-REQ-038-01; the settled number: written when registration closes (§214), unique per event (partial index), never reissued or renumbered; per race across distances is M2
+- provisional_bib_number integer null  -- §214; held with the place from submission, unique per event (partial index), released the moment the place is, never printed and never emailed
 - submitted_at
 - email_confirmed_at null
 - waitlisted_at null
@@ -2354,14 +2359,21 @@ and the page is entered at the error summary rather than at the top (§18.2). No
 3 is ever reported that way: from canonicalization onward the response is the generic one
 whatever the address turns out to mean, honeypot and throttle included.
 
-**The timing check is the one exception, since §194.** The honeypot is tripped by a machine and
-by nothing else, so it keeps the generic answer and creates nothing. The three-second floor is a
-*guess* about a person, and it was wrong about a real participant who had autofill: he was shown
-"we have sent you a confirmation link" while no registration, no outbox row and no log line were
-written anywhere. It now refuses with a field marker, the form returns with every answer still in
-it, and one sentence asks for another press — a script that posts instantly reads the same
-sentence and still has to wait, which is all a timing check ever bought. Both verdicts are logged
-by event and reason, never by address.
+**The two anti-bot checks are the exception, since §194 and — for the honeypot — §217.**
+
+The invariant, stated first because it is the reason: **nothing may show the "check your email"
+screen unless a message was actually queued.** Telling somebody to wait for an email that was
+never sent is the worst answer this form can give; they wait, they give up, and the club never
+learns they tried. It cost a real participant once (§194) and a second time while §217 was being
+written, on production, which still ran the older code.
+
+So neither verdict is answered with silence. The three-second floor is a *guess* about a person
+and was wrong about somebody with autofill; the honeypot is tripped by a machine and, rarely, by
+a password manager or an accessibility tool that does not know the field is hidden. Both now
+refuse with the **same** field marker and the same sentence, so a script learns only "refused"
+and still has to wait out the timer — which is all a timing check ever bought — while the form
+comes back with every answer in it and offers the contact form if a second press also fails.
+Both verdicts are logged by event and reason, never by address.
 
 ### 15.2 Email confirmation
 

@@ -1,0 +1,4 @@
+ALTER TABLE "events" ADD COLUMN "bibs_settled_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "registrations" ADD COLUMN "provisional_bib_number" integer;--> statement-breakpoint
+CREATE UNIQUE INDEX "registrations_event_provisional_bib_unique" ON "registrations" USING btree ("event_id","provisional_bib_number") WHERE "registrations"."provisional_bib_number" IS NOT NULL;--> statement-breakpoint
+ALTER TABLE "registrations" ADD CONSTRAINT "registrations_provisional_bib_number_positive" CHECK ("registrations"."provisional_bib_number" IS NULL OR "registrations"."provisional_bib_number" > 0);

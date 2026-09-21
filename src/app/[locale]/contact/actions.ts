@@ -31,8 +31,9 @@ export async function submitContactAction(form: FormData): Promise<void> {
   const locale: Locale = form.get("locale") === "en" ? "en" : "ro";
   const path = getPathname({ locale, href: "/contact" });
 
-  // The bot check, when configured (§97): a token Cloudflare does not confirm is a field
-  // error on the form — a person whose widget timed out reads why and presses again.
+  // The bot check, when configured (§97, §216): only a token Cloudflare looked at and
+  // rejected is a field error. A widget that never ran, or a Cloudflare that did not answer,
+  // is "unavailable" and passes — the honeypot and the timing check are still in front.
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);

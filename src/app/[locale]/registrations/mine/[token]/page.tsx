@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { readMyRegistrations } from "@/modules/registrations/my-registrations";
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -119,14 +120,25 @@ export default async function MyRegistrationsPage({ params, searchParams }: Prop
                     sx={{ width: 160, height: 160, border: 1, borderColor: "divider", borderRadius: 1 }}
                   />
                   <Box>
-                    {item.bibNumber && (
+                    {/*
+                      The number the runner has (§214). Before registration closes it is the
+                      provisional one, and it is said so in a sentence beneath rather than left
+                      to look final: this is the number they will quote to a volunteer, and the
+                      one thing worse than not showing it is showing it as settled when it is not.
+                    */}
+                    {raceNumberOf(item) && (
                       <>
                         <Typography variant="body2" color="text.secondary">
                           {t("mine.bib")}
                         </Typography>
                         <Typography sx={{ fontWeight: 700, fontSize: "1.75rem", color: "primary.main" }}>
-                          {item.bibNumber}
+                          {raceNumberOf(item)?.value}
                         </Typography>
+                        {!raceNumberOf(item)?.settled && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                            {t("mine.bibProvisional")}
+                          </Typography>
+                        )}
                       </>
                     )}
                     <Typography variant="body2" color="text.secondary">

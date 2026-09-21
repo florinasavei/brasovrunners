@@ -351,13 +351,14 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "ana@example.org", { fastTrack: true });
     await enter(event, "pending@example.org", { at: new Date(NOW.getTime() + 60_000) });
-    // Confirmed at the desk, so numbered on the spot (§87) — the event's first number (§173).
-    expect(a.registration.bibNumber).toBe(1);
+    // Numbered when the place was taken (§214) — the event's first number (§173). It is the
+    // provisional column while the window is open, and the desk reads whichever is set.
+    expect(a.registration.provisionalBibNumber).toBe(1);
     await checkInByStaff(db, volunteer, a.registration.id, "in", NOW);
 
     const byCode = await findRegistrationByCheckinCode(db, a.registration.checkinCode as string, "ro");
     expect(byCode?.id).toBe(a.registration.id);
-    expect(byCode?.bibNumber).toBe(1);
+    expect(byCode?.provisionalBibNumber).toBe(1);
     expect(byCode?.checkedInByName).toBe("Volunteer");
 
     const byName = await listDeskRegistrations(db, { eventId: event.id, query: "ana@", locale: "ro" });
@@ -376,25 +377,33 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
    * settled. §94's random draw is gone: sequential is how every race does it, it is a list a
    * volunteer can check off, and the band a number falls in says which start line it belongs on.
    */
-  it("numbers in order of confirmation, from the event's own first number", async () => {
+  it("numbers in order of registration, from the event's own first number (§214)", async () => {
+    // §214 moved the draw from confirmation to registration: the number is held with the
+    // place, so it exists before the declaration and before the email is even confirmed. It
+    // is provisional until the window closes, which is why `bib_number` is still empty here.
     const event = await createInternalEvent(10);
     const a = await enter(event, "a@example.org", { fastTrack: true });
     const b = await enter(event, "b@example.org", { fastTrack: true, at: new Date(NOW.getTime() + 60_000) });
-    expect(a.registration.bibNumber).toBe(1);
-    expect(b.registration.bibNumber).toBe(2);
+    expect(a.registration.provisionalBibNumber).toBe(1);
+    expect(b.registration.provisionalBibNumber).toBe(2);
+    expect(a.registration.bibNumber).toBeNull();
+    expect(b.registration.bibNumber).toBeNull();
 
     const hundreds = await createInternalEvent(10, { bibStartNumber: 100 });
     const c = await enter(hundreds, "c@example.org", { fastTrack: true });
     const d = await enter(hundreds, "d@example.org", { fastTrack: true, at: new Date(NOW.getTime() + 60_000) });
-    expect(c.registration.bibNumber).toBe(100);
-    expect(d.registration.bibNumber).toBe(101);
+    expect(c.registration.provisionalBibNumber).toBe(100);
+    expect(d.registration.provisionalBibNumber).toBe(101);
   });
 
-  it("refuses to change the number of a confirmed runner, whoever asks", async () => {
+  it("refuses to change a number that has been settled, whoever asks", async () => {
     const event = await createInternalEvent(10);
     const a = await enter(event, "a@example.org", { fastTrack: true });
+    // Settled: the runner has been emailed this number and it may already be printed (§173,
+    // §214). Written directly rather than by closing the window, so the refusal is what is
+    // under test and not the job that produces it.
+    await db.update(registrations).set({ bibNumber: 1, provisionalBibNumber: null }).where(eq(registrations.id, a.registration.id));
 
-    // The runner has been emailed this number and it may already be printed (§173).
     expect(await codeOf(setBibNumberByStaff(db, volunteer, a.registration.id, 9, NOW))).toBe("VALIDATION_ERROR");
     // Clearing it is a change too.
     expect(await codeOf(setBibNumberByStaff(db, volunteer, a.registration.id, null, NOW))).toBe("VALIDATION_ERROR");
@@ -423,8 +432,10 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
 
     const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.bib_set"));
     expect(entry.metadataJson).toEqual({ from: null, to: 7 });
-    // And the confirmed one is untouched by any of it.
-    expect(confirmed.registration.bibNumber).toBe(1);
+    // And the confirmed one is untouched by any of it: it still holds the provisional number
+    // it was given when it took its place (§214), and no final one, because the window is open.
+    expect(confirmed.registration.provisionalBibNumber).toBe(1);
+    expect(confirmed.registration.bibNumber).toBeNull();
   });
 
   /**
