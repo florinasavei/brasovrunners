@@ -38,6 +38,7 @@ import {
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
 import EmailTwice from "@/modules/registrations/ui/EmailTwice";
+import ClubForMember from "@/modules/registrations/ui/ClubForMember";
 import Flag from "@/shared/ui/Flag";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
@@ -46,7 +47,7 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
-import { PAGE_WIDTH } from "@/theme/brand";
+import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 
 type Props = {
@@ -329,7 +330,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               tabIndex={-1}
               sx={{ mb: 2 }}
             >
-              <AlertTitle>{t("errors.title")}</AlertTitle>
+              <AlertTitle>{tooFast ? t("errors.tooFastTitle") : t("errors.title")}</AlertTitle>
               {/*
                 The anti-bot check, said in words (§176; the owner: "trebuie să ne putem
                 înscrie man!").
@@ -344,6 +345,18 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               */}
               {captchaFailed ? (
                 t("errors.captcha")
+              ) : tooFast ? (
+                /*
+                  The anti-bot refusal, said **here** and not only beside the button (§217).
+
+                  This is where the browser lands and where focus goes, and `tooFast` is not one
+                  of the form's fields — so the summary used to fall through to "verifică datele
+                  completate", which is the same trap the captcha comment above describes: a red
+                  box telling somebody to check twenty inputs that are all correct, while the one
+                  sentence that explains what happened sat at the far end of a long form. The
+                  owner: "they need visuals on this! so that they know!"
+                */
+                t("errors.tooFast")
               ) : rejected.length > 0 ? (
                 <>
                   {t("errors.fieldsIntro")}
@@ -697,10 +710,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     ))}
                   </TextField>
 
-                  <TextField
+                  {/*
+                    The club, filled in and locked while the tick above is on (§215; the owner:
+                    "if people check that they are brasov runners members, the club input must be
+                    auto-filled and readonly"). The same fact was being written three ways —
+                    "BRASOV RUNNERS", "Brasov runners", "BvR" — and the export read them as three
+                    clubs. The tick still grants nothing (§48); the service writes the same name
+                    whatever the browser did, so a form filled with JavaScript off records it too.
+                  */}
+                  <ClubForMember
                     {...field("clubName", t("optional"))}
                     label={t("clubName")}
-                    autoComplete="organization"
+                    memberCheckboxId={fieldId("clubMemberDeclared")}
+                    clubName={CLUB_NAME}
+                    lockedHelperText={t("clubNameFromMembership")}
                   />
                 </Stack>
               </Box>

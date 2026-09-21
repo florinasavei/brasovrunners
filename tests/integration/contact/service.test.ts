@@ -66,12 +66,25 @@ describe("BR-REQ-070-04 the contact form", () => {
     expect(capture.messages[0]?.subject).toBe(`${QA_SUBJECT_PREFIX}Mesaj de pe site: Ana Popescu`);
   });
 
-  it("answers a bot as sent and sends nothing — the trap field, or a post faster than a person reads", async () => {
+  it("answers a bot as sent and sends nothing — the trap field, or an instant post", async () => {
     const capture = createCaptureSmtpTransport();
     expect(await submitContactMessage(db, delivery(capture), { ...PERSON, honeypot: "http://spam.example" }, NOW, PAGE)).toEqual({ outcome: "ignored" });
+    // Posted in the same instant the page rendered: inside the one-second floor (§217).
     expect(await submitContactMessage(db, delivery(capture), { ...PERSON, renderedAt: NOW.toISOString() }, NOW, PAGE)).toEqual({ outcome: "ignored" });
-    expect(await submitContactMessage(db, delivery(capture), { ...PERSON, renderedAt: undefined }, NOW, PAGE)).toEqual({ outcome: "ignored" });
     expect(capture.messages).toHaveLength(0);
+  });
+
+  it("sends a message that carries no render time at all (§217)", async () => {
+    /*
+      This used to be treated as a bot. What actually loses the timestamp is a page restored
+      from the back-forward cache, an extension that rewrites the DOM, or a tab left open since
+      yesterday — and this form is the escape hatch somebody reaches for *because* the rest of
+      the site would not take them (§205). Refusing it silently is the worst possible failure
+      on the one page that exists to catch the others.
+    */
+    const capture = createCaptureSmtpTransport();
+    expect(await submitContactMessage(db, delivery(capture), { ...PERSON, renderedAt: undefined }, NOW, PAGE)).toEqual({ outcome: "sent" });
+    expect(capture.messages).toHaveLength(1);
   });
 
   it("tells a person who wrote too often, keyed on the canonical identity, and does not send", async () => {

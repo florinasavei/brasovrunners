@@ -4,6 +4,9 @@ import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
 import { materializeStandingRepeats } from "@/modules/content/events/service";
 import { sweepOrphanAssets } from "@/modules/media/references";
 import { queueEventReminders, queueParticipationConfirmations } from "@/modules/notifications/event-mail";
+import { registrationHasClosed } from "@/modules/events/domain/registration-window";
+import { enqueueEmail } from "@/modules/notifications/outbox";
+import { settleBibNumbers, type SettledBib } from "./bibs";
 import { queueRegistrationOpenedMessages } from "./interest";
 import * as repo from "./repository";
 import { fillAvailableSpots } from "./service";
@@ -36,6 +39,8 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   confirmationsQueued: number;
   /** "Registration is open" messages queued this run to the addresses left ahead of the window (§146). */
   interestsNotified: number;
+  /** Race numbers settled by a registration window closing in this run (§214). */
+  bibsSettled: number;
 }> {
   const jobRunId = await startJobRun(db, "registration-maintenance", now);
 
@@ -43,6 +48,16 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
 
   const eventIds = await repo.findEventsNeedingMaintenance(db, now);
   let errorCount = 0;
+  /**
+   * Everyone numbered by a close in this run, collected across the per-event transactions and
+   * written to afterwards (§214).
+   *
+   * The messages are queued outside the loop on purpose: each event's transaction holds a lock
+   * on its own row, and queueing an email inside it lengthens the one thing every registration
+   * at that event is waiting behind. Failing to queue is also recoverable — the number is
+   * already written and the club can send it again — while failing to *number* is not.
+   */
+  const settled: SettledBib[] = [];
 
   for (const eventId of eventIds) {
     try {
@@ -71,12 +86,68 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
           },
           now,
         );
+
+        /*
+          The numbers settle when registration closes (§214).
+
+          Inside the same per-event transaction, which already holds `FOR UPDATE` on the event
+          row — the serialization point every number is drawn under (§10.6) — and after
+          `fillAvailableSpots`, so the last waiting-list offer the close produced is numbered
+          with everybody else rather than left out of the sheet.
+
+          `bibsSettledAt` makes it once-only: this job sees the same closed event every few
+          minutes, and a second pass would renumber people who have already been told.
+        */
+        if (registrationHasClosed(event, now) && event.bibsSettledAt === null) {
+          settled.push(
+            ...(await settleBibNumbers(tx, {
+              eventId: event.id,
+              bibStartNumber: event.bibStartNumber,
+              bibsSettledAt: event.bibsSettledAt,
+              now,
+            })),
+          );
+        }
       });
     } catch {
       // One event's failure must not stop the run from reaching the rest — each event's work
       // is independent, and the next run retries whatever this one could not finish.
       errorCount += 1;
     }
+  }
+
+  /**
+   * "Here is your race number" (§214), to everybody a close has just numbered.
+   *
+   * This is the **only** message that ever carries a number, and that is the whole shape of
+   * the feature: a provisional number is shown and never sent, because it can still move; a
+   * final number cannot move, so it is sent. `BIB_ASSIGNED` already exists and already says
+   * exactly this — it is what a number typed by hand sends (§105).
+   *
+   * One per registration, ever, by its own key: an event settles once, and a key that survives
+   * every later run is what makes a retried job harmless.
+   */
+  let bibsSettled = 0;
+  try {
+    await db.transaction(async (tx) => {
+      for (const row of settled) {
+        const inserted = await enqueueEmail(tx, {
+          participantId: row.participantId,
+          registrationId: row.registrationId,
+          messageType: "BIB_ASSIGNED",
+          locale: row.locale,
+          recipientEmail: row.recipientEmail,
+          payload: { bibNumber: row.bibNumber },
+          idempotencyKey: `registration:${row.registrationId}:bib-settled`,
+          now,
+        });
+        if (inserted) bibsSettled += 1;
+      }
+    });
+  } catch {
+    // The numbers are written and the club can send them again from the list. A failure here
+    // is a message nobody got, not a race with no bibs.
+    errorCount += 1;
   }
 
   /**
@@ -162,5 +233,5 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
     new Date(),
   );
 
-  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued, confirmationsQueued, interestsNotified };
+  return { eventsProcessed: eventIds.length, errorCount, prunedRows, orphanPicturesDeleted, remindersQueued, confirmationsQueued, interestsNotified, bibsSettled };
 }

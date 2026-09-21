@@ -41,11 +41,22 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   const publicEvent = await findPublishedEventBySlug(db, locale, slug);
   if (!publicEvent) redirect(getPathname({ locale, href: "/events" }));
 
-  // The bot check, when configured (§97): a token Cloudflare does not confirm is a field
-  // error on the form — a person whose widget timed out reads why and presses again.
+  /*
+    The bot check, when configured (§97, §216).
+
+    Only a token Cloudflare **looked at and rejected** stops a registration. No token at all —
+    a blocked script, a privacy browser, JavaScript off — and Cloudflare not answering are
+    "unavailable", and a registration is not refused for either: the honeypot, the timing
+    check and the per-identity throttle are still in front of this form, and §205 is explicit
+    that people must be able to register at all costs. It is logged so the club can see how
+    often the widget does not run, and the line never carries an address.
+  */
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);
+  if (verdict === "unavailable") {
+    console.warn("[turnstile] unavailable, registration accepted on the other defences", { slug });
+  }
   if (verdict === "failed") {
     await stashFormDraft(form, path);
     redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${ERROR_SUMMARY_ID}`);

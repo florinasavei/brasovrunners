@@ -24,6 +24,7 @@ import {
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { registrationStatus } from "@/db/schema/registrations";
 import { journeyOf } from "@/modules/registrations/domain/journey";
+import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { deriveAllowedResendMessageType } from "@/modules/registrations/domain/resend";
 import StaffJourney from "@/modules/registrations/ui/StaffJourney";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -245,7 +246,9 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       label: t("registrations.columnJourney"),
       // "3/6" cannot say what the six are (§200).
       hint: t("registrations.journey.legend"),
-      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={row.bibNumber} variant="compact" />,
+      // The number the runner has, settled or not (§214): the chip said "nr. 42" and would
+      // otherwise say nothing at all for everybody registered before the window closes.
+      render: (row) => <StaffJourney journey={journeyOf(row)} bibNumber={raceNumberOf(row)?.value ?? null} variant="compact" />,
     },
     {
       /*
@@ -256,16 +259,36 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
       key: "bib",
       label: t("registrations.columnBib"),
       sortable: true,
-      render: (row) =>
-        row.bibNumber === null ? (
-          <Box component="span" sx={{ color: "text.disabled" }}>
-            —
+      /*
+        Whichever number the runner has (§214). Before the window closes it is the provisional
+        one, shown in a lighter weight with an asterisk and explained by the column's own hint:
+        the club needs to see it — that is the whole reason it exists — and also needs to know
+        it is not the one to print.
+      */
+      render: (row) => {
+        const number = raceNumberOf(row);
+        if (number === null) {
+          return (
+            <Box component="span" sx={{ color: "text.disabled" }}>
+              —
+            </Box>
+          );
+        }
+        return (
+          <Box
+            component="span"
+            title={number.settled ? undefined : t("registrations.bibProvisional")}
+            sx={{
+              fontVariantNumeric: "tabular-nums",
+              fontWeight: number.settled ? 700 : 500,
+              color: number.settled ? "text.primary" : "text.secondary",
+            }}
+          >
+            {number.value}
+            {number.settled ? "" : "*"}
           </Box>
-        ) : (
-          <Box component="span" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
-            {row.bibNumber}
-          </Box>
-        ),
+        );
+      },
     },
     {
       key: "event",

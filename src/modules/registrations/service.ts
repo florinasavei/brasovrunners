@@ -8,10 +8,10 @@ import type {
 import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
-import { registrationState } from "@/modules/events/domain/registration-window";
+import { registrationHasClosed, registrationState } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
-import { pickBibNumber } from "./bibs";
+import { ensureProvisionalBibNumber, pickBibNumber } from "./bibs";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
 import { newCheckinCode } from "./checkin-code";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -22,6 +22,7 @@ import {
 } from "@/modules/participants/repository";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { env } from "@/shared/config/env";
+import { CLUB_NAME } from "@/theme/brand";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, computePublicAvailability, hasDirectAvailability } from "./domain/capacity";
 import { computeDeclarationHoldExpiry, computeWaitlistOfferExpiry, confirmationWindow } from "./domain/hold-deadlines";
@@ -126,6 +127,40 @@ function assertRegistrationOpen(event: EventForRegistration, now: Date, atTheDes
   }
 }
 
+/**
+ * The **final** race number to write when a registration is confirmed (`DECISIONS.md` §214).
+ *
+ * §87 drew one here, at "the moment the place is certain". That is no longer the moment the
+ * number is certain, and the two had been the same thing only because nothing existed earlier.
+ * Now a place-holding registration carries a provisional number from submission, and the entry
+ * list is still moving — people cancel, holds lapse, the waiting list advances — so a number
+ * written at confirmation would be a number printed with gaps in it.
+ *
+ * So, while the window is open, confirmation writes **nothing**: the provisional number stands,
+ * the runner keeps seeing it, and the recompaction at close turns the whole list into one dense
+ * sequence and emails it. `REGISTRATION_CONFIRMED` therefore carries no number before the
+ * close, which is the trade the owner chose: a number that is emailed is a number that cannot
+ * move afterwards.
+ *
+ * **Once the window has shut it draws immediately**, because by then the sequence is settled
+ * and a late confirmation — somebody signing on paper at the desk, a walk-in on race day —
+ * needs a bib in their hand within the minute. `pickBibNumber` gives it the lowest free final
+ * number, which is the one the recompaction has not used.
+ */
+async function finalBibAtConfirmation<T extends Record<string, unknown>>(
+  tx: Database<T>,
+  event: EventForRegistration,
+  current: Registration,
+  now: Date,
+): Promise<number | null> {
+  // Never renumber: a number already given is that runner's, whatever else changes (§173).
+  if (current.bibNumber !== null) return current.bibNumber;
+  // A test registration wears none, as in the batch assignment (`AGENTS.md` §12.6).
+  if (current.kind !== "REAL") return null;
+  if (!registrationHasClosed(event, now)) return null;
+  return pickBibNumber(tx, current.eventId);
+}
+
 async function deliveryEmailOf<T extends Record<string, unknown>>(
   db: Database<T>,
   participantId: string,
@@ -199,7 +234,18 @@ async function allocateOrWaitlist<T extends Record<string, unknown>>(
     await fillAvailableSpots(db, event, now);
     return (await repo.findRegistrationById(db, registrationId)) ?? updated;
   }
-  return updated;
+
+  /*
+    The place is held, so the number is (§214). Under the lock the caller is holding, which is
+    why it is safe here and would not be in the service's outer scope.
+
+    Dani, on why this cannot wait for a confirmation: "procesul trebuie să fie automat… vor fi
+    gratis, cu număr limitat de înscrieri… ce discuții și hate ne luăm dacă nu l-am înscris pe
+    unul la timp și i-a luat altul locul". The place was already held from submission; what was
+    missing was anything the runner or the club could *see*, and a number is that thing.
+  */
+  await ensureProvisionalBibNumber(db, { eventId: event.id, registrationId, now });
+  return (await repo.findRegistrationById(db, registrationId)) ?? updated;
 }
 
 /**
@@ -320,8 +366,21 @@ export async function readPublicAvailability<T extends Record<string, unknown>>(
 
 // --- Spam defenses (AGENTS.md §19.4, WEEKEND.md) ---------------------------------------------
 
-/** Below this, a submission is treated as automated. */
-const MIN_SUBMISSION_SECONDS = 3;
+/**
+ * Below this, a submission is treated as automated (§217).
+ *
+ * **One second, not three.** The owner, after the second person it cost: "so the anti-spam/bot
+ * verification must be way more loose." The asymmetry is the argument — a lost registration is
+ * the thing this site exists to prevent, and a spam registration is a row an Administrator
+ * deletes in two seconds. Three seconds is well inside what a person with autofill, a saved
+ * card of details, or a fast connection takes; one second is not reachable by hand and is still
+ * the entire benefit, because a script that waits it out has been slowed exactly as much.
+ *
+ * The real bot defences on this form are the honeypot, Turnstile (§97, §216) and the
+ * per-identity throttle (§19.4). This is the cheapest of the four and the only one that has
+ * ever refused a real person.
+ */
+const MIN_SUBMISSION_SECONDS = 1;
 
 /**
  * What the two public-form defences actually found (§194).
@@ -332,13 +391,18 @@ const MIN_SUBMISSION_SECONDS = 3;
  * anywhere. Nothing recorded which check had fired, so nothing could be diagnosed; the only way
  * to find it was to read the code and eliminate every other path.
  *
- * They are separated because they are not equally certain:
+ * They are still separated, because they are not equally certain and the **log** should say
+ * which fired:
  *
- * - `trap` — the hidden field was filled. Only a machine does that, so the silence is right and
- *   stays: a distinct error here tells a script exactly what to stop doing (BR-REQ-031-01 c3).
+ * - `trap` — the hidden field was filled. Almost always a machine; rarely a password manager
+ *   or an accessibility tool that does not know the field is hidden.
  * - `too-fast` — the form was posted less than three seconds after it was rendered, or arrived
  *   with no render time at all. That is a *guess*, and a wrong guess about a person who typed
- *   quickly, used autofill, or came back to a cached page. It is no longer answered with silence.
+ *   quickly, used autofill, or came back to a cached page.
+ *
+ * **Neither is answered with silence** (§217). They produce the same refusal with the same
+ * marker, so the caller — and therefore a script — cannot tell them apart, while the person
+ * always gets a sentence and their answers back instead of a promise of an email nobody sent.
  */
 export type SubmissionVerdict = "ok" | "trap" | "too-fast";
 
@@ -347,10 +411,18 @@ export function classifySubmission(
   now: Date,
 ): SubmissionVerdict {
   if ((input.honeypot ?? "") !== "") return "trap";
-  // An absent value parses to `Invalid Date`: a submission that lost its timestamp is suspected
-  // rather than waved through — but suspected, now, means asked again rather than discarded.
+  /*
+    A missing or unparseable render time is **not** suspicious any more (§217).
+
+    It used to be treated as a bot, on the reasoning that a submission which lost its timestamp
+    had probably been assembled by something other than the form. In practice the things that
+    lose it are a page restored from the back-forward cache, a browser extension that rewrites
+    the DOM, a proxy that strips a hidden field, and a form posted from a tab open since
+    yesterday — all of them people. There is nothing to time, so there is nothing to judge, and
+    the honeypot and Turnstile are still in front of this.
+  */
   const renderedAt = new Date(input.renderedAt ?? "");
-  if (Number.isNaN(renderedAt.getTime())) return "too-fast";
+  if (Number.isNaN(renderedAt.getTime())) return "ok";
   return now.getTime() - renderedAt.getTime() < MIN_SUBMISSION_SECONDS * 1000 ? "too-fast" : "ok";
 }
 
@@ -526,23 +598,33 @@ export async function submitRegistration<T extends Record<string, unknown>>(
   if (origin.source === "PUBLIC") {
     const verdict = classifySubmission(input, now);
     /*
-      The trap keeps its silence: a filled hidden field is a machine, and an error would tell it
-      which check to stop tripping. It is logged, because a drop nobody can see is what made the
-      last one take a database query to find — the event and the verdict, never the address.
+      Neither defence is answered with silence any more (§217, amending §194 and
+      BR-REQ-031-01 criterion 3).
+
+      The owner: "people need to know that they were identified as bots! it's very bad for a
+      user to tell him he is waiting for an email but he never receives it!" He is right, and
+      the rule is worth stating as an invariant rather than as a fix: **nothing may show the
+      "check your email" screen unless a message was actually queued.** Telling somebody to
+      wait for an email that was never sent is the worst answer this form can give — they wait,
+      they give up, and the club never learns they tried.
+
+      §194 kept the trap silent because a distinct error tells a script what to stop doing.
+      That argument is sound and it is outweighed. A hidden field is filled by machines and
+      *also*, rarely, by a password manager or an accessibility tool that does not know it is
+      hidden — and that person was being told a lie with no way out of it. What a bot learns
+      from the refusal is only "refused": both verdicts throw the **same** error with the same
+      marker, so nothing says which check fired, and a script still has to wait out the timer
+      either way. That is the whole of what a timing check ever bought.
+
+      Both are logged with the verdict — the event and nothing about the person (§14.5) — so
+      the club can see how often this happens without a database query, which is what made the
+      last silent drop so expensive to find.
     */
-    if (verdict === "trap") {
-      console.warn(`[registration] dropped as automated: trap, event ${event.id}`);
-      return { ok: true };
-    }
-    /*
-      A submission that merely looked quick is asked again rather than thrown away (§194). A
-      person reads one sentence and presses again — their answers come back with them — and a
-      script that posts instantly gets the same sentence and still has to wait, which is the whole
-      of what a timing check buys. What it no longer buys is a silently vanished participant.
-    */
-    if (verdict === "too-fast") {
-      console.warn(`[registration] asked again: too fast, event ${event.id}`);
-      throw new DomainError("VALIDATION_ERROR", "the form was submitted too quickly", ["tooFast"]);
+    if (verdict !== "ok") {
+      console.warn(`[registration] refused as automated: ${verdict}, event ${event.id}`);
+      throw new DomainError("VALIDATION_ERROR", `the submission looked automated (${verdict})`, [
+        "tooFast",
+      ]);
     }
   }
 
@@ -596,7 +678,21 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     phone: input.phone ?? null,
     emergencyContactName: input.emergencyContactName ?? null,
     emergencyContactPhone: input.emergencyContactPhone ?? null,
-    clubName: input.clubName ?? null,
+    /**
+     * A member's club is the club's own name (§215).
+     *
+     * The tick and this box are the same question asked twice (BR-REQ-031-06), and typing the
+     * answer by hand is how one club became "BRASOV RUNNERS", "Brasov runners" and "BvR" in the
+     * export. The form fills it in and locks it while the tick is on; this is the same rule on
+     * the server, so a submission with JavaScript off — or from anything that is not the form —
+     * records the same string. The tick still grants nothing (§48): this writes a name, not a
+     * capability.
+     *
+     * The name is the platform's constant rather than the catalogue's: what is stored is a
+     * fact about the club, not a translation, and it must not differ between a Romanian and an
+     * English submission.
+     */
+    clubName: input.clubMemberDeclared ? CLUB_NAME : (input.clubName ?? null),
     // Kept only for a minor: an adult who typed a name into the folded field named nobody's guardian.
     guardianName: input.birthDate && isMinorOn(input.birthDate, now) && input.guardianName ? input.guardianName : null,
     stravaUrl: input.stravaUrl ?? null,
@@ -715,6 +811,22 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       return;
     }
 
+    /*
+      The event row, locked, before the row that occupies one of its places is written (§214).
+
+      Until now the insert was the one door into the allocator that took no lock, on the
+      reasoning that the capacity *decision* happens later, at email confirmation. That is
+      still true of the decision — and a `PENDING_EMAIL_CONFIRMATION` row occupies a place
+      from the instant it exists (`ACTIVE_REGISTRATION_STATUSES`), so the number that goes
+      with the place has to be drawn here, and a draw without the lock is two people reaching
+      the same free number.
+
+      It is the same serialization point every other allocation uses (§10.6, §151), so the
+      cost is contention this event already has, not a new kind of it.
+    */
+    const lockedForCreate = await repo.lockEventForCapacity(tx, event.id);
+    if (!lockedForCreate) throw new DomainError("NOT_FOUND", "no such event");
+
     const created = await repo.insertPendingEmailRegistration(tx, {
       eventId: event.id,
       participantId: participant.id,
@@ -732,6 +844,17 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       createdByStaffUserId: origin.createdByStaffUserId ?? null,
       now,
     });
+    // The number, at the moment the place is taken rather than at the moment it is confirmed
+    // (§214). The runner sees it on the screen they land on, and the club sees it in the list
+    // before anybody has signed anything — which is what "the process must be automatic" asks
+    // for. It is never emailed, because it can still move when the numbers are settled.
+    await ensureProvisionalBibNumber(tx, {
+      eventId: event.id,
+      registrationId: created.id,
+      bibStartNumber: lockedForCreate.bibStartNumber,
+      now,
+    });
+
     // At the desk the address is about to be vouched for by the person typing it
     // (BR-REQ-037-07); a verification email to somebody standing in front of them is noise.
     if (!atTheDesk) await enqueueVerificationEmail(tx, participant, created, now);
@@ -873,9 +996,10 @@ export async function signDeclaration<T extends Record<string, unknown>>(
         confirmedAt: now,
         holdExpiresAt: null,
         checkinCode: current.checkinCode ?? newCheckinCode(),
-        // The race number, at the moment the place is certain (§87): under the event lock
-        // held above. A test registration wears none, as in the batch assignment.
-        bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await pickBibNumber(tx, current.eventId) : null),
+        // The race number, once the list is settled (§214, amending §87): nothing while the
+        // window is open — the provisional number stands and the recompaction at close gives
+        // the final one — and the next free number immediately once it has shut.
+        bibNumber: await finalBibAtConfirmation(tx, event, current, now),
       },
       now,
     });
@@ -960,6 +1084,7 @@ type StaffActor = { id: string };
  */
 async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   tx: Transaction<T>,
+  event: EventForRegistration,
   current: Registration,
   actor: StaffActor,
   now: Date,
@@ -987,7 +1112,9 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       confirmedAt: now,
       holdExpiresAt: null,
       checkinCode: current.checkinCode ?? newCheckinCode(),
-      bibNumber: current.bibNumber ?? (current.kind === "REAL" ? await pickBibNumber(tx, current.eventId) : null),
+      // As in `signDeclaration` (§214): nothing while the window is open, the next free
+      // number once it has shut — which is every walk-in confirmed at the desk on race day.
+      bibNumber: await finalBibAtConfirmation(tx, event, current, now),
     },
     now,
   });
@@ -1053,7 +1180,7 @@ export async function confirmByStaff<T extends Record<string, unknown>>(
       current = await allocateOrWaitlist(tx, withLockedRow(event, lockedEvent), current.id, now);
     }
     if (current.status === "PENDING_DECLARATION" || current.status === "WAITLIST_OFFERED") {
-      return acceptDeclarationOnPaper(tx, current, actor, now);
+      return acceptDeclarationOnPaper(tx, withLockedRow(event, lockedEvent), current, actor, now);
     }
     if (current.status === "WAITLISTED") return current;
     throw new DomainError("CONFLICT", `a registration in status ${current.status} cannot be confirmed`);
@@ -1096,7 +1223,7 @@ export async function promoteFromWaitlistByStaff<T extends Record<string, unknow
       now,
     });
     if (!offered) throw new DomainError("CONFLICT", "this registration changed state concurrently");
-    const confirmed = await acceptDeclarationOnPaper(tx, offered, actor, now);
+    const confirmed = await acceptDeclarationOnPaper(tx, locked, offered, actor, now);
     // As in `signDeclaration`: the expiry above may have released another person's lapsed
     // hold to the queue, and this transaction is the one holding the lock that can offer it.
     await fillAvailableSpots(tx, locked, now);

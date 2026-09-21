@@ -55,6 +55,8 @@ export type RegistrationListRow = {
   confirmedAt: Date | null;
   /** The race number, once assigned (BR-REQ-038-01). */
   bibNumber: number | null;
+  /** The number held while it can still change (§214); null once a final one is settled. */
+  provisionalBibNumber: number | null;
   checkedInAt: Date | null;
   /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
   emailRejectedReason: string | null;
@@ -236,7 +238,11 @@ function registrationOrderBy(sort: RegistrationSortKey, dir: "asc" | "desc") {
     // Race morning sorts by this (§173). Nulls last either way: a row with no number yet is
     // not "before 1", it is not in the list the sort is about.
     case "bib":
-      return dir === "asc" ? sql`${registrations.bibNumber} asc nulls last` : sql`${registrations.bibNumber} desc nulls last`;
+      // Whichever number the runner actually has (§214): sorting by the final column alone
+      // would put everybody still provisional in one undifferentiated block at the end.
+      return dir === "asc"
+        ? sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) asc nulls last`
+        : sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) desc nulls last`;
   }
 }
 
@@ -284,6 +290,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       submittedAt: registrations.submittedAt,
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
+      provisionalBibNumber: registrations.provisionalBibNumber,
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
       idDocument: latestIdDocument,
@@ -380,6 +387,8 @@ export type RegistrationDetail = {
   expiryReason: string | null;
   /** Race day (BR-REQ-037-07, BR-REQ-037-08, BR-REQ-038-01). */
   bibNumber: number | null;
+  /** The number held while it can still change (§214); null once a final one is settled. */
+  provisionalBibNumber: number | null;
   checkinCode: string | null;
   checkedInAt: Date | null;
   /** Null when the participant checked themselves in, or the staff row is gone. */
@@ -410,6 +419,7 @@ export async function findRegistrationDetailForAdmin<T extends Record<string, un
   const [row] = await db
     .select({
       bibNumber: registrations.bibNumber,
+      provisionalBibNumber: registrations.provisionalBibNumber,
       checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
       checkedInAt: registrations.checkedInAt,
@@ -478,6 +488,8 @@ export type DeskRegistration = {
   eventTitle: string | null;
   eventStartsAt: Date;
   bibNumber: number | null;
+  /** The number held while it can still change (§214); null once a final one is settled. */
+  provisionalBibNumber: number | null;
   /** Null until confirmed. */
   checkinCode: string | null;
   checkedInAt: Date | null;
@@ -497,6 +509,7 @@ const DESK_COLUMNS = {
   eventTitle: eventTranslations.title,
   eventStartsAt: events.startsAt,
   bibNumber: registrations.bibNumber,
+  provisionalBibNumber: registrations.provisionalBibNumber,
   checkinCode: registrations.checkinCode,
   idDocument: latestIdDocument,
   checkedInAt: registrations.checkedInAt,
@@ -542,7 +555,9 @@ export async function listDeskRegistrations<T extends Record<string, unknown>>(
     sql`${registrations.status} NOT IN ('CANCELLED', 'EXPIRED')`,
   ];
   if (/^\d{1,5}$/.test(q)) {
-    conditions.push(eq(registrations.bibNumber, Number(q)));
+    // Either column: on race morning the desk types the number printed on the sheet, and
+    // before the settle that number lives in the provisional column (§214).
+    conditions.push(sql`coalesce(${registrations.bibNumber}, ${registrations.provisionalBibNumber}) = ${Number(q)}`);
   } else if (q !== "") {
     // The same diacritics-blind contains-match as the list: the desk types what it hears.
     conditions.push(
@@ -564,7 +579,8 @@ export async function countDesk<T extends Record<string, unknown>>(
     .select({
       confirmed: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED')`.mapWith(Number),
       checkedIn: sql<number>`count(*) FILTER (WHERE ${registrations.checkedInAt} IS NOT NULL)`.mapWith(Number),
-      withoutBib: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED' AND ${registrations.bibNumber} IS NULL)`.mapWith(Number),
+      // Nobody to hand a bib to: neither number (§214).
+      withoutBib: sql<number>`count(*) FILTER (WHERE ${registrations.status} = 'CONFIRMED' AND ${registrations.bibNumber} IS NULL AND ${registrations.provisionalBibNumber} IS NULL)`.mapWith(Number),
       pending: sql<number>`count(*) FILTER (WHERE ${registrations.status} NOT IN ('CONFIRMED', 'CANCELLED', 'EXPIRED'))`.mapWith(Number),
     })
     .from(registrations)

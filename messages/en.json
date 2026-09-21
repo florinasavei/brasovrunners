@@ -393,6 +393,7 @@
       },
       "exportExcel": "Export to Excel",
       "columnBib": "Race number (BIB)",
+      "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
@@ -1454,6 +1455,7 @@
       "rowHelp": "On each row: type the race number (if not assigned already) → Save; when the person has arrived → Present. Somebody whose email never arrived signs the declaration on paper → Confirm on paper.",
       "givePlace": "Give a place",
       "bibField": "Race number (BIB)",
+      "bibProvisional": "Provisional number: it is settled when registration closes.",
       "saveBib": "Save no.",
       "checkIn": "Mark present",
       "undoCheckIn": "Undo",
@@ -1740,7 +1742,7 @@
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again.",
       "tooFastTitle": "Please try once more",
-      "tooFast": "The form was submitted very soon after the page opened, and we check for that to keep bots out. Everything you typed is still here — press “Send the registration” again and that is all."
+      "tooFast": "The automated check did not pass the first time — we run it to keep bots out, and it sometimes gets real people wrong. Everything you typed is still here: press “Send the registration” again. If it fails a second time, write to us through the contact form and we will register you ourselves."
     },
     "sections": {
       "about": "About you",
@@ -1871,6 +1873,7 @@
       "guardian": "Registering a minor — parent or legal guardian"
     },
     "clubMemberDeclared": "I am a member of the Brașov Runners group",
+    "clubNameFromMembership": "Filled in because you ticked that you are a member. Untick it to enter a different club.",
     "facts": {
       "details": "Event details",
       "rules": "The rules",
@@ -1957,6 +1960,7 @@
       "empty": "You have no active registration at the moment.",
       "code": "Access code",
       "bib": "Race number",
+      "bibProvisional": "Provisional number. It is settled when registration closes, and you get it by email then.",
       "cancel": "Withdraw from this registration",
       "cancelledTitle": "Registration cancelled",
       "cancelled": "Your place has been released. This link is spent; for another change, ask for a new one.",

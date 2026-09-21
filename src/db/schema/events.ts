@@ -351,6 +351,20 @@ export const events = pgTable(
     bibStartNumber: integer("bib_start_number").notNull().default(1),
     bibColour: text("bib_colour"),
 
+    /**
+     * When this event's race numbers were settled (`DECISIONS.md` §214).
+     *
+     * Registration closes, the entry list stops moving, and the maintenance job turns every
+     * provisional number into a final one in a single dense sequence — then writes this. It is
+     * the idempotency marker and nothing else: the job runs every few minutes and must do that
+     * work exactly once, because a second pass would renumber people who have already been
+     * told their number.
+     *
+     * Null means "not settled yet", which is every event before its window shuts and every
+     * event written before this existed.
+     */
+    bibsSettledAt: timestamp("bibs_settled_at", { withTimezone: true }),
+
     capacity: integer("capacity"),
     /**
      * The participation window (`DECISIONS.md` §104): for an event further away than

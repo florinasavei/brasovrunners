@@ -403,19 +403,46 @@ describe("BR-REQ-033-01 registration lifecycle", () => {
     );
   });
 
-  it("answers a honeypot-tripped submission exactly like success, and creates nothing", async () => {
+  it("refuses a honeypot-tripped submission out loud, and creates nothing (§217)", async () => {
+    /*
+      §194 answered the trap with the success page, so a script could not learn which check it
+      tripped. The owner overruled it: "people need to know that they were identified as bots!
+      it's very bad for a user to tell him he is waiting for an email but he never receives
+      it!" A hidden field is filled by machines and, rarely, by a password manager that does
+      not know it is hidden — and that person was being told to wait for an email nobody sent.
+
+      What a script learns is still only "refused": this throws the *same* error with the same
+      marker as a too-fast submission, so neither the caller nor a bot can tell them apart.
+    */
     const event = await createInternalEvent(db);
 
-    const spamResult = await submitRegistration(
-      db,
-      event,
-      submissionInput({ honeypot: "http://spam.example" }),
-      NOW,
+    await expect(
+      submitRegistration(db, event, submissionInput({ honeypot: "http://spam.example" }), NOW),
+    ).rejects.toSatisfy(
+      (error: unknown) =>
+        isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields?.includes("tooFast") === true,
     );
-    expect(spamResult).toEqual({ ok: true });
 
     const rows = await db.select().from(registrations).where(eq(registrations.eventId, event.id));
     expect(rows).toHaveLength(0);
+  });
+
+  it("gives the trap and the timing check the same answer, so neither can be told apart (§217)", async () => {
+    // The whole of what the old silence bought, kept: a script gets one sentence for both and
+    // still has to wait out the timer. What it no longer costs is a vanished participant.
+    const event = await createInternalEvent(db);
+
+    const codes: string[] = [];
+    for (const bad of [
+      submissionInput({ honeypot: "http://spam.example" }),
+      { ...submissionInput(), renderedAt: new Date(NOW.getTime() - 500).toISOString() },
+    ]) {
+      await submitRegistration(db, event, bad, NOW).catch((error: unknown) => {
+        if (isDomainError(error)) codes.push(`${error.code}:${(error.fields ?? []).join(",")}`);
+      });
+    }
+    expect(codes).toHaveLength(2);
+    expect(codes[0]).toBe(codes[1]);
   });
 
   it("asks a too-fast submission again instead of discarding it (§194)", async () => {

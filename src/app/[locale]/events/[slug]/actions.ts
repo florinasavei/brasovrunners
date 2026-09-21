@@ -41,7 +41,8 @@ export async function registerInterestAction(form: FormData): Promise<void> {
   const event = await findPublishedEventBySlug(db, locale, slug);
   if (!event) redirect(getPathname({ locale, href: "/events" }));
 
-  // The same bot check as the registration form (§97), when configured.
+  // The same bot check as the registration form (§97, §216), when configured: a rejected
+  // token stops this, a widget that could not run does not.
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);

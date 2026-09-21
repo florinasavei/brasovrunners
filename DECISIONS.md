@@ -9528,3 +9528,268 @@ It costs little: since §209 a pull request runs one viewport, so serial-desktop
 parallel-both-projects cost before. Measured: **91 specs, 2.7 minutes.**
 
 Baseline `BR-V1.38-2026-09-18`.
+
+
+## 213. Decided — a paragraph or a heading can be centred (2026-09-21)
+
+**Context.** "Centrare / aliniere elemente în rich text editor."
+
+**Decision.** A closed set of three words — `left`, `center`, `right` — on the two nodes that
+hold prose, exactly as a picture's `align` is a closed set of three (§193) and its
+`widthPercent` a closed set of four numbers. `justify` is deliberately not in it: justified
+text in a 320-pixel column is rivers of white space, and that column is a hard target here.
+
+*No dependency.* `@tiptap/extension-text-align` is one `addGlobalAttributes` block and a
+command around `updateAttributes`, and the standing instruction is to prefer nothing over a
+package (`AGENTS.md` §1.5). §196 took the table package on the opposite reasoning and the two
+are consistent: table editing is selection and transform work nobody should re-implement, and
+this is an attribute.
+
+**Two silences, and they are the whole of the care taken here.**
+
+*`attrs` is optional on a paragraph*, so every body written before today parses to exactly
+itself — no `align: "left"` appears, no migration is needed, and the next save does not rewrite
+every page the club has ever written. The heading keeps its required `attrs` for `level` and
+gains an optional `align` beside it, with the same property.
+
+*The renderer emits `text-align` only where somebody chose one.* Left is already what the theme
+does, so declaring it would put a rule on every paragraph on every page and change no pixel.
+The same discipline as §193's clearing rules, which are absent rather than no-ops in a body
+that floats nothing.
+
+*The editor's `parseHTML` clamps to the same three words.* A paste from Word or Google Docs
+carries `text-align: justify`, `start`, or an inherited value, and a body the server then
+refuses is a refusal the organizer meets at the end of a long edit. Anything unrecognised
+reads as no alignment at all.
+
+*Alignment is a rendering, not content.* The plain-text projection is untouched, so the
+excerpt, the `.ics`, the Open Graph description and the search index do not learn that a line
+was centred.
+
+Tests: `tests/unit/content/rich-text-align.test.ts` (7), including that a body written before
+this parses byte-for-byte to itself and that the default emits no rule at all.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 214. Decided — the race number is reserved when the place is, and settled when registration closes (2026-09-21)
+
+**Context.** The owner, looking at his own registration stuck on "waiting for the email":
+"I need the BID to be reserved ASAP because I still did not receive this email." And Dani,
+on why it cannot be a manual step: "procesul trebuie să fie automat, să nu pierdem timp să
+facem noi înscrieri manuale… ca nimeni nu face așa ceva. Și mai ales că vor fi gratis, cu nr
+limitat de înscrieri… să vezi ce discuții și hate ne luăm dacă nu l-am înscris pe unul la
+timp și i-a luat altul locul."
+
+§87 drew the number at confirmation — "the moment the place is certain". That was true when
+nothing existed earlier, and it put the number behind the two steps most likely to strand
+somebody: an email that does not arrive, and a declaration nobody has read yet. The club could
+not plan and the runner could not ask.
+
+**Decision.** *Two columns, and the difference between them is the whole design.*
+
+`provisional_bib_number` is drawn **at submission**, under the event row's lock, for any real
+registration that occupies a place. `bib_number` is the settled one: printed, emailed, never
+reissued, never renumbered.
+
+*The provisional number is released.* It belongs to a registration **exactly while it occupies
+a place**, so cancelling, expiring or being pushed back onto the waiting list hands it straight
+back to the next person. That is safe only because it is printed nowhere and emailed to nobody
+— nothing in the world has to keep matching it — and it is what keeps the sequence dense, which
+is what makes most people's number survive the settle unchanged. `bib_number` stays the
+opposite and always will: a cancelled runner keeps theirs, because reuse is how two people end
+up wearing 17.
+
+The release lives in `transitionRegistration`, the one guarded transition every state change
+already goes through, so there is no path that moves a registration out of a place and forgets.
+The *draw* cannot live there — it needs the event lock and the band — so it sits in the
+allocator's own paths, which hold both. Losing a release is the failure that matters: a number
+nobody holds that nobody can take.
+
+*A place is held from submission, and always was.* `PENDING_EMAIL_CONFIRMATION` is in
+`ACTIVE_REGISTRATION_STATUSES`, so nobody waiting on an email can have their place taken by
+somebody faster. What was missing was anything the runner or the club could **see**. That is
+also why the insert now takes the event lock: the row occupies a place from the instant it
+exists, so the number that goes with the place has to be drawn under the same serialization
+point capacity uses (§10.6, §151), and it was the one door into the allocator that took no lock.
+
+*Confirmation draws nothing while the window is open.* The provisional number stands, and
+`REGISTRATION_CONFIRMED` carries no number before the close — which is the trade: a number that
+is emailed is a number that cannot move afterwards. Once the window has shut, confirmation
+draws immediately, because a late paper signature or a walk-in on race day needs a bib within
+the minute and the sequence is settled by then.
+
+*The settle is a recompaction, and it is the one moment a number moves.* The provisional
+sequence is dense while it is handed out and full of holes by the end — cancellations, lapsed
+confirmations, expired holds. Printing that is a sheet reading 1, 2, 5, 6, 9 and a box of bibs
+a volunteer cannot count off. So at the close every runner still holding a place is renumbered
+into one unbroken run from the event's own band, in provisional order, which is registration
+order. A number already given by hand (§105) is kept and the sequence closes around it.
+`events.bibs_settled_at` makes it once-only: the job sees the same closed event every few
+minutes, and a second pass would renumber people who have already been told.
+
+*Everybody holding a place is numbered, not only the confirmed.* A declaration can be signed on
+paper at the desk on race morning (§67), so an unsigned registration is a person who may well
+run, and a race with no bib for them is the failure this is trying to avoid.
+
+**Consequences.** `findEventsNeedingMaintenance` gains a fourth clause, and it is load-bearing:
+an event that filled up cleanly has no expired hold and no waiting list, so none of the three
+existing conditions would ever name it and the settle would never run on the event that needs
+it most. `suggestFreeBibNumbers` now skips provisional numbers too, or it would offer an
+organizer a number somebody is already looking at. Every screen reads `raceNumberOf`, one
+accessor over the two columns, because answering "which number does this runner have" in eight
+places is how one of them ends up showing a dash on race morning. The printed bib and its
+picture stay on the settled column alone — a provisional number is never printed.
+
+**Rejected.** *Keeping one column and letting its value change.* It cannot be told apart from a
+settled number by any reader, so nothing downstream could know whether it was safe to print or
+send. *Two visible numbers per runner* — a provisional one beside a final one — which is what a
+naive second column gives, and what the settle's clearing of the provisional column avoids.
+
+Tests: `tests/integration/registrations/provisional-bibs.test.ts` (9), including the release
+and reuse, the unique index, that a test registration gets none, that the settle closes the
+holes, that it runs exactly once however often the job does, and that nothing is emailed before
+it.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 215. Decided — a member's club is the club's own name (2026-09-21)
+
+**Context.** "If people check that they are brasov runners members, the club input must be
+auto-filled and readonly", with a screenshot of `BRASOV RUNNERS` typed in by hand.
+
+**Decision.** The tick and the club box are the same question asked twice (BR-REQ-031-06), and
+typing the answer by hand is how one club becomes "BRASOV RUNNERS", "Brasov runners" and "BvR"
+— three clubs in the export, sorted apart on the start list. Ticking the box fills the field
+with the club's own name and makes it read-only; unticking gives back whatever was typed before.
+
+*The tick still grants nothing.* §48 is untouched: this writes a name, not a capability.
+
+*`readOnly`, never `disabled`.* A disabled input posts nothing, so ticking the box would
+silently clear the club from the submission.
+
+*The value is written imperatively and the input stays uncontrolled* (§211). A controlled input
+over a server-rendered form wipes what somebody typed before hydration; the box keeps its
+`defaultValue`, the DOM owns the value, and the island writes only in response to the checkbox
+changing, which is after hydration by definition.
+
+*The same rule runs on the server*, so a submission with JavaScript off — or from anything that
+is not this form — records the same string. `CLUB_NAME` is a constant in `theme/brand.ts`
+rather than `Site.name` from the catalogue, because what is stored is a fact and not a
+translation: it must not differ between a Romanian and an English submission. A test asserts
+the constant equals `Site.name` in both catalogues, so the two cannot drift.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 216. Decided — a challenge that cannot run is not a reason to refuse a registration (2026-09-21)
+
+**Context.** Dani could not register, on two different addresses. Diagnosing it turned up
+something worse than the bug being looked for: `verifyTurnstile` answered `failed` for **no
+token at all** and for **Cloudflare not answering**, and the action refused the submission on
+`failed`.
+
+So anybody whose browser never ran the widget could not register: a content blocker or a
+privacy browser that refuses `challenges.cloudflare.com`, a corporate proxy, a phone on a bad
+connection, JavaScript switched off. They were told to tick a box that was not on their screen.
+And a bad five seconds at Cloudflare locked out every visitor at once.
+
+**Decision.** *Three verdicts where there were two.* `failed` is a token Cloudflare looked at
+and rejected — evidence, and it still stops a submission. `unavailable` is the **absence** of
+evidence: no token, a 5xx, a timeout. It refuses nobody, and it is logged so the club can see
+how often the widget does not run. The line never carries an address, as §194's does not.
+
+The original comment argued the other way — "a bot's token is not waved through on a bad day" —
+and it was wrong about which failure costs more. A bot that omits the token still has to get
+past the honeypot, the timing check and the per-identity throttle (`AGENTS.md` §19.4). A person
+who cannot register is the thing this site exists to prevent, and §205 says so in the owner's
+own words: "trebuie să lăsăm oamenii să se înscrie cu orice preț!!! Asta e scopul principal al
+site-ului."
+
+An over-long token stays `failed`: nothing legitimate produces one, and it *was* submitted.
+
+*The contact form and the interest box are fixed by the same change*, because both already
+refused only on `failed`.
+
+**This was not Dani's bug**, and the distinction is worth recording. His widget ticks itself,
+so Turnstile was passing for him all along. What discarded him is §194's silent drop, which is
+fixed on `qa` and has never been deployed — production still runs `if (looksLikeSpam(input,
+now)) return { ok: true }`, which writes no registration, queues no email, and tells the person
+to check their inbox. The evidence was in the registrations list: no row for him at all. This
+section is a second hole found while looking for the first.
+
+Tests: `tests/unit/registrations/turnstile.test.ts` — each way the check can fail to run, and
+the one way it can fail.
+
+Baseline `BR-V1.38-2026-09-18`.
+
+## 217. Decided — nobody is told to wait for an email that was never sent (2026-09-21)
+
+**Context.** Dani could not register. On the same afternoon he registered successfully in
+DuckDuckGo and failed repeatedly in Edge, which is the whole diagnosis in one sentence: Edge
+holds his details and fills the form instantly, and production answers an instant submission
+with the confirmation page and nothing else.
+
+The owner, on being shown why: "people need to know that they were identified as bots! it's
+very bad for a user to tell him he is waiting for an email but he never receives it!" And then:
+"so the anti-spam/bot verification must be way more loose... so that we don't mistakenly mark
+real people as spam and they never receive the mail! and they need visuals on this!"
+
+**Decision, stated as an invariant because that is what it is:** *nothing may show the "check
+your email" screen unless a message was actually queued.*
+
+Three changes carry it.
+
+**1. Neither defence is answered with silence.** §194 moved the timing check from silence to a
+visible refusal and deliberately left the honeypot silent, on the argument — a good one — that
+a distinct error tells a script exactly what to stop doing (BR-REQ-031-01 criterion 3). The
+argument is sound and it is outweighed: a hidden field is filled by machines and, rarely, by a
+password manager or an accessibility tool that does not know the field is hidden, and that
+person was told to wait for an email nobody had sent.
+
+What a script still cannot learn is *which* check fired. Both verdicts throw the same error
+with the same field marker, so the trap and the timer are indistinguishable from outside, and a
+bot that omits the honeypot still has to wait out the timer — which is the whole of what a
+timing check ever bought. The log keeps the distinction, by event and reason, never by address.
+
+**2. The timing check is much looser.** One second, not three, and **a missing or unreadable
+render time is no longer suspicious at all**. Three seconds is well inside what somebody with
+autofill takes; one second is not reachable by hand and slows a script exactly as much. And the
+things that lose the timestamp are a page restored from the back-forward cache, an extension
+that rewrites the DOM, a proxy that strips a hidden field and a tab left open since yesterday —
+all of them people. There is nothing to time, so there is nothing to judge.
+
+The asymmetry is the argument. A lost registration is the thing this site exists to prevent; a
+spam registration is a row an Administrator deletes in two seconds. The real defences on this
+form are the honeypot, Turnstile (§97, §216) and the per-identity throttle (§19.4); the timer
+is the cheapest of the four and the only one that has ever refused a real person.
+
+**3. The refusal is where the person is looking.** `tooFast` is not one of the form's fields, so
+the error summary — the element the redirect anchors to and moves focus to — filtered it out and
+fell through to "verifică datele completate", a red box sending somebody hunting through twenty
+inputs that are all correct, while the sentence that explains what happened sat at the far end
+of a long form beside the button. That is the same trap §176 fixed for the captcha, and it is
+fixed the same way: said first, on its own, with its own title. The sentence names a second
+press and then the contact form, because a person whose password manager fills the trap will
+trip it again on the retry and would otherwise have a new dead end. The honeypot is in
+`form-draft.ts`'s `SKIPPED` set, so its value never travels back into the retry.
+
+**Consequences.** BR-REQ-031-01 criterion 3's "answered exactly like success" now describes
+neither check; `AGENTS.md` §15.1 is amended and states the invariant above it. The contact form
+and the interest box follow the same loosened rule through `looksLikeSpam`, and the contact form
+matters most of the three: it is the escape hatch somebody reaches for *because* the rest of the
+site would not take them (§205), so refusing it silently is the worst failure on the one page
+that exists to catch the others.
+
+**The second finding, and it is the expensive one.** While looking for what blocked Dani it
+turned out that **production has never had §194**: `main` is forty-one commits behind `qa` and
+still runs the silent drop. Every symptom matched — the widget ticked itself, the form
+submitted, the page said to check the inbox, no email arrived, and there was no row for him in
+the registrations list at all, because none was ever created. A fix that is written, tested and
+undeployed is not a fix, and nothing in this repository was measuring the distance between the
+two branches.
+
+Tests: `tests/unit/registrations/submission-verdict.test.ts` (6 — the one-second boundary and
+the passing of a missing render time), `tests/integration/registrations/lifecycle.test.ts` (the
+trap refuses out loud and creates nothing, and the two verdicts produce the identical answer),
+`tests/integration/contact/service.test.ts` and `tests/integration/registrations/interest.test.ts`.
+
+Baseline `BR-V1.38-2026-09-18`.

@@ -322,6 +322,28 @@ export const registrations = pgTable(
      */
     bibNumber: integer("bib_number"),
 
+    /**
+     * The number held for this registration while it can still change (`DECISIONS.md` §214).
+     *
+     * The owner, looking at his own row stuck on "waiting for the email": "I need the BID to be
+     * reserved ASAP". A number that arrives only at confirmation arrives after the two steps
+     * most likely to strand somebody — an email that does not come, a declaration nobody has
+     * read yet — so the club cannot plan and the runner cannot ask about a number they do not
+     * have.
+     *
+     * **It is the opposite of `bib_number` in the one way that matters: it is released.** A
+     * provisional number belongs to a registration *while it occupies a place*, and the moment
+     * the place goes — cancelled, expired, pushed onto the waiting list — the number goes back
+     * into the pool for the next person. That is safe precisely because it is never printed and
+     * never emailed: nothing exists in the world that has to keep matching it. `bib_number`
+     * is the opposite and stays so — once given it is never reissued, because two people
+     * wearing 17 is the failure that rule exists to prevent.
+     *
+     * Unique per event while it is set, like `bib_number` and for the same reason, and drawn
+     * under the event row's lock — the serialization point capacity already uses (§10.6).
+     */
+    provisionalBibNumber: integer("provisional_bib_number"),
+
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     emailConfirmedAt: timestamp("email_confirmed_at", { withTimezone: true }),
     waitlistedAt: timestamp("waitlisted_at", { withTimezone: true }),
@@ -390,6 +412,18 @@ export const registrations = pgTable(
     uniqueIndex("registrations_event_bib_number_unique")
       .on(t.eventId, t.bibNumber)
       .where(sql`${t.bibNumber} IS NOT NULL`),
+
+    check(
+      "registrations_provisional_bib_number_positive",
+      sql`${t.provisionalBibNumber} IS NULL OR ${t.provisionalBibNumber} > 0`,
+    ),
+    // The same guarantee for the number held before confirmation (§214). It is released when
+    // the place is, so this index is what makes a released number safe to hand to the next
+    // person: the release and the draw both happen under the event row's lock, and this is
+    // what would surface a mistake rather than let two rows quietly share a number.
+    uniqueIndex("registrations_event_provisional_bib_unique")
+      .on(t.eventId, t.provisionalBibNumber)
+      .where(sql`${t.provisionalBibNumber} IS NOT NULL`),
 
     // NOT NULL permits '', and an empty display name on a published start list is the legal
     // name leaking or a blank row. Neither is acceptable, so the emptiness is refused here too.
