@@ -1,7 +1,7 @@
 "use client";
 
 import TextField from "@mui/material/TextField";
-import { useCallback, useRef, useSyncExternalStore } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 
 /**
  * The runner's club, filled in and locked while "I am a member of the Brașov Runners group" is
@@ -63,6 +63,14 @@ export default function ClubForMember({
    * club's name behind in a box that is now editable — which would read as their own answer.
    */
   const previous = useRef<string | null>(null);
+  /**
+   * Whether the box has anything in it, kept only so the floating label knows to move.
+   *
+   * The DOM owns the value (§211), so nothing else needs this — but MUI decides where to draw
+   * the label from events it never sees when the value is written through a ref, and a label
+   * resting on top of the text is exactly what that looks like.
+   */
+  const [hasValue, setHasValue] = useState(Boolean(defaultValue));
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -79,6 +87,7 @@ export default function ClubForMember({
             input.value = previous.current;
             previous.current = null;
           }
+          setHasValue(input.value !== "");
         }
         onStoreChange();
       };
@@ -95,6 +104,7 @@ export default function ClubForMember({
       if (box.checked && inputRef.current && inputRef.current.value === "") {
         previous.current = "";
         inputRef.current.value = clubName;
+        setHasValue(true);
       }
 
       box.addEventListener("change", apply);
@@ -132,7 +142,23 @@ export default function ClubForMember({
       error={error}
       autoComplete="organization"
       helperText={locked ? lockedHelperText : helperText}
+      /*
+        The label has to be told to move (§226; the owner: "the brasov runners text is
+        overlapping with the placeholder here").
+
+        MUI floats a label by watching the input's own events, and this island writes the value
+        **imperatively** through the ref — which fires nothing. So the field had text in it and
+        the label still sat in its resting position, the two drawn on top of each other. It is
+        the price of writing to the DOM instead of holding the value in state, and §211 is why
+        state is not an option here.
+
+        `shrink` is forced only when there is something to shrink for; left `undefined`
+        otherwise, so MUI keeps deciding for itself on focus and blur as it does everywhere
+        else. Forcing `false` would be worse than the bug — the label would refuse to move even
+        while somebody typed.
+      */
       slotProps={{
+        inputLabel: { shrink: locked || hasValue || undefined },
         htmlInput: {
           maxLength: 120,
           readOnly: locked,

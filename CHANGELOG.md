@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.39-2026-09-21
 
+- **A telephone number pasted with its country code is judged again, not quietly re-prefixed.** Yesterday's digits-only filter ate the leading plus, which turned “that is a French number, fix the country” into a silently stored number belonging to nobody. And the club field's label no longer sits on top of the club's name. §226.
 - **The declaration sets in bold everything filled in for you** — your name, your identity document, the race and its date — so what a signer has to check stands out from the text that was approved once for everybody. On screen and in the signed PDF. §225.
 - **The “check your email” screen says which address it went to**, and gives the five-minute wait its own bold line instead of repeating it three times. An address read back is what catches “@gmail.con” in the second before somebody walks away. §224.
 - **The telephone box takes digits only**, stripping anything else as it is typed — so a number pasted out of your contacts keeps its digits and loses the punctuation. §223.
