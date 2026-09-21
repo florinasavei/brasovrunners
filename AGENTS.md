@@ -2720,6 +2720,18 @@ with the event and the count (§82). Every message carries the facts line where 
 event — date, time, meeting point in bold, then the map and the Strava event — and the
 footer "reply to this email with questions" when `EMAIL_REPLY_TO` is set.
 
+**The words of any message may be rewritten by the club** (`DECISIONS.md` §247): the subject
+and the paragraphs, per message type and per language, on `/admin/emails`, by a Redactor or
+above (`canEditTexts`, §103), stored in `platform_settings.emailCopy` and audited one message
+at a time. Everything else stays in code and MUST NOT become editable: the greeting, the facts
+line, the action button and the token behind it, the QR, the attachments, the links under the
+button, the sign-off and the layout — they carry tokens, files and addresses rather than words
+(§12.8, §14.5). The words may name a closed set of fields, written `{participantName}`; a
+placeholder outside that set, and any URL, is refused when it is saved rather than reaching a
+participant as literal braces. The two sentences the platform adds *around* a body — "you were
+already registered" (§235) and "this number is provisional" (§237) — are statements about the
+registration and survive a rewrite.
+
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary
 public event registration page. It carries no scoped token and creates none.

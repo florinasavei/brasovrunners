@@ -10805,6 +10805,54 @@ including the ones that are about something else entirely — the opposite of wh
 Tests: `tests/integration/registrations/admin-list.test.ts` — each state counted once, the test
 rows apart, and the same filters the list uses.
 
+## 247. Decided — the club writes the words, the platform keeps the machinery (2026-09-21)
+
+**Context.** Dani's ask, carried by the owner: the email templates should be editable in the
+backoffice. Today every word is in `templates.ts`, so "Ne vedem duminică!" instead of "Ne
+vedem la eveniment" is a pull request, a review and a deployment — for a club whose voice is
+the whole point of a club.
+
+**Decision.** *The subject and the paragraphs are editable*, per message type and per language,
+in the same disclosure on `/admin/emails` that already previews the message, with the preview
+directly above the box that changes it.
+
+*Everything else stays in code, and the line is not arbitrary.* The greeting, the facts line,
+the action button and the token behind it, the QR, the attachments, the links and the sign-off
+are what makes a message **work**: they carry secrets, files and addresses (§12.8, §14.5). A
+club that could edit the button's address could send a participant to a link this platform
+never minted; a club that could edit the QR could send them to the desk with nothing to scan.
+Words are words; machinery is machinery.
+
+*A closed set of placeholders, and no URL among them.* `{participantName}`, `{eventTitle}`,
+`{bibNumber}` and nine others. Anything else between braces is refused **when it is saved**,
+naming itself — the alternative is a participant receiving literal braces, which is the failure
+this kind of feature is famous for. A field a given message does not carry renders as nothing,
+with the spacing closed up, and the preview under the editor is where somebody sees that.
+
+*A Redactor's verb, not an Administrator's.* §103 decided that the Redactor writes and the
+Organizer organizes; this is writing. The panels beside it — who receives a copy (§244), which
+plan the club is on (§100) — stay the Administrator's, because those are about money and
+personal data rather than about words.
+
+*One `platform_settings` row, one entry at a time.* The shape §100, §164 and §244 proved. The
+audit row names the one message that changed and its before and after, rather than a map of
+seventeen types nobody could read in a trail. "Revino la textul platformei" deletes the entry
+instead of storing an empty one, so there is exactly one way to be on the shipped text.
+
+*Read once per batch on the send path.* A memo of half a minute, dropped the moment anybody
+saves, so a batch of twenty messages reads the setting once and a save is visible on the next
+send rather than in thirty seconds. The preview reads straight through, because somebody who
+has just pressed Save is looking at it.
+
+*The platform's two framing sentences survive a rewrite.* "You were already registered" (§235)
+and "this number is provisional" (§237) are statements about the state of a registration, not
+about how the club likes to write, and a rewritten confirmation would otherwise silently lose
+them.
+
+Tests: `tests/unit/notifications/email-copy.test.ts` — the placeholders, the refusals, and that
+only the words move; `tests/integration/notifications/email-copy.test.ts` — who may write, what
+the worker renders, the audit row, and the reset.
+
 Baseline `BR-V1.41-2026-09-21`.
 
 ## 249. Decided — the club designs its own race number (2026-09-21)
