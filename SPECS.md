@@ -1415,6 +1415,12 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 
 **Verification:** unit `notifications/templates.test.ts`, `notifications/mailgun-adapter.test.ts`; integration `notifications/event-mail.test.ts`, `registrations/signed-declaration.test.ts`, `registrations/interest.test.ts`
 
+14. Given a Redactor, an Administrator or a Superadministrator, when they write a subject and paragraphs for one message type in one language on `/admin/emails`, then those words are stored under `platform_settings.emailCopy`, audited with that one key and its before and after, and used by every later send of that type in that language — the other language and every other type keeping the platform's text; an Organizer or a volunteer is refused (`DECISIONS.md` §103, §247).
+
+15. Given words containing `{field}`, when they are saved, then a field outside the closed placeholder set — including any URL — is refused, naming it; a field the message does not carry renders as nothing, with the spacing closed up; and the greeting, the facts line, the action button and its token, the QR, the attachments, the links and the sign-off are unchanged by any rewrite. "Revino la textul platformei" removes the override rather than storing an empty one, and the next send sees that at once (`DECISIONS.md` §247).
+
+**Verification:** unit `notifications/email-copy.test.ts`; integration `notifications/email-copy.test.ts`
+
 #### BR-REQ-080-02 — Outbox is authoritative and idempotent
 
 - **Source:** BR-BUS-080

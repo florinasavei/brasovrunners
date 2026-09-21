@@ -7,11 +7,13 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
+import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
+import { updateEmailCopy } from "@/modules/notifications/email-copy";
 import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
-import { requireStaffRole } from "@/modules/staff-identity/session";
-import { isDomainError } from "@/shared/errors/domain-error";
+import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
+import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
 function localeOf(form: FormData): Locale {
@@ -143,4 +145,55 @@ export async function updateClubNoticesAction(form: FormData): Promise<void> {
   }
   revalidatePath(path);
   redirect(`${path}?${outcome}#admin-alert`);
+}
+
+/**
+ * The club's own wording for one message, in one language (`DECISIONS.md` §247).
+ *
+ * A Redactor's verb, not an Administrator's: §103 is explicit that the Redactor writes the
+ * words. The service asserts that again, validates every placeholder, and records the one
+ * message that changed. "Revino la textul platformei" is the same form's second button — it
+ * posts `reset`, and the service reads that as "no override".
+ */
+export async function updateEmailCopyAction(form: FormData): Promise<void> {
+  const locale = localeOf(form);
+  const lang = form.get("lang") === "en" ? "en" : "ro";
+  const path = getPathname({ locale, href: "/admin/emails" });
+  const back = `${path}?lang=${lang}`;
+  const text = (name: string): string => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
+
+  let outcome: string;
+  try {
+    const actor = await requireStaff();
+    const messageType = text("messageType") as EmailMessageType;
+    if (!(emailMessageType.enumValues as readonly string[]).includes(messageType)) {
+      throw new DomainError("VALIDATION_ERROR", `unknown message type ${messageType}`);
+    }
+    await updateEmailCopy(
+      getDb(),
+      actor,
+      {
+        messageType,
+        locale: lang,
+        entry:
+          form.get("reset") === "1"
+            ? null
+            : {
+                subject: text("subject"),
+                // A blank line between paragraphs, which is how anybody writes them into a box.
+                paragraphs: text("paragraphs")
+                  .split(/\r?\n\s*\r?\n/)
+                  .map((paragraph) => paragraph.trim())
+                  .filter((paragraph) => paragraph !== ""),
+              },
+      },
+      new Date(),
+    );
+    outcome = form.get("reset") === "1" ? "saved=emailCopyReset" : "saved=emailCopy";
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    outcome = `error=${error.code}`;
+  }
+  revalidatePath(path);
+  redirect(`${back}&${outcome}#admin-alert`);
 }

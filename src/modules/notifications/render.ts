@@ -16,6 +16,7 @@ import { env } from "@/shared/config/env";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { findSignedDeclaration, renderSignedDeclarationPdf } from "@/modules/registrations/signed-declaration";
+import { readEmailCopyForSending } from "./email-copy";
 import { buildOutgoingEmail, type TemplateData } from "./templates";
 import type { EmailRenderer, OutboxRow } from "./outbox";
 
@@ -322,6 +323,9 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data,
     actionUrl,
     attachments,
+    // The club's own words, when it has written any (§247). Memoized for half a minute, so a
+    // batch of twenty reads the setting once rather than twenty times.
+    overrides: await readEmailCopyForSending(db, now),
     cc: addresses(payload.cc),
     bcc: addresses(payload.bcc),
   });

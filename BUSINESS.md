@@ -742,6 +742,8 @@ Messages include:
 
 Who at the club receives the archive copy of a signed declaration, and who is told when somebody confirms, is set in the backoffice rather than in the deployment: one mailbox for the declarations, plus visible copies (Cc) and hidden ones (Bcc), and a list for the confirmation notices. A hidden copy delivers the participant's name and identity document to a mailbox nobody on the message can see, and the screen that sets it says so (`DECISIONS.md` §244).
 
+The club writes its own wording for any message — the subject and the paragraphs, in each language, from the backoffice, with a preview of the result. What a message *carries* is not editable: the button and its secure link, the QR code, the attached declaration and the sign-off are the platform's, because they are what makes the message work rather than what it says (`DECISIONS.md` §247).
+
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.
 
 Newsletters and promotional campaigns require a separate consent model and decision.
