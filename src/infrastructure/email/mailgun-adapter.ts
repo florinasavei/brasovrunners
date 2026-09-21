@@ -184,6 +184,11 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       const form = new FormData();
       form.set("from", config.from);
       form.set("to", message.to);
+      // Repeated fields, which is how Mailgun takes several recipients of the same kind. A
+      // `cc` is on the message everybody can read; a `bcc` reaches its mailbox and appears
+      // nowhere (§244, where the club is warned of exactly that).
+      for (const address of message.cc ?? []) form.append("cc", address);
+      for (const address of message.bcc ?? []) form.append("bcc", address);
       form.set("subject", message.subject);
       form.set("text", message.text);
       form.set("html", message.html);

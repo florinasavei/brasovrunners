@@ -669,7 +669,11 @@ Forward destination takes a comma-separated list (`owner@…, amalia@…, dani@�
 copy. Only `contact@` is routed — a reply sent to `noreply@mail.<domain>` is dropped, which
 is right, because every email the site sends carries `Reply-To: contact@…`. **The same mailbox is the declarations archive** once `DECLARATIONS_ARCHIVE_TO=brasovrunners@gmail.com`
 is set on the production project (`DECISIONS.md` §99): every signed declaration arrives there
-as a PDF at signing. One more message per registration on Mailgun's allowance. When the club gets Google or Microsoft
+as a PDF at signing. One more message per registration on Mailgun's allowance. **Since
+`DECISIONS.md` §244 this is a setting instead**: `/admin/emails` → "Copiile clubului", where an
+Administrator names the mailbox and any visible (Cc) or hidden (Bcc) copies, with the variable
+kept as the fallback for a deployment that names none. The same panel sets who is told when
+somebody confirms (§245) — each of those addresses is one more message per registration too. When the club gets Google or Microsoft
 mailboxes, those take the **apex** (`@brasovrunners.com`) and this subdomain is untouched; only
 the two reply-to values move — `EMAIL_REPLY_TO` here and the Zitadel SMTP provider's.
 

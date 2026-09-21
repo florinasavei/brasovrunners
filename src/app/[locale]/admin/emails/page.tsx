@@ -14,13 +14,19 @@ import { getDb } from "@/db/client";
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
+import { readClubNotices } from "@/modules/notifications/club-notices";
+import { resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { readEmailPlan } from "@/modules/notifications/email-plan";
+import { readOutboxQueue } from "@/modules/notifications/queue";
 import EmailPlanPanel from "@/modules/notifications/ui/EmailPlanPanel";
+import ClubNoticesPanel from "@/modules/notifications/ui/ClubNoticesPanel";
+import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
+import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 
-type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ lang?: string; saved?: string; error?: string; sent?: string }> };
 
 /**
  * Reads the session, the plan and the contact recipients, and is returned to straight after
@@ -45,19 +51,29 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  await requireStaff();
-  const { lang, saved, error } = await searchParams;
+  const staff = await requireStaff();
+  const { lang, saved, error, sent } = await searchParams;
   const emailLocale: EmailLocale = lang === "en" ? "en" : lang === "ro" ? "ro" : locale;
 
   // The plan and the counts (§100), above the messages: what can still go out is the first
   // thing anybody opening this page on race day wants to know.
   const db = getDb();
   const now = new Date();
-  const [plan, volume, recipients] = await Promise.all([
+  /*
+    The queue names recipients, which is participant data (§15.11), so it is read only for the
+    roles that already hold the participant list — and "send now" is an Administrator's verb
+    anyway (§80). A Redactor opening this page sees the templates and the plan, as before.
+  */
+  const maySeeQueue = canManageRegistrations(staff.role);
+  const [plan, volume, recipients, queue, notices] = await Promise.all([
     readEmailPlan(db),
     readEmailVolumeToday(db, now),
     // Who reads "Scrie-ne" (§164): the same page, because both are "what the club's email does".
     readContactRecipients(db),
+    maySeeQueue ? readOutboxQueue(db) : null,
+    // Who receives a signed declaration and who is told about a confirmation (§244, §245):
+    // participant data again, so the same gate as the queue.
+    maySeeQueue ? readClubNotices(db) : null,
   ]);
   const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
@@ -98,9 +114,23 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "emailPlan" && <Alert severity="success">{t("emails.plan.saved")}</Alert>}
         {saved === "contactRecipients" && <Alert severity="success">{t("emails.contacts.saved")}</Alert>}
+        {saved === "outboxSent" && <Alert severity="success">{t("outbox.sentNow", { count: sent ?? "0" })}</Alert>}
+        {saved === "clubNotices" && <Alert severity="success">{t("emails.clubNotices.saved")}</Alert>}
       </Box>
 
       <EmailPlanPanel locale={locale} plan={plan} volume={volume} />
+
+      {/* What is actually queued, and the button that sends it (§243). */}
+      {queue && <OutboxQueuePanel locale={locale} queue={queue} volume={volume} />}
+
+      {/* The club's own copies (§244, §245), beside the contact recipients they mirror. */}
+      {notices && (
+        <ClubNoticesPanel
+          locale={locale}
+          notices={notices}
+          declarations={resolveDeclarationCopies(notices, env.DECLARATIONS_ARCHIVE_TO)}
+        />
+      )}
 
       <ContactRecipientsPanel locale={locale} recipients={recipients} resolved={resolvedRecipients} />
 

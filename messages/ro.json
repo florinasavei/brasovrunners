@@ -1508,7 +1508,8 @@
         "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)",
         "BIB_ASSIGNED": "Numărul de concurs dat de mână",
         "STAFF_INVITATION": "Invitația în echipă",
-        "REGISTRATION_OPENED": "Înscrierile s-au deschis"
+        "REGISTRATION_OPENED": "Înscrierile s-au deschis",
+        "CLUB_CONFIRMATION_NOTICE": "Anunț pentru club: cineva a confirmat"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1527,7 +1528,45 @@
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune.",
         "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
-        "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere."
+        "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere.",
+        "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token."
+      },
+      "clubNotices": {
+        "title": "Copiile clubului",
+        "intro": "Cine primește, la club, copia unei declarații semnate și cine află când cineva își confirmă înscrierea. Adrese ale clubului, nu ale participanților.",
+        "source": {
+          "setting": "În vigoare: declarațiile merg la {to}; copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
+          "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
+          "none": "Nicio adresă: declarațiile semnate nu se trimit nicăieri, se păstrează doar în aplicație."
+        },
+        "updatedAt": "Modificat la {when}.",
+        "declarationsTo": "Declarațiile semnate merg la",
+        "declarationsToHelp": "O singură adresă — cutia de arhivă a clubului. Gol: nu se trimite nicio copie.",
+        "declarationsCc": "Copie vizibilă (Cc)",
+        "declarationsCcHelp": "Adrese separate prin virgulă. Toți destinatarii se văd între ei.",
+        "declarationsBcc": "Copie ascunsă (Bcc)",
+        "declarationsBccHelp": "Adrese separate prin virgulă. Nu apar în mesaj.",
+        "bccWarning": "Declarația conține numele participantului și actul de identitate declarat la semnare. O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
+        "confirmationsTo": "Anunță-ne când cineva confirmă",
+        "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
+        "save": "Salvează",
+        "saving": "Se salvează…",
+        "saved": "Am salvat cine primește copiile clubului."
+      },
+      "queue": {
+        "title": "Coada de trimitere",
+        "intro": "Ce nu a plecat încă: tipul mesajului, destinatarul, când a intrat în coadă, câte încercări au fost și ce a răspuns furnizorul ultima dată. Mesajul în sine nu se păstrează nicăieri — se compune la trimitere.",
+        "count": "În coadă: {count} mesaje.",
+        "facts": "În coadă din {queued} · încercări: {attempts} · următoarea încercare: {next}",
+        "nextAny": "la prima trimitere",
+        "lastError": "Ultimul răspuns al furnizorului: {error}",
+        "manual": "Retrimis manual",
+        "more": "Și încă {count} în coadă, neafișate aici.",
+        "status": {
+          "PENDING": "În așteptare",
+          "PROCESSING": "Se trimite acum",
+          "FAILED": "Oprit după toate încercările"
+        }
       },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",

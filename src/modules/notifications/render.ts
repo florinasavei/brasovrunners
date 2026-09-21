@@ -152,6 +152,12 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
   }
   // The desk code on the confirmation and the reminder (BR-REQ-037-08). A confirmed
   // registration made before codes existed gets one here, so a resent confirmation carries it too.
+  // The club's own notice (§245) needs the number and nothing else the runner's copy carries:
+  // no check-in code and no QR, because neither means anything in a club mailbox.
+  if (row.messageType === "CLUB_CONFIRMATION_NOTICE" && registration) {
+    data.bibNumber = registration.bibNumber ?? undefined;
+  }
+
   if (
     (row.messageType === "REGISTRATION_CONFIRMED" || row.messageType === "EVENT_REMINDER" || row.messageType === "BIB_ASSIGNED") &&
     registration?.status === "CONFIRMED"
@@ -261,6 +267,18 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     }
   }
 
+  /*
+    The club's copies of the declaration (§244), as the confirmation asked for them.
+
+    Read from the payload rather than from the setting: the row is what was decided when the
+    declaration was signed, and a list edited since must not silently redirect a copy that was
+    already queued. Addresses only — `AGENTS.md` §14.5 keeps bodies and tokens out of the row,
+    and an address is neither.
+  */
+  const payload = (row.payloadJson ?? {}) as { cc?: unknown; bcc?: unknown };
+  const addresses = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "") : [];
+
   return buildOutgoingEmail({
     to: row.recipientEmail,
     locale,
@@ -269,6 +287,8 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     data,
     actionUrl,
     attachments,
+    cc: addresses(payload.cc),
+    bcc: addresses(payload.bcc),
   });
 };
 
