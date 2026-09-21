@@ -62,6 +62,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     bandColour: event.bibColour,
     partners: event.coHosts.map((host) => host.name),
     replyTo: env.EMAIL_REPLY_TO,
+    // The club's own design (§249), or the preview stops being a preview of the paper.
+    design: event.design,
   });
   // A number and a name change rarely; the browser may keep the picture for an hour.
   image.headers.set("Cache-Control", "private, max-age=3600");

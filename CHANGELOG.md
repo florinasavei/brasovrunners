@@ -16,6 +16,11 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 - **The page is wider and carries less air**: 2040 pixels instead of 1536, a third less vertical padding on every page, 12 pixels inside a card instead of 16 and 24 — and the events are a grid of two or three columns on a wide screen rather than one stripe of full-width cards. Running text keeps its reading measure. §252.
 - **"Cine vine" is a real table now**, with a position, the name and the club, and fifty to a page — the pages are links, so it works with JavaScript off and a list of four hundred is not four hundred rows on a phone. Who is listed has not changed: confirmed participants who did not ask to be left out. §250.
 
+## BR-V1.42-2026-09-21
+
+- **The club designs its own race number.** What is printed on the bib — the runner's name, the event, the date, the club's logo — how large the number is, whether the name sits above it or below, a picture of your own instead of the coloured band, a strip of sponsors, and cut marks on the sheet. The preview on the event's page is the sheet that prints. §249.
+- **The text on a coloured band is readable whatever colour you pick.** White on the club's blue, ink on yellow, worked out rather than assumed. §249.
+
 ## BR-V1.41-2026-09-21
 
 - **The club writes the emails' own words.** The subject and the paragraphs of any message, in each language, from `/admin/emails`, with the preview right above the box — and a button back to the platform's text. What a message *carries* stays the platform's: the button and its secure link, the QR, the attached declaration and the sign-off. Fields like `{participantName}` are filled in; anything else between braces is refused when you save it. §247.

@@ -713,6 +713,32 @@
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
       "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
+      "bibDesign": {
+        "title": "Cum arată numărul de concurs",
+        "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
+        "showName": "Numele alergătorului",
+        "showEventTitle": "Numele evenimentului",
+        "showDate": "Data",
+        "showLogo": "Sigla clubului",
+        "cutMarks": "Repere de tăiere pe foaie",
+        "numberScale": "Mărimea numărului",
+        "namePosition": "Unde stă numele",
+        "scales": {
+          "small": "Mic",
+          "medium": "Normal",
+          "large": "Mare"
+        },
+        "positions": {
+          "below": "Sub număr",
+          "above": "Deasupra numărului"
+        },
+        "headerImageSrc": "Imagine în locul benzii colorate",
+        "headerImageSrcHelp": "Se întinde pe toată lățimea, sus. Când alegi una, banda colorată, sigla și textul din bandă nu se mai tipăresc — imaginea e antetul.",
+        "sponsorImageSrc": "Bandă cu sponsori",
+        "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
+        "noPicture": "Fără imagine",
+        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea și PDF-ul se actualizează după salvare."
+      },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
       "bibColours": {
