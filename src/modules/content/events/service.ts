@@ -350,6 +350,15 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes) {
     // so the editor's two controls posted into nothing — caught by review (§177).
     bibStartNumber: fields.bibStartNumber,
     bibColour: fields.bibColour,
+    /*
+      The rest of the bib's design (§249), and the same discipline the partners' list above
+      follows: a caller that said nothing writes no column at all.
+
+      A checkbox that is off posts nothing, so a form without the design panel — the create
+      form, an older caller, a test fixture — would otherwise read as "every switch off" and
+      silently redesign a bib nobody had touched.
+    */
+    ...(fields.bibDesign === undefined ? {} : { bibDesign: fields.bibDesign }),
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
     registrationOpensAt: times.registrationOpensAt,
@@ -749,6 +758,7 @@ const SERIES_COLUMNS = [
   // One race, one band: a series is the same event on several dates (§173, §177).
   "bibStartNumber",
   "bibColour",
+  "bibDesign",
   "confirmationOpensDaysBefore",
   "confirmationDeadlineDaysBefore",
   "declarationDocumentId",

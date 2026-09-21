@@ -393,6 +393,13 @@
       "when": 1790002431772,
       "tag": "0055_club_confirmation_notice",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1790009930338,
+      "tag": "0056_bib_design",
+      "breakpoints": true
     }
   ]
 }

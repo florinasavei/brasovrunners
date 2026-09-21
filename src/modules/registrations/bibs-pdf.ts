@@ -2,7 +2,14 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import { COLOR } from "@/theme/brand";
-import { bibBandColour, bibFooterLine } from "./bib-design";
+import {
+  bandTextColour,
+  type BibDesign,
+  bibBandColour,
+  bibFooterLine,
+  DEFAULT_BIB_DESIGN,
+  numberScaleFactor,
+} from "./bib-design";
 import type { BibRow } from "./bibs";
 
 /**
@@ -52,6 +59,17 @@ export type BibSheetInput = {
    * a cut or a club that pins the whole page (`DECISIONS.md` §79).
    */
   layout?: "two" | "one";
+  /** What the club decided this bib shows (§249); absent is the platform's own design. */
+  design?: BibDesign;
+  /**
+   * The header and sponsor pictures, already fetched by the caller.
+   *
+   * Bytes rather than addresses, deliberately: this function is pure over its inputs and a
+   * printer sheet is not the place to discover that a store is slow. The route fetches them,
+   * caps their size and hands over what it got — `null` where it got nothing, which prints the
+   * coloured band exactly as before (§249).
+   */
+  pictures?: { header?: Buffer | null; sponsors?: Buffer | null };
 };
 
 const ASSETS = path.join(process.cwd(), "src", "theme", "pdf");
@@ -78,6 +96,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     readFile(path.join(ASSETS, "logo-white.png")),
   ]);
   const band = bibBandColour(input.bandColour);
+  const bandText = bandTextColour(band);
+  const design = input.design ?? DEFAULT_BIB_DESIGN;
   const footer = bibFooterLine(input.partners ?? [], input.replyTo);
 
   const doc = new PDFDocument({
@@ -106,7 +126,13 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     the embeddable object to reuse; it is missing from `@types/pdfkit`, like the font buffers
     above, hence the cast rather than a second file read.
   */
-  const lockup = (doc as unknown as { openImage: (src: Buffer) => Buffer }).openImage(logo);
+  const embed = (doc as unknown as { openImage: (src: Buffer) => Buffer }).openImage.bind(doc);
+  const lockup = embed(logo);
+  // The club's own pictures, embedded once each for the same reason the lockup is (§249).
+  const headerPicture = input.pictures?.header ? embed(input.pictures.header) : null;
+  const sponsorPicture = input.pictures?.sponsors ? embed(input.pictures.sponsors) : null;
+  /** The strip of sponsors takes this much above the small print, when there is one. */
+  const SPONSOR_HEIGHT = sponsorPicture ? 30 : 0;
 
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -118,49 +144,94 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const drawBib = (row: Pick<BibRow, "bibNumber" | "registeredName">, top: number) => {
     const left = MARGIN;
 
-    // The band first, edge to edge across the top: it is what says which race this is before
-    // anybody is close enough to read a word of it.
-    doc.rect(left, top, BIB.width, BAND_HEIGHT).fill(band);
+    /*
+      The club's own picture across the top (§249), or the coloured band with the lockup and the
+      race on it. The picture replaces the band whole — a band *and* a picture is two headers —
+      and it is drawn to cover the strip, so a photograph of any proportion fills it without
+      being squashed.
+    */
+    if (headerPicture) {
+      doc.image(headerPicture, left, top, { cover: [BIB.width, BAND_HEIGHT], align: "center", valign: "center" });
+    } else {
+      // The band first, edge to edge across the top: it is what says which race this is before
+      // anybody is close enough to read a word of it.
+      doc.rect(left, top, BIB.width, BAND_HEIGHT).fill(band);
 
-    // The lockup at the left of the band, white on whatever colour the band is; the race and
-    // its date at the right, also white. 2.424:1, the lockup's own proportion.
-    const logoWidth = 122;
-    doc.image(lockup, left + 18, top + (BAND_HEIGHT - logoWidth / 2.424) / 2, { width: logoWidth });
-    const headerLeft = left + logoWidth + 36;
-    const headerWidth = BIB.width - logoWidth - 54;
-    doc
-      .font("bold")
-      .fontSize(13)
-      .fillColor(COLOR.surface)
-      .text(input.eventTitle, headerLeft, top + 15, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true })
-      .font("body")
-      .fontSize(10.5)
-      .text(input.eventDate, headerLeft, top + 34, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
+      // The lockup at the left of the band, white on whatever colour the band is; the race and
+      // its date at the right, in whichever of white and ink can be read on it. 2.424:1, the
+      // lockup's own proportion.
+      const logoWidth = 122;
+      if (design.showLogo) {
+        doc.image(lockup, left + 18, top + (BAND_HEIGHT - logoWidth / 2.424) / 2, { width: logoWidth });
+      }
+      const headerLeft = left + (design.showLogo ? logoWidth + 36 : 18);
+      const headerWidth = BIB.width - (design.showLogo ? logoWidth + 54 : 36);
+      if (design.showEventTitle) {
+        doc
+          .font("bold")
+          .fontSize(13)
+          .fillColor(bandText)
+          .text(input.eventTitle, headerLeft, top + 15, { width: headerWidth, align: "right", lineBreak: false, ellipsis: true });
+      }
+      if (design.showDate) {
+        doc
+          .font("body")
+          .fontSize(10.5)
+          .fillColor(bandText)
+          .text(input.eventDate, headerLeft, top + (design.showEventTitle ? 34 : 22), {
+            width: headerWidth,
+            align: "right",
+            lineBreak: false,
+            ellipsis: true,
+          });
+      }
+    }
 
-    // The number: everything the card has left under the band, in the body ink — a number is
-    // read at distance, and ink on white is the highest contrast the paper can carry.
+    /*
+      The number: everything the card has left under the header, in the body ink — a number is
+      read at distance, and ink on white is the highest contrast the paper can carry. Its size
+      is the club's choice as a multiple of that (§249), so the preview on the screen and this
+      sheet scale together.
+
+      The name is above it or below it, or nowhere; what it takes is given back to the number
+      when it is switched off, which is what makes "just the number" a real choice rather than
+      a bib with a gap in it.
+    */
+    const nameBlock = design.showName ? NAME_BLOCK : 0;
+    const nameAbove = design.showName && design.namePosition === "above";
     const digits = String(row.bibNumber);
-    const numberSize = digits.length >= 5 ? 140 : digits.length === 4 ? 175 : 200;
-    const numberArea = BIB.height - BAND_HEIGHT - FOOTER_HEIGHT - NAME_BLOCK;
+    const numberSize = Math.round((digits.length >= 5 ? 140 : digits.length === 4 ? 175 : 200) * numberScaleFactor(design));
+    const numberArea = BIB.height - BAND_HEIGHT - FOOTER_HEIGHT - nameBlock - SPONSOR_HEIGHT;
+    const numberTop = top + BAND_HEIGHT + (nameAbove ? nameBlock : 0);
+
+    const drawName = (y: number) =>
+      doc
+        .font("bold")
+        .fontSize(24)
+        .fillColor(COLOR.ink)
+        .text(row.registeredName, left + 18, y, { width: BIB.width - 36, align: "center", lineBreak: false, ellipsis: true });
+
+    if (nameAbove) drawName(top + BAND_HEIGHT + 10);
+
     doc.font("bold").fontSize(numberSize).fillColor(COLOR.ink);
     const numberHeight = doc.heightOfString(digits, { width: BIB.width, lineBreak: false });
-    doc.text(digits, left, top + BAND_HEIGHT + Math.max(0, (numberArea - numberHeight) / 2), {
+    doc.text(digits, left, numberTop + Math.max(0, (numberArea - numberHeight) / 2), {
       width: BIB.width,
       align: "center",
       lineBreak: false,
     });
 
-    // The name, under the number, large enough to read at a finish line.
-    doc
-      .font("bold")
-      .fontSize(24)
-      .fillColor(COLOR.ink)
-      .text(row.registeredName, left + 18, top + BIB.height - FOOTER_HEIGHT - 34, {
-        width: BIB.width - 36,
+    // The name under the number, large enough to read at a finish line.
+    if (design.showName && !nameAbove) drawName(top + BIB.height - FOOTER_HEIGHT - SPONSOR_HEIGHT - 34);
+
+    // The sponsors' strip above the small print (§249), its own proportion kept.
+    if (sponsorPicture) {
+      doc.image(sponsorPicture, left + 18, top + BIB.height - FOOTER_HEIGHT - SPONSOR_HEIGHT + 2, {
+        fit: [BIB.width - 36, SPONSOR_HEIGHT - 6],
         align: "center",
-        lineBreak: false,
-        ellipsis: true,
+        valign: "center",
       });
+    }
 
     // The small print: who is putting the race on, and where to write. Never a telephone
     // number — `bibFooterLine` says why.
@@ -182,18 +253,46 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     doc.rect(left, top, BIB.width, BIB.height).lineWidth(0.75).strokeColor(COLOR.line).stroke();
   };
 
+  /**
+   * Corner marks, for a club that takes the sheet to a printer (§249).
+   *
+   * Short rules outside each corner of the bib rather than a frame: a printer trims to them and
+   * a pair of scissors follows them, and neither is helped by a line across the picture.
+   */
+  const cutMarks = (top: number) => {
+    if (!design.cutMarks) return;
+    const length = 10;
+    const gap = 4;
+    const corners = [
+      [MARGIN, top],
+      [PAGE.width - MARGIN, top],
+      [MARGIN, top + BIB.height],
+      [PAGE.width - MARGIN, top + BIB.height],
+    ] as const;
+    doc.lineWidth(0.5).strokeColor(COLOR.inkMuted);
+    for (const [x, y] of corners) {
+      const towardsLeft = x === MARGIN ? -1 : 1;
+      const towardsTop = y === top ? -1 : 1;
+      doc.moveTo(x + towardsLeft * gap, y).lineTo(x + towardsLeft * (gap + length), y).stroke();
+      doc.moveTo(x, y + towardsTop * gap).lineTo(x, y + towardsTop * (gap + length)).stroke();
+    }
+  };
+
   if (input.layout === "one") {
     // The bib keeps its size — an A5 number on a shirt is the size that reads from the finish
     // line — and sits in the middle of the page, so the cut is optional.
     for (const row of input.rows) {
       doc.addPage();
-      drawBib(row, (PAGE.height - BIB.height) / 2);
+      const top = (PAGE.height - BIB.height) / 2;
+      drawBib(row, top);
+      cutMarks(top);
     }
   }
 
   for (let index = 0; input.layout !== "one" && index < input.rows.length; index += 2) {
     doc.addPage();
     drawBib(input.rows[index], MARGIN);
+    cutMarks(MARGIN);
     if (input.rows[index + 1]) {
       // The cut line, in the gap, dashed so it reads as "cut here" and not as a rule.
       const y = MARGIN + BIB.height + GAP / 2;
@@ -206,6 +305,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         .stroke()
         .undash();
       drawBib(input.rows[index + 1], MARGIN + BIB.height + GAP);
+      cutMarks(MARGIN + BIB.height + GAP);
     }
   }
 

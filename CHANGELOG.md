@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.42-2026-09-21
+
+- **The club designs its own race number.** What is printed on the bib — the runner's name, the event, the date, the club's logo — how large the number is, whether the name sits above it or below, a picture of your own instead of the coloured band, a strip of sponsors, and cut marks on the sheet. The preview on the event's page is the sheet that prints. §249.
+- **The text on a coloured band is readable whatever colour you pick.** White on the club's blue, ink on yellow, worked out rather than assumed. §249.
+
 ## BR-V1.41-2026-09-21
 
 - **The club writes the emails' own words.** The subject and the paragraphs of any message, in each language, from `/admin/emails`, with the preview right above the box — and a button back to the platform's text. What a message *carries* stays the platform's: the button and its secure link, the QR, the attached declaration and the sign-off. Fields like `{participantName}` are filled in; anything else between braces is refused when you save it. §247.
