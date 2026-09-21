@@ -321,11 +321,13 @@ describe("BR-REQ-051-01 editorial workflow", () => {
     });
   });
 
-  describe("criterion 2 an Editor or Administrator publishes, unpublishes and archives", () => {
-    it.each([
-      ["editor", () => editor],
-      ["administrator", () => admin],
-    ])("lets an %s publish a reviewed draft", async (_name, actorOf) => {
+  /**
+   * Criterion 2, as §201 narrowed it: **the Administrator** publishes, unpublishes and archives
+   * what is live. The organizer prepares and submits; the move that puts something in front of
+   * the public, or takes it away, is hers.
+   */
+  describe("criterion 2 the Administrator publishes, unpublishes and archives", () => {
+    it.each([["administrator", () => admin]])("lets an %s publish a reviewed draft", async (_name, actorOf) => {
       const { event } = await seedEvent({ status: "IN_REVIEW" });
       const now = new Date("2026-09-04T08:00:00Z");
 
@@ -346,7 +348,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent({ status: "IN_REVIEW" });
 
       await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         to: "PUBLISHED",
@@ -362,7 +364,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           transitionEvent(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             to: "PUBLISHED",
@@ -380,7 +382,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           transitionEvent(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             to: "PUBLISHED",
@@ -395,7 +397,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(await listPublishedEvents(db, "ro")).toHaveLength(1);
 
       await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         to: "DRAFT",
@@ -410,7 +412,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event } = await seedEvent({ status: "PUBLISHED", publishedAt: firstPublication });
 
       const draft = await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         to: "DRAFT",
@@ -422,7 +424,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
         to: "IN_REVIEW",
       });
       const finalState = await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: reviewed.version,
         to: "PUBLISHED",
@@ -490,7 +492,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: editor,
+            actor: admin,
             translationId: translation.id,
             expectedVersion: translation.version,
             fields: { ...FIELDS, title: "Titlu nou" },
@@ -506,7 +508,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { translation } = await seedEvent({ status: "PUBLISHED" });
 
       const saved = await saveEventTranslation(db, {
-        actor: editor,
+        actor: admin,
         translationId: translation.id,
         expectedVersion: translation.version,
         acknowledgeLiveEdit: true,
@@ -572,7 +574,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           transitionEvent(db, {
-            actor: editor,
+            actor: admin,
             eventId: event.id,
             expectedVersion: event.version,
             to: "PUBLISHED",
@@ -646,7 +648,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: editor,
+            actor: admin,
             translationId: translation.id,
             expectedVersion: translation.version,
             acknowledgeLiveEdit: true,
@@ -660,7 +662,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       const { event, translation } = await seedEvent({ status: "PUBLISHED" });
 
       await transitionEvent(db, {
-        actor: editor,
+        actor: admin,
         eventId: event.id,
         expectedVersion: event.version,
         to: "DRAFT",
@@ -669,7 +671,7 @@ describe("BR-REQ-051-01 editorial workflow", () => {
       expect(
         await codeOf(
           saveEventTranslation(db, {
-            actor: editor,
+            actor: admin,
             translationId: translation.id,
             expectedVersion: translation.version,
             fields: { ...FIELDS, slug: "alta-adresa" },

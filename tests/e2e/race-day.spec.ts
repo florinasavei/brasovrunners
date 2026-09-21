@@ -19,7 +19,7 @@ test.describe("BR-REQ-037-08 the race-day desk", () => {
 
   test("a volunteer enters a walk-in, gives a number, checks them in, and opens their QR page", async ({ page }) => {
     // An organizer opens registration on the featured event (the seed configures none).
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.getByRole("button", { name: "Ieși din cont" }).click();
     // Wait for the sign-out to land before signing in as somebody else: a `goto` fired while

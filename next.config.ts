@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
@@ -61,6 +62,40 @@ const commitSha = process.env.VERCEL_GIT_COMMIT_SHA ?? git("rev-parse", "HEAD") 
 const commitDate = git("log", "-1", "--format=%cI") ?? "";
 const migrationHead = readMigrationHead();
 
+/**
+ * Which **deployment** this is — deliberately not which commit.
+ *
+ * `BUILD_COMMIT` cannot answer "is this tab running the code that is deployed now?", because
+ * this club redeploys the same commit with changed environment variables and that is a
+ * genuinely different deployment: a Turnstile key arriving, `CONTACT_FORM_TO` being set,
+ * `EMAIL_DELIVERY_MODE` changing. The commit is identical and the running site is not.
+ *
+ * So the identity is the commit *and* the host's own deployment identity, hashed together.
+ * Hashed for three reasons. It is opaque, so the answer `/api/build-id` serves to every visitor
+ * leaks nothing about the host — `VERCEL_URL` is a deployment hostname, and `AGENTS.md` §8
+ * keeps hostnames out of what this repository says. It is a fixed twelve characters, so the
+ * comparison never has to reason about length. And it is deterministic, which a build
+ * timestamp would not be: `next build` evaluates this file in more than one process, and a
+ * wall clock read twice can disagree, which would inline two different identities into two
+ * different chunks of the same build.
+ *
+ * Empty when there is nothing to derive it from — a source archive with no `.git` on a host
+ * that is not Vercel. Empty means "never raise the notice" (`shared/ui/new-build.ts`), which
+ * is the only honest answer: an identity that cannot change cannot detect a change.
+ */
+function readDeploymentIdentity(): string {
+  /**
+   * `VERCEL_DEPLOYMENT_ID` is the deployment's own id; `VERCEL_URL` is its unique hostname,
+   * documented as available during the build, so it is the fallback. Neither is a dependency:
+   * BR-REQ-101-01 requires this app to run on any Node host honouring `PORT`, and there the
+   * commit alone answers — nobody rebuilds a laptop to change a variable and then expects to
+   * be told about it.
+   */
+  const deployment = process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_URL ?? "";
+  if (!commitSha && !deployment) return "";
+  return createHash("sha256").update(`${commitSha}\n${deployment}`).digest("hex").slice(0, 12);
+}
+
 const nextConfig: NextConfig = {
   /**
    * Inlined at build time and read by `src/shared/config/build-info.ts`. Not secrets: a
@@ -70,6 +105,7 @@ const nextConfig: NextConfig = {
     BUILD_BASELINE: readBaseline(),
     BUILD_COMMIT: commitSha.slice(0, 7),
     BUILD_COMMITTED_AT: commitDate,
+    BUILD_ID: readDeploymentIdentity(),
     BUILD_MIGRATION_TAG: migrationHead.tag,
     BUILD_MIGRATION_WHEN: migrationHead.when,
   },

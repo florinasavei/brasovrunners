@@ -2,6 +2,7 @@ import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
 import {
+  legalDocumentNumbering,
   legalDocumentTranslations,
   legalDocuments,
   type LegalDocumentKey,
@@ -178,6 +179,66 @@ export async function findLatestVersion<T extends Record<string, unknown>>(
     .orderBy(desc(legalDocuments.version))
     .limit(1);
   return row;
+}
+
+/**
+ * The number the next draft of `key` gets — the one answer to "which version is this"
+ * (`DECISIONS.md` §151).
+ *
+ * `max(version) + 1` over the surviving rows is no longer enough, because a row can now stop
+ * existing: an approved version nothing relied on can be deleted outright, and if its number
+ * came back the words it was published under would be reissued to different text. Every
+ * registration carries `privacy_notice_version` as a plain integer with no foreign key, so
+ * nothing in the database would notice and nothing in the application could tell afterwards.
+ *
+ * So the answer is the higher of two things: the largest version still present, and the largest
+ * one ever destroyed (`legal_document_numbering`). Deleting the top version therefore skips its
+ * number permanently; deleting a middle one changes nothing, because the surviving maximum is
+ * already above the floor.
+ *
+ * Read in one place and used in one place — `createDraftVersion`. A second caller computing
+ * `max + 1` for itself is exactly how the floor would be forgotten.
+ */
+export async function nextVersionNumber<T extends Record<string, unknown>>(
+  db: Database<T>,
+  key: LegalDocumentKey,
+): Promise<number> {
+  const latest = await findLatestVersion(db, key);
+  const [floor] = await db
+    .select({ highest: legalDocumentNumbering.highestRetiredVersion })
+    .from(legalDocumentNumbering)
+    .where(eq(legalDocumentNumbering.key, key))
+    .limit(1);
+
+  return Math.max(latest?.version ?? 0, floor?.highest ?? 0) + 1;
+}
+
+/**
+ * Take a version number out of circulation for good, as part of the transaction that destroys
+ * the row carrying it.
+ *
+ * `GREATEST` rather than an assignment, so the floor can only ever rise: two deletions
+ * committing in either order leave the same number behind, and a stale write cannot lower a
+ * floor a later deletion already raised. The row is created on first use — a document nothing
+ * has ever been deleted from has no row here at all, which is also what makes this table
+ * readable as "these keys have lost a version".
+ */
+export async function retireVersionNumber<T extends Record<string, unknown>>(
+  db: Database<T>,
+  key: LegalDocumentKey,
+  version: number,
+  now: Date,
+): Promise<void> {
+  await db
+    .insert(legalDocumentNumbering)
+    .values({ key, highestRetiredVersion: version, updatedAt: now })
+    .onConflictDoUpdate({
+      target: legalDocumentNumbering.key,
+      set: {
+        highestRetiredVersion: sql`greatest(${legalDocumentNumbering.highestRetiredVersion}, excluded.highest_retired_version)`,
+        updatedAt: now,
+      },
+    });
 }
 
 /**

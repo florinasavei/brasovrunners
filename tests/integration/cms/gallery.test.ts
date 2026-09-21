@@ -42,7 +42,7 @@ describe("BR-REQ-054-01 the photo gallery", () => {
 
   beforeEach(async () => {
     await resetTables(db);
-    [editor] = await db.insert(staffUsers).values({ email: "mod@dev.test", displayName: "Mod", role: "MODERATOR" }).returning();
+    [editor] = await db.insert(staffUsers).values({ email: "mod@dev.test", displayName: "Mod", role: "ADMIN" }).returning();
     [author] = await db.insert(staffUsers).values({ email: "author@dev.test", displayName: "Author", role: "CONTRIBUTOR" }).returning();
   });
 

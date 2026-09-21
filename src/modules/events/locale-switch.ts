@@ -88,6 +88,7 @@ export async function resolveLocaleSwitch(
     parsed.route === "/preview/events/[id]" ||
     parsed.route === "/admin/registrations/[id]" ||
     parsed.route === "/admin/legal/[id]" ||
+    parsed.route === "/admin/legal/[id]/delete" ||
     parsed.route === "/admin/pages/[id]" ||
     parsed.route === "/admin/gallery/[id]"
   ) {

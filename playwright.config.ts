@@ -25,6 +25,24 @@ const baseURL = `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
+
+  /**
+   * **One worker in CI, and the reason is the fixture rather than the machine (§212.)**
+   *
+   * Several suites drive the *same* featured event — `ensureRegistrationIsOpen` sets its mode,
+   * its window and its fifty places, and then a spec registers somebody against it. Run in
+   * parallel against one database, two workers interleave: one opens registration while another
+   * is submitting, or fills the last place another is counting. The symptom is a handful of
+   * specs that pass alone and fail together, which is the most expensive kind of red.
+   *
+   * The honest fix is a fixture per worker — an event of its own, created and torn down — and
+   * that is a change to every backoffice spec's setup rather than a line here. Until then CI
+   * runs them one at a time and says so, because a suite nobody trusts is worse than a slow one.
+   *
+   * It costs less than it used to: since §209 a pull request runs one viewport rather than two,
+   * so serial-desktop is roughly what parallel-both-projects cost before.
+   */
+  workers: process.env.CI ? 1 : undefined,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   // The HTML report is what the failure artifact uploads; "github" alone writes nothing to

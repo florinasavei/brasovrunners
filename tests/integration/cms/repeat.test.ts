@@ -31,7 +31,7 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     await resetTables(db);
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "ADMIN" })
       .returning();
     [author] = await db
       .insert(staffUsers)
@@ -182,7 +182,7 @@ describe("BR-REQ-050-02 criterion 7 repeating an event", () => {
     expect(fromDraft.published).toBe(false);
 
     await resetTables(db);
-    [editor] = await db.insert(staffUsers).values({ email: "m2@dev.test", displayName: "E", role: "MODERATOR" }).returning();
+    [editor] = await db.insert(staffUsers).values({ email: "m2@dev.test", displayName: "E", role: "ADMIN" }).returning();
     const publishedSource = await seedRun({ published: true });
     const fromPublished = await repeatEvent(db, { actor: editor, eventId: publishedSource.id, rule: weekly("2026-10-26", [], true), now: NOW });
     expect(fromPublished.published).toBe(true);

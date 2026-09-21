@@ -67,6 +67,12 @@ export function readRegistrationForm(
     displayName: options.displayName ? optional(form, "displayName") : undefined,
 
     email: text(form, "email"),
+    /*
+      The second box (§206). Absent from a staff entry, which asks once — and `text` answers a
+      missing field with an empty string, which `z.email().optional()` refuses, so the empty
+      case has to become `undefined` rather than "".
+    */
+    emailConfirm: text(form, "emailConfirm") || undefined,
 
     birthDate: text(form, "birthDate"),
     sex: text(form, "sex"),

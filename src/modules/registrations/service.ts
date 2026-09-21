@@ -617,10 +617,47 @@ export async function submitRegistration<T extends Record<string, unknown>>(
     const existing = await repo.findRegistrationByEventAndParticipant(tx, event.id, participant.id);
 
     if (existing && isActiveStatus(existing.status)) {
-      // Already registered at some stage; resubmitting the form only helps if the first
-      // confirmation email never arrived.
-      if (existing.status === "PENDING_EMAIL_CONFIRMATION") {
+      /*
+        Already registered at some stage (§199).
+
+        The screen's answer is the generic one, always: telling a visitor "this address is
+        already registered" would turn the public form into a way to ask who is entered, which
+        is the oracle `AGENTS.md` §19.4 exists to refuse. The *useful* answer goes where it can
+        safely go — the address itself, which only its owner reads.
+
+        It used to be sent only while the first registration was still waiting for its email
+        confirmation, on the reasoning that resubmitting helps only if the first message was
+        lost. That leaves everybody else with nothing at all: somebody who confirmed a month ago,
+        forgot, and filled the form again sees "we have sent you a confirmation link" and no
+        message arrives, which reads exactly like a failure — and it is what happens to anybody
+        re-entering a test registration.
+
+        So: whatever the state can offer, it offers, through the same `deriveAllowedResendMessageType`
+        the backoffice's "send it again" uses — the verification link, the declaration, the
+        waiting-list offer, or the confirmation with its QR. A state with nothing to resend
+        (WAITLISTED: nothing is waiting on the participant) still sends nothing, because there is
+        nothing to say.
+
+        The throttle in front of the form is what keeps this from being a mailer: the same person
+        can only ask so often (§19.4), and each message goes to the address that asked for it.
+      */
+      const messageType = deriveAllowedResendMessageType(existing.status);
+      if (messageType === "VERIFY_REGISTRATION_EMAIL") {
         await enqueueVerificationEmail(tx, participant, existing, now);
+      } else if (messageType) {
+        await enqueueEmail(tx, {
+          participantId: participant.id,
+          registrationId: existing.id,
+          messageType,
+          // The registration's language, not the page's: the row records what they chose.
+          locale: existing.locale,
+          recipientEmail: participant.deliveryEmail,
+          payload: {},
+          // Per submission, so two genuine attempts an hour apart are two messages; the throttle
+          // bounds them rather than a key collision silently swallowing the second.
+          idempotencyKey: `registration:${existing.id}:resubmitted:${now.toISOString()}`,
+          now,
+        });
       }
       return;
     }

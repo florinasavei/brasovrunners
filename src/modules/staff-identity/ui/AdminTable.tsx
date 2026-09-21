@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Hint from "@/shared/ui/Hint";
 import Stack from "@mui/material/Stack";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -57,6 +58,13 @@ export type AdminColumn<Row> = {
   key: string;
   /** Already translated by the caller. */
   label: string;
+  /**
+   * One sentence explaining what this column's values mean, shown behind a "?" beside the
+   * heading (§200). For a column whose values are shorthand — "3/6 · Loc rezervat" — the
+   * heading alone cannot say what the six are, and a legend above the table is a legend
+   * nobody reads twice.
+   */
+  hint?: string;
   sortable?: boolean;
   /** Which way this column reads first: a name starts A to Z, a date starts newest first. */
   initialDir?: "asc" | "desc";
@@ -224,6 +232,7 @@ export default function AdminTable<Row>({
                   ) : (
                     column.label
                   )}
+                  {column.hint && <Hint text={column.hint} />}
                 </TableCell>
               ))}
               {rowActions && (

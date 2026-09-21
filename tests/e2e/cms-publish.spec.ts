@@ -128,7 +128,7 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
   }
 });
 
-test.describe("BR-REQ-050-02 an Editor creates an event without a developer", () => {
+test.describe("BR-REQ-050-02 an Administrator creates an event without a developer (§204)", () => {
   test("creates it in both languages, as a draft", async ({ page }) => {
     // Unique per project *and* per run: the two projects run in parallel against one database,
     // and `UNIQUE(locale, slug)` would otherwise make the second run of the suite fail on rows
@@ -136,7 +136,7 @@ test.describe("BR-REQ-050-02 an Editor creates an event without a developer", ()
     // spec people stop running.
     const suffix = `${test.info().project.name}-${Date.now().toString(36)}`;
 
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
 
     // By field name rather than by label: MUI marks a required label with an asterisk, and the
@@ -166,11 +166,11 @@ test.describe("BR-REQ-050-02 an Editor creates an event without a developer", ()
   });
 });
 
-test.describe("BR-REQ-051-01 an Editor publishes and unpublishes an event", () => {
+test.describe("BR-REQ-051-01 an Administrator publishes and unpublishes an event (§201)", () => {
   test("takes an event off the public site in both languages and puts it back", async ({ page }) => {
     const event = EVENT_BY_PROJECT[test.info().project.name];
 
-    await signIn(page, "Dev Moderator");
+    await signIn(page, "Dev Administrator");
     await page.getByRole("link", { name: event.title }).first().click();
     // Wait for the navigation before reading the URL: taken too early, this is still the list,
     // and every later `goto` in the test would quietly reload the wrong page.

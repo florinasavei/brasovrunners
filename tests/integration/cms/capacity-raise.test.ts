@@ -41,7 +41,7 @@ describe("BR-REQ-034-02 criterion 5 a raised capacity offers places to the waiti
     await resetTables(db);
     [editor] = await db
       .insert(staffUsers)
-      .values({ email: "moderator@dev.test", displayName: "Editor", role: "MODERATOR" })
+      .values({ email: "moderator@dev.test", displayName: "Editor", role: "ADMIN" })
       .returning();
     const privacy: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["p"] }] } },

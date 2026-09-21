@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { notFound } from "next/navigation";
+import { requireStaff } from "@/modules/staff-identity/session";
+import { canReadContent } from "@/modules/staff-identity/domain/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +22,9 @@ export const dynamic = "force-dynamic";
  * would cover this section's `[id]` and `new` routes too, and turn *their* 404s into 200s.
  */
 export default async function SectionLayout({ children }: { children: ReactNode }) {
-  await requireStaffRole("ADMIN");
+  // The section is offered to a reader (§208); each writer inside asks its own question.
+  const actor = await requireStaff();
+  if (!canReadContent(actor.role)) notFound();
 
   return <>{children}</>;
 }

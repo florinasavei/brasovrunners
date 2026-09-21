@@ -73,22 +73,74 @@ describe("BR-REQ-051-01 criterion 3 publishing is out of a copywriter's hands", 
   });
 });
 
-describe("BR-REQ-051-01 criterion 2 an Editor or Administrator publishes", () => {
-  it.each(["MODERATOR", "ADMIN"] as const)("lets %s publish a reviewed draft", (role) => {
-    expect(canTransition(role, "IN_REVIEW", "PUBLISHED", false)).toBe(true);
+/**
+ * BR-REQ-051-01 criterion 2 and `DECISIONS.md` §201 — **crossing into or out of public view is
+ * the Administrator's**.
+ *
+ * The owner, of his two colleagues: "Amalia e Administrator, Dani e Organizator dar poate face
+ * prostii, deci trebuie manageuit de Amalia". The rule is one sentence — below Administrator,
+ * nothing the public can see changes — and these assertions are that sentence from both sides.
+ */
+describe("BR-REQ-051-01 criterion 2 the Administrator publishes", () => {
+  it("lets an Administrator publish a reviewed draft", () => {
+    expect(canTransition("ADMIN", "IN_REVIEW", "PUBLISHED", false)).toBe(true);
   });
 
-  it.each(["MODERATOR", "ADMIN"] as const)("lets %s unpublish and archive", (role) => {
-    expect(canTransition(role, "PUBLISHED", "DRAFT", false)).toBe(true);
-    expect(canTransition(role, "PUBLISHED", "ARCHIVED", false)).toBe(true);
+  it("refuses the organizer, who prepares it and asks", () => {
+    expect(canTransition("MODERATOR", "IN_REVIEW", "PUBLISHED", false)).toBe(false);
   });
 
-  it.each(["MODERATOR", "ADMIN"] as const)("lets %s edit any status", (role) => {
+  it("lets an Administrator unpublish and archive what is live", () => {
+    expect(canTransition("ADMIN", "PUBLISHED", "DRAFT", false)).toBe(true);
+    expect(canTransition("ADMIN", "PUBLISHED", "ARCHIVED", false)).toBe(true);
+  });
+
+  it("refuses the organizer both, because both change what the public sees", () => {
+    expect(canTransition("MODERATOR", "PUBLISHED", "DRAFT", false)).toBe(false);
+    expect(canTransition("MODERATOR", "PUBLISHED", "ARCHIVED", false)).toBe(false);
+  });
+
+  it("leaves the organizer everything that never reaches the public", () => {
+    // Returning a submission to its author, and archiving something that was never live.
+    expect(canTransition("MODERATOR", "IN_REVIEW", "DRAFT", false)).toBe(true);
+    expect(canTransition("MODERATOR", "DRAFT", "ARCHIVED", false)).toBe(true);
+    expect(canTransition("MODERATOR", "IN_REVIEW", "ARCHIVED", false)).toBe(true);
+    expect(canTransition("MODERATOR", "ARCHIVED", "DRAFT", false)).toBe(true);
+  });
+
+  it("lets an Administrator edit at any status, live included", () => {
     for (const status of EDITORIAL_STATUSES) {
       expect(
-        canEditTranslation(role, { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
-        `${role} editing ${status}`,
+        canEditTranslation("ADMIN", { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
+        `administrator editing ${status}`,
       ).toBe(true);
+    }
+  });
+
+  it("lets the copywriter edit text at any status, live included, and refuses the organizer (§207)", () => {
+    /*
+      The open half of §201. Editing the words of a published page is the remaining way
+      something reaches the public without the Administrator, and closing it would reverse
+      BR-REQ-051-01 criterion 3 — "a copywriter edits live text with the acknowledgement" —
+      for the copywriter as well as the organizer, because the organizer sits above them.
+      That is the club's decision to take, so this asserts what is true today and will be
+      changed the day the club takes it.
+    */
+    /*
+      §207 broke the ladder at exactly one capability. "Tot ce vreau e ca organizatorul să nu fie
+      și redactor… Redactorul scrie, Organizatorul organizează." A rank hierarchy cannot express
+      that — rank would hand the Organizer the Redactor's work simply for sitting above them — so
+      `canEditTexts` is a set, and this is both halves of it.
+    */
+    for (const status of EDITORIAL_STATUSES) {
+      expect(
+        canEditTranslation("COPYWRITER", { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
+        `copywriter editing ${status}`,
+      ).toBe(true);
+      expect(
+        canEditTranslation("MODERATOR", { editorialStatus: status, authorStaffUserId: OTHER_ID }, AUTHOR_ID),
+        `organizer editing ${status}`,
+      ).toBe(false);
     }
   });
 });
@@ -185,11 +237,28 @@ describe("BR-REQ-060-01 which backoffice sections a role is offered", () => {
     // The desk is every role's (BR-REQ-037-08, `DECISIONS.md` §67), and since §103 it is the
     // volunteer's whole backoffice: a person handing out numbers is not offered the events.
     expect(visibleAdminSections("CONTRIBUTOR")).toEqual(["checkin", "guide"]);
-    // The copywriter: the events (their texts), the desk, the pages — no gallery, no settings.
-    expect(visibleAdminSections("COPYWRITER")).toEqual(["events", "checkin", "guide", "pages"]);
-    // An Organizer gains the gallery (BR-REQ-050-03): pictures sit with the roles that
-    // configure an event, where an event's own settings already sit.
-    expect(visibleAdminSections("MODERATOR")).toEqual(["events", "checkin", "guide", "pages", "gallery"]);
+    /*
+      From the copywriter up, the sections are what a role may *look* at (§208): reading the
+      club's content and changing it are two questions now, and the navigation asks the first.
+      The Organizer sees the same content as the copywriter and changes none of it — "Dani îi
+      zice Amaliei să modifice X, Y lucru".
+    */
+    expect(visibleAdminSections("COPYWRITER")).toEqual([
+      "events",
+      "checkin",
+      "guide",
+      "pages",
+      "gallery",
+      "legal",
+    ]);
+    expect(visibleAdminSections("MODERATOR")).toEqual([
+      "events",
+      "checkin",
+      "guide",
+      "pages",
+      "gallery",
+      "legal",
+    ]);
   });
 
   it("gives DEV the configuration report and no participant data", () => {

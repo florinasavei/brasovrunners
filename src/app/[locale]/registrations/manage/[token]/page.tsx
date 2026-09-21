@@ -11,7 +11,8 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import { getFormatter } from "next-intl/server";
-import { readRaceDayContext } from "@/modules/registrations/token-actions";
+import ActionLinkNotice from "@/modules/registrations/ui/ActionLinkNotice";
+import { readRaceDayContext, readSpentRegistrationLink } from "@/modules/registrations/token-actions";
 import { env } from "@/shared/config/env";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { cancelRegistrationAction, selfCheckInAction } from "./actions";
@@ -54,8 +55,23 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
   // One token read for the page — it is throttled per presented token, so a second read here
   // would charge the participant twice. It also carries race day (BR-REQ-037-08): the code,
   // its QR, and "I am here", shown only once confirmed.
-  const context = invalid || started ? { ok: false as const } : await readRaceDayContext(token, new Date());
-  const confirmed = context.ok && context.registration.status === "CONFIRMED" ? context : null;
+  //
+  // The token is read even after a failed POST. `invalid=1` used to skip the read, so somebody
+  // who had already cancelled from this link — the one action that spends it — was told the
+  // link was broken rather than that the registration was cancelled and the place released.
+  const context = started ? null : await readRaceDayContext(token, new Date());
+  const spent =
+    context && !context.ok
+      ? await readSpentRegistrationLink(
+          token,
+          [{ purpose: "MANAGE_REGISTRATION" as const, reason: context.reason }],
+          locale,
+          new Date(),
+        )
+      : null;
+  const blocked = context === null || !context.ok || Boolean(invalid);
+  const confirmed =
+    context !== null && context.ok && !invalid && context.registration.status === "CONFIRMED" ? context : null;
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
@@ -65,8 +81,8 @@ export default async function ManageRegistrationPage({ params, searchParams }: P
 
       {started ? (
         <Alert severity="info">{t("manage.eventStarted")}</Alert>
-      ) : !context.ok ? (
-        <Alert severity="warning">{t("invalidOrExpired")}</Alert>
+      ) : blocked ? (
+        <ActionLinkNotice locale={locale} status={spent} />
       ) : (
         <Stack spacing={3}>
           {confirmed?.registration.checkinCode && (

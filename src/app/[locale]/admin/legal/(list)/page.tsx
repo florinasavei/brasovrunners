@@ -24,7 +24,9 @@ import {
   listVersionsForBackoffice,
 } from "@/modules/legal-documents/repository";
 import { isReliedOn } from "@/modules/legal-documents/service";
-import { requireStaffRole } from "@/modules/staff-identity/session";
+import { canManageStaff } from "@/modules/staff-identity/domain/roles";
+import { requireStaff } from "@/modules/staff-identity/session";
+import { canReadContent } from "@/modules/staff-identity/domain/roles";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import ButtonLink from "@/shared/ui/ButtonLink";
@@ -60,19 +62,23 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * yet". The row said a version was free when it was the most relied-upon document the club has
  * (`DECISIONS.md` §53).
  *
- * ## What may be deleted, what may be withdrawn, and what the refusal says
+ * ## What may be withdrawn, what may be deleted, and what the refusal says
  *
- * Deleted: a draft that was never approved, and nothing else. Withdrawn: an approved version
- * that nobody has relied on and that is not the one in force — the row, its number and its words
- * stay, and only the offering stops (`DECISIONS.md` §46, §53). Between them they answer the
- * owner's "I have to be able to delete these documents" without reopening the one rule that
- * cannot move: an approved version is never removed.
+ * Withdrawn: an approved version nobody has relied on that is not the one in force — the row,
+ * its number and its words stay, and only the offering stops (§46, §53). **Deleted: the same
+ * version, and now for real** — the row, both translations and the text go, and the version
+ * number is retired so it can never be issued again (§151). A draft has its own delete, which
+ * needs no confirmation because nothing could ever have relied on it.
+ *
+ * Both are offered on the same row, and the row says what each one costs before either is
+ * pressed: withdrawal as a button, deletion as a link to a screen that spells out the
+ * consequence and asks for a typed phrase. The reversible one is the larger target on purpose.
  *
  * Where neither is possible the row says why, derived from the same facts the service checks and
- * in the same order — the three counts, then "in force right now". A missing button explains
- * nothing; a count is a reason an organizer accepts. The server refuses regardless
- * (BR-REQ-060-01) — this only changes what the screen is able to explain before anything is
- * pressed.
+ * in the same order — the three counts, then "in force right now" — and it says it about both
+ * verbs at once, because the condition is the same condition. A missing button explains nothing;
+ * a count is a reason an organizer accepts. The server refuses regardless (BR-REQ-060-01) — this
+ * only changes what the screen is able to explain before anything is pressed.
  *
  * Withdrawn rows are folded away by default and revealed with `?withdrawn=1`, because the
  * point of withdrawing is to get them out of the way, and the point of not deleting them is
@@ -87,13 +93,31 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const actor = await requireStaffRole("ADMIN");
+  /*
+    Reading what the club published is not writing it (§208). The Organizer must be able to see
+    the texts in force — "Dani îi zice Amaliei să modifice X, Y lucru" cannot be said about a
+    document he cannot read. Writing, approving, withdrawing and deleting each assert their own
+    role below and again in the service (§46, §181, §203).
+  */
+  const actor = await requireStaff();
+  if (!canReadContent(actor.role)) notFound();
   // Creating a version is a Superadministrator's act (BR-REQ-053-02); an Administrator reads.
   // Offered here rather than only from an existing version's page, because an environment with
   // no version yet — production, by design — has no such page to start from, and the create
   // route was reachable by typing its address and no other way (found on production,
   // 2026-09-17: "I still can't create documents").
   const mayCreate = actor.role === "SUPERADMIN";
+  /*
+    Deleting a version outright is the same gate as writing one (`canManageStaff`), because the
+    role that publishes the club's word is the role that unpublishes it (§151). Written as the
+    capability rather than as another `role === "SUPERADMIN"`, so it moves if the rule does.
+
+    The link is hidden from an Administrator rather than the row saying nothing: the sentence
+    below it — what deletion would mean — is shown to everybody who can read this screen, so an
+    Administrator learns that the version *can* go and who can do it, instead of finding a
+    control that answers 404. The page and the service refuse regardless (BR-REQ-060-01).
+  */
+  const mayDestroy = canManageStaff(actor.role);
 
   const current = await searchParams;
   const { saved, error } = current;
@@ -229,12 +253,20 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
         {saved === "legalVersionWithdrawn" && (
           <Alert severity="success">{t("legal.legalVersionWithdrawn")}</Alert>
         )}
+        {/* The phrase that was typed names what went: a document code and a number, nothing
+            about any person — the same two things the audit row keeps. */}
+        {saved === "legalVersionErased" && (
+          <Alert severity="success">
+            {t("legal.legalVersionErased", { phrase: current.phrase ?? "" })}
+          </Alert>
+        )}
         {saved === "platformApproved" && (
           <Alert severity="success">{t("legal.platformApproved", { count: Number(current.approved ?? "0") })}</Alert>
         )}
         {saved &&
           saved !== "legalVersionDeleted" &&
           saved !== "legalVersionWithdrawn" &&
+          saved !== "legalVersionErased" &&
           saved !== "platformApproved" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
@@ -375,34 +407,59 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
               gives and the refusal the server would give name the same obstacle.
             */
             if (version.isApproved) {
-              if (version.withdrawnAt) {
-                return reason(
-                  t("legal.withdrawnOn", {
-                    date: format.dateTime(version.withdrawnAt, { dateStyle: "medium" }),
-                  }),
-                );
-              }
-              if (relied) return reason(t("legal.withdrawBlockedReferenced", reliance));
-              if (inForceIds.has(version.id)) return reason(t("legal.withdrawBlockedCurrent"));
+              if (relied) return reason(t("legal.removeBlockedReferenced", reliance));
+              if (inForceIds.has(version.id)) return reason(t("legal.removeBlockedCurrent"));
 
+              /*
+                Deletable, so the row says both verbs and what each one costs (§151).
+
+                Withdrawal first and as the button, deletion second and as a link: one of them
+                keeps everything and the other keeps nothing, and the reversible one should be
+                the larger target. The link goes to a screen rather than opening a dialog,
+                because what deletion means — permanent, and the number retired with it — is
+                three sentences and a typed phrase, not a `confirm()`.
+
+                A withdrawn version has no withdraw button left, only the date it went and the
+                delete link: it is the row the owner asked about, already out of circulation and
+                still in the way.
+              */
               return (
-                <Box component="form" action={withdrawLegalVersionAction}>
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="versionId" value={version.id} />
-                  {/*
-                    Warning rather than error, and the word is "retrage" rather than "șterge",
-                    because the button does not destroy anything — saying otherwise in the one
-                    place somebody reads before pressing would be the wrong kind of honest.
-                  */}
-                  <ConfirmSubmitButton
-                    label={t("legal.withdraw")}
-                    title={t("legal.withdrawTitle")}
-                    body={t("legal.withdrawBody")}
-                    confirmLabel={t("legal.withdraw")}
-                    cancelLabel={t("confirm.cancel")}
-                    color="warning"
-                  />
-                </Box>
+                <Stack spacing={0.75} sx={{ alignItems: "flex-end" }}>
+                  {version.withdrawnAt ? (
+                    reason(
+                      t("legal.withdrawnOn", {
+                        date: format.dateTime(version.withdrawnAt, { dateStyle: "medium" }),
+                      }),
+                    )
+                  ) : (
+                    <Box component="form" action={withdrawLegalVersionAction}>
+                      <input type="hidden" name="uiLocale" value={locale} />
+                      <input type="hidden" name="versionId" value={version.id} />
+                      {/*
+                        Warning rather than error, and the word is "retrage" rather than
+                        "șterge", because this button does not destroy anything — saying
+                        otherwise in the one place somebody reads before pressing would be the
+                        wrong kind of honest.
+                      */}
+                      <ConfirmSubmitButton
+                        label={t("legal.withdraw")}
+                        title={t("legal.withdrawTitle")}
+                        body={t("legal.withdrawBody")}
+                        confirmLabel={t("legal.withdraw")}
+                        cancelLabel={t("confirm.cancel")}
+                        color="warning"
+                      />
+                    </Box>
+                  )}
+                  {mayDestroy && (
+                    <Link
+                      href={{ pathname: "/admin/legal/[id]/delete", params: { id: version.id } }}
+                    >
+                      {t("legal.deletePermanently")}
+                    </Link>
+                  )}
+                  {reason(t("legal.deleteMeans", { version: version.version }))}
+                </Stack>
               );
             }
 

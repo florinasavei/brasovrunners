@@ -16,6 +16,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
+import LegalLink from "@/shared/ui/LegalLink";
 import { routing } from "@/i18n/routing";
 import ReadAndAgree from "@/modules/registrations/ui/ReadAndAgree";
 import { isRichTextEmpty, readRichText } from "@/modules/content/rich-text/domain/schema";
@@ -36,6 +37,7 @@ import {
 } from "@/shared/ui/select-option";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GuardianForMinor from "@/modules/registrations/ui/GuardianForMinor";
+import EmailTwice from "@/modules/registrations/ui/EmailTwice";
 import Flag from "@/shared/ui/Flag";
 import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
@@ -226,12 +228,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {t("facts.rules")}
             </Link>
           )}
-          <Link href="/legal/terms" style={factLink}>
+          {/* The two reference texts open in a tab of their own (§197): a half-filled form
+               must not depend on the browser restoring it after a Back. */}
+          <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")} style={factLink}>
             {t("facts.terms")}
-          </Link>
-          <Link href="/legal/privacy" style={factLink}>
+          </LegalLink>
+          <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")} style={factLink}>
             {t("facts.privacy")}
-          </Link>
+          </LegalLink>
         </Box>
       </Box>
 
@@ -259,6 +263,31 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             {t("resend.prompt")}{" "}
             <Link href={{ pathname: "/registrations/resend", query: { event: slug } }}>
               {t("resend.linkLabel")}
+            </Link>
+          </Typography>
+          {/*
+            The second way out, and it exists because the first one can fail (§205).
+
+            The owner, after two people in one evening got no message: "trebuie să lăsăm oamenii
+            să se înscrie cu orice preț!!! Asta e scopul principal al site-ului. Dacă nu primesc
+            mail trebuie să le apară opțiunea de retrimite sau să ne dea mail prin formularul de
+            contact."
+
+            He is right about the order of importance. A resend helps when a message was lost in
+            transit, and does nothing when the address itself cannot be reached — a spam filter
+            that swallows every one, a provider refusing the sending domain, a typo in the
+            address they cannot now correct. In all of those the person is stuck on this screen
+            with no way to tell anybody, and the club never learns they tried.
+
+            So: a link to the contact form, carrying the event, which reaches a human. It is
+            deliberately second and quieter than the resend — most people need the resend — and
+            it is deliberately present, because "the message never arrives" is not a rare case on
+            a club's first season with a new sending domain.
+          */}
+          <Typography variant="body2" color="text.secondary">
+            {t("resend.stillNothing")}{" "}
+            <Link href={{ pathname: "/contact", query: { about: slug } }}>
+              {t("resend.contactLinkLabel")}
             </Link>
           </Typography>
         </Stack>
@@ -515,16 +544,28 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 {t("contactNote")}
               </Typography>
 
-              <TextField
-                {...field("email")}
-                type="email"
+              {/*
+                The address, twice, typed by hand (§206). QA's outbox holds three bounced
+                messages to "…@gmail.con": one letter, and the confirmation link goes nowhere
+                while the screen says to check the inbox.
+              */}
+              <EmailTwice
+                name="email"
+                confirmName="emailConfirm"
+                fieldId={fieldId("email")}
+                confirmFieldId={fieldId("emailConfirm")}
                 label={t("email")}
-                required
-                autoComplete="email"
-                slotProps={{ htmlInput: { inputMode: "email" } }}
+                confirmLabel={t("emailConfirm")}
+                mismatchLabel={t("emailMismatch")}
+                help={t("emailHelp")}
+                defaultValue={typed("email")}
+                defaultConfirmValue={typed("emailConfirm")}
+                error={invalid.has("email") || invalid.has("emailConfirm")}
+                helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
+                invalidLabel={t("phoneInvalid")}
                 name="phone"
                 draft={draft ? { country: draft.phoneCountry, national: draft.phone } : undefined}
                 id={fieldId("phone")}
@@ -551,6 +592,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   autoComplete="off"
                 />
                 <PhoneField
+                  invalidLabel={t("phoneInvalid")}
                   name="emergencyContactPhone"
                   draft={draft ? { country: draft.emergencyContactPhoneCountry, national: draft.emergencyContactPhone } : undefined}
                   id={fieldId("emergencyContactPhone")}
@@ -789,14 +831,20 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
               ) : (
                 <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required>
-                  {t("rules.plain")} <Link href="/legal/terms">{t("facts.terms")}</Link>
+                  {t("rules.plain")}{" "}
+                  <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
+                    {t("facts.terms")}
+                  </LegalLink>
                 </CheckboxField>
               )}
               <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
                 {t("fitnessDeclared")}
               </CheckboxField>
               <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
-                {t("privacyPrefix")} <Link href="/legal/privacy">{t("privacyLinkLabel")}</Link>
+                {t("privacyPrefix")}{" "}
+                <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
+                  {t("privacyLinkLabel")}
+                </LegalLink>
               </CheckboxField>
               <CheckboxField name="resultsNameConsent" defaultChecked={typed("resultsNameConsent") === "on"}>
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
