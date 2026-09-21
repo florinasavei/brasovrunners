@@ -8,6 +8,7 @@ import {
   type RichTextText,
 } from "../domain/schema";
 import { imageCaptionSx, imageFigureSx } from "./image-layout";
+import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
 
 /**
@@ -80,8 +81,10 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
         </Box>
       );
     case "paragraph":
+      // `textAlign` is emitted only when the organizer chose one (§213): a body written before
+      // alignment existed renders the markup it rendered yesterday, not a rule that says "left".
       return (
-        <Typography variant="body1" sx={{ mb: 2 }}>
+        <Typography variant="body1" sx={{ mb: 2, ...blockAlignSx(block.attrs) }}>
           {renderInline(block.content)}
         </Typography>
       );
@@ -91,7 +94,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
       return (
         <Typography
           component={block.attrs.level === 2 ? "h2" : "h3"}
-          sx={{ fontSize: block.attrs.level === 2 ? "1.25rem" : "1.0625rem", fontWeight: 700, mt: 4, mb: 1 }}
+          sx={{ fontSize: block.attrs.level === 2 ? "1.25rem" : "1.0625rem", fontWeight: 700, mt: 4, mb: 1, ...blockAlignSx(block.attrs) }}
         >
           {renderInline(block.content)}
         </Typography>

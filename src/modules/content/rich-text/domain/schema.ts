@@ -84,8 +84,37 @@ const textNode = z.object({
 /** Inline content is text alone until a media library exists. */
 const inlineContent = z.array(textNode).optional();
 
+/**
+ * Where a line of text sits in its column (`DECISIONS.md` §213; the owner: "centrare / aliniere
+ * elemente în rich text editor").
+ *
+ * A closed set of three words, exactly as a picture's `align` is (§193) and its `widthPercent` is
+ * a closed set of four numbers: the attribute names a rendering the renderer knows, never a CSS
+ * value somebody typed. `justify` is **not** in it — justified text on a 320-pixel column is
+ * rivers of white space, and this site's hard target is that column.
+ *
+ * **`attrs` is optional on the node, and that is what keeps every stored body byte-identical.**
+ * A paragraph written before today parses to a paragraph with no `attrs` at all, not to one
+ * carrying `align: "left"`, so the golden-string tests that assert a body parses to exactly
+ * itself keep passing and no migration is needed. Absent reads as `left` at render time.
+ */
+export const BLOCK_ALIGNMENTS = ["left", "center", "right"] as const;
+export type BlockAlignment = (typeof BLOCK_ALIGNMENTS)[number];
+
+const blockAlign = z
+  .union([z.literal("left"), z.literal("center"), z.literal("right")])
+  .nullish();
+
+const blockAlignAttrs = z.object({ align: blockAlign }).optional();
+
+/** Absent, null, or "left" — all the same thing, read in one place so no caller re-decides it. */
+export function alignmentOf(attrs: { align?: BlockAlignment | null } | undefined): BlockAlignment {
+  return attrs?.align ?? "left";
+}
+
 const paragraphNode = z.object({
   type: z.literal("paragraph"),
+  attrs: blockAlignAttrs,
   content: inlineContent,
 });
 
@@ -96,7 +125,7 @@ const paragraphNode = z.object({
  */
 const headingNode = z.object({
   type: z.literal("heading"),
-  attrs: z.object({ level: z.union([z.literal(2), z.literal(3)]) }),
+  attrs: z.object({ level: z.union([z.literal(2), z.literal(3)]), align: blockAlign }),
   content: inlineContent,
 });
 
