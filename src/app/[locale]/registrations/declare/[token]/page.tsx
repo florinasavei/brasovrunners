@@ -207,7 +207,9 @@ export default async function DeclarePage({ params, searchParams }: Props) {
             it lands when printed. What is signed is the template, by id and hash.
           */}
           <LegalDocumentBody
-            body={mergeLegalBody(declaration.body, {
+            body={declaration.body}
+            /* The blanks, passed rather than pre-merged, so the filled-in parts render bold (§225). */
+            values={{
               participant: registration?.registeredName,
               ...(registration ? declarantValues(registration.registeredName, registration.guardianName, locale) : {}),
               event: eventDetails?.title,
@@ -215,7 +217,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                 ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", { dateStyle: "long", timeZone: eventDetails.timezone }).format(eventDetails.startsAt)
                 : undefined,
               eventLocation: eventDetails?.locationName,
-            })}
+            }}
           />
 
           {changed && (

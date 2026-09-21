@@ -6,7 +6,8 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { findEventNotificationDetails } from "@/modules/events/repository";
-import { mergeLegalBody, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
 import { renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
 
@@ -17,6 +18,18 @@ import { renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput }
  * one of an event), and never stored as a file — the rows are the record; the PDF is a view
  * of them, reproducible for as long as they exist.
  */
+/**
+ * The stored body as the renderer takes it (§225).
+ *
+ * `mergeLegalBody` used to do this narrowing on the way past; now that the PDF merges for
+ * itself, the same "an unreadable body is no sections" answer has to be given here — a
+ * declaration nobody can parse prints as an empty text, never as a crash on the one document
+ * somebody is waiting to sign.
+ */
+function asLegalBody(body: unknown): LegalDocumentBody {
+  return isLegalDocumentBody(body) ? body : { sections: [] };
+}
+
 export type SignedDeclaration = {
   registrationId: string;
   registeredName: string;
@@ -155,14 +168,16 @@ function signedEntry(
   const when = dateFormatter(signed.locale, event.timezone, true).format(signed.acceptedAt);
   return {
     title: signed.title,
-    body: mergeLegalBody(signed.body, {
+    // The template and its values, kept apart so the PDF can set the fill-ins in bold (§225).
+    body: asLegalBody(signed.body),
+    values: {
       ...event.values,
       // The runner's name, and who declares (§108): the guardian for a minor, the runner otherwise.
       participant: signed.registeredName,
       ...declarantValues(signed.registeredName, signed.guardianName, signed.locale),
       idDocument: signed.idDocument,
       signedAt: when,
-    }),
+    },
     eventTitle: event.title,
     version: signed.version,
     contentSha256: signed.contentSha256,
@@ -226,7 +241,8 @@ export async function renderBlankDeclarationPdf<T extends Record<string, unknown
     entries: [
       {
         title: document.title,
-        body: mergeLegalBody(document.body, event.values),
+        body: asLegalBody(document.body),
+        values: event.values,
         eventTitle: event.title,
         version: document.version,
         contentSha256: document.contentSha256,

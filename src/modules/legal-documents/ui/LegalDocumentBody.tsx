@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { Fragment } from "react";
 import { isLegalDocumentBody } from "../domain/content-hash";
 import { parseInline } from "../domain/inline";
+import { mergeTextSegments, type MergeValues } from "../domain/merge-fields";
 
 /**
  * Renders a legal document's stored body — headings and paragraphs, and inside a paragraph
@@ -14,8 +15,47 @@ import { parseInline } from "../domain/inline";
  * versioned row, and the two marks become an `<a>` and an `<img>` with attributes the parser
  * allowed — https, mailto or a path for a link, https for a picture — never markup.
  */
-export default function LegalDocumentBody({ body }: { body: unknown }) {
+export default function LegalDocumentBody({
+  body,
+  values,
+}: {
+  body: unknown;
+  /**
+   * The blanks to fill, when this is a declaration shown to one person for one event (§225).
+   *
+   * Passing the values here rather than a pre-merged body is what lets the filled-in parts be
+   * **bold** — the owner: "în declarație trebuie să fac bold la datele care sunt din binding".
+   * The reason is not decoration: a declaration is one approved text with a few blanks, and
+   * what the signer must check before signing is exactly the blanks — their name, their
+   * identity document, the race and its date. The rest was approved once and is the same for
+   * everybody.
+   *
+   * Omitted, this renders exactly what it always did.
+   */
+  values?: MergeValues;
+}) {
   const sections = isLegalDocumentBody(body) ? body.sections : [];
+
+  /**
+   * One string, merged and marked up, as React children.
+   *
+   * **Inline marks are parsed first and the merge happens inside each text run**, which is the
+   * order that matters. Merging first would feed a participant's name to `parseInline`, so a
+   * name containing `[words](…)` would be read as a link — the parser restricts the protocol,
+   * so it was never script, but a person's own data has no business becoming markup. This way
+   * a filled-in value is always plain text, and a `{{field}}` written inside a link's label
+   * still merges, inside the link, where the author put it.
+   */
+  const inline = (text: string, keyPrefix: string) =>
+    (values ? mergeTextSegments(text, values) : [{ text, filled: false }]).map((segment, index) =>
+      segment.filled ? (
+        <Box key={`${keyPrefix}-${index}`} component="strong" sx={{ fontWeight: 700 }}>
+          {segment.text}
+        </Box>
+      ) : (
+        <Fragment key={`${keyPrefix}-${index}`}>{segment.text}</Fragment>
+      ),
+    );
 
   return (
     <>
@@ -23,7 +63,7 @@ export default function LegalDocumentBody({ body }: { body: unknown }) {
         <div key={index}>
           {section.heading && (
             <Typography variant="h2" sx={{ fontSize: "1.25rem", mt: 4, mb: 1 }}>
-              {section.heading}
+              {inline(section.heading, `h-${index}`)}
             </Typography>
           )}
           {section.paragraphs.map((paragraph, paragraphIndex) => {
@@ -45,10 +85,10 @@ export default function LegalDocumentBody({ body }: { body: unknown }) {
               <Typography key={paragraphIndex} variant="body1" sx={{ mb: 2 }}>
                 {parts.map((part, partIndex) => (
                   <Fragment key={partIndex}>
-                    {part.kind === "text" && part.text}
+                    {part.kind === "text" && inline(part.text, `t-${paragraphIndex}-${partIndex}`)}
                     {part.kind === "link" && (
                       <MuiLink href={part.href} target={part.href.startsWith("/") ? undefined : "_blank"} rel={part.href.startsWith("/") ? undefined : "noopener noreferrer"}>
-                        {part.text}
+                        {inline(part.text, `l-${paragraphIndex}-${partIndex}`)}
                       </MuiLink>
                     )}
                     {part.kind === "image" && <Box component="img" src={part.src} alt={part.alt} loading="lazy" sx={{ maxWidth: "100%", height: "auto", display: "block", my: 1 }} />}

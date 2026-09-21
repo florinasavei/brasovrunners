@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.39-2026-09-21
 
+- **The declaration sets in bold everything filled in for you** — your name, your identity document, the race and its date — so what a signer has to check stands out from the text that was approved once for everybody. On screen and in the signed PDF. §225.
 - **The “check your email” screen says which address it went to**, and gives the five-minute wait its own bold line instead of repeating it three times. An address read back is what catches “@gmail.con” in the second before somebody walks away. §224.
 - **The telephone box takes digits only**, stripping anything else as it is typed — so a number pasted out of your contacts keeps its digits and loses the punctuation. §223.
 - **An Organizer can open the standing pages and the legal texts at last**, which is what §208 was for and what it did not finish: both screens were gated on *writing*, so the one role meant to read everything could see the lists and open nothing. Every screen opens on reading now, and every button asks the question its own action asks. §222.

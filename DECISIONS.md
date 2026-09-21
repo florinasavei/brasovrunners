@@ -10022,3 +10022,43 @@ Somebody who does not know a wait is normal fills the form in again within thirt
 §218 is what that used to cost them.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 225. Decided — the declaration sets its fill-ins in bold (2026-09-21)
+
+**Context.** "În declarație trebuie să fac bold la datele care sunt din binding (datele
+participantului, datele concursului)."
+
+**Decision.** He is right, and the reason is not decoration. A declaration is one approved,
+hashed text with a handful of named blanks filled in for one person and one race (§95). What
+the signer has to check before signing is exactly the blanks — their own name, who declares,
+the identity document, the race, its date and its place. Everything around them was approved
+once and reads the same for everybody. Setting the two apart is the difference between reading
+a contract and checking a form.
+
+*The merge returns segments now, not a string.* `mergeTextSegments` says which spans came out
+of a `{{field}}`, and `mergeText` is that function joined back together — defined as such, so
+the two cannot come to disagree about what a merge produces.
+
+*The dotted blank counts as filled*, because it occupies a field too. On the blank form the
+desk prints, the emphasised parts are then the gaps somebody writes into, which is what a
+paper form does with a rule under a space.
+
+*Nothing about the signature changes.* `content_sha256` is computed over the **unmerged**
+template (§12.5, §46) and that is what an acceptance binds to. This is a rendering of the same
+template; no approved text and no recorded signature is touched.
+
+**A hardening that came free.** On screen the merge now happens **inside** `LegalDocumentBody`,
+after the inline marks are parsed rather than before. Merging first fed a participant's own
+name to `parseInline`, so a name written with the square-bracket link mark was read as a link — the parser
+restricts the protocol, so it was never script, but a person's own data has no business
+becoming markup. A filled-in value is plain text now, always, and a `{{field}}` written inside
+a link's label still merges inside that link, where the author put it.
+
+**In the PDF** the paragraph is drawn a run at a time with pdfkit's `continued`, so the line
+breaking and the justification stay the paragraph's rather than each run's, and the two
+callers hand the renderer the template and the values apart instead of a merged body.
+
+Tests: `tests/unit/legal-documents/merge-fields.test.ts` — which spans are filled, the blank
+counting as one, an unknown name staying plain, and the join being exactly `mergeText`.
+
+Baseline `BR-V1.39-2026-09-21`.
