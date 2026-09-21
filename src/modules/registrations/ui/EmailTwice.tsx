@@ -3,9 +3,11 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { suggestEmail } from "../domain/email-suggestion";
 
 /**
  * The address, twice, typed by hand, checked as it is typed (`DECISIONS.md` §206).
@@ -81,6 +83,9 @@ export default function EmailTwice({
   mismatchLabel,
   noPasteLabel,
   allowPasteLabel,
+  invalidLabel,
+  suggestionLabel,
+  useSuggestionLabel,
   help,
   fieldId,
   confirmFieldId,
@@ -99,6 +104,12 @@ export default function EmailTwice({
   noPasteLabel: string;
   /** The door out of it, for somebody who cannot type the address by hand. */
   allowPasteLabel: string;
+  /** "That is not an address" — said as it is typed, not held back until submit (§233). */
+  invalidLabel: string;
+  /** "Did you mean {address}?", with the corrected address substituted by the island. */
+  suggestionLabel: string;
+  /** The button that accepts the suggestion. */
+  useSuggestionLabel: string;
   help?: string;
   fieldId: string;
   confirmFieldId: string;
@@ -134,6 +145,63 @@ export default function EmailTwice({
   const mismatch = hydrated && second.trim() !== "" && !sameAddress(first, second);
 
   /**
+   * Whether the first box has been left, so a verdict about it is not delivered mid-word
+   * (§198's rule, and §233 follows it): turning a box red on the fourth character of an
+   * address is scolding somebody for typing.
+   */
+  const [touched, setTouched] = useState(false);
+
+  const looksLikeAddress = (value: string): boolean => {
+    try {
+      canonicalizeEmail(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const complete = hydrated && first.trim() !== "" && looksLikeAddress(first);
+
+  /**
+   * "That is not an address" waits until the box is **left** (§198's rule): saying it on the
+   * fourth character of one somebody is still typing is scolding them for typing.
+   */
+  const invalid = hydrated && touched && first.trim() !== "" && !looksLikeAddress(first);
+
+  /**
+   * The suggestion does **not** wait, and the difference is deliberate (§233).
+   *
+   * It is only ever offered for an address that is already complete and valid — `gmail.con`
+   * is a perfectly good address, which is exactly why it costs people a registration — so
+   * there is no half-typed state to be rude about, and the moment it can be shown is the
+   * moment it is most useful: while they are still looking at the field, before they have
+   * moved on and stopped thinking about it.
+   *
+   * The two verdicts are therefore mutually exclusive by construction: one needs the address
+   * to parse, the other needs it not to.
+   */
+  const suggestion = complete ? suggestEmail(first) : null;
+
+  /**
+   * Accepting it writes to both boxes through the DOM, never through state (§211).
+   *
+   * They are uncontrolled, so setting state would change nothing on screen; and writing the
+   * corrected address into the second box as well is the point — it was typed to match the
+   * first, and leaving it behind would turn one press into a mismatch error.
+   */
+  const firstRef = useRef<HTMLInputElement>(null);
+  const secondRef = useRef<HTMLInputElement>(null);
+  const acceptSuggestion = () => {
+    if (!suggestion) return;
+    if (firstRef.current) firstRef.current.value = suggestion;
+    setFirst(suggestion);
+    if (secondRef.current && secondRef.current.value.trim() !== "") {
+      secondRef.current.value = suggestion;
+      setSecond(suggestion);
+    }
+  };
+
+  /**
    * The paste block, and the door in it (§227).
    *
    * `blocked` is whether a paste has just been refused — what puts the sentence on screen, so
@@ -157,16 +225,34 @@ export default function EmailTwice({
         name={name}
         type="email"
         label={label}
+        inputRef={firstRef}
         defaultValue={defaultValue ?? ""}
         onChange={(event) => setFirst(event.target.value)}
+        onBlur={() => setTouched(true)}
         required
         fullWidth
         autoComplete="off"
-        error={error}
-        helperText={helperText ?? help}
+        error={error || invalid}
+        helperText={invalid && !error ? invalidLabel : (helperText ?? help)}
         slotProps={{ htmlInput: { maxLength: 320, spellCheck: false } }}
       />
+      {/*
+        The one check that would have caught the addresses that actually lost people (§233).
+        A suggestion, never a refusal: only DNS knows whether a plausible domain has a mail
+        server, and refusing what cannot be verified turns a typo into a lockout (§205).
+      */}
+      {suggestion && (
+        <Box>
+          <Typography variant="body2" component="span">
+            {suggestionLabel.replace("{address}", suggestion)}
+          </Typography>{" "}
+          <Button type="button" size="small" onClick={acceptSuggestion} sx={{ minHeight: 44 }}>
+            {useSuggestionLabel}
+          </Button>
+        </Box>
+      )}
       <TextField
+        inputRef={secondRef}
         id={confirmFieldId}
         name={confirmName}
         type="email"

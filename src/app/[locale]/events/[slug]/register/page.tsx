@@ -647,6 +647,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 mismatchLabel={t("emailMismatch")}
                 noPasteLabel={t("emailNoPaste")}
                 allowPasteLabel={t("emailAllowPaste")}
+                invalidLabel={t("emailInvalid")}
+                suggestionLabel={t.raw("emailSuggestion") as string}
+                useSuggestionLabel={t("emailUseSuggestion")}
                 help={t("emailHelp")}
                 defaultValue={typed("email")}
                 defaultConfirmValue={typed("emailConfirm")}

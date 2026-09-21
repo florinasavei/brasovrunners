@@ -244,6 +244,29 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       await page.locator('[name="emergencyContactPhone"]').evaluate((node) => (node as HTMLInputElement).checkValidity()),
     ).toBe(true);
   });
+  test("offers the address the entrant meant, and fixes both boxes", async ({ page }) => {
+    /*
+      §233. Every address that has cost this club a registration was syntactically perfect —
+      QA bounced three messages to "…@gmail.con". The browser accepts it, the server accepts
+      it, and the person waits for an email that can never arrive.
+
+      Accepting the suggestion has to correct **both** boxes: the second was typed to match
+      the first, so fixing one alone turns a helpful press into a mismatch error.
+    */
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    await page.locator('[name="email"]').fill("ana.e2e@gmail.con");
+    await page.locator('[name="emailConfirm"]').fill("ana.e2e@gmail.con");
+    // No blur needed: a complete address is judged at once, which is when it is most useful.
+    await expect(page.getByText("ana.e2e@gmail.com", { exact: false })).toBeVisible();
+    await page.getByRole("button", { name: /corectează/i }).click();
+
+    await expect(page.locator('[name="email"]')).toHaveValue("ana.e2e@gmail.com");
+    await expect(page.locator('[name="emailConfirm"]')).toHaveValue("ana.e2e@gmail.com");
+  });
   test("never scrolls sideways, at either viewport", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

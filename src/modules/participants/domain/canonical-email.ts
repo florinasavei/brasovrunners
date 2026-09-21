@@ -1,4 +1,28 @@
-import { domainToASCII } from "node:url";
+/**
+ * IDNA, without `node:url` (`DECISIONS.md` §234).
+ *
+ * This module used `domainToASCII` from `node:url`, which does not exist in a browser. Next
+ * substitutes a shim whose `domainToASCII` answers `""`, and `""` is what this function treats
+ * as "domain is not valid" — so **every** address threw on the client, silently.
+ *
+ * That was not a latent problem. `EmailTwice` compares the two typed addresses with this
+ * function (§206) and catches a throw as "not an address yet, nothing to compare", so the live
+ * mismatch check the owner asked for could never fire in the one place it runs. It shipped
+ * dead and nothing noticed, because its failure mode is silence.
+ *
+ * `new URL()` does the same IDNA-to-punycode conversion in Node and in every browser, which
+ * makes one rule that genuinely runs in both — the point of importing the server's function
+ * into the island in the first place. It throws where `domainToASCII` returned `""`, and the
+ * caller wants a throw either way.
+ */
+function domainToPunycode(domain: string): string {
+  try {
+    // The scheme is a carrier and nothing else; `hostname` is the punycode form, lowercased.
+    return new URL(`http://${domain}`).hostname;
+  } catch {
+    return "";
+  }
+}
 
 /**
  * Email identity for participants.
@@ -97,7 +121,7 @@ export function canonicalizeEmail(input: string): CanonicalEmail {
   if (deliveryEmail.length > 254) throw new InvalidEmailError("address too long");
 
   // Internationalised domains become punycode so two spellings of one domain compare equal.
-  const asciiDomain = domainToASCII(domain);
+  const asciiDomain = domainToPunycode(domain);
   if (asciiDomain === "") throw new InvalidEmailError("domain is not valid");
 
   const normalizedDomain = asciiDomain.toLowerCase();

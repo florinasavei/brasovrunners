@@ -14,6 +14,7 @@ import {
   submitRegistration,
 } from "@/modules/registrations/service";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
+import { renderOutboxMessage } from "@/modules/notifications/render";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -161,6 +162,39 @@ describe("§199 the form filled a second time with the same address", () => {
     ]);
   });
 
+  it("says in the message that it is the registration they already have (§235)", async () => {
+    /*
+      The owner read two confirmations as two registrations — "te poți înscrie cu fix același
+      mail de 2 ori, primești și QR și tot" — because the re-sent one is the confirmation
+      again, QR and all, and reads exactly like a first.
+
+      The inbox is the only place this may be answered: saying it on the form would answer
+      "is this address registered" about anybody's address (§19.4). So the queued row carries
+      the fact, and the rendered message leads with it.
+    */
+    const event = await createInternalEvent();
+    await submitRegistration(db, event, submission(NOW), NOW);
+    // Past the email step, so the re-send is the confirmation — the case the owner met. A
+    // re-submission still waiting for its verification link is not "already registered":
+    // nothing was finished, and the right answer there is the link again, which it gets.
+    const [registration] = await db.select().from(registrations);
+    await confirmEmail(db, event, registration.id, new Date(NOW.getTime() + 60_000));
+
+    const later = new Date(NOW.getTime() + 2 * 60 * 60 * 1000);
+    await submitRegistration(db, event, submission(later), later);
+
+    const rows = await db.select().from(emailOutbox);
+    const resend = rows.at(-1)!;
+    expect(resend.payloadJson).toMatchObject({ alreadyRegistered: true });
+
+    const message = await renderOutboxMessage(
+      { ...resend, status: "PROCESSING", attemptCount: 1, lockedAt: later },
+      db,
+      later,
+    );
+    expect(message.html).toContain("nu s-a creat o a doua înscriere");
+    expect(message.text).toContain("nu s-a creat o a doua înscriere");
+  });
   it("sends what the state can offer once the address is already confirmed", async () => {
     /*
       The case that used to send nothing. Somebody who confirmed, forgot, and filled the form

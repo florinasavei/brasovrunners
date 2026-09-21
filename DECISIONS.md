@@ -10274,3 +10274,304 @@ Tests: `tests/e2e/registration-form.spec.ts` — the message is the right one, `
 is false, a press does not leave the page, and correcting the number lifts the refusal.
 
 Baseline `BR-V1.40-2026-09-21`.
+
+## 232. Decided — the race number is one line, and changing it is folded away (2026-09-21)
+
+**Context.** "I wanna simplify that part with the BID changing."
+
+**Decision.** The block had grown, one correct addition at a time, into four things stacked up:
+a sentence explaining what the runner holds, a prefilled input, a save button, and a list of
+every free number at the event. Each was added for a reason — §105's preferential number, §230's
+"say what you would be replacing" — and together they answered a question nobody was asking. The
+question this screen is almost always open for is *what number does this person have*.
+
+So the answer is one line, and the change is a `<details>` underneath it.
+
+*The same idiom the rest of the backoffice uses* for a rare verb: the registrations list folds
+its destructive actions this way and the public form its optional groups. It costs no client
+island, it opens with JavaScript off, and the disclosure triangle says there is more without
+spending a line saying so.
+
+*The free numbers stay — inside.* They are exactly what somebody who has decided to change a
+number needs, and noise to everybody else. Hiding them behind the same press that reveals the
+box puts them where the decision is.
+
+*The sentences are shorter too*, which is half of what "simplify" meant. "Numărul de concurs: 2
+— provizoriu până la închiderea înscrierilor" replaces a sentence that also explained what
+would happen if you typed another one; the box below says that by existing.
+
+Nothing about the rules moved: changing by hand is still §105, it still settles the number and
+releases the provisional one (§230), and the service still refuses a change once the number is
+settled (§173).
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 233. Decided — the email box says what is wrong, and what you probably meant (2026-09-21)
+
+**Context.** "Ar trebui să văd live dacă emailul e invalid sau nu corespunde cu cel reintrodus…
+mailul e cel mai important!"
+
+**Decision, in two halves, and the second is the one that matters.**
+
+*Live invalidity* is the small half: the first box says "that does not look like an address"
+once it has been left, by the platform's own `canonicalizeEmail` rather than a second rule
+approximated in a regular expression (§198's discipline). It waits for the blur, because
+saying it on the fourth character is scolding somebody for typing.
+
+*"Did you mean gmail.com?"* is the half that is worth building. **Every address that has cost
+this club a registration was syntactically perfect.** QA's outbox holds three bounced messages
+to `…@gmail.con`, and one of the owner's own attempts went to `prinicipal33.com`, refused by
+Mailgun with "No MX". A validity check accepts all of them, the server accepts all of them, and
+the person is told to go and read an inbox that will never receive anything. Nothing downstream
+recovers them: a resend goes to the same wrong address, and the club never learns they tried.
+
+So the useful question is not "is this an address" but "is this the address you meant", and the
+only moment it is cheap to ask is while they are looking at it.
+
+*A table, not an edit-distance guess.* The usual approach measures the domain against a list of
+popular ones, and it guesses — it will offer `gmail.com` to somebody at a real company domain
+one letter away, and a suggestion that is wrong once teaches people to dismiss the next one.
+The table only fires on spellings that are **nobody's domain**: `gmail.con` and its like, plus
+endings that are not delegated at all, of which `.con` is the one that matters. It is therefore
+never wrong about a real address, only silent about a typo it has not seen.
+
+*A suggestion, never a refusal.* `prinicipal33.com` is not in the table and cannot be: it is a
+plausible domain, and only DNS knows it has no mail server. Refusing what cannot be verified
+turns a typo into a lockout, which §205 forbids.
+
+*The suggestion does not wait for the blur, and the invalidity does.* One needs the address to
+parse and the other needs it not to, so they are mutually exclusive by construction — and the
+moment a complete address can be questioned is the moment the question is most useful.
+
+*Accepting it corrects both boxes.* The second was typed to match the first, so fixing one
+alone would turn a helpful press into a mismatch error. Written through the DOM, because the
+boxes are uncontrolled (§211).
+
+Tests: `tests/unit/registrations/email-suggestion.test.ts` (8) — most of them assert the
+silence, which is the property that keeps the suggestion worth reading.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 234. Decided — the live email checks had never run (2026-09-21)
+
+**Context.** Found while building §233: the new "not an address" message fired for *every*
+address in the browser, including correct ones.
+
+**What it was.** `canonicalizeEmail` imported `domainToASCII` from `node:url`. There is no
+`node:url` in a browser; Next substitutes a shim whose `domainToASCII` answers `""`, and `""`
+is exactly what this function treats as "domain is not valid". So the canonicalizer threw on
+every address on the client.
+
+**Why nobody saw it.** `EmailTwice` compares the two typed addresses with that function and
+catches a throw as "not an address yet, so nothing to compare" — a sensible-looking guard that
+turns a total failure into silence. The live mismatch check of §206, which the owner asked for
+in as many words, **has never fired in a browser since the day it shipped.** The server-side
+`assertEmailTypedTwice` was carrying the whole feature, which is why no test and no person
+noticed: the rule still worked, just a round trip later than intended.
+
+**Decision.** `new URL("http://" + domain).hostname` does the same IDNA-to-punycode conversion
+in Node and in every browser. One rule that genuinely runs in both, which was the point of
+importing the server's function into the island rather than writing a second one.
+
+*The test is a source-level assertion*, not a behavioural one: vitest runs in Node, where the
+old import worked perfectly. Nothing about the behaviour could catch this, so the test reads
+the module and fails if it imports from `node:` at all.
+
+**The lesson, and it is why this is its own section.** A `catch` that turns an error into a
+benign default will hide a total failure as effectively as it hides the edge case it was
+written for. This one read "not an address yet" and meant "this module cannot run here".
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 235. Decided — the re-sent message says it is one (2026-09-21)
+
+**Context.** §229 made the confirmation screen stop asserting a registration it had not made,
+and the owner still said: "I was still able to sign up with the same email again and I had no
+idea." He was right that the screen alone does not settle it, and the reason is that the
+*email* did not either: filling the form again while confirmed re-sends
+`REGISTRATION_CONFIRMED`, QR and all, which reads exactly like a first confirmation. Two of
+those in an inbox is indistinguishable from two registrations.
+
+**Decision.** One sentence in front of the body of a re-sent message: you were already
+registered for this event, no second registration was created, and what follows is the
+registration you already have.
+
+*The inbox is the only place this may be said*, and that is the whole shape of the decision.
+Saying it on the form would answer "is this address registered" about **anybody's** address to
+anybody who types one — the oracle `AGENTS.md` §19.4 forbids, and the throttle does not help,
+because it is keyed on the address being submitted, so a hundred probes are a hundred separate
+allowances. What leaks is "this named person will be at this place on Saturday", which is
+nothing to almost everybody and is not nothing to somebody avoiding an ex-partner. The inbox
+answers the same question to the one person entitled to the answer.
+
+*The sentence is added centrally, not in one template*, because the re-send picks its type
+from the state: confirmed gets the confirmation, unsigned gets the declaration, queued gets the
+waiting-list notice. All three needed it.
+
+*A registration still waiting for its email confirmation gets no such sentence*, and that is
+deliberate rather than an omission: nothing was finished, so "you were already registered" would
+be untrue. The right answer there is the verification link again, which is what it already
+sends.
+
+*The flag rides in the outbox payload* rather than being derived at render time. Only the
+caller knows why a row was queued, and the row is the record of that.
+
+**What this does not fix, said plainly.** Somebody who fills the form twice and never opens
+their email still sees a generic screen. §229's sentence is what covers them, and that is as
+far as this can go without becoming the oracle.
+
+Tests: `tests/integration/registrations/resubmitted.test.ts` — the queued row carries the flag
+and the rendered message leads with the sentence, in both the HTML and the plain text.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 236. Decided — the country selector is a flag and a dialling code (2026-09-21)
+
+**Context.** The owner, on a phone: "pe mobil nu arată bine aceste selectoare, scrie doar
+codul țării prescurtat, și steagul."
+
+**Decision.** At 132 pixels "România (+40)" renders as "România (+4…" — and the part that
+gets cut is the part worth reading. The option is now the flag and the code, which always
+fit, and the control gives the width back to the number beside it, which was the field
+actually being squeezed.
+
+*An emoji rather than the `Flag` component this form uses elsewhere.* That one is an
+`<img>`, and an `<option>` may contain text and nothing else — which is also why this stays
+a native select (§84: it works before hydration, a phone knows how to open it, and two
+hundred options in a popover is a scroll nobody wants).
+
+*It degrades exactly where it must.* Windows draws no flag for a regional-indicator pair
+and falls back to the two letters, so a desktop reads "RO +40" — the abbreviated country
+code, which is the other half of what was asked for.
+
+*Still ordered by the country's name*, Romania first. The names are no longer drawn, but the
+order they give is the one somebody scanning flags expects; sorting by the emoji would order
+by codepoint, which is ISO order and looks arbitrary to anybody not reading the letters.
+
+**The trade, named.** Somebody hunting for a country they cannot picture the flag of now has
+only the dialling code to go on. For a club whose entrants are overwhelmingly Romanian —
+and Romania is the first option — that is a good trade, and it is reversible in one line if
+the club finds otherwise.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 237. Decided — the race number goes in the message, labelled while it can move (2026-09-21)
+
+**Context.** The owner, with a confirmation email in front of him: "în acest mail trebuie să
+confirm BID-ul. Peste tot trebuie să apară BID-ul!!"
+
+He was right and the omission was mine. §214 stopped writing `bib_number` until registration
+closes; the renderer read only that column, so a confirmation went out with a QR, a check-in
+code and **no number** — to somebody who had been looking at number 2 on their own page
+since the day they registered.
+
+**Decision.** The message carries whichever number the runner has, and says so when it is the
+provisional one.
+
+*Absent is worse than provisional.* A missing number reads as "you have not been given one",
+and the place they find out otherwise is the desk. A number with a sentence attached reads as
+what it is.
+
+*The label is the condition §214 attached to sending it at all.* That section said the
+provisional number is never emailed, because a number in an inbox cannot move afterwards.
+The rule it was protecting is not "do not send it" but "do not let somebody believe a number
+is final when it is not" — which a sentence satisfies, and which the `BIB_ASSIGNED` message
+at the settle then completes.
+
+*Appended after the body rather than in front of it*, because the number is already in the
+body and this only qualifies it — and centrally rather than in each template, so the
+confirmation, the reminder and the rest all gained it at once.
+
+*Nothing is qualified once it is settled.* After the close the number cannot move, and saying
+"provisional" then would invite somebody to wait for a second number that is never coming.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 238. Decided — the confirmation link presses its own button (2026-09-21)
+
+**Context.** The owner: "when I click from the mail I wanna auto-confirm the email." The link
+landed on a page with a Confirm button, which is one press more than anybody expects from a
+link that exists to confirm something.
+
+**Decision.** The GET still changes nothing; the page submits the existing POST itself, from
+the client, as soon as it has hydrated.
+
+*Why the route cannot just do it.* "Email action links: token hashed at rest, single use, GET
+never mutates" is in the unbreakable table in `CLAUDE.md` (`AGENTS.md` §12.8, BR-REQ-036-02),
+and the reason is this club's own inboxes rather than purity: **Microsoft 365 Safe Links
+fetches every URL in a message before the recipient sees it**, and both work addresses tested
+this week are Microsoft tenants. A confirming GET is spent by Defender, and the human clicks a
+minute later and is told the link is used. Every mail antivirus and prefetcher behaves the
+same way.
+
+*A scanner does not run JavaScript.* That is the whole of the trick: the automatic press is a
+`requestSubmit()` in an effect, so it needs a real browser that has hydrated a real page. The
+token is spent by a POST, by a person, which is exactly the rule.
+
+*The button is still there.* It is what renders before hydration and the only thing with
+JavaScript off — the page behaves as it did, and the press is an enhancement on top of it
+(`AGENTS.md` §1.5). The press is fired once, guarded by a ref, because React mounts effects
+twice in development.
+
+*The prompt changed with it.* "Press the button below" is no longer true; it now says the
+address is being confirmed, and to press the button if nothing happens.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 239. Decided — the email's band is the picture, and every message ends with the same links (2026-09-21)
+
+**Context.** The owner, with a confirmation open in Gmail's dark theme: "the email banner must
+be edge-to-edge", and "I need more links in that email".
+
+**The banner.** §218 made the header a white table cell with `bgcolor`, which is the strongest
+lever CSS has — and it is still not enough. Gmail's dark theme re-colours the cell and cannot
+re-colour a raster, so the white band shrank to a white rectangle the size of the 180-pixel
+lockup: a sticker on a dark wall, the exact thing §189 and §218 each set out to remove.
+
+So the band **is** the picture. `logo-email-banner.png` is a white canvas the width of the
+card with the lockup centred on it, generated by `scripts/brand-assets.mjs` at 1200×340 for a
+retina screen. A client may invert everything around it; it cannot invert the inside of a PNG,
+and there is no longer an edge between two whites for it to expose. The cell keeps its
+`bgcolor` underneath and pads nothing, so with images blocked — the common case on a first
+message from an unknown sender — the reader sees the white band and the club's name as `alt`.
+
+**The links.** They were built per template, so which links a message carried depended on
+which message it happened to be, and the confirmation of an address — the first mail anybody
+gets, and often the only one read carefully — carried none at all.
+
+Every participant message now ends with the same list: the event, its rules, its programme,
+the reader's own registrations, the other races, and a way to reach a human. Each is dropped
+when there is nothing to point at, and the list is deduplicated against whatever the template
+already named, with the template's own wording winning — the reminder calls the event page
+something that fits its own sentence.
+
+*Not on the club's archive copy or the staff invitation.* Neither is a participant's message,
+and a manage link in either would be a link into somebody else's registration.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 240. Decided — editing a repeated event edits the whole series by default (2026-09-21)
+
+**Context.** The owner, on the editor of a weekly run: "by default when I edit a repeated
+event, I wanna edit all!"
+
+**Decision.** The date chips open ticked — every date of the series — instead of opening on
+"just this date".
+
+*§131 chose the calendar's default and chose wrong for this club.* A weekly run is one event
+repeated: the description, the place, the rules and the programme belong to the series, not to
+the Monday. Fixing a typo on one date and leaving it on the other seven is the mistake that is
+easy to make and hard to notice, and the board currently holds eight Mondays.
+
+*The opposite mistake is louder, which is why this is the safer default.* The ticks are in the
+header, above the save; the box over the button says in words how many dates the save reaches.
+Somebody who means one date unticks the rest or presses "Niciuna", and is told what they chose
+before pressing Save. Nobody can widen a save by accident without the page having said so.
+
+*The scope widened; the merge rules did not.* Only what was changed travels, and a date moved
+or cancelled on its own stays that way unless the place or the state is what is being edited
+(§131).
+
+*The sentence under a repeated event's header said the opposite* and now says this.
+
+Baseline `BR-V1.40-2026-09-21`.
