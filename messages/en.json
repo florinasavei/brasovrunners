@@ -232,6 +232,22 @@
     }
   },
   "Admin": {
+    "botCheck": {
+      "title": "The anti-bot check (captcha)",
+      "state": {
+        "on": "On: the forms show the \"I am not a robot\" box, and a failed check stops the submission.",
+        "off": "Off: no box is shown and nothing is verified with Cloudflare.",
+        "noKeys": "Not configured on this deployment: without the two Turnstile keys there is nothing to switch on."
+      },
+      "others": "These stay on either way: the hidden honeypot in the form, the timing check and the per-address limit — none of them costs the visitor anything.",
+      "warning": "With it off, a robot can submit the form. It is worth switching off on the day the box is refusing real people; switch it back on afterwards.",
+      "turnOff": "Switch the check off",
+      "turnOn": "Switch the check on",
+      "saving": "Saving…",
+      "savedOn": "The anti-bot check is on.",
+      "savedOff": "The anti-bot check is off. The hidden honeypot and the per-address limit remain.",
+      "updatedAt": "Changed on {when}."
+    },
     "title": "Backoffice",
     "signedInAs": "Signed in as {name} — {role}",
     "signOut": "Sign out",

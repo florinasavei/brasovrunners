@@ -28,6 +28,8 @@ import {
   type TaskState,
 } from "@/modules/diagnostics/owner-tasks";
 import { isStorageConfigured } from "@/modules/media/storage";
+import { readBotCheck } from "@/modules/registrations/bot-check";
+import BotCheckPanel from "@/modules/registrations/ui/BotCheckPanel";
 import {
   annualCostToday,
   freeTierVerdict,
@@ -135,6 +137,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const db = getDb();
   const now = new Date();
 
+  // The anti-bot switch (§254): read straight through, because this page is where it is moved.
+  const botCheck = await readBotCheck(db);
   const privacyNotice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);
   const jobs = await Promise.all([
     checkJobHealth(db, "email-outbox", now),
@@ -216,7 +220,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       publishedEventCount,
       roDomainBound,
       storageConfigured: isStorageConfigured(),
-      botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
+      // Configured *and* switched on (§254): a row that said "done" while the check was off
+      // would be the task board lying about a defence.
+      botCheckConfigured: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY) && botCheck.enabled,
       // The club's own setting first, the deployment's variable as the fallback (§244).
       declarationArchiveConfigured: volume.archiveConfigured,
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
@@ -330,9 +336,19 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         )}
       </Box>
 
+      <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
+        {query.saved === "botCheckOn" && <Alert severity="success">{t("botCheck.savedOn")}</Alert>}
+        {query.saved === "botCheckOff" && <Alert severity="warning">{t("botCheck.savedOff")}</Alert>}
+        {typeof query.error === "string" && <Alert severity="error">{t(`errors.${query.error}`)}</Alert>}
+      </Box>
+
       <Alert severity={blocking > 0 ? "warning" : "success"}>
         {blocking > 0 ? t("blockingSummary", { count: blocking }) : t("nothingBlocking")}
       </Alert>
+
+      {/* The one setting on this page rather than a row about one (§254): the anti-bot check,
+          which the club must be able to switch off on the day it refuses real people. */}
+      <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} />
 
       {/* Who and what kind — two rows of links, no client code, each keeping the other's
           choice (§150). The link is 44 px tall; the chip inside it is small. */}

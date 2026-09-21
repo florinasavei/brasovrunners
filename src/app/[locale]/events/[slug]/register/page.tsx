@@ -44,7 +44,7 @@ import Hint from "@/shared/ui/Hint";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { turnstileSiteKey } from "@/modules/registrations/turnstile";
+import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { submitRegistrationAction } from "./actions";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
@@ -119,8 +119,9 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (!event) notFound();
 
   const now = new Date();
-  // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
-  const siteKey = turnstileSiteKey();
+  // Read once: the widget is drawn when both keys are set *and* the club has not switched the
+  // check off (§254). The honeypot and the timing check stand either way (§19.4).
+  const siteKey = await activeBotCheckSiteKey(getDb(), now);
   const state = registrationState(
     {
       registrationMode: event.registrationMode,

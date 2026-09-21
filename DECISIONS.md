@@ -11033,3 +11033,43 @@ has an entry there and a line in `tests/unit/staff/roles.test.ts`, which asserts
 is offered every section the role below it is.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 254. Decided — the anti-bot check is a switch, not a deployment (2026-09-21)
+
+**Context.** The owner: "I wanna be able to enable/disable the captcha from the backoffice."
+
+Turnstile has been behind `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` since §97, so turning
+it off meant editing two Vercel projects and waiting for a build. The day that is needed is the
+day the widget is refusing real people — which happened on 2026-09-21, twice, to Dani (§216) —
+and on that day a deployment is the wrong unit of response.
+
+**Decision.** *One stored flag, `platform_settings.botCheck`, default **on**.* A missing row does
+not remove a defence, and a database that cannot be reached answers "on": a form that refused to
+render because a settings table was unavailable would fail the one thing this site exists to do,
+and a challenge is the safe side of that failure.
+
+*Off means what "no keys" already meant.* The widget is not rendered and no token is verified —
+the same path a deployment without keys takes, which is code that already existed and is already
+tested. Nothing new had to be taught about refusing or accepting.
+
+*The quieter defences are untouched.* The honeypot, the timing check and the per-address throttle
+(§19.4) cost a visitor nothing and stay on whatever this says. The panel says so, because
+"switch off the captcha" should not read as "switch off the door".
+
+*One function, four callers.* `activeBotCheckSiteKey` for the two forms and `botCheckIsOn` for
+their two actions, memoized for half a minute and dropped the moment the switch moves. A switch
+that half the entry points ignored would be worse than none — the club would believe the check
+was off while the registration form still refused people — so a test asserts all four read it.
+
+*Administrator only, audited both ways.* The same gate as the Mailgun plan (§100) and the club's
+copies (§244); the trail records the direction, because turning a defence off is exactly the
+decision a trail is for.
+
+*It lives on `/admin/tasks`.* That page already carried the row that says whether the check is
+configured, and that row now reads "done" only when the check is configured **and** on — a task
+board that called it done while it was off would be lying about a defence.
+
+Tests: `tests/integration/registrations/bot-check.test.ts` — the default, the switch, the role,
+the audit row, and that all four entry points consult it.
+
+Baseline `BR-V1.43-2026-09-21`.

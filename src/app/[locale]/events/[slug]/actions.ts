@@ -8,6 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { registerInterest } from "@/modules/registrations/interest";
 import { INTEREST_BOX_ID } from "@/modules/registrations/interest-box";
+import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -45,7 +46,9 @@ export async function registerInterestAction(form: FormData): Promise<void> {
   // token stops this, a widget that could not run does not.
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-  const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);
+  const verdict = (await botCheckIsOn(getDb(), new Date()))
+    ? await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp)
+    : "not_configured";
   if (verdict === "failed") redirect(`${path}?interest=captcha#${INTEREST_BOX_ID}`);
 
   try {

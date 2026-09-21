@@ -61,6 +61,8 @@ export type AuditAction =
   | "email_plan.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
+  /** The anti-bot challenge switched on or off from the backoffice (§254). */
+  | "bot_check.changed"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */

@@ -232,6 +232,22 @@
     }
   },
   "Admin": {
+    "botCheck": {
+      "title": "Verificarea anti-bot (captcha)",
+      "state": {
+        "on": "Pornită: formularele arată caseta „Nu sunt robot”, iar o verificare picată oprește trimiterea.",
+        "off": "Oprită: nu se arată nicio casetă și nu se verifică nimic la Cloudflare.",
+        "noKeys": "Nu e configurată pe acest server: fără cele două chei Turnstile nu există ce să pornim."
+      },
+      "others": "Oricum rămân pornite: capcana ascunsă din formular, verificarea de timp și limita pe adresă — nu costă nimic vizitatorului.",
+      "warning": "Dacă o oprești, un robot poate trimite formularul. Merită oprită exact în ziua în care caseta refuză oameni reali; repornește-o după.",
+      "turnOff": "Oprește verificarea",
+      "turnOn": "Pornește verificarea",
+      "saving": "Se salvează…",
+      "savedOn": "Verificarea anti-bot este pornită.",
+      "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
+      "updatedAt": "Modificat la {when}."
+    },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
     "signOut": "Ieși din cont",
