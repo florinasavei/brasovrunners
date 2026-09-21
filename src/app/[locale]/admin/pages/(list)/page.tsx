@@ -119,9 +119,14 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
         <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
           {t("pages.title")}
         </Typography>
+        {/* A reader opens this list; writing a page is the Redactor's and the Administrator's
+            (§207, §208). The action refuses either way — this keeps the button off a screen
+            where pressing it could only fail. */}
+        {canEditTexts(actor.role) && (
         <ButtonLink href="/admin/pages/new" variant="contained" sx={{ minHeight: 44 }}>
           {t("pages.create")}
         </ButtonLink>
+        )}
       </Stack>
 
       <Typography variant="body2" color="text.secondary">

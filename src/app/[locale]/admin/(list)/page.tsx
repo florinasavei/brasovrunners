@@ -21,7 +21,6 @@ import {
 import {
   canCreateEvent,
   canDeleteEvent,
-  canEditTexts,
   canReadContent,
   canHardDeleteEvent,
   canManageRegistrations,

@@ -42,7 +42,8 @@ test.describe("BR-REQ-080-02 the Mailgun plan on /admin/emails", () => {
   test("a Moderator does not get the page's form to act on", async ({ page }) => {
     // BR-REQ-060-01: the page is readable by every staff role (the messages are), the action
     // is not — the service refuses a Moderator and the page shows the refusal as a sentence.
-    await signIn(page, "Dev Administrator");
+    // This is exactly the shape §208 generalised: reading and changing are two questions.
+    await signIn(page, "Dev Moderator");
     await page.goto("/ro/admin/emails");
     const main = page.locator("#main");
     // Whatever the plan reads when this test starts — the tests above share one settings row
