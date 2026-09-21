@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   currentMonth,
@@ -92,5 +94,38 @@ describe("the events calendar", () => {
     const grouped = groupByDay([monday, mondayLater, wednesday]);
     expect([...grouped.keys()]).toEqual(["2026-10-05", "2026-10-07"]);
     expect(grouped.get("2026-10-05")?.map((e) => e.title)).toEqual(["Mon", "Mon 2"]);
+  });
+});
+
+/**
+ * §261 — the tooltip is the month grid's, and nothing else's.
+ *
+ * A chip in a 40-pixel grid column shows glyphs and a time, so the tooltip is the only place
+ * the title exists. An agenda row shows the whole sentence, and there the tooltip repeated the
+ * line it was covering — on a tap, since `enterTouchDelay` is zero (the owner: "pe calendar
+ * tooltipurile nu ar trebui să apară pe list view, sunt destul de enervante").
+ *
+ * Source assertion: the chip is a client island with no exported logic, and what is being
+ * pinned is that the dense case keeps its tooltip while the agenda case returns before it.
+ */
+describe("§261 the calendar chip's tooltip", () => {
+  const SOURCE = readFileSync(
+    path.join(process.cwd(), "src/modules/events/ui/CalendarEventChip.tsx"),
+    "utf8",
+  );
+
+  it("returns the bare link when the row is not dense", () => {
+    expect(SOURCE).toContain("if (!dense) return chip;");
+  });
+
+  it("keeps one tooltip, after that return, for the grid", () => {
+    const tooltips = SOURCE.match(/<Tooltip\b/g) ?? [];
+    expect(tooltips).toHaveLength(1);
+    expect(SOURCE.indexOf("<Tooltip")).toBeGreaterThan(SOURCE.indexOf("if (!dense) return chip;"));
+  });
+
+  it("names the whole sentence on the link itself, dense or not", () => {
+    // Nothing is lost for a screen reader where the tooltip is gone.
+    expect(SOURCE).toContain("aria-label={sentence}");
   });
 });

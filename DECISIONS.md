@@ -11253,3 +11253,27 @@ required hint in both languages) and `tests/unit/events/card-excerpt.test.ts` (n
 measurement left in either direction).
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 261. Decided — a tooltip only where the row cannot show the words itself (2026-09-21)
+
+**Context.** The owner, on the calendar's list view: "pe calendar tooltipurile nu ar trebui să
+apară pe list view, sunt destul de enervante" — with a screenshot of a tooltip lying across two
+agenda rows, repeating the line underneath it word for word.
+
+**Decision.** `CalendarEventChip` keeps its tooltip in the month grid and drops it everywhere
+else. In a grid column some 40 pixels wide the chip is a stack of glyphs over a time and the
+title is cut or not drawn at all, so the tooltip is the only place the title exists. An agenda
+row carries the whole sentence, and `enterTouchDelay={0}` — right for a grid, where a tap is how
+a phone reads a chip — made the repetition pop up on every tap there.
+
+The link's `aria-label` is the whole sentence in both cases, so nothing is lost for a screen
+reader where the tooltip is gone.
+
+*The general rule, worth stating once:* a tooltip is for what does not fit, never a second copy
+of what does. §257 is the same rule about a tooltip's shape; this is about whether it should
+exist at all.
+
+Tests: `tests/unit/events/calendar.test.ts` — the dense case keeps the tooltip, the agenda case
+returns before it, and the accessible name is on the link either way.
+
+Baseline `BR-V1.43-2026-09-21`.
