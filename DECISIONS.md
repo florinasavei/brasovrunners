@@ -9913,3 +9913,112 @@ number through the sweep, a final draw never lands on a held provisional one, an
 confirmation keeps the number it was shown.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 221. Decided — the club chooses when email leaves (2026-09-21)
+
+**Context.** The owner asked for a switch: messages go out instantly, or only through the
+scheduler.
+
+**Decision.** One `platform_settings` row, `immediate` by default, read by the drain.
+
+The two failure modes are opposite and the club cannot know in advance which one it is in.
+`immediate` is what has always happened — `drainOutboxAfterResponse` sends after the response,
+so a confirmation link arrives in seconds, which is why a registration feels instant. Its cost
+is a burst: eighty people registering when a popular race opens is eighty sends in a few
+minutes, which is where a daily allowance goes fastest and where a provider's rate limiter
+answers 429. `scheduled` sends nothing from the web request and leaves it all to the pinger —
+late by up to fifteen minutes by day (§68), and in exchange paced, predictable, and unable to
+take the site's own response times with it.
+
+*Superadministrator only*, unlike the Mailgun plan beside it, which is the Administrator's
+(§100). The plan is a fact about the club's account that its data controller knows; this is an
+operational trade that makes **every** message on the platform arrive later, and getting it
+wrong is invisible until somebody asks why their link took a quarter of an hour.
+
+*The setting is read inside `after()`, never at the call site.* `enqueueEmail` calls the drain
+from within the caller's transaction, and a settings read there would put one more query
+between a registration and its commit. Inside `after()` the response has gone and the
+transaction is closed, so it costs one indexed lookup on a path that was about to open a
+connection anyway. Nothing is lost when the answer is `scheduled`: the row stays PENDING and
+whoever reaches it first claims it under `FOR UPDATE SKIP LOCKED`.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 222. Decided — §208 finished: every control asks the question its own action asks (2026-09-21)
+
+**Context.** §208 said it plainly and left it: "the read-only screens were verified by reading
+the gates, not by walking every control on every page… the remaining pages are worth a pass."
+This is the pass — one reader per admin page, twenty-four of them, each finding then attacked
+by a verifier that had to refute it against `roles.ts`. Thirty findings, seventeen survived.
+
+**What it found, and the two shapes it came in.**
+
+*A control rendered and then refused.* The Mailgun plan form and the contact-recipients form on
+`/admin/emails`, the "create album" button, the withdraw and delete buttons on the legal list,
+"start the next version", and three event-series controls. None is a security hole — every
+action asserts again on the server (BR-REQ-060-01) — and each is a person pressing a button on
+a screen they were invited to open and being told their role does not permit it.
+
+*A screen an Organizer may read and could not open*, which is worse, because the work simply
+cannot be done. `/admin/pages/[id]` and `/admin/legal/[id]` both gated on **writing**, so the
+one role §208 exists for could see the list and open nothing on it. "Organizatorul vede cam tot
+(dar în readonly), practic Dani îi zice Amaliei să modifice X" is impossible if X cannot be
+read.
+
+**Decision.** *Every screen opens on `canReadContent`; every control inside is guarded on the
+capability its own Server Action asserts.* Stated that way rather than as a list of fixes,
+because the list is what drifts — the general rule is the thing worth keeping.
+
+The standing-page editor is the case that proves it. One flag, `mayEdit`, answered two
+questions, and answered one of them wrongly: it read `canEditEventFields`, while `savePage`
+asserts `canEditTexts`. Opening the screen without splitting that flag would have *created* a
+rendered-but-refused control where there had been a locked door. `deletePage` genuinely does
+assert `canEditEventFields`, so delete keeps the wider gate — an Organizer may delete a
+standing page and not edit its words, which is odd and is what §207's deliberate gap says.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 223. Decided — the telephone box takes digits and nothing else (2026-09-21)
+
+**Context.** "In the phone field I should be able to type only numbers!"
+
+**Decision.** Non-digits are **stripped as they are typed**, not refused. The country code is
+chosen in the select beside the box, so what belongs in it is the national number; and a person
+pasting `0721 234 567` or `+40 721-234-567` out of their own contacts keeps the digits and
+loses the punctuation, where a refusal would leave them retyping a number they had correctly in
+the clipboard. `composePhone` on the server already strips exactly this, so the box now shows
+the answer the server would have reached.
+
+*The `pattern` still admits separators, and that is deliberate.* With JavaScript off nothing
+strips anything, and the server accepts a number written with spaces. A pattern narrowed to
+digits would make the browser refuse, without JavaScript, a number the server would have taken
+— the form working worse for the person least able to recover from it (`AGENTS.md` §1.5).
+
+`inputMode` moves from `tel` to `numeric`: a telephone keypad offers `+ * #`, and none of them
+can be typed here any more.
+
+## 224. Decided — the screen that says "check your email" says which one (2026-09-21)
+
+**Context.** "On this page I should show the email again", and "I should underline that 5
+minutes rule".
+
+**Decision.** The address is the one fact that screen was missing, and it is the cheapest catch
+there is. "Check your email" is useless to somebody who typed `@gmail.con` — they check the
+inbox they meant, find nothing, and conclude the site is broken. QA's outbox holds three bounced
+messages to that exact misspelling (§206), and one of the owner's own registrations went to a
+domain with a letter added. Reading their own address back is what stops them walking away.
+
+*In a sealed cookie of its own, never the URL.* Nothing a participant typed goes into a URL,
+which every proxy in between logs (§14.5), so the redirect's query string is out. It is not the
+draft cookie either: that one is cleared on a successful submit and carries twenty fields
+including health notes. This carries one field, is written only on success, and uses the same
+key and the same ten minutes, because an address is still personal data sitting in a browser.
+
+*The wait is bold, and said once.* It was on the screen three times — the stepper's sentence,
+the alert, and the resend prompt beneath — which is how a sentence stops being read. The
+stepper keeps "we have sent you a confirmation link" and gives up its copy of the delay; the
+alert carries the address, then the five minutes in bold, then the spam advice in plain text.
+Somebody who does not know a wait is normal fills the form in again within thirty seconds, and
+§218 is what that used to cost them.
+
+Baseline `BR-V1.39-2026-09-21`.

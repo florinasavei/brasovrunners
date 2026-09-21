@@ -30,12 +30,31 @@ export function drainOutboxAfterResponse(): void {
   try {
     after(async () => {
       try {
-        const [{ processOutboxBatch }, { renderOutboxMessage }] = await Promise.all([
+        const [{ processOutboxBatch }, { renderOutboxMessage }, { readDeliveryTiming }] = await Promise.all([
           import("./outbox"),
           import("./render"),
+          import("./delivery-timing"),
         ]);
+        const db = getDb();
+
+        /*
+          The club's own choice about when mail leaves (§221).
+
+          Read **inside** `after()`, never at the call site: `enqueueEmail` calls this from
+          within the caller's transaction, and a settings read there would put one more query
+          between a registration and its commit. Here the response has already gone out and
+          the transaction is closed, so the cost is a single indexed lookup on a path that was
+          about to open a connection anyway.
+
+          `scheduled` means the request does nothing and the pinger sends — up to fifteen
+          minutes later by day (§68). Nothing is lost either way: the row stays PENDING and
+          whoever gets there first claims it under `FOR UPDATE SKIP LOCKED`.
+        */
+        const { timing } = await readDeliveryTiming(db);
+        if (timing === "scheduled") return;
+
         const { sender } = createEmailSenderForEnvironment(env);
-        await processOutboxBatch(getDb(), { sender, render: renderOutboxMessage, now: new Date() });
+        await processOutboxBatch(db, { sender, render: renderOutboxMessage, now: new Date() });
       } catch (error) {
         console.error("[email-outbox] drain after response failed", error);
       }

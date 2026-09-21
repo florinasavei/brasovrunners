@@ -24,7 +24,7 @@ import { registrationState } from "@/modules/events/domain/registration-window";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
-import { readFormDraft } from "@/modules/registrations/form-draft";
+import { readFormDraft, readSubmittedAddress } from "@/modules/registrations/form-draft";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
@@ -135,6 +135,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   if (state !== "OPEN") notFound();
 
   const { submitted, error, fields } = await searchParams;
+  // Only meaningful on the screen that follows a successful submit (§224).
+  const submittedTo = submitted ? await readSubmittedAddress() : null;
 
   /**
    * Which boxes to mark, when the server rejected the form.
@@ -275,7 +277,26 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           */}
           <Alert severity="success">
             <AlertTitle>{t("submitted")}</AlertTitle>
-            {t("submittedDelay")}
+            {/*
+              The address it went to (§224). The one fact this screen was missing: "check your
+              email" is useless to somebody who typed `@gmail.con`, and QA's outbox holds three
+              bounced messages to exactly that. Reading their own address back is what catches
+              it, in the second before they walk away.
+            */}
+            {submittedTo && (
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                {t("submittedTo")}{" "}
+                <Box component="strong" sx={{ wordBreak: "break-all" }}>
+                  {submittedTo}
+                </Box>
+              </Typography>
+            )}
+            {/* The wait, in bold, because not knowing it is normal is what makes somebody
+                fill the form in again thirty seconds later (§224). */}
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+              {t("submittedDelay")}
+            </Typography>
+            <Typography variant="body2">{t("submittedSpam")}</Typography>
           </Alert>
           {/*
             The one thing a person needs when the message does not arrive, offered at the
