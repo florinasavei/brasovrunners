@@ -1,0 +1,36 @@
+#!/bin/sh
+# Brasov Runners pre-push hook.
+#
+# The second half of the guard in pre-commit, because a commit is not the only way to
+# reach a shared branch: a fast-forward, a cherry-pick, an amend, or a push made from a
+# branch that happens to track `qa` all arrive here without a commit being made.
+#
+# git passes each ref being pushed on stdin as: <local ref> <local sha> <remote ref> <remote sha>
+#
+# Installed by `yarn setup`, which sets core.hooksPath to .githooks.
+# Deliberate exception — a release merge you really do mean: git push --no-verify.
+
+blocked=""
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+	case "$remote_ref" in
+		refs/heads/qa | refs/heads/main)
+			blocked="$blocked ${remote_ref#refs/heads/}"
+			;;
+	esac
+done
+
+if [ -n "$blocked" ]; then
+	echo ""
+	echo "pre-push: refusing to push to:$blocked"
+	echo ""
+	echo "  Those branches move through pull requests only (CLAUDE.md, Working"
+	echo "  conventions): a feature branch opens a PR into qa, and a release is the"
+	echo "  qa → main PR the owner merges."
+	echo ""
+	echo "      git push -u origin <your-branch>   # then open the PR"
+	echo ""
+	echo "  If you really mean it: git push --no-verify"
+	echo ""
+	exit 1
+fi
