@@ -228,6 +228,12 @@ export type TemplateData = {
    * already registered (§199, §235). One sentence goes in front of the body saying so.
    */
   alreadyRegistered?: boolean;
+  /**
+   * The race number in this message is the provisional one (§214, §237): it is shown so
+   * the runner has it, and said to be provisional because the settle at the close may
+   * move it.
+   */
+  bibProvisional?: boolean;
   eventTitle?: string;
   eventLocationName?: string;
   eventStartsAtFormatted?: string;
@@ -466,6 +472,9 @@ const T = {
     /** In front of a message re-sent because the form was filled in again (§235). */
     alreadyRegistered:
       "Erai deja înscris la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
+    /** Appended when the number in this message can still change (§237). */
+    bibProvisional: (n: number) =>
+      `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
     footer: "Răspunde la acest email pentru întrebări.",
   },
   en: {
@@ -642,6 +651,9 @@ const T = {
     /** In front of a message re-sent because the form was filled in again (§235). */
     alreadyRegistered:
       "You were already registered for this event, so no second registration was created — below is the registration you already have.",
+    /** Appended when the number in this message can still change (§237). */
+    bibProvisional: (n: number) =>
+      `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
     footer: "Reply to this email with questions.",
   },
 } as const;
@@ -715,9 +727,15 @@ export function buildTemplateContent(
       address ( §19.4); the inbox is the one place the question can be answered to
       the only person entitled to the answer.
     */
-    paragraphs: data.alreadyRegistered
-      ? [copy.alreadyRegistered, ...entry.body(data)]
-      : entry.body(data),
+    paragraphs: [
+      ...(data.alreadyRegistered ? [copy.alreadyRegistered] : []),
+      ...entry.body(data),
+      // After the body, not before it: the number is in the body already, and this only
+      // qualifies it (§237).
+      ...(data.bibProvisional && data.bibNumber !== undefined
+        ? [copy.bibProvisional(data.bibNumber)]
+        : []),
+    ],
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
     links: entry.links?.(data),

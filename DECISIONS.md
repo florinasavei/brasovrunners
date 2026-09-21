@@ -10424,3 +10424,65 @@ Tests: `tests/integration/registrations/resubmitted.test.ts` — the queued row 
 and the rendered message leads with the sentence, in both the HTML and the plain text.
 
 Baseline `BR-V1.40-2026-09-21`.
+
+## 236. Decided — the country selector is a flag and a dialling code (2026-09-21)
+
+**Context.** The owner, on a phone: "pe mobil nu arată bine aceste selectoare, scrie doar
+codul țării prescurtat, și steagul."
+
+**Decision.** At 132 pixels "România (+40)" renders as "România (+4…" — and the part that
+gets cut is the part worth reading. The option is now the flag and the code, which always
+fit, and the control gives the width back to the number beside it, which was the field
+actually being squeezed.
+
+*An emoji rather than the `Flag` component this form uses elsewhere.* That one is an
+`<img>`, and an `<option>` may contain text and nothing else — which is also why this stays
+a native select (§84: it works before hydration, a phone knows how to open it, and two
+hundred options in a popover is a scroll nobody wants).
+
+*It degrades exactly where it must.* Windows draws no flag for a regional-indicator pair
+and falls back to the two letters, so a desktop reads "RO +40" — the abbreviated country
+code, which is the other half of what was asked for.
+
+*Still ordered by the country's name*, Romania first. The names are no longer drawn, but the
+order they give is the one somebody scanning flags expects; sorting by the emoji would order
+by codepoint, which is ISO order and looks arbitrary to anybody not reading the letters.
+
+**The trade, named.** Somebody hunting for a country they cannot picture the flag of now has
+only the dialling code to go on. For a club whose entrants are overwhelmingly Romanian —
+and Romania is the first option — that is a good trade, and it is reversible in one line if
+the club finds otherwise.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 237. Decided — the race number goes in the message, labelled while it can move (2026-09-21)
+
+**Context.** The owner, with a confirmation email in front of him: "în acest mail trebuie să
+confirm BID-ul. Peste tot trebuie să apară BID-ul!!"
+
+He was right and the omission was mine. §214 stopped writing `bib_number` until registration
+closes; the renderer read only that column, so a confirmation went out with a QR, a check-in
+code and **no number** — to somebody who had been looking at number 2 on their own page
+since the day they registered.
+
+**Decision.** The message carries whichever number the runner has, and says so when it is the
+provisional one.
+
+*Absent is worse than provisional.* A missing number reads as "you have not been given one",
+and the place they find out otherwise is the desk. A number with a sentence attached reads as
+what it is.
+
+*The label is the condition §214 attached to sending it at all.* That section said the
+provisional number is never emailed, because a number in an inbox cannot move afterwards.
+The rule it was protecting is not "do not send it" but "do not let somebody believe a number
+is final when it is not" — which a sentence satisfies, and which the `BIB_ASSIGNED` message
+at the settle then completes.
+
+*Appended after the body rather than in front of it*, because the number is already in the
+body and this only qualifies it — and centrally rather than in each template, so the
+confirmation, the reminder and the rest all gained it at once.
+
+*Nothing is qualified once it is settled.* After the close the number cannot move, and saying
+"provisional" then would invite somebody to wait for a second number that is never coming.
+
+Baseline `BR-V1.40-2026-09-21`.

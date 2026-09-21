@@ -171,7 +171,22 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     }
     data.checkinCode = code;
     data.checkinQrUrl = `${env.APP_BASE_URL}/api/registrations/qr/${code}.png`;
-    data.bibNumber = registration.bibNumber ?? undefined;
+    /*
+      The number the runner has, settled or not (§237; the owner: "peste tot trebuie să
+      apară BID-ul!!").
+
+      §214 stopped writing `bib_number` until the window closes, and this line read only
+      that column — so the confirmation went out with a QR, a check-in code and no number,
+      for a runner who had been looking at number 2 on their own page since they
+      registered. Absent is worse than provisional: it reads as "you have not been given
+      one", and the desk is where they find out otherwise.
+
+      So it is sent, and it is **labelled** when it can still move — which is the condition
+      §214 attached to emailing it at all. The settle sends `BIB_ASSIGNED` with the final
+      one, so nobody is left holding only the provisional figure.
+    */
+    data.bibNumber = registration.bibNumber ?? registration.provisionalBibNumber ?? undefined;
+    data.bibProvisional = registration.bibNumber === null && registration.provisionalBibNumber !== null;
   }
 
   const purpose = TOKEN_PURPOSE_BY_MESSAGE_TYPE[row.messageType];
