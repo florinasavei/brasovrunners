@@ -10274,3 +10274,87 @@ Tests: `tests/e2e/registration-form.spec.ts` — the message is the right one, `
 is false, a press does not leave the page, and correcting the number lifts the refusal.
 
 Baseline `BR-V1.40-2026-09-21`.
+
+## 241. Decided — the organizer draws the crop, instead of the code guessing it (2026-09-21)
+
+**Context.** The owner: what the organizer sees in the editor is not what the site renders. The
+editor showed the whole photograph; the listing card cut it to 180 pixels from the centre
+(`CARD_EXCERPT_SX`, §73). A portrait photograph of a runner became a slice of their chest, and
+nobody could see that happen while choosing the picture.
+
+**Decision.** *The crop is four fractions on the image node* — `x`, `y`, `w`, `h` of the stored
+photograph — drawn by dragging a box over the picture in the editor's own panel, and honoured by
+everything that renders that picture: the event page, the listing card, and the editor itself.
+
+*Fractions, never pixels.* The same document is drawn in a text column, in a card and at 320
+pixels. A rectangle measured on somebody's laptop means nothing in any of them; four fractions
+mean the same thing in all three.
+
+*The photograph is never touched.* Nothing is re-encoded, no second variant is stored, and
+removing the crop restores the whole picture — the stored file is exactly what was uploaded.
+This is a rendering decision, so it lives in the document, next to the alignment and the width
+share it sits beside in the panel.
+
+*A window, not `object-position`.* `object-fit: cover` can pan a picture inside a box, but the
+visible part always keeps the whole of one dimension — you cannot zoom into a corner with it,
+and a corner is exactly what somebody cropping a group photograph wants. The arrangement that
+can is a window that keeps the rectangle's shape and hides the rest, with the photograph
+magnified inside it: `100 / w` per cent of the window's width, pulled left by `x / w` and up by
+`y / h`. One function, `cropGeometry`, and two rules built from it — as `sx` for the renderer
+and as inline CSS for Tiptap — so the editor cannot drift from the page.
+
+*No dependency.* Every cropper on npm brings a canvas, a zoom gesture, a rotation and an export
+pipeline, and each of them is larger than this editor (§1.5: prefer nothing). What was needed is
+a pointer listener and a box: drag outside the rectangle to draw a new one, drag inside it to
+move it, arrows and `Shift`-arrows for a keyboard, and a line underneath that says in words
+where it is — because a control only a pointer can use is not a control everybody has.
+
+*Absent means the whole picture, and that is what every existing body says.* A rectangle dragged
+back out to the edges is stored as no crop at all (`meaningfulCrop`), and a picture with no crop
+renders the markup it rendered yesterday — a plain `<img>`, no window, byte for byte. A crop is
+also refused for a picture whose own size was never stored: the window is shaped from the
+photograph's ratio, and a guessed one is a band of background under the picture.
+
+*The card's cap survives as a ceiling.* 180 pixels still bounds a card's picture, but it is now
+the exception rather than the rule: a crop wider than about 8:5 never reaches it. The selector
+became a child selector in the same change, or it would have reached the photograph inside the
+window and fought the magnification that draws the crop.
+
+**What this does not do.** The Open Graph card is drawn from the event's facts — the title, the
+date, the place, the distance, in the brand's blue (§90) — and carries no photograph at all, so
+there was no second crop there to honour. Putting the cropped picture on the share card is a
+product decision of its own and is not taken here.
+
+Tests: `tests/unit/content/rich-text-crop.test.ts` — the geometry, the refusals, the defaults,
+and that the editor and the renderer draw from the same function;
+`tests/unit/events/card-excerpt.test.ts` — the card caps the window and never the photograph.
+
+Baseline `BR-V1.40-2026-09-21`.
+
+## 242. Decided — the dense cards under the hero keep dropping the summary, and the editor says so (2026-09-21)
+
+**Context.** The owner asked whether it was right that the card under the hero drops the short
+description entirely (`underHero`, `SeriesCard.tsx`, `EventCard`), given that the field is
+labelled "apare pe card".
+
+**Decision.** *The density stays.* The list under a featured event is "other events" and exists
+to be scanned: a heading, a title, a date and a place. §78 already decided that the lead event
+must not be followed by a scroll of cards — that is why the list is a disclosure on a phone —
+and a summary with a picture in it on every row is exactly the scroll that decision avoided.
+The summary is not lost, either: the featured event shows it on the hero, the event's own page
+shows it, and the shares carry it.
+
+*The label was the thing that was wrong.* "Apare pe card" promised something that is true on a
+filtered listing and false under a hero, and an organizer who writes a summary and cannot find
+it has been misled by this application. The field now says where it appears, and the help names
+the exception in words.
+
+*What the alternative would have been.* Rendering the excerpt under the hero as words only —
+no picture, clamped to two lines — is a real option and a smaller change than it sounds. It is
+not taken because nobody asked for the front page to grow, and because the honest label costs
+nothing and can be reversed in one line if the club would rather have the words.
+
+Tests: `tests/unit/events/card-excerpt.test.ts` — the rule and the sentence that explains it are
+asserted together, so one cannot change without the other.
+
+Baseline `BR-V1.40-2026-09-21`.

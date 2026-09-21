@@ -216,6 +216,50 @@ const tableNode = z.object({
  * rendering the renderer knows, never a CSS value somebody typed. Absent — every stored document
  * — it reads as `block`, so nothing written before this renders differently.
  */
+/**
+ * `crop` is the part of the photograph the organizer chose to show (`DECISIONS.md` §241; the
+ * owner: "what the organizer sees in the editor is not what the site renders").
+ *
+ * Four fractions of the stored picture — `x`, `y` from its top-left corner, `w`, `h` of its
+ * width and height — and never pixels: the same document is rendered at a column's width, at a
+ * card's width and inside a 320-pixel phone, and a pixel measured on somebody's laptop means
+ * nothing in any of them. Absent, which is every picture written before today, means the whole
+ * photograph, so no stored body changes a byte and the renderer emits exactly the markup it
+ * emitted yesterday.
+ *
+ * The rectangle must lie inside the picture — that is what the two refinements say — because a
+ * crop that hangs over the edge renders as a band of background the reader cannot explain. Four
+ * decimals is finer than any screen this runs on and keeps the stored number short.
+ */
+const cropFraction = z.number().min(0).max(1);
+const imageCrop = z
+  .object({
+    x: cropFraction,
+    y: cropFraction,
+    w: z.number().min(0.02).max(1),
+    h: z.number().min(0.02).max(1),
+  })
+  .strict()
+  .refine((crop) => crop.x + crop.w <= 1.0001, "a crop must end inside the picture")
+  .refine((crop) => crop.y + crop.h <= 1.0001, "a crop must end inside the picture");
+
+export type ImageCrop = z.infer<typeof imageCrop>;
+
+/** The whole picture, as the crop box shows it before anybody has dragged one. */
+export const WHOLE_IMAGE: ImageCrop = { x: 0, y: 0, w: 1, h: 1 };
+
+/**
+ * The crop worth storing, or `null` for "the whole picture".
+ *
+ * One place decides that a rectangle covering the whole photograph is *not* a crop, so the
+ * editor, the renderer and the card never disagree about a body that has one stored as
+ * `{0,0,1,1}` — and so dragging a box back out to the edges leaves the document as it was.
+ */
+export function meaningfulCrop(crop: ImageCrop | null | undefined): ImageCrop | null {
+  if (!crop) return null;
+  return crop.w >= 0.999 && crop.h >= 0.999 ? null : crop;
+}
+
 export const IMAGE_WIDTH_PERCENTS = [100, 75, 50, 33] as const;
 export type ImageWidthPercent = (typeof IMAGE_WIDTH_PERCENTS)[number];
 export const IMAGE_ALIGNMENTS = ["block", "left", "right"] as const;
@@ -249,6 +293,10 @@ const imageNode = z.object({
       .nullable()
       .optional()
       .transform((value) => value ?? "block"),
+    crop: imageCrop
+      .nullable()
+      .optional()
+      .transform((value) => meaningfulCrop(value)),
   }),
 });
 

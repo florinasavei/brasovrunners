@@ -7,7 +7,7 @@ import {
   type RichTextBlock,
   type RichTextText,
 } from "../domain/schema";
-import { imageCaptionSx, imageFigureSx } from "./image-layout";
+import { cropGeometry, cropImageSx, cropWindowSx, imageCaptionSx, imageFigureSx } from "./image-layout";
 import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
 
@@ -57,22 +57,35 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
       // id on the server, and nothing is fetched from Google until the reader opens it.
       return <RichTextVideo videoId={block.attrs.videoId} caption={block.attrs.caption} />;
-    case "image":
+    case "image": {
       // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
       // address was validated to be one of this site's own variants (§72). Where the figure
       // sits in the column — a band, or floated with the text beside it — is `image-layout.ts`,
       // which is also where the reversal of §73's "never floated" is argued.
+      //
+      // A picture the organizer cropped (§241) is the same <img> inside a window that shows the
+      // rectangle they drew. The window is emitted only when there is a crop, so every picture
+      // written before today renders the markup it rendered yesterday, byte for byte.
+      const crop = cropGeometry(block.attrs.crop, block.attrs);
       return (
         <Box component="figure" sx={imageFigureSx(block.attrs, floats)}>
-          <Box
-            component="img"
-            src={block.attrs.src}
-            alt={block.attrs.alt}
-            width={block.attrs.width ?? undefined}
-            height={block.attrs.height ?? undefined}
-            loading="lazy"
-            sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1 }}
-          />
+          {crop ? (
+            // No `width`/`height` attributes inside: the window reserves the space from the
+            // crop's own shape, and the photograph is laid over it at whatever size that takes.
+            <Box className="rt-crop" sx={cropWindowSx(crop)}>
+              <Box component="img" src={block.attrs.src} alt={block.attrs.alt} loading="lazy" sx={cropImageSx(crop)} />
+            </Box>
+          ) : (
+            <Box
+              component="img"
+              src={block.attrs.src}
+              alt={block.attrs.alt}
+              width={block.attrs.width ?? undefined}
+              height={block.attrs.height ?? undefined}
+              loading="lazy"
+              sx={{ display: "block", width: "100%", height: "auto", borderRadius: 1 }}
+            />
+          )}
           {block.attrs.caption !== "" && (
             <Typography component="figcaption" variant="body2" color="text.secondary" sx={imageCaptionSx(block.attrs)}>
               {block.attrs.caption}
@@ -80,6 +93,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
           )}
         </Box>
       );
+    }
     case "paragraph":
       // `textAlign` is emitted only when the organizer chose one (§213): a body written before
       // alignment existed renders the markup it rendered yesterday, not a rule that says "left".
