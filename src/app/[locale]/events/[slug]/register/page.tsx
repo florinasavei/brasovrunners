@@ -253,7 +253,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
       {submitted ? (
         <Stack spacing={2}>
-          <Alert severity="success">{t("submitted")}</Alert>
+          {/*
+            "Check your email", and then — in the same panel, in the same weight — how long it
+            may take. The owner asked for the second sentence to be highlighted here rather than
+            left where it was, three lines down in the stepper's prose: this screen is where
+            somebody stands with their inbox open, and a person who does not know a wait is
+            normal fills the form again within thirty seconds (§199 is the reason that is not
+            free, and §205 is what it costs the club when they give up instead).
+
+            One caveat worth knowing rather than guessing at: the outbox drains after the
+            request that queued it, so the usual delay is seconds. Five minutes is the honest
+            outer bound for the common path; a message that misses its drain waits for the
+            pinger, which by day is a quarter of an hour (§68).
+          */}
+          <Alert severity="success">
+            <AlertTitle>{t("submitted")}</AlertTitle>
+            {t("submittedDelay")}
+          </Alert>
           {/*
             The one thing a person needs when the message does not arrive, offered at the
             moment they would first notice — carrying the event so the resend knows which

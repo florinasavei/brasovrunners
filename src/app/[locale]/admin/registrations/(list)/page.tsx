@@ -630,6 +630,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   pendingLabel={row.status === "CONFIRMED" ? t("registrations.resendQr") : t("registrations.resendShort")}
                   ariaLabel={row.status === "CONFIRMED" ? t("registrations.resendQrLong") : t("registrations.resend")}
                   variant="outlined"
+                  // One per row, in a narrow column: the 44-pixel floor and a wrapping label
+                  // together made every row seventy pixels tall in a list whose whole purpose
+                  // is to make eighty of them scannable. The full sentence is still the
+                  // accessible name.
+                  compact
                 />
               </Box>
             )}
