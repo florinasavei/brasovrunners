@@ -10111,3 +10111,120 @@ label carries MUI's `shrink` class, which is the overlap stated as a fact rather
 screenshot.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 227. Decided — the second address is typed, not pasted, and there is a door (2026-09-21)
+
+**Context.** "În căsuța de reconfirmare mail nu ar trebui să pot face copy-paste, trebe să scriu
+de mână! dar să fie safe!"
+
+**Decision, and it reverses §206.** That section left paste alone, reasoning that a password
+manager holds the address people use everywhere and that refusing it pushes somebody to type
+from memory. The reversal is right for a reason §206 did not weigh: the paste that matters is
+not from a password manager, it is **from the box above**. Copy, paste, done — and the second
+box has confirmed nothing whatever. It is the cheapest way to defeat the check and the one
+every hurried person reaches for.
+
+*Only the second box refuses.* The first is where a password manager legitimately fills in the
+address, and §206 was right about that half.
+
+*"Dar să fie safe"* is the same instruction §195 got about the rules gate, and it is answered
+the same way: **the block is an enhancement with a door in it.** A refused paste says why —
+never a silent no-op (§217) — and offers "paste it anyway", which lets that person through for
+that field. Voice input, an assistive tool, a keyboard that only pastes: none of them is locked
+out of registering, and the person copying from the box above still has to stop and read a
+sentence telling them why not to.
+
+*Both `paste` and `drop` are refused*, because dragging the address down from the box above is
+the same act without the keyboard.
+
+The door is not persisted anywhere. The next form asks again, and the cost of saying so twice
+is one press.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 228. Decided — an emergency contact is somebody else (2026-09-21)
+
+**Context.** Amalia, testing: "și poți pune la persoana de contact numele tău și nr tău."
+
+**Decision.** You could, and the field was then worth nothing. Its whole purpose is a number
+somebody can ring when the runner cannot answer their own; a contact who *is* the runner is not
+a contact, it is a blank the form let through.
+
+*The number is the rule and the name is not.* Both were considered and only the number is
+refused. Two people at one race genuinely share a name — a father and a son, two Ion Popescus —
+and refusing that would turn a real entry away for no gain. Nobody shares a telephone that
+answers in an emergency. By the time the schema sees them both numbers are E.164, so the
+comparison is exact rather than a guess about how somebody wrote it.
+
+**Consequences.** The synthetic registration generator gave every fake participant the same
+number twice and now gives two, because a test row goes through the public schema unchanged —
+that is the whole point of it (§30).
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 229. Decided — the confirmation screen stops asserting a registration it did not make (2026-09-21)
+
+**Context.** Amalia, testing: "te poți înscrie cu fix același mail de 2 ori, primești și QR și
+tot."
+
+**What actually happens, because it is not what it looks like.** No second registration is ever
+created: `registrations_event_participant_unique` forbids it, the service declines before
+reaching the database, and a query of QA's rows found not one address with two registrations.
+What she met is §199 working as designed — re-submitting an address that is already confirmed
+re-sends `REGISTRATION_CONFIRMED`, **QR and all** — while this screen said "check your email to
+confirm your registration". A second email carrying a QR, under a screen asserting a new
+registration, is indistinguishable from having registered twice.
+
+So the defect is the sentence, not the data.
+
+**Decision.** It cannot be fixed by saying "you are already registered" here. That would answer
+a question about *somebody else's* address to anybody who types it, which is precisely the
+oracle `AGENTS.md` §19.4 forbids and which §199 chose the inbox to avoid.
+
+So the sentence is made **true for everybody** instead: the screen now adds that if the address
+was already registered, the email is the existing confirmation and no second registration was
+created. It reads identically whether or not the address is on the list — no oracle — and the
+person who owns the inbox is the only one who learns which case they are in.
+
+*Recorded because the diagnosis is the valuable part.* Three people looked at this and read it
+as a duplicate-registration bug. The database was never in doubt; the screen was. A test that
+proves the constraint holds is now beside the one that proves the service declines, so the next
+person can answer the question in a second rather than an afternoon.
+
+Baseline `BR-V1.39-2026-09-21`.
+
+## 230. Decided — the screens that hand out numbers had not noticed that numbers arrive earlier now (2026-09-21)
+
+**Context.** The owner, on a registration detail page showing "nr. 2" in the journey and an
+empty "give this runner a number" box underneath: "I would like the BIDs to be reserved from
+the first stages (I've already said that!) Cuz this input does not make any sense now! Amalia
+already has number 2 reserved."
+
+The reservation was already working — that is where the "nr. 2" came from. What had not caught
+up was the screen around it.
+
+**What was wrong.** The hand-entry control asks "has a number been settled", and reads that as
+`bib_number === null`. Since §214 that is true of *every* place-holding registration until the
+window closes, so the box rendered for somebody who already held a number, invited an organizer
+to give them one, and listed the free numbers with the runner's own left out of it. Correct by
+its old question, nonsense by the new one.
+
+**Decision.** The box stays — a preferential number is still typed by hand (§105) — and it
+stops pretending the runner has nothing. It says which number they hold, comes prefilled with
+it, and is a **change** rather than a gift.
+
+*And setting one by hand now clears the provisional column.* §220 says the recompaction closes
+around a number given by hand, and it skips rows that already have a final one — so a row left
+holding both would keep a provisional number reserved to somebody who no longer needs it. That
+is a hole in the sequence, which is precisely the failure §220 found in the bulk sweeps, and it
+would have been reintroduced by a different verb. One runner, one number, whichever verb
+produced it.
+
+**The pattern, because this is the second time.** §214 changed *when* a number exists, and
+every screen that had encoded "no number yet" as `bib_number IS NULL` was quietly wrong from
+that moment. `raceNumberOf` was written for exactly this and the reads were moved onto it; the
+two places that decide whether to *offer* a number were missed, because they are not reads of a
+number, they are questions about its absence. Worth naming: when a column stops meaning what it
+meant, the dangerous callers are the ones testing it for null.
+
+Baseline `BR-V1.39-2026-09-21`.
