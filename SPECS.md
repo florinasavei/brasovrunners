@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.40-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.40-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -687,9 +687,13 @@ registration — and it lists registrations and never changes an address.
 9. Given a signature — by link or on paper — when it is recorded, then the participant receives the signed declaration as an attached PDF (the merged text, the typed name in the signature face, the instant, the method, the version and the hash) **on the confirmation** — since 2026-09-19 no `DECLARATION_SIGNED` message of its own is queued (`DECISIONS.md` §126); the type stays for a resend — and a link to the same PDF from the manage token; the participant's manage page offers it.
 10. Given an Administrator, when they request an event's declarations, then every signed one of its real registrations is one PDF, one per page, oldest first, and one registration's is its own PDF; any staff role may print the event's blank form on the current approved text. All three are renderings of the stored rows, never files kept elsewhere; a registration and its acceptance are deleted three years after the event's start by the retention sweep (`jobs/retention.ts`).
 
-11. Given `DECLARATIONS_ARCHIVE_TO` set to the club's mailbox, when a real registration's declaration is signed — by link or on paper — then a `DECLARATION_ARCHIVE` message is queued to that address with the same PDF attached, a subject naming the participant and the event, and no action link or token; unset, or for a test registration, no such message exists (`DECISIONS.md` §99).
+11. Given a club mailbox named for the declarations — on `/admin/emails` since 2026-09-21, otherwise `DECLARATIONS_ARCHIVE_TO` — when a real registration's declaration is signed, by link or on paper, then a `DECLARATION_ARCHIVE` message is queued to that address with the same PDF attached, a subject naming the participant and the event, and no action link or token; with neither named, or for a test registration, no such message exists (`DECISIONS.md` §99, §244).
 
-**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `registrations/declaration-archive.test.ts` (11), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`; e2e `registration-form.spec.ts`
+12. Given Cc or Bcc addresses on `/admin/emails`, when that copy is queued, then the addresses ride in the row's payload — so a list edited afterwards cannot redirect a message already queued — and the message carries them as envelope recipients; outside production each copy faces `EMAIL_ALLOWLIST` on its own and an unauthorized one is dropped while the rest of the message goes; a mailbox named twice receives one copy; a Cc list with no "to" sends nothing (`DECISIONS.md` §244).
+
+13. Given addresses under "anunță-ne când cineva confirmă" on `/admin/emails`, when a real registration is confirmed — by signature or at the desk — then one `CLUB_CONFIRMATION_NOTICE` is queued per address (`registration:<id>:club-confirmed:<address>:<time>`), naming the participant, the event and the race number, with no token, no QR and no attachment; none is queued for a test registration or when no address is named. The allowance forecast counts six messages per completed registration because of it (`DECISIONS.md` §245).
+
+**Verification:** integration `registrations/lifecycle.test.ts` (criterion 6), `registrations/signed-declaration.test.ts` (7–10), `registrations/declaration-archive.test.ts` (11), `notifications/club-notices.test.ts` (11–13), `jobs/retention.test.ts`; unit `legal-documents/merge-fields.test.ts`, `notifications/club-notices.test.ts`, `notifications/delivery.test.ts` (12); e2e `registration-form.spec.ts`
 
 #### BR-REQ-033-03 — Staff cannot sign for a participant
 
@@ -1049,8 +1053,10 @@ way through every step, and none of them is a way around the allocator.
 10. Given an event, when a registration is confirmed or the batch runs, then it is given the lowest free race number at or above that event's own `bib_start_number` (1 by default) — in order, never at random (2026-09-20, `DECISIONS.md` §173, reversing §94) — under the same event-row lock capacity uses; a number once given is never renumbered and a cancelled registration keeps it.
 11. Given a confirmed registration that already has a race number, when a staff member tries to change or clear it, then it is refused: the runner has been emailed it and it may already be printed. Given a confirmed registration with no number, then one may still be given by hand and the runner is told. Given a registration that is not yet confirmed, then a preferential number may be set among the free ones, and no email goes out until confirmation carries it (2026-09-20, `DECISIONS.md` §173, §105).
 12. Given an event, when an organizer sets where its numbers start and what colour they print, then both are stored on the event and checked at the database — a start a four-digit bib can reach, and a colour that is six hex digits after a hash — and the free-number suggestions count from that start rather than from 1 (2026-09-20, `DECISIONS.md` §173).
+13. Given an event's page, when an organizer opens "cum arată numărul de concurs" and saves, then the event stores what is printed (the runner's name, the event's title, the date, the club's logo), the number's size, where the name sits, a header picture, a sponsors' strip and whether the sheet carries cut marks; the A4 sheet and the preview picture both render exactly that, and a form that does not carry the panel — the create form, an older caller — leaves the stored design untouched (2026-09-21, `DECISIONS.md` §249).
+14. Given a header or sponsors' picture, when it is chosen, then it must be one this site stored — its own WebP variant, on the store's public host or the local media route — and anything else is refused or dropped; when the sheet prints, each picture is fetched with a five-second deadline and a four-megabyte ceiling, and one that cannot be fetched prints the coloured band rather than failing the sheet. The band's own text is white or ink, whichever can be read on the chosen colour (2026-09-21, `DECISIONS.md` §249).
 
-**Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`; unit `registrations/bibs-pdf.test.ts`
+**Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`
 
 ### 4.8 Public runner profiles
 
@@ -1410,6 +1416,12 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 11. Given the confirmation or the reminder for a **published** event, when it renders, then the event is attached as an `.ics` file built by the same function the event page uses — beside the signed declaration on the confirmation, never instead of it. Given an event that is not published, then the message goes without one (2026-09-20, `DECISIONS.md` §174).
 
 **Verification:** unit `notifications/templates.test.ts`, `notifications/mailgun-adapter.test.ts`; integration `notifications/event-mail.test.ts`, `registrations/signed-declaration.test.ts`, `registrations/interest.test.ts`
+
+14. Given a Redactor, an Administrator or a Superadministrator, when they write a subject and paragraphs for one message type in one language on `/admin/emails`, then those words are stored under `platform_settings.emailCopy`, audited with that one key and its before and after, and used by every later send of that type in that language — the other language and every other type keeping the platform's text; an Organizer or a volunteer is refused (`DECISIONS.md` §103, §247).
+
+15. Given words containing `{field}`, when they are saved, then a field outside the closed placeholder set — including any URL — is refused, naming it; a field the message does not carry renders as nothing, with the spacing closed up; and the greeting, the facts line, the action button and its token, the QR, the attachments, the links and the sign-off are unchanged by any rewrite. "Revino la textul platformei" removes the override rather than storing an empty one, and the next send sees that at once (`DECISIONS.md` §247).
+
+**Verification:** unit `notifications/email-copy.test.ts`; integration `notifications/email-copy.test.ts`
 
 #### BR-REQ-080-02 — Outbox is authoritative and idempotent
 

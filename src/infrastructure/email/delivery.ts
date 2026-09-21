@@ -130,7 +130,28 @@ export function createEmailSender(config: {
       const decision = decideDelivery(config.mode, marked.to, config.allowlist);
       const adapter = decision === "send" ? config.live() : config.capture;
 
-      return adapter.send(marked);
+      /*
+        A copy is a recipient (`DECISIONS.md` §244).
+
+        The decision above is about the message — whether this environment may transmit at all
+        — and it is made on the address the message is *for*. Every `cc` and `bcc` is then
+        judged on its own: a club mailbox nobody authorized must not receive a participant's
+        declaration from QA merely because the archive address happens to be on the allowlist.
+        Dropped one by one rather than capturing the whole message, so the copy the operator
+        did authorize still arrives.
+
+        A captured message keeps its lists untouched: capture is the local record of what would
+        have gone out, and filtering it there would hide what was about to happen.
+      */
+      const copies =
+        decision === "send"
+          ? {
+              ...(marked.cc ? { cc: marked.cc.filter((address) => decideDelivery(config.mode, address, config.allowlist) === "send") } : {}),
+              ...(marked.bcc ? { bcc: marked.bcc.filter((address) => decideDelivery(config.mode, address, config.allowlist) === "send") } : {}),
+            }
+          : {};
+
+      return adapter.send({ ...marked, ...copies });
     },
   };
 }

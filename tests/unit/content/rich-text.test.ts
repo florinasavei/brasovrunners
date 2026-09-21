@@ -80,7 +80,9 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
       );
       expect(parsed.content?.[0]).toEqual({
         type: "image",
-        attrs: { src: ours, alt: "Startul", caption: "Startul, 2025", width: 1600, height: 1067, widthPercent: 50, align: "block" },
+        // `crop: null` is "the whole photograph" — the default every picture written before
+        // §241 parses to, and the one the renderer reads as "emit the markup you always did".
+        attrs: { src: ours, alt: "Startul", caption: "Startul, 2025", width: 1600, height: 1067, widthPercent: 50, align: "block", crop: null },
       });
       // Defaults (§73): no alt, no caption, the whole column, a band across it. Never the file name.
       expect(parseRichText(doc({ type: "image", attrs: { src: local } })).content?.[0]).toMatchObject({

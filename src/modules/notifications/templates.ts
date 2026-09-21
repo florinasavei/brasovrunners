@@ -1,5 +1,6 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { COLOR } from "@/theme/brand";
 import { env } from "@/shared/config/env";
 
@@ -209,8 +210,10 @@ export function renderBilingual(
   locale: EmailLocale,
   data: TemplateData,
   actionUrl: string | undefined,
+  /** The club's own wording (§247); both halves read it, each in its own language. */
+  overrides?: EmailCopy | null,
 ): { subject: string; html: string; text: string } {
-  const first = buildTemplateContent(messageType, locale, data, actionUrl);
+  const first = buildTemplateContent(messageType, locale, data, actionUrl, overrides);
   // The second language repeats the words, not the picture: one QR per message is enough —
   // and its date is its own ("Sunday 11 October", not "duminică").
   const otherData: TemplateData = {
@@ -218,7 +221,7 @@ export function renderBilingual(
     ...(data.eventStartsAtFormattedOther ? { eventStartsAtFormatted: data.eventStartsAtFormattedOther } : {}),
     ...(data.eventProgrammeOther ? { eventProgramme: data.eventProgrammeOther } : {}),
   };
-  const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl), image: undefined };
+  const second = { ...buildTemplateContent(messageType, OTHER_LOCALE[locale], otherData, actionUrl, overrides), image: undefined };
   const a = renderContent(first, locale);
   const b = renderContent(second, OTHER_LOCALE[locale]);
   return {
@@ -473,6 +476,15 @@ const T = {
         "Copia pentru arhiva clubului. Se păstrează 3 ani după eveniment, ca în nota de informare; același document este și în PDF-ul cu toate declarațiile de pe pagina evenimentului din backoffice.",
       ],
     },
+    clubConfirmationNotice: {
+      // Searchable in the club's mailbox by who and for what, like the archive copy above.
+      subject: (d: TemplateData) => `Înscriere confirmată: ${d.participantName || "participant"} — ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Salut,",
+      body: (d: TemplateData) => [
+        `${d.participantName || "Un participant"} și-a confirmat înscrierea la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.${d.bibNumber ? ` Numărul de concurs: ${d.bibNumber}.` : ""}`,
+        "Mesaj pentru club: lista completă, filtrele și exportul sunt în backoffice, la Înscrieri. Participantul a primit confirmarea lui separat.",
+      ],
+    },
     staffInvitation: {
       subject: "Ești în echipa Brașov Runners",
       body: (d: TemplateData) => [
@@ -639,6 +651,14 @@ const T = {
         "The club's archive copy. Kept for 3 years after the event, as the privacy notice says; the same document is in the all-declarations PDF on the event's backoffice page.",
       ],
     },
+    clubConfirmationNotice: {
+      subject: (d: TemplateData) => `Registration confirmed: ${d.participantName || "participant"} — ${d.eventTitle ?? "event"}`,
+      greeting: () => "Hello,",
+      body: (d: TemplateData) => [
+        `${d.participantName || "A participant"} has confirmed their registration for ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? `, ${d.eventStartsAtFormatted}` : ""}.${d.bibNumber ? ` Race number: ${d.bibNumber}.` : ""}`,
+        "A note for the club: the full list, the filters and the export are in the backoffice, under Registrations. The participant received their own confirmation separately.",
+      ],
+    },
     staffInvitation: {
       subject: "You are on the Brașov Runners team",
       body: (d: TemplateData) => [
@@ -741,6 +761,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   BIB_ASSIGNED: "bibAssigned",
   STAFF_INVITATION: "staffInvitation",
   REGISTRATION_OPENED: "registrationOpened",
+  CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
 };
 
 /**
@@ -754,6 +775,8 @@ export function buildTemplateContent(
   locale: EmailLocale,
   data: TemplateData,
   actionUrl: string | undefined,
+  /** The club's own wording for this message, when it has written some (§247). */
+  overrides?: EmailCopy | null,
 ): TemplateContent {
   const copy = T[locale];
   const key = KEY_BY_MESSAGE_TYPE[messageType];
@@ -770,8 +793,25 @@ export function buildTemplateContent(
     links?: (d: TemplateData) => TemplateContent["links"];
   };
 
+  /*
+    The club's own words, where it has written some (§247).
+
+    Only the subject and the body. The greeting, the facts line, the action button and its
+    token, the QR, the links and the sign-off are the message's machinery and stay in code —
+    and so do the two sentences below that the platform adds *around* a body: "you were already
+    registered" (§235) and "this number is provisional" (§237). Both are statements about the
+    state of a registration rather than about how the club likes to write, and a club that
+    rewrote the confirmation would otherwise silently lose them.
+  */
+  const written = copyFor(overrides, messageType, locale);
+  const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
+
   return {
-    subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
+    subject: written
+      ? fill(written.subject)
+      : typeof entry.subject === "function"
+        ? entry.subject(data)
+        : entry.subject,
     greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
     facts: entry.facts?.(data),
     /*
@@ -794,7 +834,7 @@ export function buildTemplateContent(
     */
     paragraphs: [
       ...(data.alreadyRegistered ? [copy.alreadyRegistered] : []),
-      ...entry.body(data),
+      ...(written ? written.paragraphs.map(fill) : entry.body(data)),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined
@@ -825,8 +865,13 @@ export function buildOutgoingEmail(params: {
   data: TemplateData;
   actionUrl?: string;
   attachments?: OutgoingEmail["attachments"];
+  /** The club's own wording for this message (§247), read once per batch by the caller. */
+  overrides?: EmailCopy | null;
+  /** The club's copies of this one message (§244); empty for every other message type. */
+  cc?: readonly string[];
+  bcc?: readonly string[];
 }): OutgoingEmail {
-  const { subject, html, text } = renderBilingual(params.messageType, params.locale, params.data, params.actionUrl);
+  const { subject, html, text } = renderBilingual(params.messageType, params.locale, params.data, params.actionUrl, params.overrides);
   return {
     to: params.to,
     subject,
@@ -835,5 +880,8 @@ export function buildOutgoingEmail(params: {
     locale: params.locale,
     idempotencyKey: params.idempotencyKey,
     ...(params.attachments && params.attachments.length > 0 ? { attachments: params.attachments } : {}),
+    // Absent rather than empty, so a message with no copies is byte-identical to before.
+    ...(params.cc && params.cc.length > 0 ? { cc: params.cc } : {}),
+    ...(params.bcc && params.bcc.length > 0 ? { bcc: params.bcc } : {}),
   };
 }

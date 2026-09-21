@@ -1,16 +1,10 @@
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import DownloadIcon from "@mui/icons-material/Download";
-import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import Alert from "@mui/material/Alert";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import { webcalUrl } from "@/modules/events/ical";
-import { env } from "@/shared/config/env";
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -26,22 +20,19 @@ import FeaturedEventHero from "@/modules/events/ui/FeaturedEventHero";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
-import { calendarBoundaryKey, listingSections, presentEventTypes } from "@/modules/events/domain/listing";
+import { listingSections, presentEventTypes } from "@/modules/events/domain/listing";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import ChipLink from "@/shared/ui/ChipLink";
-import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX } from "@/shared/ui/disclosure";
-import InfoTip from "@/shared/ui/InfoTip";
+import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
-import { CalendarBodySkeleton, EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
-import { findLatestPastEvent, listPublishedEventsBetween, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
-import { monthGrid, monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
+import { EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
+import { findLatestPastEvent, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
+
 import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
-import CalendarHeader from "@/modules/events/ui/CalendarHeader";
-import EventCalendar, { type CalendarLayout, type CalendarView } from "@/modules/events/ui/EventCalendar";
-import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
+import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
 import { headingRule } from "@/theme/surfaces";
@@ -86,28 +77,14 @@ async function loadListing(db: Db, locale: EventLocale, now: Date) {
 
 type Listing = Awaited<ReturnType<typeof loadListing>>;
 
-/**
- * The three calendar buttons (§175; the owner: "these buttons must be smaller as well and have
- * icons"). A finger's 44 pixels on a touch screen, a pointer's 32 from `sm` up — the same two
- * sizes the share pills take — and the glyph as a child of the Button, never an element-valued
- * prop across the server/client boundary.
- */
-const CALENDAR_BUTTON_SX = {
-  minHeight: { xs: 44, sm: 32 },
-  gap: 0.5,
-  px: { xs: 1.5, sm: 1.25 },
-  fontSize: { sm: "0.78rem" },
-} as const;
-
 export default async function EventsPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { month: monthParam, year: yearParam, type: typeParam, view: viewParam } = await searchParams;
+  const { type: typeParam, view: viewParam } = await searchParams;
   // The type filter (§89): one of the closed set, or everything.
   const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
   const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
-  // The month as a list rather than the grid (§137), kept by the month links like the filter.
+  // The layout the month links keep (§137); `ListingLead` passes it to the filter's own links.
   const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
-  const query: Record<string, string> = { ...(type ? { type } : {}), ...(layout === "list" ? { view: "list" } : {}) };
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
@@ -117,32 +94,23 @@ export default async function EventsPage({ params, searchParams }: Props) {
   // registration has closed, or about where the line between past and upcoming falls.
   const now = new Date();
   const db = getDb();
-  // The month view (`DECISIONS.md` §89): the month the URL names, or this one — or the whole
-  // year it names (§116). The year wins when both are given: it is the wider question.
-  const year = parseYear(yearParam, now, CLUB_TIME_ZONE);
-  const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
-  const range = view.kind === "year" ? yearRange(view.year, CLUB_TIME_ZONE) : monthRange(view.month, CLUB_TIME_ZONE);
 
   /**
-   * Both queries are **started here and awaited nowhere in this function** (§166).
+   * The query is **started here and awaited nowhere in this function** (§166).
    *
    * That is the whole fix for the owner's "there is flickering when changing calendars". The
-   * page body itself now touches no database, so Next can send the header, the wordmark, the
-   * heading and every calendar control to the browser the instant the request arrives, and
-   * each region below fills in when its own query answers. A press on "next month" replaces
-   * one grid; nothing else on the page so much as repaints.
+   * page body itself touches no database, so Next can send the header, the wordmark and the
+   * heading to the browser the instant the request arrives, and each region below fills in
+   * when the query answers.
    *
    * Passing a promise down to a Server Component is the supported shape for this — the child
    * awaits it inside a `<Suspense>` boundary, and the two children that share `listing` share
    * one query between them.
    */
   const listing = loadListing(db, locale, now);
-  const inRange = listPublishedEventsBetween(db, locale, range.from, range.to).then((rows) =>
-    rows.filter((event) => !type || event.type === type),
-  );
 
   return (
-    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       {/*
         BR-REQ-052-02 criterion 1 asks the homepage to carry one SportsOrganization block, and
         this page is now the homepage — the site root redirects here. Incomplete by design:
@@ -154,10 +122,10 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <Wordmark />
 
       {/* The gradient rule under the heading says where a section starts (§166). */}
-      <Typography variant="h1" gutterBottom sx={{ mt: 2, ...headingRule }}>
+      <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
         {t("title")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5 }}>
         {t("intro")}
       </Typography>
 
@@ -165,99 +133,9 @@ export default async function EventsPage({ params, searchParams }: Props) {
         <ListingLead listing={listing} type={type} layout={layout} locale={locale} now={now} />
       </Suspense>
 
-      {/* Every Monday, every Wednesday, some weekends: a month, not a list, is how the club runs. */}
-      <Box sx={{ mt: 2, mb: 4 }}>
-        {/*
-          The controls stay; only the grid streams (§166). `CalendarHeader` reads the address
-          and never the database, so it renders with the shell and stays pressable while the
-          month below it is being fetched — three quick presses on "next" are three presses on
-          the same button. The `key` is what asks for the skeleton: React keeps the content of
-          a boundary that updates and shows the fallback for one that is new, so the key names
-          exactly what the query depends on and nothing else.
-        */}
-        <Box component="section" aria-labelledby="calendar-title" id="calendar">
-          <CalendarHeader view={view} now={now} query={query} layout={layout} />
-          <Suspense
-            key={calendarBoundaryKey(view, layout, type)}
-            fallback={
-              <CalendarBodySkeleton
-                label={t("loading")}
-                kind={view.kind}
-                layout={layout}
-                // As many week rows as the month actually spans, four to six (§167): pure
-                // arithmetic on the address, so the skeleton is the grid's exact height and
-                // the swap moves nothing under it.
-                weeks={view.kind === "month" ? monthGrid(view.month).length : 6}
-              />
-            }
-          >
-            <EventCalendar view={view} events={inRange} now={now} query={query} layout={layout} />
-          </Suspense>
-        </Box>
-
-        {/* "Add to your calendar" (§107, §139): three doors (the owner: "this subscription to
-            calendar does not work" — a `webcal://` link does nothing where no app claims the
-            scheme, which on a desktop is most browsers): Google Calendar's own "add by URL"
-            address, `webcal://` for Apple, Outlook and phones, the file itself; the plain
-            address folded away for any other app, and the "when does it update" behind an "i"
-            (the feed is fresh on every read, §129; when the phone shows a change is the app's
-            clock, and the owner asked why Google still showed the old hour). */}
-        <Box component="section" aria-labelledby="add-to-calendar" sx={{ mt: 2, p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
-          <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-            <Typography id="add-to-calendar" component="h3" variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
-              {t("calendar.addTitle")}
-            </Typography>
-            <Button
-              component="a"
-              href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              size="small"
-              variant="outlined"
-              sx={CALENDAR_BUTTON_SX}
-            >
-              <EventAvailableIcon sx={{ fontSize: 18 }} aria-hidden="true" />
-              {t("calendar.subscribeGoogle")}
-            </Button>
-            <Button component="a" href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
-              <CalendarMonthIcon sx={{ fontSize: 18 }} aria-hidden="true" />
-              {t("calendar.subscribeApple")}
-            </Button>
-            <Button component="a" href={`/${locale}/events/calendar.ics`} size="small" variant="outlined" sx={CALENDAR_BUTTON_SX}>
-              <DownloadIcon sx={{ fontSize: 18 }} aria-hidden="true" />
-              {t("calendar.downloadLink")}
-            </Button>
-            <InfoTip text={t("calendar.refreshNote")} />
-          </Stack>
-          {/* A fold looks like a fold (§164): the marker back, the pointer, an underline on
-              hover and on focus. It had been a flex box, which removes the triangle in
-              Chrome and Safari — the owner: "it's not clear that this is expandable". */}
-          <Box component="details" sx={{ mt: 0.5, ...DISCLOSURE_SX, "& > summary": { ...DISCLOSURE_SUMMARY_SX, fontSize: "0.8125rem", color: "text.secondary" } }}>
-            <summary>{t("calendar.feedAddress")}</summary>
-            {/*
-              A link, not only a string to copy (§195; the owner, of the address: "ăsta trebuia
-              să fie link"). It is still selected whole by one click — `userSelect: all` — for
-              the calendar apps that want it pasted, and it is now also pressable for the ones
-              that subscribe from the browser. `webcal://` rather than `https://` on the anchor:
-              the same address handed to the operating system as a subscription rather than as a
-              file to download once, which is the difference between a calendar that updates and
-              a snapshot of today.
-            */}
-            <Box
-              component="a"
-              href={webcalUrl(`${env.APP_BASE_URL}/${locale}/events/calendar.ics`)}
-              sx={{
-                display: "inline-block",
-                fontFamily: "monospace",
-                fontSize: "0.8125rem",
-                userSelect: "all",
-                wordBreak: "break-all",
-                minHeight: 44,
-              }}
-            >{`${env.APP_BASE_URL}/${locale}/events/calendar.ics`}</Box>
-          </Box>
-        </Box>
-      </Box>
+      {/* The calendar moved to its own page in §251 — a tab after the events, because the
+          front page is for "what is on next" and a grid of squares is what somebody planning a
+          month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
       <Suspense fallback={<EventListSkeleton label={t("loading")} />}>
         <ListingBody listing={listing} type={type} now={now} />
@@ -333,8 +211,8 @@ async function ListingLead({
 /**
  * Everything that is not the lead event.
  *
- * Under a hero, the rest is "other events": a heading and denser cards — no excerpt, the
- * facts and the title are what a reader scans for the next Sunday.
+ * Under a hero, the rest is every other event: a heading and the same cards the unfiltered
+ * listing shows, summary and picture included (§251).
  *
  * On a phone the heading is a native disclosure (`DECISIONS.md` §78): open when there are
  * four or fewer, folded when there are more, so the lead event is not followed by a scroll of
@@ -374,7 +252,8 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; 
           sx={{
             ...DISCLOSURE_SUMMARY_SX,
             fontSize: "1.25rem",
-            mb: 2,
+            // The heading sits on its list, not a line above it (§252).
+            mb: 0.5,
             cursor: { xs: "pointer", sm: "default" },
             listStyle: { xs: "revert", sm: "none" },
             pointerEvents: { xs: "auto", sm: "none" },
@@ -382,15 +261,23 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; 
         >
           {t("othersCount", { count: cards.length })}
         </Typography>
-        <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+        <Box component="ul" sx={{
+            listStyle: "none",
+            p: 0,
+            m: 0,
+            display: "grid",
+            gap: 1.5,
+            gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
+            alignItems: "start",
+          }}>
           {cards.map((series, index) =>
             series.members.length > 1 ? (
-              <SeriesCard key={series.key} members={series.members} index={index} now={now} underHero />
+              <SeriesCard key={series.key} members={series.members} index={index} now={now} />
             ) : (
-              <EventCard key={series.key} event={series.members[0]} index={index} now={now} underHero />
+              <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
             ),
           )}
-        </Stack>
+        </Box>
       </Box>
     );
   }
@@ -398,7 +285,15 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; 
   if (listed.length === 0) return <Alert severity="info">{t("empty")}</Alert>;
 
   return (
-    <Stack component="ul" spacing={2} sx={{ listStyle: "none", p: 0, m: 0 }}>
+    <Box component="ul" sx={{
+            listStyle: "none",
+            p: 0,
+            m: 0,
+            display: "grid",
+            gap: 1.5,
+            gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
+            alignItems: "start",
+          }}>
       {cards.map((series, index) =>
         series.members.length > 1 ? (
           <SeriesCard key={series.key} members={series.members} index={index} now={now} />
@@ -406,25 +301,28 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; 
           <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
         ),
       )}
-    </Stack>
+    </Box>
   );
 }
 
 /**
  * One event on the listing. Each card rises into place in reading order and lifts under a
  * pointer — CSS only, and none of it for a reader who asked for less motion
- * (`theme/motion.ts`). Under a hero the card is denser: no excerpt.
+ * (`theme/motion.ts`).
+ *
+ * Every card carries the summary, pictures and all (§251). It did not under the featured event
+ * — §242 kept that list dense so the lead was not followed by a scroll — and the owner asked
+ * for the opposite once a picture could be cropped to the shape a card shows (§241): "on the
+ * event card I wanna be able to see pictures in the preview".
  */
 async function EventCard({
   event,
   index,
   now,
-  underHero = false,
 }: {
   event: PublicEvent;
   index: number;
   now: Date;
-  underHero?: boolean;
 }) {
   const tEvent = await getTranslations("Event");
   return (
@@ -450,7 +348,7 @@ async function EventCard({
               render the plain-text shadow of it, so a picture in a short description showed on
               the event page and nowhere else. `EventExcerpt` renders nothing when there is
               nothing, which is what the old `event.excerpt &&` did. */}
-          {!underHero && <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />}
+          <EventExcerpt place="card" excerptJson={event.excerptJson} excerpt={event.excerpt} />
 
           {/* No links inside: the card is the link. */}
           <EventFacts event={event} now={now} variant="compact" links={false} />

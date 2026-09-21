@@ -323,8 +323,13 @@ export async function transitionRegistration<T extends Record<string, unknown>>(
 export async function listPublicStartList<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
+  /**
+   * One page of the list (§250). Absent, the whole of it — which is what every caller before
+   * the page existed asked for, and what the privacy test still reads.
+   */
+  page?: { offset: number; limit: number },
 ): Promise<Array<{ displayName: string; clubName: string | null }>> {
-  return db
+  const query = db
     // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
     // The select list is the guarantee — widening it is what
     // tests/privacy/public-surface.test.ts refuses.
@@ -339,6 +344,35 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
       ),
     )
     .orderBy(asc(registrations.confirmedAt), asc(registrations.id));
+
+  // The order is what makes a page meaningful: a runner keeps their position and their page
+  // however often the list is read, because both columns of the sort are fixed at confirmation.
+  return page ? query.limit(page.limit).offset(page.offset) : query;
+}
+
+/**
+ * How many runners the list names (§250).
+ *
+ * A number, so a page of fifty does not have to fetch four hundred rows to know it is the
+ * first of eight. The same four conditions as the list itself — anything else would be a page
+ * count that disagrees with the page.
+ */
+export async function countPublicStartList<T extends Record<string, unknown>>(
+  db: Database<T>,
+  eventId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: count() })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        eq(registrations.status, "CONFIRMED"),
+        eq(registrations.kind, "REAL"),
+        eq(registrations.listOptOut, false),
+      ),
+    );
+  return row?.count ?? 0;
 }
 
 /**

@@ -25,6 +25,7 @@
     "nav": {
       "label": "Main navigation",
       "events": "Events",
+      "calendar": "Calendar",
       "gallery": "Gallery",
       "more": "Menu",
       "contact": "Contact"
@@ -50,7 +51,7 @@
     "featured": "Featured event",
     "featuredCallToAction": "See the race details",
     "others": "Other events",
-    "othersCount": "Other events ({count})",
+    "othersCount": "All events ({count})",
     "filter": {
       "label": "Event type",
       "all": "All"
@@ -69,12 +70,14 @@
       "pickMonth": "Month",
       "pickYear": "Year",
       "yearEmpty": "Nothing scheduled this year.",
+      "pageTitle": "Calendar",
+      "pageIntro": "The club's month: the weekly runs and the races, day by day. You can take the whole calendar into your phone or your Google Calendar.",
       "addTitle": "Add to your calendar",
       "feedAddress": "The address for other apps",
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / phone",
       "downloadLink": "download the .ics",
-      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read."
+      "refreshNote": "Google Calendar re-reads the address by itself, about once a day; Apple and Outlook as often as you set them. A change shows on the next read. On Android the 🏃 BVR calendar only appears in the app once you switch it on: Google Calendar → Menu → Settings → 🏃 BVR → Sync."
     },
     "raceWeek": {
       "today": "Today, {when}",
@@ -141,7 +144,14 @@
       "titleCount": "Who's coming ({count})",
       "empty": "Nobody has confirmed a place yet.",
       "note": "Only people who confirmed their registration and did not ask to be left out are listed here.",
-      "anonymous": "Anonymous participant"
+      "anonymous": "Anonymous participant",
+      "caption": "The confirmed participants, in the order they confirmed.",
+      "columnPosition": "#",
+      "columnName": "Name",
+      "columnClub": "Club",
+      "previous": "← Previous page",
+      "next": "Next page →",
+      "pageOf": "Page {page} of {pages}"
     },
     "cta": {
       "register": "Register for this event",
@@ -251,6 +261,7 @@
       "pages": "Pages",
       "gallery": "Gallery",
       "checkin": "Race day",
+      "emails": "Emails",
       "guide": "Guide"
     },
     "outbox": {
@@ -271,6 +282,8 @@
       "filterAll": "All events",
       "filter": "Filter",
       "statusLabel": "Status",
+      "summaryTotal": "Registrations: {count}",
+      "summaryTest": "Test: {count}",
       "export": "Export CSV",
       "backToList": "Back to registrations",
       "resend": "Resend email",
@@ -510,7 +523,7 @@
       "fields": {
         "title": "Title",
         "slug": "Page address",
-        "excerpt": "Summary — shown on the card and in shares",
+        "excerpt": "Summary — shown on the page, on the listing card and in shares",
         "locationName": "Meeting point",
         "locationAddress": "Address",
         "seoTitle": "Search engine title",
@@ -534,7 +547,7 @@
       "newTitle": "New event",
       "newHelp": "Both languages are filled in here, because an event goes live in both at once. Everything else can be changed afterwards on the event's own page.",
       "create": "Create the event",
-      "excerptHelp": "One or two sentences: what the listing card and the shares carry (and the page, in the same slot, for as long as the full description has no words). Required before publication.",
+      "excerptHelp": "One or two sentences: what the event page, the listing card (with a picture, if you put one in) and the shares carry. Required before publication.",
       "rulesEmpty": "(none yet — press to write)",
       "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
       "programmeSection": "Programme",
@@ -700,6 +713,32 @@
       "bibsOnlyTest": "Numbers are given to real, confirmed registrations only. Everything here is test data, which never gets a number — for a rehearsal, add a participant at the desk.",
       "bibStartNumber": "Race numbers (BIB) start at",
       "bibStartNumberHelp": "Usually 1. Use 100 or 500 to give each distance its own band — numbers are given in order of registration, counting up from here.",
+      "bibDesign": {
+        "title": "What the race number looks like",
+        "intro": "What is printed on the bib, and how large. The same choices show in the preview on the “Numbers” page and on the A4 sheet you send to the printer.",
+        "showName": "The runner's name",
+        "showEventTitle": "The event's name",
+        "showDate": "The date",
+        "showLogo": "The club's logo",
+        "cutMarks": "Cut marks on the sheet",
+        "numberScale": "The number's size",
+        "namePosition": "Where the name sits",
+        "scales": {
+          "small": "Small",
+          "medium": "Normal",
+          "large": "Large"
+        },
+        "positions": {
+          "below": "Under the number",
+          "above": "Above the number"
+        },
+        "headerImageSrc": "A picture instead of the coloured band",
+        "headerImageSrcHelp": "It runs the full width across the top. With one chosen, the band, the logo and the text on it are not printed — the picture is the header.",
+        "sponsorImageSrc": "A sponsors' strip",
+        "sponsorImageSrcHelp": "Above the small print at the foot. Fitted without being stretched.",
+        "noPicture": "No picture",
+        "previewNote": "The pictures are the ones already uploaded (the “Pictures” page). The preview and the PDF follow a save."
+      },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
       "bibColours": {
@@ -1273,6 +1312,10 @@
       "imageAlignLeft": "Left",
       "imageAlignRight": "Right",
       "imageAlignHelp": "\"In the flow\" gives the picture the whole column. \"Left\" or \"right\" moves it to one side and the text wraps around it — on a phone it is the full width either way.",
+      "imageCrop": "Crop — what is shown of the photograph",
+      "imageCropHelp": "Drag a box over the photograph: that is exactly what the page and the card show. Drag inside it to move it; the arrows move it, and Shift with them resizes it.",
+      "imageCropReset": "No crop",
+      "imageCropPosition": "{w}% × {h}% of the photograph, from the left {x}%, from the top {y}%",
       "table": "Table",
       "tableAddRow": "Add a row",
       "tableAddColumn": "Add a column",
@@ -1506,7 +1549,8 @@
         "DECLARATION_ARCHIVE": "The club's archive copy (PDF attached)",
         "BIB_ASSIGNED": "A race number given by hand",
         "STAFF_INVITATION": "The team invitation",
-        "REGISTRATION_OPENED": "Registration is open"
+        "REGISTRATION_OPENED": "Registration is open",
+        "CLUB_CONFIRMATION_NOTICE": "Notice to the club: somebody confirmed"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Right after the form is sent. The link lasts 48 hours.",
@@ -1525,7 +1569,59 @@
         "DECLARATION_ARCHIVE": "Together with the signed declaration, to the mailbox in DECLARATIONS_ARCHIVE_TO — only when the variable is set and only for real registrations. No action link.",
         "BIB_ASSIGNED": "When an organizer types or changes the number of a confirmed registration, from its page or at the desk. With the QR code and the manage link.",
         "STAFF_INVITATION": "When an administrator adds somebody on Echipa, and on \"Resend the invitation\" while that person has not signed in yet. To the colleague's address, no token: the sign-in page decides who they are.",
-        "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form."
+        "REGISTRATION_OPENED": "Automatically, on the maintenance job's first run after registration opens (within a quarter of an hour by day, an hour at night), to every address left at \"Tell me\" on the event's page while registration was still ahead. One message; the address is deleted from the notification list with it. No token — the button leads to the ordinary registration form.",
+        "CLUB_CONFIRMATION_NOTICE": "On every confirmation of a real registration, to the club addresses above. No action link and no token."
+      },
+      "clubNotices": {
+        "title": "The club's copies",
+        "intro": "Who at the club receives a copy of a signed declaration, and who is told when somebody confirms their registration. Club addresses, never a participant's.",
+        "source": {
+          "setting": "In force: declarations go to {to}; visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
+          "environment": "In force: declarations go to {to}, the address in the server's configuration (DECLARATIONS_ARCHIVE_TO), because the box below is empty. Visible copies (Cc): {cc}; hidden copies (Bcc): {bcc}.",
+          "none": "No address: signed declarations are sent nowhere and are kept in the application alone."
+        },
+        "updatedAt": "Changed on {when}.",
+        "declarationsTo": "Signed declarations go to",
+        "declarationsToHelp": "One address — the club's archive mailbox. Empty: no copy is sent.",
+        "declarationsCc": "Visible copy (Cc)",
+        "declarationsCcHelp": "Addresses separated by commas. Every recipient can see the others.",
+        "declarationsBcc": "Hidden copy (Bcc)",
+        "declarationsBccHelp": "Addresses separated by commas. They appear nowhere in the message.",
+        "bccWarning": "The declaration carries the participant's name and the identity document typed at signing. A hidden copy delivers that personal data to a mailbox nobody on the message can see. Use it only as a decision of the club.",
+        "confirmationsTo": "Tell us when somebody confirms",
+        "confirmationsToHelp": "Addresses separated by commas. Each receives a short message on every confirmation — who, which event, and which number. Each address spends one message of the Mailgun allowance.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved who receives the club's copies."
+      },
+      "queue": {
+        "title": "The sending queue",
+        "intro": "What has not left yet: the message type, the recipient, when it was queued, how many attempts it has had and what the provider last said. The message itself is stored nowhere — it is composed at sending time.",
+        "count": "In the queue: {count} messages.",
+        "facts": "Queued since {queued} · attempts: {attempts} · next attempt: {next}",
+        "nextAny": "at the next send",
+        "lastError": "The provider's last answer: {error}",
+        "manual": "Sent again by hand",
+        "more": "And {count} more in the queue, not shown here.",
+        "status": {
+          "PENDING": "Waiting",
+          "PROCESSING": "Sending now",
+          "FAILED": "Stopped after every attempt"
+        }
+      },
+      "copy": {
+        "title": "The message's words ({lang}) — the platform's",
+        "editedTitle": "The message's words ({lang}) — written by the club",
+        "subject": "Subject",
+        "paragraphs": "Paragraphs",
+        "paragraphsHelp": "A blank line between paragraphs. **Bold** is written between two asterisks.",
+        "placeholders": "You may use: {list}. A field this message does not carry is left empty — see the preview above.",
+        "machinery": "The button, the link inside it, the QR code, the attachments, the greeting and the sign-off stay the platform's: they carry tokens and files, not words.",
+        "save": "Save the words",
+        "saving": "Saving…",
+        "reset": "Back to the platform's text",
+        "saved": "The message's words are saved.",
+        "resetDone": "The message uses the platform's text again."
       },
       "plan": {
         "title": "The Mailgun plan, and how much we can still send",

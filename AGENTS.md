@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.40-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.40-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2708,6 +2708,7 @@ DECLARATION_ARCHIVE
 BIB_ASSIGNED
 STAFF_INVITATION
 REGISTRATION_OPENED
+CLUB_CONFIRMATION_NOTICE
 ```
 
 `EVENT_REMINDER` goes from the maintenance job to every CONFIRMED registration of a SCHEDULED
@@ -2719,6 +2720,18 @@ with the event and the count (§82). Every message carries the facts line where 
 event — date, time, meeting point in bold, then the map and the Strava event — and the
 footer "reply to this email with questions" when `EMAIL_REPLY_TO` is set.
 
+**The words of any message may be rewritten by the club** (`DECISIONS.md` §247): the subject
+and the paragraphs, per message type and per language, on `/admin/emails`, by a Redactor or
+above (`canEditTexts`, §103), stored in `platform_settings.emailCopy` and audited one message
+at a time. Everything else stays in code and MUST NOT become editable: the greeting, the facts
+line, the action button and the token behind it, the QR, the attachments, the links under the
+button, the sign-off and the layout — they carry tokens, files and addresses rather than words
+(§12.8, §14.5). The words may name a closed set of fields, written `{participantName}`; a
+placeholder outside that set, and any URL, is refused when it is saved rather than reaching a
+participant as literal braces. The two sentences the platform adds *around* a body — "you were
+already registered" (§235) and "this number is provisional" (§237) — are statements about the
+registration and survive a rewrite.
+
 `REGISTRATION_STATE_NOTICE` is the Admin resend for a cancelled or expired registration.
 It states the current status and, when rejoining is eligible, links to the ordinary
 public event registration page. It carries no scoped token and creates none.
@@ -2728,6 +2741,21 @@ adds a colleague on Echipa (`staff:<id>:invitation:<time>`), to the staff addres
 colleague's language — who added them, as what, the sign-in page as the action. No token:
 the sign-in page asserts who they are. Sent again from the row until they first sign in
 (`DECISIONS.md` §141).
+
+`CLUB_CONFIRMATION_NOTICE` is the club's own: queued in the transaction that confirms a real
+registration, one row per address the club named under "anunță-ne când cineva confirmă" on
+`/admin/emails` (`registration:<id>:club-confirmed:<address>:<time>`), in Romanian, carrying
+the runner's name, the event and the race number. No token, no QR, no check-in code and no
+attachment: none of it means anything in a club mailbox, and a manage token there would be a
+secret handed to the wrong person (§12.8). Never for a test registration (§12.6), and nothing
+at all when the club has named nobody (`DECISIONS.md` §245).
+
+The club's copy of a signed declaration keeps its own type, `DECLARATION_ARCHIVE`, and since
+`DECISIONS.md` §244 its recipient is a setting rather than `DECLARATIONS_ARCHIVE_TO`: one "to"
+plus a `Cc` and a `Bcc` list, edited by an Administrator on `/admin/emails`, with the variable
+as the fallback for a deployment that has not named one. The copies ride in the row's payload,
+so a list edited later cannot redirect a message already queued, and outside production every
+copy faces the allowlist on its own (`infrastructure/email/delivery.ts`).
 
 `REGISTRATION_OPENED` is the other message with no participant: from the maintenance job,
 the run that first sees an event's window open, to every address left in "Anunță-mă" on

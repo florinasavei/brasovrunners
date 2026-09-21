@@ -10,6 +10,8 @@ import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import { registrationHasClosed, registrationState } from "@/modules/events/domain/registration-window";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { readClubNotices } from "@/modules/notifications/club-notices";
+import { confirmationNoticeRecipients, resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { ensureProvisionalBibNumber, pickBibNumber } from "./bibs";
 import { mergeFieldsIn } from "@/modules/legal-documents/domain/merge-fields";
@@ -1073,6 +1075,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       now,
     });
     await enqueueDeclarationCopies(tx, confirmed, now);
+    await enqueueClubConfirmationNotice(tx, confirmed, now);
 
     // The expiry above may have released somebody *else's* lapsed hold to the queue — this
     // signature is the capacity-changing transaction that saw it, and no other will until the
@@ -1084,29 +1087,66 @@ export async function signDeclaration<T extends Record<string, unknown>>(
 }
 
 /**
- * The club's copy of a signed declaration (§99): when the club has named an archive mailbox,
- * the same PDF to `DECLARATIONS_ARCHIVE_TO`. The participant's own copy rides on the
- * confirmation since §126 — the PDF attached to the one message they keep — rather than as a
- * message of its own (the owner: "we need to minimize the number of emails"). The archive
- * copy carries no action link (a manage token in the club's mailbox would be a secret handed
- * to the wrong person, §12.8) and is not sent for a test registration: a synthetic runner's
+ * The club's copy of a signed declaration (§99, §244): the same PDF to the mailbox the club
+ * named on `/admin/emails`, with the copies it asked for. The participant's own copy rides on
+ * the confirmation since §126 — the PDF attached to the one message they keep — rather than as
+ * a message of its own (the owner: "we need to minimize the number of emails"). The copy
+ * carries no action link (a manage token in the club's mailbox would be a secret handed to the
+ * wrong person, §12.8) and is not sent for a test registration: a synthetic runner's
  * declaration is not a record the club keeps.
+ *
+ * The `cc` and `bcc` lists travel in the payload rather than being looked up at send time, so
+ * the row is a faithful record of what this confirmation asked for: a list edited tomorrow
+ * changes tomorrow's copies, not the ones already queued.
  */
 async function enqueueDeclarationCopies<T extends Record<string, unknown>>(
   tx: Transaction<T>,
   confirmed: Registration,
   now: Date,
 ): Promise<void> {
-  if (env.DECLARATIONS_ARCHIVE_TO && confirmed.kind === "REAL") {
+  if (confirmed.kind !== "REAL") return;
+  const copies = resolveDeclarationCopies(await readClubNotices(tx), env.DECLARATIONS_ARCHIVE_TO);
+  if (!copies.to) return;
+  await enqueueEmail(tx, {
+    participantId: confirmed.participantId,
+    registrationId: confirmed.id,
+    messageType: "DECLARATION_ARCHIVE",
+    // The club reads Romanian; the message is bilingual regardless (§96).
+    locale: "ro",
+    recipientEmail: copies.to,
+    payload: { cc: [...copies.cc], bcc: [...copies.bcc] },
+    idempotencyKey: `registration:${confirmed.id}:declaration-archive:${now.toISOString()}`,
+    now,
+  });
+}
+
+/**
+ * "Somebody has confirmed" (§245): one message to each mailbox the club named, with the
+ * runner's name, the event and the number — and nothing a participant could act on.
+ *
+ * One row per address rather than one row with copies, unlike the declaration above: these are
+ * separate notices to separate people, none of whom needs to see who else was told, and a
+ * failure to reach one mailbox should not hold up another. A test registration is invisible
+ * here as everywhere the club is told something (§12.6).
+ */
+async function enqueueClubConfirmationNotice<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  confirmed: Registration,
+  now: Date,
+): Promise<void> {
+  if (confirmed.kind !== "REAL") return;
+  const recipients = confirmationNoticeRecipients(await readClubNotices(tx));
+  for (const recipient of recipients) {
     await enqueueEmail(tx, {
       participantId: confirmed.participantId,
       registrationId: confirmed.id,
-      messageType: "DECLARATION_ARCHIVE",
-      // The club reads Romanian; the message is bilingual regardless (§96).
+      messageType: "CLUB_CONFIRMATION_NOTICE",
       locale: "ro",
-      recipientEmail: env.DECLARATIONS_ARCHIVE_TO,
+      recipientEmail: recipient,
       payload: {},
-      idempotencyKey: `registration:${confirmed.id}:declaration-archive:${now.toISOString()}`,
+      // One notice per mailbox per confirmation: the address is part of the trigger, or the
+      // second recipient's row would collide with the first's key and never be written.
+      idempotencyKey: `registration:${confirmed.id}:club-confirmed:${recipient.toLowerCase()}:${now.toISOString()}`,
       now,
     });
   }
@@ -1189,6 +1229,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
   });
   // The copy of the paper declaration's record, by email, as after an electronic signature (§95).
   await enqueueDeclarationCopies(tx, confirmed, now);
+  await enqueueClubConfirmationNotice(tx, confirmed, now);
   return confirmed;
 }
 

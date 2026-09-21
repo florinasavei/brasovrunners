@@ -19,6 +19,17 @@ export type OutgoingEmail = {
   subject: string;
   html: string;
   text: string;
+  /**
+   * The club's own copies of this message (`DECISIONS.md` §244): visible on it, and invisible.
+   *
+   * Only the declaration archive uses them, and only because the club asked for a second
+   * reader without a deployment. They are envelope recipients like `to`, so every one of them
+   * spends a message of the Mailgun allowance, and the allowlist filters them one by one
+   * outside production — a copy must never be the thing that reaches a stranger's inbox from
+   * QA (`delivery.ts`).
+   */
+  cc?: readonly string[];
+  bcc?: readonly string[];
   locale: EmailLocale;
   /**
    * Passed to the provider so a webhook can be traced back to the outbox row (§16.5) without

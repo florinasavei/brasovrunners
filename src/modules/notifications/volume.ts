@@ -3,6 +3,8 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { registrations } from "@/db/schema/registrations";
 import type { Database } from "@/db/types";
 import { env } from "@/shared/config/env";
+import { readClubNotices } from "./club-notices";
+import { declarationArchiveIsConfigured } from "./domain/club-notices";
 import { type EmailPlanId, EMAIL_PLANS, emailCeilings, emailHeadroom } from "./domain/email-plan";
 import { readEmailPlan } from "./email-plan";
 
@@ -26,14 +28,20 @@ import { readEmailPlan } from "./email-plan";
  * 2026-09-18, and the reminder made it four.
  *
  * The fifth was `DECLARATION_SIGNED` (§95), and since §126 the signed PDF rides on the
- * confirmation instead, so nothing enqueues that type (§171). The number stays **five** anyway,
+ * confirmation instead, so nothing enqueues that type (§171). The number stayed **five** anyway,
  * and deliberately: an entrant who lands on the waiting list costs two more
- * (`WAITLIST_JOINED`, then `WAITLIST_SPOT_OFFER`) and one who cancels costs another, so five is
- * a realistic floor once a race fills. `docs/PLATFORM.md` states the arithmetic in prose and
+ * (`WAITLIST_JOINED`, then `WAITLIST_SPOT_OFFER`) and one who cancels costs another, so five
+ * was a realistic floor once a race fills.
+ *
+ * **Six since §245**: the club is told when somebody confirms, and that notice is a message on
+ * the same allowance — one per confirmed registration, to the mailbox the club named on
+ * `/admin/emails`. A club that has named none sends five, and the forecast is then one high,
+ * which is the safe direction for a number whose job is to answer "is there headroom?".
+ * `docs/PLATFORM.md` states the arithmetic in prose and
  * `tests/unit/diagnostics/platform-plans.test.ts` holds the two to each other — changing it is
  * a documentation change, not a constant edit.
  */
-export const MESSAGES_PER_COMPLETED_REGISTRATION = 5;
+export const MESSAGES_PER_COMPLETED_REGISTRATION = 6;
 
 /**
  * Six when the club's archive mailbox is named (`DECLARATIONS_ARCHIVE_TO`, §99): the archive
@@ -87,6 +95,8 @@ export type EmailVolumeToday = {
   allowance: number | null;
   /** `allowance − sent` over the binding period, never below zero; null when nothing binds. */
   remaining: number | null;
+  /** Whether a signed declaration also reaches the club, which is the sixth message's seventh (§244). */
+  archiveConfigured: boolean;
 };
 
 /** The first of the month, UTC, matching the day boundary below. */
@@ -145,15 +155,17 @@ export async function readEmailVolumeToday<T extends Record<string, unknown>>(
   const sentThisMonth = sentMonth?.value ?? 0;
 
   const setting = await readEmailPlan(db);
+  // One row by primary key, on a table with a handful of rows: the archive mailbox may be a
+  // setting now (§244), and the forecast would otherwise still be reading the environment.
+  const archiveConfigured = declarationArchiveIsConfigured(await readClubNotices(db), env.DECLARATIONS_ARCHIVE_TO);
   const ceilings = emailCeilings(setting);
   const headroom = emailHeadroom(ceilings, sentMessages, sentThisMonth);
 
   return {
     realRegistrations,
     testRegistrations,
-    projectedMessages:
-      (realRegistrations + testRegistrations) *
-      messagesPerCompletedRegistration(Boolean(env.DECLARATIONS_ARCHIVE_TO)),
+    projectedMessages: (realRegistrations + testRegistrations) * messagesPerCompletedRegistration(archiveConfigured),
+    archiveConfigured,
     queuedMessages: queued?.value ?? 0,
     waitingMessages: waiting?.value ?? 0,
     sentMessages,

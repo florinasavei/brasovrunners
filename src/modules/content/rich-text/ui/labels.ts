@@ -52,6 +52,11 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageAlignLeft: rt("imageAlignLeft"),
     imageAlignRight: rt("imageAlignRight"),
     imageAlignHelp: rt("imageAlignHelp"),
+    imageCrop: rt("imageCrop"),
+    imageCropHelp: rt("imageCropHelp"),
+    imageCropReset: rt("imageCropReset"),
+    // Raw, with its four placeholders: the island substitutes the percentages itself.
+    imageCropPosition: rt.raw("imageCropPosition") as string,
     imageRemove: rt("imageRemove"),
     imageDone: rt("imageDone"),
     imageNoAltOne: rt("imageNoAltOne"),

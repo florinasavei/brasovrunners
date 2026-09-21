@@ -179,6 +179,28 @@ function eventFieldsFrom(form: FormData) {
     capacity: value("capacity"),
     bibStartNumber: value("bibStartNumber"),
     bibColour: value("bibColour"),
+    /*
+      The bib's design (§249), and only when the form that posted actually carried the panel.
+
+      A checkbox that is off posts nothing, so reading these keys from a form without the panel
+      — the create form, a test fixture — would write every switch off and quietly redesign a
+      bib nobody had touched. The panel posts a marker; without it this is `undefined`, which
+      `fields.ts` reads as "not editing the design".
+    */
+    bibDesign:
+      form.get("event.bibDesign.present") === "1"
+        ? {
+            showName: form.get("event.bibDesign.showName") === "on",
+            showEventTitle: form.get("event.bibDesign.showEventTitle") === "on",
+            showDate: form.get("event.bibDesign.showDate") === "on",
+            showLogo: form.get("event.bibDesign.showLogo") === "on",
+            numberScale: text(form, "event.bibDesign.numberScale") || "medium",
+            namePosition: text(form, "event.bibDesign.namePosition") || "below",
+            headerImageSrc: text(form, "event.bibDesign.headerImageSrc") || null,
+            sponsorImageSrc: text(form, "event.bibDesign.sponsorImageSrc") || null,
+            cutMarks: form.get("event.bibDesign.cutMarks") === "on",
+          }
+        : undefined,
     confirmationOpensDaysBefore: value("confirmationOpensDaysBefore"),
     confirmationDeadlineDaysBefore: value("confirmationDeadlineDaysBefore"),
     registrationOpensAtWallTime: wallTime("registrationOpensAt"),

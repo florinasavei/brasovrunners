@@ -43,6 +43,9 @@ export const emailMessageType = pgEnum("email_message_type", [
   // "Registration is open" to an address left on the event's page before the window (§146):
   // no participant, no token; the action is the ordinary registration page.
   "REGISTRATION_OPENED",
+  // "Somebody has confirmed" to the club's own mailboxes (§245): who, for which event, and
+  // their number. No token and no link a participant could act on — the club signs in.
+  "CLUB_CONFIRMATION_NOTICE",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { Extension, Node } from "@tiptap/core";
+import { Extension, mergeAttributes, Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -24,7 +24,10 @@ import {
   IMAGE_WIDTH_PERCENTS,
   readRichText,
   type BlockAlignment,
+  type ImageCrop,
 } from "../domain/schema";
+import ImageCropBox from "./ImageCropBox";
+import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -108,6 +111,11 @@ export default function RichTextEditor({
     imageAlignLeft: string;
     imageAlignRight: string;
     imageAlignHelp: string;
+    /** The crop box (§241): its name, how to use it, "the whole picture", and where it is. */
+    imageCrop: string;
+    imageCropHelp: string;
+    imageCropReset: string;
+    imageCropPosition: string;
     imageRemove: string;
     imageDone: string;
     /**
@@ -233,7 +241,37 @@ export default function RichTextEditor({
                     }
                   : {},
             },
+            /**
+             * The part of the photograph the page will show (§241). It renders no attribute of
+             * its own — four fractions are not an HTML attribute — because the node's own
+             * `renderHTML` below turns them into the window the page uses.
+             */
+            crop: { default: null, renderHTML: () => ({}) },
           };
+        },
+        /**
+         * What the editor draws, and the reason the crop is visible while it is being chosen:
+         * the same window `RichText` renders, from the same geometry (`image-layout.ts`).
+         *
+         * Without a crop this returns exactly what Tiptap's own Image returns — one `<img>` —
+         * so a body that has none is edited in markup identical to yesterday's. With one, the
+         * block's size and side stay on the window (that is the `style` the width and align
+         * attributes produced) and the photograph inside it is magnified and pulled to the
+         * chosen corner.
+         */
+        renderHTML({ node, HTMLAttributes }) {
+          const merged = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes) as Record<string, string>;
+          const crop = cropGeometry(node.attrs.crop as ImageCrop | null, {
+            width: node.attrs.width as number | null,
+            height: node.attrs.height as number | null,
+          });
+          if (!crop) return ["img", merged];
+          const { style, ...rest } = merged;
+          return [
+            "div",
+            { class: "rt-crop", style: `${style ? `${style};` : ""}${cropWindowCss(crop)}` },
+            ["img", { ...rest, style: cropImageCss(crop) }],
+          ];
         },
       }),
     ],
@@ -289,7 +327,7 @@ export default function RichTextEditor({
       editor
         ?.chain()
         .focus()
-        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100, align: "block" } as never)
+        .setImage({ src: uploaded.src, alt: "", caption: "", width: uploaded.width, height: uploaded.height, widthPercent: 100, align: "block", crop: null } as never)
         .run();
       setImageState("idle");
     } catch {
@@ -303,7 +341,7 @@ export default function RichTextEditor({
    * editor owns, and `shouldRerenderOnTransaction` is what keeps this current.
    */
   const selectedImage = editor?.isActive("image")
-    ? (editor.view.dom.querySelector("img.ProseMirror-selectednode") as HTMLElement | null)
+    ? (editor.view.dom.querySelector("img.ProseMirror-selectednode, .rt-crop.ProseMirror-selectednode") as HTMLElement | null)
     : null;
   const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
   /** The selected film, for its own panel (§110): caption it, or remove it. */
@@ -339,7 +377,7 @@ export default function RichTextEditor({
     editor
       ?.chain()
       .focus()
-      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block" } as never)
+      .setImage({ src: picture.src, alt: "", caption: "", width: picture.width, height: picture.height, widthPercent: 100, align: "block", crop: null } as never)
       .run();
     setGallery(null);
   };
@@ -710,6 +748,19 @@ export default function RichTextEditor({
               outlineColor: "primary.main",
               outlineOffset: 2,
             },
+            /*
+              A cropped picture (§241) is the same block with a window around it: the window
+              carries the width and the side, so it takes the margins the picture had, and it is
+              what ProseMirror marks as selected — the outline and the panel's anchor both move
+              to it. The photograph inside carries its own inline rules and overrides the ones
+              above, which are what an uncropped picture still gets.
+            */
+            "& .tiptap .rt-crop": { mx: "auto", my: 2, cursor: "pointer", borderRadius: 1 },
+            "& .tiptap .rt-crop.ProseMirror-selectednode": {
+              outline: 3,
+              outlineColor: "primary.main",
+              outlineOffset: 2,
+            },
             "& .tiptap p": { my: 1 },
             "& .tiptap h2": { fontSize: "1.25rem", mt: 3, mb: 1 },
             "& .tiptap h3": { fontSize: "1.0625rem", mt: 2, mb: 1 },
@@ -826,6 +877,25 @@ export default function RichTextEditor({
                 {labels.imageAlignHelp}
               </Typography>
             </Box>
+            {/*
+              The crop (§241). Only for a picture whose own size is stored: the window the page
+              draws is shaped from the photograph's ratio, and a picture from before the upload
+              route recorded it would be cropped here and shown whole everywhere else — a lie in
+              the one place this feature exists to stop telling.
+            */}
+            {typeof imageAttrs?.width === "number" && typeof imageAttrs?.height === "number" && (
+              <ImageCropBox
+                src={String(imageAttrs.src ?? "")}
+                crop={(imageAttrs.crop as ImageCrop | null) ?? null}
+                onChange={(crop) => setImageAttr({ crop })}
+                labels={{
+                  title: labels.imageCrop,
+                  help: labels.imageCropHelp,
+                  reset: labels.imageCropReset,
+                  position: labels.imageCropPosition,
+                }}
+              />
+            )}
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.imageRemove}

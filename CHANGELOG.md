@@ -8,6 +8,31 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.43-2026-09-21
+
+- **The club's email has a tab.** `/admin/emails` — the templates, the plan, who receives a copy of a declaration, the outbox queue — had no entry in the backoffice navigation at all, only a link buried in the guide. §253.
+- **Every card shows its summary and its picture**, under the featured event as well — which is what the crop (§241) made worth looking at. The list's heading is "Toate evenimentele" now, because that is what it is. §251.
+- **The calendar has its own page and its own tab**, after Events, and no longer sits above the next run on the front page. The menu is Events · Calendar · Gallery · Contact, then a rule, then the club's own pages. §251.
+- **The page is wider and carries less air**: 2040 pixels instead of 1536, a third less vertical padding on every page, 12 pixels inside a card instead of 16 and 24 — and the events are a grid of two or three columns on a wide screen rather than one stripe of full-width cards. Running text keeps its reading measure. §252.
+- **"Cine vine" is a real table now**, with a position, the name and the club, and fifty to a page — the pages are links, so it works with JavaScript off and a list of four hundred is not four hundred rows on a phone. Who is listed has not changed: confirmed participants who did not ask to be left out. §250.
+
+## BR-V1.42-2026-09-21
+
+- **The club designs its own race number.** What is printed on the bib — the runner's name, the event, the date, the club's logo — how large the number is, whether the name sits above it or below, a picture of your own instead of the coloured band, a strip of sponsors, and cut marks on the sheet. The preview on the event's page is the sheet that prints. §249.
+- **The text on a coloured band is readable whatever colour you pick.** White on the club's blue, ink on yellow, worked out rather than assumed. §249.
+
+## BR-V1.41-2026-09-21
+
+- **The club writes the emails' own words.** The subject and the paragraphs of any message, in each language, from `/admin/emails`, with the preview right above the box — and a button back to the platform's text. What a message *carries* stays the platform's: the button and its secure link, the QR, the attached declaration and the sign-off. Fields like `{participantName}` are filled in; anything else between braces is refused when you save it. §247.
+- **The calendar feed says what Android needs.** A subscribed calendar shows nothing on a phone until it is switched on in Google Calendar; the note beside the subscribe buttons now names that step, and the calendar, exactly as the phone lists it. §241.
+- **A local end-to-end run no longer blocks the next commit.** Playwright leaves an HTML report whose bundled JavaScript ESLint was reading — three thousand problems in somebody else's minified code — so `yarn check`, and with it the pre-commit hook, refused every commit until the folder was deleted by hand.
+- **The organizer draws the crop on a picture, and that is what the site shows.** Drag a box over a photograph in the editor: the event page, the listing card and the editor itself all show that rectangle. Nothing is re-encoded — the stored file is untouched and the crop can be removed — and a picture with no crop renders exactly as it did. §241.
+- **The summary field says where the summary appears.** It is on the event page, on the listing card and in the shares, but not on the dense cards under the featured event, which carry the title, the date and the place alone. The cards were right; the label was not. §242.
+- **`/admin/emails` shows what is actually queued** — which message, to whom, when it was queued, how many attempts it has survived and what the provider last said — with the same "Trimite acum" the registrations list has. A message that has spent every attempt is in the list, which is exactly what a count of "waiting" was hiding. Administrator only. §243.
+- **Who receives a signed declaration is set in the backoffice**, not in the deployment: the club's mailbox plus visible copies (Cc) and hidden ones (Bcc), with the old `DECLARATIONS_ARCHIVE_TO` kept as the fallback. The Bcc box carries a warning, because a declaration holds the participant's identity document and a hidden copy delivers it to a mailbox nobody on the message can see. §244.
+- **The club is told when somebody confirms** — who, which event, which race number — to whichever of its own mailboxes it named. It costs one message per registration, so the Mailgun forecast is six per completed registration now and 100 a day is about 16 rather than 20. §245.
+- **The registrations list opens with a counter**: how many have signed up, each state beside it, the test rows apart. One grouped query, so the page costs one round trip more rather than five. §246.
+
 ## BR-V1.40-2026-09-21
 
 - **The link in the confirmation email confirms it.** No button to press; the page does it on arrival, and still only ever through a POST, so a mail scanner that opens the link cannot spend it. §238.

@@ -25,6 +25,7 @@
     "nav": {
       "label": "Navigare principală",
       "events": "Evenimente",
+      "calendar": "Calendar",
       "gallery": "Galerie",
       "more": "Meniu",
       "contact": "Contact"
@@ -50,7 +51,7 @@
     "featured": "Evenimentul principal",
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
-    "othersCount": "Alte evenimente ({count})",
+    "othersCount": "Toate evenimentele ({count})",
     "filter": {
       "label": "Tipul evenimentului",
       "all": "Toate"
@@ -69,12 +70,14 @@
       "pickMonth": "Luna",
       "pickYear": "Anul",
       "yearEmpty": "Nimic programat în acest an.",
+      "pageTitle": "Calendar",
+      "pageIntro": "Luna clubului: alergările săptămânale și cursele, pe zile. Poți lua tot calendarul în telefon sau în Google Calendar.",
       "addTitle": "Adaugă în calendarul tău",
       "feedAddress": "Adresa pentru alte aplicații",
       "subscribeGoogle": "Google Calendar",
       "subscribeApple": "Apple / Outlook / telefon",
       "downloadLink": "descarcă .ics",
-      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare."
+      "refreshNote": "Google Calendar reia adresa singur, cam o dată pe zi; Apple și Outlook, cât de des le setezi. O schimbare apare la următoarea reluare. Pe Android, calendarul „🏃 BVR” se vede în aplicație abia după ce îl activezi: Google Calendar → Meniu → Setări → 🏃 BVR → Sincronizare."
     },
     "raceWeek": {
       "today": "Azi, {when}",
@@ -141,7 +144,14 @@
       "titleCount": "Cine vine ({count})",
       "empty": "Încă nu și-a confirmat nimeni participarea.",
       "note": "Apar aici doar persoanele care și-au confirmat înscrierea și nu au cerut să fie lăsate în afara listei.",
-      "anonymous": "Participant anonim"
+      "anonymous": "Participant anonim",
+      "caption": "Participanții confirmați, în ordinea confirmării.",
+      "columnPosition": "#",
+      "columnName": "Nume",
+      "columnClub": "Club",
+      "previous": "← Pagina anterioară",
+      "next": "Pagina următoare →",
+      "pageOf": "Pagina {page} din {pages}"
     },
     "cta": {
       "register": "Înscrie-te la eveniment",
@@ -251,6 +261,7 @@
       "pages": "Pagini",
       "gallery": "Galerie",
       "checkin": "Ziua cursei",
+      "emails": "Emailuri",
       "guide": "Ghid"
     },
     "outbox": {
@@ -271,6 +282,8 @@
       "filterAll": "Toate evenimentele",
       "filter": "Filtrează",
       "statusLabel": "Stare",
+      "summaryTotal": "Înscrieri: {count}",
+      "summaryTest": "De test: {count}",
       "export": "Exportă CSV",
       "backToList": "Înapoi la înscrieri",
       "resend": "Retrimite emailul",
@@ -510,7 +523,7 @@
       "fields": {
         "title": "Titlu",
         "slug": "Adresa paginii",
-        "excerpt": "Rezumat — apare pe card și în distribuiri",
+        "excerpt": "Rezumat — apare pe pagină, pe cardul din listă și în distribuiri",
         "locationName": "Punct de întâlnire",
         "locationAddress": "Adresă",
         "seoTitle": "Titlu pentru motoarele de căutare",
@@ -534,7 +547,7 @@
       "newTitle": "Eveniment nou",
       "newHelp": "Ambele limbi se completează aici, pentru că evenimentul devine public în amândouă deodată. Restul câmpurilor se pot schimba oricând, din pagina evenimentului.",
       "create": "Creează evenimentul",
-      "excerptHelp": "Una-două fraze: ce se vede pe cardul din listă și în distribuiri (și pe pagină, în același loc, cât timp descrierea completă n-are cuvinte). Obligatorie înainte de publicare.",
+      "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă (cu poză, dacă pui una) și în distribuiri. Obligatoriu înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",
@@ -700,6 +713,32 @@
       "bibsOnlyTest": "Numerele se dau doar înscrierilor reale și confirmate. Aici sunt numai înscrieri de test, care nu primesc niciodată număr — pentru o repetiție, adaugă un participant de la masa de înscrieri.",
       "bibStartNumber": "Numerele de concurs (BIB) încep de la",
       "bibStartNumberHelp": "De obicei 1. Pune 100 sau 500 dacă vrei ca fiecare distanță să aibă seria ei — numerele se dau în ordinea înscrierii, de aici în sus.",
+      "bibDesign": {
+        "title": "Cum arată numărul de concurs",
+        "intro": "Ce se tipărește pe bib și cât de mare. Aceleași alegeri apar și în previzualizarea de pe pagina „Numere”, și pe foaia A4 trimisă la imprimantă.",
+        "showName": "Numele alergătorului",
+        "showEventTitle": "Numele evenimentului",
+        "showDate": "Data",
+        "showLogo": "Sigla clubului",
+        "cutMarks": "Repere de tăiere pe foaie",
+        "numberScale": "Mărimea numărului",
+        "namePosition": "Unde stă numele",
+        "scales": {
+          "small": "Mic",
+          "medium": "Normal",
+          "large": "Mare"
+        },
+        "positions": {
+          "below": "Sub număr",
+          "above": "Deasupra numărului"
+        },
+        "headerImageSrc": "Imagine în locul benzii colorate",
+        "headerImageSrcHelp": "Se întinde pe toată lățimea, sus. Când alegi una, banda colorată, sigla și textul din bandă nu se mai tipăresc — imaginea e antetul.",
+        "sponsorImageSrc": "Bandă cu sponsori",
+        "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Se încadrează fără să fie deformată.",
+        "noPicture": "Fără imagine",
+        "previewNote": "Pozele sunt cele încărcate deja (pagina „Poze”). Previzualizarea și PDF-ul se actualizează după salvare."
+      },
       "bibColour": "Culoarea numerelor de concurs (BIB)",
       "bibColourHelp": "Banda de sus a numărului tipărit, cea cu logo-ul clubului și cursa pe ea. „Culoarea clubului” dacă nu vrei una anume.",
       "bibColours": {
@@ -1273,6 +1312,10 @@
       "imageAlignLeft": "Stânga",
       "imageAlignRight": "Dreapta",
       "imageAlignHelp": "„În flux” pune imaginea pe toată lățimea coloanei. „Stânga” sau „dreapta” o mută într-o parte și textul curge lângă ea — pe telefon rămâne tot pe toată lățimea.",
+      "imageCrop": "Decupaj — ce se vede din fotografie",
+      "imageCropHelp": "Trage un dreptunghi peste fotografie: exact atât se vede pe pagină și pe card. Trage în interiorul lui ca să-l muți; săgețile îl mută, Shift cu ele îl redimensionează.",
+      "imageCropReset": "Fără decupaj",
+      "imageCropPosition": "{w}% × {h}% din fotografie, de la stânga {x}%, de sus {y}%",
       "table": "Tabel",
       "tableAddRow": "Adaugă un rând",
       "tableAddColumn": "Adaugă o coloană",
@@ -1506,7 +1549,8 @@
         "DECLARATION_ARCHIVE": "Copia pentru arhiva clubului (PDF atașat)",
         "BIB_ASSIGNED": "Numărul de concurs dat de mână",
         "STAFF_INVITATION": "Invitația în echipă",
-        "REGISTRATION_OPENED": "Înscrierile s-au deschis"
+        "REGISTRATION_OPENED": "Înscrierile s-au deschis",
+        "CLUB_CONFIRMATION_NOTICE": "Anunț pentru club: cineva a confirmat"
       },
       "when": {
         "VERIFY_REGISTRATION_EMAIL": "Imediat după trimiterea formularului. Linkul e valabil 48 de ore.",
@@ -1525,7 +1569,59 @@
         "DECLARATION_ARCHIVE": "Odată cu declarația semnată, către căsuța din DECLARATIONS_ARCHIVE_TO — doar când variabila e setată și doar pentru înscrieri reale. Fără niciun link de acțiune.",
         "BIB_ASSIGNED": "Când un organizator scrie sau schimbă numărul unei înscrieri confirmate, din pagina înscrierii sau de la masă. Cu codul QR și linkul de gestionare.",
         "STAFF_INVITATION": "Când un administrator adaugă pe cineva pe Echipa, și la „Retrimite invitația” câtă vreme persoana nu s-a autentificat încă. Către adresa colegului, fără token: pagina de autentificare decide cine e.",
-        "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere."
+        "REGISTRATION_OPENED": "Automat, la prima rulare a jobului de întreținere după ce se deschid înscrierile (în cel mult un sfert de oră ziua, o oră noaptea), către fiecare adresă lăsată la „Anunță-mă” pe pagina evenimentului cât timp înscrierile nu erau încă deschise. Un singur mesaj; adresa se șterge din lista de anunțare odată cu el. Fără token — butonul duce la formularul obișnuit de înscriere.",
+        "CLUB_CONFIRMATION_NOTICE": "La fiecare confirmare a unei înscrieri reale, către adresele clubului de mai sus. Fără link de acțiune și fără token."
+      },
+      "clubNotices": {
+        "title": "Copiile clubului",
+        "intro": "Cine primește, la club, copia unei declarații semnate și cine află când cineva își confirmă înscrierea. Adrese ale clubului, nu ale participanților.",
+        "source": {
+          "setting": "În vigoare: declarațiile merg la {to}; copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
+          "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
+          "none": "Nicio adresă: declarațiile semnate nu se trimit nicăieri, se păstrează doar în aplicație."
+        },
+        "updatedAt": "Modificat la {when}.",
+        "declarationsTo": "Declarațiile semnate merg la",
+        "declarationsToHelp": "O singură adresă — cutia de arhivă a clubului. Gol: nu se trimite nicio copie.",
+        "declarationsCc": "Copie vizibilă (Cc)",
+        "declarationsCcHelp": "Adrese separate prin virgulă. Toți destinatarii se văd între ei.",
+        "declarationsBcc": "Copie ascunsă (Bcc)",
+        "declarationsBccHelp": "Adrese separate prin virgulă. Nu apar în mesaj.",
+        "bccWarning": "Declarația conține numele participantului și actul de identitate declarat la semnare. O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
+        "confirmationsTo": "Anunță-ne când cineva confirmă",
+        "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
+        "save": "Salvează",
+        "saving": "Se salvează…",
+        "saved": "Am salvat cine primește copiile clubului."
+      },
+      "queue": {
+        "title": "Coada de trimitere",
+        "intro": "Ce nu a plecat încă: tipul mesajului, destinatarul, când a intrat în coadă, câte încercări au fost și ce a răspuns furnizorul ultima dată. Mesajul în sine nu se păstrează nicăieri — se compune la trimitere.",
+        "count": "În coadă: {count} mesaje.",
+        "facts": "În coadă din {queued} · încercări: {attempts} · următoarea încercare: {next}",
+        "nextAny": "la prima trimitere",
+        "lastError": "Ultimul răspuns al furnizorului: {error}",
+        "manual": "Retrimis manual",
+        "more": "Și încă {count} în coadă, neafișate aici.",
+        "status": {
+          "PENDING": "În așteptare",
+          "PROCESSING": "Se trimite acum",
+          "FAILED": "Oprit după toate încercările"
+        }
+      },
+      "copy": {
+        "title": "Textul mesajului ({lang}) — al platformei",
+        "editedTitle": "Textul mesajului ({lang}) — scris de club",
+        "subject": "Subiect",
+        "paragraphs": "Paragrafe",
+        "paragraphsHelp": "Un rând gol între paragrafe. **Îngroșat** se scrie între două steluțe.",
+        "placeholders": "Poți folosi: {list}. Un câmp pe care mesajul acesta nu îl are rămâne gol — vezi previzualizarea de mai sus.",
+        "machinery": "Butonul, linkul din el, codul QR, atașamentele, salutul și semnătura rămân ale platformei: ele duc token-uri și fișiere, nu cuvinte.",
+        "save": "Salvează textul",
+        "saving": "Se salvează…",
+        "reset": "Revino la textul platformei",
+        "saved": "Am salvat textul mesajului.",
+        "resetDone": "Mesajul folosește din nou textul platformei."
       },
       "plan": {
         "title": "Planul Mailgun și cât mai putem trimite",

@@ -352,6 +352,20 @@ export const events = pgTable(
     bibColour: text("bib_colour"),
 
     /**
+     * The rest of what a bib looks like (`DECISIONS.md` §249): what is printed, how large the
+     * number is, where the name sits, a picture instead of the coloured band, a sponsors'
+     * strip, and whether the sheet carries cut marks.
+     *
+     * One JSON column rather than eight, because none of it is ever queried — a bib is drawn,
+     * never filtered — and the ninth setting would otherwise be a ninth migration. Null is the
+     * platform's own design, which is what every event created before this has;
+     * `readBibDesign` in `modules/registrations/bib-design.ts` is the only reader, and it
+     * answers with the defaults for anything it cannot read rather than throwing: a bib that
+     * fails to print is worse than a bib that prints plainly.
+     */
+    bibDesign: jsonb("bib_design"),
+
+    /**
      * When this event's race numbers were settled (`DECISIONS.md` §214).
      *
      * Registration closes, the entry list stops moving, and the maintenance job turns every

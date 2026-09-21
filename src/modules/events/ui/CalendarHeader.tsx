@@ -30,9 +30,12 @@ export default async function CalendarHeader({
   now,
   query = {},
   layout = "grid",
+  pathname = "/calendar",
 }: {
   view: CalendarView;
   now: Date;
+  /** The page the calendar is on (§251): every control links back to it, never to /events. */
+  pathname?: "/calendar" | "/events";
   /** Other query parameters the month links keep — the type filter (§89), the layout (§137). */
   query?: Record<string, string>;
   layout?: CalendarLayout;
@@ -47,11 +50,11 @@ export default async function CalendarHeader({
     view.kind === "month"
       ? format.dateTime(anchor, { timeZone: "UTC", month: "long", year: "numeric" })
       : String(view.year);
-  const basePath = getPathname({ locale, href: "/events" });
+  const basePath = getPathname({ locale, href: pathname });
   const href = (params: Record<string, string>, drop?: string) => {
     const merged: Record<string, string> = { ...query, ...params };
     if (drop) delete merged[drop];
-    return getPathname({ locale, href: { pathname: "/events", query: merged } });
+    return getPathname({ locale, href: { pathname, query: merged } });
   };
   const previousHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, -1)) }) : href({ year: String(view.year - 1) });
   const nextHref = view.kind === "month" ? href({ month: monthParam(shiftMonth(view.month, 1)) }) : href({ year: String(view.year + 1) });
@@ -80,7 +83,7 @@ export default async function CalendarHeader({
         />
         <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
           <CalendarStepLink href={previousHref} label={view.kind === "month" ? t("calendar.previous") : t("calendar.previousYear")} direction="previous" />
-          <Link href={{ pathname: "/events", query }} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+          <Link href={{ pathname, query }} style={{ fontSize: "0.875rem", minHeight: 44, display: "inline-flex", alignItems: "center" }}>
             {t("calendar.today")}
           </Link>
           <CalendarStepLink href={nextHref} label={view.kind === "month" ? t("calendar.next") : t("calendar.nextYear")} direction="next" />

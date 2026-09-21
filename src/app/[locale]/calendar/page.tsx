@@ -1,0 +1,80 @@
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import type { Metadata } from "next";
+import { hasLocale } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { getDb } from "@/db/client";
+import { routing } from "@/i18n/routing";
+import { EVENT_TYPES } from "@/modules/events/domain/event-type";
+import { CLUB_TIME_ZONE } from "@/modules/jobs/quiet-hours";
+import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/domain/calendar";
+import { listPublishedEventsBetween } from "@/modules/events/repository";
+import CalendarSection from "@/modules/events/ui/CalendarSection";
+import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
+import { PAGE_WIDTH } from "@/theme/brand";
+import { headingRule } from "@/theme/surfaces";
+
+type Props = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ month?: string | string[]; year?: string | string[]; type?: string | string[]; view?: string | string[] }>;
+};
+
+/**
+ * The club's calendar, on a page of its own (`DECISIONS.md` §251; the owner: "the calendar
+ * should be a tab, after events, and not show on the homepage").
+ *
+ * It lived on the listing, which is the site's front page, above the events themselves — so the
+ * first thing a visitor met was a grid of squares rather than the next run. The grid is what
+ * somebody planning a month wants and it is worth its own address; the front page is for "what
+ * is on next".
+ *
+ * Everything the section does is unchanged (`CalendarSection`): the month or the year the
+ * address names, the grid or the list, and the three doors into a reader's own calendar. The
+ * query is started here and awaited nowhere in this function, so the heading and every control
+ * reach the browser before the database answers (§166).
+ */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
+  const t = await getTranslations({ locale, namespace: "Events" });
+  return { title: t("calendar.pageTitle"), description: t("calendar.pageIntro") };
+}
+
+export default async function CalendarPage({ params, searchParams }: Props) {
+  const { locale } = await params;
+  const { month: monthParam, year: yearParam, type: typeParam, view: viewParam } = await searchParams;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  setRequestLocale(locale);
+
+  const t = await getTranslations("Events");
+  const now = new Date();
+  const db = getDb();
+
+  // The same three readings of the address the listing made (§89, §116, §137), so a link that
+  // was in somebody's history still means what it meant.
+  const typeRaw = Array.isArray(typeParam) ? typeParam[0] : typeParam;
+  const type = EVENT_TYPES.find((candidate) => candidate === typeRaw);
+  const layout: CalendarLayout = (Array.isArray(viewParam) ? viewParam[0] : viewParam) === "list" ? "list" : "grid";
+  const query: Record<string, string> = { ...(type ? { type } : {}), ...(layout === "list" ? { view: "list" } : {}) };
+  const year = parseYear(yearParam, now, CLUB_TIME_ZONE);
+  const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
+  const range = view.kind === "year" ? yearRange(view.year, CLUB_TIME_ZONE) : monthRange(view.month, CLUB_TIME_ZONE);
+
+  const events = listPublishedEventsBetween(db, locale, range.from, range.to).then((rows) =>
+    rows.filter((event) => !type || event.type === type),
+  );
+
+  return (
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+      <Typography variant="h1" gutterBottom sx={{ ...headingRule }}>
+        {t("calendar.pageTitle")}
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+        {t("calendar.pageIntro")}
+      </Typography>
+
+      <CalendarSection locale={locale} view={view} layout={layout} type={type} query={query} now={now} events={events} />
+    </Container>
+  );
+}

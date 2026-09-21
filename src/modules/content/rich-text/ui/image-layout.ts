@@ -1,4 +1,4 @@
-import type { ImageAlignment, ImageWidthPercent } from "../domain/schema";
+import type { ImageAlignment, ImageCrop, ImageWidthPercent } from "../domain/schema";
 
 /**
  * Where a picture sits in the text column, as `sx` — separated from `RichText` because this is
@@ -58,6 +58,86 @@ export function imageFigureSx(
     width: { xs: "100%", sm: `${attrs.widthPercent}%` },
     maxWidth: "100%",
   } as const;
+}
+
+/**
+ * The four numbers that draw a crop, in CSS (`DECISIONS.md` §241).
+ *
+ * A crop is a *rectangle*, so `object-fit: cover` with an `object-position` cannot express it:
+ * cover scales the photograph until it fills the box, which means the visible part always keeps
+ * the whole of one dimension — you can pan, you cannot zoom into a corner. The arrangement that
+ * can is a window with the photograph inside it:
+ *
+ * - the window keeps the visible rectangle's own shape (`aspect-ratio`) and hides the rest;
+ * - the photograph is laid over it at `100 / w` per cent of the window's width, which is exactly
+ *   the magnification that makes the chosen slice fill it;
+ * - and it is pulled left and up by the chosen corner — `x / w` of the window's width, `y / h`
+ *   of its height, which is where those two percentages resolve against.
+ *
+ * Everything is a fraction of the window, so the same four numbers are right in a text column,
+ * on a listing card and at 320 pixels; nothing here is a pixel.
+ *
+ * `null` when the picture's own size was never stored — bodies from before the upload route
+ * recorded it. The shape of the window cannot be computed without the photograph's own ratio,
+ * and a window guessed wrong is a band of background under the picture, so such a picture is
+ * rendered whole, exactly as it was.
+ */
+export type CropGeometry = { aspectRatio: string; width: string; left: string; top: string };
+
+/** Four decimals: finer than any screen this runs on, and short enough to read in the markup. */
+const ratio = (value: number) => String(Math.round(value * 10_000) / 10_000);
+const percent = (value: number) => `${Math.round(value * 1_000_000) / 10_000}%`;
+
+export function cropGeometry(
+  crop: ImageCrop | null | undefined,
+  intrinsic: { width?: number | null; height?: number | null },
+): CropGeometry | null {
+  if (!crop) return null;
+  const { width, height } = intrinsic;
+  if (!width || !height) return null;
+  return {
+    aspectRatio: ratio((width * crop.w) / (height * crop.h)),
+    width: percent(1 / crop.w),
+    left: percent(-crop.x / crop.w),
+    top: percent(-crop.y / crop.h),
+  };
+}
+
+/** The window, as `sx`: it keeps the crop's shape and hides everything outside it. */
+export function cropWindowSx(geometry: CropGeometry) {
+  return {
+    position: "relative",
+    overflow: "hidden",
+    width: "100%",
+    aspectRatio: geometry.aspectRatio,
+    borderRadius: 1,
+  } as const;
+}
+
+/** The photograph inside that window: magnified and pulled to the chosen corner. */
+export function cropImageSx(geometry: CropGeometry) {
+  return {
+    position: "absolute",
+    display: "block",
+    width: geometry.width,
+    height: "auto",
+    maxWidth: "none",
+    left: geometry.left,
+    top: geometry.top,
+  } as const;
+}
+
+/**
+ * The same two rules as inline CSS, for the editor — Tiptap renders its own DOM from strings
+ * and never sees an `sx`. One function per rule would be two places where a crop is drawn;
+ * these two read the same geometry, so the editor cannot drift from the page.
+ */
+export function cropWindowCss(geometry: CropGeometry): string {
+  return `position:relative;overflow:hidden;aspect-ratio:${geometry.aspectRatio}`;
+}
+
+export function cropImageCss(geometry: CropGeometry): string {
+  return `position:absolute;display:block;width:${geometry.width};height:auto;max-width:none;left:${geometry.left};top:${geometry.top};margin:0;border-radius:0`;
 }
 
 /**

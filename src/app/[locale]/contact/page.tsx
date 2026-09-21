@@ -107,7 +107,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   });
 
   return (
-    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 3, sm: 6 } }}>
+    <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
       <Typography variant="h1" gutterBottom>
         {t("title")}
       </Typography>

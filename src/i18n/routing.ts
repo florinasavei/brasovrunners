@@ -31,6 +31,8 @@ export const routing = defineRouting({
   pathnames: {
     "/": "/",
     "/events": { ro: "/evenimente", en: "/events" },
+    // The same word in both languages, and the one page the club's members bookmark (§251).
+    "/calendar": { ro: "/calendar", en: "/calendar" },
     "/events/[slug]": { ro: "/evenimente/[slug]", en: "/events/[slug]" },
     "/events/[slug]/register": { ro: "/evenimente/[slug]/inscriere", en: "/events/[slug]/register" },
 

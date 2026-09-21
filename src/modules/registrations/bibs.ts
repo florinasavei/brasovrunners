@@ -4,6 +4,7 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import { type BibDesign, readBibDesign } from "./bib-design";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -440,13 +441,17 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   locale: string,
-): Promise<{ title: string; startsAt: Date; timezone: string; bibColour: string | null; coHosts: CoHost[] } | undefined> {
+): Promise<
+  | { title: string; startsAt: Date; timezone: string; bibColour: string | null; coHosts: CoHost[]; design: BibDesign }
+  | undefined
+> {
   const [row] = await db
     .select({
       title: eventTranslations.title,
       startsAt: events.startsAt,
       timezone: events.timezone,
       bibColour: events.bibColour,
+      bibDesign: events.bibDesign,
       coHosts: events.coHosts,
       coHostName: events.coHostName,
       coHostUrl: events.coHostUrl,
@@ -464,5 +469,7 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
     timezone: row.timezone,
     bibColour: row.bibColour,
     coHosts: readCoHosts(row),
+    // What the club decided this bib shows (§249); anything unreadable is the platform's own.
+    design: readBibDesign(row.bibDesign),
   };
 }

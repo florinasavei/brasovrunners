@@ -8,6 +8,7 @@ import {
   countRegistrationsForAdmin,
   findRegistrationDetailForAdmin,
   listRegistrationsForAdmin,
+  summariseRegistrationsForAdmin,
 } from "@/modules/registrations/admin-repository";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
@@ -42,7 +43,7 @@ let participantCounter = 0;
 
 async function addRegistration(
   name: string,
-  overrides: { status?: RegistrationStatus; submittedAt?: Date } = {},
+  overrides: { status?: RegistrationStatus; submittedAt?: Date; kind?: "REAL" | "TEST" } = {},
 ): Promise<void> {
   participantCounter += 1;
   const email = `participant-${participantCounter}@example.test`;
@@ -69,6 +70,7 @@ async function addRegistration(
     resultsNameConsent: false,
     resultsConsentVersion: 1,
     submittedAt: overrides.submittedAt ?? NOW,
+    kind: overrides.kind ?? "REAL",
   });
 }
 
@@ -395,5 +397,47 @@ describe("the journey of a restarted row is this cycle's, not the first one's", 
       expect(journey.outcome).toBe("cancelled");
       expect(journey.outcomeAt).toEqual(minutes(8));
     }
+  });
+});
+
+/**
+ * `DECISIONS.md` §246 — the counter above the list.
+ *
+ * One grouped query for every state at once, because a strip of five numbers must not become
+ * five scans of the same rows (the owner: "I wanna make sure it's performant and light on the
+ * DB"). The rule it shares with every other number the club is given: a test registration is
+ * not in it (§12.6).
+ */
+describe("the counter above the list (§246)", () => {
+  it("counts each state once, and keeps the test rows apart", async () => {
+    await addRegistration("Ana Popescu");
+    await addRegistration("Mihai Ionescu");
+    await addRegistration("Dan Radu", { status: "WAITLISTED" });
+    await addRegistration("Ioana Marin", { status: "CANCELLED" });
+    await addRegistration("Runner Test", { kind: "TEST" });
+
+    const summary = await summariseRegistrationsForAdmin(db, { eventId });
+    expect(summary).toEqual({
+      byStatus: { CONFIRMED: 2, WAITLISTED: 1, CANCELLED: 1 },
+      real: 4,
+      test: 1,
+    });
+  });
+
+  it("narrows with the same filters the list uses", async () => {
+    await addRegistration("Ana Popescu");
+    await addRegistration("Mihai Ionescu", { status: "WAITLISTED" });
+
+    expect(await summariseRegistrationsForAdmin(db, { eventId, search: "Ana" })).toEqual({
+      byStatus: { CONFIRMED: 1 },
+      real: 1,
+      test: 0,
+    });
+    // An event with nothing on it is four zeroes rather than an absence.
+    expect(await summariseRegistrationsForAdmin(db, { eventId: crypto.randomUUID() })).toEqual({
+      byStatus: {},
+      real: 0,
+      test: 0,
+    });
   });
 });
