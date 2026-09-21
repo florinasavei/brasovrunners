@@ -1318,6 +1318,8 @@
       "imageSize": "Lățime pe ecran lat",
       "imageRemove": "Șterge imaginea",
       "imageDone": "Gata",
+      "imageClose": "Închide panoul imaginii",
+      "imagePanel": "Imaginea",
       "imageFromGallery": "Alege o imagine deja încărcată",
       "imageShort": "Imagine",
       "imageFromGalleryShort": "Din galerie",

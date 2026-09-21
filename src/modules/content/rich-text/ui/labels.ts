@@ -59,6 +59,8 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageCropPosition: rt.raw("imageCropPosition") as string,
     imageRemove: rt("imageRemove"),
     imageDone: rt("imageDone"),
+    imageClose: rt("imageClose"),
+    imagePanel: rt("imagePanel"),
     imageNoAltOne: rt("imageNoAltOne"),
     // Raw, with its `{count}` placeholder: the island substitutes the number itself.
     imageNoAltMany: rt.raw("imageNoAltMany") as string,

@@ -23,7 +23,7 @@ import {
 } from "@/modules/content/events/service";
 import EditorPanel from "@/modules/content/events/ui/EditorPanel";
 import EventFieldsForm from "@/modules/content/events/ui/EventFieldsForm";
-import LocaleTabPanels from "@/modules/content/events/ui/LocaleTabPanels";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import TranslationFieldsForm from "@/modules/content/events/ui/TranslationFieldsForm";
 import { listApprovedVersions } from "@/modules/legal-documents/repository";

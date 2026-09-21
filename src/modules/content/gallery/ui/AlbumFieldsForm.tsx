@@ -1,10 +1,9 @@
-import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 
 export type EditableAlbumTranslation = {
   locale: string;
@@ -66,15 +65,16 @@ export default async function AlbumFieldsForm({
         </TextField>
       </Stack>
 
-      {routing.locales.map((locale) => {
-        const translation = translations.find((row) => row.locale === locale);
-        const name = (field: string) => `translations.${locale}.${field}`;
-        return (
-          <Box key={locale} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: { xs: 2, sm: 3 } }}>
-            <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 2 }}>
-              {t(`language.${locale}`)}
-            </Typography>
-            <Stack spacing={2}>
+      {/* One tab per language, as every other editor has (§259). */}
+      <LocaleTabPanels
+        panels={routing.locales.map((locale) => {
+          const translation = translations.find((row) => row.locale === locale);
+          const name = (field: string) => `translations.${locale}.${field}`;
+          return {
+            locale,
+            label: t(`language.${locale}`),
+            content: (
+              <Stack spacing={2} sx={{ pt: 2 }}>
               <TextField name={name("title")} label={t("fields.title")} defaultValue={translation?.title ?? ""} required />
               <TextField
                 name={name("slug")}
@@ -91,10 +91,11 @@ export default async function AlbumFieldsForm({
                 multiline
                 minRows={2}
               />
-            </Stack>
-          </Box>
-        );
-      })}
+              </Stack>
+            ),
+          };
+        })}
+      />
     </Stack>
   );
 }

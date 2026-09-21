@@ -1318,6 +1318,8 @@
       "imageSize": "Width on a wide screen",
       "imageRemove": "Remove the picture",
       "imageDone": "Done",
+      "imageClose": "Close the picture panel",
+      "imagePanel": "The picture",
       "imageFromGallery": "Choose a picture already uploaded",
       "imageShort": "Picture",
       "imageFromGalleryShort": "From gallery",

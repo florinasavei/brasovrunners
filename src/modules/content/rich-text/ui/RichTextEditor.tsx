@@ -118,6 +118,9 @@ export default function RichTextEditor({
     imageCropPosition: string;
     imageRemove: string;
     imageDone: string;
+    /** The ✕ on the picture's panel, and the panel's own heading (§258). */
+    imageClose: string;
+    imagePanel: string;
     /**
      * The nag under the editor, one picture and several. Two strings rather than a function:
      * props cross the server boundary, and the client island substitutes the count itself.
@@ -151,6 +154,17 @@ export default function RichTextEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
   const [gallery, setGallery] = useState<null | "loading" | StoredPicture[]>(null);
+  /**
+   * The picture's panel, closed by hand (§258; the owner: "ar trebui să pot anula sau închide
+   * pur și simplu").
+   *
+   * Selecting a picture is how the panel opens, and a selected picture is a state Tiptap owns —
+   * so "closed" cannot be the absence of a selection without also deselecting the picture the
+   * organizer is looking at. It is a dismissal instead, remembered against the position of the
+   * node it was dismissed for, so pressing the same picture again opens it and moving to
+   * another picture opens that one's.
+   */
+  const [dismissedAt, setDismissedAt] = useState<number | null>(null);
 
   const editor = useEditor({
     // Next renders this component's tree on the server first; Tiptap needs a DOM. Without this,
@@ -344,6 +358,9 @@ export default function RichTextEditor({
     ? (editor.view.dom.querySelector("img.ProseMirror-selectednode, .rt-crop.ProseMirror-selectednode") as HTMLElement | null)
     : null;
   const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
+  const imageNodeAt = selectedImage ? (editor?.state.selection.from ?? null) : null;
+  const imagePanelOpen = Boolean(selectedImage) && imageNodeAt !== dismissedAt;
+  const closeImagePanel = () => setDismissedAt(imageNodeAt);
   /** The selected film, for its own panel (§110): caption it, or remove it. */
   const selectedVideo = editor?.isActive("youtube")
     ? (editor.view.dom.querySelector(".rt-youtube.ProseMirror-selectednode") as HTMLElement | null)
@@ -792,14 +809,50 @@ export default function RichTextEditor({
         when the selection moves anywhere else, and "Done" moves it past the picture.
       */}
       <Popper
-        open={Boolean(selectedImage)}
+        open={imagePanelOpen}
         anchorEl={selectedImage}
         placement="bottom-start"
-        modifiers={[{ name: "preventOverflow", options: { altAxis: true, padding: 8 } }]}
+        /*
+          It floated over the header and the navigation on a wide screen (§258; the owner:
+          "editorul de poze rămâne floating în dreapta random").
+
+          Three modifiers and nothing clever: `flip` puts it above the picture when there is no
+          room below, `preventOverflow` keeps it inside the writing area's own box rather than
+          the viewport — so a picture floated to the right edge no longer pushes the panel over
+          the page's chrome — and `offset` leaves eight pixels so it reads as attached to the
+          picture and not as part of it.
+        */
+        modifiers={[
+          { name: "offset", options: { offset: [0, 8] } },
+          { name: "flip", options: { padding: 8 } },
+          { name: "preventOverflow", options: { altAxis: true, padding: 8, boundary: "clippingParents" } },
+        ]}
         sx={{ zIndex: (theme) => theme.zIndex.modal }}
       >
-        <Paper elevation={6} sx={{ p: 1.5, width: 320, maxWidth: "calc(100vw - 32px)" }} data-testid="rich-text-image-panel">
+        <Paper
+          elevation={6}
+          sx={{ p: 1.5, width: 320, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto" }}
+          data-testid="rich-text-image-panel"
+          // Escape closes it, like every dialog on the platform — and the keyboard is how
+          // somebody who has just been nudging the crop box with the arrows will reach for it.
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeImagePanel();
+            }
+          }}
+        >
           <Stack spacing={1.5}>
+            {/* A heading and a way out. The panel used to offer "Gata", which moves the caret
+                past the picture — useful, and not the same thing as "close this". */}
+            <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {labels.imagePanel}
+              </Typography>
+              <Button size="small" color="inherit" onClick={closeImagePanel} aria-label={labels.imageClose} sx={{ minWidth: 44 }}>
+                ✕
+              </Button>
+            </Stack>
             <TextField
               size="small"
               label={labels.imageAlt}
