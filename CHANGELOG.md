@@ -10,6 +10,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **The event editor asks for the summary first, and every long text folds.** Title, summary, full description, rules, programme — each behind a heading you press to open, so the panel is a screen instead of three and nothing loads until you ask for it. The summary's heading says it is required before publication while it is still empty. §260.
+- **A picture on a listing card keeps its own shape.** The card used to squeeze every picture into a 180-pixel band and cut the rest from the middle, which is why a photograph looked one way in the editor and another on the card. If you want a band, draw it with the crop tool. §260.
 - **The picture panel in the editor closes.** It has an ✕ and answers Escape, and it no longer floats over the header on a wide screen — it stays inside the writing area and flips above the picture when there is no room below. §258.
 - **Every editor shows the two languages as tabs.** The pages editor and the album editor stacked them, which with a rich-text editor in each meant two screens of scrolling to reach the English title. §259.
 - **Every backoffice list behaves the same way.** The ⋮ menu the events list had is now on pages, the gallery and the team as well — edit, publish or take off the site, delete — and each of those asks before it acts. The team's row was five buttons stacked on a phone, two of which ended somebody's access without a question; it is one select and a menu now. §256.

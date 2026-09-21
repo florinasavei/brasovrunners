@@ -5,7 +5,6 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
-import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { fromPlainText } from "@/modules/content/rich-text/domain/schema";
 import { Link } from "@/i18n/navigation";
@@ -27,15 +26,19 @@ import OnlyForType from "./OnlyForType";
  * the whole event and live in the settings panels (`DECISIONS.md` §36) — they were the same
  * answer typed twice, not a translation.
  *
- * **The order is the order somebody writes in** (§170): the title, then the full description,
- * then the summary that the card and the shares carry, then the rules and the programme, then
- * what to bring. The address and the two search-engine fields are folded away at the bottom,
- * because they are set once and never looked at again.
+ * **The order is the order somebody writes in** (§260): the title, then the summary that the
+ * card and the shares carry, then the full description, then the rules and the programme, then
+ * what to bring. Every long text is a fold, and the address and the two search-engine fields
+ * are folded away at the bottom because they are set once and never looked at again.
  *
- * The summary used to sit above the description, which put a one-sentence box before the box
- * it summarises and left `Rezumat` empty on event after event — and an empty summary is what
- * refuses publication (`REQUIRED_PUBLIC_TRANSLATION_FIELDS`). It is second now, and it says on
- * its face that it is required.
+ * §170 put the description first — "it is what the writer came here to write" — and moved the
+ * summary under it because an empty `Rezumat` is what refuses publication
+ * (`REQUIRED_PUBLIC_TRANSLATION_FIELDS`) and it kept being empty. The owner asked for the other
+ * order and gave the reason: "prima oară văd rezumat, apoi descriere full, asta e flow-ul
+ * logic". It is the visitor's order — the card, the hero and every share carry the summary, and
+ * the description is what somebody reads after deciding to look — and the emptiness §170 was
+ * worried about is now answered by the fold itself, which says "obligatoriu" on its face
+ * instead of hiding an empty box below the fold.
  *
  * A read-only language renders its reason and no inputs at all, so a save posts nothing for it
  * and the server has nothing to refuse. The rule itself is asserted in the service regardless
@@ -93,32 +96,37 @@ export default async function TranslationFieldsForm({
             required
           />
 
-          {/* The description proper, in the same editor a standing page uses (§11.3, §71), and
-              first: it is what the writer came here to write. */}
-          <RichTextEditor
-            name={name("body")}
-            label={t("editor.fields.body")}
-            initialBody={translation.bodyJson}
-            accessibleSuffix={translation.locale.toUpperCase()}
-            labels={richTextEditorLabels(rt)}
-          />
-          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
-            {t("editor.bodyHelp")}
-          </Typography>
-
-          {/* The summary, under the description it summarises (§170). In the same editor (§73):
-              a sentence or two, and a picture when the organizer wants one on the hero. Its
-              words become the plain `excerpt`, which is what publication requires — so the
-              label says "required" rather than the refusal saying it later. */}
-          <RichTextEditor
+          {/* The summary first (§260): it is what a visitor meets — the card, the hero, every
+              share — and it is what publication requires, so the fold says so. In the same
+              editor as everything else (§73): a sentence or two and, if the organizer wants
+              one, a picture. */}
+          <LazyRichTextEditor
             name={name("excerptBody")}
             label={t("editor.fields.excerpt")}
+            summary={t("editor.fields.excerpt")}
+            emptyHint={t("editor.excerptEmpty")}
             initialBody={translation.excerptJson ?? fromPlainText(translation.excerpt)}
             accessibleSuffix={translation.locale.toUpperCase()}
             labels={richTextEditorLabels(rt)}
           />
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
             {t("editor.excerptHelp")}
+          </Typography>
+
+          {/* The description proper, in the same editor a standing page uses (§11.3, §71), and
+              folded like every other long text on this panel (§260) — which is also four fewer
+              Tiptap instances mounted when the editor opens. */}
+          <LazyRichTextEditor
+            name={name("body")}
+            label={t("editor.fields.body")}
+            summary={t("editor.fields.body")}
+            emptyHint={t("editor.bodyEmpty")}
+            initialBody={translation.bodyJson}
+            accessibleSuffix={translation.locale.toUpperCase()}
+            labels={richTextEditorLabels(rt)}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+            {t("editor.bodyHelp")}
           </Typography>
 
           {/* The rules (§96): what the declaration says they read on this page; linked from every

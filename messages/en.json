@@ -565,6 +565,8 @@
       "create": "Create the event",
       "excerptHelp": "One or two sentences: what the event page, the listing card (with a picture, if you put one in) and the shares carry. Required before publication.",
       "rulesEmpty": "(none yet — press to write)",
+      "excerptEmpty": "(required before publication — press to write it)",
+      "bodyEmpty": "(nothing yet — press to write it)",
       "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
       "programmeSection": "Programme",
       "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored.",

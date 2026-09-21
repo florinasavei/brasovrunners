@@ -11148,3 +11148,108 @@ has more than one verb, a confirming button where it has one, and no destructive
 button.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 257. Decided — a tooltip with a list in it puts each item on its own line (2026-09-21)
+
+**Context.** "Unde a ajuns" on a registration row explains six states in one tooltip, and the
+legend arrived as one paragraph of dashes: the owner, looking at it — "acest tooltip ar trebui sa
+aiba liniute una sub alta". A legend read as prose is not a legend.
+
+**Decision.** The tooltip renders `pre-line` at a 360-pixel ceiling, and the strings carry their
+own line breaks (`\n– ` per item). No list markup inside a tooltip: MUI's tooltip is a single
+text node by design, and the alternative is a popover with a focus trap for six words a line.
+
+*So:* `shared/ui/InfoTip` sets `whiteSpace: "pre-line"` and `maxWidth: 360` on the tooltip slot,
+once, and every legend on the platform gets it. The bounded width is the part that is not
+cosmetic — a tooltip as wide as a desktop is unreadable whatever the line breaks say.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 258. Decided — the picture's panel in the editor can be closed, and stays next to its picture (2026-09-21)
+
+**Context.** Selecting a picture in the rich-text editor opens a panel — the crop box, the width,
+the side, the caption, remove. Two complaints, one screen apart: "editorul de poze ramane
+floaiting ind reapta random" and "ar trebui sa pot anula sau inchide pur si simplu".
+
+Both came from the same root: the panel's only open/closed state was Tiptap's own selection. It
+had no way out that did not also deselect the picture the organizer was working on, and its
+`Popper` had one overflow modifier, so a picture near the right edge pushed the panel over the
+header and the navigation.
+
+**Decision.** *Closing is a dismissal, not a deselection.* The panel remembers the document
+position it was dismissed at; pressing the same picture again opens it, moving to another picture
+opens that one's. An ✕ with a heading, and Escape — which is what somebody nudging the crop box
+with the arrow keys will reach for.
+
+*Anchoring is three Popper modifiers and nothing clever:* `offset` for eight pixels of air so it
+reads as attached rather than part of the picture, `flip` to go above when there is no room
+below, and `preventOverflow` with `boundary: "clippingParents"` so it is kept inside the writing
+area instead of the viewport. A `maxHeight` of `calc(100vh - 32px)` with its own scroll, because
+the panel is taller than a laptop once the crop box is in it.
+
+"Gata" stays and is a different verb: it moves the caret past the picture so typing continues
+after it.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 259. Decided — every editor shows the two languages as tabs (2026-09-21)
+
+**Context.** The owner: "in pagina de eveniment pot vedea continutul biling unul sub altul, pe
+alte eveniment eil vad in tabs, hai sa fim consistenti!". The event editor has had a tab per
+language since §170. The standing-pages editor and the album editor stacked them, and argued for
+it in a comment: a page carries four fields, and both languages at once makes "the English one is
+empty" obvious *before* publication is refused.
+
+**Decision.** Tabs everywhere. The argument stopped being true when a page's body became a
+rich-text editor — two editors stacked is two screens of scrolling to reach the English title —
+and the incompleteness it protected is caught twice over anyway: by the publish rule
+(`AGENTS.md` §11.2) and by the "incomplet" mark the tab itself carries.
+
+*So:* `LocaleTabPanels` moved from the events module to `shared/ui`, unchanged, because the
+thing that makes it safe is already in it: **the hidden panel stays in the form.** A panel that
+unmounted on a tab change would post nothing for that language and the save would write empty
+strings over somebody's English text. With JavaScript off the first tab shows and the rest are
+unreachable — a degradation, not a data loss, since every hidden field still carries its
+`defaultValue`.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 260. Decided — the summary comes first, both descriptions fold, and a card's picture keeps its shape (2026-09-21)
+
+**Context.** Three messages about the same panel. "de asemenea partea de rezumat si descoere
+completa trebuie sa gie in acordeoane colapsabile", then the reason for the order — "si prima
+oara vad rezumat, apoi descriere full, asta e flow-ul logic" — and then, about the picture inside
+the summary, "cumva editorul nu e perfect, imainea arata diferit in card preview fata de cum e in
+editor" and "practic pe card au o inaltime fixa, ceea ce e cam gresit".
+
+§170 had decided the other order: the description first, "because it is what the writer came here
+to write", with the summary under it. The cost was a language panel two screens tall with two
+Tiptap instances mounted before anybody typed a character, and a *required* field sitting below
+the description that kept being left empty.
+
+**Decision.** *The panel is the visitor's order.* Title, summary, full description, rules,
+programme, what to bring, then the folded search-engine fields. The card, the hero and every
+share carry the summary; the description is what somebody reads after deciding to look.
+
+*Every long text is a fold.* Both descriptions are `LazyRichTextEditor` now, like the rules and
+the programme: the editor mounts when the section is opened, and until then the stored document
+rides in a hidden field — so a save that never opened a section never changes it. Ten Tiptap
+instances across two languages became none until asked for.
+
+*The emptiness §170 was worried about is answered on the closed fold*, not by the save: the
+summary's fold says "obligatoriu înainte de publicare" while it is empty, which is earlier than
+the refusal ever was.
+
+*A picture on a listing card has the shape it has.* The card capped every picture at 180 pixels
+and cut the rest from the centre — a crop nobody asked for, nobody could see, and which is why
+the editor and the card disagreed. It is gone: `height: auto` and no ceiling. The organizer's own
+crop box (§241) is where a portrait photograph becomes a band, and that is a choice made while it
+can be seen. The two card rules that remain are about the *column* — a figure takes the whole card
+whatever share of a page's column it was given, and a float goes back into the flow — because a
+card has one narrow column and no side.
+
+Tests: `tests/unit/content/editor-order.test.ts` (the order, four folds, no eager editor, the
+required hint in both languages) and `tests/unit/events/card-excerpt.test.ts` (no fixed
+measurement left in either direction).
+
+Baseline `BR-V1.43-2026-09-21`.
