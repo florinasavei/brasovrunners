@@ -622,7 +622,7 @@
         "selectNone": "Niciuna",
         "open": "Deschide data de {date}"
       },
-      "repeatOfNote": "Ce schimbi aici — o anulare, alt loc, altă oră — privește doar această dată, dacă nu alegi altfel la Salvează.",
+      "repeatOfNote": "Salvarea ajunge, din start, pe toate datele seriei — bifele de sus și caseta de la Salvează arată exact pe care. O anulare, alt loc sau altă oră rămân doar aici dacă le debifezi pe celelalte.",
       "series": {
         "kicker": "Seria „{title}”",
         "editing": "Editezi data de {date}",
@@ -1929,8 +1929,9 @@
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
     "confirm": {
       "title": "Confirmă adresa de email",
-      "prompt": "Apasă butonul de mai jos pentru a confirma adresa de email și a continua înscrierea.",
+      "prompt": "Îți confirmăm adresa de email. Dacă nu se întâmplă nimic în câteva secunde, apasă butonul.",
       "action": "Confirmă",
+      "pending": "Se confirmă…",
       "done": "Adresa de email a fost confirmată.",
       "doneTitle": "Adresa a fost confirmată"
     },

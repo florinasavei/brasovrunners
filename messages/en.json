@@ -622,7 +622,7 @@
         "selectNone": "None",
         "open": "Open the date {date}"
       },
-      "repeatOfNote": "Changes here — a cancellation, another place, another time — are this date's alone, unless you choose otherwise at Save.",
+      "repeatOfNote": "A save reaches every date of the series by default — the ticks above and the box by Save show exactly which. A cancellation, a different place or a different time stay here alone if you untick the others.",
       "series": {
         "kicker": "Series “{title}”",
         "editing": "Editing the date {date}",
@@ -1929,8 +1929,9 @@
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
     "confirm": {
       "title": "Confirm your email address",
-      "prompt": "Press the button below to confirm your email address and continue your registration.",
+      "prompt": "We are confirming your email address. If nothing happens in a few seconds, press the button.",
       "action": "Confirm",
+      "pending": "Confirming…",
       "done": "Your email address has been confirmed.",
       "doneTitle": "Your email address is confirmed"
     },

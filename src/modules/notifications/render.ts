@@ -102,6 +102,18 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
     eventUrl: eventDetails?.slug
       ? `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: eventDetails.slug } } })}`
       : undefined,
+    /*
+      The listing and the contact page, on every participant message (§239; the owner: "I
+      need more links in that email").
+
+      Unconditional, unlike the ones above: they do not depend on an event, on a token or on
+      anything the organizer wrote, so there is no state in which the reader cannot use them.
+      Both go through `getPathname` in the message's own language, so a Romanian message
+      links to /evenimente and an English one to /events (`AGENTS.md` §8: the host comes from
+      `APP_BASE_URL` and appears nowhere in `src/`).
+    */
+    eventsUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/events" })}`,
+    contactUrl: `${env.APP_BASE_URL}${getPathname({ locale, href: "/contact" })}`,
   };
   if (data.eventUrl && eventDetails?.hasRules) data.eventRulesUrl = `${data.eventUrl}#rules`;
   // The hold's deadline on the declaration email (§104), and whether it is the window's — a

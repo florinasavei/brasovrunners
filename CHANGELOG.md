@@ -10,6 +10,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.40-2026-09-21
 
+- **The link in the confirmation email confirms it.** No button to press; the page does it on arrival, and still only ever through a POST, so a mail scanner that opens the link cannot spend it. §238.
+- **The email's white banner runs edge to edge**, and survives a dark inbox: the band is part of the picture, which no mail client can re-colour. §239.
+- **Every email ends with the same links** — the event, its rules, its programme, your registrations, the other races and a way to write to us. The address-confirmation email had none at all. §239.
+- **Editing a repeated event edits the whole series by default.** The ticks above the form still say which dates a save reaches, and unticking them keeps a change on one date. §240.
 - **Your race number is in the emails again**, with one line saying it is provisional until registration closes. It had gone missing when numbers moved to being reserved at sign-up, which reads as “you have not been given one”. §237.
 - **The country selector on a phone is the flag and the dialling code** instead of “România (+4…”, and gives the width back to the number beside it. §236.
 - **A confirmation you receive twice now says it is the same one.** Filling the form again when you are already registered re-sends your confirmation, QR and all, and it used to read exactly like a first one — which is how two emails looked like two registrations. It now leads with “you were already registered; no second registration was created”. Said in the inbox and not on the form, because the form would answer that question about anybody’s address. §235.
