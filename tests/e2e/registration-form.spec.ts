@@ -286,7 +286,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     // What was typed is still there (`DECISIONS.md` §142) — and not in the address.
     await expect(page.locator('[name="lastName"]')).toHaveValue("Popescu");
     await expect(page.locator('[name="city"]')).toHaveValue("Brașov");
-    await expect(page.locator('[name="phone"]')).toHaveValue("+40711111111");
+    await expect(page.locator('[name="phone"]')).toHaveValue("40711111111");
     await expect(page.locator('[name="emergencyContactName"]')).toHaveValue("Ion Popescu");
     expect(page.url()).not.toContain("Popescu");
   });
