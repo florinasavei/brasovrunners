@@ -1742,6 +1742,7 @@
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",
       "phone": "Numărul nu e valid. Scrie doar cifrele numărului, fără prefixul țării (acela se alege în stânga).",
+      "emergencySame": "Persoana de contact trebuie să aibă alt număr decât al tău — pe al tău nu te sună nimeni dacă ți se întâmplă ceva.",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "field": "Completează acest câmp corect.",
       "generic": "Înscrierea nu a putut fi trimisă. Verifică datele completate și încearcă din nou.",

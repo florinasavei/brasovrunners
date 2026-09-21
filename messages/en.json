@@ -1742,6 +1742,7 @@
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
       "phone": "The number is not valid. Type only the digits of the number, without the country code (that is chosen on the left).",
+      "emergencySame": "The emergency contact needs a different number from yours — nobody can ring your own phone if something happens to you.",
       "captcha": "The anti-bot check did not pass. Tick the box again and resend.",
       "field": "Please complete this field correctly.",
       "generic": "The registration could not be submitted. Check what you entered and try again.",

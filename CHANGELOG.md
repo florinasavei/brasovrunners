@@ -8,8 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
-## BR-V1.39-2026-09-21
+## BR-V1.40-2026-09-21
 
+- **The form refuses an emergency contact that is your own number before you can send it**, and says so correctly — it used to accept the press, come back from the server, and tell you the number was invalid, which it was not. §231.
 - **The “give this runner a number” box knows they already have one.** Since numbers are reserved at registration, that box was rendering empty for somebody holding number 2 and offering the free numbers with theirs missing. It now says which number they hold, comes prefilled, and is a change rather than a gift — and setting one by hand releases the provisional one instead of stranding it. §230.
 - **The confirmation screen no longer claims a registration it did not make.** Filling the form again with an address that is already registered creates nothing — the database forbids a second row — but it re-sends the confirmation with its QR, and the screen said “check your email to confirm your registration”. It now says, to everybody alike, that an email to an address already registered is the existing confirmation. §229.
 - **The second address box must be typed, not pasted** — a paste from the box above confirms nothing. It says so when it refuses, and offers “paste it anyway” for anybody who cannot type it by hand. §227.

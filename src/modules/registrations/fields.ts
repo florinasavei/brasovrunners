@@ -239,6 +239,16 @@ const emergencyContactRule = (
       path: ["emergencyContactPhone"],
       message: "the emergency contact must be somebody other than the participant",
     });
+    /*
+      A second marker, so the page can say *which* rule refused it (§231).
+
+      The path above is the field, which is what makes the error summary able to link to it.
+      But the field has two ways to fail — a malformed number and this — and the page could
+      only tell somebody "that number is not valid", which about their own correct number is
+      simply untrue. Not a field name, so `parseInvalidFields` drops it from the summary; the
+      page reads it from the raw parameter, as it does for the captcha and the timing check.
+    */
+    ctx.addIssue({ code: "custom", path: ["emergencySame"], message: "same as the participant" });
   }
 };
 
