@@ -74,9 +74,24 @@ export default function GuardianForMinor({
 
   return (
     <>
-      <noscript>
-        <style>{`.guardian-for-minor { display: block !important }`}</style>
-      </noscript>
+      {/*
+        The `<noscript>` rule, set as raw HTML rather than as children (§211).
+
+        With scripting **enabled** — which is every case React hydrates in — the browser parses
+        the inside of a `<noscript>` element as **text**, not as elements. React renders children
+        there as real nodes, so the server's HTML and the client's tree disagree about what is
+        inside it, and React answers a mismatch by discarding the DOM and rebuilding the subtree.
+        On this form that threw away whatever had already been typed: the e2e suite caught it as
+        an empty "Prenume" with every later field intact, because the first thing typed was the
+        only thing typed before hydration finished.
+
+        `dangerouslySetInnerHTML` is how a `<noscript>` is written so both sides agree it holds
+        text. The rule itself is unchanged: with JavaScript off the guardian's name is simply
+        always visible.
+      */}
+      <noscript
+        dangerouslySetInnerHTML={{ __html: "<style>.guardian-for-minor { display: block !important }</style>" }}
+      />
       <Box className="guardian-for-minor" sx={{ display: open ? "block" : "none" }}>
         {children}
       </Box>

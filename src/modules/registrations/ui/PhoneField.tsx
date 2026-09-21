@@ -28,6 +28,20 @@ import { composePhone, DIALING_CODES, PHONE_COUNTRY_CODES, splitPhone } from "..
  * to approximate it — which is how the two drift and a form starts refusing what the server
  * accepts.
  *
+ * ## Uncontrolled inputs, and why that is not a detail (§211)
+ *
+ * The boxes keep `defaultValue` and never `value`. Written as controlled inputs they wiped what
+ * somebody had already typed: the server's HTML carries the fields, a person starts typing
+ * immediately, React hydrates a moment later, and a controlled input rendered from state that
+ * began at "" replaces their text with nothing. It is invisible in development, where hydration
+ * is instant, and it is exactly what happens to the first person on a cold edge.
+ *
+ * The e2e suite found it by behaving like that person — filling the form the instant the page
+ * arrives — and the submission then failed native validation on boxes that looked filled.
+ *
+ * So the DOM owns the value and this island only *watches* it: state exists for the comparison
+ * and for nothing else, which is why it can never contradict what is on screen.
+ *
  * ## What happens before hydration, and without JavaScript
  *
  * The same markup, with the same `pattern`, `minLength` and `required` the browser has always
@@ -111,7 +125,7 @@ export default function PhoneField({
         select
         name={`${name}Country`}
         label={countryLabel}
-        value={country}
+        defaultValue={initialCountry}
         onChange={(event) => setCountry(event.target.value)}
         size="medium"
         slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
@@ -128,7 +142,7 @@ export default function PhoneField({
         name={name}
         type="tel"
         label={label}
-        value={national}
+        defaultValue={initialNational}
         onChange={(event) => setNational(event.target.value)}
         onBlur={() => setTouched(true)}
         required={required}

@@ -60,6 +60,8 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.locator('[name="firstName"]').fill("Ana");
     await page.locator('[name="lastName"]').fill("Popescu");
     await page.locator('[name="email"]').fill(address);
+    // The same address again (§206): the form asks for it twice and the action refuses a mismatch.
+    await page.locator('[name="emailConfirm"]').fill(address);
     await page.locator('[name="birthDate"]').fill("1990-05-17");
     await page.locator('[name="city"]').fill("Brașov");
 
@@ -71,6 +73,9 @@ test.describe("BR-REQ-030-01 the featured event leads to the registration form",
     await page.locator('[name="emergencyContactName"]').fill("Ion Popescu");
     await page.locator('[name="emergencyContactPhone"]').fill("+40722222222");
     await page.locator('[name="privacyAcknowledged"]').check();
+    // The race conditions (§195): the seeded events carry none of their own, so this is the
+    // plain-checkbox branch rather than the panel.
+    await page.locator('[name="rulesAcknowledged"]').check();
     // Required since §171, beside the privacy acknowledgment.
     await page.locator('[name="fitnessDeclared"]').check();
 

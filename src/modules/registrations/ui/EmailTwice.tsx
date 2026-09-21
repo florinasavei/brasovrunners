@@ -32,11 +32,26 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
  * password manager holds the address people use everywhere, and refusing it would push somebody
  * to type from memory, which is worse than a paste of the right thing.
  *
+ * ## Uncontrolled inputs, and why that is not a detail (§211)
+ *
+ * The boxes keep `defaultValue` and never `value`. Written as controlled inputs they wiped what
+ * somebody had already typed: the server's HTML carries the fields, a person starts typing
+ * immediately, React hydrates a moment later, and a controlled input rendered from state that
+ * began at "" replaces their text with nothing. It is invisible in development, where hydration
+ * is instant, and it is exactly what happens to the first person on a cold edge.
+ *
+ * The e2e suite found it by behaving like that person — filling the form the instant the page
+ * arrives — and the submission then failed native validation on boxes that looked filled.
+ *
+ * So the DOM owns the value and this island only *watches* it: state exists for the comparison
+ * and for nothing else, which is why it can never contradict what is on screen.
+ *
  * ## Before hydration, and with JavaScript off
  *
  * The two fields and their `type="email"` validation are the server's markup; the live verdict is
  * consulted only once hydrated. And the match is **checked again on the server**, because a
- * comparison that only ever ran in a browser is a decoration (the schema's own `superRefine`).
+ * comparison that only ever ran in a browser is a decoration (`assertEmailTypedTwice`, called by
+ * the public action — §206 records why it is not in the service's schema).
  */
 export default function EmailTwice({
   name,
@@ -99,7 +114,7 @@ export default function EmailTwice({
         name={name}
         type="email"
         label={label}
-        value={first}
+        defaultValue={defaultValue ?? ""}
         onChange={(event) => setFirst(event.target.value)}
         required
         fullWidth
@@ -113,7 +128,7 @@ export default function EmailTwice({
         name={confirmName}
         type="email"
         label={confirmLabel}
-        value={second}
+        defaultValue={defaultConfirmValue ?? ""}
         onChange={(event) => setSecond(event.target.value)}
         required
         fullWidth

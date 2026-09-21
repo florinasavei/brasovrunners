@@ -33,7 +33,26 @@ async function fillRequired(page: Page, omit?: string) {
     if (name === omit) continue;
     await page.locator(`[name="${name}"]`).fill(value);
   }
+  /*
+    The address a second time (§206): typed by hand on the real form, because QA's outbox held
+    three bounced messages to "…@gmail.con" and one letter loses somebody for good. Omitting
+    `email` omits both — a test that wants the address missing wants it missing from both boxes,
+    or the mismatch would be what refused the form rather than the absence.
+  */
+  if (omit !== "email") {
+    await page.locator('[name="emailConfirm"]').fill(values.email);
+  }
   await page.locator('[name="privacyAcknowledged"]').check();
+  /*
+    "I have read the race conditions" (§195), required on the public form.
+
+    The seeded events carry no rules of their own, so this is the plain-checkbox branch. An event
+    that *has* rules gets the panel instead — a button, the text, a scroll to the end, and only
+    then a tick — and its hidden input is deliberately `readOnly`, so a spec for that branch has
+    to press through the panel rather than check the box. Worth knowing before somebody adds
+    rules to the seed and wonders why this stops working.
+  */
+  await page.locator('[name="rulesAcknowledged"]').check();
   // "Declar că sunt apt medical să particip" (§171): required on the public form, like the
   // privacy acknowledgment beside it.
   await page.locator('[name="fitnessDeclared"]').check();
@@ -46,6 +65,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
+    await hydrated(page);
 
     // Everything a registration cannot be accepted without is on the page as it loads.
     for (const name of [
@@ -54,11 +74,13 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
       "birthDate",
       "city",
       "email",
+      "emailConfirm",
       "phone",
       "emergencyContactName",
       "emergencyContactPhone",
       "fitnessDeclared",
       "privacyAcknowledged",
+      "rulesAcknowledged",
     ]) {
       await expect(page.locator(`[name="${name}"]`), `${name} is asked up front`).toBeVisible();
     }
@@ -100,6 +122,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
+    await hydrated(page);
 
     await fillRequired(page);
     // The group is open as the page loads; the tick is reachable without opening anything.
@@ -117,6 +140,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
+    await hydrated(page);
 
     // Criterion 1, with every disclosure open — the widest the page can be made. All but the
     // medical note open by default (§59); that one is closed since §171, so it is opened here,
@@ -139,24 +163,59 @@ test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
+    await hydrated(page);
 
     const submit = page.getByRole("button", { name: "Trimite înscrierea" });
     const submitBox = await submit.boundingBox();
     expect(submitBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    // MUI's default checkbox is 42 by 42 — under the rule by two pixels, which is exactly the
-    // kind of miss that survives a review and fails on a phone.
-    const consentBox = await page
-      .locator('[name="privacyAcknowledged"]')
-      .locator("..")
-      .boundingBox();
-    expect(consentBox?.height ?? 0).toBeGreaterThanOrEqual(44);
-    expect(consentBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    /*
+      MUI's default checkbox is 42 by 42 — under the rule by two pixels, which is exactly the
+      kind of miss that survives a review and fails on a phone.
+
+      Measured on the **input**, which is where the hit area is: MUI's
+      `PrivateSwitchBase-input` fills its control and `CHECKBOX_TAP_TARGET` sizes it, while the
+      wrapping span has no box of its own — `boundingBox()` answers null for it, which this
+      assertion read as zero and called a failure. The thing a thumb lands on is the input.
+    */
+    const consentBox = await page.locator('[name="privacyAcknowledged"]').evaluate((input) => {
+      /*
+        Whichever node carries the target, found rather than assumed.
+
+        `CHECKBOX_TAP_TARGET` is applied to MUI's `Checkbox`, and which element in its slot tree
+        ends up with the box has moved between versions and between compositions — the input
+        itself, or the `PrivateSwitchBase-root` span around it. Asserting on one of them by name
+        made this test fail twice for a rule that was being kept: `boundingBox()` answers null
+        for a node with no area, which the old assertion read as zero.
+
+        So: walk from the input up to its label and take the largest box on the way. A thumb
+        lands on whichever of them is biggest, which is the thing the rule is about.
+      */
+      let node: HTMLElement | null = input as HTMLElement;
+      let best = { width: 0, height: 0 };
+      for (let step = 0; step < 4 && node; step += 1) {
+        const rect = node.getBoundingClientRect();
+        if (rect.width * rect.height > best.width * best.height) {
+          best = { width: rect.width, height: rect.height };
+        }
+        if (node.tagName === "LABEL") break;
+        node = node.parentElement;
+      }
+      return best;
+    });
+    expect(consentBox.height).toBeGreaterThanOrEqual(44);
+    expect(consentBox.width).toBeGreaterThanOrEqual(44);
 
     // BR-REQ-031-01 criterion 5 (`DECISIONS.md` §102): what is being signed up for, on the
     // form — the event's page, the terms and the privacy notice as links, each a tap target.
+    /*
+      Not `exact` since §197: the two legal links open in a tab of their own, and their
+      accessible name says so — "Termeni de concurs — se deschide într-o filă nouă". That
+      sentence is the point of the icon beside them, so the test matches the beginning of the
+      name rather than insisting the name never grew.
+    */
     for (const name of ["Detaliile evenimentului", "Termeni de concurs", "GDPR"]) {
-      const link = page.locator("#main").getByRole("link", { name, exact: true }).first();
+      const link = page.locator("#main").getByRole("link", { name }).first();
       await expect(link).toBeVisible();
       expect((await link.boundingBox())?.height ?? 0, name).toBeGreaterThanOrEqual(44);
     }
@@ -168,6 +227,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
+    await hydrated(page);
 
     await fillRequired(page, "firstName");
 
@@ -212,6 +272,7 @@ test.describe("BR-REQ-031-04 a rejected submission says what to fix, and goes th
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);
+    await hydrated(page);
     await hydrated(page);
 
     await fillRequired(page);
