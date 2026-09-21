@@ -11310,3 +11310,52 @@ overflowing sideways at 320, and exactly one language switcher, in the footer on
 the header on a desktop.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 263. Decided — a table says how it is drawn, and the editor draws it that way (2026-09-21)
+
+**Context.** The owner, twice. First "tabelele arată strange", and then the ask: "la tabele ar
+trebui să pot alege border and stuff, ca să pot folosi tabelele și ca și layout, și să pot centra
+info în ele".
+
+Two separate things were wrong. **The editor had no table rules at all** — the page drew a full
+grid with a shaded header row, the writing area drew whatever a browser does with an unstyled
+`<table>`, which is nothing — so a table was arranged against one drawing and published as
+another. And a table could only ever be a grid, which is why using one to lay two columns of text
+side by side looked like a spreadsheet somebody had left in the page.
+
+**Decision.** *Two attributes on the table node, and one description of the drawing.*
+
+- `borders`: `all` (the grid every table already has), `rows` (horizontal rules only — what a
+  price list or a printed timetable wants), or `none` (no lines, which is what makes a table
+  usable as a layout). In `none` the header row keeps its weight and loses its shading: bold is a
+  heading, shaded is a table's chrome.
+- `valign`: `top` as before, or `middle`.
+
+*Horizontal centring needed nothing.* A cell holds paragraphs and a paragraph has carried its own
+alignment since §213, so the toolbar's centre button already centres a cell's words — and finding
+that out was cheaper than adding a second alignment that would have fought it.
+
+*`table-layout.ts` is the one description*, the way `image-layout.ts` is for a picture: the page
+takes an `sx` from it, and the editor takes a block of rules keyed on `data-borders` /
+`data-valign`, which is how a ProseMirror node carries a choice into CSS. A borderless table gets
+a dashed outline **in the editor only**, because a writer still has to see where the cells are.
+
+*The default writes nothing.* `all` and `top` emit no attribute, so a table stored before today
+parses to exactly itself — no migration, and the golden-string tests stay green. The editor's
+`parseHTML` validates rather than trusting, because an unknown word would become an attribute the
+server's allowlist then refuses, which is a save that fails for a reason nobody can see.
+
+*Three controls, and they only appear inside a table* (§196's rule): one that cycles the borders
+and is **named after the state it is in** ("Linii: doar orizontale (apasă pentru niciuna)"), one
+for the vertical middle, and Tiptap's own header-row toggle — a layout table has no header row,
+and a table that grew one by accident had no way to lose it.
+
+*Also, since it was the same complaint:* the pages and album editors called English "Engleză"
+while the event editor called it "English". One name now, the language's own, from `Site` (§259).
+
+Tests: `tests/unit/content/rich-text-tables.test.ts` (the allowlist, the defaults, each variant's
+rules, and that the page has no rules of its own) and `tests/e2e/rich-text-tables.spec.ts` — a
+table drawn in the editor, restyled, saved, published, and the computed border width of a real
+cell read back as zero.
+
+Baseline `BR-V1.43-2026-09-21`.

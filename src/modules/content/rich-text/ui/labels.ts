@@ -33,6 +33,15 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     tableDeleteRow: rt("tableDeleteRow"),
     tableDeleteColumn: rt("tableDeleteColumn"),
     tableDelete: rt("tableDelete"),
+    // §263: one control per choice, and the borders one is named after the state it is in, so
+    // the tooltip says "lines: rows only" rather than "cycle the lines".
+    tableBorders: {
+      all: rt("tableBordersAll"),
+      rows: rt("tableBordersRows"),
+      none: rt("tableBordersNone"),
+    },
+    tableValign: rt("tableValign"),
+    tableHeaderRow: rt("tableHeaderRow"),
     link: rt("link"),
     linkUrl: rt("linkUrl"),
     linkApply: rt("linkApply"),

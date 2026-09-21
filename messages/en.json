@@ -1350,7 +1350,12 @@
       "tableAddColumn": "Add a column",
       "tableDeleteRow": "Delete the row",
       "tableDeleteColumn": "Delete the column",
-      "tableDelete": "Delete the table"
+      "tableDelete": "Delete the table",
+      "tableBordersAll": "Lines: all (press for rows only)",
+      "tableBordersRows": "Lines: rows only (press for none)",
+      "tableBordersNone": "Lines: none — the table is a layout (press for all)",
+      "tableValign": "Text in the middle of the cell, vertically",
+      "tableHeaderRow": "Header row on or off"
     },
     "pages": {
       "title": "Pages",

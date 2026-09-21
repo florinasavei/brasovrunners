@@ -23,11 +23,15 @@ import {
   IMAGE_ALIGNMENTS,
   IMAGE_WIDTH_PERCENTS,
   readRichText,
+  TABLE_BORDERS,
   type BlockAlignment,
   type ImageCrop,
+  type TableBorders,
+  type TableValign,
 } from "../domain/schema";
 import ImageCropBox from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
+import { EDITOR_TABLE_SX } from "./table-layout";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -91,6 +95,10 @@ export default function RichTextEditor({
     tableDeleteRow: string;
     tableDeleteColumn: string;
     tableDelete: string;
+    /** §263: how the table is drawn, where its text sits, and whether it has a header row. */
+    tableBorders: Record<TableBorders, string>;
+    tableValign: string;
+    tableHeaderRow: string;
     link: string;
     linkUrl: string;
     linkApply: string;
@@ -222,6 +230,8 @@ export default function RichTextEditor({
         value that is thrown away.
       */
       TableKit.configure({ table: { resizable: false } }),
+      /* The borders and the vertical alignment of a table (§263), above. */
+      TableStyle,
       Image.configure({ inline: false, allowBase64: false }).extend({
         parseHTML() {
           return [];
@@ -357,6 +367,17 @@ export default function RichTextEditor({
   const selectedImage = editor?.isActive("image")
     ? (editor.view.dom.querySelector("img.ProseMirror-selectednode, .rt-crop.ProseMirror-selectednode") as HTMLElement | null)
     : null;
+  /*
+    The table's own two choices (§263), read where the toolbar is built. `getAttributes` on a
+    caret outside a table answers `{}`, so the fallbacks are the defaults and the controls are
+    only rendered inside one anyway.
+  */
+  const tableBorders: TableBorders =
+    (editor?.getAttributes("table").borders as TableBorders | null) ?? "all";
+  const tableValign: TableValign =
+    (editor?.getAttributes("table").valign as TableValign | null) ?? "top";
+  const nextBorders = TABLE_BORDERS[(TABLE_BORDERS.indexOf(tableBorders) + 1) % TABLE_BORDERS.length];
+
   const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
   const imageNodeAt = selectedImage ? (editor?.state.selection.from ?? null) : null;
   const imagePanelOpen = Boolean(selectedImage) && imageNodeAt !== dismissedAt;
@@ -555,6 +576,48 @@ export default function RichTextEditor({
                 text="−→"
                 active={false}
                 onClick={() => editor?.chain().focus().deleteColumn().run()}
+              />
+              {/*
+                How the table is drawn (§263; the owner: "la tabele ar trebui să pot alege border
+                and stuff, ca să pot folosi tabelele și ca și layout"). One control that cycles
+                grid → rows → none, showing what it is on rather than what it will do, because
+                three separate buttons for one three-valued choice is three buttons.
+              */}
+              <Control
+                label={labels.tableBorders[tableBorders]}
+                text={TABLE_BORDER_GLYPH[tableBorders]}
+                active={tableBorders !== "all"}
+                onClick={() =>
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("table", {
+                      borders: nextBorders === "all" ? null : nextBorders,
+                    })
+                    .run()
+                }
+              />
+              {/* Top or middle. Horizontal centring is the paragraph's own alignment, three
+                  buttons to the left — a cell holds paragraphs, so it is already there. */}
+              <Control
+                label={labels.tableValign}
+                text="↕"
+                active={tableValign === "middle"}
+                onClick={() =>
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("table", { valign: tableValign === "middle" ? null : "middle" })
+                    .run()
+                }
+              />
+              {/* A layout table has no header row, and a table that grew one by accident has no
+                  other way to lose it. Tiptap's own command: it converts the row in place. */}
+              <Control
+                label={labels.tableHeaderRow}
+                text="H"
+                active={editor?.isActive("tableHeader") ?? false}
+                onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
               />
               <Control
                 label={labels.tableDelete}
@@ -789,6 +852,10 @@ export default function RichTextEditor({
               fontStyle: "italic",
             },
             "& .tiptap ul, & .tiptap ol": { pl: 3 },
+            /* A table is drawn here exactly as the page draws it (§263). The editor had no table
+               rules at all: a grid on the page was an unstyled table in the form, which is the
+               whole of "tabelele arată strange". */
+            ...EDITOR_TABLE_SX,
           }}
         >
           <EditorContent editor={editor} />
@@ -1031,6 +1098,59 @@ export default function RichTextEditor({
  * `text-align` declaration only where somebody chose one — the same discipline the renderer
  * keeps, and the reason the two look identical.
  */
+/**
+ * The table's own two choices (§263): how it is drawn, and where in a cell the text sits.
+ *
+ * A global attribute on the `table` node rather than a fork of `TableKit`, which is the same
+ * shape `BlockAlign` uses for a paragraph's alignment and needs no package: `addGlobalAttributes`
+ * is the documented way to put an attribute on a node another extension owns.
+ *
+ * **The default emits nothing.** `all` and `top` are what every table already looks like, so a
+ * table nobody has restyled writes no attribute at all — its stored JSON stays byte-identical
+ * and the editor's own default CSS applies. Only a choice away from the default reaches the DOM,
+ * as `data-borders` / `data-valign`, which is what `table-layout.ts` keys the editor's rules on.
+ *
+ * `parseHTML` validates rather than trusting: the value comes back from the editor's own DOM on
+ * an undo or a copy inside the document, and an unknown string there would become an attribute
+ * the server's allowlist then refuses — a save that fails for a reason nobody can see.
+ */
+const TableStyle = Extension.create({
+  name: "tableStyle",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["table"],
+        attributes: {
+          borders: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              attrs.borders === "rows" || attrs.borders === "none"
+                ? { "data-borders": attrs.borders }
+                : {},
+            parseHTML: (element: HTMLElement) => {
+              const value = element.getAttribute("data-borders");
+              return value === "rows" || value === "none" ? value : null;
+            },
+          },
+          valign: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              attrs.valign === "middle" ? { "data-valign": "middle" } : {},
+            parseHTML: (element: HTMLElement) =>
+              element.getAttribute("data-valign") === "middle" ? "middle" : null,
+          },
+        },
+      },
+    ];
+  },
+});
+
+/**
+ * What the borders control shows: the state it is in, drawn with box-drawing characters rather
+ * than an icon package (`AGENTS.md` §1.5) and in the same spirit as the rest of this toolbar.
+ */
+const TABLE_BORDER_GLYPH: Record<TableBorders, string> = { all: "▦", rows: "▤", none: "▢" };
+
 const ALIGNABLE = ["paragraph", "heading"] as const;
 
 const BlockAlign = Extension.create({

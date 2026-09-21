@@ -169,7 +169,37 @@ const blockquoteNode = z.object({
  *
  * A header row is `tableHeader` cells, which is Tiptap's own shape; the renderer turns them into
  * `<th>` with a scope, so a screen reader announces which column a figure belongs to.
+ *
+ * **Two choices about the whole table are kept** (§263; the owner: "la tabele ar trebui să pot
+ * alege border and stuff, ca să pot folosi tabelele și ca și layout, și să pot centra info în
+ * ele"). Both are on the table rather than the cell, because a table whose cells each carry
+ * their own rules is a spreadsheet, and because these are the two questions somebody actually
+ * asks — "should this read as a table or hold a layout" and "where in the cell does the text
+ * sit". Horizontal centring needs nothing new: a cell holds paragraphs, and a paragraph already
+ * carries its own alignment (§213), so the toolbar's own centre button centres a cell's words.
+ *
+ * - `borders`: `all` — the lines the table has always had — `rows` for horizontal rules only,
+ *   which is how a price list reads, or `none`, which is what makes a table usable as a layout.
+ * - `valign`: `top`, as it was, or `middle`.
+ *
+ * Absent means the default, exactly as with a paragraph's alignment: a table stored before today
+ * parses to a table with no `attrs` at all, so every golden-string test keeps passing and
+ * nothing needs migrating.
  */
+export const TABLE_BORDERS = ["all", "rows", "none"] as const;
+export type TableBorders = (typeof TABLE_BORDERS)[number];
+export const TABLE_VALIGNS = ["top", "middle"] as const;
+export type TableValign = (typeof TABLE_VALIGNS)[number];
+
+export type TableStyle = { borders: TableBorders; valign: TableValign };
+
+/** Absent, null, or the default — one place decides, so no renderer re-decides it. */
+export function tableStyleOf(
+  attrs: { borders?: TableBorders | null; valign?: TableValign | null } | undefined,
+): TableStyle {
+  return { borders: attrs?.borders ?? "all", valign: attrs?.valign ?? "top" };
+}
+
 const SPAN = z.number().int().min(1).max(20).optional();
 
 const tableCellContent = z.array(z.union([paragraphNode, bulletListNode, orderedListNode])).min(1);
@@ -193,6 +223,12 @@ const tableRowNode = z.object({
 
 const tableNode = z.object({
   type: z.literal("table"),
+  attrs: z
+    .object({
+      borders: z.union([z.literal("all"), z.literal("rows"), z.literal("none")]).nullish(),
+      valign: z.union([z.literal("top"), z.literal("middle")]).nullish(),
+    })
+    .optional(),
   content: z.array(tableRowNode).min(1),
 });
 

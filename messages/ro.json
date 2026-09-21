@@ -1350,7 +1350,12 @@
       "tableAddColumn": "Adaugă o coloană",
       "tableDeleteRow": "Șterge rândul",
       "tableDeleteColumn": "Șterge coloana",
-      "tableDelete": "Șterge tabelul"
+      "tableDelete": "Șterge tabelul",
+      "tableBordersAll": "Linii: toate (apasă pentru doar orizontale)",
+      "tableBordersRows": "Linii: doar orizontale (apasă pentru niciuna)",
+      "tableBordersNone": "Linii: niciuna — tabelul e folosit ca aranjament (apasă pentru toate)",
+      "tableValign": "Text la mijlocul celulei, pe verticală",
+      "tableHeaderRow": "Rând de titlu (pornit/oprit)"
     },
     "pages": {
       "title": "Pagini",
@@ -1391,7 +1396,7 @@
       "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
       "language": {
         "ro": "Română",
-        "en": "Engleză"
+        "en": "English"
       },
       "fields": {
         "title": "Titlu",
@@ -1470,7 +1475,7 @@
       "slugLocked": "Adresa este fixă după publicare, ca să nu se strice linkurile distribuite.",
       "language": {
         "ro": "Română",
-        "en": "Engleză"
+        "en": "English"
       },
       "fields": {
         "takenOn": "Data fotografiilor",
@@ -1921,7 +1926,7 @@
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
     "preferredLocaleOptions": {
       "ro": "Română",
-      "en": "Engleză"
+      "en": "English"
     },
     "phone": "Telefon",
     "phoneCountry": "Țara",

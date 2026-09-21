@@ -10,6 +10,7 @@ import {
 import { cropGeometry, cropImageSx, cropWindowSx, imageCaptionSx, imageFigureSx } from "./image-layout";
 import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
+import { tableSx } from "./table-layout";
 
 /**
  * An editorial body, rendered on the server through the same allowlist that validated it
@@ -166,6 +167,12 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
 
         Header cells become `<th scope>` — a column header says which column, a row header which
         row — so a screen reader announces "Ora de start, 10:00" rather than "10:00".
+
+        How it is *drawn* — a grid, horizontal rules only, or nothing at all, and where in the
+        cell the text sits — is the organizer's choice since §263 and lives in `table-layout.ts`,
+        which the editor draws from as well. It used to be the block of rules below, which the
+        editor had no copy of: the page showed a grid and the editor showed nothing, so a table
+        was arranged against one drawing and published as another.
       */
       return (
         <Box
@@ -173,24 +180,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
           role="region"
           sx={{ maxWidth: "100%", overflowX: "auto", mb: 2, WebkitOverflowScrolling: "touch" }}
         >
-          <Box
-            component="table"
-            sx={{
-              borderCollapse: "collapse",
-              // Never narrower than it needs to be, never forced wider than the column.
-              minWidth: "min(100%, 28rem)",
-              "& td, & th": {
-                border: 1,
-                borderColor: "divider",
-                px: 1.5,
-                py: 1,
-                textAlign: "left",
-                verticalAlign: "top",
-              },
-              "& th": { fontWeight: 700, backgroundColor: "action.hover" },
-              "& p:last-of-type": { mb: 0 },
-            }}
-          >
+          <Box component="table" sx={tableSx(block.attrs)}>
             <Box component="tbody">
               {block.content.map((row, rowIndex) => (
                 <Box component="tr" key={rowIndex}>
