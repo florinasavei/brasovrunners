@@ -223,6 +223,11 @@ export function renderBilingual(
 /** What every template needs beyond the locale — never a rendered body, never a token. */
 export type TemplateData = {
   participantName: string;
+  /**
+   * This message is a re-send, because the form was filled in again with an address that is
+   * already registered (§199, §235). One sentence goes in front of the body saying so.
+   */
+  alreadyRegistered?: boolean;
   eventTitle?: string;
   eventLocationName?: string;
   eventStartsAtFormatted?: string;
@@ -458,6 +463,9 @@ const T = {
       ],
     },
     closing: "Alergare plăcută,",
+    /** In front of a message re-sent because the form was filled in again (§235). */
+    alreadyRegistered:
+      "Erai deja înscris la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
     footer: "Răspunde la acest email pentru întrebări.",
   },
   en: {
@@ -631,6 +639,9 @@ const T = {
       ],
     },
     closing: "Happy running,",
+    /** In front of a message re-sent because the form was filled in again (§235). */
+    alreadyRegistered:
+      "You were already registered for this event, so no second registration was created — below is the registration you already have.",
     footer: "Reply to this email with questions.",
   },
 } as const;
@@ -686,7 +697,27 @@ export function buildTemplateContent(
     subject: typeof entry.subject === "function" ? entry.subject(data) : entry.subject,
     greeting: entry.greeting ? entry.greeting(data) : copy.hi(data.participantName),
     facts: entry.facts?.(data),
-    paragraphs: entry.body(data),
+    /*
+      The re-send says it is one (§235).
+
+      Filling the form again with an address that is already registered creates nothing and
+      re-sends whatever the state can offer (§199) — for a confirmed entrant, the confirmation,
+      QR and all. That arrived reading exactly like a first confirmation, so the owner read two
+      of them as two registrations and said so: "te poți înscrie cu fix același mail de 2 ori,
+      primești și QR și tot". No second registration exists; only the message was ambiguous.
+
+      One sentence in front of the body, and it is **here** rather than in one template because
+      the re-send picks its type from the state: confirmed gets the confirmation, unsigned gets
+      the declaration, queued gets the waiting-list notice. All three needed the same sentence.
+
+      This is the whole of what may be said. The screen stays generic whatever the state,
+      because answering "is this address registered" there would answer it about *anybody*'s
+      address ( §19.4); the inbox is the one place the question can be answered to
+      the only person entitled to the answer.
+    */
+    paragraphs: data.alreadyRegistered
+      ? [copy.alreadyRegistered, ...entry.body(data)]
+      : entry.body(data),
     action: entry.action && actionUrl ? { label: entry.action, url: actionUrl } : undefined,
     image: entry.image?.(data),
     links: entry.links?.(data),

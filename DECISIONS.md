@@ -10382,3 +10382,45 @@ benign default will hide a total failure as effectively as it hides the edge cas
 written for. This one read "not an address yet" and meant "this module cannot run here".
 
 Baseline `BR-V1.40-2026-09-21`.
+
+## 235. Decided — the re-sent message says it is one (2026-09-21)
+
+**Context.** §229 made the confirmation screen stop asserting a registration it had not made,
+and the owner still said: "I was still able to sign up with the same email again and I had no
+idea." He was right that the screen alone does not settle it, and the reason is that the
+*email* did not either: filling the form again while confirmed re-sends
+`REGISTRATION_CONFIRMED`, QR and all, which reads exactly like a first confirmation. Two of
+those in an inbox is indistinguishable from two registrations.
+
+**Decision.** One sentence in front of the body of a re-sent message: you were already
+registered for this event, no second registration was created, and what follows is the
+registration you already have.
+
+*The inbox is the only place this may be said*, and that is the whole shape of the decision.
+Saying it on the form would answer "is this address registered" about **anybody's** address to
+anybody who types one — the oracle `AGENTS.md` §19.4 forbids, and the throttle does not help,
+because it is keyed on the address being submitted, so a hundred probes are a hundred separate
+allowances. What leaks is "this named person will be at this place on Saturday", which is
+nothing to almost everybody and is not nothing to somebody avoiding an ex-partner. The inbox
+answers the same question to the one person entitled to the answer.
+
+*The sentence is added centrally, not in one template*, because the re-send picks its type
+from the state: confirmed gets the confirmation, unsigned gets the declaration, queued gets the
+waiting-list notice. All three needed it.
+
+*A registration still waiting for its email confirmation gets no such sentence*, and that is
+deliberate rather than an omission: nothing was finished, so "you were already registered" would
+be untrue. The right answer there is the verification link again, which is what it already
+sends.
+
+*The flag rides in the outbox payload* rather than being derived at render time. Only the
+caller knows why a row was queued, and the row is the record of that.
+
+**What this does not fix, said plainly.** Somebody who fills the form twice and never opens
+their email still sees a generic screen. §229's sentence is what covers them, and that is as
+far as this can go without becoming the oracle.
+
+Tests: `tests/integration/registrations/resubmitted.test.ts` — the queued row carries the flag
+and the rendered message leads with the sentence, in both the HTML and the plain text.
+
+Baseline `BR-V1.40-2026-09-21`.

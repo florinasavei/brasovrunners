@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.40-2026-09-21
 
+- **A confirmation you receive twice now says it is the same one.** Filling the form again when you are already registered re-sends your confirmation, QR and all, and it used to read exactly like a first one — which is how two emails looked like two registrations. It now leads with “you were already registered; no second registration was created”. Said in the inbox and not on the form, because the form would answer that question about anybody’s address. §235.
 - **The email box offers the address you meant** — “did you mean ana@gmail.com?”, with one press to fix both boxes. Every address that has cost this club a registration was spelled perfectly; “@gmail.con” bounced three times in QA. §233.
 - **And the live email checks now actually run.** The canonicalizer imported a Node-only function, so in a browser it threw on every address — which the mismatch check quietly read as “nothing to compare”. The “two addresses do not match” warning had never once appeared since it shipped. §234.
 - **A registration’s race number is one line again.** Changing it by hand is folded underneath, with the free numbers inside where somebody changing it can read them — instead of four controls stacked up for a question that is almost always just “what number does this person have”. §232.

@@ -134,6 +134,14 @@ export const renderOutboxMessage: EmailRenderer = async (row: OutboxRow, db, now
       payloadActionUrl = url;
     }
   }
+  /*
+    A message re-sent because the form was filled in again (§199, §235). The flag is in the
+    payload rather than derived here: only the caller knows why this row was queued, and the
+    row is the record of that.
+  */
+  if ((row.payloadJson as { alreadyRegistered?: unknown } | null)?.alreadyRegistered === true) {
+    data.alreadyRegistered = true;
+  }
   // The staff invitation (§141): everything it says is in the payload — there is no
   // participant and no token; the action is the sign-in page, which asserts who they are.
   if (row.messageType === "STAFF_INVITATION") {
