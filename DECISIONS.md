@@ -11403,3 +11403,40 @@ idempotence with two dated batches, the single-bib mark, the refusals, the role)
 at a time, before erase).
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 265. Decided — the configuration screens are panels, not one scroll (2026-09-21)
+
+**Context.** The owner: "partea de configurare ar trebui să aibă subtaburi, pt status, general,
+mailuri, captcha, etc". Two screens had each grown to six or seven sections on one scroll —
+`/devs` is six hundred lines, `/admin/tasks` seven hundred — so "where do I turn the anti-bot
+check off" meant scrolling past Neon's compute hours or the price of every service the club uses.
+
+**Decision.** *A `?panel=` query and a row of sub-tabs, on both screens.*
+
+- `/devs`: **status** (the verdict, the schema and the jobs, Neon's month, Vercel's month, what
+  each limit does, the runtime), **general** (which variables are present — never a value, §8 —
+  the rate limits, what each setting can be, who may do what), **email** (today's volume against
+  the plan, and what was captured locally).
+- `/admin/tasks`: **todo** (what is owed, its filters, the open decisions), **botCheck** (the one
+  switch that lives here, §254), **costs** (what the club pays and what the next thing costs).
+
+*A query parameter rather than a route each.* Every panel needs the same session and the same
+reading of the system — `/devs` maps `env` to booleans before it renders anything, which is the
+last code in the repository worth duplicating — so three routes would be three copies of one
+page's head. Anything unknown in `panel` reads as the first panel, never as an empty screen.
+
+*The two screens name each other.* `/devs` offers "Anti-robot", which is the club's switch on the
+other screen; the to-do screen offers "Sistem", when the reader's role may see it. They are two
+halves of one question the club asks together, and a sub-tab that crosses a route is cheaper than
+moving a control away from the people who need it.
+
+*`shared/ui/SubNav`* is a Server Component of plain anchors — the same decision `GallerySubNav`
+records: `AdminTabs` is a client island only because a layout cannot know which page it wraps,
+and a page always knows which panel it is showing. So this works with JavaScript off, and the
+current panel carries `aria-current="page"` rather than colour alone.
+
+Tests: `tests/e2e/config-panels.spec.ts` — each panel shows its own sections and not the others,
+a bare URL opens the first, a nonsense panel falls back, and the cross-screen sub-tab lands on the
+switch. `tests/e2e/tasks-cost.spec.ts` now opens the costs panel by its URL.
+
+Baseline `BR-V1.43-2026-09-21`.

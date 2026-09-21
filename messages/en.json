@@ -1026,6 +1026,12 @@
       "allDone": "Everything shown here is done.",
       "noneMatch": "No row matches this filter.",
       "listLabel": "The task list",
+      "panel": {
+        "todo": "To do",
+        "botCheck": "Anti-bot",
+        "costs": "Costs",
+        "system": "System"
+      },
       "filter": {
         "who": "Who",
         "kind": "Kind",
@@ -2213,6 +2219,12 @@
     "intro": "What is configured here and what is missing. Variable names and whether they have a value — never the value.",
     "environment": "Environment",
     "buildUnknown": "build date unknown",
+    "panel": {
+      "status": "Status",
+      "general": "General",
+      "email": "Email",
+      "botCheck": "Anti-bot"
+    },
     "configuration": "Configuration",
     "neverValues": "No value, key or secret appears on this page. Only the variable's name and whether it is set.",
     "runtime": "State right now",

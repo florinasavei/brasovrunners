@@ -54,10 +54,11 @@ import {
 } from "@/modules/notifications/volume";
 import { contactFormReaches } from "@/modules/contact/delivery";
 import { readContactRecipients } from "@/modules/contact/recipients";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canManageRegistrations, canSeeDiagnostics } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
 import { getPathname } from "@/i18n/navigation";
+import SubNav from "@/shared/ui/SubNav";
 import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 
 type Props = {
@@ -67,6 +68,25 @@ type Props = {
 };
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The panels this screen is divided into (§265; the owner: "partea de configurare ar trebui să
+ * aibă subtaburi, pt status, general, mailuri, captcha, etc").
+ *
+ * What was owed, the anti-bot switch and the cost table were one scroll of about seven hundred
+ * lines, so "where do I turn the captcha off" meant passing the whole checklist and the price of
+ * every service on the way. Three panels:
+ *
+ * - `todo` — what is still owed, with its filters, and the decisions still open.
+ * - `botCheck` — the one setting that lives here rather than a row about one (§254), because the
+ *   club must be able to switch it off on the day it refuses real people.
+ * - `costs` — what the club pays today and what the next thing to cost anything would cost.
+ *
+ * A query parameter, not three routes: each panel needs the same session and the same reading of
+ * the system (`describeTasks`), so three routes would be three copies of this page's head.
+ */
+const TASK_PANELS = ["todo", "botCheck", "costs"] as const;
+type TaskPanel = (typeof TASK_PANELS)[number];
 
 /** The colour is the whole message for somebody scanning: red stops a registration today. */
 const STATE_COLOR: Record<TaskState, "error" | "warning" | "success"> = {
@@ -124,6 +144,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   // The filters, checked against the closed sets: a typed value nobody offered is "all".
   const query = await searchParams;
   const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  const panelRaw = first(query.panel);
+  const panel: TaskPanel = TASK_PANELS.includes(panelRaw as TaskPanel) ? (panelRaw as TaskPanel) : "todo";
   const ownerRaw = first(query.owner);
   const kindRaw = first(query.kind);
   const filter = {
@@ -136,6 +158,11 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
 
   const db = getDb();
   const now = new Date();
+
+  // Strings, because that is what the sub-nav takes (§265), and `getPathname` is a server
+  // function so this is the only side of the boundary that can build them.
+  const tasksPath = getPathname({ locale, href: "/admin/tasks" });
+  const devsPath = getPathname({ locale, href: "/devs" });
 
   // The anti-bot switch (§254): read straight through, because this page is where it is moved.
   const botCheck = await readBotCheck(db);
@@ -346,345 +373,375 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
         {blocking > 0 ? t("blockingSummary", { count: blocking }) : t("nothingBlocking")}
       </Alert>
 
-      {/* The one setting on this page rather than a row about one (§254): the anti-bot check,
-          which the club must be able to switch off on the day it refuses real people. */}
-      <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} />
+      {/* The panels (§265), and the system's own screen beside them: `/devs` answers "is it
+          working" and this one answers "what do we still owe", which are two halves of one
+          question the club asks together. */}
+      <SubNav
+        items={[
+          ...TASK_PANELS.map((name) => ({
+            href: name === "todo" ? tasksPath : `${tasksPath}?panel=${name}`,
+            label: t(`panel.${name}`),
+            active: panel === name,
+          })),
+          ...(canSeeDiagnostics(actor.role) ? [{ href: devsPath, label: t("panel.system") }] : []),
+        ]}
+      />
 
-      {/* Who and what kind — two rows of links, no client code, each keeping the other's
-          choice (§150). The link is 44 px tall; the chip inside it is small. */}
-      <Stack spacing={0.5}>
-        <Stack component="nav" aria-label={t("filter.who")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
-            {t("filter.who")}:
-          </Typography>
-          {[undefined, ...TASK_OWNERS].map((candidate) => (
-            <Box
-              key={candidate ?? "all"}
-              component="a"
-              href={filterHref({ owner: candidate })}
-              aria-current={candidate === filter.owner ? "page" : undefined}
-              sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
-            >
-              <Chip size="small" label={candidate ? t(`owner.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.owner)} />
-            </Box>
-          ))}
-        </Stack>
-        <Stack component="nav" aria-label={t("filter.kind")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
-            {t("filter.kind")}:
-          </Typography>
-          {[undefined, ...TASK_KINDS].map((candidate) => (
-            <Box
-              key={candidate ?? "all"}
-              component="a"
-              href={filterHref({ kind: candidate })}
-              aria-current={candidate === filter.kind ? "page" : undefined}
-              sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
-            >
-              <Chip size="small" label={candidate ? t(`kind.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.kind)} />
-            </Box>
-          ))}
-        </Stack>
-      </Stack>
-
-      {/* Email has stopped (§98). Red, above the list, because every row below assumes the
-          confirmations are going out — and this page is the one the club opens. */}
-      {email.status === "stalled" && (
-        <Alert severity="error">
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            {t("emailStalled.title")}
-          </Typography>
-          {email.deferred > 0 && (
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {t("emailStalled.deferred", {
-                count: email.deferred,
-                allowance: volume.allowance ?? "—",
-                resumesAt: email.resumesAt
-                  ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
-                      dateStyle: "medium",
-                      timeStyle: "short", hourCycle: "h23",
-                      timeZone: "Europe/Bucharest",
-                    }).format(new Date(email.resumesAt))
-                  : "—",
-              })}
-            </Typography>
-          )}
-          {email.failed > 0 && (
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {t("emailStalled.failed", { count: email.failed, reason: email.lastError ?? "—" })}
-            </Typography>
-          )}
-          {email.overdue > 0 && (
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {t("emailStalled.overdue", { count: email.overdue })}
-            </Typography>
-          )}
-          <Typography variant="body2" sx={{ mt: 0.5 }}>
-            {t("emailStalled.notify")}
-          </Typography>
-        </Alert>
+      {panel === "botCheck" && (
+        <>
+        {/* The one setting on this page rather than a row about one (§254): the anti-bot check,
+            which the club must be able to switch off on the day it refuses real people. */}
+        <BotCheckPanel locale={locale} state={botCheck} keysPresent={Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)} />
+        </>
       )}
 
-      {shown.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
-          {t("noneMatch")}
-        </Typography>
-      )}
-
-      <Stack spacing={2} component="ul" aria-label={t("listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
-        {shown.map((task) => (
-          <Box
-            component="li"
-            key={task.id}
-            sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
-          >
-            <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-              <Chip size="small" color={STATE_COLOR[task.state]} label={t(`state.${task.state}`)} />
-              {/* Who it is waiting on, because that is the difference between a list somebody
-                  acts on and a list they scroll past. */}
-              <Chip size="small" variant="outlined" label={t(`owner.${task.owner}`)} />
-              {/* And what sort of work it is — the same word the filter above uses. */}
-              <Chip size="small" variant="outlined" label={t(`kind.${task.kind}`)} />
-            </Stack>
-            <Typography variant="h2" sx={{ fontSize: "1rem", mb: 0.5 }}>
-              {t(`items.${task.id}.title`)}
+      {panel === "todo" && (
+        <>
+        {/* Who and what kind — two rows of links, no client code, each keeping the other's
+            choice (§150). The link is 44 px tall; the chip inside it is small. */}
+        <Stack spacing={0.5}>
+          <Stack component="nav" aria-label={t("filter.who")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+              {t("filter.who")}:
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t(`items.${task.id}.${task.state === "done" ? "done" : "todo"}`, howValues)}
-              {task.detail && ` — ${task.detail}`}
-            </Typography>
-            {/*
-              How to do it, on the page, with this deployment's own values filled in — so the
-              answer to "what do I click" is under the task and not in a runbook ("things
-              should be self-explanatory in the admin console" — the owner, 2026-09-17). A
-              native <details>, closed: the list stays scannable, and no client code. Hidden
-              once the task is done; the steps are for doing it, not for reading about it.
-            */}
-            {task.state !== "done" && (
-              <Box component="details" sx={{ mt: 1.5 }}>
-                <Box component="summary" sx={{ ...DISCLOSURE_SUMMARY_SX, minHeight: 36, py: 0.5, fontSize: "0.875rem", fontWeight: 500 }}>
-                  {t("howTitle")}
-                </Box>
-                <Box component="ol" sx={{ m: 0, mt: 1, pl: 2.5, "& li": { mb: 0.75 } }}>
-                  {(t.raw(`items.${task.id}.how`) as string[]).map((step, index) => (
-                    <Typography component="li" variant="body2" key={index} sx={{ wordBreak: "break-word" }}>
-                      {fill(step)}
-                    </Typography>
-                  ))}
-                </Box>
+            {[undefined, ...TASK_OWNERS].map((candidate) => (
+              <Box
+                key={candidate ?? "all"}
+                component="a"
+                href={filterHref({ owner: candidate })}
+                aria-current={candidate === filter.owner ? "page" : undefined}
+                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
+              >
+                <Chip size="small" label={candidate ? t(`owner.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.owner)} />
               </Box>
-            )}
-          </Box>
-        ))}
-      </Stack>
-
-      <Divider />
-
-      {/*
-        The money, and the answer before the table that justifies it: what the club pays today,
-        then the next thing to cost anything. Two sentences and two numbers, because the
-        complaint this replaced was that a treasurer had to assemble them from four sections.
-      */}
-      <Box component="section">
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("costTitle")}
-        </Typography>
-
-        <Alert severity={verdict === "freeExceptDomain" ? "success" : "warning"} sx={{ mb: 2 }}>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            {paidToday.length === 0
-              ? t("costToday.nothing")
-              : t("costToday.total", {
-                  total: paidToday
-                    .map((total) =>
-                      total.plusVat
-                        ? t("costToday.amountPlusVat", {
-                            amount: total.amount,
-                            currency: total.currency,
-                          })
-                        : t("costToday.amount", {
-                            amount: total.amount,
-                            currency: total.currency,
-                          }),
-                    )
-                    .join(", "),
-                })}
-          </Typography>
-          {next && (
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {t(`nextSpend.${next.id}`, { cost: next.nextCost ?? "" })}
+            ))}
+          </Stack>
+          <Stack component="nav" aria-label={t("filter.kind")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
+              {t("filter.kind")}:
             </Typography>
-          )}
-        </Alert>
+            {[undefined, ...TASK_KINDS].map((candidate) => (
+              <Box
+                key={candidate ?? "all"}
+                component="a"
+                href={filterHref({ kind: candidate })}
+                aria-current={candidate === filter.kind ? "page" : undefined}
+                sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, textDecoration: "none" }}
+              >
+                <Chip size="small" label={candidate ? t(`kind.${candidate}`) : t("filter.all")} {...chipLook(candidate === filter.kind)} />
+              </Box>
+            ))}
+          </Stack>
+        </Stack>
 
-        {/* The verdict on the free plans, and the one figure that turns this page from reading
-            into acting: how many more people can register today before the free allowance stops
-            sending confirmations. Understated on purpose — a waitlisted entrant costs more. */}
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t(`freeVerdict.${verdict}`)}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t(`registrationsLeft.${volume.period}`, {
-            count: registrationsLeft ?? "",
-            sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
-            allowance: volume.allowance ?? "",
-            plan: volume.planName,
-          })}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t("currencyNote", { vat: ROMANIAN_VAT_PERCENT })}
-        </Typography>
-      </Box>
+        {/* Email has stopped (§98). Red, above the list, because every row below assumes the
+            confirmations are going out — and this page is the one the club opens. */}
+        {email.status === "stalled" && (
+          <Alert severity="error">
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {t("emailStalled.title")}
+            </Typography>
+            {email.deferred > 0 && (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {t("emailStalled.deferred", {
+                  count: email.deferred,
+                  allowance: volume.allowance ?? "—",
+                  resumesAt: email.resumesAt
+                    ? new Intl.DateTimeFormat(locale === "ro" ? "ro-RO" : "en-GB", {
+                        dateStyle: "medium",
+                        timeStyle: "short", hourCycle: "h23",
+                        timeZone: "Europe/Bucharest",
+                      }).format(new Date(email.resumesAt))
+                    : "—",
+                })}
+              </Typography>
+            )}
+            {email.failed > 0 && (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {t("emailStalled.failed", { count: email.failed, reason: email.lastError ?? "—" })}
+              </Typography>
+            )}
+            {email.overdue > 0 && (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {t("emailStalled.overdue", { count: email.overdue })}
+              </Typography>
+            )}
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
+              {t("emailStalled.notify")}
+            </Typography>
+          </Alert>
+        )}
 
-      {/*
-        A researched price is a fact with an expiry, so the page says how old these are instead
-        of printing a date beside them and asserting them with equal confidence for ever.
-      */}
-      <Alert severity={freshness.state === "stale" ? "warning" : "info"}>
-        {t(`freshness.${freshness.state}`, {
-          checked: oldestCheckDate(services),
-          days: Number.isFinite(freshness.days) ? freshness.days : 0,
-        })}
-      </Alert>
+        {shown.length === 0 && (
+          <Typography variant="body2" color="text.secondary">
+            {t("noneMatch")}
+          </Typography>
+        )}
 
-      {/*
-        One row per service, carrying everything about that service: what it costs, what the
-        free plan gives, the ceiling this club meets first, how close this deployment is to it
-        right now, what happens when it is crossed, and what the next plan costs — including the
-        way back down, which used to be a section of its own and belongs here.
-      */}
-      <Box component="section">
-        <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-          {t("servicesTitle")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("servicesIntro")}
-        </Typography>
-
-        <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-          {services.map((row) => (
+        <Stack spacing={2} component="ul" aria-label={t("listLabel")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+          {shown.map((task) => (
             <Box
               component="li"
-              key={row.id}
+              key={task.id}
               sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
             >
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}
-              >
-                <Typography variant="h3" sx={{ fontSize: "1rem" }}>
-                  {t(`services.${row.id}.name`)}
-                </Typography>
-                <Chip
-                  size="small"
-                  color={SERVICE_COLOR[row.severity]}
-                  variant={row.severity === "unknown" ? "outlined" : "filled"}
-                  label={t(`severity.${row.severity}`)}
-                />
+              <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
+                <Chip size="small" color={STATE_COLOR[task.state]} label={t(`state.${task.state}`)} />
+                {/* Who it is waiting on, because that is the difference between a list somebody
+                    acts on and a list they scroll past. */}
+                <Chip size="small" variant="outlined" label={t(`owner.${task.owner}`)} />
+                {/* And what sort of work it is — the same word the filter above uses. */}
+                <Chip size="small" variant="outlined" label={t(`kind.${task.kind}`)} />
               </Stack>
-
-              {/* Two columns at 320px, four from `md`. A table would scroll sideways on a
-                  phone, which §18.5 refuses. */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
-                  gap: 1.5,
-                  mb: 1.5,
-                }}
-              >
-                <Fact label={t("field.planToday")}>
-                  {row.planToday ?? t("planNone")}
-                </Fact>
-                <Fact label={t("field.costToday")}>
-                  <strong>
-                    {row.costToday.kind === "free"
-                      ? t("costToday.free")
-                      : row.costToday.kind === "notTaken"
-                        ? t("costToday.notTaken")
-                        : row.costToday.plusVat
-                          ? t("costToday.amountPlusVat", {
-                              amount: row.costToday.amount,
-                              currency: row.costToday.currency,
-                            })
-                          : t("costToday.amount", {
-                              amount: row.costToday.amount,
-                              currency: row.costToday.currency,
-                            })}
-                  </strong>
-                </Fact>
-                <Fact label={t("field.howClose")}>{howClose(row)}</Fact>
-                <Fact label={t("field.nextPlan")}>
-                  {row.nextPlan ? `${row.nextPlan} — ${row.nextCost}` : t("nextPlanNone")}
-                </Fact>
-              </Box>
-
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                {t(`services.${row.id}.freeGives`)}
+              <Typography variant="h2" sx={{ fontSize: "1rem", mb: 0.5 }}>
+                {t(`items.${task.id}.title`)}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                <strong>{t(`services.${row.id}.ceiling`)}</strong> {t(`services.${row.id}.whenCrossed`)}
+              <Typography variant="body2" color="text.secondary">
+                {t(`items.${task.id}.${task.state === "done" ? "done" : "todo"}`, howValues)}
+                {task.detail && ` — ${task.detail}`}
               </Typography>
-
-              {/* The one genuinely good idea in the table this replaced: a temporary upgrade
-                  nobody reverses is the expensive failure, and no dashboard will remind the
-                  club to come back down. It belongs on the service, not in a section. */}
-              {row.bump && (
-                <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    color={row.bump === "temporary" ? "info" : "default"}
-                    label={t(`bump.${row.bump}`)}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    {t(`services.${row.id}.bumpBack`)}
-                  </Typography>
-                </Stack>
+              {/*
+                How to do it, on the page, with this deployment's own values filled in — so the
+                answer to "what do I click" is under the task and not in a runbook ("things
+                should be self-explanatory in the admin console" — the owner, 2026-09-17). A
+                native <details>, closed: the list stays scannable, and no client code. Hidden
+                once the task is done; the steps are for doing it, not for reading about it.
+              */}
+              {task.state !== "done" && (
+                <Box component="details" sx={{ mt: 1.5 }}>
+                  <Box component="summary" sx={{ ...DISCLOSURE_SUMMARY_SX, minHeight: 36, py: 0.5, fontSize: "0.875rem", fontWeight: 500 }}>
+                    {t("howTitle")}
+                  </Box>
+                  <Box component="ol" sx={{ m: 0, mt: 1, pl: 2.5, "& li": { mb: 0.75 } }}>
+                    {(t.raw(`items.${task.id}.how`) as string[]).map((step, index) => (
+                      <Typography component="li" variant="body2" key={index} sx={{ wordBreak: "break-word" }}>
+                        {fill(step)}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
               )}
-
-              <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
-                {t("checkedOn", { checked: row.checkedOn })}
-              </Typography>
             </Box>
           ))}
         </Stack>
-      </Box>
+        </>
+      )}
 
-      {/*
-        A fact is something to read; a decision is a question with somebody's name on it. Only
-        the open ones — a question that has been answered is a fact, and lives above.
-      */}
-      {decisions.length > 0 && (
+      {panel === "costs" && (
+        <>
+        <Divider />
+
+        {/*
+          The money, and the answer before the table that justifies it: what the club pays today,
+          then the next thing to cost anything. Two sentences and two numbers, because the
+          complaint this replaced was that a treasurer had to assemble them from four sections.
+        */}
         <Box component="section">
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
-            {t("decisionsTitle")}
+            {t("costTitle")}
+          </Typography>
+
+          <Alert severity={verdict === "freeExceptDomain" ? "success" : "warning"} sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {paidToday.length === 0
+                ? t("costToday.nothing")
+                : t("costToday.total", {
+                    total: paidToday
+                      .map((total) =>
+                        total.plusVat
+                          ? t("costToday.amountPlusVat", {
+                              amount: total.amount,
+                              currency: total.currency,
+                            })
+                          : t("costToday.amount", {
+                              amount: total.amount,
+                              currency: total.currency,
+                            }),
+                      )
+                      .join(", "),
+                  })}
+            </Typography>
+            {next && (
+              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                {t(`nextSpend.${next.id}`, { cost: next.nextCost ?? "" })}
+              </Typography>
+            )}
+          </Alert>
+
+          {/* The verdict on the free plans, and the one figure that turns this page from reading
+              into acting: how many more people can register today before the free allowance stops
+              sending confirmations. Understated on purpose — a waitlisted entrant costs more. */}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t(`freeVerdict.${verdict}`)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {t(`registrationsLeft.${volume.period}`, {
+              count: registrationsLeft ?? "",
+              sent: volume.period === "month" ? volume.sentThisMonth : volume.sentMessages,
+              allowance: volume.allowance ?? "",
+              plan: volume.planName,
+            })}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("currencyNote", { vat: ROMANIAN_VAT_PERCENT })}
+          </Typography>
+        </Box>
+
+        {/*
+          A researched price is a fact with an expiry, so the page says how old these are instead
+          of printing a date beside them and asserting them with equal confidence for ever.
+        */}
+        <Alert severity={freshness.state === "stale" ? "warning" : "info"}>
+          {t(`freshness.${freshness.state}`, {
+            checked: oldestCheckDate(services),
+            days: Number.isFinite(freshness.days) ? freshness.days : 0,
+          })}
+        </Alert>
+
+        {/*
+          One row per service, carrying everything about that service: what it costs, what the
+          free plan gives, the ceiling this club meets first, how close this deployment is to it
+          right now, what happens when it is crossed, and what the next plan costs — including the
+          way back down, which used to be a section of its own and belongs here.
+        */}
+        <Box component="section">
+          <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+            {t("servicesTitle")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t("decisionsIntro")}
+            {t("servicesIntro")}
           </Typography>
+
           <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-            {decisions.map((decision) => (
+            {services.map((row) => (
               <Box
                 component="li"
-                key={decision.id}
+                key={row.id}
                 sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
               >
-                <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
-                  <Chip size="small" color="warning" label={t("decisionState.open")} />
-                  <Chip size="small" variant="outlined" label={t(`owner.${decision.owner}`)} />
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}
+                >
+                  <Typography variant="h3" sx={{ fontSize: "1rem" }}>
+                    {t(`services.${row.id}.name`)}
+                  </Typography>
+                  <Chip
+                    size="small"
+                    color={SERVICE_COLOR[row.severity]}
+                    variant={row.severity === "unknown" ? "outlined" : "filled"}
+                    label={t(`severity.${row.severity}`)}
+                  />
                 </Stack>
-                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
-                  {t(`decisions.${decision.id}.question`)}
+
+                {/* Two columns at 320px, four from `md`. A table would scroll sideways on a
+                    phone, which §18.5 refuses. */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
+                    gap: 1.5,
+                    mb: 1.5,
+                  }}
+                >
+                  <Fact label={t("field.planToday")}>
+                    {row.planToday ?? t("planNone")}
+                  </Fact>
+                  <Fact label={t("field.costToday")}>
+                    <strong>
+                      {row.costToday.kind === "free"
+                        ? t("costToday.free")
+                        : row.costToday.kind === "notTaken"
+                          ? t("costToday.notTaken")
+                          : row.costToday.plusVat
+                            ? t("costToday.amountPlusVat", {
+                                amount: row.costToday.amount,
+                                currency: row.costToday.currency,
+                              })
+                            : t("costToday.amount", {
+                                amount: row.costToday.amount,
+                                currency: row.costToday.currency,
+                              })}
+                    </strong>
+                  </Fact>
+                  <Fact label={t("field.howClose")}>{howClose(row)}</Fact>
+                  <Fact label={t("field.nextPlan")}>
+                    {row.nextPlan ? `${row.nextPlan} — ${row.nextCost}` : t("nextPlanNone")}
+                  </Fact>
+                </Box>
+
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  {t(`services.${row.id}.freeGives`)}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {t(`decisions.${decision.id}.open`)}
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  <strong>{t(`services.${row.id}.ceiling`)}</strong> {t(`services.${row.id}.whenCrossed`)}
+                </Typography>
+
+                {/* The one genuinely good idea in the table this replaced: a temporary upgrade
+                    nobody reverses is the expensive failure, and no dashboard will remind the
+                    club to come back down. It belongs on the service, not in a section. */}
+                {row.bump && (
+                  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      color={row.bump === "temporary" ? "info" : "default"}
+                      label={t(`bump.${row.bump}`)}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {t(`services.${row.id}.bumpBack`)}
+                    </Typography>
+                  </Stack>
+                )}
+
+                <Typography variant="caption" color="text.secondary" component="div" sx={{ mt: 1 }}>
+                  {t("checkedOn", { checked: row.checkedOn })}
                 </Typography>
               </Box>
             ))}
           </Stack>
         </Box>
+        </>
+      )}
+
+      {panel === "todo" && (
+        <>
+        {/*
+          A fact is something to read; a decision is a question with somebody's name on it. Only
+          the open ones — a question that has been answered is a fact, and lives above.
+        */}
+        {decisions.length > 0 && (
+          <Box component="section">
+            <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 1 }}>
+              {t("decisionsTitle")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t("decisionsIntro")}
+            </Typography>
+            <Stack spacing={2} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+              {decisions.map((decision) => (
+                <Box
+                  component="li"
+                  key={decision.id}
+                  sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
+                >
+                  <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}>
+                    <Chip size="small" color="warning" label={t("decisionState.open")} />
+                    <Chip size="small" variant="outlined" label={t(`owner.${decision.owner}`)} />
+                  </Stack>
+                  <Typography variant="h3" sx={{ fontSize: "1rem", mb: 0.5 }}>
+                    {t(`decisions.${decision.id}.question`)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t(`decisions.${decision.id}.open`)}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        )}
+        </>
       )}
     </Stack>
   );

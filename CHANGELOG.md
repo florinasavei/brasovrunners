@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **Configuration is in sub-tabs now.** "De făcut" splits into what is owed, the anti-bot switch and the costs; "Configurație" into status, general and email — and each screen offers the other's, so the captcha switch is one press from either. Both were a single scroll of six or seven hundred lines. §265.
 - **The race numbers download as a batch from the Înscrieri page, and the club marks them printed.** Two presses in the order the job is done: "the ones nobody printed yet (7)", then "mark those 7 as printed". A green tick with the date sits beside every printed number, one bib can be marked again for a reprint, and the sheet itself still prints whatever is asked for. §264.
 - **Tables can be a grid, rows only, or no lines at all** — the last one is how a table becomes a layout for two columns of text — with the text at the top or the middle of the cell, and the header row switchable. Centring a cell's words was already the alignment buttons. And the editor now draws a table exactly as the page will: it drew none of the lines before, which is why tables "looked strange". §263.
 - **All three sections fit the header on a phone** — Evenimente, Calendar, Contact — because the language switcher moved to the bottom bar's right-hand corner, opposite the light/dark switch. On a desktop it stays in the header. §262.

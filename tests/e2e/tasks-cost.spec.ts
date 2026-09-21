@@ -13,7 +13,9 @@ import { signIn } from "./support/featured-event";
 test.describe("BR-REQ-090-05 the cost half of the task board", () => {
   test("tells an Administrator what the club pays, with no sideways scroll", async ({ page }) => {
     await signIn(page, "Dev Administrator");
-    await page.goto("/ro/admin/tasks");
+    // The cost half is its own panel since §265 — the checklist, the anti-bot switch and the
+    // prices were one scroll of seven hundred lines.
+    await page.goto("/ro/admin/tasks?panel=costs");
 
     /**
      * Scoped to the page's own `<main>`, and not for tidiness. This route streams behind

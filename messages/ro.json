@@ -1026,6 +1026,12 @@
       "allDone": "Tot ce se vede aici este rezolvat.",
       "noneMatch": "Niciun rând pentru acest filtru.",
       "listLabel": "Lista de sarcini",
+      "panel": {
+        "todo": "De făcut",
+        "botCheck": "Anti-robot",
+        "costs": "Costuri",
+        "system": "Sistem"
+      },
       "filter": {
         "who": "Cine",
         "kind": "Tip",
@@ -2213,6 +2219,12 @@
     "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",
     "environment": "Mediu",
     "buildUnknown": "versiune necunoscută",
+    "panel": {
+      "status": "Stare",
+      "general": "General",
+      "email": "Emailuri",
+      "botCheck": "Anti-robot"
+    },
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
     "runtime": "Starea în acest moment",
