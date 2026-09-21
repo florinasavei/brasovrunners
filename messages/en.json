@@ -395,6 +395,7 @@
       "columnBib": "Race number (BIB)",
       "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
+      "bibHeldNow": "Holds number {number}. Type another below to change it — the number becomes final and is emailed to them.",
       "openRow": "Open the registration",
       "cancel": "Cancel the registration",
       "cancelBody": "The place is released through the allocator and offered at once to the first person waiting. An audit row records who cancelled. It cannot be undone: if they change their mind, they register again.",

@@ -10192,3 +10192,39 @@ proves the constraint holds is now beside the one that proves the service declin
 person can answer the question in a second rather than an afternoon.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 230. Decided — the screens that hand out numbers had not noticed that numbers arrive earlier now (2026-09-21)
+
+**Context.** The owner, on a registration detail page showing "nr. 2" in the journey and an
+empty "give this runner a number" box underneath: "I would like the BIDs to be reserved from
+the first stages (I've already said that!) Cuz this input does not make any sense now! Amalia
+already has number 2 reserved."
+
+The reservation was already working — that is where the "nr. 2" came from. What had not caught
+up was the screen around it.
+
+**What was wrong.** The hand-entry control asks "has a number been settled", and reads that as
+`bib_number === null`. Since §214 that is true of *every* place-holding registration until the
+window closes, so the box rendered for somebody who already held a number, invited an organizer
+to give them one, and listed the free numbers with the runner's own left out of it. Correct by
+its old question, nonsense by the new one.
+
+**Decision.** The box stays — a preferential number is still typed by hand (§105) — and it
+stops pretending the runner has nothing. It says which number they hold, comes prefilled with
+it, and is a **change** rather than a gift.
+
+*And setting one by hand now clears the provisional column.* §220 says the recompaction closes
+around a number given by hand, and it skips rows that already have a final one — so a row left
+holding both would keep a provisional number reserved to somebody who no longer needs it. That
+is a hole in the sequence, which is precisely the failure §220 found in the bulk sweeps, and it
+would have been reintroduced by a different verb. One runner, one number, whichever verb
+produced it.
+
+**The pattern, because this is the second time.** §214 changed *when* a number exists, and
+every screen that had encoded "no number yet" as `bib_number IS NULL` was quietly wrong from
+that moment. `raceNumberOf` was written for exactly this and the reads were moved onto it; the
+two places that decide whether to *offer* a number were missed, because they are not reads of a
+number, they are questions about its absence. Worth naming: when a column stops meaning what it
+meant, the dangerous callers are the ones testing it for null.
+
+Baseline `BR-V1.39-2026-09-21`.

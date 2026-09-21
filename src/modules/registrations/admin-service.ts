@@ -416,7 +416,16 @@ export async function setBibNumberByStaff<T extends Record<string, unknown>>(
   try {
     [updated] = await db
       .update(registrations)
-      .set({ bibNumber, updatedAt: now })
+      /*
+        Setting a number by hand **settles** it, so the provisional one goes with it (§230).
+
+        §220 already says the recompaction closes around a number given by hand; it only skips
+        rows that have a final number, so a row left holding both columns would keep a
+        provisional number reserved to somebody who no longer needs it — a hole in the
+        sequence, which is the exact failure §220 fixed in the bulk sweeps. One runner, one
+        number, whichever verb produced it.
+      */
+      .set({ bibNumber, provisionalBibNumber: null, updatedAt: now })
       .where(eq(registrations.id, registrationId))
       .returning();
   } catch (error) {

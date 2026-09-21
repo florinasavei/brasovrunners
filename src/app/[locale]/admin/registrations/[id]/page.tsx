@@ -224,12 +224,32 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
               {registration.bibNumber === null ? (
                 <form action={setBibNumberAction}>
                   {deskHidden}
+                  {/*
+                    The number this runner already holds, said before the box that changes it
+                    (§230; the owner: "this input does not make any sense now! Amalia already
+                    has number 2 reserved").
+
+                    Since §214 a place-holding registration carries a **provisional** number
+                    from the moment it is made, and `bib_number` stays empty until the window
+                    closes — so this branch, which asks "has a number been settled", was
+                    rendering an empty "give this runner a number" box to somebody who had one
+                    reserved and was showing them the free numbers with theirs left out of the
+                    list. The box is right to be here — a preferential number is still typed by
+                    hand (§105) — and it is a *change*, not a gift, so it says so and shows
+                    what it would replace.
+                  */}
+                  {registration.provisionalBibNumber !== null && (
+                    <Typography variant="body2" sx={{ mb: 1 }}>
+                      {tr("registrations.bibHeldNow", { number: registration.provisionalBibNumber })}
+                    </Typography>
+                  )}
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                     <TextField
                       name="bibNumber"
                       type="number"
                       label={tr("registrations.bibNumber")}
                       size="small"
+                      defaultValue={registration.provisionalBibNumber ?? ""}
                       slotProps={{ htmlInput: { min: 1, max: 99999 } }}
                       sx={{ width: 140 }}
                     />
