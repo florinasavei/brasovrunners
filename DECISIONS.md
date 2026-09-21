@@ -9871,3 +9871,45 @@ it.
 was no `<head>` to put any of this in.
 
 Baseline `BR-V1.39-2026-09-21`.
+
+## 220. Decided — the audit turned on the code the audit was written for (2026-09-21)
+
+**Context.** §218 recorded two silent drops the audit found in old code. It found two more in
+the code written the same afternoon — §214, the provisional race number — and those are worse,
+because they shipped with twelve passing tests and a decision record asserting the very
+invariant they broke.
+
+**1. The three bulk expiry sweeps never released the number.** §214 put the release inside
+`transitionRegistration`, "the one guarded transition every state change already goes through",
+and said so in as many words. Three state changes do not go through it:
+`expireStalePendingEmailConfirmations`, `expireStaleHolds` and `closeWaitlistForStartedEvent`
+are bulk `UPDATE ... SET status = 'EXPIRED'` statements — which is exactly why they are fast,
+and exactly why they were missed. An expired row kept its provisional number for ever, and
+`pickProvisionalBibNumber` treats any non-null provisional as taken, so the sequence this whole
+design exists to keep dense would grow a permanent hole every time somebody let a hold lapse.
+
+Invisible until somebody counts, which is the kind of defect that survives a release.
+
+**2. `pickBibNumber` was blind to the provisional column.** It reads the numbers already worn,
+and since §214 that is only half of the numbers that are spoken for. Reachable after the
+settle: registration has closed, two walk-ins are entered at the desk and each is given a
+provisional number, and the first of them to be confirmed draws a final one — which, reading
+`bib_number` alone, is the number the *other* one is looking at. The partial unique index
+cannot catch it, because the two numbers live in different columns, so the first anybody would
+know is two runners at one start line wearing 51.
+
+It reads both columns now. And a late confirmation **adopts its own provisional number** rather
+than drawing a fresh one — which it would otherwise now skip, the number being held by the very
+person asking for it. Adopting is also what the runner expects, because the desk has been
+showing them that number since they registered.
+
+**What this says about the method, and it is why the section exists.** Both defects are in code
+that passed its own tests. Tests written by the author of a change cover the cases the author
+thought of; an adversarial reader given the *invariant* rather than the diff found both in one
+pass, and found them on the day the code was written rather than on the morning of a race.
+
+Tests: `tests/integration/registrations/provisional-bibs.test.ts` — a lapsed hold releases its
+number through the sweep, a final draw never lands on a held provisional one, and a late
+confirmation keeps the number it was shown.
+
+Baseline `BR-V1.39-2026-09-21`.

@@ -6,15 +6,17 @@ import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { settleBibNumbers } from "@/modules/registrations/bibs";
+import { pickBibNumber, settleBibNumbers } from "@/modules/registrations/bibs";
 import { raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
 import {
   confirmEmail,
   type EventForRegistration,
+  signDeclaration,
   submitRegistration,
   unregister,
 } from "@/modules/registrations/service";
+import { signingInput } from "../../helpers/declaration-signing";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -35,6 +37,22 @@ const NOW = new Date("2026-09-21T09:00:00.000Z");
 const STARTS_AT = new Date("2026-09-24T07:00:00.000Z");
 const CLOSES_AT = new Date("2026-09-23T07:00:00.000Z");
 const AFTER_CLOSE = new Date("2026-09-23T08:00:00.000Z");
+
+async function approveDeclaration(db: TestDatabase, now: Date) {
+  const translations: LegalDocumentTranslationInput[] = [
+    { locale: "ro", title: "Declarație", body: { sections: [{ paragraphs: ["d"] }] } },
+    { locale: "en", title: "Declaration", body: { sections: [{ paragraphs: ["d"] }] } },
+  ];
+  await insertLegalDocumentVersion(db, {
+    key: "EVENT_DECLARATION",
+    version: 1,
+    effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+    isApproved: true,
+    contentSha256: computeContentHash(translations),
+    translations,
+    now,
+  });
+}
 
 async function approvePrivacyNotice(db: TestDatabase, now: Date) {
   const translations: LegalDocumentTranslationInput[] = [
@@ -87,6 +105,7 @@ describe("DECISIONS.md §214 provisional race numbers", () => {
   beforeEach(async () => {
     await resetTables(db);
     await approvePrivacyNotice(db, NOW);
+    await approveDeclaration(db, NOW);
   });
 
   async function createEvent(
@@ -264,6 +283,65 @@ describe("DECISIONS.md §214 provisional race numbers", () => {
     await runRegistrationMaintenance(db, AFTER_CLOSE);
     const afterClose = await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "BIB_ASSIGNED"));
     expect(afterClose).toHaveLength(1);
+  });
+
+  it("releases the number when a hold lapses in the bulk sweep, not only on the guarded path (§220)", async () => {
+    /*
+      The release lives in `transitionRegistration`, which is the single guarded transition —
+      and the three expiry sweeps do not use it. They are bulk `UPDATE ... SET status =
+      'EXPIRED'` statements, so each one has to release the number itself.
+
+      Missing it is invisible until somebody counts: the row is expired, the place is free, and
+      the number it was holding can never be handed to anybody, so the sequence the design
+      promises to keep dense grows a permanent hole.
+    */
+    const event = await createEvent();
+    const row = await submit(event, "lapses@example.test");
+    expect(row.provisionalBibNumber).toBe(1);
+
+    // Past the 48-hour email-confirmation deadline, swept by the job rather than by a click.
+    const muchLater = new Date(NOW.getTime() + 72 * 60 * 60_000);
+    await runRegistrationMaintenance(db, muchLater);
+
+    const [expired] = await db.select().from(registrations).where(eq(registrations.id, row.id));
+    expect(expired.status).toBe("EXPIRED");
+    expect(expired.provisionalBibNumber).toBeNull();
+  });
+
+  it("never gives a final number that somebody is holding as a provisional one (§220)", async () => {
+    /*
+      Reachable after the settle: registration has closed, two people are entered at the desk
+      and each is given a provisional number, and the first to be confirmed draws a final one.
+      Reading `bib_number` alone, that draw would hand them the number the *other* one is
+      looking at — and the partial unique index cannot catch it, because the two numbers live
+      in different columns. The first anybody would know is two runners with one number.
+    */
+    const event = await createEvent();
+    const a = await submit(event, "a@example.test");
+    const b = await submit(event, "b@example.test", new Date(NOW.getTime() + 60_000));
+    expect([a.provisionalBibNumber, b.provisionalBibNumber]).toEqual([1, 2]);
+
+    const free = await pickBibNumber(db, event.id);
+    expect([a.provisionalBibNumber, b.provisionalBibNumber]).not.toContain(free);
+    expect(free).toBe(3);
+  });
+
+  it("gives a late confirmation its own provisional number rather than a different one (§220)", async () => {
+    // The desk has been showing this number to the runner. Drawing a fresh one would both
+    // surprise them and strand the old one, reserved to nobody.
+    const event = await createEvent();
+    const row = await submit(event, "late@example.test");
+    expect(row.provisionalBibNumber).toBe(1);
+
+    await confirmEmail(db, event, row.id, new Date(NOW.getTime() + 60_000));
+    const afterClose = new Date("2026-09-23T09:00:00.000Z");
+    await signDeclaration(db, event, row.id, await signingInput(db, afterClose), afterClose);
+
+    const [confirmed] = await db.select().from(registrations).where(eq(registrations.id, row.id));
+    expect(confirmed.status).toBe("CONFIRMED");
+    expect(confirmed.bibNumber).toBe(1);
+    // One runner, one number: the provisional column is emptied when the final one is written.
+    expect(confirmed.provisionalBibNumber).toBeNull();
   });
 
   it("reads one number out of two columns, and says which it is", () => {

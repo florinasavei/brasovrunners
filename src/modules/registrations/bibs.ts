@@ -69,11 +69,24 @@ export async function pickBibNumber<T extends Record<string, unknown>>(
   taken: Set<number> = new Set(),
   startNumber?: number,
 ): Promise<number> {
+  /*
+    Both columns, and the second one is not decoration (§220).
+
+    A final number must not collide with a provisional one somebody is currently holding. It
+    can happen after the settle: registration has closed, two people are entered at the desk
+    and each is given a provisional number, and the first of them to be confirmed goes through
+    here — which, reading `bib_number` alone, would hand them the number the *other* one is
+    looking at. The partial unique index would not catch it, because the two live in different
+    columns, and the first anybody would know is two runners at the start line with one number.
+  */
   const worn = await tx
-    .select({ number: registrations.bibNumber })
+    .select({ number: registrations.bibNumber, provisional: registrations.provisionalBibNumber })
     .from(registrations)
-    .where(and(eq(registrations.eventId, eventId), isNotNull(registrations.bibNumber)));
-  for (const row of worn) taken.add(row.number as number);
+    .where(eq(registrations.eventId, eventId));
+  for (const row of worn) {
+    if (row.number !== null) taken.add(row.number);
+    if (row.provisional !== null) taken.add(row.provisional);
+  }
 
   // The caller inside a transaction that already holds the event row usually passes the start;
   // read it when it did not, so nothing has to remember to.

@@ -429,7 +429,10 @@ export async function expireStalePendingEmailConfirmations<T extends Record<stri
   const staleBefore = new Date(now.getTime() - EMAIL_CONFIRMATION_HOLD_HOURS * 60 * 60_000);
   const rows = await db
     .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EMAIL_CONFIRMATION_LAPSED", updatedAt: now })
+    // The provisional number goes with the place (§214, §220). These bulk sweeps do not go
+    // through `transitionRegistration`, which is where the release lives, so each one has to
+    // say it — a number held by an expired row is a number nobody can ever be given.
+    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EMAIL_CONFIRMATION_LAPSED", provisionalBibNumber: null, updatedAt: now })
     .where(
       and(
         eq(registrations.status, "PENDING_EMAIL_CONFIRMATION"),
@@ -516,7 +519,8 @@ export async function expireStaleHolds<T extends Record<string, unknown>>(
   // kept declaration hold, and the count below must see it as free.
   await db
     .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "WAITLIST_OFFER_LAPSED", updatedAt: now })
+    // As above (§220): the place goes, so the number goes.
+    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "WAITLIST_OFFER_LAPSED", provisionalBibNumber: null, updatedAt: now })
     .where(
       and(
         eq(registrations.eventId, event.id),
@@ -630,7 +634,8 @@ export async function closeWaitlistForStartedEvent<T extends Record<string, unkn
 ): Promise<number> {
   const rows = await db
     .update(registrations)
-    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EVENT_STARTED", updatedAt: now })
+    // As above (§220): the place goes, so the number goes.
+    .set({ status: "EXPIRED", expiredAt: now, expiryReason: "EVENT_STARTED", provisionalBibNumber: null, updatedAt: now })
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, "WAITLISTED")))
     .returning({ id: registrations.id });
   return rows.length;

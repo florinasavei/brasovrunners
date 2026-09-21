@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.39-2026-09-21
 
+- **Two defects in the new race-number code, found by auditing it the same day it was written**: a lapsed hold never gave its number back, so the sequence would have grown permanent holes; and a late confirmation at the desk could be handed a number another walk-in was already holding. §220.
 - **The sixth registration attempt in an hour is told why**, instead of the check-your-email screen with nothing sent. The per-address throttle was the last place still answering a real person with silence — its own comment justified it by pointing at two checks that had already been changed. §218.
 - **Somebody on the waiting list who fills the form again gets an answer**, rather than a promise of an email that had nothing to send. §218.
 - **The email header is a white banner**, and the message now tells mail clients it is a light-scheme document — Gmail dark mode was inverting the card around a logo it could not invert, which is what made it look like a sticker. §219.

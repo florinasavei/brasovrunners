@@ -152,13 +152,29 @@ async function finalBibAtConfirmation<T extends Record<string, unknown>>(
   event: EventForRegistration,
   current: Registration,
   now: Date,
-): Promise<number | null> {
+): Promise<{ bibNumber: number | null; provisionalBibNumber?: null }> {
   // Never renumber: a number already given is that runner's, whatever else changes (§173).
-  if (current.bibNumber !== null) return current.bibNumber;
+  if (current.bibNumber !== null) return { bibNumber: current.bibNumber };
   // A test registration wears none, as in the batch assignment (`AGENTS.md` §12.6).
-  if (current.kind !== "REAL") return null;
-  if (!registrationHasClosed(event, now)) return null;
-  return pickBibNumber(tx, current.eventId);
+  if (current.kind !== "REAL") return { bibNumber: null };
+  if (!registrationHasClosed(event, now)) return { bibNumber: null };
+
+  /*
+    Past the close, the number becomes final — and it is **their own provisional one** where
+    they have one (§220).
+
+    Drawing a fresh one would be wrong twice over now that `pickBibNumber` treats a held
+    provisional number as taken: it would skip the number this very runner is looking at and
+    hand them a different one, leaving their old number reserved to nobody. Adopting it is
+    also what the runner expects — the desk screen has been showing it to them.
+
+    The provisional column is emptied in the same statement, so one runner is left holding
+    exactly one number, which is the invariant the settle keeps too.
+  */
+  if (current.provisionalBibNumber !== null) {
+    return { bibNumber: current.provisionalBibNumber, provisionalBibNumber: null };
+  }
+  return { bibNumber: await pickBibNumber(tx, current.eventId), provisionalBibNumber: null };
 }
 
 async function deliveryEmailOf<T extends Record<string, unknown>>(
@@ -1038,7 +1054,7 @@ export async function signDeclaration<T extends Record<string, unknown>>(
         // The race number, once the list is settled (§214, amending §87): nothing while the
         // window is open — the provisional number stands and the recompaction at close gives
         // the final one — and the next free number immediately once it has shut.
-        bibNumber: await finalBibAtConfirmation(tx, event, current, now),
+        ...(await finalBibAtConfirmation(tx, event, current, now)),
       },
       now,
     });
@@ -1153,7 +1169,7 @@ async function acceptDeclarationOnPaper<T extends Record<string, unknown>>(
       checkinCode: current.checkinCode ?? newCheckinCode(),
       // As in `signDeclaration` (§214): nothing while the window is open, the next free
       // number once it has shut — which is every walk-in confirmed at the desk on race day.
-      bibNumber: await finalBibAtConfirmation(tx, event, current, now),
+      ...(await finalBibAtConfirmation(tx, event, current, now)),
     },
     now,
   });
