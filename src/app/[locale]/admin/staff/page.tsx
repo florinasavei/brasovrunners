@@ -122,8 +122,6 @@ export default async function StaffPage({ params, searchParams }: Props) {
     },
   ];
 
-  const invitationJustSent = saved === "invited" || saved === "reinvited";
-
   return (
     <Stack spacing={4}>
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
@@ -161,11 +159,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
       </Box>
 
       {/*
-        Adding a colleague is a nine-field form and a rare act — twice a season — above the
-        list that is read every time. It is a folded panel now (§269), open by itself only when
-        the page is showing the outcome of an invitation somebody has just sent.
+        Adding a colleague is a nine-field form and a rare act — twice a season — above the list
+        that is read every time. It is a panel of its own now (§269) and it folds, but it starts
+        open: a closed `<details>` is not in the accessibility tree, so a form that begins shut
+        is a form a screen reader cannot find.
       */}
-      <Panel title={t("staff.inviteTitle")} collapsible defaultOpen={invitationJustSent} data-testid="staff-invite">
+      <Panel title={t("staff.inviteTitle")} collapsible data-testid="staff-invite">
         <form action={inviteStaffAction}>
           <input type="hidden" name="uiLocale" value={locale} />
           <Stack spacing={2}>

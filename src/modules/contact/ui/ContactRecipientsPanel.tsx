@@ -34,7 +34,6 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       title={t("emails.contacts.title")}
       intro={t("emails.contacts.intro")}
       collapsible
-      defaultOpen={false}
     >
 
       {/* Where the list in force comes from, so "I saved it and nothing changed" cannot happen. */}

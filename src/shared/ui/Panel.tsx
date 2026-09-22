@@ -33,6 +33,12 @@ type Props = {
  * screen every time. A box says where one thing ends, and a fold takes the ones that are not
  * today's work out of the way without hiding that they exist.
  *
+ * **A panel that holds a form starts open.** A closed `<details>` is not in the accessibility
+ * tree at all — a screen reader cannot find its heading, and neither could the e2e suite, which
+ * is how this was caught. So `defaultOpen={false}` is for what is *read* and only when there is
+ * nothing in it to act on: the outbox queue with nothing waiting. Everything with a control in
+ * it folds on request and not on arrival.
+ *
  * **A Server Component over `<details>`, never client state.** The same reasoning `SubNav`
  * records: the backoffice works with JavaScript off, and a panel whose open state lived in
  * React would be a panel that does not open before hydration — on the very screens a volunteer
@@ -92,13 +98,21 @@ export default function Panel({
   return (
     <Box component="details" id={id} data-testid={testId} open={defaultOpen || undefined} sx={frame}>
       {/*
-        `h2` on the summary rather than inside it: a screen reader's heading list is how
-        somebody skips to a section, and a fold that is not in that list is a section that
-        cannot be skipped to. The native element keeps the keyboard behaviour either way.
+        The heading is an `h2` **inside** the summary, not the summary itself.
+
+        `component="summary"` with `variant="h2"` was the first version, and it is a trap: the
+        variant is only the typography, so the element is a `<summary>` and carries no heading
+        role at all. The section then exists for a pointer and disappears from the heading list
+        a screen reader navigates by — the e2e suite caught it as "no heading with that name".
+        A block heading inside the summary keeps both: the disclosure's own behaviour and the
+        landmark. The `sx` stays on the summary, because that is what must not be `display:
+        flex` (Chrome and Safari drop the marker when it is).
       */}
-      <Typography component="summary" variant="h2" sx={{ fontSize: "1.1rem", ...DISCLOSURE_SUMMARY_SX }}>
-        {heading}
-      </Typography>
+      <Box component="summary" sx={DISCLOSURE_SUMMARY_SX}>
+        <Typography component="h2" variant="h2" sx={{ fontSize: "1.1rem", display: "inline" }}>
+          {heading}
+        </Typography>
+      </Box>
       {intro && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           {intro}

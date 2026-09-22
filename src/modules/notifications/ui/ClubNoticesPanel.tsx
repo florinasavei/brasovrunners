@@ -40,7 +40,6 @@ export default async function ClubNoticesPanel({ locale, notices, declarations }
       title={t("emails.clubNotices.title")}
       intro={t("emails.clubNotices.intro")}
       collapsible
-      defaultOpen={false}
       data-testid="club-notices"
     >
 

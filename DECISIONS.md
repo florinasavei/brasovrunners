@@ -11568,7 +11568,13 @@ counter strip does not fold at all — it is what the screen is for.
 *The heading is an `h2` on the `<summary>` itself.* A screen reader's heading list is how
 somebody skips to a section, and a folded section that is not in it cannot be skipped to.
 
-**Consequences.** `shared/ui/Panel.tsx`; the registrations list (bibs, the counter strip, the
+*Two things the e2e suite caught, and both are the rule now.* A panel that holds a form
+**starts open**: a closed  is not in the accessibility tree at all, so the contact
+recipients were a heading no screen reader and no test could find. And the heading is an **inside** the summary rather than a summary with a heading's typography — with  styles the text and carries no heading role, which takes the section out of
+the list a screen reader navigates by. What may start closed is what is read rather than acted
+on, and only when there is nothing in it to act on.
+
+**Consequences.** ; the registrations list (bibs, the counter strip, the
 outbox, the filters); `EmailPlanPanel`, `OutboxQueuePanel`, `ClubNoticesPanel` and
 `ContactRecipientsPanel`, which now draw no frame of their own — the plan stays open, the other
 three fold; the invitation form on `/admin/staff`. Four message keys under `Admin.panels`,
