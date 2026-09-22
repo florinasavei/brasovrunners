@@ -50,7 +50,17 @@ export const CARD_EXCERPT_SX = {
   // One class more specific than the figure's own rule, which is how the chosen width and the
   // chosen side — both media queries from `sm` up — are overridden without `!important`.
   "& figure": { width: "100%", my: 1, float: "none", marginLeft: "auto", marginRight: "auto" },
-  "& figure > img": { height: "auto" },
+  /*
+    A picture keeps its shape and stops growing (§275).
+
+    §260 removed the 180-pixel band every card's picture was cut to, and that stands: nothing
+    here crops. What it did not foresee is a portrait photograph seven hundred pixels tall
+    beside a card with no picture at all — the owner, of the listing: "these cards are ugly".
+    A ceiling scales the picture down and centres it; a short or wide one is untouched, and a
+    tall one is the whole photograph, smaller. The crop box in the editor (§241) is still the
+    only thing that cuts anything, and it is a choice somebody makes while looking at it.
+  */
+  "& figure > img": { height: "auto", maxHeight: 420, width: "auto", maxWidth: "100%", mx: "auto", display: "block" },
   // The caption follows the picture: centred under a band, and every card's picture is a band.
   "& figcaption": { textAlign: "center" },
 } as const;

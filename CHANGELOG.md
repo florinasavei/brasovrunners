@@ -10,6 +10,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **Fixed: the event editor crashed as it opened**, taking the toolbar and the language tabs with it, because of how yesterday's table bar was wired. §276.
+- **The listing looks like a listing again**: cards in a row are the same height instead of leaving holes, and a very tall photograph is scaled down to fit a card rather than making one card three times the others. Nothing is cropped. §275.
+- **A weekly run is no longer listed under "already held"** — that section is for the race, the gear test, the hike, the things that happened once. §275.
+- **CI is faster and no longer fails because Google's font server had a bad minute**: the build cache and the browser download are kept between runs, and a failed build is retried once. §276.
 - **Fixed: the events listing rendered no cards** when an event was marked special — the wash added behind it was written in a way a page cannot hand to a card, so the section failed silently while the page still answered. §274.
 - **The editor's toolbar is shorter and says more.** The table's six buttons appear over the table itself instead of sitting in the row all the time; the three alignment buttons are Word's own glyphs; the preview is last and wears an eye; and every picture shows dashed edges while you write, so you can see how the text wraps around it. §274.
 - **The editor works the way WordPress does.** The toolbar follows you down a long text instead of staying at the top, selecting words brings up bold, italic and link right where they are, and the number of words is under the box. §273.

@@ -11797,3 +11797,58 @@ which crosses any boundary, and still one value per scheme.
 a function, because the same mistake is available to every future surface written there.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 275. Decided — the listing is rows of equal cards, a picture has a ceiling, and a weekly run is not history (2026-09-22)
+
+**Context.** Three things the owner said while looking at the live listing: "these cards are
+ugly", with a screenshot of a short race card beside a seven-hundred-pixel photograph and a hole
+under it; and "weekly events should not be treated as past events, only the non-weekly ones".
+
+**Decision.**
+
+*Every card in a row is as tall as the tallest.* The three grids said `alignItems: "start"`, so
+each card was its own height and the gaps between them were holes in the page. Stretched, the
+white space is **inside** a bordered card, which reads as a card with room in it rather than as
+a layout that failed.
+
+*A picture on a card has a ceiling of 420 pixels, and no crop.* §260 removed the 180-pixel band
+every card's picture used to be cut to, and that stands — this scales a tall photograph down
+whole rather than cutting it, with `width: auto` keeping its proportions. The difference matters
+and is the reason the ceiling is generous: a band *chooses* a shape for somebody, a ceiling only
+says how much of the screen one card may take. The crop box in the editor (§241) is still the
+only thing that cuts anything, and it is a choice made while looking at it.
+
+*A date of a standing series is not a past event.* Last Monday's Happy Monday is not something
+the club held and moved on from; it is the run that happens again on Monday, and it is already
+the first card on the page. `listPastEvents` excludes a source with a `repeat_rule` and every
+occurrence with a `repeat_of` (§122), so the section is what it was meant to be: the race, the
+gear test, the hike — the things that happened once.
+
+## 276. Decided — the editor's floating bars keep their props, and CI stops paying for the same bytes twice (2026-09-22)
+
+**Context.** Two failures on one morning, neither of them in a test's own logic.
+
+**The editor took itself down the moment it mounted.** §274 moved the table's verbs into a
+`BubbleMenu` and gave it an inline `shouldShow` and an inline `options` object. `BubbleMenu`
+registers a ProseMirror plugin from those props, so a new identity on every render re-registers
+it, which dispatches a transaction, which renders again: React error #185, "maximum update depth
+exceeded". The island died before the toolbar appeared, which is why the e2e suite failed on "no
+tab named English" — a message about language tabs, from a defect about tables. `useCallback`
+for the predicate and a module constant for the options fix it, and the rule generalises: **a
+prop that a Tiptap menu registers a plugin from must keep its identity between renders.**
+
+**CI failed on a font.** `next/font/google` downloads its files during the build, a runner could
+not reach Google, and twenty-one identical "cannot resolve
+`@vercel/turbopack-next/internal/font/google/font`" errors made a pull request red with nothing
+wrong in it. Three changes, in the order of how much they save: `.next/cache` is cached, which
+skips that request entirely on a warm key and gives Turbopack something to build from; the build
+is retried once before it is called a failure, because one bad minute at somebody else's service
+is not a release-blocking event; and Chromium — 170 MB of identical bytes every run — is cached
+on the resolved Playwright version, with only its apt dependencies installed on a hit.
+
+*Not done: sharding the suite.* The obvious way to halve the wall clock is to run the specs in
+parallel, and §212 already explains why CI runs one worker — the specs share one database and
+one seeded event. Sharding would buy minutes and pay for them in the most expensive currency
+there is, a suite that fails differently every run. The caches buy their minutes without that.
+
+Baseline `BR-V1.43-2026-09-21`.
