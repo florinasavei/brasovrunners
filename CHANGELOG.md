@@ -8,10 +8,17 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
-## BR-V1.43-2026-09-21
+## BR-V1.44-2026-09-22
 
 - **The site keeps working when the database does not.** Every public page now keeps the last copy of itself; if the database cannot be reached, visitors still get the events, the calendar, the rules, the legal texts and the gallery, with a line saying the page is the last saved version and when it was taken — instead of an error page. How many places are left is never shown from a copy: that one block says it cannot be checked, because it is the number people act on. A copy older than twelve hours is not shown at all. §281.
 - **Fixed: the health check could fail to report that the database was down** — it went on asking the database questions after the connection had already failed, so the answer the club's monitors read was a generic error instead of "the database is down". §281.
+- **The Neon account is now on Launch, and the documentation says what that costs.** The first 1.8 CU-hours cost $0.19; the same daily pace projects to about $5.72 compute for 30 days, while one 0.25 CU compute kept warm would cost $19.08. Storage and restore-history charges stay separate. §280.
+- **The old Free limits are no longer presented as current provider limits.** The scheduler cadence remains because sleeping compute costs less, not because 100 CU-hours now suspends the site. BR-REQ-090-07 and the setup guide explicitly record that `/devs` and `/admin/tasks` still need a code follow-up to remove their Free label, denominator, warning, and storage ceiling. §280.
+- **Launch remains the right plan for M1.** Scale is deferred until the club needs its 99.95% SLA or additional security/compliance controls; ordinary low-volume growth is not by itself an upgrade trigger. §280.
+
+## BR-V1.43-2026-09-21
+
+- **The legal texts are written in an editor now, not in a box of markup.** The declaration, the terms and the privacy notice are typed the way they will read: a heading is a heading, a link is a link, a picture is a picture. What is stored does not change at all — the versions already approved on production open in it and save identically, down to the fingerprint the signed declaration points at. Bold and lists are not offered, because a legal document has nowhere to keep them. §279.
 - **Fixed: the spaces around a bold word went missing in an email.** A message written in the editor read "înscrierea la**Crosul de toamnă**din data de" — the event, the date and the place welded to the words either side. The words were always right; only the rendering lost the spaces. §278.
 - **The registrations screen says which event it is showing**, and the search and filter box is open again instead of folded away. The tab's number counts everyone signed up for everything still to come; the list opens on the main event — so when the two differ, the page now says why and offers "show every event". §277.
 - **Fixed: the event editor crashed as it opened**, taking the toolbar and the language tabs with it, because of how yesterday's table bar was wired. §276.

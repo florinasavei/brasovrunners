@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.44-2026-09-22 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.44-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -997,6 +997,14 @@ The club must approve:
 Brașov Runners should own the domain, hosting, repository, database, staff authentication, email service, and media storage accounts. A freelancer may be granted access but must not become the only person capable of recovering the platform.
 
 The V1 application host is Vercel, with one QA project and one production project. This is an operational choice, not a product dependency: changing hosting later must not change registration, waiting-list, declaration, CMS, profile, or participant behavior.
+
+QA and production have separate Neon database projects under the Launch usage-based plan. The
+club pays for what the databases use rather than working against the former Free plan's monthly
+compute cutoff. The cost screen must name the plan that is actually active and show usage as
+money; it must not present the old 100-CU-hour allowance as a current outage threshold. Launch is
+appropriate while the club values low cost over a contractual availability promise. Move to a
+plan with an SLA or additional security controls only when the club decides those guarantees are
+worth their higher compute rate, not merely because a quiet database accumulated ordinary use.
 
 The public domain and normal DNS stay with the club's registrar, which may change. Cloudflare is used for R2 media storage and does not need to control the main site's DNS unless a later feature requires it.
 

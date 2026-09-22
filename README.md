@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.44-2026-09-22 -->
 
 # Brașov Runners Platform
 
-**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.44-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 A bilingual public website, mini CMS, and free event-registration platform for **Brașov Runners**, a small local running club in Brașov that organizes weekly meetups, larger community events, and local running races or contests.
@@ -17,7 +17,7 @@ The project is intentionally one maintainable Next.js modular monolith. It shoul
 | Repository | [`florinasavei/brasovrunners`](https://github.com/florinasavei/brasovrunners); to be transferred to a club-owned organization before handover |
 | Code | M1 complete in code. Public event pages; a backoffice where an organizer creates, duplicates, configures, previews, publishes, archives and deletes a race, with every column an organizer owns and both languages going live together; staff sign-in through Auth.js and Zitadel; the full registration lifecycle — submission, email confirmation, the declaration hold, capacity, the waiting list, self-unregistration — proven against real PostgreSQL under concurrent load; versioned legal documents, with clearly marked sample text everywhere but production and no invented text there at all; ten transactional message types through the outbox; a registrations backoffice that can enter, rename and cancel a registration — and nothing else — each with an audit row, and a CSV export and labelled test registrations for exercising the queue. Registration is reachable from the public pages, and a public participant list exists and is switched off everywhere until the club's approved privacy notice describes it. See [`DECISIONS.md`](./DECISIONS.md) §26–§34. |
 | Priority | Account creation and DevOps, not application code: DNS for the club's `.com` domain (bought 2026-09-16; a `.ro` follows in a year — [`DECISIONS.md`](./DECISIONS.md) §55), a Mailgun sending domain verified on it, a production Zitadel application, the first release PR, and the club's approved privacy notice and declaration text. The production Vercel and Neon projects exist and track `main` |
-| Now | QA is deployed: a Neon project in Frankfurt, migrated and seeded, behind a Vercel project tracking `qa` on its provider-assigned hostname ([`SETUP.md`](./SETUP.md) §26 holds it). Staff sign-in works there through Zitadel, gated by the `staff_users` allowlist; email is still `capture`, so nothing transmits until a sending domain exists. The production Vercel and Neon projects exist, configured and never deployed — `main` is behind `qa`, and the first production deployment is the release PR ([`docs/RUNBOOKS.md`](./docs/RUNBOOKS.md) § The first production deployment). `WEEKEND.md` records the narrower pilot this replaced; `SETUP.md` §29 is the original ten-PR M1 plan, most of which now exists |
+| Now | QA and production use separate Neon projects in Frankfurt under the **Launch** usage-based plan (upgraded 2026-09-22). The first 1.8 CU-hours cost $0.19; at 1.8 CU-hours a day the compute projection is about $5.72 for 30 days, before storage and restore history. Launch has no 100-CU-hour shutdown, but the application still labels that former Free limit on `/devs` and `/admin/tasks`; BR-REQ-090-07 records the required follow-up. See [`SETUP.md`](./SETUP.md) §25 and [`docs/PLATFORM.md`](./docs/PLATFORM.md). Production is live on the club domain; `WEEKEND.md` records the narrower pilot this replaced. |
 | History | [`CHANGELOG.md`](./CHANGELOG.md), one entry per baseline |
 | Open questions | Owner decisions in [`BUSINESS.md`](./BUSINESS.md) §9; provisional baseline decisions in [`DECISIONS.md`](./DECISIONS.md) §6 |
 
@@ -373,7 +373,7 @@ people screenshot.
 **PostgreSQL with Drizzle ORM.** A real relational database because the hard part of this
 product is correctness under concurrency — two people claiming the last place at the same
 instant — and that is what database transactions are for. Drizzle keeps the SQL visible instead
-of hiding it behind magic. Hosted on **Neon** (Frankfurt) in QA and production; a local Docker
+of hiding it behind magic. Hosted on **Neon Launch** (Frankfurt) in QA and production; a local Docker
 container for development.
 
 **Vercel** hosts it, one project per environment, EU region. The application stays portable by
@@ -400,7 +400,7 @@ email now exist — see [`DECISIONS.md`](./DECISIONS.md) §26 and the current-st
 | UI | Material UI 9 + Emotion | Official App Router integration; custom club theme |
 | Rich-text editor | Tiptap open-source core | JSON is the canonical editorial body — not built yet |
 | Internationalization | next-intl 4 | `ro` default and `en`; localized paths; no cross-locale fallback |
-| Database | PostgreSQL + Drizzle ORM | Neon in QA and production, Docker locally |
+| Database | PostgreSQL + Drizzle ORM | Separate Neon Launch projects in QA and production, Docker locally |
 | Validation | Zod | At every boundary, including environment variables |
 | Hosting | Vercel, region `fra1` | One project per environment; portable by rule |
 | Domain / DNS | The club's registrar; a `.com` first, a `.ro` added later | Exactly one canonical host, every other domain redirects to it, switched by `yarn domain:bind`; see [`SETUP.md`](./SETUP.md) §26 |
