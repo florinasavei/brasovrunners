@@ -2524,5 +2524,10 @@
     },
     "emailConfirm": "Scrie adresa încă o dată *",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
+  },
+  "Offline": {
+    "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, de la {when}. Unele detalii pot fi între timp schimbate.",
+    "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
+    "capacityRetry": "Încearcă din nou"
   }
 }

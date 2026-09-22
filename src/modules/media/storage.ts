@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { env } from "@/shared/config/env";
 
 /**
@@ -29,6 +29,16 @@ export type StoredVariant = "web" | "thumb";
 
 export type Storage = {
   put(key: string, body: Buffer, contentType: string): Promise<void>;
+  /**
+   * The object's bytes, or `null` when there is none (§281).
+   *
+   * Added for the last-good-page snapshots, which this application reads back itself rather
+   * than handing to a browser: a photo is fetched from Cloudflare's own address and never
+   * passes through a function, but a snapshot is consulted on the very request whose database
+   * read just failed, and that request must not depend on the public address being reachable
+   * from inside the function.
+   */
+  get(key: string): Promise<Buffer | null>;
   delete(key: string): Promise<void>;
   /** The address a browser loads the object from. */
   publicUrl(key: string): string;
@@ -56,6 +66,13 @@ function safeLocalPath(key: string): string {
 }
 
 const localStorage: Storage = {
+  async get(key) {
+    try {
+      return await readFile(safeLocalPath(key));
+    } catch {
+      return null;
+    }
+  },
   async put(key, body) {
     const file = safeLocalPath(key);
     await mkdir(path.dirname(file), { recursive: true });
@@ -82,6 +99,9 @@ const fakeObjects: Map<string, { body: Buffer; contentType: string }> = ((
 const fakeStorage: Storage = {
   async put(key, body, contentType) {
     fakeObjects.set(key, { body, contentType });
+  },
+  async get(key) {
+    return fakeObjects.get(key)?.body ?? null;
   },
   async delete(key) {
     fakeObjects.delete(key);
@@ -128,6 +148,18 @@ function r2Storage(): Storage {
           CacheControl: "public, max-age=31536000, immutable",
         }),
       );
+    },
+    async get(key) {
+      try {
+        const answer = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+        const bytes = await answer.Body?.transformToByteArray();
+        return bytes ? Buffer.from(bytes) : null;
+      } catch {
+        // A key that is not there, and a bucket having a bad minute, are the same answer to the
+        // caller: there is no last good copy. This is read on the path where the database has
+        // already failed, so it must not add a second throw to it.
+        return null;
+      }
     },
     async delete(key) {
       await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));

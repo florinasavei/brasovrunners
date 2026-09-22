@@ -6,6 +6,8 @@ import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
+import { readWithLastGood } from "@/modules/resilience/last-good";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { routing } from "@/i18n/routing";
 import { findPublishedPageBySlug } from "@/modules/content/pages/repository";
 import RichText from "@/modules/content/rich-text/ui/RichText";
@@ -49,11 +51,16 @@ export default async function StandingPage({ params }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const page = await findPublishedPageBySlug(getDb(), locale, slug);
+  // The last copy behind it (§281); `notFound()` on the result, never inside the loader.
+  const read = await readWithLastGood(`page:${locale}:${slug}`, () =>
+    findPublishedPageBySlug(getDb(), locale, slug),
+  );
+  const page = read.value;
   if (!page) notFound();
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+      <LastGoodNotice read={read} />
       {/* As wide as the header, so the title sits on the logo's column; the prose stops at a
           readable measure rather than running the whole width (AGENTS.md §18.2). */}
       <Box sx={{ maxWidth: PROSE_MEASURE }}>

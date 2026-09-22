@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -37,6 +37,8 @@ import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
+import { readWithLastGood } from "@/modules/resilience/last-good";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import JsonLd from "@/shared/ui/JsonLd";
 import { PAGE_WIDTH } from "@/theme/brand";
 
@@ -103,27 +105,44 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
   const { interest, since, lista } = await searchParams;
 
-  const event = await findPublishedEventBySlug(getDb(), locale, slug);
+  const now = new Date();
+  /*
+    The page's facts, with the last copy of them behind it (§281).
+
+    Both reads sit inside one loader, so a page served from a copy is internally consistent —
+    the event and whether it may take an address were true at the same moment. `notFound()` is
+    called on the *result*, outside: throwing it in here would be caught by the fallback and
+    answered with the previous visitor's page, turning a 404 into a wrong 200.
+  */
+  const read = await readWithLastGood(
+    `event:${locale}:${slug}`,
+    async () => {
+      const found = await findPublishedEventBySlug(getDb(), locale, slug);
+      if (!found) return { event: null, interestBox: false };
+      // "Tell me when registration opens" (§146) takes an address, and an address is taken only
+      // under an approved privacy notice — the registration form's own rule (BR-REQ-053-01). One
+      // read, only while there is a box to show.
+      const interestBox =
+        found.registrationMode === "INTERNAL" &&
+        registrationState(found, now) === "NOT_YET_OPEN" &&
+        (await findCurrentApprovedDocument(getDb(), "PRIVACY_NOTICE", locale, now)) !== undefined;
+      return { event: found, interestBox };
+    },
+    now,
+  );
+  const { event, interestBox } = read.value;
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).
   if (!event) notFound();
 
   const t = await getTranslations("Event");
   const tSite = await getTranslations("Site");
-  const now = new Date();
-  // "Tell me when registration opens" (§146) takes an address, and an address is taken only
-  // under an approved privacy notice — the registration form's own rule (BR-REQ-053-01). One
-  // read, only while there is a box to show.
-  const interestBox =
-    event.registrationMode === "INTERNAL" &&
-    registrationState(event, now) === "NOT_YET_OPEN" &&
-    (await findCurrentApprovedDocument(getDb(), "PRIVACY_NOTICE", locale, now)) !== undefined;
   const interestOutcome = parseInterestOutcome(interest);
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The
   // page is rendered per request anyway, so reading the session costs it nothing; the editor
   // asserts the role again for itself (BR-REQ-060-01). Never where there is no sign-in.
-  const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await getCurrentStaffUser();
+  const staffUser = env.STAFF_AUTH_MODE === "disabled" ? null : await readStaffUserOrNone();
   const editHref = staffUser && canEditTexts(staffUser.role) ? getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: event.id } } }) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -133,6 +152,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           `${env.APP_BASE_URL}/${locale}/events/${slug}/share-image`,
         ])}
       />
+
+      <LastGoodNotice read={read} />
 
       <Stack direction="row" spacing={2} sx={{ mb: 2, alignItems: "center", justifyContent: "space-between" }}>
         <Typography variant="body2">
@@ -289,4 +310,21 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       <StartList event={event} page={lista} />
     </Container>
   );
+}
+
+/**
+ * Who is signed in, or nobody, when the answer needs a database that is not there (§281).
+ *
+ * The session read is what puts "edit in the backoffice" on the page for staff. During an outage
+ * a visitor must still get the page, and a staff member losing a shortcut for a few minutes is
+ * not a failure worth a blank screen — they can reach the editor from `/admin`, which is not
+ * served from a copy and will tell them plainly that the database is away.
+ */
+async function readStaffUserOrNone(): Promise<Awaited<ReturnType<typeof getCurrentStaffUser>> | null> {
+  try {
+    return await getCurrentStaffUser();
+  } catch (error) {
+    unstable_rethrow(error);
+    return null;
+  }
 }

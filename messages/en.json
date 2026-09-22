@@ -2524,5 +2524,10 @@
     },
     "emailConfirm": "Type the address once more *",
     "emailMismatch": "The two addresses are not the same — check the letters."
+  },
+  "Offline": {
+    "stale": "We could not check the details just now, so this is the last saved copy of the page, from {when}. Some of it may have changed since.",
+    "capacityUnknown": "We cannot check how many places are left right now.",
+    "capacityRetry": "Try again"
   }
 }

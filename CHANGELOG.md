@@ -10,6 +10,8 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **The site keeps working when the database does not.** Every public page now keeps the last copy of itself; if the database cannot be reached, visitors still get the events, the calendar, the rules, the legal texts and the gallery, with a line saying the page is the last saved version and when it was taken — instead of an error page. How many places are left is never shown from a copy: that one block says it cannot be checked, because it is the number people act on. A copy older than twelve hours is not shown at all. §281.
+- **Fixed: the health check could fail to report that the database was down** — it went on asking the database questions after the connection had already failed, so the answer the club's monitors read was a generic error instead of "the database is down". §281.
 - **Fixed: the spaces around a bold word went missing in an email.** A message written in the editor read "înscrierea la**Crosul de toamnă**din data de" — the event, the date and the place welded to the words either side. The words were always right; only the rendering lost the spaces. §278.
 - **The registrations screen says which event it is showing**, and the search and filter box is open again instead of folded away. The tab's number counts everyone signed up for everything still to come; the list opens on the main event — so when the two differ, the page now says why and offers "show every event". §277.
 - **Fixed: the event editor crashed as it opened**, taking the toolbar and the language tabs with it, because of how yesterday's table bar was wired. §276.
