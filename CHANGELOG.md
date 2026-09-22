@@ -10,11 +10,14 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.44-2026-09-22
 
+- **The hidden anti-robot field can be switched off from the backoffice**, on its own, beside the captcha switch — for the day it is catching real people. Switched off it is still there and still recorded; it just stops refusing anybody. §282.
+- **Nobody is turned away by the anti-bot check with no way back.** If a browser or a password manager fills the hidden field the form uses to catch robots — which is what happens with autofill — the registration now goes through when that field holds the person's own name or address. If it is refused anyway, the message is calmer, says plainly that nothing was registered and no email is coming, asks for the agreements to be ticked again, and offers a button that sends it; the second press is accepted. A visitor Cloudflare's check actually rejected is still refused, both times. §282.
 - **The site keeps working when the database does not.** Every public page now keeps the last copy of itself; if the database cannot be reached, visitors still get the events, the calendar, the rules, the legal texts and the gallery, with a line saying the page is the last saved version and when it was taken — instead of an error page. How many places are left is never shown from a copy: that one block says it cannot be checked, because it is the number people act on. A copy older than twelve hours is not shown at all. §281.
 - **Fixed: the health check could fail to report that the database was down** — it went on asking the database questions after the connection had already failed, so the answer the club's monitors read was a generic error instead of "the database is down". §281.
 - **The Neon account is now on Launch, and the documentation says what that costs.** The first 1.8 CU-hours cost $0.19; the same daily pace projects to about $5.72 compute for 30 days, while one 0.25 CU compute kept warm would cost $19.08. Storage and restore-history charges stay separate. §280.
 - **The old Free limits are no longer presented as current provider limits.** The scheduler cadence remains because sleeping compute costs less, not because 100 CU-hours now suspends the site. BR-REQ-090-07 and the setup guide explicitly record that `/devs` and `/admin/tasks` still need a code follow-up to remove their Free label, denominator, warning, and storage ceiling. §280.
 - **Launch remains the right plan for M1.** Scale is deferred until the club needs its 99.95% SLA or additional security/compliance controls; ordinary low-volume growth is not by itself an upgrade trigger. §280.
+- **Launch may be temporary.** The owner will review the actual invoices and usage in December 2026 and may return Neon to Free. This is a decision checkpoint, not a scheduled downgrade; Free's then-current limits must be checked before changing the plan. §280.
 
 ## BR-V1.43-2026-09-21
 

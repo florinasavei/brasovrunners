@@ -38,15 +38,28 @@ export const BOT_CHECK_SETTING_KEY = "botCheck";
 /** One fixed id per setting for the audit row; `…e001`–`…e004` are taken (§100, §164, §244, §247). */
 export const BOT_CHECK_SETTING_ENTITY_ID = "00000000-0000-4000-8000-00000000e005";
 
-export type BotCheckState = { enabled: boolean; updatedAt: Date | null };
+export type BotCheckState = {
+  enabled: boolean;
+  /**
+   * The hidden field, on or off (§282; the owner: "I want this honeypot setting to be a toggle
+   * in the admin area as well").
+   *
+   * Its own switch rather than a second meaning for the one above, because the two defences fail
+   * differently: the captcha refuses somebody in front of a widget they can see, and the trap
+   * refuses them invisibly — which is why it was worth being able to switch off on its own when
+   * a browser keeps filling it.
+   */
+  honeypot: boolean;
+  updatedAt: Date | null;
+};
 
 /** On unless the club has switched it off: a defence is not removed by a missing row. */
-export const DEFAULT_BOT_CHECK: BotCheckState = { enabled: true, updatedAt: null };
+export const DEFAULT_BOT_CHECK: BotCheckState = { enabled: true, honeypot: true, updatedAt: null };
 
-function readEnabled(value: unknown): boolean {
-  return typeof value === "object" && value !== null && typeof (value as { enabled?: unknown }).enabled === "boolean"
-    ? (value as { enabled: boolean }).enabled
-    : DEFAULT_BOT_CHECK.enabled;
+function readFlag(value: unknown, name: "enabled" | "honeypot", fallback: boolean): boolean {
+  return typeof value === "object" && value !== null && typeof (value as Record<string, unknown>)[name] === "boolean"
+    ? ((value as Record<string, boolean>)[name])
+    : fallback;
 }
 
 export async function readBotCheck<T extends Record<string, unknown>>(db: Database<T>): Promise<BotCheckState> {
@@ -55,11 +68,25 @@ export async function readBotCheck<T extends Record<string, unknown>>(db: Databa
     .from(platformSettings)
     .where(eq(platformSettings.key, BOT_CHECK_SETTING_KEY))
     .limit(1);
-  return row ? { enabled: readEnabled(row.value), updatedAt: row.updatedAt } : DEFAULT_BOT_CHECK;
+  if (!row) return DEFAULT_BOT_CHECK;
+  return {
+    enabled: readFlag(row.value, "enabled", DEFAULT_BOT_CHECK.enabled),
+    // Absent in every row written before §282, and a defence is not removed by a missing field.
+    honeypot: readFlag(row.value, "honeypot", DEFAULT_BOT_CHECK.honeypot),
+    updatedAt: row.updatedAt,
+  };
 }
 
 const CACHE_MS = 30_000;
-let cached: { at: number; enabled: boolean } | null = null;
+let cached: { at: number; state: BotCheckState } | null = null;
+
+/** Both switches, memoized together: one row, one read, two answers. */
+async function readCached<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<BotCheckState> {
+  if (cached && now.getTime() - cached.at < CACHE_MS) return cached.state;
+  const state = await readBotCheck(db);
+  cached = { at: now.getTime(), state };
+  return state;
+}
 
 /**
  * The same read for the request path, memoized for half a minute.
@@ -70,13 +97,24 @@ let cached: { at: number; enabled: boolean } | null = null;
  * ticks a box.
  */
 export async function botCheckIsOn<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
-  if (cached && now.getTime() - cached.at < CACHE_MS) return cached.enabled;
   try {
-    const { enabled } = await readBotCheck(db);
-    cached = { at: now.getTime(), enabled };
-    return enabled;
+    return (await readCached(db, now)).enabled;
   } catch {
     return DEFAULT_BOT_CHECK.enabled;
+  }
+}
+
+/**
+ * Whether the hidden field still refuses anything (§282).
+ *
+ * On when the database cannot answer, for the same reason the captcha is: a defence is the safe
+ * side of a failure, and this one costs a visitor nothing.
+ */
+export async function honeypotIsOn<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  try {
+    return (await readCached(db, now)).honeypot;
+  } catch {
+    return DEFAULT_BOT_CHECK.honeypot;
   }
 }
 
@@ -101,20 +139,23 @@ export async function activeBotCheckSiteKey<T extends Record<string, unknown>>(
 export async function updateBotCheck<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
-  enabled: boolean,
+  /** One switch or the other; what is not named keeps the value it has (§282). */
+  change: { enabled?: boolean; honeypot?: boolean },
   now: Date,
 ): Promise<BotCheckState> {
   if (!canManageRegistrations(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not switch the anti-bot check`);
   }
   const before = await readBotCheck(db);
+  const enabled = change.enabled ?? before.enabled;
+  const honeypot = change.honeypot ?? before.honeypot;
   await db.transaction(async (tx) => {
     await tx
       .insert(platformSettings)
-      .values({ key: BOT_CHECK_SETTING_KEY, value: { enabled }, updatedAt: now, updatedByStaffUserId: actor.id })
+      .values({ key: BOT_CHECK_SETTING_KEY, value: { enabled, honeypot }, updatedAt: now, updatedByStaffUserId: actor.id })
       .onConflictDoUpdate({
         target: platformSettings.key,
-        set: { value: { enabled }, updatedAt: now, updatedByStaffUserId: actor.id },
+        set: { value: { enabled, honeypot }, updatedAt: now, updatedByStaffUserId: actor.id },
       });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
@@ -122,10 +163,10 @@ export async function updateBotCheck<T extends Record<string, unknown>>(
       entityType: "platform_setting",
       entityId: BOT_CHECK_SETTING_ENTITY_ID,
       // Turning a defence off is exactly the kind of decision a trail has to carry.
-      metadata: { from: before.enabled, to: enabled },
+      metadata: { from: { enabled: before.enabled, honeypot: before.honeypot }, to: { enabled, honeypot } },
       now,
     });
   });
   forgetCachedBotCheck();
-  return { enabled, updatedAt: now };
+  return { enabled, honeypot, updatedAt: now };
 }

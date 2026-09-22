@@ -249,7 +249,15 @@
       "saving": "Se salvează…",
       "savedOn": "Verificarea anti-bot este pornită.",
       "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
-      "updatedAt": "Modificat la {when}."
+      "updatedAt": "Modificat la {when}.",
+      "honeypot": {
+        "on": "Capcana ascunsă este pornită: un câmp pe care oamenii nu îl văd, dar roboții îl completează.",
+        "off": "Capcana ascunsă este oprită. Câmpul există în continuare și îl notăm în jurnal, dar nu mai refuză pe nimeni.",
+        "turnOff": "Oprește capcana ascunsă",
+        "turnOn": "Pornește capcana ascunsă"
+      },
+      "savedHoneypotOn": "Capcana ascunsă este pornită.",
+      "savedHoneypotOff": "Capcana ascunsă este oprită."
     },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
@@ -1965,7 +1973,9 @@
       "tooFastTitle": "Mai încearcă o dată",
       "throttledTitle": "Ai trimis deja formularul de câteva ori",
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
-      "tooFast": "Verificarea automată nu a trecut din prima — o facem ca să ținem roboții afară și uneori dă greș pentru oameni reali. Datele tale sunt toate aici: apasă din nou „Trimite înscrierea”. Dacă nici a doua oară nu merge, scrie-ne prin formularul de contact și te înscriem noi."
+      "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
+      "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Bifează din nou acordurile de mai jos — le cerem de fiecare dată, dinadins — și apasă „Trimite din nou înscrierea”.",
+      "tooFastResend": "Trimite din nou înscrierea"
     },
     "sections": {
       "about": "Despre tine",

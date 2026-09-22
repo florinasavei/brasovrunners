@@ -707,7 +707,10 @@ These are dated operational facts, not constants for business logic; re-check Ne
 changing a budget or plan. Launch removes Free's 100-CU-hour suspension, so diagnostics MUST
 report cost and MUST NOT continue presenting 100 CU-hours or 0.5 GB as current ceilings
 (BR-REQ-090-07). Scale is the next-plan decision only when the club needs its SLA or additional
-security/compliance controls. `docs/PLATFORM.md` holds the comparison and cost arithmetic.
+security/compliance controls. The owner may return the account to Free after reviewing usage and
+invoices in December 2026. Do not schedule or assume that downgrade: first re-check the then-current
+Free limits, confirm both projects fit, and change the diagnostics, documentation and operating
+expectations in the same change. `docs/PLATFORM.md` holds the comparison and cost arithmetic.
 
 Each deployed database contains environment marker:
 
