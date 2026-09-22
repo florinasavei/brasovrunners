@@ -1,5 +1,6 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { emailBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
 import { copyFor, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { COLOR } from "@/theme/brand";
 import { env } from "@/shared/config/env";
@@ -20,7 +21,13 @@ import { env } from "@/shared/config/env";
 export type TemplateContent = {
   subject: string;
   greeting: string;
-  paragraphs: string[];
+  /**
+   * The body, in order. A plain string is the platform's own sentence, escaped and rendered
+   * here; an `EmailBodyPart` is a block the club wrote in the editor (§270), already rendered
+   * into email-safe HTML and its own plain-text lines. The two mix, because the platform adds
+   * sentences around the club's words.
+   */
+  paragraphs: (string | EmailBodyPart)[];
   /**
    * The facts a participant keeps (`DECISIONS.md` §81): one bold line — date, time, meeting
    * point — and the links that go with it (the map, the Strava event). On the confirmation
@@ -61,8 +68,11 @@ export function renderContent(
     ...(content.facts
       ? [content.facts.line, ...content.facts.links.map((link) => `${link.label}: ${link.url}`), ""]
       : []),
-    // The plain-text half drops the bold markers rather than printing them (§189).
-    ...content.paragraphs.map((text) => text.replace(/\*\*([^*]+)\*\*/g, "$1")),
+    // The plain-text half drops the bold markers rather than printing them (§189); a block the
+    // club wrote carries its own lines, already stripped of formatting by the renderer.
+    ...content.paragraphs.flatMap((part) =>
+      typeof part === "string" ? [part.replace(/\*\*([^*]+)\*\*/g, "$1")] : part.text,
+    ),
     ...(content.image ? ["", `${content.image.caption}: ${content.image.url}`] : []),
     ...(content.action ? ["", `${content.action.label}: ${content.action.url}`] : []),
     ...(content.links ?? []).map((link) => `${link.label}: ${link.url}`),
@@ -92,7 +102,9 @@ export function renderContent(
           ),
         ]
       : []),
-    ...content.paragraphs.map((text) => paragraph(emphasise(escapeHtml(text)))),
+    ...content.paragraphs.map((part) =>
+      typeof part === "string" ? paragraph(emphasise(escapeHtml(part))) : part.html,
+    ),
     // A hosted image, never a data URI: several mail clients strip inline data, and a QR that
     // does not render is a participant at the desk with nothing to show.
     ...(content.image
@@ -804,6 +816,7 @@ export function buildTemplateContent(
     rewrote the confirmation would otherwise silently lose them.
   */
   const written = copyFor(overrides, messageType, locale);
+  const writtenBody = written?.body ? readEmailBody(written.body) : null;
   const fill = (text: string) => fillPlaceholders(text, data as unknown as Record<string, unknown>);
 
   return {
@@ -834,7 +847,17 @@ export function buildTemplateContent(
     */
     paragraphs: [
       ...(data.alreadyRegistered ? [copy.alreadyRegistered] : []),
-      ...(written ? written.paragraphs.map(fill) : entry.body(data)),
+      /*
+        The club's own words, with their formatting when it wrote them in the editor (§270).
+        A stored document that cannot be read — an older shape, a node an email may not carry —
+        falls back to the plain paragraphs beside it rather than to nothing, which is the same
+        direction `readEmailCopy` takes with an unreadable setting: a message still goes out.
+      */
+      ...(writtenBody
+        ? emailBodyParts(writtenBody, data as unknown as Record<string, unknown>)
+        : written
+          ? written.paragraphs.map(fill)
+          : entry.body(data)),
       // After the body, not before it: the number is in the body already, and this only
       // qualifies it (§237).
       ...(data.bibProvisional && data.bibNumber !== undefined

@@ -216,7 +216,13 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
                 emailLocale={emailLocale}
                 messageType={messageType}
                 written={copyFor(written.copy, messageType, emailLocale)}
-                shipped={{ subject: shipped.subject, paragraphs: shipped.paragraphs }}
+                /* The platform's own text is plain sentences — the rich parts in this list only ever
+                 come from something the club wrote, and this is the fallback for when it has
+                 not (§270). */
+              shipped={{
+                subject: shipped.subject,
+                paragraphs: shipped.paragraphs.filter((part): part is string => typeof part === "string"),
+              }}
               />
             )}
           </Box>

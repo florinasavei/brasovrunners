@@ -11575,3 +11575,48 @@ three fold; the invitation form on `/admin/staff`. Four message keys under `Admi
 plus `registrations.filtersInUse` and `outbox.waitingShort` for the asides.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 270. Decided — the club writes an email in the same editor it writes a page, minus what an inbox cannot draw (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "the email template editors must also be rich text." §247
+gave the club the subject and the paragraphs of every message, as one textarea with a blank line
+between paragraphs. What it could not write was the thing a club actually wants in an email: a
+bold line, a link to the event, a list of what to bring.
+
+**Decision.** *The same editor, a narrower vocabulary.* `RichTextEditor` is mounted on the copy
+panel with a new `features` prop, and the email body allows paragraphs, two heading levels, the
+two lists, a quote, bold, italic, links and alignment. **A picture, a film and a table are
+refused**, each for its own reason rather than for tidiness: a picture in an email is a request
+to a server the moment it is opened, which is the tracking pixel every client blocks by default;
+a film cannot play in an inbox at all; a table is how a mail client lays out a whole message and
+the hard target is a 320-pixel phone. `features` hides the buttons; the **server** is what
+refuses the nodes, whatever a browser posts.
+
+*Its own renderer, not the page's.* `RichText.tsx` emits MUI `sx`, which is classes in a
+stylesheet, and a stylesheet is what Gmail and Outlook drop. `domain/email-rich-text.ts` writes
+the same inline `style` attributes `templates.ts` already writes by hand, so a paragraph the
+club wrote and a paragraph the platform ships are the same paragraph on the screen.
+
+*Both halves of a message come from one document.* A message is HTML and plain text, and the
+plain half is still built from `paragraphs` — which is now **derived from the document at save
+time** rather than typed separately. A club that edited the formatted words and left a stale
+textarea behind would otherwise have sent one wording to a reading client and another to a plain
+one. An `EmailBodyPart` carries the two halves of one block together, because the platform's own
+sentences ("you are already registered", "this number is provisional") sit among the club's
+paragraphs and are plain strings.
+
+*A mark may only wrap text that is already escaped*, which is the order §189 established for the
+`**bold**` markers, and a link's `href` was checked against the safe-protocol rule when the
+document was stored.
+
+*Nothing breaks on the way in or out.* `body` is optional on the stored entry: every entry
+written before today has none and reads exactly as it did. A document that cannot be parsed —
+an older browser posting the textarea, a node an email may not carry — falls back to the plain
+paragraphs beside it, the same direction `readEmailCopy` takes with an unreadable setting. A
+message still goes out.
+
+Tests: `tests/unit/notifications/email-rich-text.test.ts` — the three refusals, inline styles and
+no classes, escaping before marks, placeholders filled in the message and kept in the store, both
+halves of a list agreeing, and the club's bold line arriving in a rendered message.
+
+Baseline `BR-V1.43-2026-09-21`.

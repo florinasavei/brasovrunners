@@ -63,6 +63,7 @@ export default function RichTextEditor({
   initialBody,
   label,
   accessibleSuffix,
+  features = { media: true, tables: true },
   labels,
 }: {
   /** The form field the JSON is posted as — the same name the textarea used. */
@@ -77,6 +78,17 @@ export default function RichTextEditor({
    * tell them apart.
    */
   accessibleSuffix?: string;
+  /**
+   * Which halves of the toolbar this body may use (`DECISIONS.md` §270).
+   *
+   * An email's words are written in this same editor, and a mail client can draw neither a
+   * picture the reader's client has not blocked, nor a film, nor a table narrow enough for a
+   * phone — `notifications/domain/email-rich-text.ts` argues each. The server refuses those
+   * nodes there whatever arrives, so this is not the guard; it is what keeps the toolbar from
+   * offering a button whose result the save would reject. Absent means the whole toolbar, which
+   * is what every editorial form wants.
+   */
+  features?: { media?: boolean; tables?: boolean };
   /** Translated control names. Passed in, because a client island cannot read the catalogue. */
   labels: {
     bold: string;
@@ -543,6 +555,7 @@ export default function RichTextEditor({
             is four dead controls, and this toolbar already has words on it rather than icons
             precisely so that what it offers is legible.
           */}
+          {features.tables !== false && (
           <Control
             label={labels.table}
             text="⊞"
@@ -551,7 +564,8 @@ export default function RichTextEditor({
               editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
             }
           />
-          {editor?.isActive("table") && (
+          )}
+          {features.tables !== false && editor?.isActive("table") && (
             <>
               <Control
                 label={labels.tableAddRow}
@@ -639,6 +653,8 @@ export default function RichTextEditor({
           />
           {/* Words, not glyphs: the picture emoji rendered as a broken box on the owner's
               machine (2026-09-18), and two of them side by side read as two broken boxes. */}
+          {features.media !== false && (
+          <>
           <Control
             label={imageState === "uploading" ? labels.imageUploading : labels.image}
             text={labels.imageShort}
@@ -671,6 +687,8 @@ export default function RichTextEditor({
               setYoutubeDraft((open) => (open === null ? "" : null));
             }}
           />
+          </>
+          )}
           <Control
             label={labels.undo}
             text="↶"

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { richTextSchema } from "@/modules/content/rich-text/domain/schema";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 
 /**
@@ -88,7 +89,24 @@ export function fillPlaceholders(text: string, data: Record<string, unknown>): s
 const copy = z
   .object({
     subject: z.string().trim().min(1).max(200),
+    /**
+     * The words as plain paragraphs. Still required, and still what the plain-text half of the
+     * message is built from — when a document is present (§270) these are derived from it at
+     * save time, so the two halves cannot say different things.
+     */
     paragraphs: z.array(z.string().trim().min(1).max(1200)).min(1).max(EMAIL_COPY_MAX_PARAGRAPHS),
+    /**
+     * The same words with their formatting (§270): bold, italic, links, headings and lists,
+     * written in the same editor as a page. Optional, because every entry written before §270
+     * has none and because the platform's own text is plain — absent means the paragraphs above
+     * are the whole of it.
+     *
+     * The narrower allowlist an email may carry — no picture, no film, no table — is checked in
+     * `email-rich-text.ts` and by the save, not here: this schema is the shape of the setting,
+     * and the reason those three are refused belongs with the renderer that would have to draw
+     * them in a mail client.
+     */
+    body: richTextSchema.nullish(),
   })
   .strict()
   .superRefine((value, ctx) => {
