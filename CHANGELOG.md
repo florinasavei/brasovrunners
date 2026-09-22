@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.47-2026-09-22
+
+- **The email page shows the Organizer what is happening and the Administrator what to change.** How many messages went out today and against which plan, what is waiting in the queue and why, and who receives the club's copies are now readable for the Organizer — the status page the club works from on race week. Changing any of it — the plan, "Trimite acum", the club's copies, who receives the contact messages — stays the Administrator's, and the buttons are simply not drawn for anybody else, with a sentence saying whose the setting is. Until now every form was shown to everyone and refused on the press. §291.
 ## BR-V1.46-2026-09-22
 
 - **The guide stops describing a backoffice that no longer exists.** The Organizer's section said "Evenimente → Eveniment nou … și textele în română și engleză" and "Trimite spre verificare → Publică" — every one of which has been the Administrator's or the Redactor's since §201, §204 and §207 — and the Redactor's said an Organizer publishes a page. Both now describe the roles as they are, the Organizer's section says what §289 gave them, and the Administrator's no longer sends anybody into Zitadel to create an account: "Adaugă" has done that itself since §123. §289.

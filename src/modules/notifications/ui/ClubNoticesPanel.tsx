@@ -16,6 +16,8 @@ type Props = {
   locale: Locale;
   notices: ClubNoticesState;
   declarations: DeclarationCopies;
+  /** Who may change these lists (§291): the Administrator; `updateClubNotices` refuses anybody else. */
+  mayEdit: boolean;
 };
 
 /**
@@ -32,7 +34,7 @@ type Props = {
  * mailbox nobody on the message can see, which is exactly why somebody asks for it and exactly
  * why the person setting it should be looking at those words when they do.
  */
-export default async function ClubNoticesPanel({ locale, notices, declarations }: Props) {
+export default async function ClubNoticesPanel({ locale, notices, declarations, mayEdit }: Props) {
   const t = await getTranslations("Admin");
 
   return (
@@ -63,6 +65,11 @@ export default async function ClubNoticesPanel({ locale, notices, declarations }
         </Typography>
       )}
 
+      {!mayEdit ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+          {t("emails.clubNotices.readOnly")}
+        </Typography>
+      ) : (
       <Box component="form" action={updateClubNoticesAction} sx={{ mt: 1.5 }}>
         <input type="hidden" name="uiLocale" value={locale} />
         <Stack spacing={1.5} sx={{ maxWidth: 560 }}>
@@ -107,6 +114,7 @@ export default async function ClubNoticesPanel({ locale, notices, declarations }
           </Box>
         </Stack>
       </Box>
+      )}
     </Panel>
   );
 }

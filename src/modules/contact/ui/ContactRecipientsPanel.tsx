@@ -14,6 +14,12 @@ type Props = {
   locale: Locale;
   recipients: ContactRecipientsState;
   resolved: ResolvedContactRecipients;
+  /**
+   * Who may change the list (§291). Everybody who opens the page reads where messages go; only
+   * the Administrator writes it, and `updateContactRecipients` refuses anybody else — the owner:
+   * "organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
+   */
+  mayEdit: boolean;
 };
 
 /**
@@ -26,7 +32,7 @@ type Props = {
  * a Gmail app password belongs in the environment, not in a table the backoffice can read
  * (AGENTS.md §14.5) — so the panel names the two variables and shows neither's value.
  */
-export default async function ContactRecipientsPanel({ locale, recipients, resolved }: Props) {
+export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit }: Props) {
   const t = await getTranslations("Admin");
 
   return (
@@ -56,6 +62,11 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
         </Typography>
       )}
 
+      {!mayEdit ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+          {t("emails.contacts.readOnly")}
+        </Typography>
+      ) : (
       <Box component="form" action={updateContactRecipientsAction} sx={{ mt: 1.5 }}>
         <input type="hidden" name="uiLocale" value={locale} />
         <Stack spacing={1.5} sx={{ maxWidth: 520 }}>
@@ -80,6 +91,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           </Box>
         </Stack>
       </Box>
+      )}
 
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
         {t("emails.contacts.sender")}
