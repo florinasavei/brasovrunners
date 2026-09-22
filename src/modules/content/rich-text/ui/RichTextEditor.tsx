@@ -17,14 +17,14 @@ import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import { Extension, mergeAttributes, Node } from "@tiptap/core";
+import { Extension, mergeAttributes, Node, type Editor } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
-import { useRef, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import {
   BLOCK_ALIGNMENTS,
@@ -59,6 +59,9 @@ import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
  * `@mui/icons-material`, which the backoffice already imports for its tab row, and only the
  * backoffice loads this file — no public page pays for them.
  */
+/** Floating-UI's placement for the table's bar: above the table, created once. */
+const TABLE_BAR_OPTIONS = { placement: "top" } as const;
+
 const ALIGN_ICON = {
   left: FormatAlignLeftIcon,
   center: FormatAlignCenterIcon,
@@ -217,6 +220,16 @@ export default function RichTextEditor({
    * shut so nothing is rendered twice behind it.
    */
   const [preview, setPreview] = useState<string | null>(null);
+  /**
+   * The two props the table's bar is given, kept stable between renders.
+   *
+   * `BubbleMenu` registers a ProseMirror plugin from its props, and a new function or object
+   * identity on every render re-registers it — which dispatches a transaction, which renders
+   * again. That is React error #185, "maximum update depth exceeded", and it took the whole
+   * editor island down the moment it mounted: no toolbar, no language tabs, and an e2e suite
+   * that failed on "no tab named English" rather than on anything about tables.
+   */
+  const showOverTable = useCallback(({ editor: current }: { editor: Editor }) => current.isActive("table"), []);
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
   const [words, setWords] = useState(() => countWords(richTextToPlainText(initialDoc)));
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -949,8 +962,8 @@ export default function RichTextEditor({
             <BubbleMenu
               editor={editor}
               pluginKey="tableVerbs"
-              shouldShow={({ editor: current }) => current.isActive("table")}
-              options={{ placement: "top" }}
+              shouldShow={showOverTable}
+              options={TABLE_BAR_OPTIONS}
             >
               <Paper elevation={3} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}>
               <Control
