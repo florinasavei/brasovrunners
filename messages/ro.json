@@ -547,7 +547,8 @@
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
-      "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere."
+      "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
+      "LEGAL_TERMS_IN_FORCE": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge: cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost. O poți retrage — rămâne în evidență și nu se mai oferă nimănui."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -1042,7 +1043,8 @@
         "action": "Șterge definitiv versiunea",
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
         "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
-        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge."
+        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge.",
+        "blockedTermsInForce": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge. Cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost — deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul. Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui."
       },
       "editor": {
         "heading": "Titlu de secțiune",

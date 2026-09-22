@@ -12361,3 +12361,49 @@ declined: the owner wanted the whole list. *Everything but erasure.* Also offere
 he did not ask for verbs, he asked to see.
 
 Baseline `BR-V1.46-2026-09-22`.
+
+## 290. Fixed — a delete screen that promised what the server refused (2026-09-22)
+
+**Context.** The owner, on `/admin/legal/<id>/delete` for *Termeni de concurs, versiunea 2*:
+"inca nu pot sterge unele ducmnete...". The screen said, in the club's own words, "Se poate șterge
+pentru că nimic nu depinde de ea: nicio semnătură, niciun eveniment, nicio înscriere — și nu este
+textul în vigoare acum", took the typed phrase and the reason, and answered **"Altcineva a salvat
+între timp. Reîncarcă pagina"** — a sentence about a concurrent save by somebody who does not
+exist.
+
+**What was actually happening.** Nothing was broken in the delete path. §203 had added a fourth
+obstacle to `assertDeletable` and to nothing else: a TERMS version that has ever been in force is
+refused, because the three dependant counts are vacuous for that key — a registration records
+`privacy_notice_version`, `results_consent_version` and `health_consent_version` and **never a
+terms version** — so every TERMS row reads as unused, including one a hundred people accepted.
+The version in front of him had been in force since 20 September. The rule was right; the screen
+had never been told about it, and `CONFLICT` is rendered in the backoffice as a concurrent save.
+
+**Decision.** *The rule becomes a pure function, `termsHasBeenInForce`, and both callers ask it.*
+The service keeps its refusal and the delete screen gains a fourth `blocked` branch, last because
+it is the narrowest — a version that is also in force should be told that first, since withdrawing
+it is the step that moves. §1.5's "one rule implemented in exactly one place" is what this restores:
+the screen had a *copy* of the obstacle list, three of four items long, and a copy is a thing that
+drifts silently.
+
+*The refusal names itself in `fields`.* `CONFLICT` stays the code — nothing about the request is
+malformed, and a real race is possible if the version takes effect between the screen and the press
+— but the action now tells this case apart, exactly as it already told a mistyped confirmation from
+a missing reason, and says what the rule is rather than inventing a colleague who saved.
+
+*The sentence says what can be done instead.* Withdrawal: the version stays on the record with its
+number and is offered to nobody. A refusal that names no alternative is where this started.
+
+**The wider lesson, and it is the second time today.** Both of this session's user-visible defects
+were a screen and a server disagreeing about a rule, with the screen inviting the press: this one,
+and the event editor's "pot edita dar nu mi se salveaza" (§289). Neither was a missing check. The
+pattern worth naming: when a rule is added to a service, the screen that offers the verb is part of
+the change, and a guard duplicated in prose on a page is a guard that will drift.
+
+**What was rejected.** *A new `DomainErrorCode`.* The union is deliberately five values wide and
+an unused one would be a value the code claims to produce; `fields` is the mechanism this action
+already used for the same purpose. *Deleting the §203 rule.* It is correct, and the proper repair
+is still a `terms_version` on the registration — a migration and a change to what the form
+records — which is not this fix.
+
+Baseline `BR-V1.46-2026-09-22`.
