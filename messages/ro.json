@@ -52,6 +52,8 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Toate evenimentele ({count})",
+    "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
+    "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
       "label": "Tipul evenimentului",
       "all": "Toate"

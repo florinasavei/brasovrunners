@@ -50,16 +50,43 @@ describe("AGENTS.md §11.3 the rich-text allowlist", () => {
    * party's image, a tracking pixel or a data URI on the club's page.
    */
   /**
-   * A YouTube film (`DECISIONS.md` §110): the id and a caption, nothing else — never an
-   * address the renderer would have to trust, and never any other host's embed.
+   * A YouTube film (`DECISIONS.md` §110, §266): the id, a caption, and since §266 how much of
+   * the column it takes and which side it sits on — the picture's own two attributes, read
+   * through the same defaults. Never an address the renderer would have to trust, and never
+   * any other host's embed.
    */
   describe("films", () => {
-    it("accepts a video id with a caption, defaults the caption, and counts the caption as its words", () => {
+    it("accepts a video id with a caption, defaults the caption and the geometry, and counts the caption as its words", () => {
       const parsed = parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", caption: "Startul din 2025" } }));
-      expect(parsed.content?.[0]).toEqual({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", caption: "Startul din 2025" } });
+      // The defaults are filled on the way in, as a picture's are: a film written before §266
+      // reads as the full-width band it was, and the markup it renders is unchanged.
+      expect(parsed.content?.[0]).toEqual({
+        type: "youtube",
+        attrs: { videoId: "dQw4w9WgXcQ", caption: "Startul din 2025", widthPercent: 100, align: "block" },
+      });
       expect(parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ" } })).content?.[0]).toMatchObject({ attrs: { caption: "" } });
       expect(richTextToPlainText(parsed)).toBe("Startul din 2025");
       expect(hasRichTextContent(parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ" } })))).toBe(true);
+    });
+
+    it("keeps a width and a side the organizer chose, and refuses any other value (§266)", () => {
+      const half = parseRichText(
+        doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", widthPercent: 50, align: "right" } }),
+      );
+      expect(half.content?.[0]).toMatchObject({ attrs: { widthPercent: 50, align: "right" } });
+      // The same closed sets as a picture's: anything else would reach the renderer as a CSS
+      // width nobody wrote.
+      for (const attrs of [
+        { widthPercent: 42 },
+        { widthPercent: "50" },
+        { align: "centre" },
+        { align: "block ", widthPercent: 100 },
+      ]) {
+        expect(() =>
+          parseRichText(doc({ type: "youtube", attrs: { videoId: "dQw4w9WgXcQ", ...attrs } })),
+          JSON.stringify(attrs),
+        ).toThrow();
+      }
     });
 
     it("refuses anything but an eleven-character id", () => {

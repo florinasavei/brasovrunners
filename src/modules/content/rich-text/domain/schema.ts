@@ -337,11 +337,21 @@ const imageNode = z.object({
 });
 
 /**
- * A YouTube film between paragraphs (`DECISIONS.md` §110): the eleven-character video id and
+ * A YouTube film in the text (`DECISIONS.md` §110, §266): the eleven-character video id and
  * nothing else — never a URL, never an iframe, never a third host. The renderer builds the
- * `youtube-nocookie.com` embed from the id behind a closed disclosure, as the event's own film
- * is shown (§69): nothing is fetched from Google until the reader presses. `caption` is the
- * sentence under it, visible to everybody.
+ * `youtube-nocookie.com` embed from the id, and nothing is fetched from Google until the reader
+ * presses (§69). `caption` is the sentence under it, visible to everybody.
+ *
+ * **`widthPercent` and `align` are the picture's own two attributes, the same closed sets**
+ * (§266; the owner: "that YouTube video must be embedded and resizable, not as a separate
+ * section"). A film was a full-width bordered block whatever the organizer wanted; it is a
+ * figure in the flow now, sized and sided like a photograph, and the geometry is literally the
+ * same function — `imageFigureSx`.
+ *
+ * Absent reads as 100 percent and `block` — the same transform a picture's two attributes have
+ * — so a film stored before today is the full-width band it always was and renders the markup
+ * it rendered yesterday. What is *stored* is untouched; what is parsed carries the defaults,
+ * which is why the golden-string test for a film names them.
  */
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const youtubeNode = z.object({
@@ -349,6 +359,16 @@ const youtubeNode = z.object({
   attrs: z.object({
     videoId: z.string().regex(YOUTUBE_ID, "a YouTube video id is eleven characters"),
     caption: z.string().max(500).nullable().optional().transform((value) => value ?? ""),
+    widthPercent: z
+      .union([z.literal(100), z.literal(75), z.literal(50), z.literal(33)])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? 100),
+    align: z
+      .union([z.literal("block"), z.literal("left"), z.literal("right")])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? "block"),
   }).strict(),
 });
 

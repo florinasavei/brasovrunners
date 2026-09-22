@@ -52,6 +52,8 @@
     "featuredCallToAction": "See the race details",
     "others": "Other events",
     "othersCount": "All events ({count})",
+    "pastCount": "{count, plural, one {# past event} other {# past events}}",
+    "pastHelp": "What has already happened. For the rest, see the calendar — it holds any month of any year.",
     "filter": {
       "label": "Event type",
       "all": "All"

@@ -11440,3 +11440,68 @@ a bare URL opens the first, a nonsense panel falls back, and the cross-screen su
 switch. `tests/e2e/tasks-cost.spec.ts` now opens the costs panel by its URL.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 266. Decided — a film in the text is a figure, sized like a picture (2026-09-22)
+
+**Context.** The owner: "that YouTube video must be embedded and resizable, not as a separate
+section". §110 put a film in the editorial body behind a closed disclosure with a bordered frame
+and a play line above it — which is a *section*, always the full width of the column, whatever
+the organizer wanted, because the node had no width to choose.
+
+**Decision.** *The film takes the picture's two attributes and the picture's own geometry.*
+`widthPercent` (100 / 75 / 50 / 33) and `align` (block / left / right), the same closed sets, read
+through the same defaults, and drawn by the same function — `imageFigureSx`. So a film beside a
+paragraph behaves exactly as a photograph beside one, down to becoming a full-width band below
+`sm`, and choosing a side from a full-width film halves it in the same transaction, which is the
+picture's rule (§193).
+
+*What did not change is the part that carries trust:* nothing is fetched from Google until the
+reader presses. The privacy notice says so ("YouTube, loaded when you press"), so the player is
+still a native `<details>` with a lazy iframe inside it — a closed disclosure keeps the iframe
+out of the viewport, so there is no request, no cookie, no script on load.
+
+*What changed is that the summary **is** the player's frame*: a 16:9 rectangle in the event's ink
+with a ▶ in the middle, and opening it hides the summary so the film fills exactly the box the
+poster filled. No border, no heading line, no thumbnail from `i.ytimg.com` — that last one would
+be the very request this shape exists to avoid. The editor keeps its thumbnail, where the request
+is the organizer's own doing (§110), and draws the film at the chosen width, because a film sized
+to half the column and shown full-width in the editor is the editor lying (§263's lesson).
+
+The notice under the frame is a caption now rather than a panel, joined to the organizer's own
+caption by a middle dot: it still says what pressing will load.
+
+Tests: `tests/unit/content/rich-text.test.ts` — the two attributes survive the allowlist, the
+defaults are filled as a picture's are, and anything outside the closed sets is refused.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 267. Decided — the events already held are a section at the foot of the listing (2026-09-22)
+
+**Context.** The owner: "old or closed events must be shown at the bottom on a different
+category". The listing shows what is still to come and nothing else (§167 added one exception:
+between seasons it leads with the club's last event so the page is not blank). Everything the
+club has held was therefore reachable only through the calendar's month view — so somebody
+looking for last month's race, or for the page with its photographs, had nowhere obvious to go.
+
+**Decision.** *A section of its own, at the foot, folded at every width.*
+
+`listPastEvents` is the query — finished, newest first, a limit — and the newest-first order is
+the point: the page above asks "what is next", this asks "what did we just do". Races do not come
+first here, unlike the listing proper; once an event is over its kind no longer ranks it.
+
+*Folded at every width*, unlike the "other events" fold above it, which opens from `sm` up (§78).
+The difference is the meaning: what is to come is what the page is for, and what is past is
+something a reader goes looking for. A closed `<details>` also costs a phone nothing to scroll by.
+
+*Twelve, and the calendar for the rest.* A weekly run is fifty rows a year, so the section is a
+window rather than an archive, and its own line says where the rest lives (§107, §116) instead of
+growing a pager nobody would page through.
+
+*Its own `<Suspense>` boundary and its own query*, so nothing above it waits for it — the lead
+and the list keep the two-query page they had (§166). Between seasons it skips the one row the
+lead is already showing, which would otherwise be the same card twice on one page.
+
+Tests: `tests/integration/events/publication.test.ts` — finished only, newest first, and never
+more rows than asked for.
+
+Baseline `BR-V1.43-2026-09-21`.

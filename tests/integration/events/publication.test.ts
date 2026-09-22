@@ -4,6 +4,7 @@ import {
   findLatestPastEvent,
   findPublishedEventBySlug,
   findPublishedTranslations,
+  listPastEvents,
   listPublishedEvents,
   listUpcomingEvents,
 } from "@/modules/events/repository";
@@ -171,6 +172,33 @@ describe("BR-REQ-020-01 / BR-REQ-040-02 publication is per event", () => {
 
     it("returns nothing to fall back to when the club has held no events", async () => {
       expect(await findLatestPastEvent(db, "ro", NOW)).toBeUndefined();
+    });
+
+    /**
+     * §267 — what the foot of the listing carries: the events that have finished, newest first.
+     *
+     * The order is the opposite of the listing's own and that is the point: the page above asks
+     * "what is next", this asks "what did we just do", and the newest is the one somebody is
+     * looking for. Races do *not* come first here — a race that happened in July does not
+     * outrank last Monday's run once both are over.
+     */
+    it("lists the finished events newest first, and only those (§267)", async () => {
+      await seedEvent({ slug: "race-in-july", type: "RACE", startsAt: new Date("2026-07-01T07:00:00Z") });
+      await seedEvent({ slug: "run-last-week", startsAt: new Date("2026-08-25T07:00:00Z") });
+      await seedEvent({ slug: "still-to-come", startsAt: new Date("2026-09-05T07:00:00Z") });
+
+      const past = await listPastEvents(db, "ro", NOW, 12);
+      expect(past.map((event) => event.slug)).toEqual(["run-last-week", "race-in-july"]);
+    });
+
+    it("takes no more than it was asked for", async () => {
+      // The section is a window, not an archive: a weekly run is fifty rows a year, and the
+      // calendar is where the whole history lives.
+      for (const day of [1, 2, 3, 4, 5]) {
+        await seedEvent({ slug: `past-${day}`, startsAt: new Date(`2026-08-0${day}T07:00:00Z`) });
+      }
+      const past = await listPastEvents(db, "ro", NOW, 3);
+      expect(past.map((event) => event.slug)).toEqual(["past-5", "past-4", "past-3"]);
     });
   });
 });

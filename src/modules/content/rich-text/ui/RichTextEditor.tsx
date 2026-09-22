@@ -1034,7 +1034,7 @@ export default function RichTextEditor({
         </Paper>
       </Popper>
 
-      {/* The film's own panel (§110): a caption, or remove it. */}
+      {/* The film's own panel (§110): a caption, how wide it is, which side (§266), or remove it. */}
       <Popper
         open={Boolean(selectedVideo)}
         anchorEl={selectedVideo}
@@ -1055,6 +1055,59 @@ export default function RichTextEditor({
               }}
               slotProps={{ htmlInput: { maxLength: 500 } }}
             />
+            {/*
+              The same two questions a picture answers, and the same answers (§266): the film is
+              a figure in the text now, so "how big" and "where" are the organizer's to set.
+            */}
+            <Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                {labels.imageSize}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={Number(videoAttrs?.widthPercent ?? 100)}
+                onChange={(_event, percent: number | null) => {
+                  if (percent !== null) editor?.chain().focus().updateAttributes("youtube", { widthPercent: percent }).run();
+                }}
+                aria-label={labels.imageSize}
+              >
+                {IMAGE_WIDTH_PERCENTS.map((percent) => (
+                  <ToggleButton key={percent} value={percent} sx={{ minWidth: 56, minHeight: 40 }}>
+                    {percent}%
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
+            <Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                {labels.imageAlign}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={String(videoAttrs?.align ?? "block")}
+                onChange={(_event, align: string | null) => {
+                  if (align === null) return;
+                  // A film floated at the full width leaves no column to write in, so choosing a
+                  // side halves it in the same transaction — the picture's own rule.
+                  const widthPercent =
+                    align !== "block" && Number(videoAttrs?.widthPercent ?? 100) === 100 ? 50 : undefined;
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("youtube", widthPercent ? { align, widthPercent } : { align })
+                    .run();
+                }}
+                aria-label={labels.imageAlign}
+              >
+                {IMAGE_ALIGNMENTS.map((align) => (
+                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
+                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.youtubeRemove}
@@ -1178,10 +1231,16 @@ const BlockAlign = Extension.create({
 });
 
 /**
- * The YouTube block (§110): an atom, so the caret never enters it; selectable, so a click opens
- * its panel; shown as the film's thumbnail from YouTube's image host with a play mark and the
- * caption beneath — the editor is the backoffice, where a request to Google for a thumbnail is
- * the organizer's own doing, unlike a reader's page, which fetches nothing until pressed.
+ * The YouTube block (§110, §266): an atom, so the caret never enters it; selectable, so a click
+ * opens its panel; shown as the film's thumbnail from YouTube's image host with a play mark and
+ * the caption beneath — the editor is the backoffice, where a request to Google for a thumbnail
+ * is the organizer's own doing, unlike a reader's page, which fetches nothing until pressed.
+ *
+ * **It carries the picture's two attributes since §266** — how much of the column it takes and
+ * which side it sits on — and draws itself at that size here, because a film the organizer sized
+ * to half the column and saw full-width in the editor is the editor lying. The width is written
+ * as an inline style for the same reason the crop's is: ProseMirror owns this DOM, so there is no
+ * `sx` to give it.
  */
 const YoutubeNode = Node.create({
   name: "youtube",
@@ -1190,16 +1249,34 @@ const YoutubeNode = Node.create({
   selectable: true,
   draggable: true,
   addAttributes() {
-    return { videoId: { default: null }, caption: { default: "" } };
+    return {
+      videoId: { default: null },
+      caption: { default: "" },
+      // The defaults emit nothing: a film stored before §266 keeps its exact JSON.
+      widthPercent: { default: 100 },
+      align: { default: "block" },
+    };
   },
   parseHTML() {
     return [];
   },
   renderHTML({ node }) {
     const id = String(node.attrs.videoId ?? "");
+    const percent = Number(node.attrs.widthPercent ?? 100);
+    const align = String(node.attrs.align ?? "block");
+    /*
+      The page's geometry, in the one form this DOM accepts. A floated film gets the gutter the
+      text wraps against on its inner side, which is what `imageFigureSx` does with `mr`/`ml`.
+    */
+    const box = [
+      "position:relative",
+      `width:${percent}%`,
+      "max-width:100%",
+      align === "block" ? "margin:8px auto" : align === "left" ? "float:left;margin:8px 24px 8px 0" : "float:right;margin:8px 0 8px 24px",
+    ].join(";");
     return [
       "div",
-      { class: "rt-youtube", "data-youtube": id, style: "position:relative;max-width:480px;margin:8px 0" },
+      { class: "rt-youtube", "data-youtube": id, "data-width": String(percent), "data-align": align, style: box },
       ["img", { src: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, alt: "", style: "display:block;width:100%;border-radius:4px" }],
       ["span", { style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:#fff;text-shadow:0 0 8px #000" }, "▶"],
       ["div", { style: "font-size:0.875rem;color:#666;text-align:center;margin-top:4px" }, String(node.attrs.caption ?? "")],

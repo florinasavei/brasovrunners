@@ -56,8 +56,18 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
   switch (block.type) {
     case "youtube":
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
-      // id on the server, and nothing is fetched from Google until the reader opens it.
-      return <RichTextVideo videoId={block.attrs.videoId} caption={block.attrs.caption} />;
+      // id on the server, and nothing is fetched from Google until the reader opens it. Since
+      // §266 it is a figure in the flow with the picture's own width and side, which is why it
+      // takes `floats` as well: a document that floats anything clears around it the same way.
+      return (
+        <RichTextVideo
+          videoId={block.attrs.videoId}
+          caption={block.attrs.caption}
+          widthPercent={block.attrs.widthPercent}
+          align={block.attrs.align}
+          floats={floats}
+        />
+      );
     case "image": {
       // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
       // address was validated to be one of this site's own variants (§72). Where the figure
