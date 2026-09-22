@@ -6,6 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Panel from "@/shared/ui/Panel";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -121,6 +122,8 @@ export default async function StaffPage({ params, searchParams }: Props) {
     },
   ];
 
+  const invitationJustSent = saved === "invited" || saved === "reinvited";
+
   return (
     <Stack spacing={4}>
       <Typography variant="h2" sx={{ fontSize: "1.25rem" }}>
@@ -157,11 +160,12 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved && saved !== "invited" && saved !== "reinvited" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
-      <Box component="section">
-        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 2 }}>
-          {t("staff.inviteTitle")}
-        </Typography>
-
+      {/*
+        Adding a colleague is a nine-field form and a rare act — twice a season — above the
+        list that is read every time. It is a folded panel now (§269), open by itself only when
+        the page is showing the outcome of an invitation somebody has just sent.
+      */}
+      <Panel title={t("staff.inviteTitle")} collapsible defaultOpen={invitationJustSent} data-testid="staff-invite">
         <form action={inviteStaffAction}>
           <input type="hidden" name="uiLocale" value={locale} />
           <Stack spacing={2}>
@@ -214,7 +218,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             {t("staff.inviteKeyMissing")}
           </Alert>
         )}
-      </Box>
+      </Panel>
 
       <AdminTable
         caption={t("staff.tableCaption")}

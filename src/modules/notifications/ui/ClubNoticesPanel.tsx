@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Panel from "@/shared/ui/Panel";
 import { getTranslations } from "next-intl/server";
 import { updateClubNoticesAction } from "@/app/[locale]/admin/emails/actions";
 import { formatAddressList } from "@/modules/contact/domain/recipients";
@@ -35,13 +36,13 @@ export default async function ClubNoticesPanel({ locale, notices, declarations }
   const t = await getTranslations("Admin");
 
   return (
-    <Box component="section" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="club-notices">
-      <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 0.5 }}>
-        {t("emails.clubNotices.title")}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {t("emails.clubNotices.intro")}
-      </Typography>
+    <Panel
+      title={t("emails.clubNotices.title")}
+      intro={t("emails.clubNotices.intro")}
+      collapsible
+      defaultOpen={false}
+      data-testid="club-notices"
+    >
 
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
         {t(`emails.clubNotices.source.${declarations.source}`, {
@@ -107,6 +108,6 @@ export default async function ClubNoticesPanel({ locale, notices, declarations }
           </Box>
         </Stack>
       </Box>
-    </Box>
+    </Panel>
   );
 }

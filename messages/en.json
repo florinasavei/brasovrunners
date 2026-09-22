@@ -293,7 +293,8 @@
       "allowanceSpent": "The Mailgun plan's limit is reached; the rest goes out after the reset.",
       "sending": "Sending…",
       "sendNowLong": "Send the queued emails now, without waiting for the monitor; stops at the daily allowance",
-      "sentNow": "Emails sent just now: {count}."
+      "sentNow": "Emails sent just now: {count}.",
+      "waitingShort": "{count} waiting"
     },
     "registrations": {
       "empty": "There are no registrations.",
@@ -452,7 +453,8 @@
       "eraseTypeName": "Type the participant's name",
       "eraseTypeNameHelp": "Type “{name}” exactly, so we know this is the row you meant. Capitals and diacritics do not matter.",
       "eraseAction": "Erase permanently",
-      "erasePending": "Erasing…"
+      "erasePending": "Erasing…",
+      "filtersInUse": "filters on"
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -1871,6 +1873,12 @@
       "reasonLabel": "Reason",
       "reasonHelp": "It is kept in the audit trail. It is the only thing that survives the deletion; the names of the people erased are kept nowhere.",
       "action": "Permanently delete the event and its registrations"
+    },
+    "panels": {
+      "bibs": "Race numbers",
+      "summary": "Who has signed up",
+      "outbox": "Email waiting to go out",
+      "filters": "Search and filter"
     }
   },
   "NotFound": {

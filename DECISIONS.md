@@ -11536,3 +11536,42 @@ schemes, so the pill needs no dark variant and clears AA on either.
 `admin/emails/page.tsx` (`SubNav` in place of the two `Link`s).
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 269. Decided — a backoffice screen is boxes, and the ones that are not today's work fold (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "overall I want the admin area to have more boxes and
+collapsables." The registrations screen is the case for it. Between the heading and the table
+sat a bib toolbar, a counter strip, an outbox line and eight filter fields, separated by nothing
+but vertical space — about a screen and a half of controls, most of them read once a week,
+above the list that is read every time. The configuration screens got sub-tabs for the same
+problem (§265); the screens that are one section each needed the smaller move.
+
+**Decision.** *One component, `shared/ui/Panel`.* A bordered section with a heading, an
+optional line saying what it is for, and an optional **aside** — a figure that stays visible
+while the panel is shut, because a closed fold that says nothing is a fold nobody opens. With
+`collapsible` it is a `<details>`; without it, the same box the panels on `/admin/emails`
+had each been drawing by hand.
+
+*A `<details>`, never client state.* The backoffice works with JavaScript off, and a panel
+whose open state lived in React is a panel that does not open before hydration — on the screens
+a volunteer opens on a phone at the desk, where §68's note about hydration windows was written.
+`DISCLOSURE_SUMMARY_SX` (§164) is what makes the summary read as a control, and it carries the
+44-pixel target. The summary is never `display: flex`: Chrome and Safari drop the marker when
+it is.
+
+*What folds is decided by whether it is today's work, and it opens itself when it is.* The bib
+panel opens when something is unprinted; the outbox when something is waiting; the filters when
+the list is actually narrowed, so nobody loses a filter behind a fold they cannot see; the
+invitation form on Echipa opens while the page is showing the outcome of an invitation. The
+counter strip does not fold at all — it is what the screen is for.
+
+*The heading is an `h2` on the `<summary>` itself.* A screen reader's heading list is how
+somebody skips to a section, and a folded section that is not in it cannot be skipped to.
+
+**Consequences.** `shared/ui/Panel.tsx`; the registrations list (bibs, the counter strip, the
+outbox, the filters); `EmailPlanPanel`, `OutboxQueuePanel`, `ClubNoticesPanel` and
+`ContactRecipientsPanel`, which now draw no frame of their own — the plan stays open, the other
+three fold; the invitation form on `/admin/staff`. Four message keys under `Admin.panels`,
+plus `registrations.filtersInUse` and `outbox.waitingShort` for the asides.
+
+Baseline `BR-V1.43-2026-09-21`.

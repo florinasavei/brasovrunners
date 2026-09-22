@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **The backoffice is boxes now, and what is not today's work folds away.** On Înscrieri the race numbers, the counters, the email queue and the eight filter fields each have their own box; the ones you are not using are shut, with their number still on the line — "7 în așteptare" — and they open themselves when there is something to do. The email screen's four panels fold the same way, as does "add a colleague" on Echipa. §269.
 - **The two languages on the email screen are tabs**, and the tab row is whole again: "Emailuri" has its glyph like every other section, and the number of people signed up sits in the club's orange instead of disappearing into the word beside it. §268.
 - **A YouTube film in the text is embedded and resizable**, not a bordered section: it takes its share of the column and its side like a picture does, and the poster frame becomes the player in place. Still nothing loaded from Google until somebody presses. §266.
 - **The events the club has already held are a section at the foot of the listing**, newest first and folded — with the calendar named for anything older. §267.

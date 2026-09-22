@@ -293,7 +293,8 @@
       "allowanceSpent": "Limita planului Mailgun este atinsă; restul pleacă după resetare.",
       "sending": "Se trimit…",
       "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
-      "sentNow": "Emailuri trimise acum: {count}."
+      "sentNow": "Emailuri trimise acum: {count}.",
+      "waitingShort": "{count} în așteptare"
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -452,7 +453,8 @@
       "eraseTypeName": "Scrie numele înscrisului",
       "eraseTypeNameHelp": "Scrie exact „{name}”, ca să fim siguri că este rândul pe care îl vrei. Majusculele și diacriticele nu contează.",
       "eraseAction": "Șterge definitiv",
-      "erasePending": "Se șterge…"
+      "erasePending": "Se șterge…",
+      "filtersInUse": "filtre active"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -1871,6 +1873,12 @@
       "reasonLabel": "Motivul",
       "reasonHelp": "Rămâne în jurnalul de audit. Este singurul lucru care supraviețuiește ștergerii; numele celor șterși nu se păstrează nicăieri.",
       "action": "Șterge definitiv evenimentul și înscrierile"
+    },
+    "panels": {
+      "bibs": "Numere de concurs",
+      "summary": "Cine s-a înscris",
+      "outbox": "Emailuri de trimis",
+      "filters": "Caută și filtrează"
     }
   },
   "NotFound": {

@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Panel from "@/shared/ui/Panel";
 import { getTranslations } from "next-intl/server";
 import { sendOutboxNowFromEmailsAction } from "@/app/[locale]/admin/emails/actions";
 import type { Locale } from "@/i18n/routing";
@@ -38,13 +39,14 @@ export default async function OutboxQueuePanel({ locale, queue, volume }: Props)
   });
 
   return (
-    <Box component="section" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }} data-testid="outbox-queue">
-      <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 0.5 }}>
-        {t("emails.queue.title")}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-        {t("emails.queue.intro")}
-      </Typography>
+    <Panel
+      title={t("emails.queue.title")}
+      intro={t("emails.queue.intro")}
+      aside={t("outbox.waitingShort", { count: queue.total })}
+      collapsible
+      defaultOpen={queue.total > 0}
+      data-testid="outbox-queue"
+    >
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, mb: 1.5 }}>
         <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
@@ -111,6 +113,6 @@ export default async function OutboxQueuePanel({ locale, queue, volume }: Props)
           {t("emails.queue.more", { count: queue.total - queue.rows.length })}
         </Typography>
       )}
-    </Box>
+    </Panel>
   );
 }

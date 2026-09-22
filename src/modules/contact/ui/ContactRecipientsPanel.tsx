@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Panel from "@/shared/ui/Panel";
 import { getTranslations } from "next-intl/server";
 import { updateContactRecipientsAction } from "@/app/[locale]/admin/emails/actions";
 import { formatAddressList, type ResolvedContactRecipients } from "@/modules/contact/domain/recipients";
@@ -29,13 +30,12 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
   const t = await getTranslations("Admin");
 
   return (
-    <Box component="section" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
-      <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 0.5 }}>
-        {t("emails.contacts.title")}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {t("emails.contacts.intro")}
-      </Typography>
+    <Panel
+      title={t("emails.contacts.title")}
+      intro={t("emails.contacts.intro")}
+      collapsible
+      defaultOpen={false}
+    >
 
       {/* Where the list in force comes from, so "I saved it and nothing changed" cannot happen. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -85,6 +85,6 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1.5 }}>
         {t("emails.contacts.sender")}
       </Typography>
-    </Box>
+    </Panel>
   );
 }

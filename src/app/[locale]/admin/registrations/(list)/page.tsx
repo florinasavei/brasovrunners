@@ -37,6 +37,7 @@ import {
   pageCount,
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import Panel from "@/shared/ui/Panel";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -530,15 +531,18 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         two dead buttons on the screen the club uses most.
       */}
       {filters.eventId && bibs.total > 0 && (
+        <Panel
+          title={t("panels.bibs")}
+          aside={t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
+          collapsible
+          defaultOpen={bibs.unprinted > 0}
+          data-testid="registrations-bibs"
+        >
         <Stack
           direction="row"
           spacing={1}
           sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
-          data-testid="registrations-bibs"
         >
-          <Typography variant="body2" color="text.secondary">
-            {t("registrations.bibsPrintedCount", { printed: bibs.total - bibs.unprinted, total: bibs.total })}
-          </Typography>
           {bibs.unprinted > 0 && (
             <Button
               component="a"
@@ -589,6 +593,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             </Box>
           )}
         </Stack>
+        </Panel>
       )}
 
       {/*
@@ -598,11 +603,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         a number the club is given (§12.6), and the strip would otherwise disagree with the
         list beneath it, which does show them.
       */}
+      <Panel title={t("panels.summary")} data-testid="registrations-summary">
       <Stack
         direction="row"
         spacing={1}
         sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
-        data-testid="registrations-summary"
       >
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {t("registrations.summaryTotal", { count: summary.real })}
@@ -621,6 +626,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Chip size="small" variant="outlined" color="warning" label={t("registrations.summaryTest", { count: summary.test })} />
         )}
       </Stack>
+      </Panel>
 
       {/*
         The outbox, and the day's Mailgun counter (`DECISIONS.md` §80): what is waiting, what
@@ -628,11 +634,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         to wait for the monitor. The counter is the ceiling the button respects, and the number
         a newsletter would have to fit under.
       */}
+      <Panel
+        title={t("panels.outbox")}
+        aside={t("outbox.waitingShort", { count: volume.waitingMessages })}
+        collapsible
+        defaultOpen={volume.waitingMessages > 0}
+        data-testid="outbox-panel"
+      >
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1.5}
-        sx={{ alignItems: { sm: "center" }, border: 1, borderColor: "divider", borderRadius: 1, px: 2, py: 1.5 }}
-        data-testid="outbox-panel"
+        sx={{ alignItems: { sm: "center" } }}
       >
         <Typography variant="body2" sx={{ flex: 1 }}>
           {t(`outbox.status.${volume.period}`, {
@@ -662,12 +674,20 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Typography>
         )}
       </Stack>
+      </Panel>
 
       {/*
         A plain GET form, so filtering and searching are a URL an organizer can bookmark and
         come back to, and so both keep working with JavaScript off. `sort` and `dir` ride along
         as hidden fields: filtering should narrow the list, not silently re-sort it.
       */}
+      <Panel
+        title={t("panels.filters")}
+        aside={hasFilters ? t("registrations.filtersInUse") : undefined}
+        collapsible
+        defaultOpen={hasFilters}
+        data-testid="registrations-filters"
+      >
       <Box component="form" method="get" action={basePath}>
         <input type="hidden" name="sort" value={query.sort} />
         <input type="hidden" name="dir" value={query.dir} />
@@ -744,6 +764,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </Stack>
         </Stack>
       </Box>
+      </Panel>
 
       <AdminTable
         caption={t("registrations.tableCaption")}
