@@ -1855,7 +1855,7 @@
             "„Evenimente” → alege evenimentul → tab-ul Română și tab-ul English: titlul, descrierea scurtă, descrierea, regulamentul, programul și câmpurile SEO. O singură salvare scrie ambele limbi.",
             "Un eveniment publicat: ce salvezi apare imediat pe site — bifează „Știu că modific o pagină publicată”. Adresa paginii nu se mai schimbă după publicare.",
             "Un film de pe YouTube: în editor, butonul „YouTube” → lipești adresa filmului → „Adaugă filmul”. Apasă pe film ca să-i pui o legendă. Pe pagină apare închis, „Vezi filmul”; se încarcă doar când cititorul apasă.",
-            "„Pagini”: paginile fixe ale site-ului. Creezi o ciornă, scrii în editor (titluri, liste, linkuri, imagini), o trimiți spre verificare; un Organizator o publică.",
+            "„Pagini”: paginile fixe ale site-ului. Creezi o ciornă, scrii în editor (titluri, liste, linkuri, imagini), o trimiți spre verificare; Administratorul o publică.",
             "Nu ai și nu îți trebuie: setările evenimentului (data, locurile, înscrierile), publicarea, galeria, înscrierile. Dacă un text depinde de o setare greșită, spune Organizatorului.",
             "Ambele limbi contează: un eveniment nu poate fi publicat fără text complet în română și în engleză, iar pagina în engleză rămâne cu textul vechi până o corectezi și pe ea."
           ]
@@ -1864,13 +1864,15 @@
           "title": "Organizator — evenimente și numere",
           "who": "Rol: Organizator sau mai sus.",
           "steps": [
-            "„Evenimente” → „Eveniment nou” (sau „Duplică” pe ediția trecută / „Repetă” pentru serii săptămânale). Completezi setările — tip, dată, loc, distanță, traseu, link video — și textele în română și engleză.",
-            "Înscrieri: în Setări alege „Înscriere locală”, pune capacitatea și perioada de înscriere, alege declarația aprobată.",
-            "Publicare: „Trimite spre verificare” → „Publică”. Ambele limbi merg live împreună; o limbă incompletă blochează publicarea.",
-            "Numere de concurs (Administrator): pe pagina evenimentului, „Alocă numerele” dă numere în ordinea confirmării; „Descarcă foaia (PDF)” — două numere pe A4, cu logo. Tipărește și declarația (Documente legale → PDF) pentru semnături pe loc.",
+            "Evenimentul îl creează Administratorul („Eveniment nou”, „Duplică”, „Repetă”). Tu îl deschizi din „Evenimente” și te ocupi de Setări: tipul, data, ora startului, durata, locul de întâlnire, adresa, linkul de hartă, distanța, traseul, dificultatea, costul.",
+            "Înscrieri: în Setări alege „Înscriere locală”, pune capacitatea și perioada de înscriere, fereastra de confirmare (cu câte zile înainte se cere și când expiră), banda de numere și declarația aprobată.",
+            "Textele — titlul, rezumatul, descrierea, regulamentul, programul — le scrie Redactorul sau Administratorul. Tu le vezi și nu le poți salva; dacă un text e greșit, spune-i Administratorului.",
+            "Publicare: tu apeși „Trimite spre verificare”. „Publică” este al Administratorului, ca și retragerea de pe site și arhivarea unui eveniment deja publicat. Ambele limbi merg live împreună; o limbă incompletă blochează publicarea.",
+            "Înscrieri (Organizator, nu și Tehnic): vezi lista întreagă, fiecare înscriere cu istoricul ei, exportul (Excel sau CSV), numerele de concurs și declarațiile semnate. Nu poți anula, șterge, redenumi sau retrimite un email — alea sunt ale Administratorului.",
+            "Numere de concurs: „Alocă numerele”, pe pagina evenimentului, este al Administratorului. Foaia o descarci tu: „Descarcă foaia (PDF)” — două numere pe A4, cu logo — de pe pagina evenimentului sau din „Înscrieri”. Tipărește și declarația (Documente legale → PDF) pentru semnături pe loc.",
             "În ziua cursei: „Masa de ridicare a numerelor” de pe pagina evenimentului sau „Ziua cursei” din bară. Cifrele „Confirmați / Prezenți” sunt cifrele cursei.",
             "Numere de concurs: la confirmare fiecare primește unul la întâmplare. Un număr preferențial: pagina înscrierii → „Număr de concurs” — vezi lângă câmp numerele libere, scrii unul, salvezi; participantul primește numărul pe email, cu codul QR. Un număr purtat deja de altcineva este refuzat.",
-            "După: „Arhivează” evenimentul. Pozele merg în „Galerie” (album nou, încarci pozele din telefon, le publici)."
+            "După: arhivarea unui eveniment publicat o face Administratorul. Pozele le pui tu: „Galerie” — album nou, încarci pozele din telefon, le publici."
           ],
           "roles": [
             "MODERATOR",
@@ -1883,8 +1885,8 @@
           "steps": [
             "„Înscrieri”: lista completă, filtre, căutare după nume, export CSV, pagina fiecărei înscrieri cu istoric. De aici: corectezi numele, anulezi (locul se eliberează), ștergi la cerere, retrimiți emailul.",
             "„Documente legale”: nota de confidențialitate, termenii, declarația. Versiune nouă → salvezi ciorna → PDF pentru verificat → „Aprobă”. Un text aprobat nu se mai schimbă; corectura e versiunea următoare.",
-            "„Echipa” (Superadministrator): adaugi oameni după email și rol. Persoana trebuie să existe și în Zitadel (consola de autentificare) ca să se poată loga.",
-            "Cont pentru voluntari: în Zitadel creezi utilizatorul (email + parolă), apoi în „Echipa” îl adaugi cu rolul Voluntar. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
+            "„Echipa” (Superadministrator): adaugi oameni după email și rol. „Adaugă” le face și contul de autentificare și le trimite invitația să-și aleagă parola — nu mai intri în Zitadel. Dacă persoana nu primește invitația, „Trimite din nou invitația” de pe rândul ei.",
+            "Cont pentru voluntari: în „Echipa”, „Adaugă” cu rolul Voluntar — contul și invitația pleacă de acolo. Un cont pe voluntar, ca istoricul să spună cine a apăsat; dacă nu e timp, un cont comun „Voluntar masă” merge — istoricul va spune „Voluntar masă”.",
             "„De făcut”: ce mai lipsește ca platforma să primească înscrieri reale, citit din sistem, cu pașii de urmat.",
             "„Configurație” (/devs): starea joburilor, variabilele setate, consumul bazei de date, laboratorul de temă.",
             "„Emailuri” → „Planul Mailgun”: spune platformei pe ce plan e contul Mailgun. Pe Free pleacă 100 de mesaje pe zi (≈ 20 de înscrieri); când plătești o lună de Basic înainte de cursă, alegi Basic aici și cifrele de pe „Sarcini” și butonul „Trimite acum” se iau după el; când anulezi, pui Free la loc."
