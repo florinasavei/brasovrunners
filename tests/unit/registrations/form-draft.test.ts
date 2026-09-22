@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { draftValuesOf, openFormDraft, sealFormDraft } from "@/modules/registrations/form-draft";
+import { draftValuesOf, firstNameOf, openFormDraft, sealFormDraft } from "@/modules/registrations/form-draft";
 
 /**
  * BR-REQ-041-01 criterion 10 (`DECISIONS.md` §142) — what a participant typed survives a rejected
@@ -57,5 +57,31 @@ describe("BR-REQ-041-01 criterion 10 the form draft", () => {
 
   it("drops a draft the cookie could not hold", () => {
     expect(sealFormDraft({ healthNotes: "x".repeat(5_000) }, "secret-one")).toBeNull();
+  });
+});
+
+/**
+ * `DECISIONS.md` §224 and the screen after it — the sealed cookie that names the inbox to open
+ * now carries the first name the screen greets with ("Aproape gata, Ana!"). The name is the
+ * first word of the first-name box, or nothing: a greeting to a blank is worse than none.
+ */
+describe("§224 the facts the check-your-email screen greets with", () => {
+  it("greets by the first word of the first name, or by nobody", () => {
+    expect(firstNameOf("Ana")).toBe("Ana");
+    expect(firstNameOf("  Ana Maria ")).toBe("Ana");
+    expect(firstNameOf("Ana-Maria")).toBe("Ana-Maria");
+    expect(firstNameOf("   ")).toBeNull();
+    expect(firstNameOf("")).toBeNull();
+    expect(firstNameOf(null)).toBeNull();
+    expect(firstNameOf(undefined)).toBeNull();
+  });
+
+  it("seals the address and the name together and reads neither without the secret", () => {
+    const sealed = sealFormDraft({ email: "ana@example.ro", firstName: firstNameOf("Ana Maria") ?? "" }, "secret-one");
+    expect(sealed).toBeTruthy();
+    expect(sealed).not.toContain("ana@example.ro");
+    expect(sealed).not.toContain("Ana");
+    expect(openFormDraft(sealed as string, "secret-one")).toEqual({ email: "ana@example.ro", firstName: "Ana" });
+    expect(openFormDraft(sealed as string, "secret-two")).toBeNull();
   });
 });

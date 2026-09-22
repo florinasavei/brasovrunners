@@ -1972,11 +1972,36 @@
     "submit": "Trimite înscrierea",
     "submitting": "Se trimite…",
     "incompleteHint": "Completează câmpurile marcate cu * ca să trimiți.",
-    "submitted": "Verifică-ți emailul pentru a confirma înscrierea.",
     "submittedTo": "L-am trimis la adresa:",
-    "submittedDelay": "Poate dura până la 5 minute să ajungă.",
-    "submittedSpam": "Dacă nu îl vezi, verifică și folderul de spam înainte să te înscrii din nou.",
     "submittedAlready": "Dacă erai deja înscris la acest eveniment, emailul conține confirmarea ta existentă — nu s-a creat o a doua înscriere.",
+    "done": {
+      "heading": "Aproape gata!",
+      "headingNamed": "Aproape gata, {name}!",
+      "lead": "Ți-am trimis un email ca să-ți confirmi locul la {event}, {date}.",
+      "nextTitle": "Ce urmează",
+      "next": {
+        "open": {
+          "title": "Deschizi emailul și apeși linkul",
+          "body": "Atât. Linkul e valabil {hours} de ore."
+        },
+        "declare": {
+          "title": "Semnezi declarația",
+          "body": "Din același email: o citești și îți scrii numele — online, sau pe hârtie la masa de înscrieri în ziua cursei.",
+          "bodyLater": "Locul e al tău. Cu {opensDays} zile înainte de start îți cerem confirmarea: semnezi declarația online — sau pe hârtie, la masa de înscrieri în ziua cursei. Poți semna și mai devreme, din emailul de înscriere."
+        },
+        "confirmed": {
+          "title": "Ești înscris",
+          "body": "Primești confirmarea, cu codul QR și numărul de concurs. Ne vedem la start!"
+        }
+      },
+      "delay": "De obicei ajunge într-un minut, cel târziu în cinci.",
+      "notArrived": "Nu a venit? Uită-te și în Spam. Linkul e valabil {hours} de ore, așa că ai timp.",
+      "backToEvent": "Înapoi la eveniment"
+    },
+    "deliveryNotice": {
+      "capture": "Acesta este un mediu de dezvoltare: emailurile nu se trimit deloc de aici — se pot citi doar în backoffice. Nu aștepta un mesaj în inbox.",
+      "allowlist": "Acesta este mediul de test: emailurile ajung doar la adresele autorizate de club. Dacă adresa ta nu e printre ele, nu vei primi nimic — și nu e vina ta."
+    },
     "errors": {
       "title": "Înscrierea nu a putut fi trimisă",
       "fieldsIntro": "Verifică aceste câmpuri:",

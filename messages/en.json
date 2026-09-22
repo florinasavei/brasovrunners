@@ -1972,11 +1972,36 @@
     "submit": "Submit registration",
     "submitting": "Sending…",
     "incompleteHint": "Fill in the fields marked with * to send.",
-    "submitted": "Check your email to confirm your registration.",
     "submittedTo": "We sent it to:",
-    "submittedDelay": "It can take up to 5 minutes to arrive.",
-    "submittedSpam": "If you cannot see it, check your spam folder before registering again.",
     "submittedAlready": "If you were already registered for this event, that email is your existing confirmation — no second registration was created.",
+    "done": {
+      "heading": "Almost there!",
+      "headingNamed": "Almost there, {name}!",
+      "lead": "We have emailed you a link to confirm your place at {event}, {date}.",
+      "nextTitle": "What happens next",
+      "next": {
+        "open": {
+          "title": "Open the email and press the link",
+          "body": "That is all. The link is valid for {hours} hours."
+        },
+        "declare": {
+          "title": "Sign the declaration",
+          "body": "From that same email: read it and type your name — online, or on paper at the registration desk on race day.",
+          "bodyLater": "The place is yours. {opensDays} days before the start we ask you to confirm: sign the declaration online — or on paper, at the registration desk on race day. You can sign earlier, from the registration email."
+        },
+        "confirmed": {
+          "title": "You are in",
+          "body": "You get the confirmation, with your QR code and race number. See you at the start!"
+        }
+      },
+      "delay": "It usually arrives within a minute, five at the most.",
+      "notArrived": "Not there? Look in Spam too. The link is valid for {hours} hours, so there is time.",
+      "backToEvent": "Back to the event"
+    },
+    "deliveryNotice": {
+      "capture": "This is a development environment: no email is sent from here at all — messages can only be read in the backoffice. Do not wait for one in your inbox.",
+      "allowlist": "This is the test environment: emails reach only the addresses the club has authorized. If yours is not among them, nothing will arrive — and that is not your fault."
+    },
     "errors": {
       "title": "The registration could not be submitted",
       "fieldsIntro": "Check these fields:",
