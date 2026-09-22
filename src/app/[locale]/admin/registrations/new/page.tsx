@@ -15,7 +15,7 @@ import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { listEventsAcceptingRegistrations } from "@/modules/registrations/admin-repository";
-import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
+import { canReadRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { createRegistrationAction } from "../actions";
 
@@ -58,7 +58,9 @@ export default async function NewRegistrationPage({ params, searchParams }: Prop
   return (
     <Stack spacing={3}>
       <Typography variant="body2">
-        {fromDesk || !canManageRegistrations(actor.role) ? (
+        {/* Back where they came from: the desk for a volunteer, the list for whoever has one
+            (§289 — the Organizer does now). */}
+        {fromDesk || !canReadRegistrations(actor.role) ? (
           <Link href="/admin/checkin">{t("desk.backToDesk")}</Link>
         ) : (
           <Link href="/admin/registrations">{t("registrations.backToList")}</Link>

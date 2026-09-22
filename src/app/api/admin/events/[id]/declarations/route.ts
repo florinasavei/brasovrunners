@@ -4,13 +4,14 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { declarationWords, pdfResponse } from "@/modules/registrations/declaration-labels";
 import { renderEventDeclarationsPdf } from "@/modules/registrations/signed-declaration";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 
 /**
  * Every signed declaration of one event in one PDF, oldest first (`DECISIONS.md` §95): what
- * the club downloads after the race and keeps in its own archive. Administrator only — each
+ * the club downloads after the race and keeps in its own archive. Whoever may read the
+ * registrations (§289) — each
  * page names a person and an identity document. `?locale=` chooses the words of the labels;
  * each declaration is in the language it was signed in.
  */
@@ -22,7 +23,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canManageRegistrations(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  if (!canReadRegistrations(actor.role)) return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
 
   const { id } = await context.params;
   const locale = new URL(request.url).searchParams.get("locale") ?? routing.defaultLocale;

@@ -14,6 +14,7 @@ import {
 } from "./domain/content-hash";
 import { isEmptyBody } from "./domain/body-text";
 import { matchesConfirmation } from "./domain/confirmation";
+import { termsHasBeenInForce } from "./domain/deletability";
 import {
   findCurrentApprovedDocument,
   findCurrentApprovedVersionId,
@@ -707,30 +708,25 @@ async function assertDeletable<T extends Record<string, unknown>>(
   /*
     **TERMS cannot be shown to be unused, and deletion is the verb that needs it shown (§203).**
 
-    Found in review. The three counts in `assertNothingDependsOn` are real for two keys and
-    vacuous for the third: acceptances and events only ever see EVENT_DECLARATION, and the
-    acknowledgement count is restricted to PRIVACY_NOTICE — because a registration records
-    `privacy_notice_version`, `results_consent_version` and `health_consent_version` and
-    **never a terms version**. Every TERMS row therefore reads as unused, including one a
-    hundred people accepted at registration.
+    This is here and not in the shared guard because the two verbs ask different questions.
+    **Withdrawal** keeps the row, its number and its words and stops only the offering, so nothing
+    is lost if the counts are blind. **Deletion** destroys the words, and after it the audit row's
+    hash is the only evidence of what the club published.
 
-    This is here and not in the shared guard because the two verbs are asking different
-    questions. **Withdrawal** keeps the row, its number and its words and stops only the
-    offering, so nothing is lost if the counts are blind. **Deletion** destroys the words, and
-    after it the audit row's hash is the only evidence of what the club published — so it has to
-    be able to show that nobody relied on them, and for this key it cannot.
+    The rule itself is `termsHasBeenInForce`, a pure function, because the delete screen has to
+    give the same answer before the press (§290): it did not, and the reader was told the version
+    could be deleted and then refused with "somebody else saved meanwhile".
 
-    A terms version that was ever in force is therefore refused: somebody registering in that
-    window accepted it. One that never took effect — approved ahead of its date and superseded
-    before it arrived — was accepted by nobody and may go.
-
-    The proper repair is a `terms_version` on the registration: a migration and a change to
-    what the form records. Until that exists, this refusal is the honest answer.
+    The field carries the reason to that screen: the action tells this refusal apart from a
+    mistyped confirmation and from a genuine race, exactly as it already does for the confirmation
+    and the reason. `CONFLICT` is the right code — nothing about the request is malformed — and it
+    is the *rendering* of a bare CONFLICT that was the lie.
   */
-  if (row.key === "TERMS" && row.effectiveAt !== null && row.effectiveAt.getTime() <= now.getTime()) {
+  if (termsHasBeenInForce(row, now)) {
     throw new DomainError(
       "CONFLICT",
       "a terms version that has been in force cannot be shown to be unused: a registration records no terms version",
+      ["termsInForce"],
     );
   }
 

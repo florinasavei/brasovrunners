@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.46-2026-09-22 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.46-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1089,9 +1089,9 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: create and configure events; approve, publish, unpublish, archive; the gallery
-DEV          + the configuration report (/devs). No participant data
-ADMIN        + registrations, participants, exports, legal texts, emails, tasks, delete an event
+MODERATOR    the organizer: configure events, the gallery; read the registrations, the export, the bibs
+DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
+ADMIN        + changing a registration, publication, legal texts, emails, tasks, delete an event
 SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
 
@@ -1101,7 +1101,9 @@ own texts and submitted them; the club asked for a role whose whole job is the w
 volunteers who "can do just that" — the desk.
 
 `modules/staff-identity/domain/roles.ts` is the single place this order is written. Every
-capability is `atLeast(role, MINIMUM)` rather than a list of roles, which is what makes the
+capability is `atLeast(role, MINIMUM)` rather than a list of roles — with two named exceptions,
+`MAY_EDIT_TEXTS` (§207: the organizer is not a redactor) and `MAY_READ_REGISTRATIONS` (§289:
+DEV does not inherit the participant list) — which is what makes the
 hierarchy a property rather than a convention: a role added later inherits correctly, and no
 grant can be forgotten. `session.ts` imports that rank rather than keeping its own — it used to
 keep a second copy, which is one rule in two places.
@@ -2606,8 +2608,10 @@ BR-REQ-037-05):
      page it opens is behind staff sign-in.
    - **Who.** Every desk verb is open to every staff role (`canWorkTheDesk`): a volunteer with
      a phone is a CONTRIBUTOR and the desk is their whole backoffice. The desk shows a name, a
-     state and a number, never an address; the list, the export, cancel, erase, rename and
-     resend stay Administrator-only. Each verb is audited under the volunteer's own id.
+     state and a number, never an address. **The list, the export and the race numbers are the
+     Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
+     erase, rename, resend and the printing mark stay Administrator-only
+     (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
 
 Every one of the five writes an `audit_logs` row (§12.12). MUST NOT: a second write path into
 `registrations`, a staff-signed declaration (a paper one is the participant's, recorded), a
