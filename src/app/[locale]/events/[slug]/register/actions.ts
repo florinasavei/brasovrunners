@@ -11,6 +11,7 @@ import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
 import { submitRegistration } from "@/modules/registrations/service";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
+import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { headers } from "next/headers";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -93,6 +94,19 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
       },
       readRegistrationForm(form, locale),
       new Date(),
+      "REAL",
+      {
+        source: "PUBLIC",
+        createdByStaffUserId: null,
+        /*
+          What the two guesses are weighed against (§282). Cloudflare's verdict outranks the
+          hidden trap, and a submission after a refusal is let through whatever the trap says —
+          a password manager refills it every time, and looping a real person forever is the one
+          outcome this form must not have.
+        */
+        turnstile: verdict,
+        secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
+      },
     );
   } catch (error) {
     if (isDomainError(error)) {
@@ -105,7 +119,13 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
       // nothing said: the browser scrolls to the summary and, because it is focusable, focuses
       // it. No JavaScript is involved, which is the point — this path exists for the submission
       // the browser's own validation could not catch.
-      redirect(`${path}?error=${error.code}${fields}#${ERROR_SUMMARY_ID}`);
+      /*
+        `retry=1` is what makes the next press work (§282). The form renders a hidden field from
+        it, the action reads it back, and a person whose browser keeps filling the trap is not
+        refused twice for the same reason.
+      */
+      const retry = error.fields.includes("tooFast") ? "&retry=1" : "";
+      redirect(`${path}?error=${error.code}${fields}${retry}#${ERROR_SUMMARY_ID}`);
     }
     throw error;
   }

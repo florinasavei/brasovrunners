@@ -422,13 +422,32 @@ const MIN_SUBMISSION_SECONDS = 1;
  * marker, so the caller — and therefore a script — cannot tell them apart, while the person
  * always gets a sentence and their answers back instead of a promise of an email nobody sent.
  */
-export type SubmissionVerdict = "ok" | "trap" | "too-fast";
+export type SubmissionVerdict = "ok" | "trap" | "too-fast" | "autofill";
 
 export function classifySubmission(
-  input: { honeypot?: string; renderedAt?: string },
+  input: { honeypot?: string; renderedAt?: string; email?: string; firstName?: string; lastName?: string },
   now: Date,
 ): SubmissionVerdict {
-  if ((input.honeypot ?? "") !== "") return "trap";
+  const trap = (input.honeypot ?? "").trim();
+  if (trap !== "") {
+    /*
+      A trap holding the person's **own** details is a password manager, not a bot (§282).
+
+      The owner, 2026-09-22: "we need to test with auto-fill properly … I also want to give real
+      people the option to fix it." A browser that autofills a form fills what it believes are
+      the name and address fields, and an offscreen input is still an input — so what lands in
+      the trap is that person's name or address, spelled exactly as they typed it above. A bot
+      has no reason to put the submitted address in a field the form never showed; it puts a
+      link, a keyword, or a random string.
+
+      So the value is compared with what was submitted, and a match is reported as `autofill`,
+      which the caller does not refuse. Anything else is still `trap`.
+    */
+    const own = [input.email, input.firstName, input.lastName]
+      .filter((value): value is string => typeof value === "string" && value.trim() !== "")
+      .map((value) => value.trim().toLowerCase());
+    return own.includes(trap.toLowerCase()) ? "autofill" : "trap";
+  }
   /*
     A missing or unparseable render time is **not** suspicious any more (§217).
 
@@ -446,7 +465,36 @@ export function classifySubmission(
 
 /** Shared with the contact and interest forms (§146, §149), which keep the older, single answer. */
 export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string }, now: Date): boolean {
-  return classifySubmission(input, now) !== "ok";
+  const verdict = classifySubmission(input, now);
+  return verdict !== "ok" && verdict !== "autofill";
+}
+
+/**
+ * Whether a submission this form suspects is actually refused (§282).
+ *
+ * The suspicion and the consequence are separated because they answer different questions, and
+ * only the second one can lose the club an entrant:
+ *
+ * - **Cloudflare outranks the hidden field.** Turnstile looked at this browser and passed it;
+ *   the trap is a guess, and a guess does not overrule a measurement. A bot that can pass
+ *   Turnstile was never going to be stopped by an offscreen input.
+ * - **A second attempt is let through.** Somebody refused once is now a person who has been
+ *   told they looked automated and has pressed the button again. If their browser refills the
+ *   trap every time — which is exactly what a password manager does — refusing again would
+ *   loop them forever, and the form's whole purpose is to take their entry.
+ * - **Otherwise the verdict stands**, which is what still refuses a script that posts once with
+ *   no token and a filled trap.
+ */
+export function refusesSubmission(input: {
+  verdict: SubmissionVerdict;
+  /** What Cloudflare said, when it was asked at all. */
+  turnstile: "passed" | "failed" | "unavailable" | "not_configured";
+  /** This is the try after a refusal. */
+  secondAttempt: boolean;
+}): boolean {
+  if (input.verdict === "ok" || input.verdict === "autofill") return false;
+  if (input.turnstile === "passed") return false;
+  return !input.secondAttempt;
 }
 
 // --- §15.1 Registration submission ------------------------------------------------------------
@@ -473,6 +521,14 @@ export type RegistrationOrigin = {
    * SCHEDULED, and the capacity lock is exactly the same.
    */
   atTheDesk?: boolean;
+  /**
+   * What the public form already learned before calling (§282): Cloudflare's verdict, and
+   * whether this is the try after a refusal. Both are the caller's to know — the token is
+   * verified in the action, over the network, and the attempt is a field on the form — and
+   * both are ignored for a staff submission, which has no widget and no hidden field.
+   */
+  turnstile?: "passed" | "failed" | "unavailable" | "not_configured";
+  secondAttempt?: boolean;
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
@@ -638,11 +694,23 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       the club can see how often this happens without a database query, which is what made the
       last silent drop so expensive to find.
     */
-    if (verdict !== "ok") {
+    const refused = refusesSubmission({
+      verdict,
+      turnstile: origin.turnstile ?? "not_configured",
+      secondAttempt: origin.secondAttempt === true,
+    });
+    if (refused) {
       console.warn(`[registration] refused as automated: ${verdict}, event ${event.id}`);
       throw new DomainError("VALIDATION_ERROR", `the submission looked automated (${verdict})`, [
         "tooFast",
       ]);
+    }
+    if (verdict !== "ok") {
+      // Suspected and taken anyway — logged, because how often this happens is the only way to
+      // tell a password manager filling the trap from a defence that has stopped working (§282).
+      console.warn(
+        `[registration] accepted despite ${verdict}: turnstile ${origin.turnstile ?? "not_configured"}, second attempt ${origin.secondAttempt === true}, event ${event.id}`,
+      );
     }
   }
 

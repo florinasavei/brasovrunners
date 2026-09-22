@@ -1965,7 +1965,9 @@
       "tooFastTitle": "Mai încearcă o dată",
       "throttledTitle": "Ai trimis deja formularul de câteva ori",
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
-      "tooFast": "Verificarea automată nu a trecut din prima — o facem ca să ținem roboții afară și uneori dă greș pentru oameni reali. Datele tale sunt toate aici: apasă din nou „Trimite înscrierea”. Dacă nici a doua oară nu merge, scrie-ne prin formularul de contact și te înscriem noi."
+      "tooFast": "Verificarea automată nu a trecut din prima — o facem ca să ținem roboții afară și uneori dă greș pentru oameni reali. Datele tale sunt toate aici: apasă din nou „Trimite înscrierea”. Dacă nici a doua oară nu merge, scrie-ne prin formularul de contact și te înscriem noi.",
+      "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email — deci nu aștepta unul. Apasă butonul de mai jos și de data asta trece.",
+      "tooFastResend": "Trimite din nou înscrierea"
     },
     "sections": {
       "about": "Despre tine",

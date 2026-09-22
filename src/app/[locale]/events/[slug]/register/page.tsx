@@ -4,6 +4,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
@@ -25,6 +26,7 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
 import { readFormDraft, readSubmittedAddress } from "@/modules/registrations/form-draft";
+import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
@@ -52,7 +54,7 @@ import { env } from "@/shared/config/env";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ submitted?: string; error?: string; fields?: string }>;
+  searchParams: Promise<{ submitted?: string; error?: string; fields?: string; retry?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -110,6 +112,9 @@ const disclosureSx = {
  * on the one page that has to work everywhere. What actually made the page long is that a
  * third of it asks for things nobody has to answer, so those are collapsed and the rest is not.
  */
+/** The form's own id, so the refusal's button can submit it from outside (§282). */
+const REGISTRATION_FORM_ID = "registration-form";
+
 export default async function RegisterPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
@@ -135,7 +140,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   );
   if (state !== "OPEN") notFound();
 
-  const { submitted, error, fields } = await searchParams;
+  const { submitted, error, fields, retry } = await searchParams;
   // Only meaningful on the screen that follows a successful submit (§224).
   const submittedTo = submitted ? await readSubmittedAddress() : null;
 
@@ -416,7 +421,28 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   sentence that explains what happened sat at the far end of a long form. The
                   owner: "they need visuals on this! so that they know!"
                 */
-                t("errors.tooFast")
+                /*
+                  Said in full, and with the button right here (§282; the owner: "I want clear
+                  visual feedback when people are not let through"). Three things somebody needs
+                  at this moment and had to infer: that nothing was registered, that no email is
+                  coming — the promise §217 forbids making falsely — and that pressing again will
+                  work, without scrolling back down a form of twenty fields to find the button.
+                */
+                <>
+                  {t("errors.tooFast")}
+                  <Box sx={{ mt: 1 }}>{t("errors.tooFastNothingSent")}</Box>
+                  <Button
+                    type="submit"
+                    // The button sits in the alert, which is above the form: `form` is how HTML
+                    // lets a control submit a form it is not inside.
+                    form={REGISTRATION_FORM_ID}
+                    variant="contained"
+                    color="error"
+                    sx={{ ...TAP_TARGET, mt: 1.5 }}
+                  >
+                    {t("errors.tooFastResend")}
+                  </Button>
+                </>
               ) : rejected.length > 0 ? (
                 <>
                   {t("errors.fieldsIntro")}
@@ -460,7 +486,14 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           <Alert severity="info" icon={false} sx={{ mb: 2 }}>
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
           </Alert>
-          <form action={submitRegistrationAction}>
+          <form action={submitRegistrationAction} id={REGISTRATION_FORM_ID}>
+            {/*
+              The try after a refusal (§282). The action reads this back and lets the submission
+              through whatever the hidden trap says: a password manager refills that trap on
+              every render, so refusing twice for the same reason would loop a real person
+              forever — which is precisely how somebody gives up on entering a race.
+            */}
+            {retry === "1" && <input type="hidden" name={SECOND_ATTEMPT_FIELD} value="1" />}
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="slug" value={slug} />
