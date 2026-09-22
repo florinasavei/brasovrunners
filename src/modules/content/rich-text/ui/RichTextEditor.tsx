@@ -2,6 +2,10 @@
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import Stack from "@mui/material/Stack";
@@ -12,6 +16,7 @@ import Typography from "@mui/material/Typography";
 import { Extension, mergeAttributes, Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
@@ -23,15 +28,20 @@ import {
   IMAGE_ALIGNMENTS,
   IMAGE_WIDTH_PERCENTS,
   readRichText,
+  richTextToPlainText,
   TABLE_BORDERS,
+  TABLE_BORDER_COLOURS,
+  TABLE_HEADER_FILLS,
   type BlockAlignment,
   type ImageCrop,
+  type TableBorderColour,
   type TableBorders,
+  type TableHeaderFill,
   type TableValign,
 } from "../domain/schema";
 import ImageCropBox from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
-import { EDITOR_TABLE_SX } from "./table-layout";
+import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -63,6 +73,7 @@ export default function RichTextEditor({
   initialBody,
   label,
   accessibleSuffix,
+  features = { media: true, tables: true },
   labels,
 }: {
   /** The form field the JSON is posted as — the same name the textarea used. */
@@ -77,6 +88,17 @@ export default function RichTextEditor({
    * tell them apart.
    */
   accessibleSuffix?: string;
+  /**
+   * Which halves of the toolbar this body may use (`DECISIONS.md` §270).
+   *
+   * An email's words are written in this same editor, and a mail client can draw neither a
+   * picture the reader's client has not blocked, nor a film, nor a table narrow enough for a
+   * phone — `notifications/domain/email-rich-text.ts` argues each. The server refuses those
+   * nodes there whatever arrives, so this is not the guard; it is what keeps the toolbar from
+   * offering a button whose result the save would reject. Absent means the whole toolbar, which
+   * is what every editorial form wants.
+   */
+  features?: { media?: boolean; tables?: boolean };
   /** Translated control names. Passed in, because a client island cannot read the catalogue. */
   labels: {
     bold: string;
@@ -97,6 +119,9 @@ export default function RichTextEditor({
     tableDelete: string;
     /** §263: how the table is drawn, where its text sits, and whether it has a header row. */
     tableBorders: Record<TableBorders, string>;
+    /** §271: the two colours, each named by the state it is in. */
+    tableBorderColour: Record<TableBorderColour, string>;
+    tableHeaderFill: Record<TableHeaderFill, string>;
     tableValign: string;
     tableHeaderRow: string;
     link: string;
@@ -104,6 +129,12 @@ export default function RichTextEditor({
     linkApply: string;
     linkRemove: string;
     linkCancel: string;
+    /** §273: how much has been written, with its `{count}` placeholder. */
+    words: string;
+    /** §271: the pop-up that shows the body as the page will draw it. */
+    preview: string;
+    previewShort: string;
+    previewClose: string;
     undo: string;
     redo: string;
     image: string;
@@ -158,7 +189,14 @@ export default function RichTextEditor({
   const [youtubeDraft, setYoutubeDraft] = useState<string | null>(null);
   const [youtubeInvalid, setYoutubeInvalid] = useState(false);
   const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
+  /**
+   * The preview (§271; the owner: "I also want a preview in a pop-up"): the editor's own markup,
+   * taken once when the dialog opens rather than read on every keystroke, and `null` while it is
+   * shut so nothing is rendered twice behind it.
+   */
+  const [preview, setPreview] = useState<string | null>(null);
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
+  const [words, setWords] = useState(() => countWords(richTextToPlainText(initialDoc)));
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
   const [gallery, setGallery] = useState<null | "loading" | StoredPicture[]>(null);
@@ -223,13 +261,16 @@ export default function RichTextEditor({
       */
       BlockAlign,
       /*
-        Tables (§196). `TableKit` is the table node with its row, cell and header in one import;
-        `resizable: false` because a column width is a pixel measurement made on somebody's
-        laptop and this site's hard target is a 320-pixel column — the renderer decides widths,
-        and the schema drops `colwidth` on the way in, so a handle here would only produce a
-        value that is thrown away.
+        Tables (§196). `TableKit` is the table node with its row, cell and header in one import.
+
+        `resizable` was false, because a column width is a pixel measurement made on somebody's
+        laptop and this site's hard target is a 320-pixel column. §271 turns it on: what dragging
+        an edge says is "this column is about twice that one", the stored pixels are read as a
+        proportion, and the page lays the table out from a `<colgroup>` of percentages. The
+        handle is drawn by `EDITOR_TABLE_SX` — ProseMirror renders an element with no styles of
+        its own, so without a rule the gesture is invisible.
       */
-      TableKit.configure({ table: { resizable: false } }),
+      TableKit.configure({ table: { resizable: true } }),
       /* The borders and the vertical alignment of a table (§263), above. */
       TableStyle,
       Image.configure({ inline: false, allowBase64: false }).extend({
@@ -306,6 +347,7 @@ export default function RichTextEditor({
     onUpdate: ({ editor: current }) => {
       setValue(JSON.stringify(current.getJSON()));
       setMissingAlt(countMissingAlt(current.getJSON()));
+      setWords(countWords(current.getText()));
     },
     editorProps: {
       // A picture pasted or dropped as a *file* goes through the same upload as the control.
@@ -376,6 +418,11 @@ export default function RichTextEditor({
     (editor?.getAttributes("table").borders as TableBorders | null) ?? "all";
   const tableValign: TableValign =
     (editor?.getAttributes("table").valign as TableValign | null) ?? "top";
+  /** The two colours (§271), read the same way and defaulting the same way. */
+  const tableBorderColour: TableBorderColour =
+    (editor?.getAttributes("table").borderColour as TableBorderColour | null) ?? "default";
+  const tableHeaderFill: TableHeaderFill =
+    (editor?.getAttributes("table").headerFill as TableHeaderFill | null) ?? "default";
   const nextBorders = TABLE_BORDERS[(TABLE_BORDERS.indexOf(tableBorders) + 1) % TABLE_BORDERS.length];
 
   const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
@@ -467,6 +514,29 @@ export default function RichTextEditor({
         {label}
       </Typography>
 
+      {/*
+        The preview (§271). What it shows is the editor's own markup under the page's rules and
+        **without the editing aids** — no dashed cell guides, no resize handle, no selection
+        shading — because the question a preview answers is "which of these lines will the reader
+        see". `PREVIEW_CONTENT_SX` is the same description `.tiptap` uses, keyed under the
+        dialog instead, so the two cannot drift (§263's rule, applied to a third surface).
+
+        The markup is this browser's own editor state, never anything fetched or stored: it is
+        the document the author is looking at, rendered back to them. What is *saved* still goes
+        through the server's allowlist, which is the boundary that matters (`domain/schema.ts`).
+      */}
+      <Dialog open={preview !== null} onClose={() => setPreview(null)} fullWidth maxWidth="md" scroll="paper">
+        <DialogTitle>{labels.preview}</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={PREVIEW_CONTENT_SX} dangerouslySetInnerHTML={{ __html: preview ?? "" }} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPreview(null)} sx={{ minHeight: 44 }}>
+            {labels.previewClose}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* The value the form posts. Present and correct even before the editor has loaded. */}
       <input type="hidden" name={name} value={value} readOnly />
 
@@ -476,7 +546,29 @@ export default function RichTextEditor({
           spacing={0.5}
           role="toolbar"
           aria-label={accessibleSuffix ? `${label} — ${accessibleSuffix}` : label}
-          sx={{ flexWrap: "wrap", gap: 0.5, p: 0.5, borderBottom: 1, borderColor: "divider" }}
+          /*
+            Sticky (§273). A description runs to several screens and the toolbar sat at the top
+            of it: to make a word bold two screens down, the writer scrolled up, lost the
+            selection, and scrolled back. Every editor people already know keeps its toolbar in
+            view, and the alternative — a floating bar — is the bubble menu below, which is for
+            the selection rather than for the whole body.
+
+            `top: 0` against the page's own scroller, and a background of its own: without one
+            the text scrolls visibly under a transparent bar.
+          */
+          sx={{
+            flexWrap: "wrap",
+            gap: 0.5,
+            p: 0.5,
+            borderBottom: 1,
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            backgroundColor: "background.paper",
+            borderTopLeftRadius: "inherit",
+            borderTopRightRadius: "inherit",
+          }}
         >
           <Control
             label={labels.bold}
@@ -543,6 +635,7 @@ export default function RichTextEditor({
             is four dead controls, and this toolbar already has words on it rather than icons
             precisely so that what it offers is legible.
           */}
+          {features.tables !== false && (
           <Control
             label={labels.table}
             text="⊞"
@@ -551,7 +644,8 @@ export default function RichTextEditor({
               editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
             }
           />
-          {editor?.isActive("table") && (
+          )}
+          {features.tables !== false && editor?.isActive("table") && (
             <>
               <Control
                 label={labels.tableAddRow}
@@ -611,6 +705,30 @@ export default function RichTextEditor({
                     .run()
                 }
               />
+              {/*
+                The two colours (§271), each a control that cycles its own closed set and is
+                named after the state it is in — the same shape the borders control has, for the
+                same reason: a toolbar with words on it can say "lines: blue" and a colour
+                picker cannot say anything at all.
+              */}
+              <Control
+                label={labels.tableBorderColour[tableBorderColour]}
+                text="▦"
+                active={tableBorderColour !== "default"}
+                onClick={() => {
+                  const next = TABLE_BORDER_COLOURS[(TABLE_BORDER_COLOURS.indexOf(tableBorderColour) + 1) % TABLE_BORDER_COLOURS.length];
+                  editor?.chain().focus().updateAttributes("table", { borderColour: next === "default" ? null : next }).run();
+                }}
+              />
+              <Control
+                label={labels.tableHeaderFill[tableHeaderFill]}
+                text="▩"
+                active={tableHeaderFill !== "default"}
+                onClick={() => {
+                  const next = TABLE_HEADER_FILLS[(TABLE_HEADER_FILLS.indexOf(tableHeaderFill) + 1) % TABLE_HEADER_FILLS.length];
+                  editor?.chain().focus().updateAttributes("table", { headerFill: next === "default" ? null : next }).run();
+                }}
+              />
               {/* A layout table has no header row, and a table that grew one by accident has no
                   other way to lose it. Tiptap's own command: it converts the row in place. */}
               <Control
@@ -639,6 +757,8 @@ export default function RichTextEditor({
           />
           {/* Words, not glyphs: the picture emoji rendered as a broken box on the owner's
               machine (2026-09-18), and two of them side by side read as two broken boxes. */}
+          {features.media !== false && (
+          <>
           <Control
             label={imageState === "uploading" ? labels.imageUploading : labels.image}
             text={labels.imageShort}
@@ -670,6 +790,14 @@ export default function RichTextEditor({
               setYoutubeInvalid(false);
               setYoutubeDraft((open) => (open === null ? "" : null));
             }}
+          />
+          </>
+          )}
+          <Control
+            label={labels.preview}
+            text={labels.previewShort}
+            active={preview !== null}
+            onClick={() => setPreview(editor?.getHTML() ?? "")}
           />
           <Control
             label={labels.undo}
@@ -858,9 +986,55 @@ export default function RichTextEditor({
             ...EDITOR_TABLE_SX,
           }}
         >
+          {/*
+            The bar over a selection (§273; the owner: "I want that rich text editor to be almost
+            as good as word … or at least close to WordPress, Amalia is used to WordPress").
+
+            Three verbs, because a bubble menu is for what somebody does *to the words they just
+            selected* — make them bold, make them a link — and everything structural stays in the
+            toolbar above, which is sticky now. `@tiptap/react/menus` is a subpath of a package
+            already installed: no new dependency (§1.5).
+          */}
+          {editor && (
+            <BubbleMenu editor={editor}>
+              <Paper elevation={3} sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
+                <Control
+                  label={labels.bold}
+                  text="B"
+                  active={editor.isActive("bold")}
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Control
+                  label={labels.italic}
+                  text="I"
+                  active={editor.isActive("italic")}
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  sx={{ fontStyle: "italic" }}
+                />
+                <Control
+                  label={labels.link}
+                  text="🔗"
+                  active={editor.isActive("link")}
+                  onClick={() =>
+                    setLinkDraft((open) => (open === null ? (editor.getAttributes("link").href ?? "") : null))
+                  }
+                />
+              </Paper>
+            </BubbleMenu>
+          )}
           <EditorContent editor={editor} />
         </Box>
       </Box>
+
+      {/*
+        How much is written (§273), which every editor people know shows and which answers the
+        question an organizer actually has about a description: is this two sentences or two
+        screens. Counted from the editor's own text rather than from a package.
+      */}
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="rich-text-words">
+        {labels.words.replace("{count}", String(words))}
+      </Typography>
 
       {/* Dimmed, not a block: a picture without alt text is a page that still publishes, and
           a sentence somebody reads before they save. */}
@@ -1192,6 +1366,34 @@ const TableStyle = Extension.create({
             parseHTML: (element: HTMLElement) =>
               element.getAttribute("data-valign") === "middle" ? "middle" : null,
           },
+          /* The line colour and the header's fill (§271), the same shape as the two above:
+             only a choice away from the default reaches the DOM or the stored JSON. */
+          borderColour: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              typeof attrs.borderColour === "string" && attrs.borderColour !== "default"
+                ? { "data-border-colour": attrs.borderColour }
+                : {},
+            parseHTML: (element: HTMLElement) => {
+              const value = element.getAttribute("data-border-colour");
+              return (TABLE_BORDER_COLOURS as readonly string[]).includes(value ?? "") && value !== "default"
+                ? value
+                : null;
+            },
+          },
+          headerFill: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              typeof attrs.headerFill === "string" && attrs.headerFill !== "default"
+                ? { "data-header-fill": attrs.headerFill }
+                : {},
+            parseHTML: (element: HTMLElement) => {
+              const value = element.getAttribute("data-header-fill");
+              return (TABLE_HEADER_FILLS as readonly string[]).includes(value ?? "") && value !== "default"
+                ? value
+                : null;
+            },
+          },
         },
       },
     ];
@@ -1291,6 +1493,17 @@ type StoredPicture = { id: string; src: string; thumb: string; width: number; he
 function countMissingAlt(doc: unknown): number {
   const content = (doc as { content?: { type?: string; attrs?: { alt?: unknown } }[] })?.content ?? [];
   return content.filter((node) => node.type === "image" && !String(node.attrs?.alt ?? "").trim()).length;
+}
+
+/**
+ * Words in a piece of text: runs of anything that is not a space.
+ *
+ * Deliberately not Tiptap's `CharacterCount`, which is another extension to install and
+ * configure for a number this line computes exactly as well (§1.5: prefer nothing).
+ */
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
 }
 
 /**

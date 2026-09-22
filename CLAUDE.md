@@ -267,7 +267,9 @@ it is the authority, this is the summary):
     and nothing else: the 21 November race has no event there, so nobody can register for it.
     It is one save in `/admin/events` — the event, its capacity, its participation window, its
     bib band — and then publish. Everything under it is live already, which is what items 1–11
-    were about.
+    were about. **The click list is `SETUP.md` §39**, field by field, with every value filled
+    in; the two the club alone can decide are marked there (how many places, and how many days
+    before the race a confirmation is asked and owed).
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

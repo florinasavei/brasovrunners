@@ -1265,3 +1265,63 @@ To take the form away, clear the recipients on `/admin/emails` and leave `CONTAC
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
 back to the address either way. Google's own limit on an ordinary account is about 500 messages a day,
 which is more than a club receives; the form's own limit is five an hour per sender.
+
+## 39. Put the 21 November race on production — the last thing between the club and its entries
+
+This is item 12 of `CLAUDE.md` § Still owed, and it is the launch. Everything under it is live:
+the sign-in, the approved legal texts, Mailgun on the club's own domain, the anti-bot check, the
+monitors, the contact form. Production publishes the weekly group run and nothing else, so on
+the day this is saved and published, the race takes entries.
+
+**Fifteen minutes in one form.** Sign in at `/admin` on the club's own domain, press **Adaugă
+un eveniment**, and fill in what follows. Two of the numbers are the club's decision and nobody
+else's: they are marked **YOURS**. Everything else below is a value, not a placeholder.
+
+### The form, field by field
+
+| Panel | Field | What to type |
+| --- | --- | --- |
+| — | Tip eveniment | **Cursă** |
+| Când și unde | Începutul evenimentului | **21.11.2026**, and the hour the first runner is expected at the desk |
+| Când și unde | Startul cursei | the hour the gun goes — this is what the countdown and the reminder use |
+| Când și unde | Durata (minute) | how long the club will be there, start to prize-giving |
+| Când și unde | Fus orar | **Europe/Bucharest** (already filled in) |
+| Când și unde | Punct de întâlnire | where people gather, e.g. **Parcul Tractorul** |
+| Când și unde | Adresă | the street address, for the map and the calendar entry |
+| Când și unde | Link către punctul de întâlnire | a Google Maps link, https |
+| Înscrieri | Modul de înscriere | **Înscrieri pe site** |
+| Înscrieri | Număr de locuri | **YOURS** — how many runners the club can handle. Leave it empty only if there is genuinely no limit; the page then shows no number and the waiting list never engages |
+| Înscrieri | Înscrierile se deschid | leave **empty** — entries open the moment the event is published |
+| Înscrieri | Înscrierile se închid | leave **empty** for "until the start", or a date if the club wants the list closed earlier |
+| Înscrieri | Confirmarea participării: cu câte zile înainte se cere | **YOURS** — the default **7** asks everyone to confirm a week out |
+| Înscrieri | …și cu câte zile înainte expiră | **YOURS** — the default **2**: an unconfirmed place goes to the waiting list two days before |
+| Înscrieri | Numerele de concurs (BIB) încep de la | **1**, or **100** if the club wants three-digit numbers |
+| Înscrieri | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
+| Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
+| Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
+| Traseu și detalii | Distanță, Denivelare, Dificultate, Suprafață, Cost | as the race is |
+| Română / English | Titlu, Adresa paginii, Rezumat | both languages — the event cannot be published with either missing |
+| Română / English | Regulamentul evenimentului | the race rules. Every entrant ticks "am citit regulamentul", and the emails link here |
+| Română / English | Programul evenimentului | kit pickup, briefing, start, cut-offs — each row becomes a calendar entry |
+
+Then **Salvează**, read the page through **Previzualizare**, and press **Publică**. Both
+languages go live together; that is the rule, not a setting.
+
+### After it is published, in this order
+
+1. `/ro/evenimente` on the club's domain — the race is there, with its free places on the
+   button.
+2. Open the registration form and read it as a runner would. Do **not** complete a real entry on
+   production unless the club wants that row in its list; the rehearsal belongs on the QA host,
+   where the same form sends real email to the addresses in `EMAIL_ALLOWLIST`.
+3. `/admin/emails` → the Mailgun plan. Free is **100 messages a day**, and a completed
+   registration costs about six, so about **16 entries a day** (`docs/PLATFORM.md`). If the
+   race opens to a crowd, one month of **Basic** is $15 and is a setting on that screen — no
+   deployment.
+4. `/admin/tasks` → the row for this item turns green by itself once the event exists.
+
+### What to have ready before sitting down
+
+The capacity and the two window numbers (the club's own call), the rules text, the programme,
+the meeting point and its map link, and the bib band colour. Nothing else is asked for, and
+nothing here needs a developer.

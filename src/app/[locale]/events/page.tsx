@@ -35,7 +35,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
-import { headingRule } from "@/theme/surfaces";
+import { specialCard, headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -145,7 +145,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
           own boundary, so it costs the page nothing until it answers — and nothing at all
           above it waits for it. */}
       <Suspense fallback={null}>
-        <PastEvents locale={locale} now={now} hasUpcoming={listing.then((value) => value.hasUpcoming)} />
+        <PastEvents locale={locale} now={now} type={type} hasUpcoming={listing.then((value) => value.hasUpcoming)} />
       </Suspense>
     </Container>
   );
@@ -243,14 +243,17 @@ const PAST_EVENTS_SHOWN = 12;
 async function PastEvents({
   locale,
   now,
+  type,
   hasUpcoming,
 }: {
   locale: EventLocale;
   now: Date;
+  /** The kind the filter above is showing (§272), or nothing for every kind. */
+  type?: EventType;
   hasUpcoming: Promise<boolean>;
 }) {
   const [rows, upcoming] = await Promise.all([
-    listPastEvents(getDb(), locale, now, PAST_EVENTS_SHOWN + 1),
+    listPastEvents(getDb(), locale, now, PAST_EVENTS_SHOWN + 1, type),
     hasUpcoming,
   ]);
   // The one the lead is already showing, when there is nothing to come (§167).
@@ -258,6 +261,7 @@ async function PastEvents({
   if (events.length === 0) return null;
 
   const t = await getTranslations("Events");
+  const tEvent = await getTranslations("Event");
   // A repeated event is one card here too (§113) — "Happy Monday" is one line, not eleven.
   const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
 
@@ -268,7 +272,7 @@ async function PastEvents({
         variant="h2"
         sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 0.5, listStyle: "revert" }}
       >
-        {t("pastCount", { count: cards.length })}
+        {type ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${type}`) }) : t("pastCount", { count: cards.length })}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
         {t("pastHelp")}
@@ -415,7 +419,12 @@ async function EventCard({
 }) {
   const tEvent = await getTranslations("Event");
   return (
-    <Card component="li" variant="outlined" sx={{ ...liftOnHover, ...riseIn(index) }}>
+    <Card
+      component="li"
+      variant="outlined"
+      /* An event the club marked special wears it on the whole card (§272), not only as a chip. */
+      sx={{ ...liftOnHover, ...riseIn(index), ...(event.isSpecial ? specialCard : {}) }}
+    >
       <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
         <CardContent>
           <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>

@@ -14,6 +14,7 @@ import { updateEmailPlan } from "@/modules/notifications/email-plan";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { requireStaff, requireStaffRole } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
+import { emailBodyToParagraphs, readEmailBody } from "@/modules/notifications/domain/email-rich-text";
 
 /** Which language to land back in: the form carries it, because an action has no request locale. */
 function localeOf(form: FormData): Locale {
@@ -155,6 +156,37 @@ export async function updateClubNoticesAction(form: FormData): Promise<void> {
  * message that changed. "Revino la textul platformei" is the same form's second button — it
  * posts `reset`, and the service reads that as "no override".
  */
+/**
+ * What the form posts, as an entry (§270): the subject, the document the rich-text island wrote,
+ * and the plain paragraphs **derived from that document** rather than typed separately.
+ *
+ * Derived, so the two halves of a message cannot disagree: the plain-text part of every email is
+ * built from `paragraphs`, and a club that edited the formatted words and left a stale textarea
+ * behind would have sent one wording to a reading client and another to a plain one.
+ *
+ * A document that cannot be parsed — an older browser posting the textarea's contents, a node an
+ * email may not carry — falls back to reading the field as plain paragraphs separated by blank
+ * lines, which is exactly what the box did before this. The save then refuses or accepts on the
+ * words alone, and nobody loses what they typed.
+ */
+function emailCopyEntryFrom(subject: string, body: string): { subject: string; paragraphs: string[]; body?: unknown } {
+  const plain = (value: string): string[] =>
+    value
+      .split(/\r?\n\s*\r?\n/)
+      .map((paragraph) => paragraph.trim())
+      .filter((paragraph) => paragraph !== "");
+
+  let parsed: unknown;
+  try {
+    parsed = body.trim() === "" ? null : JSON.parse(body);
+  } catch {
+    parsed = null;
+  }
+  const doc = parsed === null ? null : readEmailBody(parsed);
+  if (!doc) return { subject, paragraphs: plain(body) };
+  return { subject, paragraphs: emailBodyToParagraphs(doc), body: doc };
+}
+
 export async function updateEmailCopyAction(form: FormData): Promise<void> {
   const locale = localeOf(form);
   const lang = form.get("lang") === "en" ? "en" : "ro";
@@ -178,14 +210,7 @@ export async function updateEmailCopyAction(form: FormData): Promise<void> {
         entry:
           form.get("reset") === "1"
             ? null
-            : {
-                subject: text("subject"),
-                // A blank line between paragraphs, which is how anybody writes them into a box.
-                paragraphs: text("paragraphs")
-                  .split(/\r?\n\s*\r?\n/)
-                  .map((paragraph) => paragraph.trim())
-                  .filter((paragraph) => paragraph !== ""),
-              },
+            : emailCopyEntryFrom(text("subject"), text("body")),
       },
       new Date(),
     );

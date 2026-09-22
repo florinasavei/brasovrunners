@@ -11505,3 +11505,250 @@ Tests: `tests/integration/events/publication.test.ts` — finished only, newest 
 more rows than asked for.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 268. Decided — which language a message is previewed in is a tab, and the tab row has no bare words (2026-09-22)
+
+**Context.** Two things the owner saw on one screen this morning. On `/admin/emails`, "Română
+English" under the intro: two underlined words in a row, the current one told apart by being
+bold. "These need to be tabs." And on the backoffice tab row itself, "Emailuri" was the one
+entry with no glyph in a row of eleven, and the registration count sat in the label in the same
+ink as the word — "I am missing the icons for the email … for the registries I need a different
+color for the number".
+
+**Decision.** *The language switch is `SubNav`*, the row §265 already uses for a panel switch
+inside a section. Two of them now exist for the same job, so there is one control for "which
+view of this page am I looking at" rather than a different one per screen. It stays anchors
+rendered on the server, so the preview still works with JavaScript off, and the current tab is
+`aria-current="page"` rather than bold alone — colour or weight by itself is the signal
+BR-REQ-041-01 refuses.
+
+*The icon record is keyed by `AdminSection`.* The missing glyph was not an oversight anybody
+could have caught by reading: `Record<string, …>` accepts a table with a section missing, and
+the tab then renders as a plain word. Keying it by the union makes the next section added
+without a glyph a build failure. Eleven glyphs, one file each, as before.
+
+*The count is the club's secondary colour on a filled pill*, inside the label rather than a
+`<Badge>` — §255's reasoning stands, because a badge is positioned over the tab's own underline
+at 320 pixels. Orange under dark ink is the one accent pair `theme.ts` keeps identical in both
+schemes, so the pill needs no dark variant and clears AA on either.
+
+**Consequences.** `AdminTabs.tsx` (the `AdminSection` key, `ForwardToInboxIcon`, the pill),
+`admin/emails/page.tsx` (`SubNav` in place of the two `Link`s).
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 269. Decided — a backoffice screen is boxes, and the ones that are not today's work fold (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "overall I want the admin area to have more boxes and
+collapsables." The registrations screen is the case for it. Between the heading and the table
+sat a bib toolbar, a counter strip, an outbox line and eight filter fields, separated by nothing
+but vertical space — about a screen and a half of controls, most of them read once a week,
+above the list that is read every time. The configuration screens got sub-tabs for the same
+problem (§265); the screens that are one section each needed the smaller move.
+
+**Decision.** *One component, `shared/ui/Panel`.* A bordered section with a heading, an
+optional line saying what it is for, and an optional **aside** — a figure that stays visible
+while the panel is shut, because a closed fold that says nothing is a fold nobody opens. With
+`collapsible` it is a `<details>`; without it, the same box the panels on `/admin/emails`
+had each been drawing by hand.
+
+*A `<details>`, never client state.* The backoffice works with JavaScript off, and a panel
+whose open state lived in React is a panel that does not open before hydration — on the screens
+a volunteer opens on a phone at the desk, where §68's note about hydration windows was written.
+`DISCLOSURE_SUMMARY_SX` (§164) is what makes the summary read as a control, and it carries the
+44-pixel target. The summary is never `display: flex`: Chrome and Safari drop the marker when
+it is.
+
+*What folds is decided by whether it is today's work, and it opens itself when it is.* The bib
+panel opens when something is unprinted; the outbox when something is waiting; the filters when
+the list is actually narrowed, so nobody loses a filter behind a fold they cannot see; the
+invitation form on Echipa folds but starts open, for the accessibility reason below. The
+counter strip does not fold at all — it is what the screen is for.
+
+*The heading is a real `h2`, inside the `<summary>`.* A screen reader's heading list is how
+somebody skips to a section, and a folded section that is not in it cannot be skipped to.
+
+*Two things the e2e suite caught, and both are the rule now.* A panel that holds a form
+**starts open**: a closed `<details>` is not in the accessibility tree at all, so the contact
+recipients were a heading no screen reader and no test could find. And the heading goes *inside*
+the summary rather than being a summary with a heading's typography — `component="summary"` with
+`variant="h2"` styles the text and carries no heading role at all, which takes the section out of
+the list a screen reader navigates by. What may start closed is what is read rather than acted
+on, and only when there is nothing in it to act on: the outbox queue with nothing waiting.
+
+**Consequences.** `shared/ui/Panel.tsx`; the registrations list (bibs, the counter strip, the
+outbox, the filters); `EmailPlanPanel`, `OutboxQueuePanel`, `ClubNoticesPanel` and
+`ContactRecipientsPanel`, which now draw no frame of their own — the plan stays open, the other
+three fold; the invitation form on `/admin/staff`. Four message keys under `Admin.panels`,
+plus `registrations.filtersInUse` and `outbox.waitingShort` for the asides.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 270. Decided — the club writes an email in the same editor it writes a page, minus what an inbox cannot draw (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "the email template editors must also be rich text." §247
+gave the club the subject and the paragraphs of every message, as one textarea with a blank line
+between paragraphs. What it could not write was the thing a club actually wants in an email: a
+bold line, a link to the event, a list of what to bring.
+
+**Decision.** *The same editor, a narrower vocabulary.* `RichTextEditor` is mounted on the copy
+panel with a new `features` prop, and the email body allows paragraphs, two heading levels, the
+two lists, a quote, bold, italic, links and alignment. **A picture, a film and a table are
+refused**, each for its own reason rather than for tidiness: a picture in an email is a request
+to a server the moment it is opened, which is the tracking pixel every client blocks by default;
+a film cannot play in an inbox at all; a table is how a mail client lays out a whole message and
+the hard target is a 320-pixel phone. `features` hides the buttons; the **server** is what
+refuses the nodes, whatever a browser posts.
+
+*Its own renderer, not the page's.* `RichText.tsx` emits MUI `sx`, which is classes in a
+stylesheet, and a stylesheet is what Gmail and Outlook drop. `domain/email-rich-text.ts` writes
+the same inline `style` attributes `templates.ts` already writes by hand, so a paragraph the
+club wrote and a paragraph the platform ships are the same paragraph on the screen.
+
+*Both halves of a message come from one document.* A message is HTML and plain text, and the
+plain half is still built from `paragraphs` — which is now **derived from the document at save
+time** rather than typed separately. A club that edited the formatted words and left a stale
+textarea behind would otherwise have sent one wording to a reading client and another to a plain
+one. An `EmailBodyPart` carries the two halves of one block together, because the platform's own
+sentences ("you are already registered", "this number is provisional") sit among the club's
+paragraphs and are plain strings.
+
+*A mark may only wrap text that is already escaped*, which is the order §189 established for the
+`**bold**` markers, and a link's `href` was checked against the safe-protocol rule when the
+document was stored.
+
+*Nothing breaks on the way in or out.* `body` is optional on the stored entry: every entry
+written before today has none and reads exactly as it did. A document that cannot be parsed —
+an older browser posting the textarea, a node an email may not carry — falls back to the plain
+paragraphs beside it, the same direction `readEmailCopy` takes with an unreadable setting. A
+message still goes out.
+
+Tests: `tests/unit/notifications/email-rich-text.test.ts` — the three refusals, inline styles and
+no classes, escaping before marks, placeholders filled in the message and kept in the store, both
+halves of a list agreeing, and the club's bold line arriving in a rendered message.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 271. Decided — a table is a layout tool: columns are dragged, the lines and the header are coloured, and the editor shows where the cells are (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "tabelele ar trebui să fie mai smart, resizable și să pot
+seta culoarea borderului și headerelor, ca să pot face layout din tabele … practic am nevoie să
+pun căsuțe în text ca să împart text și poze în stânga și în dreapta, cumva e deja posibil dar
+nu am separatoarele clare." And, separately: "in the editor I want lines visible for layout but
+I also want a preview in a pop-up." §263 gave a table three border choices, one of which is
+"none" precisely so a table can be a layout. What it did not give was the two things a layout
+actually needs — column proportions and a way to see the cells while filling them.
+
+**Decision, four parts.**
+
+*Columns are dragged, and what is stored is a proportion.* `resizable` was false and `colwidth`
+was dropped, for a reason that still holds: a pixel width is measured on somebody's laptop and
+this site's hard target is a 320-pixel column. But what dragging an edge **says** is "this column
+is about twice that one", which is scale-free. So ProseMirror's own resizing is on, the pixels it
+writes are stored, and `tableColumnFractions` divides them by the row's total: the page emits a
+`<colgroup>` of percentages and switches to `table-layout: fixed`, which is what makes a browser
+honour them. Read from the **first row**, and only when no cell in it is merged — a colgroup
+built from a row with a `colspan` would be wrong. A table nobody sized keeps the automatic layout
+it has always had.
+
+*The lines and the header row have a colour, chosen from four names.* `borderColour` is
+`default`, `strong`, `blue` or `orange`; `headerFill` is `default`, `none`, `blue` or `orange`.
+**Names of the club's palette, never a value somebody typed** — the discipline every other
+attribute in the schema follows. A colour picker would put the brand in the hands of whoever is
+writing a page that day and would produce white on yellow the first week; a filled header also
+carries its own `contrastText`, so the pair clears AA in both schemes without anybody checking.
+A borderless table still drops the shading by default (§263) and keeps a fill that was actually
+chosen: that is a decision rather than a table's chrome.
+
+*The writing area always shows where the cells are.* The dashed guide that a borderless table
+had now covers a table of rows as well — both leave the writer typing into an invisible grid.
+It is an `outline`, so switching the lines moves nothing, and dashed, so it does not read as a
+line that will be published. ProseMirror's resize handle is drawn for the same reason: it renders
+an element with no styles of its own, so without a rule the gesture is undiscoverable.
+
+*A preview in a pop-up, and it is the same description.* The dialog shows the editor's own markup
+under `PREVIEW_CONTENT_SX` — the identical table rules, keyed under the dialog instead of under
+`.tiptap`, with the editing aids left out. That difference is the preview: the question it
+answers is "which of these lines will the reader see", and a preview that kept the guides could
+not answer it. The markup is this browser's own editor state rendered back to its author; what is
+*saved* still passes the server's allowlist, which is where the boundary is.
+
+*Rejected:* a colour picker (above); storing percentages rather than pixels (ProseMirror writes
+pixels and a translation on the way in would fight its own resizing); a preview that round-trips
+to the server to render the page's real components (a request per keystroke's worth of curiosity,
+for a drawing §263 already makes identical).
+
+Tests: `tests/unit/content/rich-text-table.test.ts` — the width kept and read as two thirds and
+one third, and no proportions when nobody sized a column; `rich-text-tables.test.ts` — the four
+defaults, palette names rather than values, the contrast pair, a layout table keeping a chosen
+fill, and the guide covering both line-less variants.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 272. Decided — the past section obeys the kind filter, and a special event is the whole card (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "și la evenimentele trecute trebuie să pot pune tipul lor,
+vreau să fac hilight la evenimentele speciale, testări de papuci, etc." The section of events
+already held (§267) ignored the kind filter above it entirely: choosing "Testare de echipament"
+narrowed what is to come and left twelve mixed rows underneath. And an event marked special wore
+a chip (§168) — one line among four on a card, which is not what "highlight" means when the
+thing being looked for is one shoe testing among eleven Monday runs.
+
+**Decision.** *The filter reaches the foot of the page.* `listPastEvents` takes the kind, and
+the filter is applied **in the query** rather than after it: the limit is the database's, so
+filtering a page of twelve mixed rows down to the two gear tests among them would show two and
+call them all of them. The heading names the kind while one is chosen, so a filtered section is
+never read as "this is everything the club has held".
+
+*A special event is drawn as one.* `specialCard` in `theme/surfaces.ts`: the club's secondary
+colour on the border and a four-percent wash of it behind, on the listing's card and on a series
+card whose any date is special. A wash **over** the card's own background rather than a fill
+instead of it — a replaced surface would put body text on a tint nobody has checked for
+contrast, and four percent reads the same in both schemes because it is a wash rather than a
+colour. The chip stays: colour alone is not a signal (BR-REQ-041-01), and the chip is what a
+screen reader announces.
+
+*The kind of a past event was never the thing missing* — every event has carried one since §112
+and the editor has always offered it. What was missing was being able to *see* the past by kind,
+which is what this adds. If the club also wants past events to carry a kind the list does not
+have, that is a new value in `EVENT_TYPES` and its own decision.
+
+**Consequences.** `listPastEvents` (the `type` argument), the listing's `PastEvents` section,
+`Events.pastCountOfType` in both catalogues, `theme/surfaces.ts`, `SeriesCard`.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 273. Decided — the editor behaves like the ones people already know: a sticky toolbar, a bar over the selection, a word count (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "I want that rich text editor to be almost as good as word
+doc editing", and then the sentence that decides the shape of it — "or at least close to
+WordPress, Amalia is used to WordPress." This is a usability requirement with a named user, not
+a feature list: what matters is that somebody who has written in WordPress finds their habits
+work here.
+
+**Decision.** Three habits, and nothing that widens what a document may contain.
+
+*The toolbar is sticky.* A description runs to several screens and the toolbar sat at the top of
+it, so making a word bold two screens down meant scrolling up, losing the selection, and
+scrolling back. Every editor people know keeps it in view.
+
+*A bar appears over the selection*, with bold, italic and link — the three verbs that are about
+the words somebody has just selected. Everything structural stays in the toolbar above.
+`@tiptap/react/menus` is a subpath of a package already installed, so this is no new dependency
+(§1.5), and it is the one part of "like WordPress" that is a recognisable gesture rather than a
+button in a different place.
+
+*A word count under the box*, counted from the editor's own text rather than from Tiptap's
+`CharacterCount` extension — one line against another package to install and configure.
+
+**What was deliberately not done.** Underline, strikethrough, text colour, font size and a
+colour picker: each is a widening of `domain/schema.ts`, which is the allowlist every stored
+body is validated against, and each is a way for a page to stop looking like the club's site.
+§263, §271 and §213 already gave the two decisions that carry a layout — how a table is drawn
+and where a line of text sits. "Close to WordPress" is about the *gestures*, and those are what
+this changes.
+
+**Consequences.** `RichTextEditor.tsx` (the sticky bar, `BubbleMenu`, `countWords`), one
+message key in each catalogue, the labels helper.
+
+Baseline `BR-V1.43-2026-09-21`.
