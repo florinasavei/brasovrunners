@@ -24,6 +24,8 @@ export type AdminTab = {
   section: AdminSection;
   /** A figure beside the label — how many are signed up, on "Înscrieri" (§255). */
   count?: number | null;
+  /** What that figure counts, as the tab's tooltip (§277). */
+  countHint?: string;
 };
 
 /**
@@ -155,6 +157,8 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
             iconPosition="start"
             component="a"
             href={item.href}
+            // What the number means, for the reader who finds it disagreeing with a list (§277).
+            title={typeof item.count === "number" ? item.countHint : undefined}
             sx={{ minHeight: 44, textTransform: "none" }}
           />
         );

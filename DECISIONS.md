@@ -11852,3 +11852,32 @@ one seeded event. Sharding would buy minutes and pay for them in the most expens
 there is, a suite that fails differently every run. The caches buy their minutes without that.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 277. Decided — the registrations screen says what it is counting, and its filter is not hidden (2026-09-22)
+
+**Context.** The owner, within minutes of §269 reaching QA: "how can I have 4 registered as a
+counter but 3 in the list? And I am missing the event filter on that registrations admin page."
+
+**Both numbers were right, which is the problem.** The tab's badge counts every active
+registration of a real person on every event still to come (§255). The list opens on the
+**featured event** and nothing else, because that is what an organizer wants on arrival (§178).
+Four people are signed up across two events; three of them are on the featured one. Nothing on
+the screen said so, so the two numbers read as a contradiction — and the control that would have
+explained it, the event filter, was inside a fold §269 had closed.
+
+**Decision.** *The filter panel starts open*, like every other panel with a control in it. The
+rule §269 arrived at for a screen reader turns out to be the same rule for a person: a control
+nobody can see is a control nobody has.
+
+*The counter says its scope, in its own heading and in a sentence under it*, with a link to
+every event. "Cine s-a înscris — la Crosul de toamnă" cannot be mistaken for the club's total.
+
+*The badge says what it counts, as its tooltip.* One sentence: how many are signed up across
+every event still to come.
+
+*What was rejected: making the two numbers the same.* They answer different questions, and the
+club needs both — "how many are coming to this race" on the screen it works from, and "is
+anything happening" on a tab it can see from any page. Two numbers that disagree are fine when
+each says what it is; one number that answers neither question well is not.
+
+Baseline `BR-V1.43-2026-09-21`.

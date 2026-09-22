@@ -281,7 +281,8 @@
       "gallery": "Galerie",
       "checkin": "Ziua cursei",
       "emails": "Emailuri",
-      "guide": "Ghid"
+      "guide": "Ghid",
+      "registeredHint": "Câți sunt înscriși la toate evenimentele care urmează"
     },
     "outbox": {
       "status": {
@@ -455,7 +456,11 @@
       "eraseTypeNameHelp": "Scrie exact „{name}”, ca să fim siguri că este rândul pe care îl vrei. Majusculele și diacriticele nu contează.",
       "eraseAction": "Șterge definitiv",
       "erasePending": "Se șterge…",
-      "filtersInUse": "filtre active"
+      "filtersInUse": "filtre active",
+      "summaryScopeEvent": "la {event}",
+      "summaryScopeAll": "toate evenimentele",
+      "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat; cifra de pe tabul „Înscrieri” numără toate evenimentele care urmează.",
+      "summaryScopeAllLink": "Arată toate evenimentele"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",

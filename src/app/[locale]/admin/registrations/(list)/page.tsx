@@ -603,7 +603,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         a number the club is given (§12.6), and the strip would otherwise disagree with the
         list beneath it, which does show them.
       */}
-      <Panel title={t("panels.summary")} data-testid="registrations-summary">
+      <Panel
+        title={t("panels.summary")}
+        aside={
+          filters.eventId
+            ? t("registrations.summaryScopeEvent", {
+                event: events.find((event) => event.id === filters.eventId)?.title ?? "",
+              })
+            : t("registrations.summaryScopeAll")
+        }
+        data-testid="registrations-summary"
+      >
       <Stack
         direction="row"
         spacing={1}
@@ -626,6 +636,19 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           <Chip size="small" variant="outlined" color="warning" label={t("registrations.summaryTest", { count: summary.test })} />
         )}
       </Stack>
+      {/*
+        Why this number and the tab's badge can differ (§277). The badge counts everybody signed
+        up for anything still to come; this list opens on one event. Both are right and the pair
+        reads as a contradiction, so the screen says which it is showing and offers the other.
+      */}
+      {filters.eventId && (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          {t("registrations.summaryScopeHelp")}{" "}
+          <Box component="a" href={buildListHref(basePath, { ...listParams, eventId: ALL_EVENTS }, {})} sx={{ color: "primary.main" }}>
+            {t("registrations.summaryScopeAllLink")}
+          </Box>
+        </Typography>
+      )}
       </Panel>
 
       {/*
@@ -685,7 +708,6 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         title={t("panels.filters")}
         aside={hasFilters ? t("registrations.filtersInUse") : undefined}
         collapsible
-        defaultOpen={hasFilters}
         data-testid="registrations-filters"
       >
       <Box component="form" method="get" action={basePath}>
