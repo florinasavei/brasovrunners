@@ -1222,8 +1222,28 @@ it "Add" creates the account too and Zitadel sends the password link.
 
 1. Zitadel console → **Users → Service Accounts → New**: user name `brasovrunners-invites`,
    name "Brașov Runners — invitații", access token type **Bearer**. Create.
-2. **Organization → Members → Add**: the service account, role **Org User Manager** (it may
-   create users and send their invitation codes; nothing else).
+2. **Organization → Managers → + New**: the service account, role **Org User Manager** (it may
+   create users and send their invitation codes; nothing else). The dialog is called "Add an
+   Administrator" and it names the service user at the top; if it asks for a *Loginname*, that
+   is `brasovrunners-invites`.
+
+   **This is the step that was missed** on the club's own instance, and it cost an evening
+   (`DECISIONS.md` §288). Two traps:
+
+   - **"Role Assignments" is not this.** That page grants a user roles *inside a project* and
+     has nothing to do with managing users. A service account can sit there, Active, looking
+     perfectly configured, and still be unable to create anybody.
+   - **Nothing tells you.** Without the membership every "Add" on Echipa writes the allowlist
+     row, is refused by Zitadel, and says so in one banner that is gone at the next click. The
+     colleague then meets Zitadel's own **"User not found in the system"** at sign-in, which
+     reads like their problem rather than the club's.
+
+   To check it without inviting anybody, ask the token what it can see — 0 human users where
+   the console shows some means the membership is missing:
+
+   ```bash
+   curl -s -X POST "$AUTH_ZITADEL_ISSUER/v2/users"      -H "Authorization: Bearer $ZITADEL_MANAGEMENT_PAT"      -H "Content-Type: application/json"      -d '{"query":{"limit":50},"queries":[{"typeQuery":{"type":"TYPE_HUMAN"}}]}'
+   ```
 3. On the service account → **Personal Access Tokens → New**. Zitadel's console offers no
    expiry field here, and the token it makes does not expire — so it is a secret that has to be
    revoked by hand when it is no longer wanted, on the same screen. Copy it — shown once —
