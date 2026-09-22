@@ -116,4 +116,37 @@ describe("DECISIONS.md §270 the club writes an email in the rich-text editor", 
     expect(rendered.text).toContain("Vino la Crosul de toamnă.");
     expect(rendered.text).not.toContain("<strong>");
   });
+
+  /**
+   * `DECISIONS.md` §278 — the owner, 2026-09-22, of the preview on `/admin/emails`: "whitespaces
+   * are not read properly in the email template". A formatted paragraph is a list of runs, and
+   * the placeholder fill was trimming each of them on its own: the space before a bold run and
+   * the space after it both belonged to the run beside it, so they vanished and the sentence
+   * came out as "înscrierea la**Crosul de toamnă**din data de". A run made of nothing but a
+   * space disappeared entirely.
+   */
+  it("keeps the spaces between a paragraph's runs, around a bold one and between two", () => {
+    const body = readEmailBody(
+      doc([
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "  Ai început înscrierea la " },
+            { type: "text", text: "{eventTitle}", marks: [{ type: "bold" }] },
+            { type: "text", text: " " },
+            { type: "text", text: "{bibNumber}", marks: [{ type: "bold" }] },
+            { type: "text", text: " ce va avea loc la Tâmpa." },
+          ],
+        },
+      ]),
+    );
+    const { htmlParts, textLines } = renderEmailBody(body as RichTextDoc, sample);
+    expect(htmlParts[0]).toContain(
+      "Ai început înscrierea la <strong>Crosul de toamnă</strong> <strong>42</strong> ce va avea loc la Tâmpa.",
+    );
+    expect(textLines[0]).toBe("Ai început înscrierea la Crosul de toamnă 42 ce va avea loc la Tâmpa.");
+    // The paragraph's own two edges are still trimmed: only a run in the middle keeps them.
+    expect(htmlParts[0]).not.toContain(">  Ai");
+    expect(htmlParts[0]).toContain('">Ai început');
+  });
 });

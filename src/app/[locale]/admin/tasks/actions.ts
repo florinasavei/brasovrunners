@@ -30,8 +30,15 @@ export async function updateBotCheckAction(form: FormData): Promise<void> {
   let outcome: string;
   try {
     const actor = await requireStaffRole("ADMIN");
-    await updateBotCheck(getDb(), actor, form.get("enabled") === "1", new Date());
-    outcome = `saved=${form.get("enabled") === "1" ? "botCheckOn" : "botCheckOff"}`;
+    /*
+      One panel, two switches (§282): the captcha and the hidden trap. The form says which it
+      is and the state it wants, so two people pressing at once end up where the second one
+      aimed rather than flipping each other's decision.
+    */
+    const wanted = form.get("enabled") === "1";
+    const which = form.get("which") === "honeypot" ? "honeypot" : "enabled";
+    await updateBotCheck(getDb(), actor, { [which]: wanted }, new Date());
+    outcome = `saved=${which === "honeypot" ? (wanted ? "honeypotOn" : "honeypotOff") : wanted ? "botCheckOn" : "botCheckOff"}`;
   } catch (error) {
     if (!isDomainError(error)) throw error;
     outcome = `error=${error.code}`;

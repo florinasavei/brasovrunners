@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -11881,3 +11881,465 @@ anything happening" on a tab it can see from any page. Two numbers that disagree
 each says what it is; one number that answers neither question well is not.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 278. Fixed — a formatted email paragraph keeps the spaces between its runs (2026-09-22)
+
+**Context.** The owner, of the preview on `/admin/emails`: "whitespaces are not read properly in
+the email template". The confirmation message read *"Ai început înscrierea la**Crosul de
+toamnă**din data de**duminică, 4 octombrie 2026, 09:00**ce va avea loc la**Stația de telecabină
+Tâmpa**"* — every bold fact welded to the words either side of it.
+
+**What it was.** A rich-text paragraph (§270) is not one string but a list of runs: the plain
+words, then the placeholder in bold, then the plain words again. `fillPlaceholders` ends with a
+`trim()` — right for a whole paragraph, because a placeholder that vanishes should not leave the
+sentence starting with a space — and `email-rich-text.ts` was calling it **once per run**. Each
+run lost the space at its two ends, and a run made of nothing but the space between two bold
+facts was trimmed to the empty string and dropped altogether. The document the club typed was
+correct throughout; only the render was wrong, which is why it showed in the preview and would
+have shown in every message sent from a formatted body.
+
+**Decision.** *`fillPlaceholders` takes `edges: "trim" | "keep"`, and a run asks for `"keep"`.*
+Closing up doubled spaces and the space before a comma stays in both modes: those are about what
+a vanished placeholder left behind, not about the edges.
+
+*The paragraph's own two edges are trimmed where they belong* — in `inline()`, on the first and
+last run only. So the rule §270 wanted is kept whole, at the level it is actually about.
+
+*What was rejected: trimming nothing.* A paragraph beginning with a stray space the club typed
+in the editor would then reach an inbox with it, and the plain-text half — built from the whole
+line — would disagree with the HTML one.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 279. Decided — a legal document is written in an editor, and stores exactly what it stored before (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "this declaration must be WYSIWYG". `/admin/legal` was the
+last screen in the backoffice still writing into a monospace textarea, in a format the club had
+to learn — `## ` for a heading, a blank line between paragraphs, square brackets round the words
+and the address in the parentheses after them for a link —
+to write the three texts that carry the most trust in the product.
+
+**The constraint that shaped it.** `body_json` is `{ sections: [{ heading?, paragraphs }] }`, and
+that is not merely a storage detail: it is what `content-hash.ts` hashes, what an approval points
+at, what `merge-fields.ts` fills per participant and event, and what `pdf.ts` draws into the
+declaration somebody signs. The club's terms, privacy notice and declaration are **approved on
+production against those exact bytes**. A rich-text body would have moved the hash of documents
+already in effect.
+
+**Decision.** *The editor is a view over the stored text, not a new storage format.*
+`LegalBodyEditor` opens the stored text as a document, and posts the same plain text back under
+the same field name. `actions.ts`, the validation, the hash, the public page and the PDF are all
+untouched, and a version approved before this existed opens and saves byte for byte identically —
+which `editor-doc.test.ts` asserts against all three of the platform's templates in both
+languages, by comparing the content hash either side of a round trip.
+
+*The toolbar offers exactly what the format can store*: a heading, a paragraph, a line break, a
+link and a picture. **Bold, italic and lists are deliberately missing.** The body has nowhere to
+put them, so a button for them would produce formatting the save drops without saying so — and on
+a document somebody signs, "what you saw is not what it says" is the one failure that matters.
+
+*Its own island rather than the pages' editor.* `RichTextEditor` writes Tiptap JSON and is sixteen
+hundred lines of toolbar built for a page; threading a second serializer and a second allowlist
+through it would make both harder to read than two files that each do one thing (`AGENTS.md` §1.5,
+rules 2 and 3). The two share Tiptap, which is already installed — no dependency was added.
+
+*What was rejected: real rich text, with marks and lists.* It was offered and declined for now.
+It changes the stored shape, the hash's input, the public renderer and the PDF, and it needs a
+compatibility path for the three approved versions — a month before registrations open for
+21 November, on the documents a registration is refused without.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 280. Decided — Neon Launch is the current plan; watch money, not Free's old cutoff (2026-09-22)
+
+**Context.** The owner supplied the Neon billing console on 2026-09-22. It names **Launch** as
+the active plan and the partial billing period Sep 22–Oct 1. At that moment 1.8 compute hours
+cost $0.19. The same panel names 100 projects, 10 branches per project, 500 GB public network
+transfer, autoscaling to 16 CU, scale-to-zero after five minutes, storage at $0.35/GB-month and
+Instant Restore at $0.20/GB-month. Neon's official pricing announcement gives Launch compute as
+$0.106/CU-hour; 1.8 × 0.106 = $0.1908, which reconciles the console rather than guessing from it.
+
+**Decision.** The Neon account containing the separate QA and production projects is documented
+as Launch from this date. It is usage-based with no monthly minimum. At the observed pace of
+1.8 CU-hours a day, a 30-day month is 54 CU-hours and **$5.72 compute**. A 0.25 CU compute kept
+awake for all 720 hours is 180 CU-hours and **$19.08 per project**; two such projects are $38.16.
+Storage and retained restore changes are additional, so each number is an estimate rather than
+an invoice or a fixed subscription.
+
+The scheduler stays at fifteen minutes by day and hourly at night. §68 chose that cadence to
+avoid Free's 100-CU-hour suspension; Launch removes the suspension but not the waste. A five-minute
+ping still keeps a quiet database awake and now turns the same 180 CU-hours into a bill. The
+cadence is therefore cost control and still leaves room for the outbox and waiting-list deadlines.
+
+Launch fits M1: the two projects, branch count, transfer and autoscaling headroom exceed the
+club's present needs. It has no SLA. Scale is considered when the club needs its 99.95% SLA or
+additional security/compliance controls, not because Launch accumulated ordinary usage.
+
+**December is a review, not a scheduled downgrade.** The owner may return the account to Free
+in December 2026 after seeing real invoices and usage. Launch remains active unless the owner
+explicitly decides otherwise. Before a downgrade, re-check the Free plan as it exists then and
+confirm both projects fit its compute, storage, branch and restore constraints and that its
+production trade-offs are accepted. A downgrade changes the active operating rule, so the
+diagnostics, BR-REQ-090-07, setup and platform inventory change with it rather than before it.
+
+**The code did not change in this documentation task.** `diagnostics/neon.ts` still divides by
+Free's 100 CU-hours; `database-size.ts` still measures against Free's 0.5 GB; and
+`platform-plans.ts` still says the current plan is Free and Launch is next. BR-REQ-090-07 now
+states the follow-up: name Launch, show an estimated charge, remove both former ceilings and
+distinguish the estimate from Neon's invoice. Until then those UI labels are stale, not evidence
+of the provider plan.
+
+**Synchronized documents.** `README.md`, BR-BUS-101, BR-REQ-090-07, `AGENTS.md` §§3.1, 7 and
+16.2, `SETUP.md` §§2, 25, 26 and 33, `docs/PLATFORM.md`, `CLAUDE.md`, `MANIFEST.txt`, and this
+history. Pricing was verified against the owner-supplied console and Neon's official pricing and
+SLA pages on 2026-09-22; it must be re-checked before another plan decision.
+
+Baseline `BR-V1.44-2026-09-22`.
+
+## 281. Decided — a public page keeps its last good copy, so an outage costs a page rather than the site (2026-09-22)
+
+**Context.** The owner, 2026-09-22, after asking what happens when the database is down: "I want
+to gracefully handle DB failures … we want the website to keep running so that we don't break our
+reputation." Until now every public page read the database per request and had nothing behind it:
+Neon suspended, a provider incident or a migration mid-flight took the whole site's content with
+it, and a stranger deciding whether to enter the 21 November race met an error page.
+
+**What was already true, and kept.** `error.tsx` (§52) means that failure was never Next's raw
+"Application error": the header, the footer and the navigation survived, and the page offered a
+retry, a way home and a reference. What it could not do is show the event.
+
+**Decision.** *Each public read keeps its last good answer, and serves it when the live read
+throws.* `modules/resilience/last-good.ts`. Normally **nothing is stale**: the copy is consulted
+only after a failure, so this is not a cache in front of the database — it is a copy behind it.
+
+*The copy lives in two places, for one reason each.* In the instance's memory, which costs nothing
+and covers the ordinary case; and in R2, because a serverless instance is not a server and the
+first request after a quiet hour lands on a cold one with an empty memory. R2 is the right second
+place precisely because it is not Neon: the two do not fail together. It is written after the
+response, as the outbox drain is (§68), and at most once every ten minutes per key.
+
+*A stale page says so, and says when.* `LastGoodNotice`, naming the hour the copy was taken — a
+reader can judge a page from twenty minutes ago and one from nine hours ago differently, and that
+judgement is not the platform's to make. Serving an old page silently is what would actually cost
+the club its reputation.
+
+*A copy older than twelve hours is not shown at all.* Past that the error page is the honest
+answer: "the site kept working" is not worth telling somebody to come to a race that was called
+off yesterday.
+
+*The free places are never served from a copy.* The rest of an event page is the same facts it was
+an hour ago; how many places are left is the number somebody decides on, and the allocator is the
+only thing that knows it (`AGENTS.md` §10.6). When that one query cannot be answered, that one
+block says so and the page around it stands — rather than sending somebody through a form to be
+refused at the end of it. The owner chose this over caching the count.
+
+*`notFound()` and `redirect()` are put straight back.* They work by throwing, and answering a 404
+with the previous visitor's page would turn it into a wrong 200. Every loader is data only, and
+`unstable_rethrow` guards the boundary.
+
+*Nothing under `/admin` and no write path is wrapped in this.* Staff need to know the database is
+away, and a stale answer on a decision screen is worse than no answer.
+
+**Two things that came with it.** The storage adapter gained the read leg `AGENTS.md` §17 always
+described — `get(key)` — because a snapshot is read back by this application rather than handed to
+a browser, on the very request whose database read just failed. And `/api/health` was fixed: it
+probed the connection, then called `checkJobHealth` twice whatever the probe had said, so a
+database that was actually away made the route throw and answer Next's generic server error —
+destroying the one alarm the club has (§98), since the monitor's alarm *is* the non-2xx with a
+readable body.
+
+**What was rejected: ISR, or caching the pages outright.** Next would serve a stale page happily,
+but the pages take search parameters, the freshness rule of §28 (a cancelled event must never read
+as scheduled) would then depend on invalidation being right everywhere, and being wrong would show
+stale pages *while the database was healthy*. The mechanism above cannot do that: it is reached
+only by a throw.
+
+**Verified against a stopped database**, not a mocked one: with `docker compose stop db`, the
+listing, the calendar, both legal texts, the gallery, a standing page and an event page all
+answered 200 with their content and a dated banner; the event page's registration block said the
+places could not be checked; `/api/health` answered 503 with its structured body; and a page with
+no copy yet answered the error page, as intended.
+
+Baseline `BR-V1.44-2026-09-22`.
+
+## 282. Decided — the hidden trap may suspect a person, but it no longer refuses one on its own (2026-09-22)
+
+**Context.** Two of the club's own testers registered and never received the confirmation email;
+the WhatsApp thread reads "nu primeam mailul de confirmare a adresei… nu am descoperit 100% care
+este motivul" and, from the other side, "prea multă securitate". The owner, the same afternoon:
+"we need to test with auto-fill properly", "I want clear visual feedback when people are not let
+through", "I also want to give real people the option to fix it", and — of the red panel —
+"trebuie să fie mai subtilă".
+
+**What the honeypot meets in the real world.** A password manager fills every input it recognises,
+and an offscreen input is still an input. What lands in the trap is then *that person's own* name
+or address, spelled exactly as they typed it above. §217 had already stopped the silent failure —
+a refusal is said out loud, with the answers kept — but the refusal itself was still a dead end:
+the browser refills the trap on every render, so pressing the button again was refused for the
+same reason, forever.
+
+**Decision.** *A trap holding the submitted address or name is `autofill`, not `trap`.* A bot has
+no reason to put the submitted address in a field the form never showed; it puts a link or a
+keyword. That verdict is accepted, and logged.
+
+*Suspicion and consequence are separated.* `refusesSubmission` weighs the guess against what else
+is known: **Cloudflare's verdict outranks the hidden field** — a measurement beats a guess, and a
+bot that can pass Turnstile was never going to be stopped by an offscreen input — and **a second
+attempt is let through**, because somebody who has been told they looked automated and pressed
+again is a person.
+
+*A token Cloudflare rejected ends it, and no second press undoes that.* The owner: "nu vreau ca
+oamenii să ajungă la ecranul ăsta și să fi fost roboți." The escape exists for a person the
+guesses caught by accident; it must not become the way past the one check that measured the
+browser. A script that posted twice would otherwise reach the "check your email" screen and spend
+a message out of an allowance that is sixteen registrations a day on the free plan (§100).
+
+*The refusal is quieter, and says three things it did not.* Information rather than error —
+nothing is wrong with what they typed — and: nothing was registered, no email is coming (the
+promise §217 forbids making falsely), and the consents below must be ticked again before pressing
+send. That last is not a defect to fix: a consent is given on purpose and is deliberately never
+restored (§142), so the button would otherwise be pressed and nothing would happen, which is
+exactly what the e2e case found.
+
+*The way out is a button inside the form.* It was first placed in the alert above it with
+`form="registration-form"`, which is valid HTML and submits nothing here: a Server Action is
+driven by React from the form's own submit handler, and a submitter outside the element never
+reaches it. One refusal in the log and no second request at all — found by the browser test, not
+by reading.
+
+*And the trap has its own switch in the backoffice*, beside the captcha's (§254; the owner: "I
+want this honeypot setting to be a toggle in the admin area as well"). Its own, because the two
+fail differently: the captcha refuses somebody in front of a widget they can see, and the trap
+refuses them invisibly — which is exactly why being able to switch it off alone is worth having
+on the day a browser keeps filling it. Off, the field is still rendered and still logged; it
+simply stops refusing anybody, and the timing guess and Turnstile are untouched. It needs no keys
+and no third party, so it can be switched on a deployment that has no Turnstile at all.
+
+**What was rejected: making the trap harder to autofill.** More attributes on a hidden input is an
+arms race against browsers whose behaviour is not documented and changes. Deciding what the
+*value* means is stable, and it is the thing that distinguishes the two cases.
+
+**Verified in a browser**, `registration-autofill.spec.ts`: the trap filled with the runner's own
+address goes through first time; filled with somebody else's link it is refused, the panel says
+so, and the second press — consents re-ticked, trap still filled — is accepted.
+
+Baseline `BR-V1.44-2026-09-22`.
+
+## 283. Decided — the telephone and the declaration say what they want before they refuse it (2026-09-22)
+
+**Context.** Amalia, testing on QA: the telephone number needs a maximum and a clearer answer as
+it is typed; and signing the declaration should "give some hints on the ID document or select ID
+doc type", and should say that the name typed as a signature is the one used at registration —
+"as a hint, not a hard validation".
+
+**The telephone.** The live check has run the server's own `composePhone` since §198, so what was
+missing was not correctness but arithmetic a person can see. E.164 is fifteen digits **including**
+the country code, so the room left in the box depends on the country chosen beside it — thirteen
+after Romania's `+40`, twelve after `+373`. That ceiling is now applied at the keystroke, and the
+`maxLength` attribute follows the country rather than being one number for everybody.
+
+*And the box answers in three ways instead of one.* "That is not a number this country uses" is
+true and useless when the number is simply unfinished: it reads as a refusal of what was typed
+rather than as a count. So a number too short to judge says keep going, and a number that works
+says so — by showing the exact E.164 that will be stored. `+40712345678` on the screen is the one
+thing that proves the country beside it was understood.
+
+**The declaration.** The identity-document box asked for "seria și numărul", and people typed
+whatever their own document calls those, under a label naming a Romanian identity card. The kind
+of document is a closed list, so it is a list — identity card, passport, residence permit, other —
+and the action composes the kind and the number into the one `{{idDocument}}` merge field the
+club's approved text carries, in the language the person is signing in. A native select, like the
+telephone's country (§198): it works before hydration and a phone knows how to open it.
+
+*The signature box shows the name they registered with, and refuses nothing.* The hint is the
+whole of it: somebody whose document reads "Ana-Maria" and who registered as "Ana Maria" must
+still be able to sign. Comparing the two strings and refusing would be this platform deciding what
+a person's name is, on the one field where typing it **is** the act (§86).
+
+**What was rejected: validating the signature against the registered name.** It was asked for as a
+hint and it is right that it stays one. A declaration refused because a middle name was left out
+is a participant who cannot enter a race, and the club already knows who signed — the row is the
+registration's own.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 284. Fixed — a Turnstile widget is handed back when its form goes away (2026-09-22)
+
+**Context.** The owner, from the browser console: `[Cloudflare Turnstile] Cannot find Widget
+cf-chl-widget-hn2ug, consider using turnstile.remove() to clean up a widget.`
+
+**What it was.** The island drew the widget with `render` and kept its id to `reset()` between
+attempts (§185), and never called `remove`. Cloudflare keeps its own registry keyed by that id and
+does not notice the element leaving the document, so a form unmounted by a client navigation left
+an orphan behind. The warning is the visible half; the half that matters is that the next mount
+drew a **second** widget beside the ghost, and which of the two answered for the token a
+submission carried was not decided by anything here.
+
+**Decision.** *`remove(id)` on unmount, in an effect of its own with no dependencies.* Not in the
+drawing effect's cleanup: that one runs between attempts as well, and keeping one widget alive and
+resetting it is exactly what §185 decided — a fresh challenge is the point, a fresh widget is not.
+A `remove` that throws because Cloudflare has already forgotten the id is swallowed: a console
+line of ours on top of theirs helps nobody.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 285. Decided — the send button waits for the anti-bot check, and a dimmed button looks it (2026-09-22)
+
+**Context.** The owner, watching the form: "butonul de trimitere nu ar trebui sa fie vizibil daca
+Cloudflare Turnstile nu a terminat, corect?" and, separately, "butoanele disabled ar trebui sa fie
+mai transparente, si cu cursor interzis".
+
+**He is right about the first.** Pressing send before Turnstile has produced a token buys a
+refusal for no reason at all — the token is missing, the server sees `failed`, and the person is
+told the anti-bot check refused them when in truth they were merely quick. The widget usually
+answers in well under a second, which is exactly the window in which somebody who has finished
+typing presses the button.
+
+**Decision.** *The button waits while the token is missing*, dimmed, with a sentence saying why,
+and a press in that moment does nothing but keep the reason on screen. Cloudflare writes its token
+into a hidden input inside its own element, so the form is where it appears and the DOM is what is
+watched — the shape `PhoneField` already uses to watch the other telephone (§231), rather than
+lifting a third party's element into React.
+
+*With a release valve of eight seconds.* A blocked script, an offline moment, a bad minute at
+Cloudflare — none of them may end with somebody unable to press send. §205 is not negotiable:
+people register at all costs, and a check that never answers must not be the thing that stops
+them. The same reason the server treats "unavailable" as acceptable and only a *rejected* token as
+a refusal.
+
+*And only where a widget is actually drawn.* No keys, or the club's switch off (§254), means there
+is no token to wait for; waiting then would be a button dimmed for a check that is not running.
+
+**The second is a plain interface defect.** A dimmed button at 0.55 opacity read as a colour
+choice rather than as a state. MUI's own disabled opacity is 0.38, and with `cursor: not-allowed`
+nobody mistakes it for a button that is merely quiet. It stays pressable, for the reason §047 and
+the button's own notes give: a press is what produces the specific answer — the browser focuses
+the first unfilled field and names it, which a truly disabled control could never do.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 286. Fixed — four things found by watching two people use the form (2026-09-22)
+
+**Context.** Amalia and the owner, testing on QA within an hour of each other.
+
+**"Anumerarea in batch nu merge!"** It was working and saying nothing. A number is given to a
+**confirmed, real** registration that has none — a number follows the declaration and never
+precedes it, and a test row never wears one (§30). An event whose entrants are all still
+confirming their email therefore assigned nought and reported "0 numere alocate", which reads
+exactly like a broken button. *The screen now names what it skipped*: how many have not confirmed
+yet, and how many are test rows.
+
+**And the batch ignored the numbers the desk had already given.** Found from a screenshot of a row
+reading "Prezență marcată · 5*" — the owner: "cum pot avea prezenta marcata dar numar cu
+steluta?". The desk writes a number into `provisional_bib_number` on race morning and the list
+draws it with an asterisk because it is not settled. Confirming one registration promotes it
+(`service.ts`); the batch looked only for rows with no *final* number and handed them the next
+free one. So a runner told "you are 5", with 5 written on their hand, was quietly given 100 while
+the screen still showed 5 beside them — two numbers for one person, neither visibly wrong.
+*The number somebody was told is the number they keep*, and it stops being provisional.
+
+**The consents survive a rejected submission**, reversing that part of §142. The owner, watching
+it happen: "vreau sa persist inclusiv bifele, sa nu se enerveze Dani … gen vreau ca dani sa mai
+apese inca o data submit si atat!" The reasoning for dropping them was thinner than it looked: the
+tick that counts is the one on the submission that **succeeds**, and that is the one the row
+records with its version and timestamp. Making somebody re-tick three boxes to recover from a
+refusal that was about none of them is friction charged to the wrong person. The e2e case asserts
+it by re-ticking nothing.
+
+**The refusal is red, and said once.** §282 made it information, since nothing the person typed
+was wrong; what a reader needs first is that the submission did not go through, and blue reads as
+a remark. And §194's second copy beside the button is gone: the summary at the top now carries
+the title, the sentences and a button that sends the form, so the older panel was the same words
+twice on one screen ("exista un pic de reduntanta la butoanele alea").
+
+**"You are already registered" says so warmly, and names the number — in the email.** The owner:
+"ne bucuram ca esti entuziasmat dar esti deja inscris cu numaru …", and then, unprompted: "don't
+tell they on the screen, tell them in the email ;-)". Which is exactly the line §19.4 draws: the
+screen's answer stays generic for everybody, because a form that says "this address is already
+registered" is a way to ask who is entered; the inbox is the one place the question can be
+answered, to the one person entitled to the answer.
+
+**One incidental repair.** The register page's `typed()` helper is now `prefill()`: the i18n
+checker reads every `t…(` call as a translation lookup (`t\w*\(`), so `typed("privacyAcknowledged")`
+counted as a missing message key. It had passed for months only because every name it had been
+given — `email`, `city` — also happened to exist in the catalogue.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 287. Decided — a selection can be erased, behind the count typed by hand (2026-09-22)
+
+**Context.** The owner: "de asemenea stergerea in batch ar trebui sa mearga! dar cu super extra
+confirmare!"
+
+**What §67 decided, and why it is being changed.** Cancel is offered in bulk and erase one row at
+a time, because cancelling is recoverable — the person registers again — and erasing is not. That
+reasoning still holds. What it did not account for is the club clearing a test season or a race
+set up twice: eighty rows, eighty dialogs, and the twentieth confirmation is read by nobody. A
+guard that is always in the way stops being a guard.
+
+**Decision.** *The confirmation is the number of rows, typed.* A single erase asks for the
+registered name (§180), which cannot scale to forty. The count is the thing that can: it is a fact
+the screen has just shown, it changes with the selection, and it cannot become muscle memory the
+way a fixed word or a second "yes" does. The owner chose it over typing ȘTERG for exactly that
+reason.
+
+*Asserted in the service, not in the dialog.* `bulkDeleteRegistrationsByStaff` refuses a count
+that is not the size of the selection, and refuses an empty selection outright — so the rule
+survives a second caller and a dialog somebody rewrites later. A dialog is UX; this is the rule.
+
+*Everything else is the single erase, once per row.* The same `eraseRegistration`: the audit row
+first, the declaration acceptance with the row in one transaction, the place released through the
+allocator (§33, §44, §67). A row that refuses is counted and the rest continue, as the bulk cancel
+already does — a batch that stops on the first surprise leaves the club unable to say what
+happened.
+
+*One form, two verbs.* A checkbox's `form` attribute names exactly one form, so one selection
+cannot feed two; the erase button carries the second Server Action through `formAction`, and
+`ConfirmSubmitButton` now submits **through the button** when it does, because React reads the
+action from the submitter.
+
+**What was rejected: two ordinary confirmations.** Offered and declined. The second click becomes
+reflex, which is the failure mode this is supposed to prevent rather than a slower version of it.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 288. Fixed — the invitation key could authenticate and do nothing (2026-09-22)
+
+**Context.** The owner invited Dani as an Administrator from Echipa, and Dani met Zitadel's own
+screen: **"User not found in the system"**. The `staff_users` row existed; the Zitadel account did
+not.
+
+**What it was.** `SETUP.md` §37 step 2 asks for the service account to be made an **Org User
+Manager**, and on the club's instance that step had never been done — the token was created,
+written to both Vercel projects (§123, 2026-09-20), and granted a role on the *project* under
+"Role Assignments" instead, which is about access inside an application and confers no permission
+over users. The token authenticated perfectly and could do nothing: `orgs/me/members/_search`
+answered `membership not found (AUTHZ-cdgFk)`, and a search for human users returned **none**
+while the console showed one.
+
+**Why nobody noticed for two days.** `inviteZitadelUser` reports `failed` with the provider's
+reason, and the Echipa page says so — in a banner, once, which is gone at the next click. The
+allowlist row is written either way, by design (§123: the platform decides who is staff, Zitadel
+only authenticates), so the screen afterwards looks exactly like success. The first person to
+learn is the colleague, at the sign-in page, in words that sound like their own mistake.
+
+**Decision.** *The procedure names the console's own words and its trap* (§37): the panel is
+**Organization → Managers**, the dialog is "Add an Administrator", and **Role Assignments is not
+it** — a service account can sit there Active and configured-looking while being unable to create
+anybody.
+
+*And a check that needs no volunteer.* Asking the token to list human users answers it in one
+call: none, where the console shows some, is a missing membership. It went into §37 because the
+existing check — "add yourself with a second address" — only works for somebody who already has a
+second address and the nerve to test in production.
+
+**What is still owed, and deliberately not built here.** Two things this would have caught earlier,
+both code rather than documentation:
+
+- a staff row whose Zitadel account does not exist should say so **on Echipa, permanently**, beside
+  the resend button — not in a banner that disappears;
+- `/admin/tasks` should check the invitation key the way it checks the other providers, so "the key
+  works but has no permissions" is a row on the board rather than a discovery made by a colleague
+  who cannot sign in.
+
+Baseline `BR-V1.45-2026-09-22`.

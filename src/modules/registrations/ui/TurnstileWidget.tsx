@@ -90,6 +90,34 @@ export default function TurnstileWidget({
     };
   }, [siteKey, locale, attempt]);
 
+  /*
+    Hand the widget back when this island goes away (§284).
+
+    Cloudflare keeps its own registry keyed by the id `render` returned, and it does not notice
+    the element leaving the document — so a form unmounted by a client navigation left an orphan
+    behind, which is the console's "Cannot find Widget cf-chl-widget-…, consider using
+    turnstile.remove() to clean up a widget". The next mount then drew a *second* widget beside
+    the ghost, and the token a submission carried was whichever of them the API answered for.
+
+    Its own effect with no dependencies, so it runs on unmount and never between attempts: the
+    effect above deliberately keeps one widget alive and `reset()`s it, because a fresh challenge
+    is the point and a fresh widget is not.
+  */
+  useEffect(
+    () => () => {
+      const id = widgetId.current;
+      widgetId.current = null;
+      if (!id || !window.turnstile) return;
+      try {
+        window.turnstile.remove(id);
+      } catch {
+        // A widget Cloudflare has already forgotten is not a failure worth a console line of
+        // ours on top of theirs.
+      }
+    },
+    [],
+  );
+
   // `min-height` so the form does not jump when the challenge draws itself a moment later.
   return <Box ref={holder} sx={{ minHeight: 65 }} />;
 }

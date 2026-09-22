@@ -73,17 +73,29 @@ export function unknownPlaceholders(text: string): string[] {
  * exists — becomes nothing, and the spaces around it are closed up so the sentence still reads
  * as a sentence. It is visible in the preview under the editor, which is where somebody
  * notices they have asked for a fact this message never has.
+ *
+ * **`edges: "keep"` is what a rich-text run asks for** (§270). A formatted paragraph is not one
+ * string but a list of runs — `"Ai început înscrierea la "`, then `"{eventTitle}"` in bold, then
+ * `" din data de "` — and trimming each of them separately welds the words to the bold ones:
+ * "înscrierea la**Crosul de toamnă**din data de". The run in the middle may even be a single
+ * space, which trimming deletes outright. So a whole paragraph is trimmed and a run is not;
+ * closing up doubled spaces and the space before a comma stays in both, because both are about
+ * what a vanished placeholder left behind rather than about the edges.
  */
-export function fillPlaceholders(text: string, data: Record<string, unknown>): string {
-  return text
+export function fillPlaceholders(
+  text: string,
+  data: Record<string, unknown>,
+  edges: "trim" | "keep" = "trim",
+): string {
+  const filled = text
     .replace(PLACEHOLDER, (whole, name: string) => {
       if (!(EMAIL_COPY_PLACEHOLDERS as readonly string[]).includes(name)) return whole;
       const value = data[name];
       return value === undefined || value === null || value === "" ? "" : String(value);
     })
     .replace(/[ \t]{2,}/g, " ")
-    .replace(/ +([.,;:!?])/g, "$1")
-    .trim();
+    .replace(/ +([.,;:!?])/g, "$1");
+  return edges === "trim" ? filled.trim() : filled;
 }
 
 const copy = z

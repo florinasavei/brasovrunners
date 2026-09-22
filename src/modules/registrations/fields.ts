@@ -178,6 +178,15 @@ const submissionFields = z.object({
 });
 
 /**
+ * The marker a form carries after a refusal (§282).
+ *
+ * Not part of the schema: it says nothing about the registration and everything about this
+ * attempt, so it travels with the other two signals the action already gathers rather than
+ * becoming a field of a participant.
+ */
+export const SECOND_ATTEMPT_FIELD = "secondAttempt";
+
+/**
  * BR-REQ-031-05 criterion 2, applied to both entry points below.
  *
  * Health text without its consent is not a validation nicety: it is holding

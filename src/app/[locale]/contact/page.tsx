@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
@@ -69,7 +70,14 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const t = await getTranslations("Contact");
   const now = new Date();
   // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
-  const siteKey = await activeBotCheckSiteKey(getDb(), new Date());
+  /*
+    Both database reads on this page are tolerant of an outage rather than served from a copy
+    (§281). This is the page somebody reaches *because* something else did not work — the
+    comment below on the recipients says so — and every word on it that matters is in the
+    catalogue, not in the database. Without the captcha's key the widget is not drawn and the
+    form still posts; without the event the box simply opens empty.
+  */
+  const siteKey = await orNull(() => activeBotCheckSiteKey(getDb(), new Date()));
 
   const error = parseContactError(rawError);
   const rejected = parseContactErrorFields(fields);
@@ -94,7 +102,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
    * published events rather than printed, because anybody can type one into a URL and this text
    * goes into an email the club reads.
    */
-  const aboutEvent = about ? await findPublishedEventBySlug(getDb(), locale, about) : null;
+  const aboutEvent = about ? await orNull(() => findPublishedEventBySlug(getDb(), locale, about)) : null;
 
   const field = (name: "name" | "email" | "message", help?: string) => ({
     id: fieldId(name),
@@ -234,4 +242,20 @@ export default async function ContactPage({ params, searchParams }: Props) {
       )}
     </Container>
   );
+}
+
+/**
+ * One read that may simply not answer (§281).
+ *
+ * The contact page is the one a visitor reaches when something else has failed, so nothing on it
+ * is allowed to take it down. `null` is a state every caller here already has a rendering for.
+ */
+async function orNull<T>(read: () => Promise<T>): Promise<T | null> {
+  try {
+    return await read();
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("[contact] a lookup did not answer; the page stands without it", error);
+    return null;
+  }
 }

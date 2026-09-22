@@ -20,6 +20,15 @@ type Props = {
   size?: "small" | "medium";
   /** A glyph before the verb, by name — never as an element (`action-icons.ts`). */
   icon?: ActionIconName;
+  /**
+   * A second Server Action for the form this button sits in (§287).
+   *
+   * One selection cannot belong to two forms — a checkbox's `form` attribute names exactly one —
+   * so the list's bulk panel is one form with two verbs, and the button says which. React reads
+   * `formAction` on the submitter and routes there, which is the supported way to have two
+   * actions behind one set of fields.
+   */
+  formAction?: (formData: FormData) => void | Promise<void>;
 };
 
 /**
@@ -38,6 +47,7 @@ type Props = {
  */
 export default function ConfirmSubmitButton({
   label,
+  formAction,
   title,
   body,
   confirmLabel,
@@ -61,6 +71,7 @@ export default function ConfirmSubmitButton({
       <Button
         ref={anchor}
         type="submit"
+        formAction={formAction}
         variant={variant}
         color={color}
         size={size}
@@ -92,7 +103,11 @@ export default function ConfirmSubmitButton({
               // `requestSubmit` rather than `submit()`: it runs the form's own validation and
               // fires the submit event React's Server Action handler is listening for. The
               // plain `submit()` bypasses both and posts nothing useful.
-              anchor.current?.form?.requestSubmit();
+              // With a second action, the *button* is the submitter React reads it from — so the
+              // form is asked to submit through this control rather than by itself (§287).
+              const form = anchor.current?.form;
+              if (formAction && anchor.current) form?.requestSubmit(anchor.current);
+              else form?.requestSubmit();
             }}
           >
             {confirmLabel}

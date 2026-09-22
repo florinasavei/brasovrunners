@@ -22,7 +22,21 @@ const COOKIE = "br_form_draft";
 const MAX_AGE_SECONDS = 600;
 /** Browsers keep a cookie to about 4 KB; past this the draft is dropped rather than truncated. */
 const MAX_BYTES = 3_800;
-const SKIPPED = new Set([TURNSTILE_FIELD, "honeypot", "renderedAt", "locale", "slug", "privacyAcknowledged"]);
+/*
+  What is never carried across a rejected submission.
+
+  `privacyAcknowledged` used to be here, on the reasoning that a consent must be given
+  deliberately every time (§142). The owner, 2026-09-22, watching somebody meet the anti-bot
+  refusal: "vreau sa persist inclusiv bifele, sa nu se enerveze Dani." He is right, and the
+  reasoning was thinner than it looked: the tick that counts is the one on the submission that
+  **succeeds**, and that is the one recorded, with its version and its timestamp, by the row
+  itself. Re-ticking three boxes to recover from a refusal that was about none of them is
+  friction charged to the wrong person.
+
+  The three that stay: the token (single use), the trap (its whole point is to be empty), and
+  the render time (it is the clock for the next attempt, not the last one).
+*/
+const SKIPPED = new Set([TURNSTILE_FIELD, "honeypot", "renderedAt", "locale", "slug"]);
 
 export type FormDraft = Readonly<Record<string, string>>;
 

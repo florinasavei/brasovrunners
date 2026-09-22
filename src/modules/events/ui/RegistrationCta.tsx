@@ -2,6 +2,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import { unstable_rethrow } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { findEventForRegistrationById } from "@/modules/events/repository";
@@ -49,9 +51,27 @@ export default async function RegistrationCta({
    */
   let availablePlaces: number | null = null;
   if (event.registrationMode === "INTERNAL" && registrationState(event, now) === "OPEN") {
-    const db = getDb();
-    const internal = await findEventForRegistrationById(db, event.id);
-    if (internal) availablePlaces = await readPublicAvailability(db, internal, now);
+    try {
+      const db = getDb();
+      const internal = await findEventForRegistrationById(db, event.id);
+      if (internal) availablePlaces = await readPublicAvailability(db, internal, now);
+    } catch (error) {
+      /*
+        The one thing on a page that is never served from a copy (§281).
+
+        The rest of an event page — the date, the place, the rules, the programme — is the same
+        facts it was an hour ago, and showing the last copy of those during an outage costs a
+        reader nothing. How many places are left is not like that: it is the number somebody
+        decides on, the allocator is the only thing that knows it (`AGENTS.md` §10.6), and a
+        stale "3 locuri libere" sends a person through a form to be refused at the end of it.
+
+        So when this one query cannot be answered, this one block says so and the page around it
+        stands. A refresh is what fixes it, and it is offered as a link rather than a promise.
+      */
+      unstable_rethrow(error);
+      console.error("[registration-cta] could not read the availability", error);
+      return <CapacityUnknown slug={event.slug} />;
+    }
   }
 
   const cta = registrationCta({ ...event, availablePlaces }, now);
@@ -152,5 +172,31 @@ export default async function RegistrationCta({
     <Typography variant="body1" sx={{ mt: 3, fontWeight: 500 }}>
       {sentence}
     </Typography>
+  );
+}
+
+/**
+ * What stands in for the button when the free places cannot be counted (§281).
+ *
+ * A warning rather than an error, and no button: offering "Înscrie-te" here would send somebody
+ * to a form whose first act is the query that just failed. The link reloads this page, which is
+ * the only thing that can change the answer.
+ */
+async function CapacityUnknown({ slug }: { slug: string }) {
+  const t = await getTranslations("Offline");
+  return (
+    <Alert
+      severity="warning"
+      sx={{ mt: 3 }}
+      action={
+        // This page again, by its own address: the only thing that can change the answer is
+        // asking the database a second time.
+        <ButtonLink size="small" sx={TAP_TARGET} href={{ pathname: "/events/[slug]", params: { slug } }}>
+          {t("capacityRetry")}
+        </ButtonLink>
+      }
+    >
+      {t("capacityUnknown")}
+    </Alert>
   );
 }

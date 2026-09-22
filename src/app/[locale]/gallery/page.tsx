@@ -8,6 +8,8 @@ import { Suspense } from "react";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { listPublishedAlbums } from "@/modules/content/gallery/repository";
@@ -41,7 +43,7 @@ export default async function GalleryPage({ params }: Props) {
   const t = await getTranslations("Gallery");
   // Started, not awaited (§166): the heading and the intro reach the browser at once, and
   // the covers fill a grid of their own size when the query answers.
-  const albums = listPublishedAlbums(getDb(), locale);
+  const albums = readWithLastGood(`gallery:${locale}`, () => listPublishedAlbums(getDb(), locale));
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -52,8 +54,12 @@ export default async function GalleryPage({ params }: Props) {
         {t("intro")}
       </Typography>
 
+      <Suspense fallback={null}>
+        <GalleryStaleNotice albums={albums} />
+      </Suspense>
+
       <Suspense fallback={<GalleryGridSkeleton label={t("loading")} />}>
-        <AlbumGrid albums={albums} />
+        <AlbumGrid albums={albums.then((read) => read.value)} />
       </Suspense>
     </Container>
   );
@@ -113,4 +119,9 @@ async function AlbumGrid({ albums: pending }: { albums: ReturnType<typeof listPu
       )}
     </Box>
   );
+}
+
+/** The "last copy" line for the albums, once the query has settled (§281). */
+async function GalleryStaleNotice({ albums }: { albums: Promise<Resilient<unknown>> }) {
+  return <LastGoodNotice read={await albums} />;
 }

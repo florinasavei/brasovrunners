@@ -249,7 +249,15 @@
       "saving": "Se salvează…",
       "savedOn": "Verificarea anti-bot este pornită.",
       "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
-      "updatedAt": "Modificat la {when}."
+      "updatedAt": "Modificat la {when}.",
+      "honeypot": {
+        "on": "Honeypot pornit: un câmp ascuns, pe care oamenii nu îl văd, dar roboții îl completează.",
+        "off": "Honeypot oprit. Câmpul există în continuare și îl notăm în jurnal, dar nu mai refuză pe nimeni.",
+        "turnOff": "Oprește honeypot-ul",
+        "turnOn": "Pornește honeypot-ul"
+      },
+      "savedHoneypotOn": "Honeypot-ul este pornit.",
+      "savedHoneypotOff": "Honeypot-ul este oprit."
     },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
@@ -460,7 +468,13 @@
       "summaryScopeEvent": "la {event}",
       "summaryScopeAll": "toate evenimentele",
       "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat; cifra de pe tabul „Înscrieri” numără toate evenimentele care urmează.",
-      "summaryScopeAllLink": "Arată toate evenimentele"
+      "summaryScopeAllLink": "Arată toate evenimentele",
+      "bulkEraseTitle": "Șterge definitiv înscrierile bifate",
+      "bulkEraseHelp": "Se șterg din evidență, locurile se eliberează și nu se mai poate reveni. Rămâne doar o urmă în jurnal: cine a șters și de ce, niciodată pe cine.",
+      "bulkEraseConfirm": "Scrie câte ștergi",
+      "bulkEraseConfirmHelp": "Exact numărul de înscrieri bifate — altfel nu se șterge nimic.",
+      "bulkEraseAction": "Șterge definitiv",
+      "registrationsErased": "{erased} înscrieri șterse definitiv. {failed} nu au putut fi șterse."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -518,7 +532,9 @@
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
-      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân.",
+      "bulkEraseTitle": "Ștergi definitiv înscrierile bifate?",
+      "bulkEraseBody": "Nu se poate anula. Locurile se eliberează prin lista de așteptare, iar datele participanților dispar din evidență."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
@@ -1025,6 +1041,23 @@
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
         "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
         "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge."
+      },
+      "editor": {
+        "heading": "Titlu de secțiune",
+        "paragraph": "Paragraf",
+        "link": "Link",
+        "linkUrl": "Adresa linkului",
+        "linkApply": "Pune linkul",
+        "linkRemove": "Scoate linkul",
+        "linkCancel": "Renunță",
+        "image": "Imagine",
+        "imageUrl": "Adresa imaginii (https)",
+        "imageAlt": "Ce se vede în imagine",
+        "imageApply": "Pune imaginea",
+        "imageCancel": "Renunță",
+        "imageInvalid": "Adresa trebuie să înceapă cu https://",
+        "undo": "Înapoi",
+        "redo": "Înainte"
       }
     },
     "tasks": {
@@ -1553,7 +1586,8 @@
       "page": "Pagina {n} din {total}",
       "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
       "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
-      "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat"
+      "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat",
+      "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -1948,7 +1982,9 @@
       "tooFastTitle": "Mai încearcă o dată",
       "throttledTitle": "Ai trimis deja formularul de câteva ori",
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
-      "tooFast": "Verificarea automată nu a trecut din prima — o facem ca să ținem roboții afară și uneori dă greș pentru oameni reali. Datele tale sunt toate aici: apasă din nou „Trimite înscrierea”. Dacă nici a doua oară nu merge, scrie-ne prin formularul de contact și te înscriem noi."
+      "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
+      "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
+      "tooFastResend": "Trimite din nou înscrierea"
     },
     "sections": {
       "about": "Despre tine",
@@ -2120,7 +2156,10 @@
     "emailInvalid": "Asta nu pare o adresă de email. Verifică literele și semnul @.",
     "emailSuggestion": "Ai vrut să scrii {address}?",
     "emailUseSuggestion": "Da, corectează",
-    "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție."
+    "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție.",
+    "phoneTooShort": "Continuă — un număr are cel puțin 4 cifre.",
+    "phoneValid": "Arată bine. Îl salvăm ca",
+    "botCheckWait": "Se verifică o secundă că nu ești robot — apoi poți trimite."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -2159,7 +2198,16 @@
         "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
         "Poți renunța oricând din emailul primit."
       ],
-      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă."
+      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă.",
+      "idDocumentType": "Ce act prezinți",
+      "idDocumentTypeHelp": "Alege tipul actului — apare în declarație, împreună cu seria și numărul.",
+      "typedNameHelpWithName": "Te-ai înscris ca {name} — scrie același nume. Apare ca o semnătură.",
+      "idDocumentTypes": {
+        "ID_CARD": "Carte de identitate",
+        "PASSPORT": "Pașaport",
+        "RESIDENCE_PERMIT": "Permis de ședere",
+        "OTHER": "Alt act"
+      }
     },
     "mine": {
       "title": "Înscrierile mele",
@@ -2524,5 +2572,10 @@
     },
     "emailConfirm": "Scrie adresa încă o dată *",
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
+  },
+  "Offline": {
+    "stale": "Nu am putut verifica informațiile chiar acum, așa că îți arătăm ultima versiune salvată a paginii, de la {when}. Unele detalii pot fi între timp schimbate.",
+    "capacityUnknown": "Nu putem verifica acum câte locuri mai sunt libere.",
+    "capacityRetry": "Încearcă din nou"
   }
 }

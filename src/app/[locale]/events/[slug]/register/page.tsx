@@ -4,6 +4,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import Alert from "@mui/material/Alert";
 import AlertTitle from "@mui/material/AlertTitle";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import MenuItem from "@mui/material/MenuItem";
@@ -25,6 +26,7 @@ import { confirmationWindow } from "@/modules/registrations/domain/hold-deadline
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { countryOptions } from "@/modules/registrations/countries";
 import { readFormDraft, readSubmittedAddress } from "@/modules/registrations/form-draft";
+import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { ERROR_SUMMARY_ID, parseInvalidFields } from "@/modules/registrations/form-errors";
 import { countryName } from "@/modules/registrations/names";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
@@ -52,7 +54,7 @@ import { env } from "@/shared/config/env";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ submitted?: string; error?: string; fields?: string }>;
+  searchParams: Promise<{ submitted?: string; error?: string; fields?: string; retry?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -110,6 +112,9 @@ const disclosureSx = {
  * on the one page that has to work everywhere. What actually made the page long is that a
  * third of it asks for things nobody has to answer, so those are collapsed and the rest is not.
  */
+/** The form's own id, so the refusal's button can submit it from outside (§282). */
+const REGISTRATION_FORM_ID = "registration-form";
+
 export default async function RegisterPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
@@ -135,7 +140,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
   );
   if (state !== "OPEN") notFound();
 
-  const { submitted, error, fields } = await searchParams;
+  const { submitted, error, fields, retry } = await searchParams;
   // Only meaningful on the screen that follows a successful submit (§224).
   const submittedTo = submitted ? await readSubmittedAddress() : null;
 
@@ -199,13 +204,21 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
   const draft = error ? await readFormDraft() : null;
-  const typed = (name: string, fallback?: string) => draft?.[name] ?? fallback;
+  /*
+  What was typed before a rejected submission (§142), by field name.
+
+  Named `prefill` rather than `typed`: the i18n checker reads every `t…(` call as a translation
+  lookup (`t\w*\(`), so `prefill("privacyAcknowledged")` was being counted as a missing message
+  key. It passed for years only because every name it had been given — `email`, `city` — also
+  happened to exist in the catalogue.
+*/
+  const prefill = (name: string, fallback?: string) => draft?.[name] ?? fallback;
   const field = (name: string, help?: string) => ({
     id: fieldId(name),
     name,
     error: invalid.has(name),
     helperText: invalid.has(name) ? t("errors.field") : help,
-    defaultValue: typed(name),
+    defaultValue: prefill(name),
   });
 
   // What they are signing up for, on the form itself (§102): the date, the place, and the
@@ -378,6 +391,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           */}
           {error && (
             <Alert
+              /*
+                Quieter for the anti-bot refusal (§282; the owner, of the red panel: "trebuie sa
+                fie mai subtila"). Nothing is wrong with what they typed and nothing needs
+                hunting down — a check guessed, and the next press goes through. Red is for the
+                rejections that ask somebody to change something.
+              */
+              /*
+                Red after all (§286; the owner: "asta ar trebui sa fie cu rosu"). §282 made it
+                information because nothing the person typed was wrong — but what a reader needs
+                first is that the submission did **not** go through, and blue reads as a remark.
+              */
               severity="error"
               id={ERROR_SUMMARY_ID}
               role="alert"
@@ -416,7 +440,17 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   sentence that explains what happened sat at the far end of a long form. The
                   owner: "they need visuals on this! so that they know!"
                 */
-                t("errors.tooFast")
+                /*
+                  Said in full, and with the button right here (§282; the owner: "I want clear
+                  visual feedback when people are not let through"). Three things somebody needs
+                  at this moment and had to infer: that nothing was registered, that no email is
+                  coming — the promise §217 forbids making falsely — and that pressing again will
+                  work, without scrolling back down a form of twenty fields to find the button.
+                */
+                <>
+                  {t("errors.tooFast")}
+                  <Box sx={{ mt: 0.5 }}>{t("errors.tooFastNothingSent")}</Box>
+                </>
               ) : rejected.length > 0 ? (
                 <>
                   {t("errors.fieldsIntro")}
@@ -460,7 +494,27 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           <Alert severity="info" icon={false} sx={{ mb: 2 }}>
             {event.participantListVisibility === "NAMES" ? t("privacyBannerWithList") : t("privacyBanner")}
           </Alert>
-          <form action={submitRegistrationAction}>
+          <form action={submitRegistrationAction} id={REGISTRATION_FORM_ID}>
+            {/*
+              The try after a refusal (§282). The action reads this back and lets the submission
+              through whatever the hidden trap says: a password manager refills that trap on
+              every render, so refusing twice for the same reason would loop a real person
+              forever — which is precisely how somebody gives up on entering a race.
+            */}
+            {retry === "1" && <input type="hidden" name={SECOND_ATTEMPT_FIELD} value="1" />}
+            {/*
+              The way out, **inside** the form (§282).
+
+              It was in the alert above, with `form="registration-form"`, which is valid HTML and
+              submits nothing here: a Server Action is driven by React from the form's own submit
+              handler, and a submitter outside the element never reaches it. The e2e case caught
+              it — one refusal in the server log and no second request at all.
+            */}
+            {tooFast && (
+              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, mb: 2 }}>
+                {t("errors.tooFastResend")}
+              </Button>
+            )}
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="slug" value={slug} />
@@ -547,7 +601,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   select
                   required
                   fullWidth
-                  defaultValue={typed("sex", "UNSPECIFIED")}
+                  defaultValue={prefill("sex", "UNSPECIFIED")}
                   sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
@@ -590,7 +644,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   select
                   required
                   fullWidth
-                  defaultValue={typed("nationality", "RO")}
+                  defaultValue={prefill("nationality", "RO")}
                   sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/*
@@ -652,14 +706,16 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 suggestionLabel={t.raw("emailSuggestion") as string}
                 useSuggestionLabel={t("emailUseSuggestion")}
                 help={t("emailHelp")}
-                defaultValue={typed("email")}
-                defaultConfirmValue={typed("emailConfirm")}
+                defaultValue={prefill("email")}
+                defaultConfirmValue={prefill("emailConfirm")}
                 error={invalid.has("email") || invalid.has("emailConfirm")}
                 helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
                 invalidLabel={t("phoneInvalid")}
+                tooShortLabel={t("phoneTooShort")}
+                validLabel={t("phoneValid")}
                 name="phone"
                 draft={draft ? { country: draft.phoneCountry, national: draft.phone } : undefined}
                 id={fieldId("phone")}
@@ -687,6 +743,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
                 <PhoneField
                   invalidLabel={t("phoneInvalid")}
+                  tooShortLabel={t("phoneTooShort")}
+                  validLabel={t("phoneValid")}
                   name="emergencyContactPhone"
                   draft={draft ? { country: draft.emergencyContactPhoneCountry, national: draft.emergencyContactPhone } : undefined}
                   id={fieldId("emergencyContactPhone")}
@@ -763,7 +821,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     It is a claim and it grants nothing; `DECISIONS.md` §48 says why it is not
                     checked against `staff_users`.
                   */}
-                  <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={typed("clubMemberDeclared") === "on"}>
+                  <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={prefill("clubMemberDeclared") === "on"}>
                     {t("clubMemberDeclared")}
                     {/* What the claim means, where it is claimed (§189): "grup" rather than
                         "echipă", because the club is a group somebody runs with and not a squad
@@ -775,7 +833,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {...field("tshirtSize")}
                     label={t("tshirtSize")}
                     select
-                    defaultValue={typed("tshirtSize", "NONE")}
+                    defaultValue={prefill("tshirtSize", "NONE")}
                   >
                     <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
                     {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
@@ -892,7 +950,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     autoComplete="off"
                     slotProps={{ htmlInput: { maxLength: 2000 } }}
                   />
-                  <CheckboxField id={fieldId("healthConsent")} name="healthConsent" defaultChecked={typed("healthConsent") === "on"}>
+                  <CheckboxField id={fieldId("healthConsent")} name="healthConsent" defaultChecked={prefill("healthConsent") === "on"}>
                     {`${t("healthConsent")} — ${t("optionalSuffix")}`}
                   </CheckboxField>
                 </Stack>
@@ -944,23 +1002,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   document={event.rulesJson}
                 />
               ) : (
-                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required>
+                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required defaultChecked={prefill("rulesAcknowledged") === "on"}>
                   {t("rules.plain")}{" "}
                   <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
                     {t("facts.terms")}
                   </LegalLink>
                 </CheckboxField>
               )}
-              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
+              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
                 {t("fitnessDeclared")}
               </CheckboxField>
-              <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
+              <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required defaultChecked={prefill("privacyAcknowledged") === "on"}>
                 {t("privacyPrefix")}{" "}
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
                   {t("privacyLinkLabel")}
                 </LegalLink>
               </CheckboxField>
-              <CheckboxField name="resultsNameConsent" defaultChecked={typed("resultsNameConsent") === "on"}>
+              <CheckboxField name="resultsNameConsent" defaultChecked={prefill("resultsNameConsent") === "on"}>
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
@@ -972,7 +1030,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 registered — the notice, not a pre-answered box.
               */}
               {event.participantListVisibility === "NAMES" && (
-                <CheckboxField name="listOptIn" defaultChecked={typed("listOptIn") === "on"}>
+                <CheckboxField name="listOptIn" defaultChecked={prefill("listOptIn") === "on"}>
                   {`${t("listOptIn")} — ${t("optionalSuffix")}`}
                 </CheckboxField>
               )}
@@ -997,7 +1055,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 helperText={t("preferredLocaleHelp")}
                 select
                 fullWidth
-                defaultValue={typed("preferredLocale", locale)}
+                defaultValue={prefill("preferredLocale", locale)}
               >
                 <MenuItem value="ro">{t("preferredLocaleOptions.ro")}</MenuItem>
                 <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>
@@ -1015,18 +1073,26 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   )}
                 </Box>
               )}
-              {/* Said where the press happened, in the plain second person: the form is whole, the
-                  answers are still in it, and pressing again is all there is to do (§194). */}
-              {tooFast && (
-                <Alert severity="warning">
-                  <AlertTitle>{t("errors.tooFastTitle")}</AlertTitle>
-                  {t("errors.tooFast")}
-                </Alert>
-              )}
+              {/*
+                The refusal is said **once** now (§286; the owner, of the two panels and two
+                buttons: "exista un pic de reduntanta la butoanele alea").
+
+                §194 put this copy beside the button because the summary at the top said nothing
+                useful about the anti-bot check. It does now — the title, the two sentences and a
+                button that sends the form from where the browser lands — so a second panel
+                repeating it above the submit button is the same words twice on one screen.
+              */}
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}
                 incompleteHint={t("incompleteHint")}
+                /*
+                  Only when a widget is actually on the page (§285). With no keys, or with the
+                  club's switch off, there is no token to wait for and waiting would be a button
+                  dimmed for a check that is not running.
+                */
+                awaitsBotCheck={Boolean(siteKey)}
+                botCheckHint={t("botCheckWait")}
                 size="large"
                 fullWidth
               />

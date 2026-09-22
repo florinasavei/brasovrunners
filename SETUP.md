@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -69,7 +69,7 @@ Required:
   (registered 2026-09-16) and edits its DNS; a `.ro` at a ROTLD-accredited registrar a year
   later, both kept (`DECISIONS.md` §55);
 - Cloudflare account for R2 object storage;
-- Neon account;
+- Neon account, on the Launch usage-based plan since 2026-09-22;
 - Mailgun account/domain;
 - Cloudflare R2;
 - organization password manager;
@@ -379,8 +379,22 @@ Neon production project  exists — brasov-runners-production (lively-haze-50960
                          the gated workflow run after the first release PR
 ```
 
-Free plan (checked 2026-09-16, neon.com/docs/introduction/plans): 100 projects, 0.5 GB storage and
-100 CU-hours per project per month. The second project costs nothing.
+The account moved from Free to **Launch** on 2026-09-22. The provider console shows no monthly
+minimum, up to 100 projects, 10 included branches per project, 500 GB public transfer,
+autoscaling to 16 CU and scale-to-zero after five idle minutes. Usage is $0.106 per CU-hour,
+$0.35 per GB-month of storage and $0.20 per GB-month of changes retained for Instant Restore.
+The first 1.8 CU-hours in the Sep 22–Oct 1 partial billing period cost $0.19. If 1.8 CU-hours is
+a representative day, compute is about $5.72 for 30 days; a 0.25 CU compute kept warm all month
+is about $19.08 per project. Storage and restore history are additional. Re-check the
+[official pricing](https://neon.com/pricing) before budgeting; these figures are observations,
+not a promised vendor contract.
+
+**December 2026 checkpoint, not an automatic change.** The owner may return the account to Free
+after reviewing the Launch invoices and real QA/production usage. Before changing the plan,
+re-check Neon's then-current Free limits and confirm both projects' compute, storage, branches,
+restore needs and production expectations fit them. If the owner chooses Free, update
+BR-REQ-090-07, the diagnostics constants and labels, this section and `docs/PLATFORM.md` in the
+same change; until then Launch remains the active plan.
 
 **How it was created, for the next environment.** The Neon CLI authenticates through the browser,
 and a login started from an agent's shell prints a link whose callback port is closed by the time
@@ -418,7 +432,7 @@ Checklist, walked 2026-09-16:
       reviewer and a `main`-only deployment branch policy since 2026-09-16; `qa` has neither, by
       design.
 - [ ] Backup/restore capability documented and tested before launch — Neon's own restore exists;
-      nothing has been rehearsed, and its retention on the Free plan is not recorded here.
+      nothing has been rehearsed, and the configured Launch retention window is not recorded here.
 - [x] No production clone into QA — nothing to clone yet, and no procedure does it.
 - [ ] PostgreSQL majors match — QA and production are both PostgreSQL 18 on Neon; the local
       `docker-compose.yml` image is `postgres:17.6-alpine` and PGlite runs its own. Nothing has
@@ -688,14 +702,15 @@ asks for the sender name typed exactly as it was saved, and the comma-below `ș`
 cedilla `ş` — a deactivated provider is harmless either way). The EU host, not
 `smtp.mailgun.org`: the domain lives in the EU region.
 
-**Why fifteen and not five (2026-09-18).** Neon's Free plan gives each project 100 CU-hours a
-month and *suspends the compute* when they are spent, until the next month; the compute sleeps
-after five idle minutes and cannot be told not to. A monitor every five minutes means it never
-sleeps: 0.25 CU × 24 h = 6 CU-hours a day, 180 a month, exhausted around the 17th. QA measured
-exactly that — 74 CU-hours by 18 September. At fifteen minutes the compute is awake for about
-five and a half minutes per ping, some 37% of the time, ~65 CU-hours a month plus real traffic;
-hourly on QA is ~17. `/devs` shows the figure when `NEON_API_KEY` and `NEON_PROJECT_ID` are
-set (§33). The health thresholds are thirty-five minutes, so fifteen reads `ok`.
+**Why fifteen and not five (2026-09-18; cost updated 2026-09-22).** A monitor every five minutes
+prevents the compute from sleeping: 0.25 CU × 24 h = 6 CU-hours a day, 180 a month. That used to
+exhaust Free around the 17th; on Launch it costs about $19.08 per project in a 30-day month at
+$0.106/CU-hour. QA measured the underlying problem — 74 CU-hours by 18 September. At fifteen
+minutes the compute is awake for about five and a half minutes per ping, some 37% of the time,
+~65 CU-hours or $6.89 a month plus real traffic; hourly on QA is ~17 CU-hours or $1.80. The
+cadence still saves money and lets idle computes sleep, but crossing 100 CU-hours no longer
+suspends the site. `/devs` reads the figure when `NEON_API_KEY` and `NEON_PROJECT_ID` are set
+(§33). The health thresholds are thirty-five minutes, so fifteen reads `ok`.
 
 Checklist:
 
@@ -939,8 +954,8 @@ Providers:
 - [x] Separate QA/production Vercel projects — both exist, `fra1`, separate variables, separate
       secrets, separate Git production branches (2026-09-16).
 - [x] Separate QA/production Neon projects — both exist in `aws-eu-central-1`, both migrated
-      by the gated workflow (§25). **Free plan, 100 CU-hours a month each**: the monitors must
-      run at the §26 cadences or the compute is suspended mid-month (`DECISIONS.md` §68).
+      by the gated workflow (§25), under Launch since 2026-09-22. The §26 monitor cadences keep
+      usage-based compute cost down; there is no longer a 100-CU-hour suspension.
 - [x] R2 resources — bucket `brasovrunners-media`, one account token, the five variables on
       both Vercel projects (§32, 2026-09-18).
 - [x] Mailgun production domain verified — `mail.brasovrunners.com`, EU region, DKIM 2048,
@@ -1041,10 +1056,12 @@ only worth it once the `r2.dev` address in the gallery's image URLs bothers some
 
 ## 33. Let `/devs` read the database's consumption from Neon
 
-Two minutes, optional, read-only (BR-REQ-090-07). The Free plan's 100 CU-hours a month per
-project is the one limit whose exhaustion takes the site down (§26 has the arithmetic), and the
-figure lives in Neon's console, which no organizer opens. With these two variables `/devs` shows
-it: CU-hours used against 100, hours awake against hours elapsed, and when the period ends.
+Two minutes, optional, read-only (BR-REQ-090-07). Launch bills CU-hours instead of suspending the
+project at Free's former 100-hour allowance, and the figure lives in Neon's console, which no
+organizer opens. With these two variables `/devs` reads CU-hours, active hours and the billing
+period. **Implementation gap, recorded 2026-09-22:** the current UI still says “against 100”,
+warns at 80%, calls the active plan Free, and measures storage against Free's 0.5 GB. Those are
+stale labels and thresholds, not provider limits; BR-REQ-090-07 criteria 1–2 define the follow-up.
 
 1. Neon console → your avatar → **Account settings** → **API keys** → **Create API key**, name
    `brasovrunners-devs-readonly`. Copy it once. (Neon API keys are account-wide; this one is only
@@ -1053,7 +1070,8 @@ it: CU-hours used against 100, hours awake against hours elapsed, and when the p
    or `npx neonctl projects list`.
 3. `vercel env add NEON_API_KEY production` and `vercel env add NEON_PROJECT_ID production`
    with the production project's values; the same for QA with QA's project id. Redeploy.
-4. `/devs` → "Database (Neon)" shows the figures; red past 80%. Nothing else reads the key.
+4. `/devs` → "Database (Neon)" shows the figures. Until the BR-REQ-090-07 follow-up is built,
+   disregard the obsolete 100-CU-hour denominator and 80% warning. Nothing else reads the key.
 
 **The same for Vercel, as far as Vercel allows (`DECISIONS.md` §101).** Vercel's public API
 has no usage endpoint — bandwidth and invocations are on the dashboard's Usage page only — but
@@ -1204,8 +1222,28 @@ it "Add" creates the account too and Zitadel sends the password link.
 
 1. Zitadel console → **Users → Service Accounts → New**: user name `brasovrunners-invites`,
    name "Brașov Runners — invitații", access token type **Bearer**. Create.
-2. **Organization → Members → Add**: the service account, role **Org User Manager** (it may
-   create users and send their invitation codes; nothing else).
+2. **Organization → Managers → + New**: the service account, role **Org User Manager** (it may
+   create users and send their invitation codes; nothing else). The dialog is called "Add an
+   Administrator" and it names the service user at the top; if it asks for a *Loginname*, that
+   is `brasovrunners-invites`.
+
+   **This is the step that was missed** on the club's own instance, and it cost an evening
+   (`DECISIONS.md` §288). Two traps:
+
+   - **"Role Assignments" is not this.** That page grants a user roles *inside a project* and
+     has nothing to do with managing users. A service account can sit there, Active, looking
+     perfectly configured, and still be unable to create anybody.
+   - **Nothing tells you.** Without the membership every "Add" on Echipa writes the allowlist
+     row, is refused by Zitadel, and says so in one banner that is gone at the next click. The
+     colleague then meets Zitadel's own **"User not found in the system"** at sign-in, which
+     reads like their problem rather than the club's.
+
+   To check it without inviting anybody, ask the token what it can see — 0 human users where
+   the console shows some means the membership is missing:
+
+   ```bash
+   curl -s -X POST "$AUTH_ZITADEL_ISSUER/v2/users"      -H "Authorization: Bearer $ZITADEL_MANAGEMENT_PAT"      -H "Content-Type: application/json"      -d '{"query":{"limit":50},"queries":[{"typeQuery":{"type":"TYPE_HUMAN"}}]}'
+   ```
 3. On the service account → **Personal Access Tokens → New**. Zitadel's console offers no
    expiry field here, and the token it makes does not expire — so it is a secret that has to be
    revoked by hand when it is no longer wanted, on the same screen. Copy it — shown once —

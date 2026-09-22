@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { consumeAndSignDeclaration } from "@/modules/registrations/token-actions";
@@ -17,7 +18,15 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       {
         accepted: form.get("accepted") === "on",
         typedName: String(form.get("typedName") ?? ""),
-        idDocument: String(form.get("idDocument") ?? "").trim() || undefined,
+        /*
+          The kind and the number, as one line in the declaration (§283).
+
+          Composed here rather than stored as two columns: `{{idDocument}}` is one merge field in
+          a text the club approved, and the signed PDF has to read as a sentence — "Carte de
+          identitate BV 123456". The kind is translated at this moment, in the language the
+          person is signing in, because that is the language of the document they are signing.
+        */
+        idDocument: idDocumentFrom(form, await getTranslations({ locale, namespace: "Registrations" })),
         documentId: String(form.get("documentId") ?? ""),
         contentSha256: String(form.get("contentSha256") ?? ""),
       },
@@ -38,4 +47,15 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
     }
     throw error;
   }
+}
+
+/** The chosen kind and the typed series, as the one string the declaration carries (§283). */
+function idDocumentFrom(form: FormData, t: (key: string) => string): string | undefined {
+  const series = String(form.get("idDocument") ?? "").trim();
+  if (series === "") return undefined;
+  const kind = String(form.get("idDocumentType") ?? "");
+  // An unknown kind is nobody's document: the series alone is what was true before §283, and it
+  // is better than a declaration naming a document the person did not choose.
+  const known = ["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"].includes(kind);
+  return known ? `${t(`declare.idDocumentTypes.${kind}`)} ${series}` : series;
 }

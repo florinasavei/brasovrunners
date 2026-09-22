@@ -4,6 +4,8 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { readWithLastGood } from "@/modules/resilience/last-good";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
@@ -35,10 +37,21 @@ export default async function PrivacyNoticePage({ params }: Props) {
   setRequestLocale(locale);
 
   const t = await getTranslations("Legal");
-  const document = await findCurrentApprovedDocument(getDb(), "PRIVACY_NOTICE", locale, new Date());
+  /*
+    The text in effect, with the last copy of it behind it (§281). A legal document changes a
+    handful of times a year, so a copy of one is as true as the live read in every case but the
+    hour after an approval — and a privacy notice nobody can read is worse than one that is a
+    few hours behind, which the banner says anyway.
+  */
+  const read = await readWithLastGood(`legal:PRIVACY_NOTICE:${locale}`, () =>
+    findCurrentApprovedDocument(getDb(), "PRIVACY_NOTICE", locale, new Date()),
+  );
+  const document = read.value;
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+      <LastGoodNotice read={read} />
+
       {document ? (
         <>
           <Typography variant="h1" gutterBottom>

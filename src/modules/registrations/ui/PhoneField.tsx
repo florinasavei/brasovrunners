@@ -97,6 +97,8 @@ export default function PhoneField({
   invalidLabel,
   mustDifferFromName,
   mustDifferLabel,
+  tooShortLabel,
+  validLabel,
 }: {
   name: string;
   label: string;
@@ -124,6 +126,10 @@ export default function PhoneField({
   mustDifferFromName?: string;
   /** What to say when it does equal it. */
   mustDifferLabel?: string;
+  /** "Keep going" — for a number that is only unfinished, not wrong (§282). */
+  tooShortLabel?: string;
+  /** What precedes the composed number once it is valid: "we will ring". */
+  validLabel?: string;
 }) {
   const names = new Intl.DisplayNames([locale], { type: "region" });
   const split = splitPhone(value ?? null);
@@ -193,6 +199,16 @@ export default function PhoneField({
     // Nothing to compare on the server, where neither field exists yet.
     () => null,
   );
+
+  /*
+    E.164 is fifteen digits in all, country code included (§282; Amalia: the number needs a
+    maximum and a clearer answer as it is typed). So the room left in the box depends on the
+    country chosen beside it — ten for Romania's `+40`, twelve for `+1`. Typing past it is
+    refused at the keystroke rather than at the submit, because the digit somebody has just
+    typed is the one they can still see.
+  */
+  const maxDigits = 15 - (DIALING_CODES[country]?.length ?? 2);
+  const typedDigits = national.replace(/\D/g, "").length;
 
   const mine = hydrated ? composePhone(country, national) : null;
   const sameAsOther = Boolean(mustDifferFromName && mine && otherComposed && mine === otherComposed);
@@ -290,8 +306,12 @@ export default function PhoneField({
         */
         onChange={(event) => {
           const digits = onlyDigits(event.target.value);
-          if (event.target.value !== digits) event.target.value = digits;
-          setNational(digits);
+          // The country's own ceiling, enforced where it can be seen (§282). Written to the DOM
+          // like the stripping above, so the input stays uncontrolled.
+          const plus = digits.startsWith("+") ? "+" : "";
+          const capped = plus + digits.replace(/\D/g, "").slice(0, maxDigits);
+          if (event.target.value !== capped) event.target.value = capped;
+          setNational(capped);
         }}
         onBlur={() => setTouched(true)}
         required={required}
@@ -301,8 +321,25 @@ export default function PhoneField({
         // the error summary at the top of the page is pointing at.
         inputRef={inputRef}
         error={error || liveInvalid || sameAsOther}
+        /*
+          Three answers rather than one (§282).
+
+          "Not a number this country uses" is true and unhelpful when the number is simply not
+          finished: it reads as a refusal of what they typed rather than as a count. So a number
+          that is only too short says so, and a number that *works* says so too — with the exact
+          E.164 the club will store, which is the one thing that proves the country beside it was
+          understood. A person who sees `+40712345678` knows they are done.
+        */
         helperText={
-          sameAsOther ? mustDifferLabel : liveInvalid && !error ? (invalidLabel ?? helperText) : helperText
+          sameAsOther
+            ? mustDifferLabel
+            : liveInvalid && !error
+              ? typedDigits > 0 && typedDigits < 4
+                ? (tooShortLabel ?? invalidLabel ?? helperText)
+                : (invalidLabel ?? helperText)
+              : hydrated && mine && !error
+                ? (validLabel ? `${validLabel} ${mine}` : mine)
+                : helperText
         }
         slotProps={{
           htmlInput: {
@@ -320,7 +357,9 @@ export default function PhoneField({
             */
             pattern: "[0-9+()./\\s-]{4,20}",
             minLength: 4,
-            maxLength: 20,
+            // The country's own ceiling, plus one for a leading `+`. The keystroke cap above is
+            // the real one; this is what a browser with no JavaScript still enforces.
+            maxLength: maxDigits + 1,
           },
         }}
       />

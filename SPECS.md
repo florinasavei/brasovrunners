@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1627,13 +1627,14 @@ running this for nothing, and what do we buy on the day we cannot?** That answer
 - **Implements:** AGENTS.md §9.2, §16.2
 - **Priority:** SHOULD
 - **Release:** M1 — 2026-09-18, `DECISIONS.md` §68.
-- **Status:** built.
+- **Status:** partly stale after the account moved from Free to Launch on 2026-09-22. Criteria
+  3–4 are built; criteria 1–2 require the diagnostics follow-up recorded in `DECISIONS.md` §280.
 
 **Acceptance criteria**
 
-1. Given `NEON_API_KEY` and `NEON_PROJECT_ID`, when `/devs` renders, then it shows this project's CU-hours used in the current period against the Free plan's 100, the hours the compute was awake against the hours elapsed, and the period's end — read from Neon with a five-second timeout, and a sentence rather than an error when Neon does not answer; when they are not set, it says how to set them and shows the rest of the page.
-2. Given eighty percent of the allowance used, when the figure renders, then it is shown as a warning.
-3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence in production is fifteen minutes by day and hourly by night (23:00–07:00 `Europe/Bucharest`, `jobs/quiet-hours.ts`), the health threshold is twice the cadence in force plus five minutes, and the compute sleeps between runs.
+1. Given `NEON_API_KEY` and `NEON_PROJECT_ID`, when `/devs` renders, then it shows this project's CU-hours used in the current billing period, the hours the compute was awake against the hours elapsed, the period's end, and the estimated Launch compute charge at the documented current rate — read from Neon with a five-second timeout, and a sentence rather than an error when Neon does not answer; when the variables are not set, it says how to set them and shows the rest of the page.
+2. Given the Neon row on `/devs` or `/admin/tasks`, when it renders, then it names Launch as the active plan, does not show Free's former 100 CU-hours or 0.5 GB as current ceilings, and distinguishes the estimate from the provider's invoice; storage and retained restore history are named as additional usage-based charges.
+3. Given the outbox, when a request queues a message, then that request drains the outbox once after its own response is sent, so delivery does not wait for the scheduler; the scheduler's cadence in production is fifteen minutes by day and hourly by night (23:00–07:00 `Europe/Bucharest`, `jobs/quiet-hours.ts`), the health threshold is twice the cadence in force plus five minutes, and the compute may sleep between runs. The cadence limits Launch spend and preserves queue timing; it no longer protects against a 100-CU-hour suspension.
 
 4. Given `VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID`, when `/devs` renders, then it shows this month's deployments, today's against Hobby's 100 a day, and the build minutes against Hobby's 6,000 a month, warning at eighty percent of either, summed from Vercel's deployments list across its pages; without them it says how to set them; and it says that bandwidth and invocations are not in Vercel's API and links to the dashboard's Usage page (`DECISIONS.md` §101).
 

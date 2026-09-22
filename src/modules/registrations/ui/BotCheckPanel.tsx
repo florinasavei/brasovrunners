@@ -58,6 +58,29 @@ export default async function BotCheckPanel({
         </Typography>
       )}
 
+      {/*
+        The hidden field's own switch (§282), outside the `keysPresent` gate above: the trap
+        needs no keys and no third party, so it can be switched on a deployment that has no
+        Turnstile at all. Its own sentence, because "off" means something different here — the
+        field is still rendered and still logged, and it simply stops refusing anybody.
+      */}
+      <Stack spacing={1} sx={{ mt: 2 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {t(`botCheck.honeypot.${state.honeypot ? "on" : "off"}`)}
+        </Typography>
+        <Box component="form" action={updateBotCheckAction}>
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="which" value="honeypot" />
+          <input type="hidden" name="enabled" value={state.honeypot ? "0" : "1"} />
+          <SubmitButton
+            label={t(state.honeypot ? "botCheck.honeypot.turnOff" : "botCheck.honeypot.turnOn")}
+            pendingLabel={t("botCheck.saving")}
+            color={state.honeypot ? "warning" : "primary"}
+            variant={state.honeypot ? "outlined" : "contained"}
+          />
+        </Box>
+      </Stack>
+
       {keysPresent && (
         <Stack spacing={1.5} sx={{ mt: 1.5 }}>
           {running && <Alert severity="warning" sx={{ py: 0.5 }}>{t("botCheck.warning")}</Alert>}
