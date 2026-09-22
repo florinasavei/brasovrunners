@@ -71,6 +71,12 @@ day, 30 days is 54 CU-hours or about **$5.72 compute**, before storage and resto
 always-warm projects would be $38.16. These are projections, not a fixed subscription or invoice.
 The next separate cost likely to arrive is a month of Mailgun Basic around a real race.
 
+**Review in December 2026.** Launch is not assumed permanent. The owner may return Neon to Free
+after comparing the invoices with actual use. Nothing changes automatically: at the review,
+re-check Free's current compute, storage, branch, restore and production constraints, confirm both
+projects fit, and only then make and document the plan change. Until that explicit decision,
+every operational page and estimate must treat Launch as current.
+
 **This table, the limits below it and the bump order now render on `/admin/tasks`** for an
 Administrator, as **one row per service** rather than three overlapping lists, with the email
 headroom computed from what this deployment has actually sent today (BR-REQ-090-05). This

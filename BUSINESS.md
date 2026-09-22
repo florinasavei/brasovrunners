@@ -1005,6 +1005,9 @@ money; it must not present the old 100-CU-hour allowance as a current outage thr
 appropriate while the club values low cost over a contractual availability promise. Move to a
 plan with an SLA or additional security controls only when the club decides those guarantees are
 worth their higher compute rate, not merely because a quiet database accumulated ordinary use.
+Launch may be temporary: the owner will review the actual invoices and operational need in
+December 2026 and may return the account to Free. That is a decision checkpoint, not an automatic
+downgrade; the site remains on Launch until the owner explicitly changes it.
 
 The public domain and normal DNS stay with the club's registrar, which may change. Cloudflare is used for R2 media storage and does not need to control the main site's DNS unless a later feature requires it.
 

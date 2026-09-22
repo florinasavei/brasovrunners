@@ -389,6 +389,13 @@ is about $19.08 per project. Storage and restore history are additional. Re-chec
 [official pricing](https://neon.com/pricing) before budgeting; these figures are observations,
 not a promised vendor contract.
 
+**December 2026 checkpoint, not an automatic change.** The owner may return the account to Free
+after reviewing the Launch invoices and real QA/production usage. Before changing the plan,
+re-check Neon's then-current Free limits and confirm both projects' compute, storage, branches,
+restore needs and production expectations fit them. If the owner chooses Free, update
+BR-REQ-090-07, the diagnostics constants and labels, this section and `docs/PLATFORM.md` in the
+same change; until then Launch remains the active plan.
+
 **How it was created, for the next environment.** The Neon CLI authenticates through the browser,
 and a login started from an agent's shell prints a link whose callback port is closed by the time
 anybody clicks it — run the first command in your own terminal, the rest from anywhere:
