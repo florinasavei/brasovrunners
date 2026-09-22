@@ -59,6 +59,54 @@ export function shiftScheduleItems(
 }
 
 /**
+ * The editor's rows moved with the event's date: the programme is usually on the day of the
+ * event, so when the organizer moves the start from `fromDate` to `toDate`, every row that has
+ * a date moves by the same number of calendar days — a row on the old start lands on the new
+ * one, the day before it (kit pickup) stays the day before. A row with no date, or one the
+ * browser would refuse, is left as it is; so is every row when either anchor is not a date, or
+ * the two are the same day.
+ *
+ * Calendar days on `YYYY-MM-DD` boxes, not instants: these are the form's inputs, and the
+ * clock change is the service's business when the boxes are read at save time. Pure — it takes
+ * the two dates and never reads the wall clock.
+ */
+export function shiftProgrammeDates<Row extends { date: string }>(rows: readonly Row[], fromDate: string, toDate: string): Row[] {
+  const from = calendarDay(fromDate);
+  const to = calendarDay(toDate);
+  if (from === null || to === null || from === to) return [...rows];
+  const delta = to - from;
+  return rows.map((row) => {
+    const day = calendarDay(row.date);
+    return day === null ? row : { ...row, date: isoDate(day + delta) };
+  });
+}
+
+const ISO_DATE = /^(\d{4,})-(\d{2})-(\d{2})$/;
+const DAY_MS = 86_400_000;
+
+/** A `YYYY-MM-DD` box as whole days since 1970-01-01, or null for anything else — an empty box included. */
+function calendarDay(value: string): number | null {
+  const match = ISO_DATE.exec(value);
+  if (!match) return null;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  // `Date.UTC` reads a year under 100 as 19xx — and a date box reads "0002-11-21" while the
+  // organizer is typing a year; `setUTCFullYear` reads the year as written.
+  const at = new Date(0);
+  at.setUTCFullYear(year, month - 1, day);
+  // "2026-02-30" would roll over into March; a browser never posts it, and a row carrying it
+  // is not a date to move.
+  if (at.getUTCFullYear() !== year || at.getUTCMonth() !== month - 1 || at.getUTCDate() !== day) return null;
+  return Math.round(at.getTime() / DAY_MS);
+}
+
+/** Whole days since 1970-01-01 back as a `YYYY-MM-DD` box. */
+function isoDate(day: number): string {
+  const at = new Date(day * DAY_MS);
+  const pad = (n: number, width: number) => String(n).padStart(width, "0");
+  return `${pad(at.getUTCFullYear(), 4)}-${pad(at.getUTCMonth() + 1, 2)}-${pad(at.getUTCDate(), 2)}`;
+}
+
+/**
  * "08:30 — Briefing (Cortul de start)", one line per row, for the plain places: the calendar's
  * description and the reminder. The date is written only when the programme spans days.
  */

@@ -610,7 +610,7 @@
       "bodyEmpty": "(nimic încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",
-      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat.",
+      "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat. Dacă schimbi data de început a evenimentului, datele rândurilor se mută odată cu ea, iar un rând nou pornește din ziua evenimentului.",
       "programmeRows": {
         "date": "Data",
         "time": "Ora",

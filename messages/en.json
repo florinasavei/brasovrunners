@@ -610,7 +610,7 @@
       "bodyEmpty": "(nothing yet — press to write it)",
       "scheduleHelp": "Optional, free text under the timed rows above: what does not fit a row — how the kit is collected, the cut-off rules. Shown on the event page under “Programme”, after the rows; the emails point there.",
       "programmeSection": "Programme",
-      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored.",
+      "programmeHelp": "The day by the hour, one row each: kit pickup, the briefing, the start, the cut-offs, the awards. Shown as a list on the event page, repeated in the reminder email, and each row is its own entry in the calendar file. A row left empty is ignored. If you change the event's start date, the rows' dates move with it, and a new row starts on the event's day.",
       "programmeRows": {
         "date": "Date",
         "time": "Time",
