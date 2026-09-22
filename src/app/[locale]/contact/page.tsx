@@ -28,6 +28,7 @@ import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { env } from "@/shared/config/env";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import Wordmark from "@/shared/ui/Wordmark";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { submitContactAction } from "./actions";
 
@@ -116,7 +117,15 @@ export default async function ContactPage({ params, searchParams }: Props) {
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
-      <Typography variant="h1" gutterBottom>
+      {/* The kit-face wordmark heads this page as it heads the listing and the calendar — the
+          owner, 2026-09-22: "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de
+          contact si pe cea de calendar" (`DECISIONS.md`, the wordmark on the calendar and the
+          contact page). A paragraph that is an image to assistive technology, so "Scrie-ne"
+          below stays the page's one `<h1>`; a Server Component, so the page still has one
+          client island — the button. */}
+      <Wordmark />
+
+      <Typography variant="h1" gutterBottom sx={{ mt: 1 }}>
         {t("title")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>

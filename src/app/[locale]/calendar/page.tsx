@@ -15,6 +15,7 @@ import { monthRange, parseMonth, parseYear, yearRange } from "@/modules/events/d
 import { listPublishedEventsBetween } from "@/modules/events/repository";
 import CalendarSection from "@/modules/events/ui/CalendarSection";
 import type { CalendarLayout, CalendarView } from "@/modules/events/ui/EventCalendar";
+import Wordmark from "@/shared/ui/Wordmark";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { headingRule } from "@/theme/surfaces";
 
@@ -34,8 +35,8 @@ type Props = {
  *
  * Everything the section does is unchanged (`CalendarSection`): the month or the year the
  * address names, the grid or the list, and the three doors into a reader's own calendar. The
- * query is started here and awaited nowhere in this function, so the heading and every control
- * reach the browser before the database answers (§166).
+ * query is started here and awaited nowhere in this function, so the wordmark, the heading and
+ * every control reach the browser before the database answers (§166).
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -80,7 +81,14 @@ export default async function CalendarPage({ params, searchParams }: Props) {
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
-      <Typography variant="h1" gutterBottom sx={{ ...headingRule }}>
+      {/* The kit-face wordmark heads this page as it heads the listing — the owner, 2026-09-22:
+          "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de contact si pe cea
+          de calendar" (`DECISIONS.md`, the wordmark on the calendar and the contact page). A
+          paragraph that is an image to assistive technology, so the heading below stays the
+          page's one `<h1>`; the font is the layout's, already loaded for every page. */}
+      <Wordmark />
+
+      <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
         {t("calendar.pageTitle")}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>

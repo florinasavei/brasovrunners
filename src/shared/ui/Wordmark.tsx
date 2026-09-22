@@ -3,9 +3,16 @@ import { getTranslations } from "next-intl/server";
 import { FONT, WORDMARK, WORDMARK_SIZE } from "@/theme/brand";
 
 /**
- * `BRASOV RUNNERS` in the kit face, as it is printed on the shirt. The homepage shows it above
- * the listing; nothing else does (the header carries the artwork lockup, which has its own
- * lettering).
+ * `BRASOV RUNNERS` in the kit face, as it is printed on the shirt. It heads three public pages
+ * and nothing else: the listing (the homepage, `BR-V1.32`), and since 2026-09-22 the calendar
+ * and the contact page — the owner: "trebuie sa vad acest scris frumos cu Brasov Runners si pe
+ * pagina de contact si pe cea de calendar" (`DECISIONS.md`, the wordmark on the calendar and
+ * the contact page). The header still carries the artwork lockup, which has its own lettering
+ * (§58), and an event page or a legal text is the event's or the text's, not the club's — so a
+ * fourth page is a decision, and `tests/unit/theme/wordmark.test.ts` pins the three.
+ *
+ * A page heading, not navigation: a paragraph that is an image to assistive technology, never
+ * an `<h1>`, so each page keeps its own.
  *
  * The visible text is unaccented — a logotype, not the club's name, and safe only because it is
  * pure ASCII: Facón has no Romanian characters. So the element is an image to assistive

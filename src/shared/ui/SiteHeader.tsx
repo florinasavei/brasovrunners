@@ -69,9 +69,10 @@ async function hasPublishedAlbum(locale: Locale) {
  * and the small `BRASOV RUNNERS` in the lettering the logo was drawn with. For most of
  * 2026-09-17 the kit-face wordmark sat beside it, large, so the name would read at header
  * height; the owner then moved it out of the header and onto the homepage (`shared/ui/Wordmark`),
- * where it has the room a display face wants. The header is the artwork alone again, and the
- * link's accessible name comes from the message catalogue, so assistive technology announces
- * `Brașov Runners`, spelled properly, and never the artwork.
+ * where it has the room a display face wants — and on 2026-09-22 onto the calendar and the
+ * contact page as well, as a page heading, never back into this row. The header is the artwork
+ * alone again, and the link's accessible name comes from the message catalogue, so assistive
+ * technology announces `Brașov Runners`, spelled properly, and never the artwork.
  *
  * A plain `<img>` rather than `next/image`. It is an SVG, so there is nothing for the image
  * optimizer to do, and serving one through `next/image` requires `dangerouslyAllowSVG`, which
