@@ -32,6 +32,13 @@ export type SmtpMessage = {
   to: readonly string[];
   /** The club's own copy list (`DECISIONS.md` §164): everybody on it sees everybody else, which is what a club wants. */
   cc?: readonly string[];
+  /**
+   * The club's hidden copies (2026-09-22): Nodemailer puts them on the envelope (`RCPT TO`) and
+   * writes no `Bcc` header, so nobody else on the message — the Cc'd colleagues, the visitor
+   * answering "Reply all" — learns they exist. That is the whole of what Bcc means, and the
+   * reason `mailgun-adapter.ts` does the same for the outbox's copies (§244).
+   */
+  bcc?: readonly string[];
   replyTo: SmtpAddress;
   subject: string;
   text: string;
@@ -100,6 +107,7 @@ export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
           from: message.from,
           to: [...message.to],
           ...(message.cc && message.cc.length > 0 ? { cc: [...message.cc] } : {}),
+          ...(message.bcc && message.bcc.length > 0 ? { bcc: [...message.bcc] } : {}),
           replyTo: message.replyTo,
           subject: message.subject,
           text: message.text,

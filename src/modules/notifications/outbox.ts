@@ -4,10 +4,13 @@ import {
   type EmailOutboxStatus,
   emailOutbox,
 } from "@/db/schema/email-outbox";
+import { registrations } from "@/db/schema/registrations";
 import type { Database, Transaction } from "@/db/types";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import type { EmailSender } from "@/infrastructure/email/delivery";
 import { finishJobRun, startJobRun } from "@/modules/jobs/repository";
+import { readClubNotices } from "./club-notices";
+import { isParticipantMessage, participantMessageBcc, withParticipantBcc } from "./domain/club-notices";
 import { drainOutboxAfterResponse } from "./drain";
 import {
   MAX_SEND_ATTEMPTS,
@@ -94,8 +97,9 @@ export type EnqueueEmailParams = {
  * confirmation email it does not.
  *
  * Nothing here contacts a provider, reads configuration, or renders a body. Everything this
- * function does is one INSERT in the caller's transaction, so if the caller rolls back, the
- * message was never queued.
+ * function does is one INSERT in the caller's transaction — plus, for a participant's message,
+ * the read of the club's hidden-copy list that `clubCopiesFor` describes — so if the caller
+ * rolls back, the message was never queued.
  *
  * Generic over the caller's schema, unlike this file's other functions: a registration-lifecycle
  * transaction (`modules/registrations/service.ts`) enqueues a message as one step among several
@@ -118,7 +122,7 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
       messageType: params.messageType,
       locale: params.locale,
       recipientEmail: params.recipientEmail,
-      payloadJson: params.payload,
+      payloadJson: await clubCopiesFor(tx, params),
       idempotencyKey: params.idempotencyKey,
       requestedByStaffUserId: params.requestedByStaffUserId ?? null,
       isManualResend: params.isManualResend ?? false,
@@ -133,6 +137,43 @@ export async function enqueueEmail<T extends Record<string, unknown>>(
   // transaction commits before the response does, so the drain sees the row.
   if (row) drainOutboxAfterResponse();
   return row ?? null;
+}
+
+/**
+ * The club's hidden copy of a participant's message (2026-09-22; the owner: "să putem seta și
+ * unde mai merg în BCC mailurile de înregistrare"), stamped into the row's payload here and
+ * nowhere else.
+ *
+ * *Here*, at enqueue time, because of §244's rule for the declaration's copies: the row is the
+ * record of what this message was asked to be, and a list edited tomorrow must not redirect a
+ * message already queued. The render step reads `payload.bcc` back (`render.ts`), the sender
+ * puts each address on the envelope, and outside production each faces the allowlist on its own
+ * (`infrastructure/email/delivery.ts`) — the same path the declaration archive's copies take.
+ *
+ * *One place*, rather than at the twenty call sites, because a message type added tomorrow for
+ * a participant must carry the copy without anybody remembering to add it.
+ *
+ * Two reads at most, both by primary key, and only when they can matter: the setting is read for
+ * a participant's message that has a registration behind it; the registration's `kind` only when
+ * the list is not empty. A message with no registration — the "my registrations" link, a row a
+ * test enqueues by hand — carries no copy: without a registration nothing says whether the
+ * person is real, and a synthetic runner's mail must reach no club mailbox (§12.6). A `TEST`
+ * registration's message carries none for the same reason.
+ */
+async function clubCopiesFor<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  params: EnqueueEmailParams,
+): Promise<Record<string, unknown>> {
+  if (!params.registrationId || !isParticipantMessage(params.messageType)) return params.payload;
+  const bcc = participantMessageBcc(await readClubNotices(tx));
+  if (bcc.length === 0) return params.payload;
+  const [registration] = await tx
+    .select({ kind: registrations.kind })
+    .from(registrations)
+    .where(eq(registrations.id, params.registrationId))
+    .limit(1);
+  if (registration?.kind !== "REAL") return params.payload;
+  return withParticipantBcc(params.payload, params.recipientEmail, bcc);
 }
 
 /**

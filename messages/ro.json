@@ -1707,7 +1707,8 @@
       },
       "clubNotices": {
         "title": "Copiile clubului",
-        "intro": "Cine primește, la club, copia unei declarații semnate și cine află când cineva își confirmă înscrierea. Adrese ale clubului, nu ale participanților.",
+        "intro": "Cine primește, la club, copia unei declarații semnate, cine află când cineva își confirmă înscrierea și cine primește o copie ascunsă a emailurilor către participanți. Adrese ale clubului, nu ale participanților.",
+        "participantsInForce": "Copie ascunsă la emailurile către participanți: {bcc}.",
         "source": {
           "setting": "În vigoare: declarațiile merg la {to}; copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
           "environment": "În vigoare: declarațiile merg la {to}, adresa din configurarea serverului (DECLARATIONS_ARCHIVE_TO), fiindcă mai jos nu e nicio adresă. Copii vizibile (Cc): {cc}; copii ascunse (Bcc): {bcc}.",
@@ -1723,6 +1724,8 @@
         "bccWarning": "Declarația conține numele participantului și actul de identitate declarat la semnare. O copie ascunsă trimite aceste date personale către o cutie poștală pe care nimeni din mesaj nu o vede. Folosește-o doar dacă e o decizie a clubului.",
         "confirmationsTo": "Anunță-ne când cineva confirmă",
         "confirmationsToHelp": "Adrese separate prin virgulă. Fiecare primește un mesaj scurt la fiecare confirmare — cine, la ce eveniment și cu ce număr. Fiecare adresă consumă câte un mesaj din plafonul Mailgun.",
+        "participantsBcc": "Copie ascunsă la emailurile către participanți (Bcc)",
+        "participantsBccHelp": "Adrese separate prin virgulă. Fiecare primește, fără să apară în mesaj, o copie a fiecărui email trimis unui participant real — verificarea adresei, declarația, confirmarea cu codul QR, reminderul, numărul dat de mână. Costă: fiecare adresă consumă câte un mesaj în plus din plafonul Mailgun la fiecare email către participant. Niciodată pentru înscrierile de test.",
         "save": "Salvează",
         "readOnly": "Cine primește copiile clubului stabilește Administratorul; tu vezi listele în vigoare.",
         "saving": "Se salvează…",
@@ -1783,14 +1786,17 @@
         "saving": "Se salvează…",
         "saved": "Planul a fost salvat; cifrele de mai sus și de pe /admin/tasks îl folosesc de acum.",
         "unlimited": "fără limită",
-        "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită."
+        "shared": "Cele 100 de mesaje pe zi sunt ale unui singur cont Mailgun, folosit și de QA, și de producție: ce trimite unul scade din ce mai poate trimite celălalt. Cifrele de mai sus sunt numărate din mesajele acestui mediu; limita e a clubului, împărțită.",
+        "forecast": "O înscriere dusă până la confirmare costă circa {count} mesaje; din ce a mai rămas mai încap circa {left} înscrieri.",
+        "forecastUnlimited": "O înscriere dusă până la confirmare costă circa {count} mesaje.",
+        "forecastBcc": "Din ele, {extra} sunt copiile ascunse ({bcc} adrese la fiecare email către participant), setate la „Copiile clubului”."
       },
       "contacts": {
         "title": "Cine primește mesajele de contact",
-        "intro": "Mesajele de pe „Scrie-ne” pleacă prin contul Google al clubului, nu prin Mailgun, și nu consumă din cele 100 pe zi. Aici scrii cine le primește: „Către” sunt destinatarii, „Copie (Cc)” sunt cei care primesc o copie și se văd unul pe altul. Se salvează aici, fără redeploy.",
+        "intro": "Mesajele de pe „Scrie-ne” pleacă prin contul Google al clubului, nu prin Mailgun, și nu consumă din cele 100 pe zi. Aici scrii cine le primește: „Către” sunt destinatarii, „Copie (Cc)” sunt cei care primesc o copie și se văd unul pe altul, „Copie ascunsă (Bcc)” primesc o copie fără să apară în mesaj. Se salvează aici, fără redeploy.",
         "source": {
-          "setting": "Acum ajung la: {to}. Copie: {cc}. Scrise aici, în aplicație.",
-          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}.",
+          "setting": "Acum ajung la: {to}. Copie: {cc}. Copie ascunsă: {bcc}. Scrise aici, în aplicație.",
+          "environment": "Acum ajung la: {to} — din variabila CONTACT_FORM_TO de pe server, pentru că lista de mai jos e goală. Copie: {cc}. Copie ascunsă: {bcc}.",
           "none": "Nu le primește nimeni: pagina „Scrie-ne” arată adresa clubului în loc de formular. Scrie cel puțin o adresă la „Către”."
         },
         "updatedAt": "Setat la {when}.",
@@ -1798,6 +1804,8 @@
         "toHelp": "Cine primește mesajul. Gol înseamnă că se folosește CONTACT_FORM_TO de pe server.",
         "cc": "Copie – Cc (adrese despărțite prin virgulă)",
         "ccHelp": "Primesc o copie la fiecare mesaj trimis din formular, pe „Cc”, deci se văd unul pe altul. Gol înseamnă fără copii.",
+        "bcc": "Copie ascunsă – Bcc (adrese despărțite prin virgulă)",
+        "bccHelp": "Primesc o copie la fiecare mesaj trimis din formular, fără să apară în el: nici vizitatorul, nici cei de la „Către” și „Cc” nu îi văd. O adresă scrisă și la „Către” sau „Cc” primește un singur mesaj. Gol înseamnă fără copii ascunse.",
         "save": "Salvează destinatarii",
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",

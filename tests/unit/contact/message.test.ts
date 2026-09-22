@@ -50,6 +50,21 @@ describe("BR-REQ-070-04 the message the club receives", () => {
     expect(renderContactMessage(INPUT, { ...ROUTE, cc: [] }).cc).toBeUndefined();
   });
 
+  it("carries the club's hidden copies as a Bcc, one line each, and none when there are none (2026-09-22)", () => {
+    const hidden = renderContactMessage(INPUT, { ...ROUTE, cc: ["amalia@example.org"], bcc: ["arhiva@example.org", "presedinte@example.org"] });
+    expect(hidden.to).toEqual(["club@example.com", "colleague@example.org"]);
+    expect(hidden.cc).toEqual(["amalia@example.org"]);
+    // A separate field, so the transport puts them on the envelope and in no header: that is
+    // what makes them hidden from the visitor and from the Cc'd colleagues alike.
+    expect(hidden.bcc).toEqual(["arhiva@example.org", "presedinte@example.org"]);
+    expect(hidden.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
+    // The same header rule as the visible lists: one line, whatever the box allowed.
+    expect(renderContactMessage(INPUT, { ...ROUTE, bcc: ["a@example.org\r\nCc: x@example.com"] }).bcc).toEqual(["a@example.org Cc: x@example.com"]);
+    // No list, no field — not an empty one.
+    expect(renderContactMessage(INPUT, ROUTE).bcc).toBeUndefined();
+    expect(renderContactMessage(INPUT, { ...ROUTE, bcc: [] }).bcc).toBeUndefined();
+  });
+
   it("marks the subject on QA and nowhere else (AGENTS.md §16.4)", () => {
     expect(renderContactMessage(INPUT, { ...ROUTE, appEnv: "qa" }).subject).toBe(`${QA_SUBJECT_PREFIX}Mesaj de pe site: Ana Popescu`);
     expect(renderContactMessage(INPUT, { ...ROUTE, appEnv: "local" }).subject).toBe("Mesaj de pe site: Ana Popescu");

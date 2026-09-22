@@ -86,8 +86,8 @@ export async function updateClubNotices<T extends Record<string, unknown>>(
       // Who was added or removed from a list that receives declarations is exactly what an
       // audit trail is for; the addresses are the club's own mailboxes, not a participant's.
       metadata: {
-        from: { declarations: before.declarations, confirmations: before.confirmations },
-        to: { declarations: next.declarations, confirmations: next.confirmations },
+        from: { declarations: before.declarations, confirmations: before.confirmations, participants: before.participants },
+        to: { declarations: next.declarations, confirmations: next.confirmations, participants: next.participants },
       },
       now,
     });
