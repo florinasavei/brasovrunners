@@ -11505,3 +11505,34 @@ Tests: `tests/integration/events/publication.test.ts` — finished only, newest 
 more rows than asked for.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 268. Decided — which language a message is previewed in is a tab, and the tab row has no bare words (2026-09-22)
+
+**Context.** Two things the owner saw on one screen this morning. On `/admin/emails`, "Română
+English" under the intro: two underlined words in a row, the current one told apart by being
+bold. "These need to be tabs." And on the backoffice tab row itself, "Emailuri" was the one
+entry with no glyph in a row of eleven, and the registration count sat in the label in the same
+ink as the word — "I am missing the icons for the email … for the registries I need a different
+color for the number".
+
+**Decision.** *The language switch is `SubNav`*, the row §265 already uses for a panel switch
+inside a section. Two of them now exist for the same job, so there is one control for "which
+view of this page am I looking at" rather than a different one per screen. It stays anchors
+rendered on the server, so the preview still works with JavaScript off, and the current tab is
+`aria-current="page"` rather than bold alone — colour or weight by itself is the signal
+BR-REQ-041-01 refuses.
+
+*The icon record is keyed by `AdminSection`.* The missing glyph was not an oversight anybody
+could have caught by reading: `Record<string, …>` accepts a table with a section missing, and
+the tab then renders as a plain word. Keying it by the union makes the next section added
+without a glyph a build failure. Eleven glyphs, one file each, as before.
+
+*The count is the club's secondary colour on a filled pill*, inside the label rather than a
+`<Badge>` — §255's reasoning stands, because a badge is positioned over the tab's own underline
+at 320 pixels. Orange under dark ink is the one accent pair `theme.ts` keeps identical in both
+schemes, so the pill needs no dark variant and clears AA on either.
+
+**Consequences.** `AdminTabs.tsx` (the `AdminSection` key, `ForwardToInboxIcon`, the pill),
+`admin/emails/page.tsx` (`SubNav` in place of the two `Link`s).
+
+Baseline `BR-V1.43-2026-09-21`.

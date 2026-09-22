@@ -6,8 +6,9 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
-import { Link } from "@/i18n/navigation";
+import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import SubNav from "@/shared/ui/SubNav";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import { buildTemplateContent, renderBilingual, type TemplateData } from "@/modules/notifications/templates";
 import { getDb } from "@/db/client";
@@ -87,6 +88,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   const resolvedRecipients = resolveContactRecipients(recipients, env.CONTACT_FORM_TO);
 
   const t = await getTranslations("Admin");
+  const emailsPath = getPathname({ locale, href: "/admin/emails" });
   const tRo = emailLocale === "ro";
   const sample: TemplateData = {
     participantName: tRo ? "Ana Popescu" : "Ana Popescu",
@@ -152,18 +154,23 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
         <Typography color="text.secondary" sx={{ mt: 0.5 }}>
           {t("emails.intro")}
         </Typography>
-        <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-          {routing.locales.map((candidate) => (
-            <Link
-              key={candidate}
-              href={{ pathname: "/admin/emails", query: { lang: candidate } }}
-              style={{ fontWeight: candidate === emailLocale ? 700 : 400, minHeight: 44, display: "inline-flex", alignItems: "center" }}
-              aria-current={candidate === emailLocale ? "true" : undefined}
-            >
-              {t(`emails.lang.${candidate}`)}
-            </Link>
-          ))}
-        </Stack>
+        {/*
+          Which language is previewed, as sub-tabs rather than two links (the owner, 2026-09-22:
+          "these need to be tabs"). Two underlined words in a row read as prose — "Română
+          English" — and the one that was current was distinguished by weight alone, which is
+          the signal BR-REQ-041-01 says may not stand on its own. `SubNav` is the row §265
+          already uses for a panel switch inside a section, so this is the same control the
+          configuration screens carry, and it stays a plain anchor rendered on the server.
+        */}
+        <Box sx={{ mt: 1.5 }}>
+          <SubNav
+            items={routing.locales.map((candidate) => ({
+              href: `${emailsPath}?lang=${candidate}`,
+              label: t(`emails.lang.${candidate}`),
+              active: candidate === emailLocale,
+            }))}
+          />
+        </Box>
       </Box>
 
       {types.map((messageType) => {

@@ -1,13 +1,16 @@
 "use client";
 
+import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { usePathname } from "next/navigation";
+import type { AdminSection } from "../domain/roles";
 import { useEffect, useRef } from "react";
 import ArticleIcon from "@mui/icons-material/Article";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import EventIcon from "@mui/icons-material/Event";
+import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GavelIcon from "@mui/icons-material/Gavel";
 import GroupIcon from "@mui/icons-material/Group";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
@@ -18,16 +21,21 @@ import SettingsIcon from "@mui/icons-material/Settings";
 export type AdminTab = {
   href: string;
   label: string;
-  section: string;
+  section: AdminSection;
   /** A figure beside the label — how many are signed up, on "Înscrieri" (§255). */
   count?: number | null;
 };
 
 /**
  * One icon per section (the owner, 2026-09-18: "icons for each tab"), from the icon package
- * MUI ships — imported one file each, so the bundle carries ten glyphs and not the set.
+ * MUI ships — imported one file each, so the bundle carries eleven glyphs and not the set.
+ *
+ * Every section in `AdminSection` needs a row here, and `emails` had none: a missing key is
+ * not a type error, because the record is keyed by `string`, so the tab simply rendered as the
+ * one bare word in a row of glyphs (the owner, 2026-09-22: "I am missing the icons for the
+ * email"). Widening the key to `AdminSection` is what makes the next omission a build failure.
  */
-const ICONS: Record<string, typeof EventIcon> = {
+const ICONS: Record<AdminSection, typeof EventIcon> = {
   events: EventIcon,
   checkin: EmojiEventsIcon,
   guide: MenuBookIcon,
@@ -36,6 +44,7 @@ const ICONS: Record<string, typeof EventIcon> = {
   registrations: HowToRegIcon,
   tasks: ChecklistIcon,
   legal: GavelIcon,
+  emails: ForwardToInboxIcon,
   staff: GroupIcon,
   devs: SettingsIcon,
 };
@@ -112,7 +121,36 @@ export default function AdminTabs({ items }: { items: readonly AdminTab[] }) {
               and this figure is read rather than noticed — "Înscrieri 42" is what somebody
               wants to see.
             */
-            label={typeof item.count === "number" ? `${item.label} ${item.count}` : item.label}
+            label={
+              typeof item.count === "number" ? (
+                <>
+                  {item.label}{" "}
+                  {/*
+                    The figure in the club's secondary colour, as a filled pill: at a glance the
+                    tab says how many are signed up without the number reading as part of the
+                    word (the owner, 2026-09-22). Orange under dark ink is the one accent pair
+                    `theme.ts` keeps identical in both schemes, so this needs no dark variant.
+                  */}
+                  <Box
+                    component="span"
+                    sx={{
+                      bgcolor: "secondary.main",
+                      color: "secondary.contrastText",
+                      borderRadius: 5,
+                      px: 0.75,
+                      ml: 0.25,
+                      fontWeight: 700,
+                      fontSize: "0.75rem",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {item.count}
+                  </Box>
+                </>
+              ) : (
+                item.label
+              )
+            }
             icon={Icon ? <Icon fontSize="small" /> : undefined}
             iconPosition="start"
             component="a"
