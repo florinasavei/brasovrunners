@@ -11752,3 +11752,48 @@ this changes.
 message key in each catalogue, the labels helper.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 274. Decided — the editor's toolbar is shorter, the table's verbs sit over the table, and three glyphs earn their place (2026-09-22)
+
+**Context.** The owner, an hour after §273 reached QA: "I am not too satisfied in the editor, the
+preview icon should [be] last and it should actually have an eye icon; the pictures inside the
+editor should have borders so I know how they wrap; the tables icons should appear above the
+table, I have way too many icons now; and the alignment icons for the text should resemble
+microsoft word." Four complaints, all about the same thing: the toolbar had grown to twenty
+buttons and said too little about each.
+
+**Decision.**
+
+*The table's six verbs leave the toolbar and appear over the table.* They only ever apply inside
+one, and they were being read by somebody writing a paragraph. A bubble menu keyed on
+`isActive("table")` puts them where the table is and takes them out of the row entirely — the
+toolbar is eighteen controls now, and six of those are conditional on nothing.
+
+*Three glyphs, and only three.* The rule has been "words, not icons" since the picture emoji
+rendered as a broken box on the owner's machine, and it still holds for verbs whose names are
+the clearest thing about them. The exception it was always going to have is the one the owner
+named: the three alignments are the same picture in every editor anybody has used, and "S", "C",
+"D" are three letters to decode. The eye is the fourth, for the same reason. They come from
+`@mui/icons-material`, which the backoffice already imports for its tab row, and only the
+backoffice loads this file — no public page pays for them.
+
+*The preview is last.* It is about the whole body rather than about the caret, so it does not
+belong among the verbs that change text.
+
+*A picture shows its own edges while writing.* A photograph with a pale sky ends somewhere the
+eye cannot find, and where it ends is exactly the question when it is floated and the paragraphs
+run beside it. The same dashed hairline a table's cells wear (§271), as an `outline` so nothing
+shifts when a picture is resized or moved to the other side, and on the crop window too — a
+cropped picture is the one whose boundary is hardest to guess.
+
+**And the defect this batch shipped, which is the part worth keeping.** §272's `specialCard` was
+written as `backgroundImage: (theme) => …`, MUI's own documented `sx` callback. It is a
+*function*, the object is spread into the `sx` of MUI's `Card` from a **Server** Component, and
+React refuses to serialize a function across that boundary (`AGENTS.md` §14.1). Every card on the
+listing threw; the page still answered 200, so nothing was red — the owner saw it as "ENV-ul de QA
+e picat". The colour is `var(--mui-palette-secondary-main)` inside a `color-mix` now: a string,
+which crosses any boundary, and still one value per scheme.
+`tests/unit/theme/surfaces.test.ts` walks every export of that module at any depth and fails on
+a function, because the same mistake is available to every future surface written there.
+
+Baseline `BR-V1.43-2026-09-21`.
