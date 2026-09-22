@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { bodyToText } from "../domain/body-text";
+import LegalBodyEditor from "./LegalBodyEditor";
 import TokenLegend from "./TokenLegend";
 import type { LegalDocumentBody } from "../domain/content-hash";
 
@@ -25,10 +26,11 @@ export type LegalDocumentFormValues = {
  * can be approved (BR-REQ-040-02 forbids falling back to the other), and a form that lets
  * somebody finish one and leave is a form that produces half a document.
  *
- * A textarea, not a rich-text editor. The Tiptap body contract is M5, and pulling it forward to
- * type a privacy notice would decide that schema for the wrong reason. The format is the one
- * everybody already knows: a blank line between paragraphs, `## ` for a heading. `body-text.ts`
- * converts, and round-trips, so nothing an organizer typed is reshaped behind their back.
+ * The body is written in `LegalBodyEditor` — what the club sees is what the page and the signed
+ * PDF will show (§279) — and it posts the same plain text the textarea posted, under the same
+ * field name: `## ` for a heading, a blank line between paragraphs, `[words](url)` for a link.
+ * The stored shape, the content hash and the action are untouched, which is what makes the
+ * already-approved texts on production safe to open in it.
  */
 export default async function LegalDocumentForm({
   action,
@@ -95,15 +97,29 @@ export default async function LegalDocumentForm({
                 defaultValue={values?.[locale].title ?? ""}
               />
               {/* The declaration's merge fields (§95): named here, filled in per person and event. */}
-              <TextField
+              <LegalBodyEditor
                 name={`${locale}Body`}
                 label={t("bodyField")}
-                helperText={`${t("bodyHelp")} ${t("tokensHelp")}`}
-                required
-                multiline
-                minRows={12}
-                defaultValue={values ? bodyToText(values[locale].body) : ""}
-                slotProps={{ htmlInput: { style: { fontFamily: "monospace", fontSize: "0.875rem" } } }}
+                accessibleSuffix={locale.toUpperCase()}
+                help={`${t("bodyHelp")} ${t("tokensHelp")}`}
+                initialText={values ? bodyToText(values[locale].body) : ""}
+                labels={{
+                  heading: t("editor.heading"),
+                  paragraph: t("editor.paragraph"),
+                  link: t("editor.link"),
+                  linkUrl: t("editor.linkUrl"),
+                  linkApply: t("editor.linkApply"),
+                  linkRemove: t("editor.linkRemove"),
+                  linkCancel: t("editor.linkCancel"),
+                  image: t("editor.image"),
+                  imageUrl: t("editor.imageUrl"),
+                  imageAlt: t("editor.imageAlt"),
+                  imageApply: t("editor.imageApply"),
+                  imageCancel: t("editor.imageCancel"),
+                  imageInvalid: t("editor.imageInvalid"),
+                  undo: t("editor.undo"),
+                  redo: t("editor.redo"),
+                }}
               />
             </Stack>
           </Paper>

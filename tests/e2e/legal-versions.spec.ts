@@ -1,5 +1,17 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./support/featured-event";
+
+/**
+ * The body is written in the editor (§279), so a spec types into it as a person does: `## ` at
+ * the start of a line becomes a heading and a blank line starts a paragraph, exactly as they do
+ * for whoever is writing the club's privacy notice. The hidden field beside it — the one the
+ * Server Action reads — is what the assertions look at.
+ */
+async function writeBody(page: Page, index: number, text: string): Promise<void> {
+  const editor = page.locator(".tiptap").nth(index);
+  await editor.click();
+  await page.keyboard.type(text);
+}
 
 /**
  * BR-REQ-053-02 — "editing" an approved legal version means starting the next version from it,
@@ -32,9 +44,9 @@ test.describe("legal documents: a Superadministrator can create the first versio
       .click();
 
     await page.locator('[name="roTitle"]').fill(`Document ${suffix}`);
-    await page.locator('[name="roBody"]').fill("## Secțiunea 1\n\nUn paragraf de probă.");
+    await writeBody(page, 0, "## Secțiunea 1\n\nUn paragraf de probă.");
     await page.locator('[name="enTitle"]').fill(`Document ${suffix}`);
-    await page.locator('[name="enBody"]').fill("## Section 1\n\nA test paragraph.");
+    await writeBody(page, 1, "## Section 1\n\nA test paragraph.");
     await page.getByRole("button", { name: "Salvează ciorna" }).click();
 
     // Straight to the new draft, read-before-approve, with the version and the key named.
@@ -84,8 +96,10 @@ test.describe("legal documents: the next version starts from the current one", (
     await expect(page.getByText(/Precompletat din versiunea \d+/)).toBeVisible();
 
     // Prefilled: both bodies already carry the current text — the whole point of the button.
-    await expect(page.locator('textarea[name="roBody"]')).not.toHaveValue("");
-    await expect(page.locator('textarea[name="enBody"]')).not.toHaveValue("");
+    await expect(page.locator('input[name="roBody"]')).not.toHaveValue("");
+    await expect(page.locator('input[name="enBody"]')).not.toHaveValue("");
+    // And it is a document on the screen, not a box of markup: the stored headings are headings.
+    await expect(page.locator(".tiptap h2").first()).toBeVisible();
   });
 });
 

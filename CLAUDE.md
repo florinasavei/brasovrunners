@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.44-2026-09-22 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V1.43-2026-09-21`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V1.44-2026-09-22`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -208,7 +208,7 @@ sections and in `CHANGELOG.md`.
 - Production on the club's `.com`, QA on `qa.`, each a Vercel project over its own Neon
   project; releases are the `qa → main` PR; the gated migration workflow (§31) and the build
   that waits for it (§62); `/api/health` and `yarn smoke` (§31, §98). Monitors on cron-job.org,
-  fifteen minutes by day and hourly at night, because Neon's free month is 100 CU-hours (§68).
+  fifteen minutes by day and hourly at night, because idle compute is billed on Neon Launch (§280).
   Mailgun live on `mail.<domain>`; `contact@` forwards to the club's Gmail (`SETUP.md` §35).
 - Guards: token validation keyed on the hash, throttled job endpoints, the resend oracle rule
   (§39, `AGENTS.md` §19.4); the pool's `statement_timeout` and
@@ -286,7 +286,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated: production on `0054`, QA on `0056` (2026-09-22), and `0057_bib_printed` comes with the next release; the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated: production on `0054`, QA on `0056` (2026-09-22), and `0057_bib_printed` comes with the next release; the gated `migrate.yml` run on a push to `main` is the only way production migrates. Launch since 2026-09-22; diagnostics still need the Free-label follow-up — `DECISIONS.md` §280 |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
 | Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |

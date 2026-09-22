@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.44-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.44-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -11908,5 +11908,83 @@ last run only. So the rule §270 wanted is kept whole, at the level it is actual
 *What was rejected: trimming nothing.* A paragraph beginning with a stray space the club typed
 in the editor would then reach an inbox with it, and the plain-text half — built from the whole
 line — would disagree with the HTML one.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 280. Decided — Neon Launch is the current plan; watch money, not Free's old cutoff (2026-09-22)
+
+**Context.** The owner supplied the Neon billing console on 2026-09-22. It names **Launch** as
+the active plan and the partial billing period Sep 22–Oct 1. At that moment 1.8 compute hours
+cost $0.19. The same panel names 100 projects, 10 branches per project, 500 GB public network
+transfer, autoscaling to 16 CU, scale-to-zero after five minutes, storage at $0.35/GB-month and
+Instant Restore at $0.20/GB-month. Neon's official pricing announcement gives Launch compute as
+$0.106/CU-hour; 1.8 × 0.106 = $0.1908, which reconciles the console rather than guessing from it.
+
+**Decision.** The Neon account containing the separate QA and production projects is documented
+as Launch from this date. It is usage-based with no monthly minimum. At the observed pace of
+1.8 CU-hours a day, a 30-day month is 54 CU-hours and **$5.72 compute**. A 0.25 CU compute kept
+awake for all 720 hours is 180 CU-hours and **$19.08 per project**; two such projects are $38.16.
+Storage and retained restore changes are additional, so each number is an estimate rather than
+an invoice or a fixed subscription.
+
+The scheduler stays at fifteen minutes by day and hourly at night. §68 chose that cadence to
+avoid Free's 100-CU-hour suspension; Launch removes the suspension but not the waste. A five-minute
+ping still keeps a quiet database awake and now turns the same 180 CU-hours into a bill. The
+cadence is therefore cost control and still leaves room for the outbox and waiting-list deadlines.
+
+Launch fits M1: the two projects, branch count, transfer and autoscaling headroom exceed the
+club's present needs. It has no SLA. Scale is considered when the club needs its 99.95% SLA or
+additional security/compliance controls, not because Launch accumulated ordinary usage.
+
+**The code did not change in this documentation task.** `diagnostics/neon.ts` still divides by
+Free's 100 CU-hours; `database-size.ts` still measures against Free's 0.5 GB; and
+`platform-plans.ts` still says the current plan is Free and Launch is next. BR-REQ-090-07 now
+states the follow-up: name Launch, show an estimated charge, remove both former ceilings and
+distinguish the estimate from Neon's invoice. Until then those UI labels are stale, not evidence
+of the provider plan.
+
+**Synchronized documents.** `README.md`, BR-BUS-101, BR-REQ-090-07, `AGENTS.md` §§3.1, 7 and
+16.2, `SETUP.md` §§2, 25, 26 and 33, `docs/PLATFORM.md`, `CLAUDE.md`, `MANIFEST.txt`, and this
+history. Pricing was verified against the owner-supplied console and Neon's official pricing and
+SLA pages on 2026-09-22; it must be re-checked before another plan decision.
+
+Baseline `BR-V1.44-2026-09-22`.
+
+## 279. Decided — a legal document is written in an editor, and stores exactly what it stored before (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "this declaration must be WYSIWYG". `/admin/legal` was the
+last screen in the backoffice still writing into a monospace textarea, in a format the club had
+to learn — `## ` for a heading, a blank line between paragraphs, square brackets round the words
+and the address in the parentheses after them for a link —
+to write the three texts that carry the most trust in the product.
+
+**The constraint that shaped it.** `body_json` is `{ sections: [{ heading?, paragraphs }] }`, and
+that is not merely a storage detail: it is what `content-hash.ts` hashes, what an approval points
+at, what `merge-fields.ts` fills per participant and event, and what `pdf.ts` draws into the
+declaration somebody signs. The club's terms, privacy notice and declaration are **approved on
+production against those exact bytes**. A rich-text body would have moved the hash of documents
+already in effect.
+
+**Decision.** *The editor is a view over the stored text, not a new storage format.*
+`LegalBodyEditor` opens the stored text as a document, and posts the same plain text back under
+the same field name. `actions.ts`, the validation, the hash, the public page and the PDF are all
+untouched, and a version approved before this existed opens and saves byte for byte identically —
+which `editor-doc.test.ts` asserts against all three of the platform's templates in both
+languages, by comparing the content hash either side of a round trip.
+
+*The toolbar offers exactly what the format can store*: a heading, a paragraph, a line break, a
+link and a picture. **Bold, italic and lists are deliberately missing.** The body has nowhere to
+put them, so a button for them would produce formatting the save drops without saying so — and on
+a document somebody signs, "what you saw is not what it says" is the one failure that matters.
+
+*Its own island rather than the pages' editor.* `RichTextEditor` writes Tiptap JSON and is sixteen
+hundred lines of toolbar built for a page; threading a second serializer and a second allowlist
+through it would make both harder to read than two files that each do one thing (`AGENTS.md` §1.5,
+rules 2 and 3). The two share Tiptap, which is already installed — no dependency was added.
+
+*What was rejected: real rich text, with marks and lists.* It was offered and declined for now.
+It changes the stored shape, the hash's input, the public renderer and the PDF, and it needs a
+compatibility path for the three approved versions — a month before registrations open for
+21 November, on the documents a registration is refused without.
 
 Baseline `BR-V1.43-2026-09-21`.

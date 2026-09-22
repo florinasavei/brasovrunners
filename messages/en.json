@@ -1025,6 +1025,23 @@
         "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
         "blockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version. What people accepted stays.",
         "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted."
+      },
+      "editor": {
+        "heading": "Section heading",
+        "paragraph": "Paragraph",
+        "link": "Link",
+        "linkUrl": "Link address",
+        "linkApply": "Apply link",
+        "linkRemove": "Remove link",
+        "linkCancel": "Cancel",
+        "image": "Picture",
+        "imageUrl": "Picture address (https)",
+        "imageAlt": "What the picture shows",
+        "imageApply": "Insert picture",
+        "imageCancel": "Cancel",
+        "imageInvalid": "The address must start with https://",
+        "undo": "Undo",
+        "redo": "Redo"
       }
     },
     "tasks": {

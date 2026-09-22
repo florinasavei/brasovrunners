@@ -1,6 +1,6 @@
 Brașov Runners repository handoff
 Repository: https://github.com/florinasavei/brasovrunners
-Baseline: BR-V1.43-2026-09-21
+Baseline: BR-V1.44-2026-09-22
 
 Authoritative/current root documentation:
 - README.md      Entry point
@@ -21,8 +21,9 @@ What remains is account creation and DevOps, not application code: DNS for the c
 (bought 2026-09-16; a .ro follows a year later, both kept), a Mailgun sending domain verified on
 it, a production Zitadel application, the first release PR, and the club's approved privacy
 notice, terms and declaration text. The production Vercel and Neon projects exist, track main,
-and have never served a request. WEEKEND.md records the narrower pilot this replaced. Agents start at
-CLAUDE.md.
+and have never served a request. The Neon account moved to the usage-based Launch plan on
+2026-09-22; the diagnostics still need their old Free-plan labels removed (DECISIONS.md §280).
+WEEKEND.md records the narrower pilot this replaced. Agents start at CLAUDE.md.
 
 Supporting files:
 - docs/PRACTICES.md                    practice guides: code priorities, delivery, mobile,
