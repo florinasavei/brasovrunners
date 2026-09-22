@@ -281,7 +281,8 @@
       "gallery": "Gallery",
       "checkin": "Race day",
       "emails": "Emails",
-      "guide": "Guide"
+      "guide": "Guide",
+      "registeredHint": "How many are signed up across every event still to come"
     },
     "outbox": {
       "status": {
@@ -455,7 +456,11 @@
       "eraseTypeNameHelp": "Type “{name}” exactly, so we know this is the row you meant. Capitals and diacritics do not matter.",
       "eraseAction": "Erase permanently",
       "erasePending": "Erasing…",
-      "filtersInUse": "filters on"
+      "filtersInUse": "filters on",
+      "summaryScopeEvent": "for {event}",
+      "summaryScopeAll": "every event",
+      "summaryScopeHelp": "The numbers above are for the selected event alone; the figure on the Înscrieri tab counts every event still to come.",
+      "summaryScopeAllLink": "Show every event"
     },
     "events": {
       "empty": "There is no event in the database.",

@@ -78,7 +78,7 @@ export default async function BackofficeShell({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
     section,
-    ...(section === "registrations" ? { count: registered } : {}),
+    ...(section === "registrations" ? { count: registered, countHint: t("nav.registeredHint") } : {}),
   }));
 
   return (

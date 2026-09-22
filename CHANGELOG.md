@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **The registrations screen says which event it is showing**, and the search and filter box is open again instead of folded away. The tab's number counts everyone signed up for everything still to come; the list opens on the main event — so when the two differ, the page now says why and offers "show every event". §277.
 - **Fixed: the event editor crashed as it opened**, taking the toolbar and the language tabs with it, because of how yesterday's table bar was wired. §276.
 - **The listing looks like a listing again**: cards in a row are the same height instead of leaving holes, and a very tall photograph is scaled down to fit a card rather than making one card three times the others. Nothing is cropped. §275.
 - **A weekly run is no longer listed under "already held"** — that section is for the race, the gear test, the hike, the things that happened once. §275.
