@@ -98,14 +98,31 @@ function fill(text: string, data: Facts): string {
 }
 
 /**
+ * The same, for one run inside a paragraph: the spaces at its ends are the spaces between it and
+ * the runs either side, so they are kept. Trimming each run is what welded the words to the bold
+ * ones in the preview (§278).
+ */
+function fillRun(text: string, data: Facts): string {
+  return data === null ? text : fillPlaceholders(text, data, "keep");
+}
+
+/**
  * One run of text with its marks, escaped **before** any tag is added — the same order
  * `templates.ts` applies its `**bold**` markers in, and for the same reason: a mark may only
  * ever wrap text that has already been made safe.
+ *
+ * The paragraph's own two edges are trimmed and nothing in between is (§278): the space between
+ * two runs belongs to the sentence, the space in front of the first one does not.
  */
 function inline(nodes: readonly RichTextText[] | undefined, data: Facts): string {
-  return (nodes ?? [])
-    .map((node) => {
-      const filled = fill(node.text, data);
+  const runs = nodes ?? [];
+  const last = runs.length - 1;
+  return runs
+    .map((node, index) => {
+      let text = node.text;
+      if (index === 0) text = text.replace(/^[ \t]+/, "");
+      if (index === last) text = text.replace(/[ \t]+$/, "");
+      const filled = fillRun(text, data);
       if (filled === "") return "";
       let html = escapeHtml(filled);
       for (const mark of node.marks ?? []) {
