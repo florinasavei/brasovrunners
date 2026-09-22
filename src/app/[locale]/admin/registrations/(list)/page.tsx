@@ -38,11 +38,12 @@ import {
 } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import Panel from "@/shared/ui/Panel";
+import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { countBibs } from "@/modules/registrations/bibs";
-import { bulkCancelRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
+import { bulkCancelRegistrationsAction, bulkDeleteRegistrationsAction, markBibsPrintedAction, sendOutboxNowAction } from "../actions";
 import { resendRegistrationEmailAction } from "../[id]/actions";
 import {
   cancelRegistrationAction,
@@ -102,7 +103,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   if (!canManageRegistrations(actor.role)) notFound();
 
   const current = await searchParams;
-  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, failed, sent, erase, marked } = current;
+  const { eventId, status, clubMember, bounced, q, saved, error, cancelled, erased, failed, sent, erase, marked } = current;
 
   const query = parseListQuery(current, {
     sortable: REGISTRATION_SORT_KEYS,
@@ -360,6 +361,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           `scroll-padding-top` so the sticky site header cannot cover it after a long list. */}
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {saved === "registrationsErased" && (
+          <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
+            {t("registrations.registrationsErased", { erased: erased ?? "0", failed: failed ?? "0" })}
+          </Alert>
+        )}
         {saved === "registrationsCancelled" && (
           <Alert severity={Number(failed) > 0 ? "warning" : "success"}>
             {t("registrations.registrationsCancelled", {
@@ -385,6 +391,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
         )}
         {saved &&
           saved !== "registrationsCancelled" &&
+          saved !== "registrationsErased" &&
           saved !== "outboxSent" &&
           saved !== "registrationDeleted" &&
           saved !== "bibsPrinted" &&
@@ -1050,6 +1057,46 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                   color="warning"
                   variant="contained"
                 />
+              </Box>
+
+              {/*
+                Erasing the same selection (§287; the owner: "stergerea in batch ar trebui sa
+                mearga! dar cu super extra confirmare!").
+
+                In **this** form rather than a second one: a checkbox's `form` attribute names
+                exactly one form, so one selection cannot feed two. The button carries the other
+                action, and the count typed beside it is the confirmation the service insists on —
+                a number the screen has just shown, which changes with the selection and therefore
+                cannot become muscle memory the way a fixed word or a second "yes" does.
+              */}
+              <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
+                <Typography variant="body2" color="error" sx={{ fontWeight: 600 }}>
+                  {t("registrations.bulkEraseTitle")}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {t("registrations.bulkEraseHelp")}
+                </Typography>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "flex-start" } }}>
+                  <TextField
+                    name="confirmCount"
+                    label={t("registrations.bulkEraseConfirm")}
+                    helperText={t("registrations.bulkEraseConfirmHelp")}
+                    size="small"
+                    inputMode="numeric"
+                    slotProps={{ htmlInput: { pattern: "[0-9]{1,4}", maxLength: 4 } }}
+                    sx={{ maxWidth: 260 }}
+                  />
+                  <ConfirmSubmitButton
+                    formAction={bulkDeleteRegistrationsAction}
+                    label={t("registrations.bulkEraseAction")}
+                    title={t("confirm.bulkEraseTitle")}
+                    body={t("confirm.bulkEraseBody")}
+                    confirmLabel={t("registrations.bulkEraseAction")}
+                    cancelLabel={t("confirm.cancel")}
+                    color="error"
+                    variant="contained"
+                  />
+                </Stack>
               </Box>
             </Stack>
           </Box>

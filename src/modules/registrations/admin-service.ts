@@ -12,7 +12,7 @@ import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { findParticipantByCanonicalEmail } from "@/modules/participants/repository";
 import { canManageRegistrations, canWorkTheDesk } from "@/modules/staff-identity/domain/roles";
-import { DomainError } from "@/shared/errors/domain-error";
+import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { eraseConfirmationMatches } from "./domain/erase-confirmation";
 import { canResendReminder, deriveAllowedResendMessageType } from "./domain/resend";
 import { canTransition, isActiveStatus } from "./domain/state-machine";
@@ -651,6 +651,74 @@ export async function deleteRegistrationByStaff<T extends Record<string, unknown
   }
 
   await eraseRegistration(db, actor, current, reason, now);
+}
+
+/**
+ * Erase several registrations at once (`DECISIONS.md` §287; the owner: "stergerea in batch ar
+ * trebui sa mearga! dar cu super extra confirmare!").
+ *
+ * ## Why this was refused until now, and what changed
+ *
+ * §67 offers cancel in bulk and erase one at a time, and the reason is still true: cancelling is
+ * recoverable — the person registers again — and erasing is not. What changed is who has to live
+ * with it. A club clearing a test season, or a race that was set up twice, was erasing forty rows
+ * one dialog at a time, and the twentieth confirmation is not read by anybody.
+ *
+ * ## The confirmation is the count, typed
+ *
+ * A single erase asks for the registered name (`eraseConfirmationMatches`), which cannot scale to
+ * forty. So the batch asks for **the number of rows**, typed, and refuses anything else: it is a
+ * fact the screen has just shown, it changes with the selection, and it cannot be muscle memory
+ * the way a fixed word or a second "yes" becomes. The owner chose it over typing a magic word
+ * precisely for that.
+ *
+ * Checked here rather than in the action, so it is the rule and not the dialog: a caller that
+ * forgets the confirmation erases nothing.
+ *
+ * ## Everything else is the single erase, once per row
+ *
+ * The same `eraseRegistration` — the audit row first, the declaration acceptance with the row in
+ * one transaction, the place released through the allocator (§33, §44, §67). A row that refuses
+ * is counted and the rest continue, exactly as the bulk cancel does: a batch that stops halfway
+ * on the first surprise leaves the club with no idea what happened.
+ */
+export async function bulkDeleteRegistrationsByStaff<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  registrationIds: readonly string[],
+  reason: string,
+  now: Date,
+  options: { confirmCount: string },
+): Promise<{ erased: number; failed: number }> {
+  assertAdministrator(actor);
+
+  if (registrationIds.length === 0) {
+    throw new DomainError("VALIDATION_ERROR", "nothing selected", ["registrationId"]);
+  }
+  // Trimmed, because a typed number arrives with whatever the keyboard added; otherwise exact.
+  if (options.confirmCount.trim() !== String(registrationIds.length)) {
+    throw new DomainError("VALIDATION_ERROR", "the typed count does not match the selection", [
+      "confirmCount",
+    ]);
+  }
+
+  let erased = 0;
+  let failed = 0;
+  for (const registrationId of registrationIds) {
+    try {
+      const current = await findRegistrationById(db, registrationId);
+      if (!current) {
+        failed += 1;
+        continue;
+      }
+      await eraseRegistration(db, actor, current, reason, now);
+      erased += 1;
+    } catch (error) {
+      if (!isDomainError(error)) throw error;
+      failed += 1;
+    }
+  }
+  return { erased, failed };
 }
 
 /**

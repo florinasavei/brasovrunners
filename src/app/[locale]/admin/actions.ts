@@ -604,11 +604,18 @@ export async function assignBibNumbersAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
 
-  let outcome: { error?: string; saved?: string; assigned?: string; total?: string };
+  let outcome: { error?: string; saved?: string; assigned?: string; total?: string; notConfirmed?: string; test?: string };
   try {
     const actor = await requireStaff();
     const result = await assignBibNumbers(getDb(), { actor, eventId });
-    outcome = { saved: "bibsAssigned", assigned: String(result.assigned), total: String(result.total) };
+    outcome = {
+      saved: "bibsAssigned",
+      assigned: String(result.assigned),
+      total: String(result.total),
+      // Why nothing happened, when nothing happened (§286). Counts, never anybody's name.
+      notConfirmed: String(result.notConfirmed),
+      test: String(result.test),
+    };
   } catch (error) {
     outcome = outcomeOf(error);
   }

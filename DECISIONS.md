@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.44-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.44-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12124,3 +12124,181 @@ address goes through first time; filled with somebody else's link it is refused,
 so, and the second press — consents re-ticked, trap still filled — is accepted.
 
 Baseline `BR-V1.44-2026-09-22`.
+
+## 283. Decided — the telephone and the declaration say what they want before they refuse it (2026-09-22)
+
+**Context.** Amalia, testing on QA: the telephone number needs a maximum and a clearer answer as
+it is typed; and signing the declaration should "give some hints on the ID document or select ID
+doc type", and should say that the name typed as a signature is the one used at registration —
+"as a hint, not a hard validation".
+
+**The telephone.** The live check has run the server's own `composePhone` since §198, so what was
+missing was not correctness but arithmetic a person can see. E.164 is fifteen digits **including**
+the country code, so the room left in the box depends on the country chosen beside it — thirteen
+after Romania's `+40`, twelve after `+373`. That ceiling is now applied at the keystroke, and the
+`maxLength` attribute follows the country rather than being one number for everybody.
+
+*And the box answers in three ways instead of one.* "That is not a number this country uses" is
+true and useless when the number is simply unfinished: it reads as a refusal of what was typed
+rather than as a count. So a number too short to judge says keep going, and a number that works
+says so — by showing the exact E.164 that will be stored. `+40712345678` on the screen is the one
+thing that proves the country beside it was understood.
+
+**The declaration.** The identity-document box asked for "seria și numărul", and people typed
+whatever their own document calls those, under a label naming a Romanian identity card. The kind
+of document is a closed list, so it is a list — identity card, passport, residence permit, other —
+and the action composes the kind and the number into the one `{{idDocument}}` merge field the
+club's approved text carries, in the language the person is signing in. A native select, like the
+telephone's country (§198): it works before hydration and a phone knows how to open it.
+
+*The signature box shows the name they registered with, and refuses nothing.* The hint is the
+whole of it: somebody whose document reads "Ana-Maria" and who registered as "Ana Maria" must
+still be able to sign. Comparing the two strings and refusing would be this platform deciding what
+a person's name is, on the one field where typing it **is** the act (§86).
+
+**What was rejected: validating the signature against the registered name.** It was asked for as a
+hint and it is right that it stays one. A declaration refused because a middle name was left out
+is a participant who cannot enter a race, and the club already knows who signed — the row is the
+registration's own.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 284. Fixed — a Turnstile widget is handed back when its form goes away (2026-09-22)
+
+**Context.** The owner, from the browser console: `[Cloudflare Turnstile] Cannot find Widget
+cf-chl-widget-hn2ug, consider using turnstile.remove() to clean up a widget.`
+
+**What it was.** The island drew the widget with `render` and kept its id to `reset()` between
+attempts (§185), and never called `remove`. Cloudflare keeps its own registry keyed by that id and
+does not notice the element leaving the document, so a form unmounted by a client navigation left
+an orphan behind. The warning is the visible half; the half that matters is that the next mount
+drew a **second** widget beside the ghost, and which of the two answered for the token a
+submission carried was not decided by anything here.
+
+**Decision.** *`remove(id)` on unmount, in an effect of its own with no dependencies.* Not in the
+drawing effect's cleanup: that one runs between attempts as well, and keeping one widget alive and
+resetting it is exactly what §185 decided — a fresh challenge is the point, a fresh widget is not.
+A `remove` that throws because Cloudflare has already forgotten the id is swallowed: a console
+line of ours on top of theirs helps nobody.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 285. Decided — the send button waits for the anti-bot check, and a dimmed button looks it (2026-09-22)
+
+**Context.** The owner, watching the form: "butonul de trimitere nu ar trebui sa fie vizibil daca
+Cloudflare Turnstile nu a terminat, corect?" and, separately, "butoanele disabled ar trebui sa fie
+mai transparente, si cu cursor interzis".
+
+**He is right about the first.** Pressing send before Turnstile has produced a token buys a
+refusal for no reason at all — the token is missing, the server sees `failed`, and the person is
+told the anti-bot check refused them when in truth they were merely quick. The widget usually
+answers in well under a second, which is exactly the window in which somebody who has finished
+typing presses the button.
+
+**Decision.** *The button waits while the token is missing*, dimmed, with a sentence saying why,
+and a press in that moment does nothing but keep the reason on screen. Cloudflare writes its token
+into a hidden input inside its own element, so the form is where it appears and the DOM is what is
+watched — the shape `PhoneField` already uses to watch the other telephone (§231), rather than
+lifting a third party's element into React.
+
+*With a release valve of eight seconds.* A blocked script, an offline moment, a bad minute at
+Cloudflare — none of them may end with somebody unable to press send. §205 is not negotiable:
+people register at all costs, and a check that never answers must not be the thing that stops
+them. The same reason the server treats "unavailable" as acceptable and only a *rejected* token as
+a refusal.
+
+*And only where a widget is actually drawn.* No keys, or the club's switch off (§254), means there
+is no token to wait for; waiting then would be a button dimmed for a check that is not running.
+
+**The second is a plain interface defect.** A dimmed button at 0.55 opacity read as a colour
+choice rather than as a state. MUI's own disabled opacity is 0.38, and with `cursor: not-allowed`
+nobody mistakes it for a button that is merely quiet. It stays pressable, for the reason §047 and
+the button's own notes give: a press is what produces the specific answer — the browser focuses
+the first unfilled field and names it, which a truly disabled control could never do.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 286. Fixed — four things found by watching two people use the form (2026-09-22)
+
+**Context.** Amalia and the owner, testing on QA within an hour of each other.
+
+**"Anumerarea in batch nu merge!"** It was working and saying nothing. A number is given to a
+**confirmed, real** registration that has none — a number follows the declaration and never
+precedes it, and a test row never wears one (§30). An event whose entrants are all still
+confirming their email therefore assigned nought and reported "0 numere alocate", which reads
+exactly like a broken button. *The screen now names what it skipped*: how many have not confirmed
+yet, and how many are test rows.
+
+**And the batch ignored the numbers the desk had already given.** Found from a screenshot of a row
+reading "Prezență marcată · 5*" — the owner: "cum pot avea prezenta marcata dar numar cu
+steluta?". The desk writes a number into `provisional_bib_number` on race morning and the list
+draws it with an asterisk because it is not settled. Confirming one registration promotes it
+(`service.ts`); the batch looked only for rows with no *final* number and handed them the next
+free one. So a runner told "you are 5", with 5 written on their hand, was quietly given 100 while
+the screen still showed 5 beside them — two numbers for one person, neither visibly wrong.
+*The number somebody was told is the number they keep*, and it stops being provisional.
+
+**The consents survive a rejected submission**, reversing that part of §142. The owner, watching
+it happen: "vreau sa persist inclusiv bifele, sa nu se enerveze Dani … gen vreau ca dani sa mai
+apese inca o data submit si atat!" The reasoning for dropping them was thinner than it looked: the
+tick that counts is the one on the submission that **succeeds**, and that is the one the row
+records with its version and timestamp. Making somebody re-tick three boxes to recover from a
+refusal that was about none of them is friction charged to the wrong person. The e2e case asserts
+it by re-ticking nothing.
+
+**The refusal is red, and said once.** §282 made it information, since nothing the person typed
+was wrong; what a reader needs first is that the submission did not go through, and blue reads as
+a remark. And §194's second copy beside the button is gone: the summary at the top now carries
+the title, the sentences and a button that sends the form, so the older panel was the same words
+twice on one screen ("exista un pic de reduntanta la butoanele alea").
+
+**"You are already registered" says so warmly, and names the number — in the email.** The owner:
+"ne bucuram ca esti entuziasmat dar esti deja inscris cu numaru …", and then, unprompted: "don't
+tell they on the screen, tell them in the email ;-)". Which is exactly the line §19.4 draws: the
+screen's answer stays generic for everybody, because a form that says "this address is already
+registered" is a way to ask who is entered; the inbox is the one place the question can be
+answered, to the one person entitled to the answer.
+
+**One incidental repair.** The register page's `typed()` helper is now `prefill()`: the i18n
+checker reads every `t…(` call as a translation lookup (`t\w*\(`), so `typed("privacyAcknowledged")`
+counted as a missing message key. It had passed for months only because every name it had been
+given — `email`, `city` — also happened to exist in the catalogue.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 287. Decided — a selection can be erased, behind the count typed by hand (2026-09-22)
+
+**Context.** The owner: "de asemenea stergerea in batch ar trebui sa mearga! dar cu super extra
+confirmare!"
+
+**What §67 decided, and why it is being changed.** Cancel is offered in bulk and erase one row at
+a time, because cancelling is recoverable — the person registers again — and erasing is not. That
+reasoning still holds. What it did not account for is the club clearing a test season or a race
+set up twice: eighty rows, eighty dialogs, and the twentieth confirmation is read by nobody. A
+guard that is always in the way stops being a guard.
+
+**Decision.** *The confirmation is the number of rows, typed.* A single erase asks for the
+registered name (§180), which cannot scale to forty. The count is the thing that can: it is a fact
+the screen has just shown, it changes with the selection, and it cannot become muscle memory the
+way a fixed word or a second "yes" does. The owner chose it over typing ȘTERG for exactly that
+reason.
+
+*Asserted in the service, not in the dialog.* `bulkDeleteRegistrationsByStaff` refuses a count
+that is not the size of the selection, and refuses an empty selection outright — so the rule
+survives a second caller and a dialog somebody rewrites later. A dialog is UX; this is the rule.
+
+*Everything else is the single erase, once per row.* The same `eraseRegistration`: the audit row
+first, the declaration acceptance with the row in one transaction, the place released through the
+allocator (§33, §44, §67). A row that refuses is counted and the rest continue, as the bulk cancel
+already does — a batch that stops on the first surprise leaves the club unable to say what
+happened.
+
+*One form, two verbs.* A checkbox's `form` attribute names exactly one form, so one selection
+cannot feed two; the erase button carries the second Server Action through `formAction`, and
+`ConfirmSubmitButton` now submits **through the button** when it does, because React reads the
+action from the submitter.
+
+**What was rejected: two ordinary confirmations.** Offered and declined. The second click becomes
+reflex, which is the failure mode this is supposed to prevent rather than a slower version of it.
+
+Baseline `BR-V1.45-2026-09-22`.

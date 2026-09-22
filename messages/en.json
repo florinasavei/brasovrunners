@@ -251,13 +251,13 @@
       "savedOff": "The anti-bot check is off. The hidden honeypot and the per-address limit remain.",
       "updatedAt": "Changed on {when}.",
       "honeypot": {
-        "on": "The hidden trap is on: a field people never see, which robots fill in.",
-        "off": "The hidden trap is off. The field is still there and still logged, but it no longer refuses anybody.",
-        "turnOff": "Turn the hidden trap off",
-        "turnOn": "Turn the hidden trap on"
+        "on": "Honeypot on: a hidden field people never see, which robots fill in.",
+        "off": "Honeypot off. The field is still there and still logged, but it no longer refuses anybody.",
+        "turnOff": "Turn the honeypot off",
+        "turnOn": "Turn the honeypot on"
       },
-      "savedHoneypotOn": "The hidden trap is on.",
-      "savedHoneypotOff": "The hidden trap is off."
+      "savedHoneypotOn": "The honeypot is on.",
+      "savedHoneypotOff": "The honeypot is off."
     },
     "title": "Backoffice",
     "signedInAs": "Signed in as {name} — {role}",
@@ -468,7 +468,13 @@
       "summaryScopeEvent": "for {event}",
       "summaryScopeAll": "every event",
       "summaryScopeHelp": "The numbers above are for the selected event alone; the figure on the Înscrieri tab counts every event still to come.",
-      "summaryScopeAllLink": "Show every event"
+      "summaryScopeAllLink": "Show every event",
+      "bulkEraseTitle": "Erase the ticked registrations for good",
+      "bulkEraseHelp": "They are removed, their places are released, and it cannot be undone. Only an audit line remains: who erased and why, never whom.",
+      "bulkEraseConfirm": "Type how many you are erasing",
+      "bulkEraseConfirmHelp": "Exactly the number of ticked registrations — anything else erases nothing.",
+      "bulkEraseAction": "Erase for good",
+      "registrationsErased": "{erased} registrations erased for good. {failed} could not be erased."
     },
     "events": {
       "empty": "There is no event in the database.",
@@ -526,7 +532,9 @@
       "repeatTitle": "Create the editions?",
       "repeatBody": "The next events are created at the chosen interval, each with its own address. You can edit or delete them one by one afterwards.",
       "bibsTitle": "Assign the race numbers?",
-      "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay."
+      "bibsBody": "Every confirmed registration without a number gets the next free one, in order of confirmation. Numbers already given stay.",
+      "bulkEraseTitle": "Erase the ticked registrations for good?",
+      "bulkEraseBody": "This cannot be undone. The places are released through the waiting list and the participants' data leave the record."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
@@ -1578,7 +1586,8 @@
       "page": "Page {n} of {total}",
       "helpNone": "No number yet. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
       "helpSome": "{total} numbers given. Every registration draws a number in order of registration the moment it is confirmed; the button numbers those confirmed before that. A number once given never changes. The sheet prints two per A4 page, each with a band in the race's colour, the club's logo, the race, its date and the name. A single number is downloaded from the registration's own page.",
-      "downloadAll": "Download every number ({count}) — a PDF to print"
+      "downloadAll": "Download every number ({count}) — a PDF to print",
+      "assignedNone": "There was nothing to number. A number is given only to a real, confirmed registration: {notConfirmed} have not confirmed yet (email or declaration), and {test} are test registrations, which never get one."
     },
     "desk": {
       "title": "Number pickup desk",
@@ -1974,7 +1983,7 @@
       "throttledTitle": "You have already sent this form a few times",
       "throttled": "We have had several registrations from this address in the last hour, so we have paused it for a while. Try again in an hour — or, if it is urgent, write to us through the contact form and we will register you ourselves. Nothing you filled in has been lost.",
       "tooFast": "The automated check did not pass first time — it happens to real people too. Your answers are still here.",
-      "tooFastNothingSent": "Nothing was registered and no email was sent to you. Tick the agreements below again — we ask for them every time, on purpose — and press “Send the registration again”.",
+      "tooFastNothingSent": "Nothing was registered and no email was sent to you. Press “Send the registration again” — your answers and your ticks are still here.",
       "tooFastResend": "Send the registration again"
     },
     "sections": {
@@ -2147,7 +2156,10 @@
     "emailInvalid": "That does not look like an email address. Check the letters and the @.",
     "emailSuggestion": "Did you mean {address}?",
     "emailUseSuggestion": "Yes, fix it",
-    "emailHelp": "This is where the confirmation link goes. Type it carefully."
+    "emailHelp": "This is where the confirmation link goes. Type it carefully.",
+    "phoneTooShort": "Keep going — a number has at least 4 digits.",
+    "phoneValid": "Looks right. We will store it as",
+    "botCheckWait": "Checking for a second that you are not a robot — then you can send."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -2186,7 +2198,16 @@
         "The link has a deadline; if you do not confirm in time, the place moves on.",
         "You can withdraw at any time from the email you received."
       ],
-      "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine."
+      "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine.",
+      "idDocumentType": "Which document you will show",
+      "idDocumentTypeHelp": "Choose the kind of document — it appears in the declaration with the series and number.",
+      "typedNameHelpWithName": "You registered as {name} — type the same name. It appears as a signature.",
+      "idDocumentTypes": {
+        "ID_CARD": "Identity card",
+        "PASSPORT": "Passport",
+        "RESIDENCE_PERMIT": "Residence permit",
+        "OTHER": "Other document"
+      }
     },
     "mine": {
       "title": "My registrations",

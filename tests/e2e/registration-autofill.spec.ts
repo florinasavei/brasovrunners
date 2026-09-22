@@ -90,14 +90,16 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await expect(again).toBeVisible();
 
     /*
-      And the way out. The consents are deliberately not restored after a rejection (§142: a
-      consent is given on purpose, never carried over), and they are `required`, so a person
-      ticks them again before the second press — which is what the panel now tells them to do.
-      The trap stays filled, as a password manager would refill it on every render.
+      And the way out, in **one press** (§286; the owner: "gen vreau ca dani sa mai apese inca o
+      data submit si atat!").
+
+      Nothing is re-typed and nothing is re-ticked: the answers and the three consents come back
+      with the form. The trap is still filled, as a password manager would refill it on every
+      render, and the submission is accepted because a second attempt is not refused by a guess.
     */
-    await page.locator('[name="privacyAcknowledged"]').check();
-    await page.locator('[name="rulesAcknowledged"]').check();
-    await page.locator('[name="fitnessDeclared"]').check();
+    await expect(page.locator('[name="privacyAcknowledged"]')).toBeChecked();
+    await expect(page.locator('[name="rulesAcknowledged"]')).toBeChecked();
+    await expect(page.locator('[name="fitnessDeclared"]')).toBeChecked();
     await autofillTheTrap(page, "https://cheap-seo.example");
     await again.click();
     await expect(page).toHaveURL(/submitted=/);
