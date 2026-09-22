@@ -39,10 +39,22 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(CARD_EXCERPT_SX["& figcaption"].textAlign).toBe("center");
   });
 
-  it("gives the picture its own shape — no fixed height, no crop the organizer did not draw (§260)", () => {
-    // `height: auto` is the explicit form of "whatever this picture's proportions say", written
-    // down so nothing above it can re-impose a band.
-    expect(CARD_EXCERPT_SX["& figure > img"]).toEqual({ height: "auto" });
+  it("gives the picture its own shape — no crop the organizer did not draw (§260, §275)", () => {
+    /*
+      `height: auto` is the explicit form of "whatever this picture's proportions say", written
+      down so nothing above it can re-impose a band.
+
+      §275 adds a ceiling, and the difference from the 180-pixel band §260 removed is the whole
+      point: a band *cut* every picture to one shape, and this *scales* a tall one down whole.
+      `width: auto` beside it is what keeps the proportions while the height is capped, and
+      nothing here crops — which is what the assertions below still check.
+    */
+    const img = CARD_EXCERPT_SX["& figure > img"];
+    expect(img.height).toBe("auto");
+    expect(img.width).toBe("auto");
+    expect(img.maxWidth).toBe("100%");
+    expect(img.maxHeight).toBe(420);
+    expect(img).not.toHaveProperty("objectFit");
   });
 
   it("leaves a cropped picture's window alone, so the rectangle drawn is the rectangle shown", () => {
@@ -55,13 +67,18 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
     expect(Object.keys(CARD_EXCERPT_SX).filter((key) => key.startsWith("& figure ") && !key.includes(">"))).toEqual([]);
   });
 
-  it("measures nothing in pixels or in viewport units at all", () => {
-    // The 320-pixel rule is kept by construction rather than by a number that happens to fit:
-    // the only width here is the card's own, and `vw` on a page with a scrollbar is wider than
-    // the page. Since §260 there is no fixed measurement left in either direction.
+  it("measures nothing across the card, and nothing in viewport units", () => {
+    /*
+      The 320-pixel rule is kept by construction: nothing here states a width in pixels, so a
+      picture cannot be wider than the card it is in, and `vw` — which on a page with a
+      scrollbar is wider than the page — appears nowhere.
+
+      The one measurement is the height ceiling §275 added, and it is the safe direction: a
+      number that makes a picture *shorter* cannot make a phone scroll sideways.
+    */
     const values = JSON.stringify(CARD_EXCERPT_SX);
     expect(values).not.toMatch(/vw"/);
-    expect(values).not.toMatch(/"(width|minWidth|maxWidth|height|minHeight|maxHeight)":\s*\d/);
+    expect(values).not.toMatch(/"(width|minWidth|maxWidth|minHeight)":\s*\d/);
   });
 
   it("keeps the card's words the size the card's words were", () => {

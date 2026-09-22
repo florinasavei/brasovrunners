@@ -286,7 +286,9 @@ async function PastEvents({
           display: "grid",
           gap: 1.5,
           gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-          alignItems: "start",
+          // Every card in a row is as tall as the tallest (§275): `start` left a short card
+          // beside a tall one and a hole under it, which is what made the listing look broken.
+          alignItems: "stretch",
         }}
       >
         {cards.map((series, index) =>
@@ -361,7 +363,8 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; 
             display: "grid",
             gap: 1.5,
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-            alignItems: "start",
+            // As above (§275): one row, one height.
+            alignItems: "stretch",
           }}>
           {cards.map((series, index) =>
             series.members.length > 1 ? (
@@ -385,7 +388,8 @@ async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; 
             display: "grid",
             gap: 1.5,
             gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-            alignItems: "start",
+            // As above (§275): one row, one height.
+            alignItems: "stretch",
           }}>
       {cards.map((series, index) =>
         series.members.length > 1 ? (

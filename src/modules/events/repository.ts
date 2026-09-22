@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lt, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -242,6 +242,13 @@ export async function listPublishedEventsBetween(db: Database, locale: Locale, f
  * rather than after it, because the limit is applied by the database: filtering a page of
  * twelve mixed rows down to the two gear tests among them would show two and call it all of
  * them.
+ *
+ * **A date of a standing series is not history** (§275; the owner: "weekly events should not be
+ * treated as past events, only the non-weekly ones"). Last Monday's Happy Monday is not
+ * something the club held and moved on from — it is the run that happens again this Monday, and
+ * it is already the first card on the page. What belongs here is the race, the gear test, the
+ * hike: the things that happened once. A source with a rule and every occurrence of it are both
+ * excluded, which is the pair `repeat_rule` and `repeat_of` name (§122).
  */
 export async function listPastEvents(
   db: Database,
@@ -254,7 +261,15 @@ export async function listPastEvents(
     .select(PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(and(publishedIn(locale), lt(eventEndsAt, now), ...(type ? [eq(events.type, type)] : [])))
+    .where(
+      and(
+        publishedIn(locale),
+        lt(eventEndsAt, now),
+        isNull(events.repeatRule),
+        isNull(events.repeatOf),
+        ...(type ? [eq(events.type, type)] : []),
+      ),
+    )
     .orderBy(desc(events.startsAt))
     .limit(limit);
 }

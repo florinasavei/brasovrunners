@@ -13,14 +13,18 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { Extension, mergeAttributes, Node } from "@tiptap/core";
+import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
+import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
+import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import { Extension, mergeAttributes, Node, type Editor } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { shrinkImageInBrowser } from "@/modules/media/browser-shrink";
 import {
   BLOCK_ALIGNMENTS,
@@ -42,6 +46,27 @@ import {
 import ImageCropBox from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
 import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
+
+/**
+ * Word's own three glyphs for the three alignments (§274; the owner: "the alignment icons for
+ * the text should resemble microsoft word!").
+ *
+ * The toolbar's rule has been "words, not icons" since the picture emoji rendered as a broken
+ * box on the owner's machine, and it still holds for the verbs whose names are the clearest
+ * thing about them. These three are the exception the rule was always going to have: the lines
+ * of a left-, centre- and right-aligned paragraph are the same picture in every editor anybody
+ * has used, and "S", "C", "D" are three letters somebody has to decode. The glyphs come from
+ * `@mui/icons-material`, which the backoffice already imports for its tab row, and only the
+ * backoffice loads this file — no public page pays for them.
+ */
+/** Floating-UI's placement for the table's bar: above the table, created once. */
+const TABLE_BAR_OPTIONS = { placement: "top" } as const;
+
+const ALIGN_ICON = {
+  left: FormatAlignLeftIcon,
+  center: FormatAlignCenterIcon,
+  right: FormatAlignRightIcon,
+} as const;
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -195,6 +220,16 @@ export default function RichTextEditor({
    * shut so nothing is rendered twice behind it.
    */
   const [preview, setPreview] = useState<string | null>(null);
+  /**
+   * The two props the table's bar is given, kept stable between renders.
+   *
+   * `BubbleMenu` registers a ProseMirror plugin from its props, and a new function or object
+   * identity on every render re-registers it — which dispatches a transaction, which renders
+   * again. That is React error #185, "maximum update depth exceeded", and it took the whole
+   * editor island down the moment it mounted: no toolbar, no language tabs, and an e2e suite
+   * that failed on "no tab named English" rather than on anything about tables.
+   */
+  const showOverTable = useCallback(({ editor: current }: { editor: Editor }) => current.isActive("table"), []);
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
   const [words, setWords] = useState(() => countWords(richTextToPlainText(initialDoc)));
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -620,15 +655,18 @@ export default function RichTextEditor({
             on the owner's own machine, and three broken boxes side by side would be worse than
             three letters. The full name is the accessible name and the tooltip.
           */}
-          {BLOCK_ALIGNMENTS.map((align) => (
-            <Control
-              key={align}
-              label={labels.align[align]}
-              text={labels.alignShort[align]}
-              active={align === "left" ? !editor?.isActive({ align: "center" }) && !editor?.isActive({ align: "right" }) : (editor?.isActive({ align }) ?? false)}
-              onClick={() => setAlign(align)}
-            />
-          ))}
+          {BLOCK_ALIGNMENTS.map((align) => {
+            const AlignIcon = ALIGN_ICON[align];
+            return (
+              <Control
+                key={align}
+                label={labels.align[align]}
+                icon={<AlignIcon fontSize="small" />}
+                active={align === "left" ? !editor?.isActive({ align: "center" }) && !editor?.isActive({ align: "right" }) : (editor?.isActive({ align }) ?? false)}
+                onClick={() => setAlign(align)}
+              />
+            );
+          })}
           {/*
             One button inserts a table; the rest of the verbs appear only while the caret is
             inside one (§196). A toolbar that showed "add a row" to somebody writing a paragraph
@@ -644,106 +682,6 @@ export default function RichTextEditor({
               editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
             }
           />
-          )}
-          {features.tables !== false && editor?.isActive("table") && (
-            <>
-              <Control
-                label={labels.tableAddRow}
-                text="+↓"
-                active={false}
-                onClick={() => editor?.chain().focus().addRowAfter().run()}
-              />
-              <Control
-                label={labels.tableAddColumn}
-                text="+→"
-                active={false}
-                onClick={() => editor?.chain().focus().addColumnAfter().run()}
-              />
-              <Control
-                label={labels.tableDeleteRow}
-                text="−↓"
-                active={false}
-                onClick={() => editor?.chain().focus().deleteRow().run()}
-              />
-              <Control
-                label={labels.tableDeleteColumn}
-                text="−→"
-                active={false}
-                onClick={() => editor?.chain().focus().deleteColumn().run()}
-              />
-              {/*
-                How the table is drawn (§263; the owner: "la tabele ar trebui să pot alege border
-                and stuff, ca să pot folosi tabelele și ca și layout"). One control that cycles
-                grid → rows → none, showing what it is on rather than what it will do, because
-                three separate buttons for one three-valued choice is three buttons.
-              */}
-              <Control
-                label={labels.tableBorders[tableBorders]}
-                text={TABLE_BORDER_GLYPH[tableBorders]}
-                active={tableBorders !== "all"}
-                onClick={() =>
-                  editor
-                    ?.chain()
-                    .focus()
-                    .updateAttributes("table", {
-                      borders: nextBorders === "all" ? null : nextBorders,
-                    })
-                    .run()
-                }
-              />
-              {/* Top or middle. Horizontal centring is the paragraph's own alignment, three
-                  buttons to the left — a cell holds paragraphs, so it is already there. */}
-              <Control
-                label={labels.tableValign}
-                text="↕"
-                active={tableValign === "middle"}
-                onClick={() =>
-                  editor
-                    ?.chain()
-                    .focus()
-                    .updateAttributes("table", { valign: tableValign === "middle" ? null : "middle" })
-                    .run()
-                }
-              />
-              {/*
-                The two colours (§271), each a control that cycles its own closed set and is
-                named after the state it is in — the same shape the borders control has, for the
-                same reason: a toolbar with words on it can say "lines: blue" and a colour
-                picker cannot say anything at all.
-              */}
-              <Control
-                label={labels.tableBorderColour[tableBorderColour]}
-                text="▦"
-                active={tableBorderColour !== "default"}
-                onClick={() => {
-                  const next = TABLE_BORDER_COLOURS[(TABLE_BORDER_COLOURS.indexOf(tableBorderColour) + 1) % TABLE_BORDER_COLOURS.length];
-                  editor?.chain().focus().updateAttributes("table", { borderColour: next === "default" ? null : next }).run();
-                }}
-              />
-              <Control
-                label={labels.tableHeaderFill[tableHeaderFill]}
-                text="▩"
-                active={tableHeaderFill !== "default"}
-                onClick={() => {
-                  const next = TABLE_HEADER_FILLS[(TABLE_HEADER_FILLS.indexOf(tableHeaderFill) + 1) % TABLE_HEADER_FILLS.length];
-                  editor?.chain().focus().updateAttributes("table", { headerFill: next === "default" ? null : next }).run();
-                }}
-              />
-              {/* A layout table has no header row, and a table that grew one by accident has no
-                  other way to lose it. Tiptap's own command: it converts the row in place. */}
-              <Control
-                label={labels.tableHeaderRow}
-                text="H"
-                active={editor?.isActive("tableHeader") ?? false}
-                onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
-              />
-              <Control
-                label={labels.tableDelete}
-                text="⊟"
-                active={false}
-                onClick={() => editor?.chain().focus().deleteTable().run()}
-              />
-            </>
           )}
           <Control
             label={labels.link}
@@ -794,12 +732,6 @@ export default function RichTextEditor({
           </>
           )}
           <Control
-            label={labels.preview}
-            text={labels.previewShort}
-            active={preview !== null}
-            onClick={() => setPreview(editor?.getHTML() ?? "")}
-          />
-          <Control
             label={labels.undo}
             text="↶"
             active={false}
@@ -810,6 +742,14 @@ export default function RichTextEditor({
             text="↷"
             active={false}
             onClick={() => editor?.chain().focus().redo().run()}
+          />
+          {/* Last, and an eye (§274): it is about the whole body rather than about the caret,
+              so it belongs at the end of the row and not among the verbs that change text. */}
+          <Control
+            label={labels.preview}
+            icon={<VisibilityOutlinedIcon fontSize="small" />}
+            active={preview !== null}
+            onClick={() => setPreview(editor?.getHTML() ?? "")}
           />
         </Stack>
 
@@ -940,8 +880,18 @@ export default function RichTextEditor({
               // writing area and over whatever the form puts beneath it.
               "&::after": { content: '""', display: "table", clear: "both" },
             },
-            // A picture is never wider than the column, here as on the page; the selected one
-            // is outlined so the panel beside it is plainly about *this* picture.
+            /*
+              A picture is never wider than the column, here as on the page; the selected one is
+              outlined so the panel beside it is plainly about *this* picture.
+
+              **And every picture shows its own edges while writing** (§274; the owner: "the
+              pictures inside the editor should have borders so I know how they wrap"). A
+              photograph with a pale sky in it ends somewhere the eye cannot find, and where it
+              ends is exactly the question when it is floated and the paragraphs run beside it.
+              A dashed hairline says where the box is, the same one a table's cells wear (§271),
+              and it is an `outline` so it takes no layout and the text does not shift by a pixel
+              when a picture is resized or moved to the other side.
+            */
             "& .tiptap img": {
               display: "block",
               maxWidth: "100%",
@@ -950,7 +900,10 @@ export default function RichTextEditor({
               my: 2,
               borderRadius: 1,
               cursor: "pointer",
+              outline: (theme: { palette: { divider: string } }) => `1px dashed ${theme.palette.divider}`,
+              outlineOffset: 2,
             },
+            // The selection wins over the guide: three pixels of the club's blue, not a hairline.
             "& .tiptap img.ProseMirror-selectednode": {
               outline: 3,
               outlineColor: "primary.main",
@@ -963,7 +916,16 @@ export default function RichTextEditor({
               to it. The photograph inside carries its own inline rules and overrides the ones
               above, which are what an uncropped picture still gets.
             */
-            "& .tiptap .rt-crop": { mx: "auto", my: 2, cursor: "pointer", borderRadius: 1 },
+            "& .tiptap .rt-crop": {
+              mx: "auto",
+              my: 2,
+              cursor: "pointer",
+              borderRadius: 1,
+              // The same edges an uncropped picture shows (§274) — a cropped one is the picture
+              // whose boundary is hardest to guess, so it is the one that needs them most.
+              outline: (theme: { palette: { divider: string } }) => `1px dashed ${theme.palette.divider}`,
+              outlineOffset: 2,
+            },
             "& .tiptap .rt-crop.ProseMirror-selectednode": {
               outline: 3,
               outlineColor: "primary.main",
@@ -986,6 +948,125 @@ export default function RichTextEditor({
             ...EDITOR_TABLE_SX,
           }}
         >
+          {/*
+            The table's own verbs, over the table (§274; the owner: "the tables icons should
+            appear above the table, I have way too many icons now!").
+
+            Six controls that only ever apply inside a table were sitting in a toolbar that is
+            read while writing a paragraph — the row had grown to twenty buttons. A bubble menu
+            keyed on the caret being inside a table puts them where the table is and takes them
+            off the toolbar entirely; `shouldShow` is what decides, so the bar is absent the
+            moment the caret leaves.
+          */}
+          {editor && features.tables !== false && (
+            <BubbleMenu
+              editor={editor}
+              pluginKey="tableVerbs"
+              shouldShow={showOverTable}
+              options={TABLE_BAR_OPTIONS}
+            >
+              <Paper elevation={3} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, p: 0.5, maxWidth: 360 }}>
+              <Control
+                label={labels.tableAddRow}
+                text="+↓"
+                active={false}
+                onClick={() => editor?.chain().focus().addRowAfter().run()}
+              />
+              <Control
+                label={labels.tableAddColumn}
+                text="+→"
+                active={false}
+                onClick={() => editor?.chain().focus().addColumnAfter().run()}
+              />
+              <Control
+                label={labels.tableDeleteRow}
+                text="−↓"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteRow().run()}
+              />
+              <Control
+                label={labels.tableDeleteColumn}
+                text="−→"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteColumn().run()}
+              />
+              {/*
+                How the table is drawn (§263; the owner: "la tabele ar trebui să pot alege border
+                and stuff, ca să pot folosi tabelele și ca și layout"). One control that cycles
+                grid → rows → none, showing what it is on rather than what it will do, because
+                three separate buttons for one three-valued choice is three buttons.
+              */}
+              <Control
+                label={labels.tableBorders[tableBorders]}
+                text={TABLE_BORDER_GLYPH[tableBorders]}
+                active={tableBorders !== "all"}
+                onClick={() =>
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("table", {
+                      borders: nextBorders === "all" ? null : nextBorders,
+                    })
+                    .run()
+                }
+              />
+              {/* Top or middle. Horizontal centring is the paragraph's own alignment, three
+                  buttons to the left — a cell holds paragraphs, so it is already there. */}
+              <Control
+                label={labels.tableValign}
+                text="↕"
+                active={tableValign === "middle"}
+                onClick={() =>
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("table", { valign: tableValign === "middle" ? null : "middle" })
+                    .run()
+                }
+              />
+              {/*
+                The two colours (§271), each a control that cycles its own closed set and is
+                named after the state it is in — the same shape the borders control has, for the
+                same reason: a toolbar with words on it can say "lines: blue" and a colour
+                picker cannot say anything at all.
+              */}
+              <Control
+                label={labels.tableBorderColour[tableBorderColour]}
+                text="▦"
+                active={tableBorderColour !== "default"}
+                onClick={() => {
+                  const next = TABLE_BORDER_COLOURS[(TABLE_BORDER_COLOURS.indexOf(tableBorderColour) + 1) % TABLE_BORDER_COLOURS.length];
+                  editor?.chain().focus().updateAttributes("table", { borderColour: next === "default" ? null : next }).run();
+                }}
+              />
+              <Control
+                label={labels.tableHeaderFill[tableHeaderFill]}
+                text="▩"
+                active={tableHeaderFill !== "default"}
+                onClick={() => {
+                  const next = TABLE_HEADER_FILLS[(TABLE_HEADER_FILLS.indexOf(tableHeaderFill) + 1) % TABLE_HEADER_FILLS.length];
+                  editor?.chain().focus().updateAttributes("table", { headerFill: next === "default" ? null : next }).run();
+                }}
+              />
+              {/* A layout table has no header row, and a table that grew one by accident has no
+                  other way to lose it. Tiptap's own command: it converts the row in place. */}
+              <Control
+                label={labels.tableHeaderRow}
+                text="H"
+                active={editor?.isActive("tableHeader") ?? false}
+                onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
+              />
+              <Control
+                label={labels.tableDelete}
+                text="⊟"
+                active={false}
+                onClick={() => editor?.chain().focus().deleteTable().run()}
+              />
+
+              </Paper>
+            </BubbleMenu>
+          )}
+
           {/*
             The bar over a selection (§273; the owner: "I want that rich text editor to be almost
             as good as word … or at least close to WordPress, Amalia is used to WordPress").
@@ -1517,12 +1598,20 @@ function countWords(text: string): number {
 function Control({
   label,
   text,
+  icon,
   active,
   onClick,
   sx,
 }: {
   label: string;
-  text: string;
+  /** The word or letter on the button, when it has no glyph. */
+  text?: string;
+  /**
+   * A glyph instead of the letters (§274). Only for the controls whose shape is the same in
+   * every editor anybody has used — the three alignments and the eye — because those are
+   * recognised faster as a picture than read as a word, and misread as neither.
+   */
+  icon?: ReactNode;
   active: boolean;
   onClick: () => void;
   sx?: Record<string, unknown>;
@@ -1536,9 +1625,9 @@ function Control({
       size="small"
       onMouseDown={(event) => event.preventDefault()}
       onClick={onClick}
-      sx={{ minWidth: 44, minHeight: 44, px: 1, ...sx }}
+      sx={{ minWidth: 44, minHeight: 44, px: 1, lineHeight: 1, ...sx }}
     >
-      {text}
+      {icon ?? text}
     </ToggleButton>
   );
 }

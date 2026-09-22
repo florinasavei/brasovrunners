@@ -1320,6 +1320,25 @@ languages go live together; that is the rule, not a setting.
    deployment.
 4. `/admin/tasks` → the row for this item turns green by itself once the event exists.
 
+### If somebody says the site is blocked at work
+
+Not the site. A corporate network — Siemens' Zscaler, on 2026-09-22 — refuses whole categories,
+and one of them is **"Newly Registered and Observed Domains"**: any domain registered in roughly
+the last month, whatever is on it. The club's `.com` was registered on 2026-09-16, so it sits in
+that category until it ages out, usually thirty days from registration.
+
+Three answers, in the order they are worth giving:
+
+1. **Wait.** The category expires on its own; nothing needs doing and nothing is wrong.
+2. **Phone, not office laptop.** Mobile data is not behind the employer's proxy, and that is the
+   whole club's usual device anyway.
+3. **Ask the employer's IT for an exception**, which the block page links to. Worth it only for
+   somebody who has to open the backoffice from a work machine every day.
+
+There is nothing to change on our side: the block is decided before a request reaches the site,
+so it is invisible to the monitors and to `/api/health`, and it affects one network rather than
+the internet.
+
 ### What to have ready before sitting down
 
 The capacity and the two window numbers (the club's own call), the rules text, the programme,

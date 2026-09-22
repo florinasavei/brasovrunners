@@ -36,9 +36,27 @@ jobs:
       # It needs no database: the tests run PostgreSQL in process via PGlite.
       - run: yarn check
 
+      # The build's own cache (§276). Two things come out of it: a Turbopack build that does
+      # not start from nothing, and the fonts. `next/font/google` downloads its files at build
+      # time, and on 2026-09-22 a runner could not reach Google — twenty-one identical "cannot
+      # resolve @vercel/turbopack-next/internal/font/google/font" errors, a red pull request and
+      # nothing wrong with the code. A warm cache skips that request entirely.
+      - uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            next-${{ runner.os }}-
+
       # Vercel builds serverless functions and never runs `yarn start`, so the portability
       # contract in BR-REQ-101-01 is exercised here or nowhere.
-      - run: yarn build
+      #
+      # Twice before failing: the one failure this has ever had is a fetch to Google's font
+      # service, which either works on the second attempt or is a real outage, and a release
+      # held up by somebody else's bad minute is worse than a minute spent retrying.
+      - name: Build
+        run: yarn build || (echo "::warning::the build failed once; retrying" && yarn build)
       - name: Verify the app serves on PORT
         run: |
           PORT=3999 yarn start &
@@ -79,14 +97,38 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
 
+      # Chromium is about 170 MB and the same bytes every run (§276): cached on the resolved
+      # Playwright version, so it is downloaded when the dependency changes and not before.
+      # The system libraries still install — they are apt packages, not a download we own.
+      - name: Playwright's version, for the cache key
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
       # Only Chromium, and only its dependencies: the full install pulls three browsers.
       - run: yarn playwright install --with-deps chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+      - run: yarn playwright install-deps chromium
+        if: steps.pw-cache.outputs.cache-hit == 'true'
 
       - run: yarn db:migrate
 
       # The one suite that cannot run in the `docs-check` job: it needs two real connections,
       # and PGlite has one (BR-REQ-051-01 criterion 5).
       - run: yarn test:concurrency
+
+      # The same build cache as above: the suite's `webServer` runs `yarn build` before the
+      # first spec, and it is the slowest minute of this job.
+      - uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-e2e-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            next-e2e-${{ runner.os }}-${{ hashFiles('yarn.lock') }}-
+            next-e2e-${{ runner.os }}-
 
       - run: yarn db:seed
 

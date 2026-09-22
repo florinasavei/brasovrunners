@@ -10,6 +10,12 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **Fixed: the event editor crashed as it opened**, taking the toolbar and the language tabs with it, because of how yesterday's table bar was wired. §276.
+- **The listing looks like a listing again**: cards in a row are the same height instead of leaving holes, and a very tall photograph is scaled down to fit a card rather than making one card three times the others. Nothing is cropped. §275.
+- **A weekly run is no longer listed under "already held"** — that section is for the race, the gear test, the hike, the things that happened once. §275.
+- **CI is faster and no longer fails because Google's font server had a bad minute**: the build cache and the browser download are kept between runs, and a failed build is retried once. §276.
+- **Fixed: the events listing rendered no cards** when an event was marked special — the wash added behind it was written in a way a page cannot hand to a card, so the section failed silently while the page still answered. §274.
+- **The editor's toolbar is shorter and says more.** The table's six buttons appear over the table itself instead of sitting in the row all the time; the three alignment buttons are Word's own glyphs; the preview is last and wears an eye; and every picture shows dashed edges while you write, so you can see how the text wraps around it. §274.
 - **The editor works the way WordPress does.** The toolbar follows you down a long text instead of staying at the top, selecting words brings up bold, italic and link right where they are, and the number of words is under the box. §273.
 - **A special event stands out on the listing** — the club's orange on the border of the whole card and a faint wash behind it, not only a chip — and **the past section now follows the kind filter**, so choosing "Testare de echipament" shows the gear tests the club has already held, with the heading saying which kind is being counted. §272.
 - **Tables are a layout tool now.** Drag a column edge to set how wide it is and the page keeps the proportion at any screen width; pick the colour of the lines and of the header row from the club's own four; and while you write, every cell edge shows as a faint dashed line even when the table will print none. **A "Vezi" button opens the whole text in a pop-up** exactly as the page will draw it, without those dashed guides. §271.
