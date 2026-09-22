@@ -2,7 +2,7 @@
 
 # Platform inventory
 
-**Baseline `BR-V1.38-2026-09-18`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V1.44-2026-09-22`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 Every account the platform runs on: which plan, what it holds, who can recover it, and **what
 its limits stop the club from doing**. One page, so that "why can we not do X yet" has an answer
@@ -44,7 +44,7 @@ environment contributes what.
 
 ---
 
-## Subscriptions, limits and cost — checked 2026-09-05
+## Subscriptions, limits and cost — Neon re-checked 2026-09-22
 
 **How these were established, because it matters for how far to trust them.** Each vendor was
 researched against its own pricing and documentation pages, then a second, independent pass tried
@@ -54,20 +54,22 @@ notice — **re-check before spending, and update the date in this heading when 
 
 ### What each service gives away, and what the first upgrade costs
 
-| Service | Free plan | What it includes | First paid tier |
+| Service | Plan in use | What it includes or costs | Next paid tier or trigger |
 | --- | --- | --- | --- |
 | **Mailgun** | Free, $0 | **100 emails/day.** Sandbox: 5 authorized recipients. 1 day log retention, 2 API keys, 1 inbound route. No monthly figure is published | **Basic $15/mo** — 10,000 emails/mo, **and no daily limit**. Then Foundation $35/mo (50k), Scale $90/mo (100k) |
 | **Vercel** | Hobby, $0 | 100 GB bandwidth, 1M function invocations, 1M edge requests, 100 deployments/day, 1 concurrent build, 300s max function duration | **Pro $20/month per developer seat.** Viewer seats free and unlimited. $20 usage credit included; overage uncapped by default |
-| **Neon** | Free, $0 | 100 projects, 0.5 GB storage/project, **100 CU-hours/project/month**, 5 GB egress, 10 branches, autoscale 0.25–2 CU (re-checked 2026-09-16) | **Launch** — usage-based, no monthly minimum: $0.106/CU-hour, $0.35/GB-month. Instant restore billed separately at $0.20/GB-month |
+| **Neon** | **Launch**, usage-based; active since 2026-09-22 | No monthly minimum; $0.106/CU-hour, $0.35/GB-month storage, $0.20/GB-month of changes retained for Instant Restore; 100 projects, 10 included branches/project, 500 GB public transfer, autoscale to 16 CU, scale-to-zero after 5 idle minutes | **Scale** when the club needs the 99.95% SLA or its additional security/compliance controls; not required by today's load |
 | **Zitadel** | Free, $0 | **100 daily active users**, 5,000 management API requests, 1 instance, **1 administrator**, **0 custom domains**, 1 day audit trail | Paid tier — required for a custom domain and for more than one administrator |
 | **GitHub Actions** | Free | **Unlimited on public repositories** — standard runners consume no minutes. Private: 2,000 min/month | Metered only for private repos or larger runners. Team $4/user/month |
 | **`.com` domain** *(registered 2026-09-16)* | **none — this is the one line with no free plan** | — | **$10.97 per year** at the registry from 2026-11-01 ($10.26 until then) — Verisign's wholesale price, checked 2026-09-16; the club buys through a registrar, which adds its margin and Romania's 21% VAT and invoices in its own currency. The `.ro` that follows a year later is 12 EUR + VAT at ROTLD (checked 2026-09-07 on rotld.ro/prices), invoiced in lei |
 | **Cloudflare R2** *(no account yet)* | Included allowance | 10 GB-month storage, 1M Class A ops, 10M Class B ops, **egress always $0** — which is why R2 and not S3: a gallery viewed a thousand times costs nothing extra. A club gallery of ~2,000 photos at ~500 KB after the thumbnails the site makes is ~1 GB, inside the allowance indefinitely. **A payment method must be on file to enable R2**; nothing is charged inside the allowance (checked 2026-09-17) | Usage-based: $0.015/GB-month storage, $4.50/M Class A (writes), $0.36/M Class B (reads) |
 
-Running cost today: **the `.com` registration alone** — bought 2026-09-16 for one year, the
-registrar's invoice still to be recorded in the Cost table; nothing else is on a paid plan. The
-next cost to arrive is a month of Mailgun Basic around the first real race. The table below is
-what changes the rest.
+Running cost today: the `.com` registration plus **Neon Launch usage**. The console showed 1.8
+CU-hours and $0.19 in the Sep 22–Oct 1 partial period. If 1.8 CU-hours is representative of one
+day, 30 days is 54 CU-hours or about **$5.72 compute**, before storage and restore history. A
+0.25 CU compute kept warm for all 720 hours of a 30-day month is **$19.08 per project**; two
+always-warm projects would be $38.16. These are projections, not a fixed subscription or invoice.
+The next separate cost likely to arrive is a month of Mailgun Basic around a real race.
 
 **This table, the limits below it and the bump order now render on `/admin/tasks`** for an
 Administrator, as **one row per service** rather than three overlapping lists, with the email
@@ -266,18 +268,17 @@ on `degraded`:** `/api/health` answers 503 for every status but `ok`, and a cron
 monitor on it with "notify on failure" emails the club — from cron-job.org's own mail, which
 is the point, because the commonest reason is that the club cannot send any.
 
-### 5. Neon Free scales to zero
+### 5. Neon Launch scales to zero and bills what stays awake
 
 The first request after an idle period pays a cold start, which colleagues testing QA will feel
-as a slow first page. **The allowance, checked 2026-09-18:** 100 CU-hours a month per project;
-when they are spent the compute is *suspended until the next month* — the site is down, the data
-is kept. Scale-to-zero after five idle minutes, not configurable on Free. The arithmetic that
-matters: a job monitor every five minutes never lets the compute sleep, 0.25 CU × 24 h = 6
-CU-hours a day, 180 a month — QA had spent 74 by the 18th. So the monitors run every fifteen
-minutes in production and hourly in QA, the outbox drains itself after the request that filled
-it (`DECISIONS.md` §68), and `/devs` shows the month's figure when `NEON_API_KEY` is set
-(`SETUP.md` §33). Vercel, for the record, is nowhere near a limit: 20 minutes of 4 CPU-hours,
-19k of a million invocations, 4 of 360 GB-hours of memory in the thirty days to 2026-09-18.
+as a slow first page. Launch keeps the five-minute scale-to-zero option but removes Free's hard
+100-CU-hour monthly suspension. The arithmetic still matters because every awake interval is now
+billed: a job monitor every five minutes prevents sleep, 0.25 CU × 24 h = 6 CU-hours a day,
+180 a month, or **$19.08 per project** at $0.106/CU-hour — QA had spent 74 CU-hours by the 18th
+before the upgrade. So the monitors remain every fifteen minutes in production and hourly in QA,
+the outbox drains itself after the request that filled it (`DECISIONS.md` §68), and `/devs`
+reads the period when `NEON_API_KEY` is set (`SETUP.md` §33). Its current 100-hour denominator,
+80% warning and Free label are stale implementation, explicitly tracked by BR-REQ-090-07.
 
 The cold start is also the reason the pool sets no connection timeout: see the next section.
 
@@ -295,7 +296,7 @@ its own pool. So the deployment's total is `10 × warm instances`, a number nobo
 **What sits on the other end.** `DATABASE_URL` points at Neon's *pooled* host (the one
 containing `-pooler`), so every one of those connections lands on PgBouncer, not on PostgreSQL.
 
-| Layer | Limit at Neon Free (0.25–2 CU autoscale) |
+| Layer | Limit at the measured 0.25 and 2 CU compute sizes |
 | --- | --- |
 | PgBouncer client connections | **10,000** |
 | Concurrent server transactions (`default_pool_size`, 90% of `max_connections`) | **93** at 0.25 CU |
@@ -317,7 +318,7 @@ first is enforced by PostgreSQL, so it holds even when the Node process is froze
 was abandoned; the second covers what the first cannot see — a serverless instance killed
 between two statements of an open transaction, leaving a capacity lock (§10.6) held by nobody.
 
-**No connection timeout, deliberately.** Neon Free scales to zero and the first request after an
+**No connection timeout, deliberately.** Neon Launch scales to zero and the first request after an
 idle period waits for the compute to wake. That wait is connection time, not statement time, so
 `statement_timeout` does not touch it — and bounding it would make the guard itself the outage,
 failing a visitor's first page load to enforce a deadline.

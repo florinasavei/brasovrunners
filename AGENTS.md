@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.43-2026-09-21 -->
+<!-- PROJECT_BASELINE: BR-V1.44-2026-09-22 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V1.43-2026-09-21`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.44-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -322,7 +322,7 @@ Requires an owner decision recorded in `DECISIONS.md` before any of it is built:
 | Default timezone | `Europe/Bucharest` |
 | Validation | Zod at application boundaries |
 | ORM | Drizzle ORM |
-| Database | PostgreSQL; Neon for QA/production |
+| Database | PostgreSQL; separate Neon Launch projects for QA/production |
 | Staff authentication | Auth.js with the Zitadel OAuth provider; `staff_users` is the server-side allowlist — an unknown Zitadel account is refused (§13.1, `DECISIONS.md` §26) |
 | Participant access | Hashed, expiring, purpose-scoped email action tokens |
 | Email | Mailgun behind adapter and PostgreSQL outbox |
@@ -631,8 +631,8 @@ type AppEnvironment = "local" | "test" | "qa" | "production";
 | --- | --- | --- | --- | --- | --- |
 | local | Local PostgreSQL | Development switcher | Capture | Local/fake | Synthetic |
 | test | Disposable PostgreSQL | Development switcher | Capture | Fake | Disposable |
-| qa | Dedicated Neon | Auth.js + Zitadel, live | Capture/allowlist | Dedicated R2 | Persistent synthetic |
-| production | Dedicated Neon | Auth.js + Zitadel through its own Zitadel application; `disabled` until it exists | Live once a sending domain is verified; capture until then | Dedicated R2 | Authorized real |
+| qa | Dedicated Neon Launch project | Auth.js + Zitadel, live | Capture/allowlist | Dedicated R2 | Persistent synthetic |
+| production | Dedicated Neon Launch project | Auth.js + Zitadel through its own Zitadel application; `disabled` until it exists | Live once a sending domain is verified; capture until then | Dedicated R2 | Authorized real |
 
 ### 7.2 Provider modes
 
@@ -699,6 +699,15 @@ The primary domain and normal DNS stay with the club's registrar. Cloudflare is 
 ### 7.4 Database isolation
 
 Production uses separate Neon project/boundary from QA. QA never receives production clone or participant data.
+
+The Neon account is on Launch since 2026-09-22: usage-based with no monthly minimum, $0.106 per
+CU-hour, $0.35 per GB-month of storage, and $0.20 per GB-month of retained restore changes at
+the rates verified that day. The first 1.8 CU-hours appeared as $0.19 in the provider console.
+These are dated operational facts, not constants for business logic; re-check Neon before
+changing a budget or plan. Launch removes Free's 100-CU-hour suspension, so diagnostics MUST
+report cost and MUST NOT continue presenting 100 CU-hours or 0.5 GB as current ceilings
+(BR-REQ-090-07). Scale is the next-plan decision only when the club needs its SLA or additional
+security/compliance controls. `docs/PLATFORM.md` holds the comparison and cost arithmetic.
 
 Each deployed database contains environment marker:
 
@@ -2671,8 +2680,8 @@ Invocation has three layers, and on a serverless host none of them is a process:
 - primary: an external scheduler posting to the job endpoints with `JOB_SECRET`, **every
   fifteen minutes by day and hourly at night**, club time (`jobs/quiet-hours.ts`: quiet from
   23:00 to 07:00 `Europe/Bucharest`). It was five around the clock: five keeps a Neon compute
-  awake, and the Free plan's 100 CU-hours a month then run out around the 17th (§68 has the
-  arithmetic; `/devs` shows the figure). The site MAY be slower at night — a cold start on the
+  awake, which on Launch turns idle time into about 180 CU-hours, or $19.08 per project in a
+  30-day month at the rate verified 2026-09-22 (§68 and §280 have the arithmetic). The site MAY be slower at night — a cold start on the
   first request after an idle hour — and MUST NOT be slower by day for the same reason. This
   deploys to serverless functions (§7), which have no persistent process for an in-process
   interval to live in;

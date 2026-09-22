@@ -1025,6 +1025,23 @@
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
         "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
         "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge."
+      },
+      "editor": {
+        "heading": "Titlu de secțiune",
+        "paragraph": "Paragraf",
+        "link": "Link",
+        "linkUrl": "Adresa linkului",
+        "linkApply": "Pune linkul",
+        "linkRemove": "Scoate linkul",
+        "linkCancel": "Renunță",
+        "image": "Imagine",
+        "imageUrl": "Adresa imaginii (https)",
+        "imageAlt": "Ce se vede în imagine",
+        "imageApply": "Pune imaginea",
+        "imageCancel": "Renunță",
+        "imageInvalid": "Adresa trebuie să înceapă cu https://",
+        "undo": "Înapoi",
+        "redo": "Înainte"
       }
     },
     "tasks": {
