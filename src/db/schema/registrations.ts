@@ -344,6 +344,24 @@ export const registrations = pgTable(
      */
     provisionalBibNumber: integer("provisional_bib_number"),
 
+    /**
+     * When this registration's bib was last printed (`DECISIONS.md` §264).
+     *
+     * The owner: "ar trebui să pot descărca BID-urile din pagina de înscriere ca și batch! și
+     * să pot marca 'BID printat'". Numbers arrive in waves — somebody registers on Thursday,
+     * the sheet went to the printer on Wednesday — so the club needs to know *which* bibs are
+     * already on paper. Without it the choice is reprinting everything or remembering.
+     *
+     * A timestamp rather than a flag, because "when" answers the question a flag cannot: a bib
+     * printed before the design changed has to be printed again. It is set by the club marking
+     * a batch printed, never by the download itself — a GET does not mutate (`AGENTS.md` §12.8),
+     * and the sheet is a GET so it can be opened in a tab, saved and reopened.
+     *
+     * Cleared when the club says "not printed" for a reprint. It belongs to the printed sheet
+     * and nothing else: no email, no page, no count the club is given.
+     */
+    bibPrintedAt: timestamp("bib_printed_at", { withTimezone: true }),
+
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     emailConfirmedAt: timestamp("email_confirmed_at", { withTimezone: true }),
     waitlistedAt: timestamp("waitlisted_at", { withTimezone: true }),

@@ -744,6 +744,8 @@ Who at the club receives the archive copy of a signed declaration, and who is to
 
 The club writes its own wording for any message — the subject and the paragraphs, in each language, from the backoffice, with a preview of the result. What a message *carries* is not editable: the button and its secure link, the QR code, the attached declaration and the sign-off are the platform's, because they are what makes the message work rather than what it says (`DECISIONS.md` §247).
 
+The club can switch the anti-bot check on the registration and contact forms on or off from the backoffice, without a developer — because the day it starts refusing real people is the day it must be quickest to stop. The quieter defences stay on regardless (`DECISIONS.md` §254).
+
 The club designs its own race number: what is printed on it — the runner's name, the event, the date, the club's logo — how large the number is, where the name sits, a picture of its own instead of the coloured band, a strip of sponsors, and cut marks on the printed sheet. The preview in the backoffice is the sheet that prints (`DECISIONS.md` §249).
 
 An administrator may resend the state-appropriate message. QA email is captured or restricted to approved testers. Production email goes to the intended participant.

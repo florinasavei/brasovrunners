@@ -23,11 +23,15 @@ import {
   IMAGE_ALIGNMENTS,
   IMAGE_WIDTH_PERCENTS,
   readRichText,
+  TABLE_BORDERS,
   type BlockAlignment,
   type ImageCrop,
+  type TableBorders,
+  type TableValign,
 } from "../domain/schema";
 import ImageCropBox from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
+import { EDITOR_TABLE_SX } from "./table-layout";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -91,6 +95,10 @@ export default function RichTextEditor({
     tableDeleteRow: string;
     tableDeleteColumn: string;
     tableDelete: string;
+    /** §263: how the table is drawn, where its text sits, and whether it has a header row. */
+    tableBorders: Record<TableBorders, string>;
+    tableValign: string;
+    tableHeaderRow: string;
     link: string;
     linkUrl: string;
     linkApply: string;
@@ -118,6 +126,9 @@ export default function RichTextEditor({
     imageCropPosition: string;
     imageRemove: string;
     imageDone: string;
+    /** The ✕ on the picture's panel, and the panel's own heading (§258). */
+    imageClose: string;
+    imagePanel: string;
     /**
      * The nag under the editor, one picture and several. Two strings rather than a function:
      * props cross the server boundary, and the client island substitutes the count itself.
@@ -151,6 +162,17 @@ export default function RichTextEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
   const [gallery, setGallery] = useState<null | "loading" | StoredPicture[]>(null);
+  /**
+   * The picture's panel, closed by hand (§258; the owner: "ar trebui să pot anula sau închide
+   * pur și simplu").
+   *
+   * Selecting a picture is how the panel opens, and a selected picture is a state Tiptap owns —
+   * so "closed" cannot be the absence of a selection without also deselecting the picture the
+   * organizer is looking at. It is a dismissal instead, remembered against the position of the
+   * node it was dismissed for, so pressing the same picture again opens it and moving to
+   * another picture opens that one's.
+   */
+  const [dismissedAt, setDismissedAt] = useState<number | null>(null);
 
   const editor = useEditor({
     // Next renders this component's tree on the server first; Tiptap needs a DOM. Without this,
@@ -208,6 +230,8 @@ export default function RichTextEditor({
         value that is thrown away.
       */
       TableKit.configure({ table: { resizable: false } }),
+      /* The borders and the vertical alignment of a table (§263), above. */
+      TableStyle,
       Image.configure({ inline: false, allowBase64: false }).extend({
         parseHTML() {
           return [];
@@ -343,7 +367,21 @@ export default function RichTextEditor({
   const selectedImage = editor?.isActive("image")
     ? (editor.view.dom.querySelector("img.ProseMirror-selectednode, .rt-crop.ProseMirror-selectednode") as HTMLElement | null)
     : null;
+  /*
+    The table's own two choices (§263), read where the toolbar is built. `getAttributes` on a
+    caret outside a table answers `{}`, so the fallbacks are the defaults and the controls are
+    only rendered inside one anyway.
+  */
+  const tableBorders: TableBorders =
+    (editor?.getAttributes("table").borders as TableBorders | null) ?? "all";
+  const tableValign: TableValign =
+    (editor?.getAttributes("table").valign as TableValign | null) ?? "top";
+  const nextBorders = TABLE_BORDERS[(TABLE_BORDERS.indexOf(tableBorders) + 1) % TABLE_BORDERS.length];
+
   const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
+  const imageNodeAt = selectedImage ? (editor?.state.selection.from ?? null) : null;
+  const imagePanelOpen = Boolean(selectedImage) && imageNodeAt !== dismissedAt;
+  const closeImagePanel = () => setDismissedAt(imageNodeAt);
   /** The selected film, for its own panel (§110): caption it, or remove it. */
   const selectedVideo = editor?.isActive("youtube")
     ? (editor.view.dom.querySelector(".rt-youtube.ProseMirror-selectednode") as HTMLElement | null)
@@ -538,6 +576,48 @@ export default function RichTextEditor({
                 text="−→"
                 active={false}
                 onClick={() => editor?.chain().focus().deleteColumn().run()}
+              />
+              {/*
+                How the table is drawn (§263; the owner: "la tabele ar trebui să pot alege border
+                and stuff, ca să pot folosi tabelele și ca și layout"). One control that cycles
+                grid → rows → none, showing what it is on rather than what it will do, because
+                three separate buttons for one three-valued choice is three buttons.
+              */}
+              <Control
+                label={labels.tableBorders[tableBorders]}
+                text={TABLE_BORDER_GLYPH[tableBorders]}
+                active={tableBorders !== "all"}
+                onClick={() =>
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("table", {
+                      borders: nextBorders === "all" ? null : nextBorders,
+                    })
+                    .run()
+                }
+              />
+              {/* Top or middle. Horizontal centring is the paragraph's own alignment, three
+                  buttons to the left — a cell holds paragraphs, so it is already there. */}
+              <Control
+                label={labels.tableValign}
+                text="↕"
+                active={tableValign === "middle"}
+                onClick={() =>
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("table", { valign: tableValign === "middle" ? null : "middle" })
+                    .run()
+                }
+              />
+              {/* A layout table has no header row, and a table that grew one by accident has no
+                  other way to lose it. Tiptap's own command: it converts the row in place. */}
+              <Control
+                label={labels.tableHeaderRow}
+                text="H"
+                active={editor?.isActive("tableHeader") ?? false}
+                onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
               />
               <Control
                 label={labels.tableDelete}
@@ -772,6 +852,10 @@ export default function RichTextEditor({
               fontStyle: "italic",
             },
             "& .tiptap ul, & .tiptap ol": { pl: 3 },
+            /* A table is drawn here exactly as the page draws it (§263). The editor had no table
+               rules at all: a grid on the page was an unstyled table in the form, which is the
+               whole of "tabelele arată strange". */
+            ...EDITOR_TABLE_SX,
           }}
         >
           <EditorContent editor={editor} />
@@ -792,14 +876,50 @@ export default function RichTextEditor({
         when the selection moves anywhere else, and "Done" moves it past the picture.
       */}
       <Popper
-        open={Boolean(selectedImage)}
+        open={imagePanelOpen}
         anchorEl={selectedImage}
         placement="bottom-start"
-        modifiers={[{ name: "preventOverflow", options: { altAxis: true, padding: 8 } }]}
+        /*
+          It floated over the header and the navigation on a wide screen (§258; the owner:
+          "editorul de poze rămâne floating în dreapta random").
+
+          Three modifiers and nothing clever: `flip` puts it above the picture when there is no
+          room below, `preventOverflow` keeps it inside the writing area's own box rather than
+          the viewport — so a picture floated to the right edge no longer pushes the panel over
+          the page's chrome — and `offset` leaves eight pixels so it reads as attached to the
+          picture and not as part of it.
+        */
+        modifiers={[
+          { name: "offset", options: { offset: [0, 8] } },
+          { name: "flip", options: { padding: 8 } },
+          { name: "preventOverflow", options: { altAxis: true, padding: 8, boundary: "clippingParents" } },
+        ]}
         sx={{ zIndex: (theme) => theme.zIndex.modal }}
       >
-        <Paper elevation={6} sx={{ p: 1.5, width: 320, maxWidth: "calc(100vw - 32px)" }} data-testid="rich-text-image-panel">
+        <Paper
+          elevation={6}
+          sx={{ p: 1.5, width: 320, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto" }}
+          data-testid="rich-text-image-panel"
+          // Escape closes it, like every dialog on the platform — and the keyboard is how
+          // somebody who has just been nudging the crop box with the arrows will reach for it.
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              closeImagePanel();
+            }
+          }}
+        >
           <Stack spacing={1.5}>
+            {/* A heading and a way out. The panel used to offer "Gata", which moves the caret
+                past the picture — useful, and not the same thing as "close this". */}
+            <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {labels.imagePanel}
+              </Typography>
+              <Button size="small" color="inherit" onClick={closeImagePanel} aria-label={labels.imageClose} sx={{ minWidth: 44 }}>
+                ✕
+              </Button>
+            </Stack>
             <TextField
               size="small"
               label={labels.imageAlt}
@@ -914,7 +1034,7 @@ export default function RichTextEditor({
         </Paper>
       </Popper>
 
-      {/* The film's own panel (§110): a caption, or remove it. */}
+      {/* The film's own panel (§110): a caption, how wide it is, which side (§266), or remove it. */}
       <Popper
         open={Boolean(selectedVideo)}
         anchorEl={selectedVideo}
@@ -935,6 +1055,59 @@ export default function RichTextEditor({
               }}
               slotProps={{ htmlInput: { maxLength: 500 } }}
             />
+            {/*
+              The same two questions a picture answers, and the same answers (§266): the film is
+              a figure in the text now, so "how big" and "where" are the organizer's to set.
+            */}
+            <Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                {labels.imageSize}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={Number(videoAttrs?.widthPercent ?? 100)}
+                onChange={(_event, percent: number | null) => {
+                  if (percent !== null) editor?.chain().focus().updateAttributes("youtube", { widthPercent: percent }).run();
+                }}
+                aria-label={labels.imageSize}
+              >
+                {IMAGE_WIDTH_PERCENTS.map((percent) => (
+                  <ToggleButton key={percent} value={percent} sx={{ minWidth: 56, minHeight: 40 }}>
+                    {percent}%
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
+            <Box>
+              <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                {labels.imageAlign}
+              </Typography>
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={String(videoAttrs?.align ?? "block")}
+                onChange={(_event, align: string | null) => {
+                  if (align === null) return;
+                  // A film floated at the full width leaves no column to write in, so choosing a
+                  // side halves it in the same transaction — the picture's own rule.
+                  const widthPercent =
+                    align !== "block" && Number(videoAttrs?.widthPercent ?? 100) === 100 ? 50 : undefined;
+                  editor
+                    ?.chain()
+                    .focus()
+                    .updateAttributes("youtube", widthPercent ? { align, widthPercent } : { align })
+                    .run();
+                }}
+                aria-label={labels.imageAlign}
+              >
+                {IMAGE_ALIGNMENTS.map((align) => (
+                  <ToggleButton key={align} value={align} sx={{ minWidth: 56, minHeight: 40 }}>
+                    {align === "block" ? labels.imageAlignBlock : align === "left" ? labels.imageAlignLeft : labels.imageAlignRight}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
             <Stack direction="row" spacing={1} sx={{ justifyContent: "space-between" }}>
               <Button color="error" size="small" onClick={() => editor?.chain().focus().deleteSelection().run()}>
                 {labels.youtubeRemove}
@@ -978,6 +1151,59 @@ export default function RichTextEditor({
  * `text-align` declaration only where somebody chose one — the same discipline the renderer
  * keeps, and the reason the two look identical.
  */
+/**
+ * The table's own two choices (§263): how it is drawn, and where in a cell the text sits.
+ *
+ * A global attribute on the `table` node rather than a fork of `TableKit`, which is the same
+ * shape `BlockAlign` uses for a paragraph's alignment and needs no package: `addGlobalAttributes`
+ * is the documented way to put an attribute on a node another extension owns.
+ *
+ * **The default emits nothing.** `all` and `top` are what every table already looks like, so a
+ * table nobody has restyled writes no attribute at all — its stored JSON stays byte-identical
+ * and the editor's own default CSS applies. Only a choice away from the default reaches the DOM,
+ * as `data-borders` / `data-valign`, which is what `table-layout.ts` keys the editor's rules on.
+ *
+ * `parseHTML` validates rather than trusting: the value comes back from the editor's own DOM on
+ * an undo or a copy inside the document, and an unknown string there would become an attribute
+ * the server's allowlist then refuses — a save that fails for a reason nobody can see.
+ */
+const TableStyle = Extension.create({
+  name: "tableStyle",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["table"],
+        attributes: {
+          borders: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              attrs.borders === "rows" || attrs.borders === "none"
+                ? { "data-borders": attrs.borders }
+                : {},
+            parseHTML: (element: HTMLElement) => {
+              const value = element.getAttribute("data-borders");
+              return value === "rows" || value === "none" ? value : null;
+            },
+          },
+          valign: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              attrs.valign === "middle" ? { "data-valign": "middle" } : {},
+            parseHTML: (element: HTMLElement) =>
+              element.getAttribute("data-valign") === "middle" ? "middle" : null,
+          },
+        },
+      },
+    ];
+  },
+});
+
+/**
+ * What the borders control shows: the state it is in, drawn with box-drawing characters rather
+ * than an icon package (`AGENTS.md` §1.5) and in the same spirit as the rest of this toolbar.
+ */
+const TABLE_BORDER_GLYPH: Record<TableBorders, string> = { all: "▦", rows: "▤", none: "▢" };
+
 const ALIGNABLE = ["paragraph", "heading"] as const;
 
 const BlockAlign = Extension.create({
@@ -1005,10 +1231,16 @@ const BlockAlign = Extension.create({
 });
 
 /**
- * The YouTube block (§110): an atom, so the caret never enters it; selectable, so a click opens
- * its panel; shown as the film's thumbnail from YouTube's image host with a play mark and the
- * caption beneath — the editor is the backoffice, where a request to Google for a thumbnail is
- * the organizer's own doing, unlike a reader's page, which fetches nothing until pressed.
+ * The YouTube block (§110, §266): an atom, so the caret never enters it; selectable, so a click
+ * opens its panel; shown as the film's thumbnail from YouTube's image host with a play mark and
+ * the caption beneath — the editor is the backoffice, where a request to Google for a thumbnail
+ * is the organizer's own doing, unlike a reader's page, which fetches nothing until pressed.
+ *
+ * **It carries the picture's two attributes since §266** — how much of the column it takes and
+ * which side it sits on — and draws itself at that size here, because a film the organizer sized
+ * to half the column and saw full-width in the editor is the editor lying. The width is written
+ * as an inline style for the same reason the crop's is: ProseMirror owns this DOM, so there is no
+ * `sx` to give it.
  */
 const YoutubeNode = Node.create({
   name: "youtube",
@@ -1017,16 +1249,34 @@ const YoutubeNode = Node.create({
   selectable: true,
   draggable: true,
   addAttributes() {
-    return { videoId: { default: null }, caption: { default: "" } };
+    return {
+      videoId: { default: null },
+      caption: { default: "" },
+      // The defaults emit nothing: a film stored before §266 keeps its exact JSON.
+      widthPercent: { default: 100 },
+      align: { default: "block" },
+    };
   },
   parseHTML() {
     return [];
   },
   renderHTML({ node }) {
     const id = String(node.attrs.videoId ?? "");
+    const percent = Number(node.attrs.widthPercent ?? 100);
+    const align = String(node.attrs.align ?? "block");
+    /*
+      The page's geometry, in the one form this DOM accepts. A floated film gets the gutter the
+      text wraps against on its inner side, which is what `imageFigureSx` does with `mr`/`ml`.
+    */
+    const box = [
+      "position:relative",
+      `width:${percent}%`,
+      "max-width:100%",
+      align === "block" ? "margin:8px auto" : align === "left" ? "float:left;margin:8px 24px 8px 0" : "float:right;margin:8px 0 8px 24px",
+    ].join(";");
     return [
       "div",
-      { class: "rt-youtube", "data-youtube": id, style: "position:relative;max-width:480px;margin:8px 0" },
+      { class: "rt-youtube", "data-youtube": id, "data-width": String(percent), "data-align": align, style: box },
       ["img", { src: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, alt: "", style: "display:block;width:100%;border-radius:4px" }],
       ["span", { style: "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:#fff;text-shadow:0 0 8px #000" }, "▶"],
       ["div", { style: "font-size:0.875rem;color:#666;text-align:center;margin-top:4px" }, String(node.attrs.caption ?? "")],

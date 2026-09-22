@@ -37,6 +37,15 @@ export type AuditAction =
   | "registration.bibs_assigned"
   /** One number typed by hand, or cleared (BR-REQ-038-01 criterion 7). */
   | "registration.bib_set"
+  /**
+   * Bibs the club says are on paper, or no longer are (§264).
+   *
+   * The batch's row names the event, the scope and the count and no participant — a printing
+   * record is not a record of who was printed, and the count is what answers "did somebody
+   * already print these".
+   */
+  | "registration.bibs_printed"
+  | "registration.bibs_unprinted"
   /** Confirmed at the desk: address vouched for, declaration on paper (BR-REQ-037-07). */
   | "registration.confirmed_by_staff"
   /** Given a place ahead of the queue, into a free one (BR-REQ-037-07). */
@@ -61,6 +70,8 @@ export type AuditAction =
   | "email_plan.changed"
   | "delivery_timing.changed"
   | "contact_recipients.changed"
+  /** The anti-bot challenge switched on or off from the backoffice (§254). */
+  | "bot_check.changed"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */

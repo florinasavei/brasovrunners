@@ -1,10 +1,9 @@
-import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import RichTextEditor from "@/modules/content/rich-text/ui/RichTextEditor";
+import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 
 export type EditablePageTranslation = {
@@ -19,12 +18,14 @@ export type EditablePageTranslation = {
 /**
  * The whole page editor's fields: the nav order, then one block per language.
  *
- * ## Why both languages are on one screen rather than behind tabs
+ * ## One tab per language, as everywhere else (§259)
  *
- * The event editor uses a tab per language, and it is right there: an event carries thirty
- * fields and two panels of thirty do not fit. A page carries four. Both languages visible at
- * once is what makes "the English one is empty" obvious *before* somebody presses publish and
- * is told so by a validation error (`AGENTS.md` §11.2).
+ * This form stacked the two languages and argued for it: a page carries four fields, and both
+ * languages at once makes "the English one is empty" obvious before somebody presses publish.
+ * The argument stopped being true when the body became a rich-text editor — two editors stacked
+ * is two screens of scrolling to reach the English title — and the owner asked for the
+ * consistency outright: "hai să fim consistenți". The incompleteness it was protecting is still
+ * caught, by the publish rule itself (`AGENTS.md` §11.2) and by the tab's own "incomplet" mark.
  *
  * ## Why a textarea rather than a rich-text editor
  *
@@ -60,19 +61,16 @@ export default async function PageFieldsForm({
         sx={{ maxWidth: 220 }}
       />
 
-      {routing.locales.map((locale) => {
-        const translation = translations.find((row) => row.locale === locale);
-        const name = (field: string) => `translations.${locale}.${field}`;
+      <LocaleTabPanels
+        panels={routing.locales.map((locale) => {
+          const translation = translations.find((row) => row.locale === locale);
+          const name = (field: string) => `translations.${locale}.${field}`;
 
-        return (
-          <Box
-            key={locale}
-            sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: { xs: 2, sm: 3 } }}
-          >
-            <Typography variant="h2" sx={{ fontSize: "1.125rem", mb: 2 }}>
-              {t(`language.${locale}`)}
-            </Typography>
-            <Stack spacing={2}>
+          return {
+            locale,
+            label: t(`language.${locale}`),
+            content: (
+              <Stack spacing={2} sx={{ pt: 2 }}>
               <TextField
                 name={name("title")}
                 label={t("fields.title")}
@@ -106,10 +104,11 @@ export default async function PageFieldsForm({
                 multiline
                 minRows={2}
               />
-            </Stack>
-          </Box>
-        );
-      })}
+              </Stack>
+            ),
+          };
+        })}
+      />
     </Stack>
   );
 }

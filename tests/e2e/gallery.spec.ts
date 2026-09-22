@@ -27,6 +27,8 @@ test.describe.serial("BR-REQ-054-01 the photo gallery", () => {
     await field("translations.ro.title").fill(`Alergarea de duminică ${suffix}`);
     await field("translations.ro.slug").fill(slug);
     await field("translations.ro.description").fill("Pozele de la start.");
+    // Tabs since §259, here as in every other editor: the English panel is hidden until asked for.
+    await page.getByRole("tab", { name: /English/ }).click();
     await field("translations.en.title").fill(`Sunday run ${suffix}`);
     await field("translations.en.slug").fill(`sunday-${suffix}`);
     await page.getByRole("button", { name: "Album nou" }).click();

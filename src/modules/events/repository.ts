@@ -225,6 +225,28 @@ export async function listPublishedEventsBetween(db: Database, locale: Locale, f
 }
 
 /**
+ * The published events that have already finished, newest first (`DECISIONS.md` §267).
+ *
+ * The owner: "old or closed events must be shown at the bottom on a different category". Until
+ * now the listing showed what is still to come and nothing else, so an event the club held —
+ * the race somebody wants a photograph of, last Monday's run — existed only inside the
+ * calendar's month view. It is a section of its own at the foot of the listing now, and the
+ * part that matters is that a finished event is never mistaken for an invitation.
+ *
+ * `limit` is what keeps the page from growing without end: a weekly run is fifty rows a year.
+ * The calendar (§107, §116) is where the whole history lives, and the section says so.
+ */
+export async function listPastEvents(db: Database, locale: Locale, now: Date, limit: number) {
+  return db
+    .select(PUBLIC_COLUMNS)
+    .from(events)
+    .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+    .where(and(publishedIn(locale), lt(eventEndsAt, now)))
+    .orderBy(desc(events.startsAt))
+    .limit(limit);
+}
+
+/**
  * The most recently finished published event, or undefined when the club has never held one.
  *
  * Between seasons there may be nothing scheduled. Rather than showing an empty page — which

@@ -57,6 +57,8 @@ export type RegistrationListRow = {
   bibNumber: number | null;
   /** The number held while it can still change (§214); null once a final one is settled. */
   provisionalBibNumber: number | null;
+  /** When the club last said this bib is on paper (§264); null while it is not. */
+  bibPrintedAt: Date | null;
   checkedInAt: Date | null;
   /** Mailgun's reason when a message bounced or was complained about (§76); null otherwise. */
   emailRejectedReason: string | null;
@@ -291,6 +293,7 @@ export async function listRegistrationsForAdmin<T extends Record<string, unknown
       confirmedAt: registrations.confirmedAt,
       bibNumber: registrations.bibNumber,
       provisionalBibNumber: registrations.provisionalBibNumber,
+      bibPrintedAt: registrations.bibPrintedAt,
       checkedInAt: registrations.checkedInAt,
       emailRejectedReason,
       idDocument: latestIdDocument,

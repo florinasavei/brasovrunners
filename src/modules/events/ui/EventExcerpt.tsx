@@ -26,14 +26,18 @@ export const PAGE_EXCERPT_SX = {
  *
  * - **The column share.** 100, 75, 50 or 33 percent is a decision about the text column of an
  *   event page. A card is one narrow column, so the figure takes all of it, always.
- * - **The height.** A portrait photograph at full width is taller than the whole card, which
- *   would push the date, the place and "see details" below the fold on a phone. It is capped
- *   and cropped from the centre instead — a card's picture is an invitation, not the picture.
  * - **The float.** A picture set to sit left or right of the text on an event page (2026-09-20)
- *   is a decision about a column wide enough to have a side. A card has one column of its own
- *   and a fixed height for the picture, so a float there is two words a line beside a cropped
- *   photograph, and a float at the end of the excerpt would reach into the date and the place
- *   beneath it. The card puts every picture back in the flow.
+ *   is a decision about a column wide enough to have a side. A card has one narrow column of
+ *   its own, so a float there is two words a line beside a photograph, and a float at the end
+ *   of the excerpt would reach into the date and the place beneath it. The card puts every
+ *   picture back in the flow.
+ *
+ * The height is **not** one of them any more (§260). The card used to cap every picture at 180
+ * pixels and cut the rest from the centre, which is a crop nobody asked for and nobody could
+ * see — the owner: "practic pe card au o înălțime fixă, ceea ce e cam greșit". A picture on a
+ * card now has the shape it has, which is the shape it has in the editor and on the page: the
+ * organizer's own crop box (§241) is where a portrait photograph becomes a band, and it is a
+ * choice that is visible while it is being made.
  *
  * The words stay the size a card's words were (`body2`): this change is about the picture, and
  * a listing whose type grew would be a second, unasked-for change.
@@ -46,18 +50,7 @@ export const CARD_EXCERPT_SX = {
   // One class more specific than the figure's own rule, which is how the chosen width and the
   // chosen side — both media queries from `sm` up — are overridden without `!important`.
   "& figure": { width: "100%", my: 1, float: "none", marginLeft: "auto", marginRight: "auto" },
-  /*
-    A picture nobody cropped is capped and cut from the centre, as it always was — the child
-    selector matters now that a cropped picture has a window between the figure and the <img>,
-    and this rule must not reach the photograph inside that window.
-
-    A cropped one (§241) shows the rectangle the organizer drew: the card is the reason the
-    crop exists, since this is where a portrait photograph was being cut by a rule nobody could
-    see. The cap stays as a ceiling rather than a shape — a crop wider than about 8:5 never
-    reaches it, and one close to square is trimmed at the bottom rather than swallowing the card.
-  */
-  "& figure > img": { maxHeight: 180, objectFit: "cover" },
-  "& figure > .rt-crop": { maxHeight: 180 },
+  "& figure > img": { height: "auto" },
   // The caption follows the picture: centred under a band, and every card's picture is a band.
   "& figcaption": { textAlign: "center" },
 } as const;

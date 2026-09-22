@@ -83,6 +83,8 @@ export async function listPublishedPages<T extends Record<string, unknown>>(
 export type PageListRow = {
   id: string;
   editorialStatus: string;
+  /** The optimistic version, so the list can publish and unpublish a row (§256). */
+  version: number;
   navOrder: number;
   title: string | null;
   slug: string | null;
@@ -98,6 +100,9 @@ export async function listPagesForAdmin<T extends Record<string, unknown>>(
     .select({
       id: pages.id,
       editorialStatus: pages.editorialStatus,
+      // The optimistic version, because the list publishes and unpublishes now (§256): the
+      // transition refuses a stale one, which is what keeps two open tabs from fighting.
+      version: pages.version,
       navOrder: pages.navOrder,
       title: pageTranslations.title,
       slug: pageTranslations.slug,

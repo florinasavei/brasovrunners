@@ -1,6 +1,12 @@
 "use client";
 
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import EditIcon from "@mui/icons-material/Edit";
+import MailIcon from "@mui/icons-material/Mail";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import PublicIcon from "@mui/icons-material/Public";
+import PublicOffIcon from "@mui/icons-material/PublicOff";
+import StarIcon from "@mui/icons-material/Star";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -19,26 +25,42 @@ import MenuItem from "@mui/material/MenuItem";
 import { useState } from "react";
 
 /** The glyph before a verb (the owner: "these should also have icons"), by name — the menu is a client island and makes the element. */
-export type EventRowMenuIcon = "preview" | "registrations" | "duplicate" | "delete";
+export type RowMenuIcon =
+  | "preview"
+  | "registrations"
+  | "duplicate"
+  | "delete"
+  | "edit"
+  | "publish"
+  | "unpublish"
+  | "cover"
+  | "invite"
+  | "revoke";
 
-const ICONS: Record<EventRowMenuIcon, typeof MoreVertIcon> = {
+const ICONS: Record<RowMenuIcon, typeof MoreVertIcon> = {
   preview: VisibilityIcon,
   registrations: HowToRegIcon,
   duplicate: ContentCopyIcon,
   delete: DeleteIcon,
+  edit: EditIcon,
+  publish: PublicIcon,
+  unpublish: PublicOffIcon,
+  cover: StarIcon,
+  invite: MailIcon,
+  revoke: PersonOffIcon,
 };
 
-export type EventRowMenuItem =
+export type RowMenuItem =
   /**
    * `color` on a link, for the one link that is a destructive verb's front door: the hard
    * delete opens a screen rather than submitting a form (it has a typed confirmation to ask
    * for), and a menu entry that looks like "Preview" is the wrong preparation for it.
    */
-  | { kind: "link"; label: string; href: string; icon?: EventRowMenuIcon; color?: "error" }
+  | { kind: "link"; label: string; href: string; icon?: RowMenuIcon; color?: "error" }
   | {
       kind: "submit";
       label: string;
-      icon?: EventRowMenuIcon;
+      icon?: RowMenuIcon;
       /** The id of a form already in the page whose Server Action this item submits. */
       formId: string;
       confirm: { title: string; body: string; confirmLabel: string };
@@ -62,18 +84,18 @@ export type EventRowMenuItem =
  * changed: the role check, the version guard and the refusal to delete an event with
  * registrations against it are the server's, and this only decides which form to post.
  */
-export default function EventRowMenu({
+export default function RowMenu({
   items,
   ariaLabel,
   cancelLabel,
 }: {
-  items: EventRowMenuItem[];
+  items: RowMenuItem[];
   ariaLabel: string;
   cancelLabel: string;
 }) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const [pending, setPending] = useState<Extract<EventRowMenuItem, { kind: "submit" }> | null>(null);
-  const glyph = (name: EventRowMenuIcon | undefined) => {
+  const [pending, setPending] = useState<Extract<RowMenuItem, { kind: "submit" }> | null>(null);
+  const glyph = (name: RowMenuIcon | undefined) => {
     if (!name) return null;
     const Icon = ICONS[name];
     return (

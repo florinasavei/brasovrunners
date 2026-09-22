@@ -10,6 +10,7 @@ import { CONTACT_ERROR_SUMMARY_ID } from "@/modules/contact/fields";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { submitContactMessage } from "@/modules/contact/service";
 import { stashFormDraft } from "@/modules/registrations/form-draft";
+import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -36,7 +37,9 @@ export async function submitContactAction(form: FormData): Promise<void> {
   // is "unavailable" and passes — the honeypot and the timing check are still in front.
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-  const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);
+  const verdict = (await botCheckIsOn(getDb(), new Date()))
+    ? await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp)
+    : "not_configured";
   if (verdict === "failed") {
     await stashFormDraft(form, path);
     redirect(`${path}?error=VALIDATION_ERROR&fields=captcha#${CONTACT_ERROR_SUMMARY_ID}`);

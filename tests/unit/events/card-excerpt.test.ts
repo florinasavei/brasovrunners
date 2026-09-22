@@ -10,9 +10,14 @@ import { CARD_EXCERPT_SX, PAGE_EXCERPT_SX } from "@/modules/events/ui/EventExcer
  * The cards rendered `excerpt`, the plain-text shadow the service derives from the document,
  * so an organizer who put a picture in the summary saw it on the event page and on the hero
  * and never on the card that sends people there (the owner: "pictures should be shown in the
- * short description as well"). Rendering the document itself brings the editor's two picture
- * choices along, and neither survives a card: the column share is a decision about an event
- * page's text column, and an uncapped portrait photograph is taller than the card it is in.
+ * short description as well"). Rendering the document itself brings the editor's picture
+ * choices along, and two of them mean nothing in a card: the column share and the side are
+ * decisions about an event page's text column, and a card has one narrow column of its own.
+ *
+ * The height is not one of them (§260). The card capped every picture at 180 pixels and cut the
+ * rest from the centre — the owner: "practic pe card au o înălțime fixă, ceea ce e cam greșit" —
+ * so a picture on a card now has its own shape, the same shape it has in the editor and on the
+ * page, and the crop box (§241) is where a portrait photograph becomes a band on purpose.
  */
 describe("BR-REQ-041-01 the short description on a listing card", () => {
   it("gives a picture the whole card, whatever share of the column was chosen", () => {
@@ -24,36 +29,39 @@ describe("BR-REQ-041-01 the short description on a listing card", () => {
 
   it("puts a floated picture back in the flow, whatever side was chosen", () => {
     // The alignment (2026-09-20) is a decision about a text column wide enough to have a side.
-    // A card is one narrow column with a cropped picture at a fixed height, and a float at the
-    // end of the excerpt would reach into the date and the place beneath it. Same mechanism as
-    // the width: one type selector more specific than the figure's own media query.
+    // A card is one narrow column, so a float there is two words a line beside a photograph,
+    // and a float at the end of the excerpt would reach into the date and the place beneath it.
+    // Same mechanism as the width: one type selector more specific than the figure's own
+    // media query.
     expect(CARD_EXCERPT_SX["& figure"].float).toBe("none");
     expect(CARD_EXCERPT_SX["& figure"].marginLeft).toBe("auto");
     expect(CARD_EXCERPT_SX["& figure"].marginRight).toBe("auto");
     expect(CARD_EXCERPT_SX["& figcaption"].textAlign).toBe("center");
   });
 
-  it("caps the picture's height and crops it, so the facts stay on the first screen", () => {
-    expect(CARD_EXCERPT_SX["& figure > img"].maxHeight).toBe(180);
-    expect(CARD_EXCERPT_SX["& figure > img"].objectFit).toBe("cover");
+  it("gives the picture its own shape — no fixed height, no crop the organizer did not draw (§260)", () => {
+    // `height: auto` is the explicit form of "whatever this picture's proportions say", written
+    // down so nothing above it can re-impose a band.
+    expect(CARD_EXCERPT_SX["& figure > img"]).toEqual({ height: "auto" });
   });
 
-  it("caps the window of a cropped picture, and never the photograph inside it", () => {
-    // §241: a cropped picture is an <img> inside a window, and the window is what may be
-    // capped — `maxHeight` on the photograph would fight the magnification that draws the
-    // crop and show a slice of the wrong part. Hence the child selector above: `& figure img`
-    // would have reached inside the window.
-    expect(CARD_EXCERPT_SX["& figure > .rt-crop"].maxHeight).toBe(180);
+  it("leaves a cropped picture's window alone, so the rectangle drawn is the rectangle shown", () => {
+    // §241: a cropped picture is an <img> magnified inside a `.rt-crop` window whose height is
+    // the crop's own aspect ratio. Capping the window trimmed the bottom off that rectangle;
+    // capping the photograph inside it would show a slice of the wrong part. Neither happens
+    // now — and the child selector is still what keeps any future figure rule out of the
+    // window's inside.
+    expect(CARD_EXCERPT_SX).not.toHaveProperty("& figure > .rt-crop");
     expect(Object.keys(CARD_EXCERPT_SX).filter((key) => key.startsWith("& figure ") && !key.includes(">"))).toEqual([]);
   });
 
-  it("measures nothing horizontally in pixels or in viewport units", () => {
+  it("measures nothing in pixels or in viewport units at all", () => {
     // The 320-pixel rule is kept by construction rather than by a number that happens to fit:
     // the only width here is the card's own, and `vw` on a page with a scrollbar is wider than
-    // the page. `maxHeight` is the one fixed measurement, and it is vertical.
+    // the page. Since §260 there is no fixed measurement left in either direction.
     const values = JSON.stringify(CARD_EXCERPT_SX);
     expect(values).not.toMatch(/vw"/);
-    expect(values).not.toMatch(/"(width|minWidth|maxWidth)":\s*\d/);
+    expect(values).not.toMatch(/"(width|minWidth|maxWidth|height|minHeight|maxHeight)":\s*\d/);
   });
 
   it("keeps the card's words the size the card's words were", () => {

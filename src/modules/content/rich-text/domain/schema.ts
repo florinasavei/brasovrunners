@@ -169,7 +169,37 @@ const blockquoteNode = z.object({
  *
  * A header row is `tableHeader` cells, which is Tiptap's own shape; the renderer turns them into
  * `<th>` with a scope, so a screen reader announces which column a figure belongs to.
+ *
+ * **Two choices about the whole table are kept** (§263; the owner: "la tabele ar trebui să pot
+ * alege border and stuff, ca să pot folosi tabelele și ca și layout, și să pot centra info în
+ * ele"). Both are on the table rather than the cell, because a table whose cells each carry
+ * their own rules is a spreadsheet, and because these are the two questions somebody actually
+ * asks — "should this read as a table or hold a layout" and "where in the cell does the text
+ * sit". Horizontal centring needs nothing new: a cell holds paragraphs, and a paragraph already
+ * carries its own alignment (§213), so the toolbar's own centre button centres a cell's words.
+ *
+ * - `borders`: `all` — the lines the table has always had — `rows` for horizontal rules only,
+ *   which is how a price list reads, or `none`, which is what makes a table usable as a layout.
+ * - `valign`: `top`, as it was, or `middle`.
+ *
+ * Absent means the default, exactly as with a paragraph's alignment: a table stored before today
+ * parses to a table with no `attrs` at all, so every golden-string test keeps passing and
+ * nothing needs migrating.
  */
+export const TABLE_BORDERS = ["all", "rows", "none"] as const;
+export type TableBorders = (typeof TABLE_BORDERS)[number];
+export const TABLE_VALIGNS = ["top", "middle"] as const;
+export type TableValign = (typeof TABLE_VALIGNS)[number];
+
+export type TableStyle = { borders: TableBorders; valign: TableValign };
+
+/** Absent, null, or the default — one place decides, so no renderer re-decides it. */
+export function tableStyleOf(
+  attrs: { borders?: TableBorders | null; valign?: TableValign | null } | undefined,
+): TableStyle {
+  return { borders: attrs?.borders ?? "all", valign: attrs?.valign ?? "top" };
+}
+
 const SPAN = z.number().int().min(1).max(20).optional();
 
 const tableCellContent = z.array(z.union([paragraphNode, bulletListNode, orderedListNode])).min(1);
@@ -193,6 +223,12 @@ const tableRowNode = z.object({
 
 const tableNode = z.object({
   type: z.literal("table"),
+  attrs: z
+    .object({
+      borders: z.union([z.literal("all"), z.literal("rows"), z.literal("none")]).nullish(),
+      valign: z.union([z.literal("top"), z.literal("middle")]).nullish(),
+    })
+    .optional(),
   content: z.array(tableRowNode).min(1),
 });
 
@@ -301,11 +337,21 @@ const imageNode = z.object({
 });
 
 /**
- * A YouTube film between paragraphs (`DECISIONS.md` §110): the eleven-character video id and
+ * A YouTube film in the text (`DECISIONS.md` §110, §266): the eleven-character video id and
  * nothing else — never a URL, never an iframe, never a third host. The renderer builds the
- * `youtube-nocookie.com` embed from the id behind a closed disclosure, as the event's own film
- * is shown (§69): nothing is fetched from Google until the reader presses. `caption` is the
- * sentence under it, visible to everybody.
+ * `youtube-nocookie.com` embed from the id, and nothing is fetched from Google until the reader
+ * presses (§69). `caption` is the sentence under it, visible to everybody.
+ *
+ * **`widthPercent` and `align` are the picture's own two attributes, the same closed sets**
+ * (§266; the owner: "that YouTube video must be embedded and resizable, not as a separate
+ * section"). A film was a full-width bordered block whatever the organizer wanted; it is a
+ * figure in the flow now, sized and sided like a photograph, and the geometry is literally the
+ * same function — `imageFigureSx`.
+ *
+ * Absent reads as 100 percent and `block` — the same transform a picture's two attributes have
+ * — so a film stored before today is the full-width band it always was and renders the markup
+ * it rendered yesterday. What is *stored* is untouched; what is parsed carries the defaults,
+ * which is why the golden-string test for a film names them.
  */
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const youtubeNode = z.object({
@@ -313,6 +359,16 @@ const youtubeNode = z.object({
   attrs: z.object({
     videoId: z.string().regex(YOUTUBE_ID, "a YouTube video id is eleven characters"),
     caption: z.string().max(500).nullable().optional().transform((value) => value ?? ""),
+    widthPercent: z
+      .union([z.literal(100), z.literal(75), z.literal(50), z.literal(33)])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? 100),
+    align: z
+      .union([z.literal("block"), z.literal("left"), z.literal("right")])
+      .nullable()
+      .optional()
+      .transform((value) => value ?? "block"),
   }).strict(),
 });
 

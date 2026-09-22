@@ -1190,7 +1190,12 @@ nobody redoes them (`/admin/tasks` reads the same facts from the deployment):
 - **Release #58** (`qa → main`, 2026-09-19) is live; the production schema is `0042`
   (`0043`, the programme rows, arrives with the next release and its gated migration run).
 
-## 37. Let "Add" on Echipa create the sign-in account and send the invitation
+## 37. Let "Add" on Echipa create the sign-in account and send the invitation — done (2026-09-20)
+
+**Done on both Vercel projects.** `ZITADEL_MANAGEMENT_PAT` was written on 2026-09-20 and
+predates the builds now serving, so "Add" on Echipa already creates the account and sends the
+invitation. The procedure below is kept for the day the token is rotated or revoked — it has no
+expiry, so revoking it is a decision somebody has to make rather than something that happens.
 
 Five minutes in the Zitadel console, once (`DECISIONS.md` §123). The platform emails the
 invitation itself either way — who added them, as what, the sign-in link (§141); without
@@ -1215,7 +1220,13 @@ it "Add" creates the account too and Zitadel sends the password link.
 
 Locally the development switcher is the provider, so nothing is sent and the alert says so.
 
-## 38. The contact form — the club's Gmail lends it an app password
+## 38. The contact form — the club's Gmail lends it an app password — done (2026-09-20)
+
+**Done on both Vercel projects**, and visible: `/ro/contact` shows the form on production and on
+QA rather than the club's address (checked 2026-09-22). `CONTACT_SMTP_USER`,
+`CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` were written on 2026-09-20 and predate the builds
+now serving. The procedure below is kept for a new app password — Google shows one once — and for
+the part that stays the club's, which is who receives a message (`/admin/emails`).
 
 Five minutes, once, in the club's Google account and on Vercel (`DECISIONS.md` §149). The
 "Scrie-ne" page is built and works on every laptop (the message is captured, nothing is

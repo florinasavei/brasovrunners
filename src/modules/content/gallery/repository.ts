@@ -157,6 +157,8 @@ export async function listPhotos<T extends Record<string, unknown>>(
 export type AlbumListRow = {
   id: string;
   editorialStatus: GalleryAlbum["editorialStatus"];
+  /** The optimistic version, so the list can publish and unpublish a row (§256). */
+  version: number;
   takenOn: Date;
   title: string;
   photoCount: number;
@@ -171,6 +173,7 @@ export async function listAlbumsForAdmin<T extends Record<string, unknown>>(
     .select({
       id: galleryAlbums.id,
       editorialStatus: galleryAlbums.editorialStatus,
+      version: galleryAlbums.version,
       takenOn: galleryAlbums.takenOn,
       title: galleryAlbumTranslations.title,
       photoCount: sql<number>`(select count(*) from ${galleryItems} where ${galleryItems.albumId} = ${galleryAlbums.id})`,

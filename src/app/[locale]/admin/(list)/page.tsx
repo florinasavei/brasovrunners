@@ -33,7 +33,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
 import BulkBar from "@/modules/content/events/ui/BulkBar";
-import EventRowMenu from "@/modules/content/events/ui/EventRowMenu";
+import RowMenu from "@/shared/ui/RowMenu";
 import { editionDifference, groupSeries, usualOf } from "@/modules/events/domain/series";
 import EditionMark, { type EditionNote } from "@/modules/events/ui/EditionMark";
 import { editionNote } from "@/modules/events/ui/series-sentence";
@@ -524,7 +524,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
                     <input type="hidden" name="eventId" value={event.id} />
                   </form>
                 )}
-                <EventRowMenu
+                <RowMenu
                   ariaLabel={t("events.moreActions")}
                   cancelLabel={t("confirm.cancel")}
                   items={[
