@@ -126,8 +126,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <JsonLd data={sportsOrganizationJsonLd(tSite("name"))} />
 
       {/* The kit-face wordmark — moved here out of the header (`BR-V1.32`), and since 2026-09-22
-          also at the head of the calendar and the contact page (`DECISIONS.md`, the wordmark on
-          the calendar and the contact page). `shared/ui/Wordmark` says where it may appear. */}
+          also at the head of the calendar and the contact page (`DECISIONS.md` §292). `shared/ui/Wordmark` says where it may appear. */}
       <Wordmark />
 
       {/* Says so when what follows is the last copy rather than today's (§281). Its own

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.47-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.48-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.47-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.48-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12463,3 +12463,21 @@ The queue and the club's copies were the other half of the wrong answer. Both na
 **What was rejected.** *Leaving the forms and relying on the server.* Correct, and what BR-REQ-060-01 requires — but a rule the reader meets only as an error is a rule they cannot plan around, and the owner's screenshot is what that looks like. *Opening the plan's form to the Organizer.* The plan decides what the club pays and what "send now" may spend; it stays with the role that answers for the money.
 
 Baseline `BR-V1.47-2026-09-22`.
+
+## 292. Decided — the kit-face wordmark heads the calendar and the contact page too (2026-09-22)
+
+**Context.** The owner, looking at the listing with `BRASOV RUNNERS` in the kit face above it: "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de contact si pe cea de calendar".
+
+**What `BR-V1.32` decided, and why it is being changed.** The wordmark had a day of arrangements in the header — beside the lockup, at mark height, side by side — and each was wrong for a reason `SiteHeader.tsx` still records: the name twice on one row in two typefaces, one of them baked into an image, unalignable. The answer was to take it out of the header altogether and give it the room a display face wants, above the listing, **on the homepage and nowhere else** — `CLAUDE.md` carried that sentence, `shared/ui/Wordmark` and `theme/brand.ts` repeated it. "Nowhere else" was a guard against the header, not a judgement about other pages; it stood because nobody had asked for another page.
+
+The calendar and the contact page are the club's own pages in the same sense the listing is — what the club does and how to reach it — and the owner wants the club's signature on them. An event page or a legal text is the event's or the text's, not the club's, and keeps the heading it has.
+
+**Decision.** *Three pages, as a page heading.* `shared/ui/Wordmark` heads the listing, the calendar and the contact page — the same component, the same 2rem cap ("way too big" at 4rem, 2026-09-17), the same Server Component, so the two new pages pay no client island and no second request for Facón, which the locale layout already loads for every page. It is a paragraph that is an image to assistive technology named from the catalogue ("Brașov Runners", spelled properly), never an `<h1>`, so each page keeps exactly one heading of the first level: "Calendar", "Scrie-ne".
+
+*Never back into the header.* §58's lockup stays alone on the row; that is the half of `BR-V1.32` that was a judgement, and it stands.
+
+*A fourth page is a decision, not a copy-paste.* `tests/unit/theme/wordmark.test.ts` pins the three files that render `<Wordmark />`, that each puts it before its one `<h1>`, and that the component stays a Server Component — source-level, like `events/card-excerpt.test.ts`, because the rule is about which files carry one line.
+
+**What was rejected.** *Putting it in the layout for every public page.* An event page's heading is the event's title and a legal text's is the text's; the club's signature above "Termeni și condiții" would read as a letterhead, and the owner named two pages, not the site.
+
+Baseline `BR-V1.48-2026-09-22`.

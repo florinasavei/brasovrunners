@@ -119,8 +119,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: 2, sm: 3 } }}>
       {/* The kit-face wordmark heads this page as it heads the listing and the calendar — the
           owner, 2026-09-22: "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de
-          contact si pe cea de calendar" (`DECISIONS.md`, the wordmark on the calendar and the
-          contact page). A paragraph that is an image to assistive technology, so "Scrie-ne"
+          contact si pe cea de calendar" (`DECISIONS.md` §292). A paragraph that is an image to assistive technology, so "Scrie-ne"
           below stays the page's one `<h1>`; a Server Component, so the page still has one
           client island — the button. */}
       <Wordmark />

@@ -83,7 +83,7 @@ export default async function CalendarPage({ params, searchParams }: Props) {
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
       {/* The kit-face wordmark heads this page as it heads the listing — the owner, 2026-09-22:
           "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de contact si pe cea
-          de calendar" (`DECISIONS.md`, the wordmark on the calendar and the contact page). A
+          de calendar" (`DECISIONS.md` §292). A
           paragraph that is an image to assistive technology, so the heading below stays the
           page's one `<h1>`; the font is the layout's, already loaded for every page. */}
       <Wordmark />

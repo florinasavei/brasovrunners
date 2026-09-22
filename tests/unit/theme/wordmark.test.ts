@@ -3,8 +3,8 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * `DECISIONS.md`, 2026-09-22 — "the kit-face wordmark heads the calendar and the contact page
- * too", reversing the rule `BR-V1.32` set (the homepage and nowhere else) on the owner's word:
+ * `DECISIONS.md` §292 (2026-09-22) — the kit-face wordmark heads the calendar and the contact page
+ * too, reversing the rule `BR-V1.32` set (the homepage and nowhere else) on the owner's word:
  * "trebuie sa vad acest scris frumos cu Brasov Runners si pe pagina de contact si pe cea de
  * calendar".
  *
