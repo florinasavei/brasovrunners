@@ -12303,6 +12303,46 @@ reflex, which is the failure mode this is supposed to prevent rather than a slow
 
 Baseline `BR-V1.45-2026-09-22`.
 
+## 288. Fixed — the invitation key could authenticate and do nothing (2026-09-22)
+
+**Context.** The owner invited Dani as an Administrator from Echipa, and Dani met Zitadel's own
+screen: **"User not found in the system"**. The `staff_users` row existed; the Zitadel account did
+not.
+
+**What it was.** `SETUP.md` §37 step 2 asks for the service account to be made an **Org User
+Manager**, and on the club's instance that step had never been done — the token was created,
+written to both Vercel projects (§123, 2026-09-20), and granted a role on the *project* under
+"Role Assignments" instead, which is about access inside an application and confers no permission
+over users. The token authenticated perfectly and could do nothing: `orgs/me/members/_search`
+answered `membership not found (AUTHZ-cdgFk)`, and a search for human users returned **none**
+while the console showed one.
+
+**Why nobody noticed for two days.** `inviteZitadelUser` reports `failed` with the provider's
+reason, and the Echipa page says so — in a banner, once, which is gone at the next click. The
+allowlist row is written either way, by design (§123: the platform decides who is staff, Zitadel
+only authenticates), so the screen afterwards looks exactly like success. The first person to
+learn is the colleague, at the sign-in page, in words that sound like their own mistake.
+
+**Decision.** *The procedure names the console's own words and its trap* (§37): the panel is
+**Organization → Managers**, the dialog is "Add an Administrator", and **Role Assignments is not
+it** — a service account can sit there Active and configured-looking while being unable to create
+anybody.
+
+*And a check that needs no volunteer.* Asking the token to list human users answers it in one
+call: none, where the console shows some, is a missing membership. It went into §37 because the
+existing check — "add yourself with a second address" — only works for somebody who already has a
+second address and the nerve to test in production.
+
+**What is still owed, and deliberately not built here.** Two things this would have caught earlier,
+both code rather than documentation:
+
+- a staff row whose Zitadel account does not exist should say so **on Echipa, permanently**, beside
+  the resend button — not in a banner that disappears;
+- `/admin/tasks` should check the invitation key the way it checks the other providers, so "the key
+  works but has no permissions" is a row on the board rather than a discovery made by a colleague
+  who cannot sign in.
+
+Baseline `BR-V1.45-2026-09-22`.
 ## 289. Decided — the Organizer reads who signed up, and changes nothing (2026-09-22)
 
 **Context.** The owner, watching his Organizer use the backoffice: "ca si organizator ar trebui sa
