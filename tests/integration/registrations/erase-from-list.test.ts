@@ -11,7 +11,7 @@ import {
   type LegalDocumentTranslationInput,
 } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { cancelRegistrationByStaff, deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
+import { bulkDeleteRegistrationsByStaff, cancelRegistrationByStaff, deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
 import { rowVerbsFor } from "@/modules/registrations/domain/row-verbs";
 import { listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 import {
@@ -317,6 +317,56 @@ describe("BR-REQ-037-06 erasing a registration from the list", () => {
       (error: unknown) => isDomainError(error) && error.code === "VALIDATION_ERROR",
     );
     expect(await db.select().from(registrations).where(eq(registrations.id, registration.id))).toHaveLength(1);
+  });
+
+  /**
+   * `DECISIONS.md` §287 — erasing a selection, behind the count typed by hand.
+   *
+   * §67 kept erase to one row at a time because cancelling is recoverable and erasing is not.
+   * What changed is who lives with it: a club clearing a test season was erasing forty rows one
+   * dialog at a time, and the twentieth confirmation is read by nobody. The single erase asks for
+   * the registered name, which cannot scale to forty, so the batch asks for the number of rows —
+   * a fact the screen has just shown, which changes with the selection and cannot become muscle
+   * memory the way a fixed word or a second "yes" does.
+   */
+  it("erases a whole selection when the typed count matches it (§287)", async () => {
+    const event = await createInternalEvent(10);
+    const first = await registerPublicly(event, "one@example.ro", { firstName: "Ana", lastName: "Popescu" });
+    const second = await registerPublicly(event, "two@example.ro", { firstName: "Ion", lastName: "Ionescu" });
+
+    const result = await bulkDeleteRegistrationsByStaff(db, admin, [first.id, second.id], "sezon de test", new Date(), {
+      confirmCount: "2",
+    });
+
+    expect(result).toEqual({ erased: 2, failed: 0 });
+    expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toHaveLength(0);
+    // The same trail the single erase leaves: who and why, per row, and never whom.
+    const trail = await db.select().from(auditLogs);
+    expect(trail.filter((row) => row.action === "registration.deleted_by_staff")).toHaveLength(2);
+  });
+
+  it("refuses a count that is not the size of the selection, and erases nothing (§287)", async () => {
+    const event = await createInternalEvent(10);
+    const first = await registerPublicly(event, "three@example.ro", { firstName: "Ana", lastName: "Popescu" });
+    const second = await registerPublicly(event, "four@example.ro", { firstName: "Ion", lastName: "Ionescu" });
+
+    for (const typed of ["1", "3", "", "  ", "two"]) {
+      await expect(
+        bulkDeleteRegistrationsByStaff(db, admin, [first.id, second.id], "x", new Date(), { confirmCount: typed }),
+      ).rejects.toSatisfy(
+        (error: unknown) =>
+          isDomainError(error) && error.code === "VALIDATION_ERROR" && error.fields.includes("confirmCount"),
+      );
+    }
+
+    expect(await db.select().from(registrations).where(eq(registrations.eventId, event.id))).toHaveLength(2);
+    expect(await db.select().from(auditLogs)).toHaveLength(0);
+  });
+
+  it("refuses an empty selection rather than reporting a cheerful nothing (§287)", async () => {
+    await expect(
+      bulkDeleteRegistrationsByStaff(db, admin, [], "x", new Date(), { confirmCount: "0" }),
+    ).rejects.toSatisfy((error: unknown) => isDomainError(error) && error.code === "VALIDATION_ERROR");
   });
 
   it("accepts the name as a Romanian keyboard actually types it", async () => {

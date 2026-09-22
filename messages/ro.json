@@ -468,7 +468,13 @@
       "summaryScopeEvent": "la {event}",
       "summaryScopeAll": "toate evenimentele",
       "summaryScopeHelp": "Numerele de mai sus sunt doar pentru evenimentul selectat; cifra de pe tabul „Înscrieri” numără toate evenimentele care urmează.",
-      "summaryScopeAllLink": "Arată toate evenimentele"
+      "summaryScopeAllLink": "Arată toate evenimentele",
+      "bulkEraseTitle": "Șterge definitiv înscrierile bifate",
+      "bulkEraseHelp": "Se șterg din evidență, locurile se eliberează și nu se mai poate reveni. Rămâne doar o urmă în jurnal: cine a șters și de ce, niciodată pe cine.",
+      "bulkEraseConfirm": "Scrie câte ștergi",
+      "bulkEraseConfirmHelp": "Exact numărul de înscrieri bifate — altfel nu se șterge nimic.",
+      "bulkEraseAction": "Șterge definitiv",
+      "registrationsErased": "{erased} înscrieri șterse definitiv. {failed} nu au putut fi șterse."
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -526,7 +532,9 @@
       "repeatTitle": "Creezi edițiile?",
       "repeatBody": "Se creează evenimentele următoare, la intervalul ales, fiecare cu adresa lui. Le poți edita sau șterge apoi una câte una.",
       "bibsTitle": "Aloci numerele de concurs?",
-      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân."
+      "bibsBody": "Fiecare înscriere confirmată fără număr primește următorul număr liber, în ordinea confirmării. Numerele deja date rămân.",
+      "bulkEraseTitle": "Ștergi definitiv înscrierile bifate?",
+      "bulkEraseBody": "Nu se poate anula. Locurile se eliberează prin lista de așteptare, iar datele participanților dispar din evidență."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",

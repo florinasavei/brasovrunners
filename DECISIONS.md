@@ -12265,3 +12265,40 @@ counted as a missing message key. It had passed for months only because every na
 given — `email`, `city` — also happened to exist in the catalogue.
 
 Baseline `BR-V1.45-2026-09-22`.
+
+## 287. Decided — a selection can be erased, behind the count typed by hand (2026-09-22)
+
+**Context.** The owner: "de asemenea stergerea in batch ar trebui sa mearga! dar cu super extra
+confirmare!"
+
+**What §67 decided, and why it is being changed.** Cancel is offered in bulk and erase one row at
+a time, because cancelling is recoverable — the person registers again — and erasing is not. That
+reasoning still holds. What it did not account for is the club clearing a test season or a race
+set up twice: eighty rows, eighty dialogs, and the twentieth confirmation is read by nobody. A
+guard that is always in the way stops being a guard.
+
+**Decision.** *The confirmation is the number of rows, typed.* A single erase asks for the
+registered name (§180), which cannot scale to forty. The count is the thing that can: it is a fact
+the screen has just shown, it changes with the selection, and it cannot become muscle memory the
+way a fixed word or a second "yes" does. The owner chose it over typing ȘTERG for exactly that
+reason.
+
+*Asserted in the service, not in the dialog.* `bulkDeleteRegistrationsByStaff` refuses a count
+that is not the size of the selection, and refuses an empty selection outright — so the rule
+survives a second caller and a dialog somebody rewrites later. A dialog is UX; this is the rule.
+
+*Everything else is the single erase, once per row.* The same `eraseRegistration`: the audit row
+first, the declaration acceptance with the row in one transaction, the place released through the
+allocator (§33, §44, §67). A row that refuses is counted and the rest continue, as the bulk cancel
+already does — a batch that stops on the first surprise leaves the club unable to say what
+happened.
+
+*One form, two verbs.* A checkbox's `form` attribute names exactly one form, so one selection
+cannot feed two; the erase button carries the second Server Action through `formAction`, and
+`ConfirmSubmitButton` now submits **through the button** when it does, because React reads the
+action from the submitter.
+
+**What was rejected: two ordinary confirmations.** Offered and declined. The second click becomes
+reflex, which is the failure mode this is supposed to prevent rather than a slower version of it.
+
+Baseline `BR-V1.45-2026-09-22`.

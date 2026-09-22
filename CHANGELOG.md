@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.45-2026-09-22
 
+- **Several registrations can be erased at once**, from the same tick boxes the bulk cancel uses — behind a confirmation that asks you to type how many you are erasing. Anything but that exact number erases nothing, and each row still leaves the usual audit line: who erased and why, never whom. §287.
 - **A number given at the desk is the number that sticks.** "Alocă numerele" used to ignore the provisional numbers handed out on race morning and give those runners a different one — so somebody told "you are 5" ended up as 100, with 5 still on the screen beside them. §286.
 - **"Alocă numerele" says why nothing happened**, instead of reporting "0 alocate" and looking broken: how many have not confirmed yet, and how many are test registrations. §286.
 - **A refused registration keeps your ticks too**, so one more press on send is all it takes — and the refusal is said once, in red, rather than twice. §286.

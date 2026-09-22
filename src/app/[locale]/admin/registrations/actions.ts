@@ -12,6 +12,7 @@ import {
   createRegistrationByStaff,
   deleteRegistrationByStaff,
   promoteRegistrationByStaff,
+  bulkDeleteRegistrationsByStaff,
   setBibNumberByStaff,
 } from "@/modules/registrations/admin-service";
 import { markBibsPrinted, setBibPrinted } from "@/modules/registrations/bibs";
@@ -391,6 +392,46 @@ export async function bulkCancelRegistrationsAction(form: FormData): Promise<voi
   redirect(
     `${returnTo}${separator}saved=registrationsCancelled&cancelled=${cancelled}&failed=${failed}#admin-alert`,
   );
+}
+
+/**
+ * Erase everything selected (`DECISIONS.md` §287), behind the count typed by hand.
+ *
+ * The shape of `bulkCancelRegistrationsAction` above, with one difference that matters: the
+ * confirmation is asserted by the service, not here, so the rule survives a second caller and a
+ * dialog that is one day rewritten.
+ */
+export async function bulkDeleteRegistrationsAction(form: FormData): Promise<void> {
+  const locale = toLocale(form.get("uiLocale"));
+  const ids = form
+    .getAll("registrationId")
+    .filter((value): value is string => typeof value === "string" && value !== "");
+  const reason = text(form, "reason");
+  const confirmCount = text(form, "confirmCount");
+
+  const listPath = getPathname({ locale, href: "/admin/registrations" });
+  // Only the query, never a path: a redirect target taken from a form is an open redirect.
+  const listQuery = text(form, "listQuery");
+  const returnTo = listQuery ? `${listPath}?${listQuery}` : listPath;
+
+  let erased = 0;
+  let failed = 0;
+  try {
+    const actor = await requireStaffRole("ADMIN");
+    ({ erased, failed } = await bulkDeleteRegistrationsByStaff(
+      getDb(),
+      actor,
+      ids,
+      reason,
+      new Date(),
+      { confirmCount },
+    ));
+  } catch (error) {
+    backTo(returnTo, outcomeOf(error));
+  }
+
+  const separator = returnTo.includes("?") ? "&" : "?";
+  redirect(`${returnTo}${separator}saved=registrationsErased&erased=${erased}&failed=${failed}#admin-alert`);
 }
 
 export async function deleteRegistrationAction(form: FormData): Promise<void> {
