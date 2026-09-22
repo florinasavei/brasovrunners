@@ -12217,3 +12217,51 @@ the button's own notes give: a press is what produces the specific answer — th
 the first unfilled field and names it, which a truly disabled control could never do.
 
 Baseline `BR-V1.45-2026-09-22`.
+
+## 286. Fixed — four things found by watching two people use the form (2026-09-22)
+
+**Context.** Amalia and the owner, testing on QA within an hour of each other.
+
+**"Anumerarea in batch nu merge!"** It was working and saying nothing. A number is given to a
+**confirmed, real** registration that has none — a number follows the declaration and never
+precedes it, and a test row never wears one (§30). An event whose entrants are all still
+confirming their email therefore assigned nought and reported "0 numere alocate", which reads
+exactly like a broken button. *The screen now names what it skipped*: how many have not confirmed
+yet, and how many are test rows.
+
+**And the batch ignored the numbers the desk had already given.** Found from a screenshot of a row
+reading "Prezență marcată · 5*" — the owner: "cum pot avea prezenta marcata dar numar cu
+steluta?". The desk writes a number into `provisional_bib_number` on race morning and the list
+draws it with an asterisk because it is not settled. Confirming one registration promotes it
+(`service.ts`); the batch looked only for rows with no *final* number and handed them the next
+free one. So a runner told "you are 5", with 5 written on their hand, was quietly given 100 while
+the screen still showed 5 beside them — two numbers for one person, neither visibly wrong.
+*The number somebody was told is the number they keep*, and it stops being provisional.
+
+**The consents survive a rejected submission**, reversing that part of §142. The owner, watching
+it happen: "vreau sa persist inclusiv bifele, sa nu se enerveze Dani … gen vreau ca dani sa mai
+apese inca o data submit si atat!" The reasoning for dropping them was thinner than it looked: the
+tick that counts is the one on the submission that **succeeds**, and that is the one the row
+records with its version and timestamp. Making somebody re-tick three boxes to recover from a
+refusal that was about none of them is friction charged to the wrong person. The e2e case asserts
+it by re-ticking nothing.
+
+**The refusal is red, and said once.** §282 made it information, since nothing the person typed
+was wrong; what a reader needs first is that the submission did not go through, and blue reads as
+a remark. And §194's second copy beside the button is gone: the summary at the top now carries
+the title, the sentences and a button that sends the form, so the older panel was the same words
+twice on one screen ("exista un pic de reduntanta la butoanele alea").
+
+**"You are already registered" says so warmly, and names the number — in the email.** The owner:
+"ne bucuram ca esti entuziasmat dar esti deja inscris cu numaru …", and then, unprompted: "don't
+tell they on the screen, tell them in the email ;-)". Which is exactly the line §19.4 draws: the
+screen's answer stays generic for everybody, because a form that says "this address is already
+registered" is a way to ask who is entered; the inbox is the one place the question can be
+answered, to the one person entitled to the answer.
+
+**One incidental repair.** The register page's `typed()` helper is now `prefill()`: the i18n
+checker reads every `t…(` call as a translation lookup (`t\w*\(`), so `typed("privacyAcknowledged")`
+counted as a missing message key. It had passed for months only because every name it had been
+given — `email`, `city` — also happened to exist in the catalogue.
+
+Baseline `BR-V1.45-2026-09-22`.

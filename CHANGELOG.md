@@ -10,6 +10,10 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.45-2026-09-22
 
+- **A number given at the desk is the number that sticks.** "Alocă numerele" used to ignore the provisional numbers handed out on race morning and give those runners a different one — so somebody told "you are 5" ended up as 100, with 5 still on the screen beside them. §286.
+- **"Alocă numerele" says why nothing happened**, instead of reporting "0 alocate" and looking broken: how many have not confirmed yet, and how many are test registrations. §286.
+- **A refused registration keeps your ticks too**, so one more press on send is all it takes — and the refusal is said once, in red, rather than twice. §286.
+- **Filling the form twice gets a warmer answer**: the email now opens with "ne bucurăm că ești nerăbdător" and names the number you already have. It stays in the email, never on the screen, so the form cannot be used to ask who is entered. §286.
 - **The send button waits for the anti-bot check instead of failing you for being quick.** While Cloudflare is still looking, the button is dimmed and says so; it comes back by itself after eight seconds if the check never answers, because nobody may be stopped from registering by a check that is not working. And a dimmed button now looks unavailable — fainter, with the forbidden cursor — rather than looking like a colour choice. §285.
 - **Fixed: the anti-bot widget left a ghost behind when you navigated away**, which put a warning in the browser console and could leave two widgets on the page — with no way to tell which one the form was using. §284.
 - **The telephone box says what it is doing while you type.** It stops at the number of digits the chosen country actually leaves — a number cannot be longer than that — tells you to keep going when it is only unfinished rather than calling it wrong, and shows the number it will store, `+40712345678`, once it is right. §283.
