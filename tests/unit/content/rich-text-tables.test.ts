@@ -57,9 +57,33 @@ describe("§263 what a table may say about itself", () => {
   });
 
   it("reads absent, null and the default as the same thing", () => {
-    expect(tableStyleOf(undefined)).toEqual({ borders: "all", valign: "top" });
-    expect(tableStyleOf({ borders: null, valign: null })).toEqual({ borders: "all", valign: "top" });
-    expect(tableStyleOf({ borders: "none" })).toEqual({ borders: "none", valign: "top" });
+    // Four choices since §271: the lines, where the text sits, and the two colours.
+    const DEFAULTS = { borders: "all", valign: "top", borderColour: "default", headerFill: "default" };
+    expect(tableStyleOf(undefined)).toEqual(DEFAULTS);
+    expect(tableStyleOf({ borders: null, valign: null })).toEqual(DEFAULTS);
+    expect(tableStyleOf({ borders: "none" })).toEqual({ ...DEFAULTS, borders: "none" });
+    expect(tableStyleOf({ borderColour: "blue", headerFill: "orange" })).toEqual({
+      ...DEFAULTS,
+      borderColour: "blue",
+      headerFill: "orange",
+    });
+  });
+
+  it("paints the lines and the header in the palette's own names, never a value (§271)", () => {
+    const blue = tableSx({ borderColour: "blue", headerFill: "blue" });
+    expect(blue["& td, & th"].borderColor).toBe("primary.main");
+    expect(blue["& th"].backgroundColor).toBe("primary.main");
+    // A filled header carries its own ink: blue under the body's near-black would not clear AA.
+    expect(blue["& th"].color).toBe("primary.contrastText");
+    // Nothing anywhere is a hex value — `brand.ts` is the only file allowed one.
+    expect(JSON.stringify(tableSx({ borderColour: "orange", headerFill: "orange" }))).not.toMatch(/#[0-9a-f]{3,6}/i);
+  });
+
+  it("lets a layout table keep a coloured header row it asked for", () => {
+    // Borderless keeps the bold first row and drops the shading (§263) — unless somebody chose
+    // a fill, which is a decision rather than a table's default chrome.
+    expect(tableSx({ borders: "none" })["& th"].backgroundColor).toBeUndefined();
+    expect(tableSx({ borders: "none", headerFill: "blue" })["& th"].backgroundColor).toBe("primary.main");
   });
 });
 
@@ -115,17 +139,24 @@ describe("§263 the editor draws what the page draws", () => {
     expect(EDITOR_TABLE_SX).toHaveProperty("& .tiptap table[data-borders='none'][data-valign='middle']");
   });
 
-  it("marks the cells of a borderless table for the writer only", () => {
+  it("marks the cells of a table that draws no lines, for the writer only (§271)", () => {
     // An outline, so switching the borders moves nothing, and dashed, so it reads as an
-    // editing aid rather than as a line that will be published.
-    const rule = EDITOR_TABLE_SX["& .tiptap table[data-borders='none'] td, & .tiptap table[data-borders='none'] th"];
+    // editing aid rather than as a line that will be published. Both variants that leave the
+    // writer typing into an invisible grid are covered: a layout table draws nothing at all,
+    // and a table of rows draws no verticals.
+    const selector =
+      "& .tiptap table[data-borders='none'] td, & .tiptap table[data-borders='none'] th, & .tiptap table[data-borders='rows'] td, & .tiptap table[data-borders='rows'] th";
+    const rule = EDITOR_TABLE_SX[selector];
     expect(String(rule.outline)).toContain("dashed");
     expect(rule.outlineOffset).toBe(-1);
   });
 
   it("is the only description of a table's look — the page has no rules of its own", () => {
     const renderer = SOURCE("src/modules/content/rich-text/ui/RichText.tsx");
-    expect(renderer).toContain("sx={tableSx(block.attrs)}");
+    // The page's table still takes its whole look from `tableSx`; what it adds on top is the
+    // column proportions (§271), which are a property of the document rather than a style.
+    expect(renderer).toContain("...tableSx(block.attrs),");
+    expect(renderer).toContain("tableColumnFractions(block.content)");
     // The block of border rules that used to live here is what the editor had no copy of.
     expect(renderer).not.toMatch(/verticalAlign: "top"/);
     const editor = SOURCE("src/modules/content/rich-text/ui/RichTextEditor.tsx");

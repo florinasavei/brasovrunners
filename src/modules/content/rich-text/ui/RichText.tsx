@@ -6,6 +6,7 @@ import {
   readRichText,
   type RichTextBlock,
   type RichTextText,
+  tableColumnFractions,
 } from "../domain/schema";
 import { cropGeometry, cropImageSx, cropWindowSx, imageCaptionSx, imageFigureSx } from "./image-layout";
 import { blockAlignSx } from "./text-align";
@@ -160,7 +161,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
         </Box>
       );
 
-    case "table":
+    case "table": {
       /*
         A table (§196), and the whole of the difficulty is that this site's hard target is a
         320-pixel column.
@@ -184,13 +185,34 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
         editor had no copy of: the page showed a grid and the editor showed nothing, so a table
         was arranged against one drawing and published as another.
       */
+      const columns = tableColumnFractions(block.content);
       return (
         <Box
           tabIndex={0}
           role="region"
           sx={{ maxWidth: "100%", overflowX: "auto", mb: 2, WebkitOverflowScrolling: "touch" }}
         >
-          <Box component="table" sx={tableSx(block.attrs)}>
+          <Box
+            component="table"
+            sx={{
+              ...tableSx(block.attrs),
+              /*
+                Column proportions the organizer dragged (§271). `table-layout: fixed` is what
+                makes a browser honour a `<colgroup>` at all — with `auto` it sizes the columns
+                from their contents and the widths are a suggestion it ignores. Only a table that
+                was actually sized gets it; every other table keeps the automatic layout it has
+                always had, which is what a schedule of short facts wants.
+              */
+              ...(columns ? { tableLayout: "fixed", width: "100%" } : {}),
+            }}
+          >
+            {columns && (
+              <Box component="colgroup">
+                {columns.map((fraction, index) => (
+                  <Box component="col" key={index} sx={{ width: `${(fraction * 100).toFixed(4)}%` }} />
+                ))}
+              </Box>
+            )}
             <Box component="tbody">
               {block.content.map((row, rowIndex) => (
                 <Box component="tr" key={rowIndex}>
@@ -215,6 +237,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
           </Box>
         </Box>
       );
+    }
   }
 }
 

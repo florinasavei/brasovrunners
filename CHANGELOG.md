@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **Tables are a layout tool now.** Drag a column edge to set how wide it is and the page keeps the proportion at any screen width; pick the colour of the lines and of the header row from the club's own four; and while you write, every cell edge shows as a faint dashed line even when the table will print none. **A "Vezi" button opens the whole text in a pop-up** exactly as the page will draw it, without those dashed guides. §271.
 - **The emails are written in the same editor as a page.** Bold, italic, headings, lists, a quote and links, per message and per language, with the preview right above the box. Pictures, films and tables are not offered: an inbox blocks the first, cannot play the second and lays out the third differently in every mail client. §270.
 - **The backoffice is boxes now, and what is not today's work folds away.** On Înscrieri the race numbers, the counters, the email queue and the eight filter fields each have their own box; the ones you are not using are shut, with their number still on the line — "7 în așteptare" — and they open themselves when there is something to do. The email screen's four panels fold the same way, as does "add a colleague" on Echipa. §269.
 - **The two languages on the email screen are tabs**, and the tab row is whole again: "Emailuri" has its glyph like every other section, and the number of people signed up sits in the club's orange instead of disappearing into the word beside it. §268.

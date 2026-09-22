@@ -164,8 +164,15 @@ const blockquoteNode = z.object({
  * - **`colspan` and `rowspan` are kept**, because Tiptap emits them for a merged header and a
  *   table that lost its merges on the way through the allowlist would be silently rearranged.
  *   Both are bounded: a span beyond the table is a way to make a page render strangely.
- * - **`colwidth` is dropped.** It is a pixel width chosen on somebody's laptop, and this site's
- *   hard target is a 320-pixel column. The renderer decides widths.
+ * - **`colwidth` is kept, and read as a proportion** (§271; the owner: "tabelele ar trebui să
+ *   fie mai smart, resizable"). It was dropped for a good reason — a pixel width is measured on
+ *   somebody's laptop and this site's hard target is a 320-pixel column — and the reason still
+ *   holds for *pixels*. What the organizer is actually saying by dragging a column edge is "this
+ *   column is about twice that one", which is a proportion and survives any width. So the number
+ *   is stored as the editor measured it and the renderer divides it by the row's total: a
+ *   `<colgroup>` of percentages, which is what makes two columns of text a layout rather than a
+ *   guess. No table written before today has one, and one without them is laid out exactly as it
+ *   was.
  *
  * A header row is `tableHeader` cells, which is Tiptap's own shape; the renderer turns them into
  * `<th>` with a scope, so a screen reader announces which column a figure belongs to.
@@ -191,28 +198,92 @@ export type TableBorders = (typeof TABLE_BORDERS)[number];
 export const TABLE_VALIGNS = ["top", "middle"] as const;
 export type TableValign = (typeof TABLE_VALIGNS)[number];
 
-export type TableStyle = { borders: TableBorders; valign: TableValign };
+/**
+ * The colour of the lines and of the header row (§271; the owner: "să pot seta culoarea
+ * borderului și headerelor, ca să pot face layout din tabele").
+ *
+ * **Names of the club's own palette, never a colour somebody typed** — the same discipline every
+ * other attribute in this file follows, and the reason a body cannot carry CSS. Four lines and
+ * four fills is what a schedule, a price list and a two-column layout need; a colour picker
+ * would put the club's brand in the hands of whoever is writing a page that day, and would put
+ * an unreadable pair on the site the first time somebody chose white on yellow. Each name maps
+ * to a palette token in `table-layout.ts`, which is also where the light and dark schemes are
+ * kept in step — a hex value here would be one colour in both.
+ */
+export const TABLE_BORDER_COLOURS = ["default", "strong", "blue", "orange"] as const;
+export type TableBorderColour = (typeof TABLE_BORDER_COLOURS)[number];
+export const TABLE_HEADER_FILLS = ["default", "none", "blue", "orange"] as const;
+export type TableHeaderFill = (typeof TABLE_HEADER_FILLS)[number];
+
+export type TableStyle = {
+  borders: TableBorders;
+  valign: TableValign;
+  borderColour: TableBorderColour;
+  headerFill: TableHeaderFill;
+};
+
+type TableStyleAttrs = {
+  borders?: TableBorders | null;
+  valign?: TableValign | null;
+  borderColour?: TableBorderColour | null;
+  headerFill?: TableHeaderFill | null;
+};
 
 /** Absent, null, or the default — one place decides, so no renderer re-decides it. */
-export function tableStyleOf(
-  attrs: { borders?: TableBorders | null; valign?: TableValign | null } | undefined,
-): TableStyle {
-  return { borders: attrs?.borders ?? "all", valign: attrs?.valign ?? "top" };
+export function tableStyleOf(attrs: TableStyleAttrs | undefined): TableStyle {
+  return {
+    borders: attrs?.borders ?? "all",
+    valign: attrs?.valign ?? "top",
+    borderColour: attrs?.borderColour ?? "default",
+    headerFill: attrs?.headerFill ?? "default",
+  };
+}
+
+/**
+ * How wide each column is, as a fraction of the table — or `null` when nobody has said.
+ *
+ * Read from the **first row**, because that is the row a `<colgroup>` describes and the row
+ * ProseMirror's own resizing writes to first; a row whose cells were merged carries fewer
+ * numbers than the table has columns, and a colgroup built from it would be wrong, so a row
+ * carrying a `colspan` is left alone. Widths are normalised here rather than at each renderer:
+ * a percentage is the only form that survives a 320-pixel phone.
+ */
+export function tableColumnFractions(
+  rows: readonly {
+    content: readonly { attrs?: { colwidth?: readonly (number | null)[] | null; colspan?: number } }[];
+  }[],
+): number[] | null {
+  const first = rows[0];
+  if (!first) return null;
+  if (first.content.some((cell) => (cell.attrs?.colspan ?? 1) !== 1)) return null;
+  const widths = first.content.map((cell) => cell.attrs?.colwidth?.[0] ?? null);
+  if (widths.some((width) => width === null || width <= 0)) return null;
+  const total = (widths as number[]).reduce((sum, width) => sum + width, 0);
+  return total > 0 ? (widths as number[]).map((width) => width / total) : null;
 }
 
 const SPAN = z.number().int().min(1).max(20).optional();
+
+/**
+ * The column widths ProseMirror writes when an edge is dragged (§271): one number per column the
+ * cell spans, in the pixels the editor measured. Bounded, because an unbounded number here is a
+ * table that renders off the side of the page; read as a proportion by `tableColumnFractions`,
+ * never as pixels. `null` is what ProseMirror stores for a column nobody has sized, and it must
+ * survive parsing or a resize of one column would silently reset its neighbours.
+ */
+const COLWIDTH = z.array(z.number().int().min(10).max(4000).nullable()).max(20).nullish();
 
 const tableCellContent = z.array(z.union([paragraphNode, bulletListNode, orderedListNode])).min(1);
 
 const tableCellNode = z.object({
   type: z.literal("tableCell"),
-  attrs: z.object({ colspan: SPAN, rowspan: SPAN }).optional(),
+  attrs: z.object({ colspan: SPAN, rowspan: SPAN, colwidth: COLWIDTH }).optional(),
   content: tableCellContent,
 });
 
 const tableHeaderNode = z.object({
   type: z.literal("tableHeader"),
-  attrs: z.object({ colspan: SPAN, rowspan: SPAN }).optional(),
+  attrs: z.object({ colspan: SPAN, rowspan: SPAN, colwidth: COLWIDTH }).optional(),
   content: tableCellContent,
 });
 
@@ -227,6 +298,8 @@ const tableNode = z.object({
     .object({
       borders: z.union([z.literal("all"), z.literal("rows"), z.literal("none")]).nullish(),
       valign: z.union([z.literal("top"), z.literal("middle")]).nullish(),
+      borderColour: z.enum(TABLE_BORDER_COLOURS).nullish(),
+      headerFill: z.enum(TABLE_HEADER_FILLS).nullish(),
     })
     .optional(),
   content: z.array(tableRowNode).min(1),

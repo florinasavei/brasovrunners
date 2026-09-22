@@ -1377,7 +1377,18 @@
       "tableBordersRows": "Linii: doar orizontale (apasă pentru niciuna)",
       "tableBordersNone": "Linii: niciuna — tabelul e folosit ca aranjament (apasă pentru toate)",
       "tableValign": "Text la mijlocul celulei, pe verticală",
-      "tableHeaderRow": "Rând de titlu (pornit/oprit)"
+      "tableHeaderRow": "Rând de titlu (pornit/oprit)",
+      "tableBorderColourDefault": "Culoarea liniilor: standard",
+      "tableBorderColourStrong": "Culoarea liniilor: închisă",
+      "tableBorderColourBlue": "Culoarea liniilor: albastru",
+      "tableBorderColourOrange": "Culoarea liniilor: portocaliu",
+      "tableHeaderFillDefault": "Capul de tabel: standard",
+      "tableHeaderFillNone": "Capul de tabel: fără fundal",
+      "tableHeaderFillBlue": "Capul de tabel: albastru",
+      "tableHeaderFillOrange": "Capul de tabel: portocaliu",
+      "preview": "Previzualizare",
+      "previewShort": "Vezi",
+      "previewClose": "Închide"
     },
     "pages": {
       "title": "Pagini",

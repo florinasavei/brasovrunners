@@ -1377,7 +1377,18 @@
       "tableBordersRows": "Lines: rows only (press for none)",
       "tableBordersNone": "Lines: none — the table is a layout (press for all)",
       "tableValign": "Text in the middle of the cell, vertically",
-      "tableHeaderRow": "Header row on or off"
+      "tableHeaderRow": "Header row on or off",
+      "tableBorderColourDefault": "Line colour: standard",
+      "tableBorderColourStrong": "Line colour: dark",
+      "tableBorderColourBlue": "Line colour: blue",
+      "tableBorderColourOrange": "Line colour: orange",
+      "tableHeaderFillDefault": "Header row: standard",
+      "tableHeaderFillNone": "Header row: no fill",
+      "tableHeaderFillBlue": "Header row: blue",
+      "tableHeaderFillOrange": "Header row: orange",
+      "preview": "Preview",
+      "previewShort": "View",
+      "previewClose": "Close"
     },
     "pages": {
       "title": "Pages",

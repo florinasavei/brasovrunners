@@ -2,6 +2,10 @@
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import Stack from "@mui/material/Stack";
@@ -24,14 +28,18 @@ import {
   IMAGE_WIDTH_PERCENTS,
   readRichText,
   TABLE_BORDERS,
+  TABLE_BORDER_COLOURS,
+  TABLE_HEADER_FILLS,
   type BlockAlignment,
   type ImageCrop,
+  type TableBorderColour,
   type TableBorders,
+  type TableHeaderFill,
   type TableValign,
 } from "../domain/schema";
 import ImageCropBox from "./ImageCropBox";
 import { cropGeometry, cropImageCss, cropWindowCss } from "./image-layout";
-import { EDITOR_TABLE_SX } from "./table-layout";
+import { EDITOR_TABLE_SX, PREVIEW_CONTENT_SX } from "./table-layout";
 
 /**
  * The editor an organizer writes a page in: what they see is what the page will show.
@@ -109,6 +117,9 @@ export default function RichTextEditor({
     tableDelete: string;
     /** §263: how the table is drawn, where its text sits, and whether it has a header row. */
     tableBorders: Record<TableBorders, string>;
+    /** §271: the two colours, each named by the state it is in. */
+    tableBorderColour: Record<TableBorderColour, string>;
+    tableHeaderFill: Record<TableHeaderFill, string>;
     tableValign: string;
     tableHeaderRow: string;
     link: string;
@@ -116,6 +127,10 @@ export default function RichTextEditor({
     linkApply: string;
     linkRemove: string;
     linkCancel: string;
+    /** §271: the pop-up that shows the body as the page will draw it. */
+    preview: string;
+    previewShort: string;
+    previewClose: string;
     undo: string;
     redo: string;
     image: string;
@@ -170,6 +185,12 @@ export default function RichTextEditor({
   const [youtubeDraft, setYoutubeDraft] = useState<string | null>(null);
   const [youtubeInvalid, setYoutubeInvalid] = useState(false);
   const [imageState, setImageState] = useState<"idle" | "uploading" | "failed">("idle");
+  /**
+   * The preview (§271; the owner: "I also want a preview in a pop-up"): the editor's own markup,
+   * taken once when the dialog opens rather than read on every keystroke, and `null` while it is
+   * shut so nothing is rendered twice behind it.
+   */
+  const [preview, setPreview] = useState<string | null>(null);
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
@@ -235,13 +256,16 @@ export default function RichTextEditor({
       */
       BlockAlign,
       /*
-        Tables (§196). `TableKit` is the table node with its row, cell and header in one import;
-        `resizable: false` because a column width is a pixel measurement made on somebody's
-        laptop and this site's hard target is a 320-pixel column — the renderer decides widths,
-        and the schema drops `colwidth` on the way in, so a handle here would only produce a
-        value that is thrown away.
+        Tables (§196). `TableKit` is the table node with its row, cell and header in one import.
+
+        `resizable` was false, because a column width is a pixel measurement made on somebody's
+        laptop and this site's hard target is a 320-pixel column. §271 turns it on: what dragging
+        an edge says is "this column is about twice that one", the stored pixels are read as a
+        proportion, and the page lays the table out from a `<colgroup>` of percentages. The
+        handle is drawn by `EDITOR_TABLE_SX` — ProseMirror renders an element with no styles of
+        its own, so without a rule the gesture is invisible.
       */
-      TableKit.configure({ table: { resizable: false } }),
+      TableKit.configure({ table: { resizable: true } }),
       /* The borders and the vertical alignment of a table (§263), above. */
       TableStyle,
       Image.configure({ inline: false, allowBase64: false }).extend({
@@ -388,6 +412,11 @@ export default function RichTextEditor({
     (editor?.getAttributes("table").borders as TableBorders | null) ?? "all";
   const tableValign: TableValign =
     (editor?.getAttributes("table").valign as TableValign | null) ?? "top";
+  /** The two colours (§271), read the same way and defaulting the same way. */
+  const tableBorderColour: TableBorderColour =
+    (editor?.getAttributes("table").borderColour as TableBorderColour | null) ?? "default";
+  const tableHeaderFill: TableHeaderFill =
+    (editor?.getAttributes("table").headerFill as TableHeaderFill | null) ?? "default";
   const nextBorders = TABLE_BORDERS[(TABLE_BORDERS.indexOf(tableBorders) + 1) % TABLE_BORDERS.length];
 
   const imageAttrs = selectedImage ? editor?.getAttributes("image") : undefined;
@@ -478,6 +507,29 @@ export default function RichTextEditor({
       <Typography component="span" variant="body2" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
         {label}
       </Typography>
+
+      {/*
+        The preview (§271). What it shows is the editor's own markup under the page's rules and
+        **without the editing aids** — no dashed cell guides, no resize handle, no selection
+        shading — because the question a preview answers is "which of these lines will the reader
+        see". `PREVIEW_CONTENT_SX` is the same description `.tiptap` uses, keyed under the
+        dialog instead, so the two cannot drift (§263's rule, applied to a third surface).
+
+        The markup is this browser's own editor state, never anything fetched or stored: it is
+        the document the author is looking at, rendered back to them. What is *saved* still goes
+        through the server's allowlist, which is the boundary that matters (`domain/schema.ts`).
+      */}
+      <Dialog open={preview !== null} onClose={() => setPreview(null)} fullWidth maxWidth="md" scroll="paper">
+        <DialogTitle>{labels.preview}</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={PREVIEW_CONTENT_SX} dangerouslySetInnerHTML={{ __html: preview ?? "" }} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPreview(null)} sx={{ minHeight: 44 }}>
+            {labels.previewClose}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* The value the form posts. Present and correct even before the editor has loaded. */}
       <input type="hidden" name={name} value={value} readOnly />
@@ -625,6 +677,30 @@ export default function RichTextEditor({
                     .run()
                 }
               />
+              {/*
+                The two colours (§271), each a control that cycles its own closed set and is
+                named after the state it is in — the same shape the borders control has, for the
+                same reason: a toolbar with words on it can say "lines: blue" and a colour
+                picker cannot say anything at all.
+              */}
+              <Control
+                label={labels.tableBorderColour[tableBorderColour]}
+                text="▦"
+                active={tableBorderColour !== "default"}
+                onClick={() => {
+                  const next = TABLE_BORDER_COLOURS[(TABLE_BORDER_COLOURS.indexOf(tableBorderColour) + 1) % TABLE_BORDER_COLOURS.length];
+                  editor?.chain().focus().updateAttributes("table", { borderColour: next === "default" ? null : next }).run();
+                }}
+              />
+              <Control
+                label={labels.tableHeaderFill[tableHeaderFill]}
+                text="▩"
+                active={tableHeaderFill !== "default"}
+                onClick={() => {
+                  const next = TABLE_HEADER_FILLS[(TABLE_HEADER_FILLS.indexOf(tableHeaderFill) + 1) % TABLE_HEADER_FILLS.length];
+                  editor?.chain().focus().updateAttributes("table", { headerFill: next === "default" ? null : next }).run();
+                }}
+              />
               {/* A layout table has no header row, and a table that grew one by accident has no
                   other way to lose it. Tiptap's own command: it converts the row in place. */}
               <Control
@@ -689,6 +765,12 @@ export default function RichTextEditor({
           />
           </>
           )}
+          <Control
+            label={labels.preview}
+            text={labels.previewShort}
+            active={preview !== null}
+            onClick={() => setPreview(editor?.getHTML() ?? "")}
+          />
           <Control
             label={labels.undo}
             text="↶"
@@ -1209,6 +1291,34 @@ const TableStyle = Extension.create({
               attrs.valign === "middle" ? { "data-valign": "middle" } : {},
             parseHTML: (element: HTMLElement) =>
               element.getAttribute("data-valign") === "middle" ? "middle" : null,
+          },
+          /* The line colour and the header's fill (§271), the same shape as the two above:
+             only a choice away from the default reaches the DOM or the stored JSON. */
+          borderColour: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              typeof attrs.borderColour === "string" && attrs.borderColour !== "default"
+                ? { "data-border-colour": attrs.borderColour }
+                : {},
+            parseHTML: (element: HTMLElement) => {
+              const value = element.getAttribute("data-border-colour");
+              return (TABLE_BORDER_COLOURS as readonly string[]).includes(value ?? "") && value !== "default"
+                ? value
+                : null;
+            },
+          },
+          headerFill: {
+            default: null,
+            renderHTML: (attrs: Record<string, unknown>) =>
+              typeof attrs.headerFill === "string" && attrs.headerFill !== "default"
+                ? { "data-header-fill": attrs.headerFill }
+                : {},
+            parseHTML: (element: HTMLElement) => {
+              const value = element.getAttribute("data-header-fill");
+              return (TABLE_HEADER_FILLS as readonly string[]).includes(value ?? "") && value !== "default"
+                ? value
+                : null;
+            },
           },
         },
       },

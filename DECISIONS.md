@@ -11620,3 +11620,59 @@ no classes, escaping before marks, placeholders filled in the message and kept i
 halves of a list agreeing, and the club's bold line arriving in a rendered message.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 271. Decided — a table is a layout tool: columns are dragged, the lines and the header are coloured, and the editor shows where the cells are (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "tabelele ar trebui să fie mai smart, resizable și să pot
+seta culoarea borderului și headerelor, ca să pot face layout din tabele … practic am nevoie să
+pun căsuțe în text ca să împart text și poze în stânga și în dreapta, cumva e deja posibil dar
+nu am separatoarele clare." And, separately: "in the editor I want lines visible for layout but
+I also want a preview in a pop-up." §263 gave a table three border choices, one of which is
+"none" precisely so a table can be a layout. What it did not give was the two things a layout
+actually needs — column proportions and a way to see the cells while filling them.
+
+**Decision, four parts.**
+
+*Columns are dragged, and what is stored is a proportion.* `resizable` was false and `colwidth`
+was dropped, for a reason that still holds: a pixel width is measured on somebody's laptop and
+this site's hard target is a 320-pixel column. But what dragging an edge **says** is "this column
+is about twice that one", which is scale-free. So ProseMirror's own resizing is on, the pixels it
+writes are stored, and `tableColumnFractions` divides them by the row's total: the page emits a
+`<colgroup>` of percentages and switches to `table-layout: fixed`, which is what makes a browser
+honour them. Read from the **first row**, and only when no cell in it is merged — a colgroup
+built from a row with a `colspan` would be wrong. A table nobody sized keeps the automatic layout
+it has always had.
+
+*The lines and the header row have a colour, chosen from four names.* `borderColour` is
+`default`, `strong`, `blue` or `orange`; `headerFill` is `default`, `none`, `blue` or `orange`.
+**Names of the club's palette, never a value somebody typed** — the discipline every other
+attribute in the schema follows. A colour picker would put the brand in the hands of whoever is
+writing a page that day and would produce white on yellow the first week; a filled header also
+carries its own `contrastText`, so the pair clears AA in both schemes without anybody checking.
+A borderless table still drops the shading by default (§263) and keeps a fill that was actually
+chosen: that is a decision rather than a table's chrome.
+
+*The writing area always shows where the cells are.* The dashed guide that a borderless table
+had now covers a table of rows as well — both leave the writer typing into an invisible grid.
+It is an `outline`, so switching the lines moves nothing, and dashed, so it does not read as a
+line that will be published. ProseMirror's resize handle is drawn for the same reason: it renders
+an element with no styles of its own, so without a rule the gesture is undiscoverable.
+
+*A preview in a pop-up, and it is the same description.* The dialog shows the editor's own markup
+under `PREVIEW_CONTENT_SX` — the identical table rules, keyed under the dialog instead of under
+`.tiptap`, with the editing aids left out. That difference is the preview: the question it
+answers is "which of these lines will the reader see", and a preview that kept the guides could
+not answer it. The markup is this browser's own editor state rendered back to its author; what is
+*saved* still passes the server's allowlist, which is where the boundary is.
+
+*Rejected:* a colour picker (above); storing percentages rather than pixels (ProseMirror writes
+pixels and a translation on the way in would fight its own resizing); a preview that round-trips
+to the server to render the page's real components (a request per keystroke's worth of curiosity,
+for a drawing §263 already makes identical).
+
+Tests: `tests/unit/content/rich-text-table.test.ts` — the width kept and read as two thirds and
+one third, and no proportions when nobody sized a column; `rich-text-tables.test.ts` — the four
+defaults, palette names rather than values, the contrast pair, a layout table keeping a chosen
+fill, and the guide covering both line-less variants.
+
+Baseline `BR-V1.43-2026-09-21`.
