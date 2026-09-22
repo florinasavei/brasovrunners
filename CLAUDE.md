@@ -256,9 +256,14 @@ it is the authority, this is the summary):
    the same item as 4, with the texts now written.
 9. ~~The health monitor~~ — done 2026-09-19: `GET /api/health` every 30 minutes with failure
    notifications on production and QA (`SETUP.md` §36). Both answered `ok` on 2026-09-22.
-10. ~~The invitation key~~ — done 2026-09-20: the Zitadel service user's token is
-    `ZITADEL_MANAGEMENT_PAT` on **both** Vercel projects and predates the builds now serving,
-    so "Add" on Echipa creates the account and sends the invitation (§123, `SETUP.md` §37).
+10. ~~The invitation key~~ — done 2026-09-20, and **only actually working since 2026-09-22**:
+    the token was on both Vercel projects from the start, but the service account had never been
+    made an **Org User Manager**, so it authenticated and could create nobody. Every "Add" wrote
+    the allowlist row, was refused by Zitadel, and said so in a banner that was gone at the next
+    click — the first to find out was the colleague, meeting "User not found in the system" at
+    sign-in. The membership is granted now (§288, `SETUP.md` §37, which carries the one-call
+    check). Still owed in code: Echipa should say permanently that a row has no account yet, and
+    `/admin/tasks` should test the key the way it tests the other providers.
 11. ~~The contact form's Gmail~~ — done 2026-09-20: `CONTACT_SMTP_USER`,
     `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both projects, and `/ro/contact` shows
     the **form** on production and on QA rather than the address (§149, `SETUP.md` §38). Who
