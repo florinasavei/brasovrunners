@@ -2149,7 +2149,8 @@
     "emailUseSuggestion": "Yes, fix it",
     "emailHelp": "This is where the confirmation link goes. Type it carefully.",
     "phoneTooShort": "Keep going — a number has at least 4 digits.",
-    "phoneValid": "Looks right. We will store it as"
+    "phoneValid": "Looks right. We will store it as",
+    "botCheckWait": "Checking for a second that you are not a robot — then you can send."
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",

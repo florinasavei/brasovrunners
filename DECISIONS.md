@@ -12182,3 +12182,38 @@ A `remove` that throws because Cloudflare has already forgotten the id is swallo
 line of ours on top of theirs helps nobody.
 
 Baseline `BR-V1.45-2026-09-22`.
+
+## 285. Decided — the send button waits for the anti-bot check, and a dimmed button looks it (2026-09-22)
+
+**Context.** The owner, watching the form: "butonul de trimitere nu ar trebui sa fie vizibil daca
+Cloudflare Turnstile nu a terminat, corect?" and, separately, "butoanele disabled ar trebui sa fie
+mai transparente, si cu cursor interzis".
+
+**He is right about the first.** Pressing send before Turnstile has produced a token buys a
+refusal for no reason at all — the token is missing, the server sees `failed`, and the person is
+told the anti-bot check refused them when in truth they were merely quick. The widget usually
+answers in well under a second, which is exactly the window in which somebody who has finished
+typing presses the button.
+
+**Decision.** *The button waits while the token is missing*, dimmed, with a sentence saying why,
+and a press in that moment does nothing but keep the reason on screen. Cloudflare writes its token
+into a hidden input inside its own element, so the form is where it appears and the DOM is what is
+watched — the shape `PhoneField` already uses to watch the other telephone (§231), rather than
+lifting a third party's element into React.
+
+*With a release valve of eight seconds.* A blocked script, an offline moment, a bad minute at
+Cloudflare — none of them may end with somebody unable to press send. §205 is not negotiable:
+people register at all costs, and a check that never answers must not be the thing that stops
+them. The same reason the server treats "unavailable" as acceptable and only a *rejected* token as
+a refusal.
+
+*And only where a widget is actually drawn.* No keys, or the club's switch off (§254), means there
+is no token to wait for; waiting then would be a button dimmed for a check that is not running.
+
+**The second is a plain interface defect.** A dimmed button at 0.55 opacity read as a colour
+choice rather than as a state. MUI's own disabled opacity is 0.38, and with `cursor: not-allowed`
+nobody mistakes it for a button that is merely quiet. It stays pressable, for the reason §047 and
+the button's own notes give: a press is what produces the specific answer — the browser focuses
+the first unfilled field and names it, which a truly disabled control could never do.
+
+Baseline `BR-V1.45-2026-09-22`.

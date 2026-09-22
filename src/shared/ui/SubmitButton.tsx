@@ -38,6 +38,18 @@ type Props = {
    */
   compact?: boolean;
   /**
+   * Wait for Cloudflare's token before letting the press through (§285).
+   *
+   * Pressing send before Turnstile has answered buys a refusal for no reason — the owner:
+   * "butonul de trimitere nu ar trebui sa fie vizibil daca Cloudflare Turnstile nu a terminat".
+   * While the token is missing the button is dimmed and says why; after `RELEASE_AFTER_MS`, or
+   * if the widget never draws at all, it is released, because §205 is not negotiable: people
+   * register at all costs, and a check that never answers must not be the thing that stops them.
+   */
+  awaitsBotCheck?: boolean;
+  /** What the button says while it waits for that token. */
+  botCheckHint?: string;
+  /**
    * The accessible name, when the visible label cannot be one — an arrow in a row of pages is
    * "↓" to everybody who can see which row it is in, and nothing at all to anybody who cannot.
    */
@@ -84,6 +96,8 @@ export default function SubmitButton({
   label,
   pendingLabel,
   incompleteHint,
+  awaitsBotCheck,
+  botCheckHint,
   color = "primary",
   variant = "contained",
   size = "small",
@@ -115,7 +129,46 @@ export default function SubmitButton({
     };
   }, [incompleteHint]);
 
-  const dimmed = Boolean(incompleteHint) && !complete && !pending;
+  /*
+    Cloudflare writes its token into a hidden input inside the widget's own element, so the form
+    is where it shows up and the DOM is what this watches — the same shape `PhoneField` uses to
+    watch the other telephone (§231), rather than lifting a third party's element into React.
+  */
+  const RELEASE_AFTER_MS = 8000;
+  const [tokenMissing, setTokenMissing] = useState(false);
+
+  useEffect(() => {
+    if (!awaitsBotCheck) return;
+    const form = ref.current?.form;
+    if (!form) return;
+
+    const token = () => {
+      const input = form.querySelector('[name="cf-turnstile-response"]');
+      return input instanceof HTMLInputElement ? input.value : "";
+    };
+    // Nothing drawn yet is also "waiting": the widget appears a moment after the page does.
+    const measure = () => setTokenMissing(token() === "");
+    measure();
+
+    const observer = new MutationObserver(measure);
+    observer.observe(form, { subtree: true, childList: true, attributes: true, attributeFilter: ["value"] });
+    form.addEventListener("input", measure);
+    // The valve. A blocked script, an offline moment, a bad minute at Cloudflare — none of them
+    // may end with somebody unable to press send (§205).
+    const release = setTimeout(() => {
+      observer.disconnect();
+      setTokenMissing(false);
+    }, RELEASE_AFTER_MS);
+
+    return () => {
+      observer.disconnect();
+      form.removeEventListener("input", measure);
+      clearTimeout(release);
+    };
+  }, [awaitsBotCheck]);
+
+  const waiting = Boolean(awaitsBotCheck) && tokenMissing && !pending;
+  const dimmed = (Boolean(incompleteHint) && !complete && !pending) || waiting;
 
   return (
     <Box
@@ -145,7 +198,14 @@ export default function SubmitButton({
         sx={{
           ...(compact ? { whiteSpace: "nowrap", py: 0.25, px: 1 } : TAP_TARGET),
           ...(variant === "contained" && color === "primary" ? accentOnHover : {}),
-          ...(dimmed ? { opacity: 0.55 } : {}),
+          /*
+            What "not now" looks like (§285; the owner: "butoanele disabled ar trebui sa fie mai
+            transparente, si cu cursor interzis"). 0.55 read as a colour choice rather than as a
+            state; at 0.38 — MUI's own disabled opacity — with the forbidden cursor, nobody
+            mistakes it for a button that is merely quiet. It stays pressable, and the reason is
+            the same as ever: a press is what produces the specific answer.
+          */
+          ...(dimmed ? { opacity: 0.38, cursor: "not-allowed" } : {}),
         }}
         // The club's runner rather than MUI's ring (§166; the owner: "I need a runner showing
         // as a loader"). `color="inherit"` so it takes the button's own foreground on a
@@ -157,14 +217,14 @@ export default function SubmitButton({
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.
-          if (pending) event.preventDefault();
+          if (pending || waiting) event.preventDefault();
         }}
       >
         {pending ? pendingLabel : label}
       </Button>
       {dimmed && (
         <Typography id="submit-incomplete" variant="body2" color="text.secondary" role="status">
-          {incompleteHint}
+          {waiting ? (botCheckHint ?? incompleteHint) : incompleteHint}
         </Typography>
       )}
     </Box>

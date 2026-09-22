@@ -1072,6 +1072,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 label={t("submit")}
                 pendingLabel={t("submitting")}
                 incompleteHint={t("incompleteHint")}
+                /*
+                  Only when a widget is actually on the page (§285). With no keys, or with the
+                  club's switch off, there is no token to wait for and waiting would be a button
+                  dimmed for a check that is not running.
+                */
+                awaitsBotCheck={Boolean(siteKey)}
+                botCheckHint={t("botCheckWait")}
                 size="large"
                 fullWidth
               />

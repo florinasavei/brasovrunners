@@ -2149,7 +2149,8 @@
     "emailUseSuggestion": "Da, corectează",
     "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție.",
     "phoneTooShort": "Continuă — un număr are cel puțin 4 cifre.",
-    "phoneValid": "Arată bine. Îl salvăm ca"
+    "phoneValid": "Arată bine. Îl salvăm ca",
+    "botCheckWait": "Se verifică o secundă că nu ești robot — apoi poți trimite."
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
