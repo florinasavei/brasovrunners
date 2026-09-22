@@ -63,13 +63,22 @@ export function rowVerbsFor(
   role: StaffRole,
   options: { checkedIn: boolean; bib?: { settled: boolean; printed: boolean } },
 ): RowVerb[] {
-  // The desk's own verbs are every staff session's (§103); the list itself is Administrator-only
-  // (§10.2), so anybody reading this row already passed that gate. `canManageRegistrations` is
-  // what separates "may see a name at the desk" from "may cancel somebody's place".
+  /*
+    The desk's own verbs are every staff session's (§103). `canManageRegistrations` is what
+    separates "may see a name at the desk" from "may cancel somebody's place".
+
+    **This used to lean on the screen (§289).** The comment here said the list was
+    Administrator-only, "so anybody reading this row already passed that gate" — which was true
+    until the Organizer was given the list, and is exactly the kind of assumption that stops
+    being true without anything breaking loudly. `resend` was the one verb it covered: an
+    Organizer would have been offered a button whose service answers FORBIDDEN
+    (`assertAdministrator`), which is the "I can press it and nothing happens" that started this.
+  */
   const mayManage = canManageRegistrations(role);
   const verbs: RowVerb[] = ["open"];
 
-  if (deriveAllowedResendMessageType(status)) verbs.push("resend");
+  // Resending is a message to a participant, so it is the Administrator's (AGENTS.md §15.8).
+  if (mayManage && deriveAllowedResendMessageType(status)) verbs.push("resend");
 
   // A place is given, never assigned: `promoteRegistrationByStaff` goes through the allocator,
   // which is why the verb exists at all rather than an UPDATE (§10.6).
@@ -87,8 +96,8 @@ export function rowVerbsFor(
 
   /*
     The printing mark (§264). Only with a settled number, because a provisional one is never
-    printed, and only for whoever may manage registrations — the sheet itself is already
-    Administrator-only, and this is the record of having printed it.
+    printed, and only for whoever may manage registrations: the sheet is a read that the
+    Organizer has too (§289), and this is the club's record of having put it on paper.
   */
   if (mayManage && options.bib?.settled) {
     verbs.push(options.bib.printed ? "unmarkBibPrinted" : "markBibPrinted");

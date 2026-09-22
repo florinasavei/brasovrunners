@@ -434,6 +434,7 @@
         "legend": "The six steps of a registration:\n– 1 form submitted\n– 2 email confirmed\n– 3 place held\n– 4 declaration signed\n– 5 place confirmed\n– 6 number collected at the desk\nThe figure says which one they have reached."
       },
       "exportExcel": "Export to Excel",
+      "readOnlyNotice": "You can read the list, the export and the race numbers, but nothing here changes a registration: cancelling, erasing, resending an email and the “bib printed” mark are the Administrator’s. On race day you can still confirm on a paper declaration, give a place, set a number and check somebody in — from “Race day”.",
       "columnBib": "Race number (BIB)",
       "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",
@@ -546,7 +547,8 @@
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
-      "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion."
+      "LEGAL_DELETE_NEEDS_REASON": "Type a reason. It is the only thing left after the deletion.",
+      "LEGAL_TERMS_IN_FORCE": "This version of the terms has been in force, so it cannot be deleted: whoever registered in that window accepted it, and a registration does not record which version of the terms it was. You can withdraw it instead — it stays on the record and is offered to nobody."
     },
     "editor": {
       "eventSection": "Event details",
@@ -564,7 +566,8 @@
       "saveEvent": "Save the event details",
       "eventFieldsReadOnly": "Only an editor or an administrator can change the times, the map link and the featured event.",
       "translationSection": "Content ({locale})",
-      "translationReadOnly": "You cannot edit this text: the event is published, or the text was written by another author.",
+      "translationReadOnly": "The words are the Redactor’s or the Administrator’s — yours are the Settings: the date, the place, the route, the places, the registrations and race day. Ask the Administrator to change anything here.",
+      "saveCoversSettingsOnly": "The save below covers the event’s settings. Nothing under “Content” is saved from here, because those words are not this role’s.",
       "version": "version {version}",
       "liveWarning": "This event is published. Your changes become public the moment you save.",
       "acknowledgeLive": "I understand that I am editing published content.",
@@ -1040,7 +1043,8 @@
         "action": "Delete this version permanently",
         "blockedDraft": "This is a draft, not an approved version. Delete it from the list with the button on its own row, with no typed confirmation: nobody has seen it and its number was never given to anyone.",
         "blockedReferenced": "Cannot be deleted: {signatures} signatures, {events} events and {acknowledgements} registrations depend on this version. What people accepted stays.",
-        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted."
+        "blockedCurrent": "This is the version in force right now. Approve its successor first; then this one can be withdrawn or deleted.",
+        "blockedTermsInForce": "This version of the terms has been in force, so it cannot be deleted. Whoever registered in that window accepted it, and a registration does not record which version of the terms it was — so nobody can be shown not to have relied on it, and deletion destroys the words themselves. Withdrawal is what can be done: the version stays on the record, with its number, and is offered to nobody."
       },
       "editor": {
         "heading": "Section heading",

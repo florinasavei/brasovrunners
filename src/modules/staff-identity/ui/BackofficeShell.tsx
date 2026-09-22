@@ -10,7 +10,7 @@ import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { getDb } from "@/db/client";
 import { registeredBadgeCount } from "@/modules/registrations/nav-count";
-import { type AdminSection, canManageRegistrations, visibleAdminSections } from "../domain/roles";
+import { type AdminSection, canReadRegistrations, visibleAdminSections } from "../domain/roles";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -69,10 +69,10 @@ export default async function BackofficeShell({
     Read here because the shell is the one place every backoffice page passes through, and
     memoized for a minute inside `registeredBadgeCount` so the badge costs about one indexed
     count a minute rather than one per page view — the club's database is a free Neon plan that
-    bills compute time (§68). Only for the roles that may open the list: for everybody else
-    there is no query and no number.
+    bills compute time (§68). Only for the roles that may open the list — the Organizer since
+    §289 — so for everybody else there is no query and no number.
   */
-  const registered = canManageRegistrations(staffUser.role) ? await registeredBadgeCount(getDb(), new Date()) : null;
+  const registered = canReadRegistrations(staffUser.role) ? await registeredBadgeCount(getDb(), new Date()) : null;
 
   const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
     href: SECTION_HREF[section],

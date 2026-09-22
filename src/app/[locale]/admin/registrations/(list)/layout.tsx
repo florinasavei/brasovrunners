@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function SectionLayout({ children }: { children: ReactNode }) {
   const actor = await requireStaff();
-  if (!canManageRegistrations(actor.role)) notFound();
+  if (!canReadRegistrations(actor.role)) notFound();
 
   return <>{children}</>;
 }

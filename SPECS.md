@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.46-2026-09-22 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.46-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -989,7 +989,7 @@ way through every step, and none of them is a way around the allocator.
 4. Given a registration entered by staff with the fast track ticked, when it is created, then no verification email is queued, the registration is confirmed as in criteria 1–3 in the same request, and the public registration window is not consulted — the desk decides — while a cancelled event and a non-local registration mode still refuse it.
 5. Given a waiting-list registration, when the desk gives it a place, then it is refused with a sentence while `occupied >= capacity` under the lock, and otherwise confirmed on paper as in criterion 3; the audit row says the queue was jumped and by whom.
 6. Given any of the above, when it completes, then an `audit_logs` row names the actor and the transition and never the participant; and given a confirmation, then the `REGISTRATION_CONFIRMED` email is queued as for any confirmation.
-7. Given every staff role, including Contributor, when a desk verb (enter, confirm, give a place, set a number, check in) is attempted, then it is allowed; and given any role below Administrator, when cancel, erase, rename, resend, the list or the export is attempted, then it is refused as before (BR-REQ-060-01).
+7. Given every staff role, including Contributor, when a desk verb (enter, confirm, give a place, set a number, check in) is attempted, then it is allowed; and given any role below Administrator, when cancel, erase, rename, resend or the printing mark is attempted, then it is refused. The list and the export are the Organizer's to read since `DECISIONS.md` §289 and nobody else's below Administrator (BR-REQ-060-01).
 8. Given a `PENDING_DECLARATION` registration whose hold deadline has passed and which was kept because the queue did not want its place (BR-REQ-033-01 criterion 3, `DECISIONS.md` §160), when the desk confirms it on paper, then it is confirmed as in criterion 3 — the place was never released, so no capacity check is needed and none is made; and given the same registration after the event's own start released the hold, when the desk confirms it, then the allocator decides again under the lock and confirms it into a place that is still free rather than refusing it. The backoffice journey shows "termen depășit, locul se ține cât nu așteaptă nimeni" for such a hold — the condition in the words, because the row is rendered in a list that spans many events and reads no queue of its own.
 
 **Verification:** integration `registrations/race-day.test.ts`, `registrations/staff-crud.test.ts`
@@ -1487,7 +1487,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 **Acceptance criteria**
 
 1. Given an Author, when they request any participant, registration, export, or role-management endpoint, then it is refused regardless of what the interface shows.
-2. Given an Editor, when they request participant or export endpoints, then it is refused.
+2. Given an Editor — the Organizer — when they request participant or export endpoints, then they are **served**, read-only, since `DECISIONS.md` §289; see criterion 14. Given a copywriter, a volunteer or the Tehnic role, when they request those endpoints, then it is refused.
 3. Given an unauthenticated request to any `/admin` route, when it is made, then it is refused.
 4. Given each guarded endpoint, when tests run, then authorization is asserted at the server, not only in the UI.
 5. Given an Administrator, when they administer staff, then they may add a colleague by email address and role, change a colleague's role, and revoke access; an Author or an Editor is refused every one of those operations.
@@ -1501,7 +1501,9 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 12. Given a staff member on Echipa and a deployment with the management key set, when an Administrator adds somebody whose provider account already exists, then that account is sent the invitation rather than skipped; when they press "send a password reset", then the provider emails a reset link and nothing here ever holds a password or its code; when they press "deactivate the account", then the provider account is switched off while the allowlist row stays, because withdrawing access and disabling sign-in are two different decisions; every one of these looks the account up by email address first and login name second, and answers "no account with this address", "not configured" or the provider's own reason rather than one sentence for all four (2026-09-20, `DECISIONS.md` §171).
 13. Given the registrations list with a filter applied, when an Administrator asks for the Excel export, then the file is a real `.xlsx` — a bold header frozen at the top, readable column widths, dates written as dates and the race number as a number — carrying the same rows the comma-separated export would, plus the registration id and the runner's club, with test registrations omitted; the file and its sheet are named after the event that was filtered for and the day, the sheet name reduced to what Excel accepts; a cell beginning with `=` is written as text and never as a formula; and an empty list still produces a file (2026-09-20, `DECISIONS.md` §172).
 
-**Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`; e2e `cms-publish.spec.ts`
+14. Given an Organizer, when they open the registrations list, one registration's page, the CSV or Excel export, the bib sheet, an event's signed declarations or a single signed declaration, then each is served; and when the same session attempts to cancel, erase, rename, resend, assign the race numbers, mark a bib printed, drain the outbox or send the thank-you, then every one is refused at the server, and none of those controls is drawn — the screen says once, in a sentence, what this role may not do here rather than refusing after a press. Given the Tehnic role, when they request any of the same read endpoints, then it is refused, because the role exists to be given to a helper without the club's participants (2026-09-22, `DECISIONS.md` §289).
+
+**Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 
 #### BR-REQ-070-01 — Participant data is never public
 

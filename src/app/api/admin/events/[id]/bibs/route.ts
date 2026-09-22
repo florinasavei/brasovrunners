@@ -5,7 +5,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { bibPictureUrl } from "@/modules/registrations/bib-design";
 import { env } from "@/shared/config/env";
@@ -18,7 +18,8 @@ import { isDomainError } from "@/shared/errors/domain-error";
 /**
  * The race numbers of one event as a printable sheet (BR-REQ-038-01).
  *
- * `GET /api/admin/events/<id>/bibs?locale=ro&from=1&to=50&only=unprinted`. Administrator only —
+ * `GET /api/admin/events/<id>/bibs?locale=ro&from=1&to=50&only=unprinted`. Whoever may read the
+ * registrations (§289; the owner: "organizer should also be able to see BIDs and export them") —
  * a bib carries a participant's name, which is personal data the club holds for the event and
  * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
  * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
@@ -40,7 +41,7 @@ export async function GET(
     if (isDomainError(error)) return NextResponse.json({ error: error.code }, { status: 401 });
     throw error;
   }
-  if (!canManageRegistrations(actor.role)) {
+  if (!canReadRegistrations(actor.role)) {
     return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
   }
 

@@ -434,6 +434,7 @@
         "legend": "Cei șase pași ai unei înscrieri:\n– 1 formularul trimis\n– 2 emailul confirmat\n– 3 locul rezervat\n– 4 declarația semnată\n– 5 locul confirmat\n– 6 numărul ridicat la masă\nCifra arată la care a ajuns persoana."
       },
       "exportExcel": "Exportă Excel",
+      "readOnlyNotice": "Vezi lista, exportul și numerele de concurs, dar nu poți modifica nimic aici: anulările, ștergerile, retrimiterile de email și marcajul „BID printat” sunt ale Administratorului. La ziua cursei poți confirma pe declarație, da un loc, pune un număr și bifa prezența — de la „Ziua cursei”.",
       "columnBib": "Număr de concurs (BIB)",
       "bibProvisional": "Număr provizoriu — se stabilește definitiv când se închid înscrierile, și abia atunci se trimite pe email.",
       "bibSettled": "Numărul de concurs este {number} și nu se mai schimbă: participantul l-a primit pe email și poate fi deja tipărit.",
@@ -546,7 +547,8 @@
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
-      "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere."
+      "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
+      "LEGAL_TERMS_IN_FORCE": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge: cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost. O poți retrage — rămâne în evidență și nu se mai oferă nimănui."
     },
     "editor": {
       "eventSection": "Detaliile evenimentului",
@@ -564,7 +566,8 @@
       "saveEvent": "Salvează detaliile evenimentului",
       "eventFieldsReadOnly": "Doar un editor sau un administrator poate modifica orele, harta și evenimentul principal.",
       "translationSection": "Conținut ({locale})",
-      "translationReadOnly": "Nu poți edita acest text: evenimentul este publicat sau textul a fost scris de alt autor.",
+      "translationReadOnly": "Textele le scrie Redactorul sau Administratorul — tu te ocupi de Setări: data, locul, traseul, locurile, înscrierile și ziua cursei. Ca să schimbi ceva aici, cere-i Administratorului.",
+      "saveCoversSettingsOnly": "Salvarea de mai jos acoperă Setările evenimentului. Textele din „Conținut” nu se salvează de aici, pentru că nu sunt ale rolului tău.",
       "version": "versiunea {version}",
       "liveWarning": "Evenimentul este publicat. Modificările devin publice în momentul salvării.",
       "acknowledgeLive": "Am înțeles că modific conținut publicat.",
@@ -1040,7 +1043,8 @@
         "action": "Șterge definitiv versiunea",
         "blockedDraft": "Aceasta este o ciornă, nu o versiune aprobată. Se șterge din listă, cu butonul de pe rândul ei, fără confirmare scrisă: nimeni nu a văzut-o și numărul ei nu a fost dat nimănui.",
         "blockedReferenced": "Nu se poate șterge: {signatures} semnături, {events} evenimente și {acknowledgements} înscrieri depind de această versiune. Ce au acceptat oamenii rămâne.",
-        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge."
+        "blockedCurrent": "Aceasta este versiunea în vigoare acum. Aprobă întâi versiunea următoare; apoi aceasta se poate retrage sau șterge.",
+        "blockedTermsInForce": "Această versiune a termenilor a fost în vigoare, așa că nu se poate șterge. Cine s-a înscris în acea perioadă a acceptat-o, iar înscrierea nu reține care versiune a termenilor a fost — deci nu se poate arăta că nimeni nu s-a bazat pe ea, iar ștergerea distruge chiar textul. Retragerea este ce se poate face: versiunea rămâne în evidență, cu numărul ei, și nu se mai oferă nimănui."
       },
       "editor": {
         "heading": "Titlu de secțiune",

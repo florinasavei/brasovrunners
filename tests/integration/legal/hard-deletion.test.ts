@@ -471,6 +471,23 @@ describe("BR-REQ-053-02 deleting an approved legal version", () => {
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
+  /*
+    §290 — the refusal has to be tellable from a race.
+
+    `CONFLICT` is right for both, and the backoffice renders a bare one as "somebody else saved
+    meanwhile". That is true of a race and a lie about this rule, and it is what the owner met:
+    "inca nu pot sterge unele documente", on a screen that had just told him the version could go.
+    The screen now asks `termsHasBeenInForce` for itself; this is the marker the action reads if
+    the version takes effect between the screen and the press.
+  */
+  it("names the terms refusal in its fields, so it is not rendered as a concurrent save", async () => {
+    const { first } = await twoApproved("TERMS");
+
+    await expect(erase(first, "TERMS 1")).rejects.toSatisfy(
+      (error: unknown) => isDomainError(error) && error.fields.includes("termsInForce"),
+    );
+  });
+
   it("never moves which version is in force", async () => {
     /*
       §53 refused *un-approving* because a declaration binds when the form is posted rather than
