@@ -16,6 +16,7 @@ import Typography from "@mui/material/Typography";
 import { Extension, mergeAttributes, Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table/kit";
 import { youtubeVideoId } from "@/modules/events/domain/video";
@@ -27,6 +28,7 @@ import {
   IMAGE_ALIGNMENTS,
   IMAGE_WIDTH_PERCENTS,
   readRichText,
+  richTextToPlainText,
   TABLE_BORDERS,
   TABLE_BORDER_COLOURS,
   TABLE_HEADER_FILLS,
@@ -127,6 +129,8 @@ export default function RichTextEditor({
     linkApply: string;
     linkRemove: string;
     linkCancel: string;
+    /** §273: how much has been written, with its `{count}` placeholder. */
+    words: string;
     /** §271: the pop-up that shows the body as the page will draw it. */
     preview: string;
     previewShort: string;
@@ -192,6 +196,7 @@ export default function RichTextEditor({
    */
   const [preview, setPreview] = useState<string | null>(null);
   const [missingAlt, setMissingAlt] = useState(() => countMissingAlt(initialDoc));
+  const [words, setWords] = useState(() => countWords(richTextToPlainText(initialDoc)));
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** The pictures already stored, once asked for: `null` closed, `"loading"`, or the list. */
   const [gallery, setGallery] = useState<null | "loading" | StoredPicture[]>(null);
@@ -342,6 +347,7 @@ export default function RichTextEditor({
     onUpdate: ({ editor: current }) => {
       setValue(JSON.stringify(current.getJSON()));
       setMissingAlt(countMissingAlt(current.getJSON()));
+      setWords(countWords(current.getText()));
     },
     editorProps: {
       // A picture pasted or dropped as a *file* goes through the same upload as the control.
@@ -540,7 +546,29 @@ export default function RichTextEditor({
           spacing={0.5}
           role="toolbar"
           aria-label={accessibleSuffix ? `${label} — ${accessibleSuffix}` : label}
-          sx={{ flexWrap: "wrap", gap: 0.5, p: 0.5, borderBottom: 1, borderColor: "divider" }}
+          /*
+            Sticky (§273). A description runs to several screens and the toolbar sat at the top
+            of it: to make a word bold two screens down, the writer scrolled up, lost the
+            selection, and scrolled back. Every editor people already know keeps its toolbar in
+            view, and the alternative — a floating bar — is the bubble menu below, which is for
+            the selection rather than for the whole body.
+
+            `top: 0` against the page's own scroller, and a background of its own: without one
+            the text scrolls visibly under a transparent bar.
+          */
+          sx={{
+            flexWrap: "wrap",
+            gap: 0.5,
+            p: 0.5,
+            borderBottom: 1,
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            backgroundColor: "background.paper",
+            borderTopLeftRadius: "inherit",
+            borderTopRightRadius: "inherit",
+          }}
         >
           <Control
             label={labels.bold}
@@ -958,9 +986,55 @@ export default function RichTextEditor({
             ...EDITOR_TABLE_SX,
           }}
         >
+          {/*
+            The bar over a selection (§273; the owner: "I want that rich text editor to be almost
+            as good as word … or at least close to WordPress, Amalia is used to WordPress").
+
+            Three verbs, because a bubble menu is for what somebody does *to the words they just
+            selected* — make them bold, make them a link — and everything structural stays in the
+            toolbar above, which is sticky now. `@tiptap/react/menus` is a subpath of a package
+            already installed: no new dependency (§1.5).
+          */}
+          {editor && (
+            <BubbleMenu editor={editor}>
+              <Paper elevation={3} sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
+                <Control
+                  label={labels.bold}
+                  text="B"
+                  active={editor.isActive("bold")}
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Control
+                  label={labels.italic}
+                  text="I"
+                  active={editor.isActive("italic")}
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  sx={{ fontStyle: "italic" }}
+                />
+                <Control
+                  label={labels.link}
+                  text="🔗"
+                  active={editor.isActive("link")}
+                  onClick={() =>
+                    setLinkDraft((open) => (open === null ? (editor.getAttributes("link").href ?? "") : null))
+                  }
+                />
+              </Paper>
+            </BubbleMenu>
+          )}
           <EditorContent editor={editor} />
         </Box>
       </Box>
+
+      {/*
+        How much is written (§273), which every editor people know shows and which answers the
+        question an organizer actually has about a description: is this two sentences or two
+        screens. Counted from the editor's own text rather than from a package.
+      */}
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="rich-text-words">
+        {labels.words.replace("{count}", String(words))}
+      </Typography>
 
       {/* Dimmed, not a block: a picture without alt text is a page that still publishes, and
           a sentence somebody reads before they save. */}
@@ -1419,6 +1493,17 @@ type StoredPicture = { id: string; src: string; thumb: string; width: number; he
 function countMissingAlt(doc: unknown): number {
   const content = (doc as { content?: { type?: string; attrs?: { alt?: unknown } }[] })?.content ?? [];
   return content.filter((node) => node.type === "image" && !String(node.attrs?.alt ?? "").trim()).length;
+}
+
+/**
+ * Words in a piece of text: runs of anything that is not a space.
+ *
+ * Deliberately not Tiptap's `CharacterCount`, which is another extension to install and
+ * configure for a number this line computes exactly as well (§1.5: prefer nothing).
+ */
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
 }
 
 /**

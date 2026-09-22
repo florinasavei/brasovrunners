@@ -60,6 +60,8 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     linkApply: rt("linkApply"),
     linkRemove: rt("linkRemove"),
     linkCancel: rt("linkCancel"),
+    // Raw, with its `{count}`: the island substitutes the number itself (§273).
+    words: rt.raw("words") as string,
     preview: rt("preview"),
     previewShort: rt("previewShort"),
     previewClose: rt("previewClose"),

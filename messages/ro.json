@@ -1389,7 +1389,8 @@
       "tableHeaderFillOrange": "Capul de tabel: portocaliu",
       "preview": "Previzualizare",
       "previewShort": "Vezi",
-      "previewClose": "Închide"
+      "previewClose": "Închide",
+      "words": "{count} cuvinte"
     },
     "pages": {
       "title": "Pagini",

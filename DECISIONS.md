@@ -11709,3 +11709,38 @@ have, that is a new value in `EVENT_TYPES` and its own decision.
 `Events.pastCountOfType` in both catalogues, `theme/surfaces.ts`, `SeriesCard`.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 273. Decided — the editor behaves like the ones people already know: a sticky toolbar, a bar over the selection, a word count (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "I want that rich text editor to be almost as good as word
+doc editing", and then the sentence that decides the shape of it — "or at least close to
+WordPress, Amalia is used to WordPress." This is a usability requirement with a named user, not
+a feature list: what matters is that somebody who has written in WordPress finds their habits
+work here.
+
+**Decision.** Three habits, and nothing that widens what a document may contain.
+
+*The toolbar is sticky.* A description runs to several screens and the toolbar sat at the top of
+it, so making a word bold two screens down meant scrolling up, losing the selection, and
+scrolling back. Every editor people know keeps it in view.
+
+*A bar appears over the selection*, with bold, italic and link — the three verbs that are about
+the words somebody has just selected. Everything structural stays in the toolbar above.
+`@tiptap/react/menus` is a subpath of a package already installed, so this is no new dependency
+(§1.5), and it is the one part of "like WordPress" that is a recognisable gesture rather than a
+button in a different place.
+
+*A word count under the box*, counted from the editor's own text rather than from Tiptap's
+`CharacterCount` extension — one line against another package to install and configure.
+
+**What was deliberately not done.** Underline, strikethrough, text colour, font size and a
+colour picker: each is a widening of `domain/schema.ts`, which is the allowlist every stored
+body is validated against, and each is a way for a page to stop looking like the club's site.
+§263, §271 and §213 already gave the two decisions that carry a layout — how a table is drawn
+and where a line of text sits. "Close to WordPress" is about the *gestures*, and those are what
+this changes.
+
+**Consequences.** `RichTextEditor.tsx` (the sticky bar, `BubbleMenu`, `countWords`), one
+message key in each catalogue, the labels helper.
+
+Baseline `BR-V1.43-2026-09-21`.

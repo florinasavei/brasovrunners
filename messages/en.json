@@ -1389,7 +1389,8 @@
       "tableHeaderFillOrange": "Header row: orange",
       "preview": "Preview",
       "previewShort": "View",
-      "previewClose": "Close"
+      "previewClose": "Close",
+      "words": "{count} words"
     },
     "pages": {
       "title": "Pages",

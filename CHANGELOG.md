@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.43-2026-09-21
 
+- **The editor works the way WordPress does.** The toolbar follows you down a long text instead of staying at the top, selecting words brings up bold, italic and link right where they are, and the number of words is under the box. §273.
 - **A special event stands out on the listing** — the club's orange on the border of the whole card and a faint wash behind it, not only a chip — and **the past section now follows the kind filter**, so choosing "Testare de echipament" shows the gear tests the club has already held, with the heading saying which kind is being counted. §272.
 - **Tables are a layout tool now.** Drag a column edge to set how wide it is and the page keeps the proportion at any screen width; pick the colour of the lines and of the header row from the club's own four; and while you write, every cell edge shows as a faint dashed line even when the table will print none. **A "Vezi" button opens the whole text in a pop-up** exactly as the page will draw it, without those dashed guides. §271.
 - **The emails are written in the same editor as a page.** Bold, italic, headings, lists, a quote and links, per message and per language, with the preview right above the box. Pictures, films and tables are not offered: an inbox blocks the first, cannot play the second and lays out the third differently in every mail client. §270.
