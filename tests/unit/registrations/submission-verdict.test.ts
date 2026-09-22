@@ -115,6 +115,13 @@ describe("§282 what is actually refused", () => {
     expect(refusesSubmission({ ...base, verdict: "trap", secondAttempt: true })).toBe(false);
   });
 
+  it("suspects nothing from the trap once the club switches it off", () => {
+    // §282: the field is still rendered and still logged — it simply stops refusing. The timing
+    // guess and Cloudflare are untouched by that switch.
+    expect(refusesSubmission({ ...base, verdict: "trap", honeypotOn: false })).toBe(false);
+    expect(refusesSubmission({ ...base, verdict: "too-fast", honeypotOn: false })).toBe(true);
+  });
+
   it("never refuses an ordinary submission, or one the browser filled", () => {
     expect(refusesSubmission({ ...base, verdict: "ok" })).toBe(false);
     expect(refusesSubmission({ ...base, verdict: "autofill" })).toBe(false);
@@ -122,5 +129,12 @@ describe("§282 what is actually refused", () => {
 
   it("still refuses a script that posts once with a token Cloudflare rejected", () => {
     expect(refusesSubmission({ verdict: "trap", turnstile: "failed", secondAttempt: false })).toBe(true);
+  });
+
+  it("does not let a second press undo a token Cloudflare rejected", () => {
+    // The escape is for a person the guesses caught by accident, never a way past the one check
+    // that measured this browser — a script posting twice would otherwise reach the "check your
+    // email" screen and spend a message out of the club's allowance.
+    expect(refusesSubmission({ verdict: "trap", turnstile: "failed", secondAttempt: true })).toBe(true);
   });
 });

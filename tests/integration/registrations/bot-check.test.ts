@@ -52,25 +52,30 @@ describe("§254 the anti-bot switch", () => {
 
   it("switches off and on, and the next submission sees it at once", async () => {
     expect(await botCheckIsOn(db, NOW)).toBe(true);
-    await updateBotCheck(db, admin, false, NOW);
+    await updateBotCheck(db, admin, { enabled: false }, NOW);
     // The memo the request path uses is dropped on a save: waiting thirty seconds to stop
     // refusing people would be thirty seconds of the thing being switched off to fix.
     expect(await botCheckIsOn(db, NOW)).toBe(false);
-    await updateBotCheck(db, admin, true, NOW);
+    await updateBotCheck(db, admin, { enabled: true }, NOW);
     expect(await botCheckIsOn(db, NOW)).toBe(true);
   });
 
   it("is an Administrator's decision", async () => {
     // The same gate as every other setting that changes what a participant meets (§100, §244).
-    await expect(updateBotCheck(db, organizer, false, NOW)).rejects.toThrow();
+    await expect(updateBotCheck(db, organizer, { enabled: false }, NOW)).rejects.toThrow();
     expect((await readBotCheck(db)).enabled).toBe(true);
   });
 
   it("records who switched it and which way", async () => {
-    await updateBotCheck(db, admin, false, NOW);
+    await updateBotCheck(db, admin, { enabled: false }, NOW);
     const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, "bot_check.changed"));
     expect(row.actorStaffUserId).toBe(admin.id);
-    expect(row.metadataJson).toEqual({ from: true, to: false });
+    // Both switches, either side (§282): the trail has to say which of the two moved, and a row
+    // recording only `true → false` could not.
+    expect(row.metadataJson).toEqual({
+      from: { enabled: true, honeypot: true },
+      to: { enabled: false, honeypot: true },
+    });
   });
 
   it("is consulted by both public forms and by both of their actions", () => {

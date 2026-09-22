@@ -84,11 +84,20 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await expect(summary).toBeVisible();
     await expect(summary).toContainText("Mai încearcă o dată");
     await expect(summary).toContainText(/nu ți-am trimis niciun email/i);
-    const again = summary.getByRole("button", { name: "Trimite din nou înscrierea" });
+    // The button lives inside the form, not in the alert: a submitter outside the form does
+    // not drive a Server Action, which is what the first version of this got wrong (§282).
+    const again = page.getByRole("button", { name: "Trimite din nou înscrierea" });
     await expect(again).toBeVisible();
 
-    // And the way out: pressing it goes through, even though the trap is still filled — which is
-    // what a password manager would do on every render.
+    /*
+      And the way out. The consents are deliberately not restored after a rejection (§142: a
+      consent is given on purpose, never carried over), and they are `required`, so a person
+      ticks them again before the second press — which is what the panel now tells them to do.
+      The trap stays filled, as a password manager would refill it on every render.
+    */
+    await page.locator('[name="privacyAcknowledged"]').check();
+    await page.locator('[name="rulesAcknowledged"]').check();
+    await page.locator('[name="fitnessDeclared"]').check();
     await autofillTheTrap(page, "https://cheap-seo.example");
     await again.click();
     await expect(page).toHaveURL(/submitted=/);
@@ -104,7 +113,7 @@ test.describe("§282 a browser that fills the hidden field does not cost the clu
     await autofillTheTrap(page, "https://cheap-seo.example");
     await page.getByRole("button", { name: "Trimite înscrierea" }).click();
 
-    const again = page.locator("#registration-errors").getByRole("button", { name: "Trimite din nou înscrierea" });
+    const again = page.getByRole("button", { name: "Trimite din nou înscrierea" });
     const box = await again.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
   });

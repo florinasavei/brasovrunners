@@ -10,7 +10,7 @@ import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
 import { submitRegistration } from "@/modules/registrations/service";
-import { botCheckIsOn } from "@/modules/registrations/bot-check";
+import { botCheckIsOn, honeypotIsOn } from "@/modules/registrations/bot-check";
 import { SECOND_ATTEMPT_FIELD } from "@/modules/registrations/fields";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { headers } from "next/headers";
@@ -106,6 +106,7 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
         */
         turnstile: verdict,
         secondAttempt: String(form.get(SECOND_ATTEMPT_FIELD) ?? "") === "1",
+        honeypotOn: await honeypotIsOn(getDb(), new Date()),
       },
     );
   } catch (error) {

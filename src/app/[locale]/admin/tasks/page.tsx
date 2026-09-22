@@ -366,6 +366,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {query.saved === "botCheckOn" && <Alert severity="success">{t("botCheck.savedOn")}</Alert>}
         {query.saved === "botCheckOff" && <Alert severity="warning">{t("botCheck.savedOff")}</Alert>}
+        {query.saved === "honeypotOn" && <Alert severity="success">{t("botCheck.savedHoneypotOn")}</Alert>}
+        {query.saved === "honeypotOff" && <Alert severity="warning">{t("botCheck.savedHoneypotOff")}</Alert>}
         {typeof query.error === "string" && <Alert severity="error">{t(`errors.${query.error}`)}</Alert>}
       </Box>
 

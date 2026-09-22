@@ -487,12 +487,30 @@ export function looksLikeSpam(input: { honeypot?: string; renderedAt?: string },
  */
 export function refusesSubmission(input: {
   verdict: SubmissionVerdict;
+  /** The hidden field's own switch (§282). Off, it suspects nothing. */
+  honeypotOn?: boolean;
   /** What Cloudflare said, when it was asked at all. */
   turnstile: "passed" | "failed" | "unavailable" | "not_configured";
   /** This is the try after a refusal. */
   secondAttempt: boolean;
 }): boolean {
   if (input.verdict === "ok" || input.verdict === "autofill") return false;
+  // Switched off in the backoffice: the field is still rendered and still logged, and it stops
+  // refusing anybody (§282). The timing guess and Turnstile are untouched by this switch.
+  if (input.verdict === "trap" && input.honeypotOn === false) return false;
+  /*
+    A token Cloudflare **looked at and rejected** ends it, and no second press undoes that
+    (§282; the owner: "nu vreau ca oamenii sa ajunga la ecranul asta si sa fi fost roboti").
+
+    The escape below exists for a person the two guesses caught by accident. It must not become
+    a way past the one check that actually measured this browser — otherwise a script posts
+    twice and reaches the "check your email" screen, which costs the club a message out of a
+    Mailgun allowance that is sixteen registrations a day on the free plan (§100).
+
+    In practice the action refuses a failed token before this is reached; the rule is stated
+    here as well because this function is where the decision is written down.
+  */
+  if (input.turnstile === "failed") return true;
   if (input.turnstile === "passed") return false;
   return !input.secondAttempt;
 }
@@ -529,6 +547,8 @@ export type RegistrationOrigin = {
    */
   turnstile?: "passed" | "failed" | "unavailable" | "not_configured";
   secondAttempt?: boolean;
+  /** Whether the club has the hidden field switched on (§282). */
+  honeypotOn?: boolean;
 };
 
 const PUBLIC_ORIGIN: RegistrationOrigin = { source: "PUBLIC", createdByStaffUserId: null };
@@ -698,6 +718,7 @@ export async function submitRegistration<T extends Record<string, unknown>>(
       verdict,
       turnstile: origin.turnstile ?? "not_configured",
       secondAttempt: origin.secondAttempt === true,
+      honeypotOn: origin.honeypotOn !== false,
     });
     if (refused) {
       console.warn(`[registration] refused as automated: ${verdict}, event ${event.id}`);

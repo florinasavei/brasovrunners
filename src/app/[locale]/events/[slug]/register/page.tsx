@@ -383,7 +383,13 @@ export default async function RegisterPage({ params, searchParams }: Props) {
           */}
           {error && (
             <Alert
-              severity="error"
+              /*
+                Quieter for the anti-bot refusal (§282; the owner, of the red panel: "trebuie sa
+                fie mai subtila"). Nothing is wrong with what they typed and nothing needs
+                hunting down — a check guessed, and the next press goes through. Red is for the
+                rejections that ask somebody to change something.
+              */
+              severity={tooFast ? "info" : "error"}
               id={ERROR_SUMMARY_ID}
               role="alert"
               tabIndex={-1}
@@ -430,18 +436,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 */
                 <>
                   {t("errors.tooFast")}
-                  <Box sx={{ mt: 1 }}>{t("errors.tooFastNothingSent")}</Box>
-                  <Button
-                    type="submit"
-                    // The button sits in the alert, which is above the form: `form` is how HTML
-                    // lets a control submit a form it is not inside.
-                    form={REGISTRATION_FORM_ID}
-                    variant="contained"
-                    color="error"
-                    sx={{ ...TAP_TARGET, mt: 1.5 }}
-                  >
-                    {t("errors.tooFastResend")}
-                  </Button>
+                  <Box sx={{ mt: 0.5 }}>{t("errors.tooFastNothingSent")}</Box>
                 </>
               ) : rejected.length > 0 ? (
                 <>
@@ -494,6 +489,19 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               forever — which is precisely how somebody gives up on entering a race.
             */}
             {retry === "1" && <input type="hidden" name={SECOND_ATTEMPT_FIELD} value="1" />}
+            {/*
+              The way out, **inside** the form (§282).
+
+              It was in the alert above, with `form="registration-form"`, which is valid HTML and
+              submits nothing here: a Server Action is driven by React from the form's own submit
+              handler, and a submitter outside the element never reaches it. The e2e case caught
+              it — one refusal in the server log and no second request at all.
+            */}
+            {tooFast && (
+              <Button type="submit" variant="contained" sx={{ ...TAP_TARGET, mb: 2 }}>
+                {t("errors.tooFastResend")}
+              </Button>
+            )}
             <Stack spacing={2}>
               <input type="hidden" name="locale" value={locale} />
               <input type="hidden" name="slug" value={slug} />

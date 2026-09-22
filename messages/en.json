@@ -249,7 +249,15 @@
       "saving": "Saving…",
       "savedOn": "The anti-bot check is on.",
       "savedOff": "The anti-bot check is off. The hidden honeypot and the per-address limit remain.",
-      "updatedAt": "Changed on {when}."
+      "updatedAt": "Changed on {when}.",
+      "honeypot": {
+        "on": "The hidden trap is on: a field people never see, which robots fill in.",
+        "off": "The hidden trap is off. The field is still there and still logged, but it no longer refuses anybody.",
+        "turnOff": "Turn the hidden trap off",
+        "turnOn": "Turn the hidden trap on"
+      },
+      "savedHoneypotOn": "The hidden trap is on.",
+      "savedHoneypotOff": "The hidden trap is off."
     },
     "title": "Backoffice",
     "signedInAs": "Signed in as {name} — {role}",
@@ -1965,8 +1973,8 @@
       "tooFastTitle": "Please try once more",
       "throttledTitle": "You have already sent this form a few times",
       "throttled": "We have had several registrations from this address in the last hour, so we have paused it for a while. Try again in an hour — or, if it is urgent, write to us through the contact form and we will register you ourselves. Nothing you filled in has been lost.",
-      "tooFast": "The automated check did not pass the first time — we run it to keep bots out, and it sometimes gets real people wrong. Everything you typed is still here: press “Send the registration” again. If it fails a second time, write to us through the contact form and we will register you ourselves.",
-      "tooFastNothingSent": "Nothing was registered and no email was sent to you — so do not wait for one. Press the button below and this time it will go through.",
+      "tooFast": "The automated check did not pass first time — it happens to real people too. Your answers are still here.",
+      "tooFastNothingSent": "Nothing was registered and no email was sent to you. Tick the agreements below again — we ask for them every time, on purpose — and press “Send the registration again”.",
       "tooFastResend": "Send the registration again"
     },
     "sections": {

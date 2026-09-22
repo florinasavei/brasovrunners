@@ -12061,3 +12061,66 @@ places could not be checked; `/api/health` answered 503 with its structured body
 no copy yet answered the error page, as intended.
 
 Baseline `BR-V1.44-2026-09-22`.
+
+## 282. Decided — the hidden trap may suspect a person, but it no longer refuses one on its own (2026-09-22)
+
+**Context.** Two of the club's own testers registered and never received the confirmation email;
+the WhatsApp thread reads "nu primeam mailul de confirmare a adresei… nu am descoperit 100% care
+este motivul" and, from the other side, "prea multă securitate". The owner, the same afternoon:
+"we need to test with auto-fill properly", "I want clear visual feedback when people are not let
+through", "I also want to give real people the option to fix it", and — of the red panel —
+"trebuie să fie mai subtilă".
+
+**What the honeypot meets in the real world.** A password manager fills every input it recognises,
+and an offscreen input is still an input. What lands in the trap is then *that person's own* name
+or address, spelled exactly as they typed it above. §217 had already stopped the silent failure —
+a refusal is said out loud, with the answers kept — but the refusal itself was still a dead end:
+the browser refills the trap on every render, so pressing the button again was refused for the
+same reason, forever.
+
+**Decision.** *A trap holding the submitted address or name is `autofill`, not `trap`.* A bot has
+no reason to put the submitted address in a field the form never showed; it puts a link or a
+keyword. That verdict is accepted, and logged.
+
+*Suspicion and consequence are separated.* `refusesSubmission` weighs the guess against what else
+is known: **Cloudflare's verdict outranks the hidden field** — a measurement beats a guess, and a
+bot that can pass Turnstile was never going to be stopped by an offscreen input — and **a second
+attempt is let through**, because somebody who has been told they looked automated and pressed
+again is a person.
+
+*A token Cloudflare rejected ends it, and no second press undoes that.* The owner: "nu vreau ca
+oamenii să ajungă la ecranul ăsta și să fi fost roboți." The escape exists for a person the
+guesses caught by accident; it must not become the way past the one check that measured the
+browser. A script that posted twice would otherwise reach the "check your email" screen and spend
+a message out of an allowance that is sixteen registrations a day on the free plan (§100).
+
+*The refusal is quieter, and says three things it did not.* Information rather than error —
+nothing is wrong with what they typed — and: nothing was registered, no email is coming (the
+promise §217 forbids making falsely), and the consents below must be ticked again before pressing
+send. That last is not a defect to fix: a consent is given on purpose and is deliberately never
+restored (§142), so the button would otherwise be pressed and nothing would happen, which is
+exactly what the e2e case found.
+
+*The way out is a button inside the form.* It was first placed in the alert above it with
+`form="registration-form"`, which is valid HTML and submits nothing here: a Server Action is
+driven by React from the form's own submit handler, and a submitter outside the element never
+reaches it. One refusal in the log and no second request at all — found by the browser test, not
+by reading.
+
+*And the trap has its own switch in the backoffice*, beside the captcha's (§254; the owner: "I
+want this honeypot setting to be a toggle in the admin area as well"). Its own, because the two
+fail differently: the captcha refuses somebody in front of a widget they can see, and the trap
+refuses them invisibly — which is exactly why being able to switch it off alone is worth having
+on the day a browser keeps filling it. Off, the field is still rendered and still logged; it
+simply stops refusing anybody, and the timing guess and Turnstile are untouched. It needs no keys
+and no third party, so it can be switched on a deployment that has no Turnstile at all.
+
+**What was rejected: making the trap harder to autofill.** More attributes on a hidden input is an
+arms race against browsers whose behaviour is not documented and changes. Deciding what the
+*value* means is stable, and it is the thing that distinguishes the two cases.
+
+**Verified in a browser**, `registration-autofill.spec.ts`: the trap filled with the runner's own
+address goes through first time; filled with somebody else's link it is refused, the panel says
+so, and the second press — consents re-ticked, trap still filled — is accepted.
+
+Baseline `BR-V1.44-2026-09-22`.
