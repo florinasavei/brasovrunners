@@ -10,6 +10,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 
 ## BR-V1.46-2026-09-22
 
+- **The event editor stops saying “saved” about something it did not save.** An Organizer edits the Settings and not the words, so one form and one button covered half of what was on the screen: the green “Modificările au fost salvate” was true about the settings while the Conținut tab said the text could not be edited — and gave the wrong reason for it, “the event is published or somebody else wrote it”, which was never why. The tab now names the rule (the words are the Redactor’s or the Administrator’s) and the save says what it covers, above the button, before the press. §289.
 - **The Organizer can see who signed up** — the whole list, with the contact details, the identity document, the signed declarations, the race numbers and the Excel or CSV export — and can change none of it: cancelling, erasing, renaming, resending an email and the “bib printed” mark stay the Administrator’s. On race day the Organizer still does what anybody at the desk does: confirm on a paper declaration, give a place, set a number, check somebody in. The screen says once, in a sentence, what this role may not do there, instead of refusing after a press. The Tehnic role gets none of it — it exists precisely so it can be given to somebody outside the club without the club’s participants coming with it. §289.
 
 ## BR-V1.45-2026-09-22

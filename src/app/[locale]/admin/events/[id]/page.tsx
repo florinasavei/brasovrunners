@@ -363,6 +363,23 @@ export default async function EditEventPage({ params, searchParams }: Props) {
 
           {maySaveAnything && (
             <Box component="section">
+              {/*
+                What this save covers, for the role whose save covers half the form (§289's
+                sibling; the owner: "e un pic confusing faptul ca pot edita dar nu mi se salveaza
+                modificarile ca si Organizator").
+
+                One form and one button carry the event row and both languages (§36). An
+                Organizer may write the first and not the second, so the green "Modificările au
+                fost salvate" is true and reads as a lie: they had just been told, on the
+                Conținut tab, that they could not edit the text. Said here, beside the button,
+                before the press — the tab's own alert now names the rule instead of guessing at
+                publication or authorship, which was never the reason.
+              */}
+              {maySaveSettings && !orderedTranslations.some((translation) => mayEditTranslation(translation)) && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  {t("editor.saveCoversSettingsOnly")}
+                </Alert>
+              )}
               {/* BR-REQ-051-01 criterion 4, once for the whole save now that there is one save.
                   Binding three times over: `required`, so the browser refuses the submit and
                   names the box; the dimmed button with its sentence, so the organizer sees why
