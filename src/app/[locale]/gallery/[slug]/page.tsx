@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { readWithLastGood } from "@/modules/resilience/last-good";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
@@ -40,7 +42,12 @@ export default async function AlbumPage({ params }: Props) {
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const album = await findPublishedAlbumBySlug(getDb(), locale, slug);
+  // `notFound()` on the result rather than inside the loader: thrown in there it would be
+  // caught and answered with the previous visitor's album (§281).
+  const read = await readWithLastGood(`album:${locale}:${slug}`, () =>
+    findPublishedAlbumBySlug(getDb(), locale, slug),
+  );
+  const album = read.value;
   if (!album) notFound();
 
   const t = await getTranslations("Gallery");
@@ -48,6 +55,8 @@ export default async function AlbumPage({ params }: Props) {
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
+      <LastGoodNotice read={read} />
+
       <Typography variant="body2" sx={{ mb: 2 }}>
         <Link href="/gallery">{t("backToGallery")}</Link>
       </Typography>

@@ -11987,4 +11987,70 @@ It changes the stored shape, the hash's input, the public renderer and the PDF, 
 compatibility path for the three approved versions — a month before registrations open for
 21 November, on the documents a registration is refused without.
 
-Baseline `BR-V1.43-2026-09-21`.
+Baseline `BR-V1.44-2026-09-22`.
+
+## 281. Decided — a public page keeps its last good copy, so an outage costs a page rather than the site (2026-09-22)
+
+**Context.** The owner, 2026-09-22, after asking what happens when the database is down: "I want
+to gracefully handle DB failures … we want the website to keep running so that we don't break our
+reputation." Until now every public page read the database per request and had nothing behind it:
+Neon suspended, a provider incident or a migration mid-flight took the whole site's content with
+it, and a stranger deciding whether to enter the 21 November race met an error page.
+
+**What was already true, and kept.** `error.tsx` (§52) means that failure was never Next's raw
+"Application error": the header, the footer and the navigation survived, and the page offered a
+retry, a way home and a reference. What it could not do is show the event.
+
+**Decision.** *Each public read keeps its last good answer, and serves it when the live read
+throws.* `modules/resilience/last-good.ts`. Normally **nothing is stale**: the copy is consulted
+only after a failure, so this is not a cache in front of the database — it is a copy behind it.
+
+*The copy lives in two places, for one reason each.* In the instance's memory, which costs nothing
+and covers the ordinary case; and in R2, because a serverless instance is not a server and the
+first request after a quiet hour lands on a cold one with an empty memory. R2 is the right second
+place precisely because it is not Neon: the two do not fail together. It is written after the
+response, as the outbox drain is (§68), and at most once every ten minutes per key.
+
+*A stale page says so, and says when.* `LastGoodNotice`, naming the hour the copy was taken — a
+reader can judge a page from twenty minutes ago and one from nine hours ago differently, and that
+judgement is not the platform's to make. Serving an old page silently is what would actually cost
+the club its reputation.
+
+*A copy older than twelve hours is not shown at all.* Past that the error page is the honest
+answer: "the site kept working" is not worth telling somebody to come to a race that was called
+off yesterday.
+
+*The free places are never served from a copy.* The rest of an event page is the same facts it was
+an hour ago; how many places are left is the number somebody decides on, and the allocator is the
+only thing that knows it (`AGENTS.md` §10.6). When that one query cannot be answered, that one
+block says so and the page around it stands — rather than sending somebody through a form to be
+refused at the end of it. The owner chose this over caching the count.
+
+*`notFound()` and `redirect()` are put straight back.* They work by throwing, and answering a 404
+with the previous visitor's page would turn it into a wrong 200. Every loader is data only, and
+`unstable_rethrow` guards the boundary.
+
+*Nothing under `/admin` and no write path is wrapped in this.* Staff need to know the database is
+away, and a stale answer on a decision screen is worse than no answer.
+
+**Two things that came with it.** The storage adapter gained the read leg `AGENTS.md` §17 always
+described — `get(key)` — because a snapshot is read back by this application rather than handed to
+a browser, on the very request whose database read just failed. And `/api/health` was fixed: it
+probed the connection, then called `checkJobHealth` twice whatever the probe had said, so a
+database that was actually away made the route throw and answer Next's generic server error —
+destroying the one alarm the club has (§98), since the monitor's alarm *is* the non-2xx with a
+readable body.
+
+**What was rejected: ISR, or caching the pages outright.** Next would serve a stale page happily,
+but the pages take search parameters, the freshness rule of §28 (a cancelled event must never read
+as scheduled) would then depend on invalidation being right everywhere, and being wrong would show
+stale pages *while the database was healthy*. The mechanism above cannot do that: it is reached
+only by a throw.
+
+**Verified against a stopped database**, not a mocked one: with `docker compose stop db`, the
+listing, the calendar, both legal texts, the gallery, a standing page and an event page all
+answered 200 with their content and a dated banner; the event page's registration block said the
+places could not be checked; `/api/health` answered 503 with its structured body; and a page with
+no copy yet answered the error page, as intended.
+
+Baseline `BR-V1.44-2026-09-22`.

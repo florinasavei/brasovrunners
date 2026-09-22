@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { checkSchemaVersion } from "@/db/schema-version";
-import { checkJobHealth } from "@/modules/jobs/health";
+import { checkJobHealth, type JobHealth } from "@/modules/jobs/health";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { buildInfo } from "@/shared/config/build-info";
 
@@ -30,27 +30,71 @@ import { buildInfo } from "@/shared/config/build-info";
  * `database: ok` — `select 1` succeeds perfectly well against a stale schema — and the only
  * symptom was a broken landing page with nothing to point at (`DECISIONS.md` §31).
  */
+/**
+ * Everything this endpoint asks the database, once the connection itself has answered.
+ *
+ * One function, and one `try`, because the guarantee is about the whole group: the route's job
+ * is to *report* that the database is unusable, and a report that throws is the one failure it
+ * cannot recover from. Before this, only the schema and the email checks were guarded by the
+ * probe — the two job checks ran whatever it said, so a database that was actually away made
+ * `checkJobHealth` throw and the route answered Next's generic server error instead of the 503
+ * the monitors are waiting for (`DECISIONS.md` §98: the monitor's alarm *is* the non-2xx).
+ *
+ * `null` is "we could not ask", which is what the caller turns into `down`. It is never an
+ * empty list or a cheerful default: a monitor that reads "no stale jobs" from a database nobody
+ * could reach is worse than one that reads nothing.
+ */
+async function askTheDatabase(
+  db: ReturnType<typeof getDb>,
+  now: Date,
+): Promise<{ schema: SchemaCheck; jobs: JobHealth[]; email: EmailCheck } | null> {
+  try {
+    const [schema, jobs, email] = await Promise.all([
+      checkSchemaVersion(db),
+      Promise.all(JOB_NAMES.map((jobName) => checkJobHealth(db, jobName, now))),
+      // Whether the club can still send email (§98): deferred by the allowance, overdue, or failed.
+      checkEmailHealth(db, now),
+    ]);
+    return { schema, jobs, email };
+  } catch (error) {
+    // The message is logged, never returned: a driver's error carries the SQL it was running and
+    // sometimes the connection string, and this body is readable by anyone (§14.3).
+    console.error("[health] a database-backed check failed", error);
+    return null;
+  }
+}
+
+const JOB_NAMES = ["registration-maintenance", "email-outbox"] as const;
+
+type SchemaCheck = Awaited<ReturnType<typeof checkSchemaVersion>>;
+type EmailCheck = Awaited<ReturnType<typeof checkEmailHealth>>;
+
 export async function GET(): Promise<Response> {
   const db = getDb();
   const now = new Date();
 
-  let database: "ok" | "down" = "ok";
+  let reachable = true;
   try {
     await db.execute(sql`select 1`);
   } catch {
-    database = "down";
+    reachable = false;
   }
 
-  // Only worth asking once the connection itself answered.
-  const schema = database === "ok" ? await checkSchemaVersion(db) : null;
+  // Nothing else is asked once the probe has failed: every check below needs the connection the
+  // probe just proved is not there.
+  const checks = reachable ? await askTheDatabase(db, now) : null;
 
-  const jobs = await Promise.all(
-    ["registration-maintenance", "email-outbox"].map((jobName) => checkJobHealth(db, jobName, now)),
-  );
-  // Whether the club can still send email (§98): deferred by the allowance, overdue, or failed.
-  const email = database === "ok" ? await checkEmailHealth(db, now) : null;
+  /*
+    A probe that answered and a check that then failed is still a database this deployment
+    cannot work against — the public pages are throwing on the same connection — so it is
+    reported as `down` rather than as an `ok` database with mysteriously absent figures.
+  */
+  const database: "ok" | "down" = checks ? "ok" : "down";
+  const schema = checks?.schema ?? null;
+  const jobs = checks?.jobs ?? null;
+  const email = checks?.email ?? null;
 
-  const anyJobStale = jobs.some((job) => job.status !== "ok");
+  const anyJobStale = (jobs ?? []).some((job) => job.status !== "ok");
   /**
    * `ahead` is degraded rather than down: it is what a rollback looks like — a database migrated
    * by a newer deployment than the one now serving — and whether that breaks anything depends

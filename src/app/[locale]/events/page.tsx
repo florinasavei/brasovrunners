@@ -21,6 +21,8 @@ import GlyphChip from "@/modules/events/ui/GlyphChip";
 import SeriesCard from "@/modules/events/ui/SeriesCard";
 import { groupSeries } from "@/modules/events/domain/series";
 import { listingSections, presentEventTypes } from "@/modules/events/domain/listing";
+import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { sportsOrganizationJsonLd } from "@/modules/events/structured-data";
 import CardLink from "@/shared/ui/CardLink";
 import ChipLink from "@/shared/ui/ChipLink";
@@ -107,7 +109,12 @@ export default async function EventsPage({ params, searchParams }: Props) {
    * awaits it inside a `<Suspense>` boundary, and the two children that share `listing` share
    * one query between them.
    */
-  const listing = loadListing(db, locale, now);
+  /*
+    With its last good answer behind it (§281): if Neon cannot be reached, each region below
+    renders the copy this site last served instead of the whole page becoming `error.tsx`. The
+    promise is still started here and awaited nowhere, so the streaming above is unchanged.
+  */
+  const listing = readWithLastGood(`events:${locale}`, () => loadListing(db, locale, now), now);
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: 2, sm: 3 } }}>
@@ -120,6 +127,13 @@ export default async function EventsPage({ params, searchParams }: Props) {
 
       {/* The kit-face wordmark, here and nowhere else — the owner moved it out of the header. */}
       <Wordmark />
+
+      {/* Says so when what follows is the last copy rather than today's (§281). Its own
+          boundary, because knowing the answer means awaiting the query the page deliberately
+          does not wait for. */}
+      <Suspense fallback={null}>
+        <StaleNotice listing={listing} />
+      </Suspense>
 
       {/* The gradient rule under the heading says where a section starts (§166). */}
       <Typography variant="h1" gutterBottom sx={{ mt: 1, ...headingRule }}>
@@ -145,7 +159,7 @@ export default async function EventsPage({ params, searchParams }: Props) {
           own boundary, so it costs the page nothing until it answers — and nothing at all
           above it waits for it. */}
       <Suspense fallback={null}>
-        <PastEvents locale={locale} now={now} type={type} hasUpcoming={listing.then((value) => value.hasUpcoming)} />
+        <PastEvents locale={locale} now={now} type={type} hasUpcoming={listing.then((read) => read.value.hasUpcoming)} />
       </Suspense>
     </Container>
   );
@@ -166,13 +180,13 @@ async function ListingLead({
   locale,
   now,
 }: {
-  listing: Promise<Listing>;
+  listing: Promise<Resilient<Listing>>;
   type?: EventType;
   layout: CalendarLayout;
   locale: "ro" | "en";
   now: Date;
 }) {
-  const { events, hasUpcoming } = await listing;
+  const { events, hasUpcoming } = (await listing).value;
   const t = await getTranslations("Events");
   const tEvent = await getTranslations("Event");
   // `hasUpcoming` is what keeps a *past* race out of the hero (§167): between seasons the
@@ -315,8 +329,8 @@ async function PastEvents({
  * `::details-content` is told to stay visible and the marker is hidden — because a wide
  * screen has room, and a reader there cannot tell a heading from a control.
  */
-async function ListingBody({ listing, type, now }: { listing: Promise<Listing>; type?: EventType; now: Date }) {
-  const { events, hasUpcoming } = await listing;
+async function ListingBody({ listing, type, now }: { listing: Promise<Resilient<Listing>>; type?: EventType; now: Date }) {
+  const { events, hasUpcoming } = (await listing).value;
   const t = await getTranslations("Events");
   // The same division the lead made, and it has to be given the same third argument or the
   // two disagree: a past event the lead refused to hero must appear in the list (§167).
@@ -468,4 +482,9 @@ async function EventCard({
       </CardLink>
     </Card>
   );
+}
+
+/** The "this is the last copy" line, once the shared query has settled (§281). */
+async function StaleNotice({ listing }: { listing: Promise<Resilient<Listing>> }) {
+  return <LastGoodNotice read={await listing} />;
 }

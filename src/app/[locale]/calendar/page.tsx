@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { readWithLastGood, type Resilient } from "@/modules/resilience/last-good";
+import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { EVENT_TYPES } from "@/modules/events/domain/event-type";
@@ -61,8 +64,18 @@ export default async function CalendarPage({ params, searchParams }: Props) {
   const view: CalendarView = year ? { kind: "year", year } : { kind: "month", month: parseMonth(monthParam, now, CLUB_TIME_ZONE) };
   const range = view.kind === "year" ? yearRange(view.year, CLUB_TIME_ZONE) : monthRange(view.month, CLUB_TIME_ZONE);
 
-  const events = listPublishedEventsBetween(db, locale, range.from, range.to).then((rows) =>
-    rows.filter((event) => !type || event.type === type),
+  /*
+    Keyed by what is actually being shown (§281): a month, a year, and the language. Two months
+    are two answers, and a copy of March must never be served as a copy of April.
+  */
+  const key = `calendar:${locale}:${view.kind === "year" ? view.year : view.month}`;
+  const events = readWithLastGood(
+    key,
+    () =>
+      listPublishedEventsBetween(db, locale, range.from, range.to).then((rows) =>
+        rows.filter((event) => !type || event.type === type),
+      ),
+    now,
   );
 
   return (
@@ -74,7 +87,16 @@ export default async function CalendarPage({ params, searchParams }: Props) {
         {t("calendar.pageIntro")}
       </Typography>
 
-      <CalendarSection locale={locale} view={view} layout={layout} type={type} query={query} now={now} events={events} />
+      <Suspense fallback={null}>
+        <CalendarStaleNotice events={events} />
+      </Suspense>
+
+      <CalendarSection locale={locale} view={view} layout={layout} type={type} query={query} now={now} events={events.then((read) => read.value)} />
     </Container>
   );
+}
+
+/** The "last copy" line for the calendar, once its month has settled (§281). */
+async function CalendarStaleNotice({ events }: { events: Promise<Resilient<unknown>> }) {
+  return <LastGoodNotice read={await events} />;
 }
