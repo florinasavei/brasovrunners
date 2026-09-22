@@ -85,7 +85,8 @@
       "today": "Today, {when}",
       "tomorrow": "Tomorrow, {when}",
       "inDays": "In {days} days, {when}"
-    }
+    },
+    "pastCountOfType": "Past — {type} ({count})"
   },
   "Event": {
     "backToEvents": "Back to events",

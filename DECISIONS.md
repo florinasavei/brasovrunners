@@ -11676,3 +11676,36 @@ defaults, palette names rather than values, the contrast pair, a layout table ke
 fill, and the guide covering both line-less variants.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 272. Decided — the past section obeys the kind filter, and a special event is the whole card (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "și la evenimentele trecute trebuie să pot pune tipul lor,
+vreau să fac hilight la evenimentele speciale, testări de papuci, etc." The section of events
+already held (§267) ignored the kind filter above it entirely: choosing "Testare de echipament"
+narrowed what is to come and left twelve mixed rows underneath. And an event marked special wore
+a chip (§168) — one line among four on a card, which is not what "highlight" means when the
+thing being looked for is one shoe testing among eleven Monday runs.
+
+**Decision.** *The filter reaches the foot of the page.* `listPastEvents` takes the kind, and
+the filter is applied **in the query** rather than after it: the limit is the database's, so
+filtering a page of twelve mixed rows down to the two gear tests among them would show two and
+call them all of them. The heading names the kind while one is chosen, so a filtered section is
+never read as "this is everything the club has held".
+
+*A special event is drawn as one.* `specialCard` in `theme/surfaces.ts`: the club's secondary
+colour on the border and a four-percent wash of it behind, on the listing's card and on a series
+card whose any date is special. A wash **over** the card's own background rather than a fill
+instead of it — a replaced surface would put body text on a tint nobody has checked for
+contrast, and four percent reads the same in both schemes because it is a wash rather than a
+colour. The chip stays: colour alone is not a signal (BR-REQ-041-01), and the chip is what a
+screen reader announces.
+
+*The kind of a past event was never the thing missing* — every event has carried one since §112
+and the editor has always offered it. What was missing was being able to *see* the past by kind,
+which is what this adds. If the club also wants past events to carry a kind the list does not
+have, that is a new value in `EVENT_TYPES` and its own decision.
+
+**Consequences.** `listPastEvents` (the `type` argument), the listing's `PastEvents` section,
+`Events.pastCountOfType` in both catalogues, `theme/surfaces.ts`, `SeriesCard`.
+
+Baseline `BR-V1.43-2026-09-21`.

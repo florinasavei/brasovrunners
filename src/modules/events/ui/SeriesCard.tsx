@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import { specialCard } from "@/theme/surfaces";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
@@ -62,7 +63,7 @@ export default async function SeriesCard({
   );
 
   return (
-    <Card component="li" variant="outlined" sx={{ ...riseIn(index) }}>
+    <Card component="li" variant="outlined" sx={{ ...(special ? specialCard : {}), ...riseIn(index) }}>
       <CardContent>
         <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>
           <EventKindChips type={next.type} surface={next.surface} />

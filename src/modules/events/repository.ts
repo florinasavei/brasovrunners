@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { eventTranslations, events } from "@/db/schema/events";
+import type { EventType } from "@/modules/events/domain/event-type";
 import type { Database as GenericDatabase } from "@/db/types";
 
 type Locale = (typeof eventTranslations.locale.enumValues)[number];
@@ -235,13 +236,25 @@ export async function listPublishedEventsBetween(db: Database, locale: Locale, f
  *
  * `limit` is what keeps the page from growing without end: a weekly run is fifty rows a year.
  * The calendar (§107, §116) is where the whole history lives, and the section says so.
+ *
+ * `type` narrows it to one kind, which is the filter the listing above already carries (§272;
+ * the owner: "la evenimentele trecute trebuie să pot pune tipul lor"). Filtered in the query
+ * rather than after it, because the limit is applied by the database: filtering a page of
+ * twelve mixed rows down to the two gear tests among them would show two and call it all of
+ * them.
  */
-export async function listPastEvents(db: Database, locale: Locale, now: Date, limit: number) {
+export async function listPastEvents(
+  db: Database,
+  locale: Locale,
+  now: Date,
+  limit: number,
+  type?: EventType,
+) {
   return db
     .select(PUBLIC_COLUMNS)
     .from(events)
     .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
-    .where(and(publishedIn(locale), lt(eventEndsAt, now)))
+    .where(and(publishedIn(locale), lt(eventEndsAt, now), ...(type ? [eq(events.type, type)] : [])))
     .orderBy(desc(events.startsAt))
     .limit(limit);
 }

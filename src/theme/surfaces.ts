@@ -77,3 +77,23 @@ export const headingRule = {
   },
   "[data-dark] &::after": { background: SURFACE_GRADIENT.ruleDark },
 } as const;
+
+/**
+ * A card for an event the club marked special (`DECISIONS.md` §272; the owner: "vreau să fac
+ * hilight la evenimentele speciale, testări de papuci, etc").
+ *
+ * A chip said so already (§168) and a chip is one line among four. This is the card itself: the
+ * club's secondary colour on the border and the faintest wash of it behind, so a shoe testing
+ * among eleven Monday runs is found by the eye before anything is read.
+ *
+ * `secondary.main` at four percent, over the card's own background rather than instead of it —
+ * a fill that replaced the surface would put body text on a tint nobody checked for contrast,
+ * and the same four percent reads correctly in both schemes because it is a wash rather than a
+ * colour. Nothing about the border needs a dark variant: the orange was chosen as a pair with
+ * dark text and holds on either (`theme.ts`).
+ */
+export const specialCard = {
+  borderColor: "secondary.main",
+  backgroundImage: (theme: { palette: { secondary: { main: string } } }) =>
+    `linear-gradient(0deg, color-mix(in srgb, ${theme.palette.secondary.main} 4%, transparent), color-mix(in srgb, ${theme.palette.secondary.main} 4%, transparent))`,
+} as const;

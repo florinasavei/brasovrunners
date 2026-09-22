@@ -85,7 +85,8 @@
       "today": "Azi, {when}",
       "tomorrow": "Mâine, {when}",
       "inDays": "În {days} zile, {when}"
-    }
+    },
+    "pastCountOfType": "Din trecut — {type} ({count})"
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
