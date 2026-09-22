@@ -15,6 +15,7 @@ the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.
 - **The Neon account is now on Launch, and the documentation says what that costs.** The first 1.8 CU-hours cost $0.19; the same daily pace projects to about $5.72 compute for 30 days, while one 0.25 CU compute kept warm would cost $19.08. Storage and restore-history charges stay separate. §280.
 - **The old Free limits are no longer presented as current provider limits.** The scheduler cadence remains because sleeping compute costs less, not because 100 CU-hours now suspends the site. BR-REQ-090-07 and the setup guide explicitly record that `/devs` and `/admin/tasks` still need a code follow-up to remove their Free label, denominator, warning, and storage ceiling. §280.
 - **Launch remains the right plan for M1.** Scale is deferred until the club needs its 99.95% SLA or additional security/compliance controls; ordinary low-volume growth is not by itself an upgrade trigger. §280.
+- **Launch may be temporary.** The owner will review the actual invoices and usage in December 2026 and may return Neon to Free. This is a decision checkpoint, not a scheduled downgrade; Free's then-current limits must be checked before changing the plan. §280.
 
 ## BR-V1.43-2026-09-21
 
