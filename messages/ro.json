@@ -251,13 +251,13 @@
       "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
       "updatedAt": "Modificat la {when}.",
       "honeypot": {
-        "on": "Capcana ascunsă este pornită: un câmp pe care oamenii nu îl văd, dar roboții îl completează.",
-        "off": "Capcana ascunsă este oprită. Câmpul există în continuare și îl notăm în jurnal, dar nu mai refuză pe nimeni.",
-        "turnOff": "Oprește capcana ascunsă",
-        "turnOn": "Pornește capcana ascunsă"
+        "on": "Honeypot pornit: un câmp ascuns, pe care oamenii nu îl văd, dar roboții îl completează.",
+        "off": "Honeypot oprit. Câmpul există în continuare și îl notăm în jurnal, dar nu mai refuză pe nimeni.",
+        "turnOff": "Oprește honeypot-ul",
+        "turnOn": "Pornește honeypot-ul"
       },
-      "savedHoneypotOn": "Capcana ascunsă este pornită.",
-      "savedHoneypotOff": "Capcana ascunsă este oprită."
+      "savedHoneypotOn": "Honeypot-ul este pornit.",
+      "savedHoneypotOff": "Honeypot-ul este oprit."
     },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
@@ -2147,7 +2147,9 @@
     "emailInvalid": "Asta nu pare o adresă de email. Verifică literele și semnul @.",
     "emailSuggestion": "Ai vrut să scrii {address}?",
     "emailUseSuggestion": "Da, corectează",
-    "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție."
+    "emailHelp": "Aici îți trimitem linkul de confirmare. Scrie-o cu atenție.",
+    "phoneTooShort": "Continuă — un număr are cel puțin 4 cifre.",
+    "phoneValid": "Arată bine. Îl salvăm ca"
   },
   "Registrations": {
     "invalidOrExpired": "Acest link nu mai este valabil. Îți putem trimite unul nou, pe aceeași adresă de email.",
@@ -2186,7 +2188,16 @@
         "Linkul are termen; dacă nu confirmi la timp, locul merge mai departe.",
         "Poți renunța oricând din emailul primit."
       ],
-      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă."
+      "pressFailed": "Nu am putut înregistra semnătura. Bifează că ai citit declarația și încearcă din nou — linkul tău este în regulă.",
+      "idDocumentType": "Ce act prezinți",
+      "idDocumentTypeHelp": "Alege tipul actului — apare în declarație, împreună cu seria și numărul.",
+      "typedNameHelpWithName": "Te-ai înscris ca {name} — scrie același nume. Apare ca o semnătură.",
+      "idDocumentTypes": {
+        "ID_CARD": "Carte de identitate",
+        "PASSPORT": "Pașaport",
+        "RESIDENCE_PERMIT": "Permis de ședere",
+        "OTHER": "Alt act"
+      }
     },
     "mine": {
       "title": "Înscrierile mele",

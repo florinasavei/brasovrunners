@@ -248,6 +248,34 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   one. Presentation only — what makes it a signature is the record beneath. */}
               {/* The identity document the text names — asked only when it does (§95). */}
               {mergeFieldsIn(declaration.body).has("idDocument") && (
+                <>
+                  {/*
+                    Which document, chosen rather than described (§283; Amalia: "we must give some
+                    hints on the ID document or select ID doc type").
+
+                    The box below asks for "seria și numărul", and people typed whatever their own
+                    document calls those — or a passport number under a label naming a Romanian
+                    identity card. The kind is a closed list, so it is a list; the declaration then
+                    carries the kind and the number together, composed by the action.
+
+                    A native select, like the telephone's country (§198): it works before hydration
+                    and it is the control a phone knows how to open.
+                  */}
+                  <TextField
+                    name="idDocumentType"
+                    label={t("declare.idDocumentType")}
+                    helperText={t("declare.idDocumentTypeHelp")}
+                    select
+                    required
+                    defaultValue="ID_CARD"
+                    slotProps={{ select: { native: true } }}
+                  >
+                    {(["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"] as const).map((kind) => (
+                      <option key={kind} value={kind}>
+                        {t(`declare.idDocumentTypes.${kind}`)}
+                      </option>
+                    ))}
+                  </TextField>
                 <TextField
                   name="idDocument"
                   label={t("declare.idDocument")}
@@ -257,11 +285,24 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                   autoComplete="off"
                   slotProps={{ htmlInput: { maxLength: 30, pattern: "[A-Za-z0-9][A-Za-z0-9 .\\-/]{2,28}[A-Za-z0-9]" } }}
                 />
+                </>
               )}
               <TextField
                 name="typedName"
                 label={t("declare.typedName")}
-                helperText={t("declare.typedNameHelp")}
+                /*
+                  The name they registered with, shown rather than described (§283; Amalia: "user
+                  must type the same name as when he registered (as a hint, not a hard
+                  validation)"). A hint, deliberately: somebody whose document reads "Ana-Maria"
+                  and who registered as "Ana Maria" must still be able to sign — this is their
+                  signature, and refusing it on a string comparison would be the platform
+                  deciding what a person's name is.
+                */
+                helperText={
+                  registration?.registeredName
+                    ? t("declare.typedNameHelpWithName", { name: registration.registeredName })
+                    : t("declare.typedNameHelp")
+                }
                 required
                 autoComplete="off"
                 slotProps={{ htmlInput: { maxLength: 200 } }}

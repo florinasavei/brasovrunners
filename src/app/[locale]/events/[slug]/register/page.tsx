@@ -701,6 +701,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
               {/* The country and the digits (§84): what is stored is one number a phone can dial. */}
               <PhoneField
                 invalidLabel={t("phoneInvalid")}
+                tooShortLabel={t("phoneTooShort")}
+                validLabel={t("phoneValid")}
                 name="phone"
                 draft={draft ? { country: draft.phoneCountry, national: draft.phone } : undefined}
                 id={fieldId("phone")}
@@ -728,6 +730,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 />
                 <PhoneField
                   invalidLabel={t("phoneInvalid")}
+                  tooShortLabel={t("phoneTooShort")}
+                  validLabel={t("phoneValid")}
                   name="emergencyContactPhone"
                   draft={draft ? { country: draft.emergencyContactPhoneCountry, national: draft.emergencyContactPhone } : undefined}
                   id={fieldId("emergencyContactPhone")}

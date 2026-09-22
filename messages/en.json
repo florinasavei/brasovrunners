@@ -251,13 +251,13 @@
       "savedOff": "The anti-bot check is off. The hidden honeypot and the per-address limit remain.",
       "updatedAt": "Changed on {when}.",
       "honeypot": {
-        "on": "The hidden trap is on: a field people never see, which robots fill in.",
-        "off": "The hidden trap is off. The field is still there and still logged, but it no longer refuses anybody.",
-        "turnOff": "Turn the hidden trap off",
-        "turnOn": "Turn the hidden trap on"
+        "on": "Honeypot on: a hidden field people never see, which robots fill in.",
+        "off": "Honeypot off. The field is still there and still logged, but it no longer refuses anybody.",
+        "turnOff": "Turn the honeypot off",
+        "turnOn": "Turn the honeypot on"
       },
-      "savedHoneypotOn": "The hidden trap is on.",
-      "savedHoneypotOff": "The hidden trap is off."
+      "savedHoneypotOn": "The honeypot is on.",
+      "savedHoneypotOff": "The honeypot is off."
     },
     "title": "Backoffice",
     "signedInAs": "Signed in as {name} — {role}",
@@ -2147,7 +2147,9 @@
     "emailInvalid": "That does not look like an email address. Check the letters and the @.",
     "emailSuggestion": "Did you mean {address}?",
     "emailUseSuggestion": "Yes, fix it",
-    "emailHelp": "This is where the confirmation link goes. Type it carefully."
+    "emailHelp": "This is where the confirmation link goes. Type it carefully.",
+    "phoneTooShort": "Keep going — a number has at least 4 digits.",
+    "phoneValid": "Looks right. We will store it as"
   },
   "Registrations": {
     "invalidOrExpired": "This link is no longer valid. We can send you a new one, to the same email address.",
@@ -2186,7 +2188,16 @@
         "The link has a deadline; if you do not confirm in time, the place moves on.",
         "You can withdraw at any time from the email you received."
       ],
-      "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine."
+      "pressFailed": "We could not record the signature. Tick that you have read the declaration and try again — your link is fine.",
+      "idDocumentType": "Which document you will show",
+      "idDocumentTypeHelp": "Choose the kind of document — it appears in the declaration with the series and number.",
+      "typedNameHelpWithName": "You registered as {name} — type the same name. It appears as a signature.",
+      "idDocumentTypes": {
+        "ID_CARD": "Identity card",
+        "PASSPORT": "Passport",
+        "RESIDENCE_PERMIT": "Residence permit",
+        "OTHER": "Other document"
+      }
     },
     "mine": {
       "title": "My registrations",

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V1.44-2026-09-22 -->
+<!-- PROJECT_BASELINE: BR-V1.45-2026-09-22 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V1.44-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V1.45-2026-09-22`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -12124,3 +12124,61 @@ address goes through first time; filled with somebody else's link it is refused,
 so, and the second press — consents re-ticked, trap still filled — is accepted.
 
 Baseline `BR-V1.44-2026-09-22`.
+
+## 283. Decided — the telephone and the declaration say what they want before they refuse it (2026-09-22)
+
+**Context.** Amalia, testing on QA: the telephone number needs a maximum and a clearer answer as
+it is typed; and signing the declaration should "give some hints on the ID document or select ID
+doc type", and should say that the name typed as a signature is the one used at registration —
+"as a hint, not a hard validation".
+
+**The telephone.** The live check has run the server's own `composePhone` since §198, so what was
+missing was not correctness but arithmetic a person can see. E.164 is fifteen digits **including**
+the country code, so the room left in the box depends on the country chosen beside it — thirteen
+after Romania's `+40`, twelve after `+373`. That ceiling is now applied at the keystroke, and the
+`maxLength` attribute follows the country rather than being one number for everybody.
+
+*And the box answers in three ways instead of one.* "That is not a number this country uses" is
+true and useless when the number is simply unfinished: it reads as a refusal of what was typed
+rather than as a count. So a number too short to judge says keep going, and a number that works
+says so — by showing the exact E.164 that will be stored. `+40712345678` on the screen is the one
+thing that proves the country beside it was understood.
+
+**The declaration.** The identity-document box asked for "seria și numărul", and people typed
+whatever their own document calls those, under a label naming a Romanian identity card. The kind
+of document is a closed list, so it is a list — identity card, passport, residence permit, other —
+and the action composes the kind and the number into the one `{{idDocument}}` merge field the
+club's approved text carries, in the language the person is signing in. A native select, like the
+telephone's country (§198): it works before hydration and a phone knows how to open it.
+
+*The signature box shows the name they registered with, and refuses nothing.* The hint is the
+whole of it: somebody whose document reads "Ana-Maria" and who registered as "Ana Maria" must
+still be able to sign. Comparing the two strings and refusing would be this platform deciding what
+a person's name is, on the one field where typing it **is** the act (§86).
+
+**What was rejected: validating the signature against the registered name.** It was asked for as a
+hint and it is right that it stays one. A declaration refused because a middle name was left out
+is a participant who cannot enter a race, and the club already knows who signed — the row is the
+registration's own.
+
+Baseline `BR-V1.45-2026-09-22`.
+
+## 284. Fixed — a Turnstile widget is handed back when its form goes away (2026-09-22)
+
+**Context.** The owner, from the browser console: `[Cloudflare Turnstile] Cannot find Widget
+cf-chl-widget-hn2ug, consider using turnstile.remove() to clean up a widget.`
+
+**What it was.** The island drew the widget with `render` and kept its id to `reset()` between
+attempts (§185), and never called `remove`. Cloudflare keeps its own registry keyed by that id and
+does not notice the element leaving the document, so a form unmounted by a client navigation left
+an orphan behind. The warning is the visible half; the half that matters is that the next mount
+drew a **second** widget beside the ghost, and which of the two answered for the token a
+submission carried was not decided by anything here.
+
+**Decision.** *`remove(id)` on unmount, in an effect of its own with no dependencies.* Not in the
+drawing effect's cleanup: that one runs between attempts as well, and keeping one widget alive and
+resetting it is exactly what §185 decided — a fresh challenge is the point, a fresh widget is not.
+A `remove` that throws because Cloudflare has already forgotten the id is swallowed: a console
+line of ours on top of theirs helps nobody.
+
+Baseline `BR-V1.45-2026-09-22`.

@@ -290,6 +290,30 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
 });
 
 test.describe("BR-REQ-041-01 criterion 6 the controls are big enough for a thumb", () => {
+  /**
+   * `DECISIONS.md` §283 — Amalia: the telephone needs a maximum and a clearer answer as it is
+   * typed. E.164 is fifteen digits including the country code, so what the box still has room
+   * for depends on the country chosen beside it, and the cap is applied at the keystroke: the
+   * digit somebody has just typed is the one they can still see.
+   */
+  test("caps the telephone at what the chosen country leaves, and says when it is right", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    const phone = page.locator('[name="phone"]');
+    // E.164 is fifteen digits in all and Romania's code is two of them, so thirteen remain.
+    // Sixteen typed, thirteen kept — and the cap is per country, not one number for everybody.
+    await phone.fill("0712345678999999");
+    await expect(phone).toHaveValue("0712345678999");
+    await expect(phone).toHaveAttribute("maxlength", "14");
+
+    // And the confirmation is the number itself, which is the only thing that proves the
+    // country beside it was understood.
+    await expect(page.getByText("+40712345678")).toBeVisible();
+  });
+
   test("gives the submit button and the required consent at least 44 pixels", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

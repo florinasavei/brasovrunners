@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.45-2026-09-22
+
+- **Fixed: the anti-bot widget left a ghost behind when you navigated away**, which put a warning in the browser console and could leave two widgets on the page — with no way to tell which one the form was using. §284.
+- **The telephone box says what it is doing while you type.** It stops at the number of digits the chosen country actually leaves — a number cannot be longer than that — tells you to keep going when it is only unfinished rather than calling it wrong, and shows the number it will store, `+40712345678`, once it is right. §283.
+- **Signing the declaration asks which document you will bring** — identity card, passport, residence permit — instead of one box for "series and number"; the declaration then reads "Carte de identitate BV 123456". And the signature box now shows the name you registered with, as a hint: it is your signature, so nothing is refused for spelling it differently. §283.
+
 ## BR-V1.44-2026-09-22
 
 - **The hidden anti-robot field can be switched off from the backoffice**, on its own, beside the captcha switch — for the day it is catching real people. Switched off it is still there and still recorded; it just stops refusing anybody. §282.
