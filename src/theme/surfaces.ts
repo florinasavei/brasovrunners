@@ -92,8 +92,21 @@ export const headingRule = {
  * colour. Nothing about the border needs a dark variant: the orange was chosen as a pair with
  * dark text and holds on either (`theme.ts`).
  */
+const SPECIAL_WASH = "color-mix(in srgb, var(--mui-palette-secondary-main) 4%, transparent)";
+
 export const specialCard = {
   borderColor: "secondary.main",
-  backgroundImage: (theme: { palette: { secondary: { main: string } } }) =>
-    `linear-gradient(0deg, color-mix(in srgb, ${theme.palette.secondary.main} 4%, transparent), color-mix(in srgb, ${theme.palette.secondary.main} 4%, transparent))`,
+  /*
+    **A CSS variable, never a callback.** This was written as `(theme) => …`, which is a
+    *function*, and this object is handed as `sx` from a Server Component to MUI's `Card`,
+    which is a client one. React refuses to serialize a function across that boundary
+    (`AGENTS.md` §14.1), so every card on the listing threw "Functions cannot be passed directly
+    to Client Components" — the page answered 200 and the section did not render. It reached QA
+    on 2026-09-22 and looked like the environment being down.
+
+    `--mui-palette-secondary-main` is the variable MUI writes for the same colour
+    (`theme.ts` sets `cssVariables`), so the wash still follows the scheme — and it is a string,
+    which crosses any boundary.
+  */
+  backgroundImage: `linear-gradient(0deg, ${SPECIAL_WASH}, ${SPECIAL_WASH})`,
 } as const;
