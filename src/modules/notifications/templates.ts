@@ -550,9 +550,20 @@ const T = {
       ],
     },
     closing: "Alergare plăcută,",
-    /** In front of a message re-sent because the form was filled in again (§235). */
-    alreadyRegistered:
-      "Erai deja înscris la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
+    /**
+     * In front of a message re-sent because the form was filled in again (§235, §286).
+     *
+     * The owner: "cand omul se re-inscrie cu acelasi mail, trebuie sa ii dam un mesaj mai clar,
+     * gen «ne bucuram ca esti entuziasmat dar esti deja inscris cu numaru ...»". Filling the form
+     * twice is enthusiasm, not a mistake, and the sentence says so — then answers the question
+     * that was actually being asked, which is "am I in?". The number is named when there is one,
+     * because that is the fact somebody is hunting for; it is safe here and nowhere else, since
+     * only the owner of the address reads it (§19.4).
+     */
+    alreadyRegistered: (bib?: number | null) =>
+      bib
+        ? `Ne bucurăm că ești nerăbdător! Ești deja înscris la acest eveniment, cu numărul ${bib} — nu s-a creat o a doua înscriere. Mai jos este înscrierea pe care o ai.`
+        : "Ne bucurăm că ești nerăbdător! Ești deja înscris la acest eveniment, așa că nu s-a creat o a doua înscriere — mai jos este înscrierea pe care o ai deja.",
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Numărul ${n} este provizoriu — îl confirmăm când se închid înscrierile și îți trimitem numărul final.`,
@@ -745,9 +756,11 @@ const T = {
       ],
     },
     closing: "Happy running,",
-    /** In front of a message re-sent because the form was filled in again (§235). */
-    alreadyRegistered:
-      "You were already registered for this event, so no second registration was created — below is the registration you already have.",
+    /** In front of a message re-sent because the form was filled in again (§235, §286). */
+    alreadyRegistered: (bib?: number | null) =>
+      bib
+        ? `We are glad you are keen! You are already registered for this event, with number ${bib} — no second registration was created. Below is the one you have.`
+        : "We are glad you are keen! You are already registered for this event, so no second registration was created — below is the registration you already have.",
     /** Appended when the number in this message can still change (§237). */
     bibProvisional: (n: number) =>
       `Number ${n} is provisional — we settle it when registration closes and send you the final one.`,
@@ -846,7 +859,9 @@ export function buildTemplateContent(
       the only person entitled to the answer.
     */
     paragraphs: [
-      ...(data.alreadyRegistered ? [copy.alreadyRegistered] : []),
+      // The number when the message carries one: a settled number, or the provisional one the
+      // desk gave, whichever this registration actually has (§286).
+      ...(data.alreadyRegistered ? [copy.alreadyRegistered(data.bibNumber ?? null)] : []),
       /*
         The club's own words, with their formatting when it wrote them in the editor (§270).
         A stored document that cannot be read — an older shape, a node an email may not carry —

@@ -1578,7 +1578,8 @@
       "page": "Pagina {n} din {total}",
       "helpNone": "Niciun număr încă. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
       "helpSome": "{total} numere date. Fiecare înscriere primește un număr în ordinea înscrierii în momentul confirmării; butonul dă numere celor confirmate înainte de asta. Un număr dat nu se schimbă niciodată. Foaia de tipărit are două numere pe pagină A4, fiecare cu o bandă în culoarea cursei, logo-ul clubului, cursa, data și numele. Un singur număr se descarcă de pe pagina înscrierii.",
-      "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat"
+      "downloadAll": "Descarcă toate numerele ({count}) — PDF de printat",
+      "assignedNone": "Nu era nimic de numerotat. Un număr se dă doar unei înscrieri reale și confirmate: {notConfirmed} încă nu au confirmat (email sau declarație), iar {test} sunt înscrieri de test, care nu primesc numere."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -1974,7 +1975,7 @@
       "throttledTitle": "Ai trimis deja formularul de câteva ori",
       "throttled": "Am primit mai multe înscrieri de pe această adresă în ultima oră, așa că am oprit-o temporar. Mai încearcă peste o oră — sau, dacă e ceva urgent, scrie-ne prin formularul de contact și te înscriem noi. Nu ai pierdut nimic din ce ai completat.",
       "tooFast": "Verificarea automată nu a trecut din prima — se întâmplă și cu oameni reali. Datele tale sunt aici.",
-      "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Bifează din nou acordurile de mai jos — le cerem de fiecare dată, dinadins — și apasă „Trimite din nou înscrierea”.",
+      "tooFastNothingSent": "Nu am înregistrat nimic și nu ți-am trimis niciun email. Apasă „Trimite din nou înscrierea” — datele și bifele tale sunt încă aici.",
       "tooFastResend": "Trimite din nou înscrierea"
     },
     "sections": {

@@ -302,7 +302,7 @@ export async function settleBibNumbers<T extends Record<string, unknown>>(
 export async function assignBibNumbers<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { actor: Actor; eventId: string; now?: Date },
-): Promise<{ assigned: number; total: number }> {
+): Promise<{ assigned: number; total: number; notConfirmed: number; test: number }> {
   const now = input.now ?? new Date();
   if (!canManageRegistrations(input.actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${input.actor.role} may not assign race numbers`);
@@ -318,7 +318,7 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
 
     const waiting = await tx
-      .select({ id: registrations.id })
+      .select({ id: registrations.id, provisional: registrations.provisionalBibNumber })
       .from(registrations)
       .where(
         and(
@@ -334,11 +334,28 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
     const taken = new Set<number>();
     const given: number[] = [];
     for (const row of waiting) {
-      const number = await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber);
+      /*
+        A provisional number is **kept**, not replaced (§286; the owner, looking at a row:
+        "cum pot avea prezenta marcata dar numar cu steluta?").
+
+        The desk hands somebody a number on race morning and writes it in
+        `provisional_bib_number`; the list draws it lighter, with an asterisk, precisely because
+        it is not settled yet. Confirming one registration already promotes it (`service.ts`) —
+        the batch did not, and looked only for rows with no *final* number. So a runner who had
+        been told "you are 5", and had walked away with 5 written on their hand, was quietly
+        given 100 by the button, while the screen still showed `5*` beside them.
+
+        Two numbers for one person, one of them on the start line and neither of them wrong
+        anywhere the club could see it. The promotion is the fix: the number they were told is
+        the number they keep.
+      */
+      const number =
+        row.provisional ?? (await pickBibNumber(tx, input.eventId, taken, event.bibStartNumber));
+      taken.add(number);
       given.push(number);
       await tx
         .update(registrations)
-        .set({ bibNumber: number, updatedAt: now })
+        .set({ bibNumber: number, provisionalBibNumber: null, updatedAt: now })
         .where(eq(registrations.id, row.id));
     }
 
@@ -358,7 +375,32 @@ export async function assignBibNumbers<T extends Record<string, unknown>>(
       .from(registrations)
       .where(and(eq(registrations.eventId, input.eventId), isNotNull(registrations.bibNumber)));
 
-    return { assigned: waiting.length, total: Number(total) };
+    /*
+      Why nothing happened, when nothing happened (§286; the owner: "anumerarea in batch nu
+      merge!").
+
+      It was working: a number is given to a **confirmed, real** registration that has none, and
+      pressing the button on an event whose entrants are still at the declaration — or are test
+      rows — assigned nought and reported "0 numere alocate", which reads exactly like a broken
+      button. The two reasons are counted here so the screen can name them; they cost one query
+      on a path somebody presses a handful of times per race.
+    */
+    const [skipped] = await tx
+      .select({
+        notConfirmed: sql<number>`count(*) filter (where ${registrations.kind} = 'REAL' and ${registrations.status} <> 'CONFIRMED' and ${registrations.status} <> 'CANCELLED')`,
+        test: sql<number>`count(*) filter (where ${registrations.kind} = 'TEST')`,
+      })
+      .from(registrations)
+      .where(eq(registrations.eventId, input.eventId));
+
+    return {
+      assigned: waiting.length,
+      total: Number(total),
+      /** Real entrants who are not confirmed yet: a number follows the declaration, never precedes it. */
+      notConfirmed: Number(skipped?.notConfirmed ?? 0),
+      /** Test rows, which never wear a number (§30). */
+      test: Number(skipped?.test ?? 0),
+    };
   });
 }
 

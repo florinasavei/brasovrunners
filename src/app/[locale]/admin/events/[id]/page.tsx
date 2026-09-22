@@ -73,7 +73,7 @@ import { findEventTitle } from "@/modules/content/events/repository";
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -127,7 +127,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const staffUser = await requireStaff();
-  const { error, saved, assigned, total, created, applied, offered } = await searchParams;
+  const { error, saved, assigned, total, notConfirmed, test, created, applied, offered } = await searchParams;
 
   const db = getDb();
   const record = await findEventForEditing(db, id);
@@ -264,8 +264,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
         {saved === "bibsAssigned" && (
-          <Alert severity="success">
-            {t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
+          /*
+            Nothing assigned is an answer too (§286). A number follows the declaration and never
+            precedes it, and a test row never wears one — so an event whose entrants are all still
+            confirming their email reported "0 numere alocate" and read as a broken button.
+          */
+          <Alert severity={assigned === "0" ? "info" : "success"}>
+            {assigned === "0"
+              ? t("bibs.assignedNone", { notConfirmed: notConfirmed ?? "0", test: test ?? "0" })
+              : t("bibs.assigned", { assigned: assigned ?? "0", total: total ?? "0" })}
           </Alert>
         )}
         {saved === "created" && created && (

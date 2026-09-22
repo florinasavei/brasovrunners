@@ -45,7 +45,7 @@ describe("BR-REQ-038-01 race numbers", () => {
   // Per test, so each registration's default confirmedAt is distinct and increasing: the order
   // being tested is the confirmation order, not the id tie-break.
   let counter = 0;
-  async function register(name: string, options: { status?: RegistrationStatus; kind?: RegistrationKind; confirmedAt?: Date } = {}) {
+  async function register(name: string, options: { status?: RegistrationStatus; kind?: RegistrationKind; confirmedAt?: Date; provisional?: number } = {}) {
     counter += 1;
     const email = `${counter}@example.test`;
     const [participant] = await db
@@ -62,6 +62,7 @@ describe("BR-REQ-038-01 race numbers", () => {
         locale: "ro",
         registeredName: name,
         displayName: name,
+        provisionalBibNumber: options.provisional ?? null,
         privacyNoticeVersion: 1,
         privacyAcknowledgedAt: new Date("2026-09-01T00:00:00Z"),
         resultsNameConsent: false,
@@ -84,7 +85,7 @@ describe("BR-REQ-038-01 race numbers", () => {
     await register("De probă", { kind: "TEST" });
 
     const result = await assignBibNumbers(db, { actor: admin, eventId });
-    expect(result).toEqual({ assigned: 3, total: 3 });
+    expect(result).toMatchObject({ assigned: 3, total: 3 });
 
     const rows = await numbered();
     const given = rows.filter((row) => row.bib !== null);
@@ -103,6 +104,42 @@ describe("BR-REQ-038-01 race numbers", () => {
     expect(trail[0].action).toBe("registration.bibs_assigned");
     expect(trail[0].participantId).toBeNull();
     expect(trail[0].metadataJson).toEqual({ assigned: 3, numbers: [...numbers].sort((x, y) => x - y) });
+  });
+
+  /**
+   * `DECISIONS.md` §286 — the number somebody was told at the desk is the number they keep.
+   *
+   * The desk writes a number into `provisional_bib_number` on race morning and the list draws it
+   * with an asterisk, because it is not settled. Confirming one registration promotes it; the
+   * batch did not, and looked only for rows with no *final* number — so a runner who had been
+   * told "you are 5", and had 5 written on their hand, was quietly given the next free number
+   * while the screen still showed 5 beside them. Two numbers for one person, neither of them
+   * visibly wrong.
+   */
+  it("keeps the number the desk already gave, instead of handing out a second one (§286)", async () => {
+    await register("La ghișeu", { provisional: 5, confirmedAt: new Date("2026-09-01T10:00:00Z") });
+    await register("Pe net", { confirmedAt: new Date("2026-09-02T10:00:00Z") });
+
+    const result = await assignBibNumbers(db, { actor: admin, eventId });
+    expect(result).toMatchObject({ assigned: 2 });
+
+    const rows = await db
+      .select({
+        name: registrations.registeredName,
+        bib: registrations.bibNumber,
+        provisional: registrations.provisionalBibNumber,
+      })
+      .from(registrations);
+
+    const desk = rows.find((row) => row.name === "La ghișeu");
+    expect(desk?.bib).toBe(5);
+    // And it stops being provisional: one number, in one column, from here on.
+    expect(desk?.provisional).toBeNull();
+
+    // The other runner is numbered from the band and never collides with the kept number.
+    const online = rows.find((row) => row.name === "Pe net");
+    expect(online?.bib).not.toBe(5);
+    expect(online?.bib).not.toBeNull();
   });
 
   it("draws a number never worn at the event, which is what confirmation uses (§87, §94)", async () => {
@@ -137,7 +174,7 @@ describe("BR-REQ-038-01 race numbers", () => {
     await register("Timpurie dar întârziată", { confirmedAt: new Date("2026-08-01T10:00:00Z") });
     const before = new Map((await numbered()).map((row) => [row.name, row.bib]));
     const second = await assignBibNumbers(db, { actor: admin, eventId });
-    expect(second).toEqual({ assigned: 2, total: 4 });
+    expect(second).toMatchObject({ assigned: 2, total: 4 });
 
     const rows = await numbered();
     expect(rows.find((row) => row.name === "Prima")?.bib).toBe(before.get("Prima"));
@@ -145,7 +182,7 @@ describe("BR-REQ-038-01 race numbers", () => {
     expect(new Set(rows.map((row) => row.bib)).size).toBe(4);
 
     // Nothing to do is not an error, and writes no audit row.
-    expect(await assignBibNumbers(db, { actor: admin, eventId })).toEqual({ assigned: 0, total: 4 });
+    expect(await assignBibNumbers(db, { actor: admin, eventId })).toMatchObject({ assigned: 0, total: 4 });
     expect(await db.select().from(auditLogs)).toHaveLength(2);
   });
 

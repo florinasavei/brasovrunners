@@ -4,7 +4,12 @@ import { draftValuesOf, openFormDraft, sealFormDraft } from "@/modules/registrat
 /**
  * BR-REQ-041-01 criterion 10 (`DECISIONS.md` §142) — what a participant typed survives a rejected
  * submit in an encrypted, short-lived cookie: readable only with the deployment's secret,
- * never carrying the bot fields or the consent that must be re-read, dropped when too big.
+ * never carrying the bot fields, dropped when too big.
+ *
+ * The consent used to be left out too, on the reasoning that it must be given deliberately every
+ * time. §286 reversed that: the tick that counts is the one on the submission that succeeds, and
+ * making somebody re-tick three boxes to recover from a refusal about none of them is friction
+ * charged to the wrong person — the owner, watching it happen: "vreau sa persist inclusiv bifele".
  */
 describe("BR-REQ-041-01 criterion 10 the form draft", () => {
   const form = new FormData();
@@ -21,14 +26,27 @@ describe("BR-REQ-041-01 criterion 10 the form draft", () => {
   form.set("$ACTION_ID", "x");
 
   it("keeps what was typed and leaves out the bot fields, the address and the consent", () => {
-    expect(draftValuesOf(form)).toEqual({ firstName: "Ana", healthNotes: "Astm", sex: "FEMALE", clubMemberDeclared: "on" });
+    expect(draftValuesOf(form)).toEqual({
+      firstName: "Ana",
+      healthNotes: "Astm",
+      sex: "FEMALE",
+      clubMemberDeclared: "on",
+      // Kept since §286, so one press finishes a submission the anti-bot check refused.
+      privacyAcknowledged: "on",
+    });
   });
 
   it("round-trips under the secret and is unreadable without it", () => {
     const sealed = sealFormDraft(draftValuesOf(form), "secret-one");
     expect(sealed).toBeTruthy();
     expect(sealed).not.toContain("Astm");
-    expect(openFormDraft(sealed as string, "secret-one")).toEqual({ firstName: "Ana", healthNotes: "Astm", sex: "FEMALE", clubMemberDeclared: "on" });
+    expect(openFormDraft(sealed as string, "secret-one")).toEqual({
+      firstName: "Ana",
+      healthNotes: "Astm",
+      sex: "FEMALE",
+      clubMemberDeclared: "on",
+      privacyAcknowledged: "on",
+    });
     expect(openFormDraft(sealed as string, "secret-two")).toBeNull();
     expect(openFormDraft("not-a-draft", "secret-one")).toBeNull();
     // No secret configured: a key drawn for the process, so a laptop still gets its draft back.

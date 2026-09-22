@@ -204,13 +204,21 @@ export default async function RegisterPage({ params, searchParams }: Props) {
    */
   // What they typed before the rejection (§142), to put back in every box; nothing otherwise.
   const draft = error ? await readFormDraft() : null;
-  const typed = (name: string, fallback?: string) => draft?.[name] ?? fallback;
+  /*
+  What was typed before a rejected submission (§142), by field name.
+
+  Named `prefill` rather than `typed`: the i18n checker reads every `t…(` call as a translation
+  lookup (`t\w*\(`), so `prefill("privacyAcknowledged")` was being counted as a missing message
+  key. It passed for years only because every name it had been given — `email`, `city` — also
+  happened to exist in the catalogue.
+*/
+  const prefill = (name: string, fallback?: string) => draft?.[name] ?? fallback;
   const field = (name: string, help?: string) => ({
     id: fieldId(name),
     name,
     error: invalid.has(name),
     helperText: invalid.has(name) ? t("errors.field") : help,
-    defaultValue: typed(name),
+    defaultValue: prefill(name),
   });
 
   // What they are signing up for, on the form itself (§102): the date, the place, and the
@@ -389,7 +397,12 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 hunting down — a check guessed, and the next press goes through. Red is for the
                 rejections that ask somebody to change something.
               */
-              severity={tooFast ? "info" : "error"}
+              /*
+                Red after all (§286; the owner: "asta ar trebui sa fie cu rosu"). §282 made it
+                information because nothing the person typed was wrong — but what a reader needs
+                first is that the submission did **not** go through, and blue reads as a remark.
+              */
+              severity="error"
               id={ERROR_SUMMARY_ID}
               role="alert"
               tabIndex={-1}
@@ -588,7 +601,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   select
                   required
                   fullWidth
-                  defaultValue={typed("sex", "UNSPECIFIED")}
+                  defaultValue={prefill("sex", "UNSPECIFIED")}
                   sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/* A glyph beside each answer (§171; the owner: "pune iconițe chiar și la
@@ -631,7 +644,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   select
                   required
                   fullWidth
-                  defaultValue={typed("nationality", "RO")}
+                  defaultValue={prefill("nationality", "RO")}
                   sx={SELECT_WITH_GLYPHS_SX}
                 >
                   {/*
@@ -693,8 +706,8 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 suggestionLabel={t.raw("emailSuggestion") as string}
                 useSuggestionLabel={t("emailUseSuggestion")}
                 help={t("emailHelp")}
-                defaultValue={typed("email")}
-                defaultConfirmValue={typed("emailConfirm")}
+                defaultValue={prefill("email")}
+                defaultConfirmValue={prefill("emailConfirm")}
                 error={invalid.has("email") || invalid.has("emailConfirm")}
                 helperText={invalid.has("email") || invalid.has("emailConfirm") ? t("errors.field") : undefined}
               />
@@ -808,7 +821,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     It is a claim and it grants nothing; `DECISIONS.md` §48 says why it is not
                     checked against `staff_users`.
                   */}
-                  <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={typed("clubMemberDeclared") === "on"}>
+                  <CheckboxField id={fieldId("clubMemberDeclared")} name="clubMemberDeclared" defaultChecked={prefill("clubMemberDeclared") === "on"}>
                     {t("clubMemberDeclared")}
                     {/* What the claim means, where it is claimed (§189): "grup" rather than
                         "echipă", because the club is a group somebody runs with and not a squad
@@ -820,7 +833,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     {...field("tshirtSize")}
                     label={t("tshirtSize")}
                     select
-                    defaultValue={typed("tshirtSize", "NONE")}
+                    defaultValue={prefill("tshirtSize", "NONE")}
                   >
                     <MenuItem value="NONE">{t("tshirtSizes.NONE")}</MenuItem>
                     {["XS", "S", "M", "L", "XL", "XXL"].map((size) => (
@@ -937,7 +950,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                     autoComplete="off"
                     slotProps={{ htmlInput: { maxLength: 2000 } }}
                   />
-                  <CheckboxField id={fieldId("healthConsent")} name="healthConsent" defaultChecked={typed("healthConsent") === "on"}>
+                  <CheckboxField id={fieldId("healthConsent")} name="healthConsent" defaultChecked={prefill("healthConsent") === "on"}>
                     {`${t("healthConsent")} — ${t("optionalSuffix")}`}
                   </CheckboxField>
                 </Stack>
@@ -989,23 +1002,23 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   document={event.rulesJson}
                 />
               ) : (
-                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required>
+                <CheckboxField id={fieldId("rulesAcknowledged")} name="rulesAcknowledged" required defaultChecked={prefill("rulesAcknowledged") === "on"}>
                   {t("rules.plain")}{" "}
                   <LegalLink href="/legal/terms" newTabLabel={t("opensInNewTab")}>
                     {t("facts.terms")}
                   </LegalLink>
                 </CheckboxField>
               )}
-              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required>
+              <CheckboxField id={fieldId("fitnessDeclared")} name="fitnessDeclared" required defaultChecked={prefill("fitnessDeclared") === "on"}>
                 {t("fitnessDeclared")}
               </CheckboxField>
-              <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required>
+              <CheckboxField id={fieldId("privacyAcknowledged")} name="privacyAcknowledged" required defaultChecked={prefill("privacyAcknowledged") === "on"}>
                 {t("privacyPrefix")}{" "}
                 <LegalLink href="/legal/privacy" newTabLabel={t("opensInNewTab")}>
                   {t("privacyLinkLabel")}
                 </LegalLink>
               </CheckboxField>
-              <CheckboxField name="resultsNameConsent" defaultChecked={typed("resultsNameConsent") === "on"}>
+              <CheckboxField name="resultsNameConsent" defaultChecked={prefill("resultsNameConsent") === "on"}>
                 {`${t("resultsNameConsent")} — ${t("optionalSuffix")}`}
               </CheckboxField>
               {/*
@@ -1017,7 +1030,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 registered — the notice, not a pre-answered box.
               */}
               {event.participantListVisibility === "NAMES" && (
-                <CheckboxField name="listOptIn" defaultChecked={typed("listOptIn") === "on"}>
+                <CheckboxField name="listOptIn" defaultChecked={prefill("listOptIn") === "on"}>
                   {`${t("listOptIn")} — ${t("optionalSuffix")}`}
                 </CheckboxField>
               )}
@@ -1042,7 +1055,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                 helperText={t("preferredLocaleHelp")}
                 select
                 fullWidth
-                defaultValue={typed("preferredLocale", locale)}
+                defaultValue={prefill("preferredLocale", locale)}
               >
                 <MenuItem value="ro">{t("preferredLocaleOptions.ro")}</MenuItem>
                 <MenuItem value="en">{t("preferredLocaleOptions.en")}</MenuItem>
@@ -1060,14 +1073,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   )}
                 </Box>
               )}
-              {/* Said where the press happened, in the plain second person: the form is whole, the
-                  answers are still in it, and pressing again is all there is to do (§194). */}
-              {tooFast && (
-                <Alert severity="warning">
-                  <AlertTitle>{t("errors.tooFastTitle")}</AlertTitle>
-                  {t("errors.tooFast")}
-                </Alert>
-              )}
+              {/*
+                The refusal is said **once** now (§286; the owner, of the two panels and two
+                buttons: "exista un pic de reduntanta la butoanele alea").
+
+                §194 put this copy beside the button because the summary at the top said nothing
+                useful about the anti-bot check. It does now — the title, the two sentences and a
+                button that sends the form from where the browser lands — so a second panel
+                repeating it above the submit button is the same words twice on one screen.
+              */}
               <SubmitButton
                 label={t("submit")}
                 pendingLabel={t("submitting")}

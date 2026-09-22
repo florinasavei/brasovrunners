@@ -167,8 +167,23 @@ export default function SubmitButton({
     };
   }, [awaitsBotCheck]);
 
+  /*
+    Nothing is said until somebody presses (§285, amended; the owner: "nici macar nu am facut
+    submit inca si apare asta").
+
+    The first version dimmed the button and explained itself the moment the page loaded, which
+    is a warning about a problem nobody has yet had — and for the half-second Turnstile usually
+    takes, it is a flicker of "you cannot do this yet" in front of somebody who was doing
+    nothing. So the press is what asks the question: if the token is not there yet, that press
+    is swallowed, the sentence appears, and it goes away by itself when the token arrives.
+  */
+  const [pressedEarly, setPressedEarly] = useState(false);
   const waiting = Boolean(awaitsBotCheck) && tokenMissing && !pending;
-  const dimmed = (Boolean(incompleteHint) && !complete && !pending) || waiting;
+  // No effect resets `pressedEarly` when the token lands: it is only ever read alongside
+  // `waiting`, which is false from that moment, so a stale `true` says nothing and setting state
+  // from an effect would be a render scheduled for no visible reason.
+
+  const dimmed = (Boolean(incompleteHint) && !complete && !pending) || (waiting && pressedEarly);
 
   return (
     <Box
@@ -217,14 +232,20 @@ export default function SubmitButton({
         onClick={(event) => {
           // The press that is already in flight owns this form. Swallowing the second one here
           // rather than disabling the control is what keeps it focusable and readable.
-          if (pending || waiting) event.preventDefault();
+          if (pending) event.preventDefault();
+          if (waiting) {
+            // The check is still running: hold this press and say so, rather than spending it on
+            // a refusal the person did nothing to earn.
+            event.preventDefault();
+            setPressedEarly(true);
+          }
         }}
       >
         {pending ? pendingLabel : label}
       </Button>
       {dimmed && (
         <Typography id="submit-incomplete" variant="body2" color="text.secondary" role="status">
-          {waiting ? (botCheckHint ?? incompleteHint) : incompleteHint}
+          {waiting && pressedEarly ? (botCheckHint ?? incompleteHint) : incompleteHint}
         </Typography>
       )}
     </Box>
