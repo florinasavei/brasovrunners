@@ -11562,19 +11562,21 @@ it is.
 *What folds is decided by whether it is today's work, and it opens itself when it is.* The bib
 panel opens when something is unprinted; the outbox when something is waiting; the filters when
 the list is actually narrowed, so nobody loses a filter behind a fold they cannot see; the
-invitation form on Echipa opens while the page is showing the outcome of an invitation. The
+invitation form on Echipa folds but starts open, for the accessibility reason below. The
 counter strip does not fold at all — it is what the screen is for.
 
-*The heading is an `h2` on the `<summary>` itself.* A screen reader's heading list is how
+*The heading is a real `h2`, inside the `<summary>`.* A screen reader's heading list is how
 somebody skips to a section, and a folded section that is not in it cannot be skipped to.
 
 *Two things the e2e suite caught, and both are the rule now.* A panel that holds a form
-**starts open**: a closed  is not in the accessibility tree at all, so the contact
-recipients were a heading no screen reader and no test could find. And the heading is an **inside** the summary rather than a summary with a heading's typography — with  styles the text and carries no heading role, which takes the section out of
+**starts open**: a closed `<details>` is not in the accessibility tree at all, so the contact
+recipients were a heading no screen reader and no test could find. And the heading goes *inside*
+the summary rather than being a summary with a heading's typography — `component="summary"` with
+`variant="h2"` styles the text and carries no heading role at all, which takes the section out of
 the list a screen reader navigates by. What may start closed is what is read rather than acted
-on, and only when there is nothing in it to act on.
+on, and only when there is nothing in it to act on: the outbox queue with nothing waiting.
 
-**Consequences.** ; the registrations list (bibs, the counter strip, the
+**Consequences.** `shared/ui/Panel.tsx`; the registrations list (bibs, the counter strip, the
 outbox, the filters); `EmailPlanPanel`, `OutboxQueuePanel`, `ClubNoticesPanel` and
 `ContactRecipientsPanel`, which now draw no frame of their own — the plan stays open, the other
 three fold; the invitation form on `/admin/staff`. Four message keys under `Admin.panels`,
