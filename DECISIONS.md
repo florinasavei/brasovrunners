@@ -11881,3 +11881,32 @@ anything happening" on a tab it can see from any page. Two numbers that disagree
 each says what it is; one number that answers neither question well is not.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 278. Fixed — a formatted email paragraph keeps the spaces between its runs (2026-09-22)
+
+**Context.** The owner, of the preview on `/admin/emails`: "whitespaces are not read properly in
+the email template". The confirmation message read *"Ai început înscrierea la**Crosul de
+toamnă**din data de**duminică, 4 octombrie 2026, 09:00**ce va avea loc la**Stația de telecabină
+Tâmpa**"* — every bold fact welded to the words either side of it.
+
+**What it was.** A rich-text paragraph (§270) is not one string but a list of runs: the plain
+words, then the placeholder in bold, then the plain words again. `fillPlaceholders` ends with a
+`trim()` — right for a whole paragraph, because a placeholder that vanishes should not leave the
+sentence starting with a space — and `email-rich-text.ts` was calling it **once per run**. Each
+run lost the space at its two ends, and a run made of nothing but the space between two bold
+facts was trimmed to the empty string and dropped altogether. The document the club typed was
+correct throughout; only the render was wrong, which is why it showed in the preview and would
+have shown in every message sent from a formatted body.
+
+**Decision.** *`fillPlaceholders` takes `edges: "trim" | "keep"`, and a run asks for `"keep"`.*
+Closing up doubled spaces and the space before a comma stays in both modes: those are about what
+a vanished placeholder left behind, not about the edges.
+
+*The paragraph's own two edges are trimmed where they belong* — in `inline()`, on the first and
+last run only. So the rule §270 wanted is kept whole, at the level it is actually about.
+
+*What was rejected: trimming nothing.* A paragraph beginning with a stray space the club typed
+in the editor would then reach an inbox with it, and the plain-text half — built from the whole
+line — would disagree with the HTML one.
+
+Baseline `BR-V1.43-2026-09-21`.
