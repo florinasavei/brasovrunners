@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   inviteZitadelUser,
+  listZitadelHumanAccounts,
   resendZitadelInvite,
   sendZitadelPasswordReset,
   setZitadelUserActive,
@@ -156,5 +157,47 @@ describe("the account verbs", () => {
       kind: "failed",
       reason: "403 permission denied",
     });
+  });
+});
+
+/**
+ * §288 — the check `SETUP.md` §37 recommends, made a function: what human accounts does the key
+ * see? Every name each one answers to, lowercased, so a caller can ask about a row without a
+ * second call; the count too, so an empty answer can be told from a short one.
+ */
+describe("the accounts the key can see", () => {
+  it("lists the organization's human users by address, username and login name, lowercased", async () => {
+    const { call, calls } = fakeFetch({
+      "/v2/users": () =>
+        new Response(
+          JSON.stringify({
+            result: [
+              { userId: "1", username: "Florin@Example.ro", loginNames: ["Florin@Example.ro@club.zitadel.cloud"], human: { email: { email: "Florin@Example.ro" } } },
+              { userId: "2", username: "dani", preferredLoginName: "dani@club.zitadel.cloud", human: { email: { email: "dani@example.ro" } } },
+              { userId: "3" },
+            ],
+          }),
+          { status: 200 },
+        ),
+    });
+    const listed = await listZitadelHumanAccounts({ ...deps, fetch: call });
+    expect(listed.kind).toBe("listed");
+    if (listed.kind !== "listed") return;
+    expect(listed.count).toBe(3);
+    expect([...listed.accounts].sort()).toEqual([
+      "dani",
+      "dani@club.zitadel.cloud",
+      "dani@example.ro",
+      "florin@example.ro",
+      "florin@example.ro@club.zitadel.cloud",
+    ]);
+    expect(calls[0].body).toEqual({ query: { limit: 200 }, queries: [{ typeQuery: { type: "TYPE_HUMAN" } }] });
+    expect((calls[0] as { url: string }).url).toBe("https://id.example.test/v2/users");
+  });
+
+  it("needs the key, and says so without calling anything", async () => {
+    const never = fakeFetch({});
+    expect(await listZitadelHumanAccounts({ issuer: "", token: "", fetch: never.call })).toEqual({ kind: "unconfigured" });
+    expect(never.calls).toHaveLength(0);
   });
 });

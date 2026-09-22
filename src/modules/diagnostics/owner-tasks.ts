@@ -26,8 +26,14 @@ export const TASK_OWNERS: readonly TaskOwner[] = ["club", "developer"];
 /**
  * `blocking` is reserved for the things that stop a real person registering today. Everything
  * else is `open`: real work, no deadline attached to it by the software.
+ *
+ * `broken` is the fourth answer, added with the invitation key (§288): something that is set up
+ * and **does not work** — red, because it needs a hand today, and not `blocking`, because it
+ * stops no registration and the line above the list must go on being true. A missing key is
+ * `open`; a key that authenticates and can do nothing is `broken`, and telling those two apart
+ * is the whole reason the row exists.
  */
-export type TaskState = "blocking" | "open" | "done";
+export type TaskState = "blocking" | "broken" | "open" | "done";
 
 /**
  * What sort of work a task is (§150; the owner: "a filter by issue type and owner"). Four
@@ -48,6 +54,7 @@ export type TaskId =
   | "liveEmail"
   | "scheduler"
   | "inviteStaff"
+  | "inviteKey"
   | "publishEvents"
   | "mediaStorage"
   | "botCheck"
@@ -65,6 +72,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   liveEmail: "account",
   scheduler: "check",
   inviteStaff: "account",
+  inviteKey: "account",
   publishEvents: "text",
   mediaStorage: "account",
   botCheck: "account",
@@ -81,6 +89,23 @@ export type OwnerTask = {
   kind: TaskKind;
   /** What the page appends to the sentence, when there is something specific to say. */
   detail?: string;
+  /**
+   * The catalogue key under `items.<id>` whose sentence describes this state, when neither
+   * `todo` nor `done` says it: a key that is set and does not work needs a third sentence, and
+   * "we could not check" a fourth. Unset, the page reads `todo` or `done` from the state.
+   */
+  text?: string;
+  /** The steps array under `items.<id>` to show instead of `how`: fixing a thing is not setting it up. */
+  steps?: string;
+};
+
+/**
+ * What `checkInviteKey` answered (`diagnostics/invite-key.ts`), reduced to what a row needs:
+ * the verdict, and Zitadel's own words where it gave any.
+ */
+export type InviteKeyState = {
+  kind: "inapplicable" | "unconfigured" | "ok" | "blind" | "refused" | "unreachable";
+  reason?: string;
 };
 
 export function isTaskOwner(value: string | undefined): value is TaskOwner {
@@ -124,6 +149,12 @@ export type OwnerTaskInputs = {
    * row means somebody used `/admin/staff`, which is the whole of "the team is invited".
    */
   staffCount: number;
+  /**
+   * Whether the invitation key can do what "Add" on Echipa needs it for (§288), tested with a
+   * real search rather than read from the environment. `inapplicable` where the development
+   * switcher is the provider, and the row is then not shown at all: a laptop has no key to owe.
+   */
+  inviteKey: InviteKeyState;
   /** Events the club has published, so an empty site reads as work rather than as success. */
   publishedEventCount: number;
   /**
@@ -211,6 +242,26 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     state: input.staffCount > 1 ? "done" : "open",
   });
 
+  /**
+   * The key behind "Add", tested rather than merely present (§288). For two days the key was set
+   * on both projects, authenticated on every call and could create nobody, and the first person
+   * to know was a colleague at the sign-in page. So: no key is `open`, with the procedure; a key
+   * that answers and cannot see the reader's own account, or that Zitadel refuses, is `broken`,
+   * red, with the one step that was missed; a provider that did not answer is `open` with its
+   * words and no verdict, because a timeout says nothing about the key.
+   */
+  if (input.inviteKey.kind !== "inapplicable") {
+    const key = input.inviteKey;
+    const broken = key.kind === "blind" || key.kind === "refused";
+    push("inviteKey", {
+      owner: "club",
+      state: key.kind === "ok" ? "done" : broken ? "broken" : "open",
+      text: key.kind === "ok" || key.kind === "unconfigured" ? undefined : key.kind,
+      steps: broken ? "howBroken" : key.kind === "unreachable" ? "howUnreachable" : undefined,
+      detail: key.reason,
+    });
+  }
+
   push("publishEvents", {
     owner: "club",
     state: input.publishedEventCount > 0 ? "done" : "open",
@@ -271,9 +322,9 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
 /** In the order to take them. Each has its title, its "why" and its steps in `Admin.tasks.items`. */
 export const BACKLOG: readonly TaskId[] = [];
 
-/** Blocking first, then open, then done — the order somebody scanning the page needs. */
+/** Blocking first, then broken, then open, then done — the order somebody scanning the page needs. */
 export function sortTasks(tasks: OwnerTask[]): OwnerTask[] {
-  const rank: Record<TaskState, number> = { blocking: 0, open: 1, done: 2 };
+  const rank: Record<TaskState, number> = { blocking: 0, broken: 1, open: 2, done: 3 };
   return [...tasks].sort((a, b) => rank[a.state] - rank[b.state]);
 }
 

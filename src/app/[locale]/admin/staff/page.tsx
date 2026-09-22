@@ -30,6 +30,7 @@ import {
   setStaffAccountActiveAction,
 } from "../actions";
 import { isZitadelInviteConfigured } from "@/modules/staff-identity/zitadel-users";
+import { checkInviteKey, hasNoAccount } from "@/modules/diagnostics/invite-key";
 import { env } from "@/shared/config/env";
 
 type Props = {
@@ -73,6 +74,15 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
   const t = await getTranslations("Admin");
   const staff = await listStaff(getDb(), actor);
+  /**
+   * Which of these rows has no sign-in account (§288). For two days every "Add" wrote the row
+   * and created no account, and the page said so once, in a banner gone at the next click; the
+   * colleague learnt it at the sign-in page. So the fact is on the row now, for as long as it is
+   * true. One call for the whole list, this request only, bounded inside — and read with the
+   * reader as the control: a listing without the person looking at it is a key that cannot see
+   * accounts, and then nothing below claims anything about anybody.
+   */
+  const accounts = await checkInviteKey({ authMode: env.STAFF_AUTH_MODE, readerEmail: actor.email });
 
   const query = parseListQuery(current, {
     // `listStaff` returns the club's whole team — a handful of accounts, in its own order.
@@ -93,6 +103,11 @@ export default async function StaffPage({ params, searchParams }: Props) {
           <span>{member.displayName}</span>
           {member.id === actor.id && (
             <Chip size="small" color="primary" variant="outlined" label={t("staff.you")} />
+          )}
+          {/* In the name cell, not the status column: that one hides below `lg`, and this is
+              the fact the row exists to carry until it stops being true (§288). */}
+          {hasNoAccount(accounts, member.email) && (
+            <Chip size="small" color="warning" label={t("staff.noAccount")} data-testid="staff-no-account" />
           )}
         </Stack>
       ),
@@ -218,6 +233,22 @@ export default async function StaffPage({ params, searchParams }: Props) {
           </Alert>
         )}
       </Panel>
+
+      {/*
+        The accounts could not be checked, and why, in the provider's words (§288). Never a
+        guess in either direction: no row below says "no account" after this, and none is
+        presumed to have one. A missing key is not repeated here — the warning above says it.
+      */}
+      {accounts.kind === "blind" && (
+        <Alert severity="warning" data-testid="staff-accounts-blind">
+          {t("staff.accountsBlind", { seen: accounts.seen })}
+        </Alert>
+      )}
+      {(accounts.kind === "refused" || accounts.kind === "unreachable") && (
+        <Alert severity="warning" data-testid="staff-accounts-unchecked">
+          {t("staff.accountsUnchecked", { reason: accounts.reason })}
+        </Alert>
+      )}
 
       <AdminTable
         caption={t("staff.tableCaption")}
@@ -366,6 +397,13 @@ export default async function StaffPage({ params, searchParams }: Props) {
         }
       />
 
+      {/* What the mark means and what to do about it, once, under the list: a mark with no
+          remedy beside it is a worry, not a fact (§288). */}
+      {staff.some((member) => hasNoAccount(accounts, member.email)) && (
+        <Typography variant="body2" color="text.secondary" data-testid="staff-no-account-help">
+          {t("staff.noAccountHelp")}
+        </Typography>
+      )}
     </Stack>
   );
 }
