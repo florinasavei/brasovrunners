@@ -434,6 +434,7 @@
         "legend": "The six steps of a registration:\n– 1 form submitted\n– 2 email confirmed\n– 3 place held\n– 4 declaration signed\n– 5 place confirmed\n– 6 number collected at the desk\nThe figure says which one they have reached."
       },
       "exportExcel": "Export to Excel",
+      "readOnlyNotice": "You can read the list, the export and the race numbers, but nothing here changes a registration: cancelling, erasing, resending an email and the “bib printed” mark are the Administrator’s. On race day you can still confirm on a paper declaration, give a place, set a number and check somebody in — from “Race day”.",
       "columnBib": "Race number (BIB)",
       "bibProvisional": "Provisional number — it is settled when registration closes, and only then is it emailed.",
       "bibSettled": "The race number is {number} and is settled: the participant has been emailed it and it may already be printed.",

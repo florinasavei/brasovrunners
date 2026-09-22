@@ -23,7 +23,7 @@ import {
   canDeleteEvent,
   canReadContent,
   canHardDeleteEvent,
-  canManageRegistrations,
+  canReadRegistrations,
 } from "@/modules/staff-identity/domain/roles";
 import {
   EDITORIAL_STATUS_LABEL,
@@ -324,7 +324,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         const desk = members.find((member) => member.desk)?.desk ?? null;
         return (
           <>
-            {entries > 0 && canManageRegistrations(staffUser.role) ? (
+            {entries > 0 && canReadRegistrations(staffUser.role) ? (
               <Link href={{ pathname: "/admin/registrations", query: { eventId: next.event.id } }}>
                 {entries}
               </Link>

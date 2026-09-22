@@ -16,17 +16,23 @@
  * reads as one comparison.
  *
  *     CONTRIBUTOR  proposes; edits their own drafts and submits them for approval
- *     MODERATOR    edits any event and approves — the club's editorial hands
- *     DEV          the above, plus the configuration report. No participant data
- *     ADMIN        the above, plus registrations, participants and exports
+ *     MODERATOR    configures any event, and reads the registrations, the export and the bibs
+ *     DEV          the above, plus the configuration report
+ *     ADMIN        the above, plus *changing* a registration, and publication
  *     SUPERADMIN   the above, plus staff administration: who is here and what they may do
  *
  * **DEV is the one that is not obvious, so it is written down.** It exists so somebody helping
- * with the platform can read `/devs`, reproduce a problem and fix an event, without being
- * handed the club's participant list. The line between DEV and ADMIN is exactly personal data:
- * everything below ADMIN is about the club's own content, everything from ADMIN up is about the
- * people who registered. That is the boundary worth defending, and it is why DEV sits where it
- * does rather than at the top.
+ * with the platform can read `/devs`, reproduce a problem and fix an event. It sits above
+ * MODERATOR only so that `canSeeDiagnostics` can be a threshold; it is not a step up in what it
+ * may do to the club's participants.
+ *
+ * **Where the line runs, since §289.** It used to be personal data, with ADMIN on the far side of
+ * it. The owner moved it: an Organizer who cannot see the start list cannot organize the race, so
+ * MODERATOR reads the whole list, the spreadsheet and the race numbers. What ADMIN keeps is every
+ * verb that *changes* a registration — cancel, erase, resend, correct a name, assign or mark the
+ * numbers — and publication (§201). Reading against changing is the boundary now, and it is worth
+ * defending in the same way the old one was: each of those verbs asserts itself in its own
+ * service, never in the interface that hides its button.
  */
 
 /**
@@ -283,8 +289,46 @@ export function canHardDeleteEvent(role: StaffRole): boolean {
 }
 
 /**
- * Registrations, participants, the timeline and the export — everything about the people who
- * signed up. This is the personal-data boundary, and it is where ADMIN begins (§10.2).
+ * **Reading who signed up, without a verb that changes one (§289).**
+ *
+ * The owner, of his Organizer: "ca si organizator ar trebui sa vad cine s-a inscris!", and then
+ * "organizer should also be able to see BIDs and export them". Asked how far it should go, he
+ * chose the whole list — the addresses, the telephone numbers, the identity document, the signed
+ * declarations and the spreadsheet — and no verb: no cancel, no erasure, no resend.
+ *
+ * That is a real narrowing of §10.2, which reserved "registrations, participants, waitlist…
+ * exports" to the Administrator, and it is written here rather than argued twice because the
+ * reason is the job: an Organizer who cannot see the start list cannot organize the race. What
+ * the boundary between the two roles now means is **reading against changing**, not the data
+ * itself — the Administrator is still the only one who cancels a place, erases a row, resends a
+ * message or corrects a name, and each of those is asserted in its own service (BR-REQ-060-01).
+ *
+ * ## The second deliberate gap in the ladder, and it is `DEV`
+ *
+ * **A set, not a threshold**, which this file allows only where the gap earns itself (see
+ * `MAY_EDIT_TEXTS`). It does here, for the one reason `DEV` exists at all: it is the role the
+ * club can give somebody helping with the platform, and §38 and `roles.test.ts` both say in as
+ * many words that such a person never receives the participant list. `DEV` outranks `MODERATOR`
+ * only so that `canSeeDiagnostics` can be written as a threshold — it is not a step up in what a
+ * role may know about a person, and a threshold here would quietly have made it one.
+ *
+ * The volunteer stays out too: `CONTRIBUTOR` gets the desk, which shows one runner at a time by
+ * name with a state and a number and never an address (`AGENTS.md` §15.11).
+ */
+const MAY_READ_REGISTRATIONS: ReadonlySet<StaffRole> = new Set<StaffRole>([
+  "MODERATOR",
+  "ADMIN",
+  "SUPERADMIN",
+]);
+
+export function canReadRegistrations(role: StaffRole): boolean {
+  return MAY_READ_REGISTRATIONS.has(role);
+}
+
+/**
+ * Changing a registration: cancel, erase, resend, correct a name, assign or mark the race
+ * numbers, fill a queue with test rows, send the thank-you. The Administrator's, and it is where
+ * the line between the two roles now sits (§289) — reading is `canReadRegistrations`.
  *
  * Split out from `canManageStaff`, which every one of these screens used to call. They are two
  * different powers: reading who registered is an Administrator's job, and deciding who is on
@@ -363,7 +407,8 @@ export function canManageStaff(role: StaffRole): boolean {
  *     events         everyone with a staff session — the backoffice's front door
  *     checkin        canWorkTheDesk           `admin/checkin/page.tsx` — every role, on purpose
  *     guide          every staff session      `admin/guide/page.tsx`
- *     registrations  canManageRegistrations   `admin/registrations/page.tsx`
+ *     registrations  canReadRegistrations     `admin/registrations/page.tsx` — the verbs on it
+ *                                             ask `canManageRegistrations` one by one (§289)
  *     pages          isEditorial              `admin/pages/page.tsx`
  *     legal          atLeast(role, "ADMIN")   `admin/legal/page.tsx`
  *     emails         every staff session      `admin/emails/page.tsx` — the panels gate themselves
@@ -402,11 +447,16 @@ export type AdminSection = (typeof ADMIN_SECTIONS)[number];
  * pages, the gallery and the legal texts, and they ask the Administrator for every change. A
  * person who cannot see what the club publishes cannot tell her which line is wrong.
  *
- * It stops at the club's **content**. The participant list, the export and the tasks stay behind
- * `canManageRegistrations`, because the line this hierarchy actually draws is personal data and
- * that line is ADMIN (§10.2) — "vede cam tot" is not an instruction to hand somebody four
- * hundred addresses. What every staff role does see of a participant is the desk: a name, a
- * state and a number, never an address (`AGENTS.md` §15.11).
+ * It stops at the club's **content**. What the club still owes — `/admin/tasks` — stays behind
+ * `canManageRegistrations`, because it is the Administrator's own worklist.
+ *
+ * **The participant list is no longer on this side of the line (§289).** It was, on the reasoning
+ * that "vede cam tot" is not an instruction to hand somebody four hundred addresses — and the
+ * owner answered that question directly afterwards: the Organizer reads the whole list, the
+ * export and the race numbers, and changes nothing. So the boundary this hierarchy draws is
+ * reading against changing, and `canReadRegistrations` is where it is written. What a *volunteer*
+ * sees of a participant is still only the desk: a name, a state and a number, never an address
+ * (`AGENTS.md` §15.11).
  */
 export function canReadContent(role: StaffRole): boolean {
   return atLeast(role, "COPYWRITER");
@@ -423,7 +473,9 @@ export function visibleAdminSections(role: StaffRole): AdminSection[] {
     // both are offered to whoever may read it and guarded on the way in (§208).
     ...(canReadContent(role) ? (["pages"] as const) : []),
     ...(canReadContent(role) ? (["gallery"] as const) : []),
-    ...(canManageRegistrations(role) ? (["registrations"] as const) : []),
+    // Who signed up, for the roles that may read it (§289). Every verb on that screen asks
+    // `canManageRegistrations` for itself, so an Organizer arrives at a list and no buttons.
+    ...(canReadRegistrations(role) ? (["registrations"] as const) : []),
     // What the *club* still owes, for the role that answers for it (BR-REQ-060-01).
     ...(canManageRegistrations(role) ? (["tasks"] as const) : []),
     // The legal texts are readable by the roles that must know what the club published; only

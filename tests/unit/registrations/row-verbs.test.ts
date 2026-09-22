@@ -60,9 +60,13 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
   });
 
   /**
-   * §10.2 reserves cancelling and giving places to the Administrator. A lower role reading this
-   * list — which it cannot, the page 404s — would still be shown nothing it may not do, and the
-   * services refuse regardless (BR-REQ-060-01).
+   * §10.2 reserves cancelling and giving places to the Administrator, and the services refuse
+   * regardless (BR-REQ-060-01).
+   *
+   * This used to add "a lower role reading this list — which it cannot, the page 404s". Since
+   * §289 it can: the Organizer reads the list. So these verbs are now withheld by this function
+   * alone rather than by the screen never being reached, which is why the Organizer has a test
+   * of its own below.
    */
   it("withholds the destructive verbs from a role that may not manage registrations", () => {
     for (const status of ALL) {
@@ -152,6 +156,48 @@ describe("BR-REQ-037-05 the verbs a registration row offers", () => {
     for (const status of ALL) {
       const offered = rowVerbsFor(status, "ADMIN", { checkedIn: false }).includes("resend");
       expect(offered, status).toBe(deriveAllowedResendMessageType(status) !== null);
+    }
+  });
+});
+
+/**
+ * `DECISIONS.md` §289 — the Organizer reads the list and changes nothing on it.
+ *
+ * The regression this guards is specific. `resend` used to be pushed with no role check at all,
+ * on a comment that said the list was Administrator-only "so anybody reading this row already
+ * passed that gate". The day the Organizer was given the list that sentence stopped being true
+ * and nothing failed: they would simply have been offered a button whose service answers
+ * FORBIDDEN — "I can press it and nothing happens", which is the complaint §289 came from.
+ */
+describe("§289 the Organizer's row", () => {
+  it("offers reading and the desk, and nothing that changes a registration", () => {
+    for (const status of ALL) {
+      for (const checkedIn of [false, true]) {
+        const verbs = rowVerbsFor(status, "MODERATOR", {
+          checkedIn,
+          // A settled, printable number, so the printing mark would be offered if it were
+          // allowed to be — otherwise this loop proves nothing about that verb.
+          bib: { settled: true, printed: false },
+        });
+
+        expect(verbs, `${status}/${checkedIn}`).toContain("open");
+        for (const verb of ["resend", "cancel", "erase", "givePlace", "confirmOnPaper", "markBibPrinted", "unmarkBibPrinted"] as const) {
+          expect(verbs, `${status}/${checkedIn} must not offer ${verb}`).not.toContain(verb);
+        }
+      }
+    }
+  });
+
+  it("keeps the desk's own verbs, because every staff role works the desk (§15.11)", () => {
+    expect(rowVerbsFor("CONFIRMED", "MODERATOR", { checkedIn: false })).toContain("checkIn");
+    expect(rowVerbsFor("CONFIRMED", "MODERATOR", { checkedIn: true })).toContain("undoCheckIn");
+  });
+
+  it("offers the Administrator strictly more than the Organizer, never less", () => {
+    for (const status of ALL) {
+      const organizer = rowVerbsFor(status, "MODERATOR", { checkedIn: false, bib: { settled: true, printed: false } });
+      const administrator = rowVerbsFor(status, "ADMIN", { checkedIn: false, bib: { settled: true, printed: false } });
+      for (const verb of organizer) expect(administrator, `${status}/${verb}`).toContain(verb);
     }
   });
 });

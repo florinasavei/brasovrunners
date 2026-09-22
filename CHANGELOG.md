@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V1.46-2026-09-22
+
+- **The Organizer can see who signed up** — the whole list, with the contact details, the identity document, the signed declarations, the race numbers and the Excel or CSV export — and can change none of it: cancelling, erasing, renaming, resending an email and the “bib printed” mark stay the Administrator’s. On race day the Organizer still does what anybody at the desk does: confirm on a paper declaration, give a place, set a number, check somebody in. The screen says once, in a sentence, what this role may not do there, instead of refusing after a press. The Tehnic role gets none of it — it exists precisely so it can be given to somebody outside the club without the club’s participants coming with it. §289.
+
 ## BR-V1.45-2026-09-22
 
 - **Several registrations can be erased at once**, from the same tick boxes the bulk cancel uses — behind a confirmation that asks you to type how many you are erasing. Anything but that exact number erases nothing, and each row still leaves the usual audit line: who erased and why, never whom. §287.

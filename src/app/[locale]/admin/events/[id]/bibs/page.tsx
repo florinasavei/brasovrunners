@@ -10,7 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
 import { findEventForBibs, listBibs } from "@/modules/registrations/bibs";
-import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 
 type Props = { params: Promise<{ locale: string; id: string }> };
@@ -18,14 +18,18 @@ type Props = { params: Promise<{ locale: string; id: string }> };
 /**
  * Every bib of one event as it will print, one picture each (`DECISIONS.md` §94) — on its own
  * page since 2026-09-18, because each picture is drawn on request and a grid of them on the
- * event page made every visit to the editor pay for it. Administrator only, like the sheet.
+ * event page made every visit to the editor pay for it.
+ *
+ * Whoever may read the registrations, like the sheet (§289; the owner: "organizer should also be
+ * able to see BIDs and export them"). Assigning the numbers and marking them printed stay the
+ * Administrator's, on the screens those verbs live on.
  */
 export default async function EventBibsPage({ params }: Props) {
   const { locale, id } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const staffUser = await requireStaff();
-  if (!canManageRegistrations(staffUser.role)) notFound();
+  if (!canReadRegistrations(staffUser.role)) notFound();
 
   const db = getDb();
   const record = await findEventForEditing(db, id);

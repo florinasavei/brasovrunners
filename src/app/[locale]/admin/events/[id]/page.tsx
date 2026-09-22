@@ -34,6 +34,7 @@ import {
   canEditEventFields,
   canEditTranslation,
   canManageRegistrations,
+  canReadRegistrations,
   canManageTestRegistrations,
   isLiveContent,
 } from "@/modules/staff-identity/domain/roles";
@@ -136,7 +137,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // How many numbers this event has, for the sentence beside the button; the sheet reads the
   // same list. Only where the section that shows it renders.
   const bibs =
-    canManageTestRegistrations(staffUser.role) && event.registrationMode === "INTERNAL"
+    canReadRegistrations(staffUser.role) && event.registrationMode === "INTERNAL"
       ? await listBibs(db, event.id)
       : [];
 
@@ -177,7 +178,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   // The waiting list's length, read once for the queue panel and for the sentence under
   // "Număr de locuri" (§147): raising the number offers these people places at once.
   const waiting =
-    event.registrationMode === "INTERNAL" && (maySaveSettings || canManageRegistrations(staffUser.role))
+    event.registrationMode === "INTERNAL" && (maySaveSettings || canReadRegistrations(staffUser.role))
       ? await countEligibleWaitlisted(db, event.id)
       : 0;
 
@@ -582,8 +583,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       </Box>
 
       {/* The other way in to BR-REQ-037-05, from the event somebody is actually looking at.
-          Only for an event with a queue to put anybody in, and only for the role that may. */}
-      {canManageTestRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && (
+          Only for an event with a queue to put anybody in, and for whoever may read that queue
+          — the Organizer since §289. Everything in this block is a read except "Alocă
+          numerele", which asks for itself below. */}
+      {canReadRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && (
         <Box component="section">
           <Divider sx={{ mb: 3 }} />
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
@@ -648,17 +651,21 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               : t("bibs.helpSome", { total: bibs.length })}
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" } }}>
-            <form action={assignBibNumbersAction}>
-              <input type="hidden" name="uiLocale" value={locale} />
-              <input type="hidden" name="eventId" value={event.id} />
-              <ConfirmSubmitButton
-                label={t("bibs.assign")}
-                title={t("confirm.bibsTitle")}
-                body={t("confirm.bibsBody")}
-                confirmLabel={t("bibs.assign")}
-                cancelLabel={t("confirm.cancel")}
-              />
-            </form>
+            {/* Giving the field its numbers is a write, and `assignBibNumbers` refuses anybody
+                below ADMIN (§289). Downloading the sheet beside it is a read and is not gated. */}
+            {canManageRegistrations(staffUser.role) && (
+              <form action={assignBibNumbersAction}>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="eventId" value={event.id} />
+                <ConfirmSubmitButton
+                  label={t("bibs.assign")}
+                  title={t("confirm.bibsTitle")}
+                  body={t("confirm.bibsBody")}
+                  confirmLabel={t("bibs.assign")}
+                  cancelLabel={t("confirm.cancel")}
+                />
+              </form>
+            )}
             {bibs.length > 0 && (
               <form action={`/api/admin/events/${event.id}/bibs`} method="get">
                 <input type="hidden" name="locale" value={locale} />
@@ -751,8 +758,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           </Box>
         )}
 
-      {/* The queue as the allocator sees it, and the waiting list in its order (§92). */}
-      {canManageRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && (
+      {/* The queue as the allocator sees it, and the waiting list in its order (§92) — a read,
+          so the Organizer has it too (§289). The one verb inside is "Anunță-mă", whose own
+          count is Administrator-gated above and which therefore never renders below that. */}
+      {canReadRegistrations(staffUser.role) && event.registrationMode === "INTERNAL" && (
         <Box component="section">
           <Divider sx={{ mb: 3 }} />
           <Typography variant="h2" sx={{ fontSize: "1.25rem", mb: 2 }}>
