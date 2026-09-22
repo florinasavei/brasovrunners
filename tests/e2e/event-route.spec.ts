@@ -66,14 +66,18 @@ test.describe.serial("BR-REQ-011-01 criterion 8 the route link", () => {
     await field("event.routeUrl").fill(ROUTE_LINK);
     // Publication refuses an incomplete language (`AGENTS.md` §11.2) and an excerpt is one of
     // the fields it counts, so the one save fills both languages as well as the route. The
-    // short description is the editor since `DECISIONS.md` §73: click into it and type.
-    const excerpt = (locale: "ro" | "en") =>
-      page.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`);
-    await excerpt("ro").click();
-    await page.keyboard.type("Cursă de probă pentru traseu.");
+    // short description is the editor since `DECISIONS.md` §73 and a fold since §260: open the
+    // fold — which is what mounts the editor — then click into it and type. Scoped to the
+    // language's own panel, because the hidden one carries the same fold.
+    const excerpt = async (locale: "ro" | "en", text: string) => {
+      const panel = page.locator(`#locale-panel-${locale}`);
+      await panel.locator("summary").filter({ hasText: "Rezumat" }).click();
+      await panel.locator(`[data-rich-text="translations.${locale}.excerptBody"] [data-field]`).click();
+      await page.keyboard.type(text);
+    };
+    await excerpt("ro", "Cursă de probă pentru traseu.");
     await page.getByRole("tab", { name: /English/ }).click();
-    await excerpt("en").click();
-    await page.keyboard.type("A trial race for the route link.");
+    await excerpt("en", "A trial race for the route link.");
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 

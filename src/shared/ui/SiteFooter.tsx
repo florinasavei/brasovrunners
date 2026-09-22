@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { env } from "@/shared/config/env";
 import { DISCLOSURE_SUMMARY_SX } from "./disclosure";
+import LocaleSwitcher from "./LocaleSwitcher";
 import SocialIcon, { type SocialNetwork } from "./SocialIcon";
 import ThemeModeToggle from "./ThemeModeToggle";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -25,8 +26,13 @@ const SWITCH_WIDTH = 44;
 /**
  * The footer: one thin line, with the social marks always on it and everything else behind it.
  *
- * Four things share the line. In the bottom-left corner, the light/dark switch (§115: "the
- * theme switcher should be in the bottom left corner" — it was in the header). Then a
+ * Five things share the line. In the bottom-left corner, the light/dark switch (§115: "the
+ * theme switcher should be in the bottom left corner" — it was in the header), and **on a phone
+ * the language switcher in the bottom-right one** (§262: "eventual mutăm selectorul de limbi in
+ * dreapta jos") — the header row of a phone is 328 pixels and the sections need them. From
+ * `sm` up the language stays in the header, where a setting sits at the end of the row it is
+ * on, and this one is `display: none`, so exactly one "Limbă" navigation exists at any width.
+ * Then a
  * `<summary>` that opens the rest — the club, the contact, the legal pages — and names them, so
  * a visitor after the privacy notice knows to open it (`AGENTS.md` §9.2 asks the legal routes
  * be *linked from* the footer; they are, and the registration form links the notice directly
@@ -88,6 +94,31 @@ export default async function SiteFooter() {
           tap — the owner: "nothing happens when I click" (§157). */}
       <Box sx={{ position: "absolute", top: 0, left: 0, height: BAR_HEIGHT, display: "flex", alignItems: "center", zIndex: 1 }}>
         <ThemeModeToggle />
+      </Box>
+      {/*
+        The language, in the opposite corner and on a phone only (§262).
+
+        Positioned on the bar rather than laid out in it, for the reason the marks below are: the
+        line belongs to the `<summary>`, and a flex row cannot put a sibling between a summary
+        and the panel it opens. `right: 8` is the switch's own inset on the left, mirrored; the
+        build badge is static on a phone (`BuildBadge`: `position: { xs: "static" }`), so
+        nothing else claims this corner at this width.
+
+        Above the column like the switch, or the fold's 44px summary paints over it and swallows
+        the tap — which is exactly what §157 found on the other side of the bar.
+      */}
+      <Box
+        sx={{
+          display: { xs: "flex", sm: "none" },
+          position: "absolute",
+          top: 0,
+          right: 8,
+          height: BAR_HEIGHT,
+          alignItems: "center",
+          zIndex: 1,
+        }}
+      >
+        <LocaleSwitcher />
       </Box>
       <Container maxWidth={PAGE_WIDTH} sx={{ position: "relative" }}>
         <Box component="details">
@@ -165,7 +196,7 @@ export default async function SiteFooter() {
               top: 0,
               height: BAR_HEIGHT,
               alignItems: "center",
-              right: { xs: 16, sm: "auto" },
+              right: { xs: 62, sm: "auto" },
               left: { xs: "auto", sm: "50%" },
               transform: { xs: "none", sm: "translateX(-50%)" },
               gap: 0.5,

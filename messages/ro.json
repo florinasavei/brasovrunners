@@ -52,6 +52,8 @@
     "featuredCallToAction": "Vezi detaliile cursei",
     "others": "Alte evenimente",
     "othersCount": "Toate evenimentele ({count})",
+    "pastCount": "{count, plural, one {# eveniment trecut} few {# evenimente trecute} other {# de evenimente trecute}}",
+    "pastHelp": "Ce s-a întâmplat deja. Pentru restul, vezi calendarul — are orice lună din orice an.",
     "filter": {
       "label": "Tipul evenimentului",
       "all": "Toate"
@@ -83,7 +85,8 @@
       "today": "Azi, {when}",
       "tomorrow": "Mâine, {when}",
       "inDays": "În {days} zile, {when}"
-    }
+    },
+    "pastCountOfType": "Din trecut — {type} ({count})"
   },
   "Event": {
     "backToEvents": "Înapoi la evenimente",
@@ -232,6 +235,22 @@
     }
   },
   "Admin": {
+    "botCheck": {
+      "title": "Verificarea anti-bot (captcha)",
+      "state": {
+        "on": "Pornită: formularele arată caseta „Nu sunt robot”, iar o verificare picată oprește trimiterea.",
+        "off": "Oprită: nu se arată nicio casetă și nu se verifică nimic la Cloudflare.",
+        "noKeys": "Nu e configurată pe acest server: fără cele două chei Turnstile nu există ce să pornim."
+      },
+      "others": "Oricum rămân pornite: capcana ascunsă din formular, verificarea de timp și limita pe adresă — nu costă nimic vizitatorului.",
+      "warning": "Dacă o oprești, un robot poate trimite formularul. Merită oprită exact în ziua în care caseta refuză oameni reali; repornește-o după.",
+      "turnOff": "Oprește verificarea",
+      "turnOn": "Pornește verificarea",
+      "saving": "Se salvează…",
+      "savedOn": "Verificarea anti-bot este pornită.",
+      "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
+      "updatedAt": "Modificat la {when}."
+    },
     "title": "Administrare",
     "signedInAs": "Autentificat ca {name} — {role}",
     "signOut": "Ieși din cont",
@@ -275,7 +294,8 @@
       "allowanceSpent": "Limita planului Mailgun este atinsă; restul pleacă după resetare.",
       "sending": "Se trimit…",
       "sendNowLong": "Trimite acum emailurile din coadă, fără să aștepți monitorul; se oprește la limita zilnică",
-      "sentNow": "Emailuri trimise acum: {count}."
+      "sentNow": "Emailuri trimise acum: {count}.",
+      "waitingShort": "{count} în așteptare"
     },
     "registrations": {
       "empty": "Nu există nicio înscriere.",
@@ -402,7 +422,7 @@
         "progress": "{done} din {total} pași",
         "next": "urmează: {step}",
         "complete": "Toți pașii parcurși",
-        "legend": "Cei șase pași ai unei înscrieri: 1 formularul trimis · 2 emailul confirmat · 3 locul rezervat · 4 declarația semnată · 5 locul confirmat · 6 numărul ridicat la masă. Cifra arată la care a ajuns persoana."
+        "legend": "Cei șase pași ai unei înscrieri:\n– 1 formularul trimis\n– 2 emailul confirmat\n– 3 locul rezervat\n– 4 declarația semnată\n– 5 locul confirmat\n– 6 numărul ridicat la masă\nCifra arată la care a ajuns persoana."
       },
       "exportExcel": "Exportă Excel",
       "columnBib": "Număr de concurs (BIB)",
@@ -411,6 +431,18 @@
       "bibHeldNow": "Numărul de concurs: {number} — provizoriu până la închiderea înscrierilor.",
       "bibNone": "Nu are încă un număr de concurs.",
       "bibChange": "Schimbă numărul",
+      "bibPrinted": "BID printat",
+      "bibPrintedOn": "BID printat pe {date}",
+      "bibMarkPrinted": "Marchează BID-ul ca printat",
+      "bibMarkUnprinted": "BID-ul nu e printat",
+      "bibsPrintedCount": "BID-uri: {printed} din {total} printate",
+      "bibsDownloadUnprinted": "Descarcă BID-urile neprintate ({count})",
+      "bibsDownloadAll": "Descarcă toate BID-urile ({count})",
+      "bibsMarkPrinted": "Marchează cele {count} ca printate",
+      "bibsMarkPrintedPending": "Se marchează…",
+      "bibsMarkAllUnprinted": "Niciunul nu e printat",
+      "bibsPrintedAlert": "{count, plural, one {# BID marcat ca printat.} few {# BID-uri marcate ca printate.} other {# de BID-uri marcate ca printate.}}",
+      "bibsUnprintedAlert": "{count, plural, one {# BID nu mai e marcat ca printat.} few {# BID-uri nu mai sunt marcate ca printate.} other {# de BID-uri nu mai sunt marcate ca printate.}}",
       "openRow": "Deschide înscrierea",
       "cancel": "Anulează înscrierea",
       "cancelBody": "Locul se eliberează prin alocator și se oferă imediat primei persoane de pe lista de așteptare. Rămâne un rând în jurnal cu cine a anulat. Nu se poate desface: dacă persoana se răzgândește, se înscrie din nou.",
@@ -422,7 +454,8 @@
       "eraseTypeName": "Scrie numele înscrisului",
       "eraseTypeNameHelp": "Scrie exact „{name}”, ca să fim siguri că este rândul pe care îl vrei. Majusculele și diacriticele nu contează.",
       "eraseAction": "Șterge definitiv",
-      "erasePending": "Se șterge…"
+      "erasePending": "Se șterge…",
+      "filtersInUse": "filtre active"
     },
     "events": {
       "empty": "Nu există niciun eveniment în baza de date.",
@@ -549,6 +582,8 @@
       "create": "Creează evenimentul",
       "excerptHelp": "Una-două fraze: ce se vede pe pagina evenimentului, pe cardul din listă (cu poză, dacă pui una) și în distribuiri. Obligatoriu înainte de publicare.",
       "rulesEmpty": "(niciunul încă — apasă ca să scrii)",
+      "excerptEmpty": "(obligatoriu înainte de publicare — apasă ca să scrii)",
+      "bodyEmpty": "(nimic încă — apasă ca să scrii)",
       "scheduleHelp": "Opțional, text liber sub rândurile cu ore de mai sus: ce nu încape într-un rând — cum se ridică kitul, regulile limitelor de timp. Apare pe pagina evenimentului la „Program”, după rânduri; emailurile trimit acolo.",
       "programmeSection": "Program",
       "programmeHelp": "Ziua pe ore, câte un rând: ridicarea kiturilor, briefingul, startul, limitele de timp, festivitatea. Apare ca listă pe pagina evenimentului, se repetă în emailul de reamintire, iar fiecare rând e o intrare separată în fișierul de calendar. Un rând lăsat gol este ignorat.",
@@ -790,6 +825,15 @@
       "empty": "Nu există niciun cont în echipă.",
       "changeRolePending": "Se salvează…",
       "revokePending": "Se retrage…",
+      "rowActions": "Acțiuni pentru {name}",
+      "resendInviteTitle": "Trimiți din nou invitația?",
+      "resendInviteBody": "Pleacă un email către {email} cu linkul de intrare.",
+      "passwordResetTitle": "Trimiți resetarea parolei?",
+      "passwordResetBody": "Zitadel trimite către {email} un link prin care își schimbă parola. Noi nu vedem parola.",
+      "deactivateAccountTitle": "Dezactivezi contul?",
+      "deactivateAccountBody": "Contul lui {name} se oprește la furnizor: nu se mai poate autentica nicăieri. Rândul din Echipa rămâne.",
+      "revokeTitle": "Retragi accesul?",
+      "revokeBody": "{name} nu mai intră în backoffice. Contul de la furnizor rămâne — dezactivează-l separat dacă pleacă din club.",
       "roleHelp": "Fiecare rol poate ce poate cel de sub el, plus ce scrie aici. Voluntarii văd doar masa de ridicare.",
       "roles": {
         "CONTRIBUTOR": "masa de ridicare: scanează codurile, marchează prezența, confirmă pe hârtie, dă un loc liber, scrie un număr. Atât.",
@@ -987,6 +1031,12 @@
       "allDone": "Tot ce se vede aici este rezolvat.",
       "noneMatch": "Niciun rând pentru acest filtru.",
       "listLabel": "Lista de sarcini",
+      "panel": {
+        "todo": "De făcut",
+        "botCheck": "Anti-robot",
+        "costs": "Costuri",
+        "system": "Sistem"
+      },
       "filter": {
         "who": "Cine",
         "kind": "Tip",
@@ -1293,6 +1343,8 @@
       "imageSize": "Lățime pe ecran lat",
       "imageRemove": "Șterge imaginea",
       "imageDone": "Gata",
+      "imageClose": "Închide panoul imaginii",
+      "imagePanel": "Imaginea",
       "imageFromGallery": "Alege o imagine deja încărcată",
       "imageShort": "Imagine",
       "imageFromGalleryShort": "Din galerie",
@@ -1321,7 +1373,24 @@
       "tableAddColumn": "Adaugă o coloană",
       "tableDeleteRow": "Șterge rândul",
       "tableDeleteColumn": "Șterge coloana",
-      "tableDelete": "Șterge tabelul"
+      "tableDelete": "Șterge tabelul",
+      "tableBordersAll": "Linii: toate (apasă pentru doar orizontale)",
+      "tableBordersRows": "Linii: doar orizontale (apasă pentru niciuna)",
+      "tableBordersNone": "Linii: niciuna — tabelul e folosit ca aranjament (apasă pentru toate)",
+      "tableValign": "Text la mijlocul celulei, pe verticală",
+      "tableHeaderRow": "Rând de titlu (pornit/oprit)",
+      "tableBorderColourDefault": "Culoarea liniilor: standard",
+      "tableBorderColourStrong": "Culoarea liniilor: închisă",
+      "tableBorderColourBlue": "Culoarea liniilor: albastru",
+      "tableBorderColourOrange": "Culoarea liniilor: portocaliu",
+      "tableHeaderFillDefault": "Capul de tabel: standard",
+      "tableHeaderFillNone": "Capul de tabel: fără fundal",
+      "tableHeaderFillBlue": "Capul de tabel: albastru",
+      "tableHeaderFillOrange": "Capul de tabel: portocaliu",
+      "preview": "Previzualizare",
+      "previewShort": "Vezi",
+      "previewClose": "Închide",
+      "words": "{count} cuvinte"
     },
     "pages": {
       "title": "Pagini",
@@ -1329,6 +1398,14 @@
       "intro": "Paginile fixe ale clubului — „Despre Brașov Runners”, „Contact”. Se publică în ambele limbi deodată, ca evenimentele.",
       "empty": "Nu există nicio pagină încă.",
       "untitled": "Fără titlu",
+      "edit": "Editează pagina",
+      "publish": "Publică",
+      "unpublish": "Scoate de pe site",
+      "rowActions": "Acțiuni pentru {title}",
+      "publishTitle": "Publici pagina?",
+      "publishBody": "Pagina apare în meniu și pe site, în ambele limbi.",
+      "unpublishTitle": "Scoți pagina de pe site?",
+      "unpublishBody": "Dispare din meniu și din site; textul rămâne aici, ca ciornă.",
       "order": "ordinea {order}",
       "backToList": "← Toate paginile",
       "incomplete": "Ambele limbi trebuie completate înainte de publicare. Lipsesc: {detail}.",
@@ -1354,7 +1431,7 @@
       "bodyHelp": "Un rând gol separă paragrafele. Un rând care începe cu ## este un titlu de secțiune.",
       "language": {
         "ro": "Română",
-        "en": "Engleză"
+        "en": "English"
       },
       "fields": {
         "title": "Titlu",
@@ -1392,6 +1469,17 @@
       "intro": "Albumele clubului. Fotografiile se micșorează pe telefon înainte de a fi trimise și se păstrează doar în două mărimi, fără date de localizare. Un album apare pe site când este publicat și are cel puțin o fotografie.",
       "empty": "Nu există niciun album încă.",
       "backToList": "← Toate albumele",
+      "edit": "Deschide albumul",
+      "publish": "Publică albumul",
+      "unpublish": "Scoate albumul de pe site",
+      "rowActions": "Acțiuni pentru {title}",
+      "publishTitle": "Publici albumul?",
+      "publishBody": "Pozele devin publice și „Galerie” apare în meniul site-ului.",
+      "unpublishTitle": "Scoți albumul de pe site?",
+      "unpublishBody": "Pozele rămân încărcate, dar nu se mai văd public.",
+      "deleteAlbum": "Șterge albumul",
+      "deleteAlbumTitle": "Ștergi albumul?",
+      "deleteAlbumBody": "„{title}” și legăturile lui dispar. Pozele rămân în biblioteca de poze.",
       "readOnly": "Rolul tău poate vedea albumele, dar nu le poate modifica.",
       "noPhotosYet": "Albumul nu are nicio fotografie. Încarcă cel puțin una ca să poată fi publicat.",
       "photos": "Fotografii ({count})",
@@ -1422,7 +1510,7 @@
       "slugLocked": "Adresa este fixă după publicare, ca să nu se strice linkurile distribuite.",
       "language": {
         "ro": "Română",
-        "en": "Engleză"
+        "en": "English"
       },
       "fields": {
         "takenOn": "Data fotografiilor",
@@ -1514,6 +1602,8 @@
         "registrationConfirmed": "Confirmat. Poți da numărul și marca prezența.",
         "registrationWaitlisted": "Evenimentul este plin: persoana a intrat pe lista de așteptare. Dacă se eliberează un loc, apasă „Dă-i un loc”.",
         "bibSet": "Numărul a fost salvat.",
+        "bibsPrinted": "BID-urile sunt marcate ca printate.",
+        "bibsUnprinted": "BID-urile nu mai sunt marcate ca printate.",
         "checkedIn": "Marcat prezent.",
         "checkinUndone": "Prezența a fost anulată."
       },
@@ -1796,6 +1886,12 @@
       "reasonLabel": "Motivul",
       "reasonHelp": "Rămâne în jurnalul de audit. Este singurul lucru care supraviețuiește ștergerii; numele celor șterși nu se păstrează nicăieri.",
       "action": "Șterge definitiv evenimentul și înscrierile"
+    },
+    "panels": {
+      "bibs": "Numere de concurs",
+      "summary": "Cine s-a înscris",
+      "outbox": "Emailuri de trimis",
+      "filters": "Caută și filtrează"
     }
   },
   "NotFound": {
@@ -1873,7 +1969,7 @@
     "preferredLocaleHelp": "Emailurile vin în ambele limbi; aceasta e prima. Declarația o semnezi în limba aleasă.",
     "preferredLocaleOptions": {
       "ro": "Română",
-      "en": "Engleză"
+      "en": "English"
     },
     "phone": "Telefon",
     "phoneCountry": "Țara",
@@ -2146,6 +2242,12 @@
     "intro": "Ce este configurat aici și ce lipsește. Se afișează doar numele variabilelor și dacă au valoare — niciodată valoarea.",
     "environment": "Mediu",
     "buildUnknown": "versiune necunoscută",
+    "panel": {
+      "status": "Stare",
+      "general": "General",
+      "email": "Emailuri",
+      "botCheck": "Anti-robot"
+    },
     "configuration": "Configurație",
     "neverValues": "Nicio valoare, nicio cheie și niciun secret nu apar pe această pagină. Doar numele variabilei și dacă are valoare.",
     "runtime": "Starea în acest moment",

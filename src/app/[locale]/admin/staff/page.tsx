@@ -6,6 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Panel from "@/shared/ui/Panel";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -18,6 +19,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
 import { pageCount, parseListQuery } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import RowMenu from "@/shared/ui/RowMenu";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import {
   changeStaffRoleAction,
@@ -156,11 +158,13 @@ export default async function StaffPage({ params, searchParams }: Props) {
         {saved && saved !== "invited" && saved !== "reinvited" && <Alert severity="success">{t("saved")}</Alert>}
       </Box>
 
-      <Box component="section">
-        <Typography variant="h3" sx={{ fontSize: "1rem", mb: 2 }}>
-          {t("staff.inviteTitle")}
-        </Typography>
-
+      {/*
+        Adding a colleague is a nine-field form and a rare act — twice a season — above the list
+        that is read every time. It is a panel of its own now (§269) and it folds, but it starts
+        open: a closed `<details>` is not in the accessibility tree, so a form that begins shut
+        is a form a screen reader cannot find.
+      */}
+      <Panel title={t("staff.inviteTitle")} collapsible data-testid="staff-invite">
         <form action={inviteStaffAction}>
           <input type="hidden" name="uiLocale" value={locale} />
           <Stack spacing={2}>
@@ -213,7 +217,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
             {t("staff.inviteKeyMissing")}
           </Alert>
         )}
-      </Box>
+      </Panel>
 
       <AdminTable
         caption={t("staff.tableCaption")}
@@ -270,57 +274,93 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 </Stack>
               </Box>
 
-              {/* The invitation again, while they have not signed in (§123) — offered whether or
-                  not the key is set (the owner: "here I should have a resend email"): without
-                  it the answer names the key, which is better than a button that is not there. */}
-              {!member.firstSignedInAt && (
-                <Box component="form" action={resendStaffInviteAction}>
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="email" value={member.email} />
-                  <SubmitButton label={t("staff.resendInvite")} pendingLabel={t("staff.resendInvitePending")} variant="outlined" />
-                </Box>
-              )}
+              {/*
+                The four verbs, in the same ⋮ every other list uses (§256), each asking before
+                it acts — four bare buttons in a row asked nothing, and two of them end
+                somebody's access. On a phone the row was five stacked forms tall.
 
-              {/* The password, for somebody who has signed in before and cannot now (§171;
-                  the owner: "I can also deactivate, send password resets, etc"). Zitadel
-                  emails the link and owns the code; nothing here touches a password. Offered
-                  only once they have signed in at least once — before that the invitation
-                  above is the right email, and it sets the first password anyway. */}
-              {member.firstSignedInAt && (
-                <Box component="form" action={sendStaffPasswordResetAction}>
-                  <input type="hidden" name="uiLocale" value={locale} />
-                  <input type="hidden" name="email" value={member.email} />
-                  <SubmitButton label={t("staff.passwordReset")} pendingLabel={t("staff.passwordResetPending")} variant="outlined" />
-                </Box>
-              )}
+                The invitation again while they have not signed in (§123), offered whether or
+                not the key is set: without it the answer names the key, which is better than a
+                control that is not there. The password reset only once they *have* signed in —
+                before that the invitation is the right email and it sets the first password
+                anyway (§171). Zitadel sends both and owns the code; nothing here touches a
+                password.
 
-              {/* Two different verbs, and the difference matters (§171). "Retrage accesul"
-                  removes the allowlist row and is what stops the backoffice letting somebody
-                  in; this switches the account itself off at the provider, which outlives the
-                  row. An Administrator leaving the club usually wants both; somebody who
-                  changed job inside the club wants only the first. */}
-              <Box component="form" action={setStaffAccountActiveAction}>
+                The last two are different verbs, which is why both exist (§171): "retrage
+                accesul" removes the allowlist row, which is what stops the backoffice letting
+                somebody in, while switching the account off happens at the provider and
+                outlives the row.
+              */}
+              <form id={`invite-${member.id}`} action={resendStaffInviteAction} hidden>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="email" value={member.email} />
+              </form>
+              <form id={`password-${member.id}`} action={sendStaffPasswordResetAction} hidden>
+                <input type="hidden" name="uiLocale" value={locale} />
+                <input type="hidden" name="email" value={member.email} />
+              </form>
+              <form id={`deactivate-${member.id}`} action={setStaffAccountActiveAction} hidden>
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="email" value={member.email} />
                 <input type="hidden" name="active" value="0" />
-                <SubmitButton
-                  label={t("staff.deactivateAccount")}
-                  pendingLabel={t("staff.deactivateAccountPending")}
-                  color="warning"
-                  variant="outlined"
-                />
-              </Box>
-
-              <Box component="form" action={revokeStaffAction}>
+              </form>
+              <form id={`revoke-${member.id}`} action={revokeStaffAction} hidden>
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="staffUserId" value={member.id} />
-                <SubmitButton
-                  label={t("staff.revoke")}
-                  pendingLabel={t("staff.revokePending")}
-                  color="error"
-                  variant="outlined"
-                />
-              </Box>
+              </form>
+              <RowMenu
+                ariaLabel={t("staff.rowActions", { name: member.displayName })}
+                cancelLabel={t("confirm.cancel")}
+                items={[
+                  member.firstSignedInAt
+                    ? {
+                        kind: "submit" as const,
+                        label: t("staff.passwordReset"),
+                        icon: "invite" as const,
+                        formId: `password-${member.id}`,
+                        confirm: {
+                          title: t("staff.passwordResetTitle"),
+                          body: t("staff.passwordResetBody", { email: member.email }),
+                          confirmLabel: t("staff.passwordReset"),
+                        },
+                      }
+                    : {
+                        kind: "submit" as const,
+                        label: t("staff.resendInvite"),
+                        icon: "invite" as const,
+                        formId: `invite-${member.id}`,
+                        confirm: {
+                          title: t("staff.resendInviteTitle"),
+                          body: t("staff.resendInviteBody", { email: member.email }),
+                          confirmLabel: t("staff.resendInvite"),
+                        },
+                      },
+                  {
+                    kind: "submit" as const,
+                    label: t("staff.deactivateAccount"),
+                    icon: "revoke" as const,
+                    formId: `deactivate-${member.id}`,
+                    color: "warning" as const,
+                    confirm: {
+                      title: t("staff.deactivateAccountTitle"),
+                      body: t("staff.deactivateAccountBody", { name: member.displayName }),
+                      confirmLabel: t("staff.deactivateAccount"),
+                    },
+                  },
+                  {
+                    kind: "submit" as const,
+                    label: t("staff.revoke"),
+                    icon: "delete" as const,
+                    formId: `revoke-${member.id}`,
+                    color: "error" as const,
+                    confirm: {
+                      title: t("staff.revokeTitle"),
+                      body: t("staff.revokeBody", { name: member.displayName }),
+                      confirmLabel: t("staff.revoke"),
+                    },
+                  },
+                ]}
+              />
             </Stack>
           )
         }

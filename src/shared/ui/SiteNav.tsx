@@ -181,8 +181,11 @@ export default function SiteNav({
         // Tight on a phone: every pixel between the lockup and the language is a pixel of the
         // first section, which the owner wants on the row before the menu ("mobile first").
         gap: { xs: 0.5, sm: 2 },
-        // A step under the body size (§158): the sections are wayfinding, not reading.
-        fontSize: { xs: "0.9375rem", sm: "1rem" },
+        // A step under the body size (§158): the sections are wayfinding, not reading. Two
+        // steps under it on a phone (§262): 14 pixels instead of 15 is some fifteen pixels
+        // across three labels, and the row is measured — so those pixels are spent on whether
+        // "Contact" is on it or in the menu, not on making the words smaller for their own sake.
+        fontSize: { xs: "0.875rem", sm: "1rem" },
         flexWrap: "nowrap",
         minWidth: 0,
         position: "relative",

@@ -15,6 +15,7 @@ test.describe("BR-REQ-090-05 the to-do half of the task board", () => {
   test("counts the rows and narrows them by owner and by kind, together", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/tasks");
+    // §265: the checklist is the first panel, so a bare URL still opens on it.
     const main = page.locator("#main");
     const list = main.getByRole("list", { name: "Lista de sarcini" });
 

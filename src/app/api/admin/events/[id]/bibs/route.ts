@@ -18,11 +18,16 @@ import { isDomainError } from "@/shared/errors/domain-error";
 /**
  * The race numbers of one event as a printable sheet (BR-REQ-038-01).
  *
- * `GET /api/admin/events/<id>/bibs?locale=ro&from=1&to=50`. Administrator only — a bib carries
- * a participant's name, which is personal data the club holds for the event and nothing else
- * (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint or for the batch
- * confirmed after the first sheet; omitted, every assigned number. A GET that mutates nothing:
- * assigning numbers is the action on the event's page, and this only reads what it assigned.
+ * `GET /api/admin/events/<id>/bibs?locale=ro&from=1&to=50&only=unprinted`. Administrator only —
+ * a bib carries a participant's name, which is personal data the club holds for the event and
+ * nothing else (`AGENTS.md` §19.2). `from` and `to` bound the numbers printed, for a reprint;
+ * `only=unprinted` is the club's weekly job — the people who registered after the last sheet
+ * went to the printer (§264). Omitted, every assigned number.
+ *
+ * **A GET that mutates nothing**, which is why marking a batch printed is a separate press on the
+ * registrations list and not something this route does: the sheet has to be openable in a tab,
+ * saveable and openable again (`AGENTS.md` §12.8). Assigning numbers is the action on the event's
+ * page; this only reads what that assigned.
  */
 export async function GET(
   request: Request,
@@ -58,6 +63,8 @@ export async function GET(
   }
   // Two per page unless "one" is asked for; anything else is the default, not an error.
   const layout = url.searchParams.get("layout") === "one" ? ("one" as const) : ("two" as const);
+  // The only scope besides a range: the bibs nobody has printed yet (§264).
+  const only = url.searchParams.get("only") === "unprinted" ? ("unprinted" as const) : undefined;
 
   const db = getDb();
   const event = await findEventForBibs(db, id, locale);
@@ -66,7 +73,7 @@ export async function GET(
   const t = await getTranslations({ locale, namespace: "Admin" });
   const format = await getFormatter({ locale });
   const now = new Date();
-  const rows = await listBibs(db, id, { from, to });
+  const rows = await listBibs(db, id, { from, to, only });
 
   /*
     The club's own pictures, fetched here rather than inside the renderer (§249).
@@ -109,7 +116,7 @@ export async function GET(
     pictures: { header, sponsors },
   });
 
-  const suffix = `${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${layout === "one" ? "-one-per-page" : ""}`;
+  const suffix = `${from !== undefined || to !== undefined ? `-${from ?? 1}-${to ?? "end"}` : ""}${only ? "-unprinted" : ""}${layout === "one" ? "-one-per-page" : ""}`;
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {

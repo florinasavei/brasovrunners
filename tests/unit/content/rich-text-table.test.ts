@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   isRichTextEmpty,
   parseRichText,
-  readRichText,
   richTextToPlainText,
+  tableColumnFractions,
 } from "@/modules/content/rich-text/domain/schema";
 
 /**
@@ -45,14 +45,31 @@ describe("§196 a table in a body", () => {
     expect(first.attrs?.colspan).toBe(2);
   });
 
-  it("drops a pixel width chosen on somebody's laptop", () => {
-    // `colwidth` is not in the allowlist: this site's hard target is a 320-pixel column and the
-    // renderer decides widths. `readRichText` is the lenient path, so the node survives without it.
-    const withWidth = table(row({ ...cell("10:00"), attrs: { colspan: 1, colwidth: [480] } }));
-    const parsed = readRichText(withWidth);
-    const firstCell = (parsed.content?.[0] as { content: { content: { attrs?: Record<string, unknown> }[] }[] })
-      .content[0].content[0];
-    expect(firstCell.attrs).not.toHaveProperty("colwidth");
+  it("keeps a dragged column width, and reads it as a proportion (§271)", () => {
+    /*
+      This used to assert the opposite — a pixel width was dropped, because it is measured on
+      somebody's laptop and the hard target is a 320-pixel column. That reasoning still holds
+      for *pixels*, which is why nothing renders them: what survives is the ratio between the
+      columns, which is what dragging an edge actually says and what a `<colgroup>` of
+      percentages honours at any width.
+    */
+    const withWidth = table(
+      row({ ...cell("10:00"), attrs: { colspan: 1, colwidth: [480] } }, { ...cell("Start"), attrs: { colspan: 1, colwidth: [240] } }),
+    );
+    const parsed = parseRichText(withWidth);
+    const first = parsed.content?.[0] as {
+      content: { content: { attrs?: { colwidth?: number[]; colspan?: number } }[] }[];
+    };
+    expect(first.content[0].content[0].attrs?.colwidth).toEqual([480]);
+    // Two thirds and one third, whatever the screen is.
+    expect(tableColumnFractions(first.content)).toEqual([2 / 3, 1 / 3]);
+  });
+
+  it("has no proportions to honour when a column was never sized", () => {
+    const plain = parseRichText(table(row(cell("10:00"), cell("Start")))).content?.[0] as {
+      content: { content: { attrs?: { colwidth?: number[] } }[] }[];
+    };
+    expect(tableColumnFractions(plain.content)).toBeNull();
   });
 
   it("refuses a table inside a table", () => {

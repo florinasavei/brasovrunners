@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Panel from "@/shared/ui/Panel";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/routing";
 import { updateEmailPlanAction } from "@/app/[locale]/admin/emails/actions";
@@ -28,13 +29,7 @@ export default async function EmailPlanPanel({ locale, plan, volume }: Props) {
   const ceiling = (value: number | null) => (value === null ? unlimited : value.toLocaleString(locale === "ro" ? "ro-RO" : "en-GB"));
 
   return (
-    <Box component="section" sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}>
-      <Typography variant="h2" sx={{ fontSize: "1.1rem", mb: 0.5 }}>
-        {t("emails.plan.title")}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-        {t("emails.plan.intro")}
-      </Typography>
+    <Panel title={t("emails.plan.title")} intro={t("emails.plan.intro")}>
 
       {/* The counts first: a plan set wrong shows here before it shows on race day. */}
       <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -121,6 +116,6 @@ export default async function EmailPlanPanel({ locale, plan, volume }: Props) {
           </Box>
         </Stack>
       </Box>
-    </Box>
+    </Panel>
   );
 }

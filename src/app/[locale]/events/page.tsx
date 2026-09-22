@@ -28,14 +28,14 @@ import { DISCLOSURE_SUMMARY_SX } from "@/shared/ui/disclosure";
 import JsonLd from "@/shared/ui/JsonLd";
 import Wordmark from "@/shared/ui/Wordmark";
 import { EventListSkeleton, ListingLeadSkeleton } from "@/shared/ui/PublicSkeleton";
-import { findLatestPastEvent, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
+import { findLatestPastEvent, listPastEvents, listUpcomingEvents, type PublicEvent } from "@/modules/events/repository";
 
 import { EVENT_TYPES, type EventType } from "@/modules/events/domain/event-type";
 import { getPathname } from "@/i18n/navigation";
 import type { CalendarLayout } from "@/modules/events/ui/EventCalendar";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { liftOnHover, riseIn } from "@/theme/motion";
-import { headingRule } from "@/theme/surfaces";
+import { specialCard, headingRule } from "@/theme/surfaces";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -140,6 +140,13 @@ export default async function EventsPage({ params, searchParams }: Props) {
       <Suspense fallback={<EventListSkeleton label={t("loading")} />}>
         <ListingBody listing={listing} type={type} now={now} />
       </Suspense>
+
+      {/* What the club has already held, at the foot and folded (§267). Its own query and its
+          own boundary, so it costs the page nothing until it answers — and nothing at all
+          above it waits for it. */}
+      <Suspense fallback={null}>
+        <PastEvents locale={locale} now={now} type={type} hasUpcoming={listing.then((value) => value.hasUpcoming)} />
+      </Suspense>
     </Container>
   );
 }
@@ -205,6 +212,92 @@ async function ListingLead({
         </Stack>
       )}
     </>
+  );
+}
+
+/**
+ * How many finished events the foot of the listing carries (§267).
+ *
+ * A weekly run is fifty rows a year, so this is a window rather than an archive: twelve is
+ * about a season of Mondays, and the calendar — which shows any month of any year (§116) — is
+ * where the rest lives. The section says so in its own words rather than growing a pager.
+ */
+const PAST_EVENTS_SHOWN = 12;
+
+/**
+ * The events that have already happened, at the bottom, in their own category (§267).
+ *
+ * The owner: "old or closed events must be shown at the bottom on a different category". The
+ * listing is "what is on next" and that is right, but an event the club held was reachable only
+ * through the calendar's month view — so a runner looking for last month's race, or for the page
+ * with its photographs, had nowhere obvious to go.
+ *
+ * **Folded at every width, unlike the "other events" fold above it**, which opens from `sm` up
+ * (§78). That difference is the whole point: what is to come is what the page is for, and what
+ * is past is something a reader goes looking for. A closed `<details>` is also a section that
+ * costs a phone nothing to scroll past.
+ *
+ * Between seasons the lead already shows the club's last event with a notice (§167), so this
+ * section skips that one row: it would be the same card twice on one page.
+ */
+async function PastEvents({
+  locale,
+  now,
+  type,
+  hasUpcoming,
+}: {
+  locale: EventLocale;
+  now: Date;
+  /** The kind the filter above is showing (§272), or nothing for every kind. */
+  type?: EventType;
+  hasUpcoming: Promise<boolean>;
+}) {
+  const [rows, upcoming] = await Promise.all([
+    listPastEvents(getDb(), locale, now, PAST_EVENTS_SHOWN + 1, type),
+    hasUpcoming,
+  ]);
+  // The one the lead is already showing, when there is nothing to come (§167).
+  const events = upcoming ? rows : rows.slice(1);
+  if (events.length === 0) return null;
+
+  const t = await getTranslations("Events");
+  const tEvent = await getTranslations("Event");
+  // A repeated event is one card here too (§113) — "Happy Monday" is one line, not eleven.
+  const cards = groupSeries(events.slice(0, PAST_EVENTS_SHOWN));
+
+  return (
+    <Box component="details" data-testid="past-events" sx={{ mt: 4 }}>
+      <Typography
+        component="summary"
+        variant="h2"
+        sx={{ ...DISCLOSURE_SUMMARY_SX, fontSize: "1.25rem", mb: 0.5, listStyle: "revert" }}
+      >
+        {type ? t("pastCountOfType", { count: cards.length, type: tEvent(`type.${type}`) }) : t("pastCount", { count: cards.length })}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        {t("pastHelp")}
+      </Typography>
+      <Box
+        component="ul"
+        sx={{
+          listStyle: "none",
+          p: 0,
+          m: 0,
+          display: "grid",
+          gap: 1.5,
+          gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
+          alignItems: "start",
+        }}
+      >
+        {cards.map((series, index) =>
+          series.members.length > 1 ? (
+            <SeriesCard key={series.key} members={series.members} index={index} now={now} />
+          ) : (
+            <EventCard key={series.key} event={series.members[0]} index={index} now={now} />
+          ),
+        )}
+      </Box>
+    </Box>
   );
 }
 
@@ -326,7 +419,12 @@ async function EventCard({
 }) {
   const tEvent = await getTranslations("Event");
   return (
-    <Card component="li" variant="outlined" sx={{ ...liftOnHover, ...riseIn(index) }}>
+    <Card
+      component="li"
+      variant="outlined"
+      /* An event the club marked special wears it on the whole card (§272), not only as a chip. */
+      sx={{ ...liftOnHover, ...riseIn(index), ...(event.isSpecial ? specialCard : {}) }}
+    >
       <CardLink href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
         <CardContent>
           <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", gap: 1, alignItems: "center" }}>

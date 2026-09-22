@@ -10,6 +10,7 @@ import { ERROR_SUMMARY_ID } from "@/modules/registrations/form-errors";
 import { readRegistrationForm } from "@/modules/registrations/form-mapping";
 import { assertEmailTypedTwice } from "@/modules/registrations/fields";
 import { submitRegistration } from "@/modules/registrations/service";
+import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD, verifyTurnstile } from "@/modules/registrations/turnstile";
 import { headers } from "next/headers";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -53,7 +54,9 @@ export async function submitRegistrationAction(form: FormData): Promise<void> {
   */
   const requestHeaders = await headers();
   const remoteIp = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-  const verdict = await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp);
+  const verdict = (await botCheckIsOn(getDb(), new Date()))
+    ? await verifyTurnstile(String(form.get(TURNSTILE_FIELD) ?? ""), remoteIp)
+    : "not_configured";
   if (verdict === "unavailable") {
     console.warn("[turnstile] unavailable, registration accepted on the other defences", { slug });
   }

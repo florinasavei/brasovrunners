@@ -11033,3 +11033,722 @@ has an entry there and a line in `tests/unit/staff/roles.test.ts`, which asserts
 is offered every section the role below it is.
 
 Baseline `BR-V1.43-2026-09-21`.
+
+## 254. Decided — the anti-bot check is a switch, not a deployment (2026-09-21)
+
+**Context.** The owner: "I wanna be able to enable/disable the captcha from the backoffice."
+
+Turnstile has been behind `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` since §97, so turning
+it off meant editing two Vercel projects and waiting for a build. The day that is needed is the
+day the widget is refusing real people — which happened on 2026-09-21, twice, to Dani (§216) —
+and on that day a deployment is the wrong unit of response.
+
+**Decision.** *One stored flag, `platform_settings.botCheck`, default **on**.* A missing row does
+not remove a defence, and a database that cannot be reached answers "on": a form that refused to
+render because a settings table was unavailable would fail the one thing this site exists to do,
+and a challenge is the safe side of that failure.
+
+*Off means what "no keys" already meant.* The widget is not rendered and no token is verified —
+the same path a deployment without keys takes, which is code that already existed and is already
+tested. Nothing new had to be taught about refusing or accepting.
+
+*The quieter defences are untouched.* The honeypot, the timing check and the per-address throttle
+(§19.4) cost a visitor nothing and stay on whatever this says. The panel says so, because
+"switch off the captcha" should not read as "switch off the door".
+
+*One function, four callers.* `activeBotCheckSiteKey` for the two forms and `botCheckIsOn` for
+their two actions, memoized for half a minute and dropped the moment the switch moves. A switch
+that half the entry points ignored would be worse than none — the club would believe the check
+was off while the registration form still refused people — so a test asserts all four read it.
+
+*Administrator only, audited both ways.* The same gate as the Mailgun plan (§100) and the club's
+copies (§244); the trail records the direction, because turning a defence off is exactly the
+decision a trail is for.
+
+*It lives on `/admin/tasks`.* That page already carried the row that says whether the check is
+configured, and that row now reads "done" only when the check is configured **and** on — a task
+board that called it done while it was off would be lying about a defence.
+
+Tests: `tests/integration/registrations/bot-check.test.ts` — the default, the switch, the role,
+the audit row, and that all four entry points consult it.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 255. Decided — the tab says how many are signed up, for about one query a minute (2026-09-21)
+
+**Context.** The owner, of the backoffice navigation: "can I see a counter of registered people
+here? but DB efficiently! please note we use a light DB."
+
+I had declined exactly this an hour earlier — a badge in the shell is a query on every
+backoffice page, including the pages that are about something else — and he asked for it with
+the cost named. So the answer is the badge *and* the arithmetic that makes it cheap.
+
+**Decision.** *A memo with a minute's life.* One indexed count, kept for sixty seconds in the
+process. An evening of backoffice work costs a handful of queries instead of several hundred,
+which is the difference that matters on Neon's free plan — it bills compute time (§68). The
+badge may be a minute stale; the list itself is always exact, and nobody reads a tab that way.
+
+*Only for the roles that may open the list*, so for everybody else there is no query at all.
+
+*What it counts is what a club means by "signed up"*: active registrations — waiting for an
+email, waiting to sign, offered a place, on the waiting list, confirmed — of real people, on
+events that have not started. Cancellations are gone, last month's race is history, and a test
+registration is never inside a number the club is given (§12.6).
+
+*The figure is part of the label rather than a badge element.* A badge is absolutely positioned
+and would sit over the tab's own underline at 320 pixels; "Înscrieri 42" is what somebody wants
+to read.
+
+*A failure means no badge.* The shell renders on every backoffice page, including the ones whose
+purpose is to work when something is broken — `/admin/tasks`, `/devs`. A count is not worth a
+500, so an unreachable database renders the tab exactly as it did before this existed.
+
+Tests: `tests/integration/registrations/nav-count.test.ts` — what is counted, what is left out,
+and that the memo answers instead of the database.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 256. Decided — every list has the same verbs in the same place (2026-09-21)
+
+**Context.** The owner: "I wanna be able to do CRUDs everywhere, and have more consistency!"
+
+The audit was the surprise: the verbs were **all there already**. Events, pages, albums, photos,
+staff and registrations each had create, save and delete in their services and their actions.
+What differed was the shape a club member meets:
+
+- the **events** list had a ⋮ with confirmations (§118);
+- the **pages** list had two position arrows and no verbs at all — editing meant opening the
+  row, publishing meant opening it too, deleting meant finding the button inside it;
+- the **albums** list had nothing in the row;
+- the **staff** list had five controls in one row, stacked on a phone, and two of them —
+  "dezactivează contul" and "retrage accesul" — fired on a single press with no question;
+- the **pictures** list had one verb with a proper confirmation.
+
+**Decision.** *One rule, three shapes.* Every list is an `AdminTable`. A row with two or more
+verbs puts them in one shared ⋮ (`shared/ui/RowMenu`, moved out of the events module and given
+the glyphs the other lists need). A row with exactly one verb keeps it as a button that
+confirms — a menu for a single action is a press for nothing. And anything destructive asks,
+wherever it lives.
+
+*So:* pages gained edit, publish/unpublish and delete in the row; albums the same; staff moved
+its four verbs into the menu and each now asks, which is the part that matters — a
+single-press "take their access away" in a table is a mis-tap away from locking somebody out.
+The role select stays inline on the staff row, because a role is a value rather than a verb.
+
+*Two list rows grew a version column* (`pages`, `gallery_albums`) so the list can publish
+without opening the row: the transition already refused a stale version, and that guard is what
+keeps two open tabs from fighting.
+
+**What was not done, deliberately.** No new verbs. "CRUD everywhere" was a request about reach,
+and the reach was there; inventing a verb nobody asked for — a bulk delete on pages, say — would
+be a new rule rather than a consistent surface for the rules that exist.
+
+Tests: `tests/unit/staff/admin-lists.test.ts` — every list an `AdminTable`, the ⋮ wherever a row
+has more than one verb, a confirming button where it has one, and no destructive verb on a plain
+button.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 257. Decided — a tooltip with a list in it puts each item on its own line (2026-09-21)
+
+**Context.** "Unde a ajuns" on a registration row explains six states in one tooltip, and the
+legend arrived as one paragraph of dashes: the owner, looking at it — "acest tooltip ar trebui sa
+aiba liniute una sub alta". A legend read as prose is not a legend.
+
+**Decision.** The tooltip renders `pre-line` at a 360-pixel ceiling, and the strings carry their
+own line breaks (`\n– ` per item). No list markup inside a tooltip: MUI's tooltip is a single
+text node by design, and the alternative is a popover with a focus trap for six words a line.
+
+*So:* `shared/ui/InfoTip` sets `whiteSpace: "pre-line"` and `maxWidth: 360` on the tooltip slot,
+once, and every legend on the platform gets it. The bounded width is the part that is not
+cosmetic — a tooltip as wide as a desktop is unreadable whatever the line breaks say.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 258. Decided — the picture's panel in the editor can be closed, and stays next to its picture (2026-09-21)
+
+**Context.** Selecting a picture in the rich-text editor opens a panel — the crop box, the width,
+the side, the caption, remove. Two complaints, one screen apart: "editorul de poze ramane
+floaiting ind reapta random" and "ar trebui sa pot anula sau inchide pur si simplu".
+
+Both came from the same root: the panel's only open/closed state was Tiptap's own selection. It
+had no way out that did not also deselect the picture the organizer was working on, and its
+`Popper` had one overflow modifier, so a picture near the right edge pushed the panel over the
+header and the navigation.
+
+**Decision.** *Closing is a dismissal, not a deselection.* The panel remembers the document
+position it was dismissed at; pressing the same picture again opens it, moving to another picture
+opens that one's. An ✕ with a heading, and Escape — which is what somebody nudging the crop box
+with the arrow keys will reach for.
+
+*Anchoring is three Popper modifiers and nothing clever:* `offset` for eight pixels of air so it
+reads as attached rather than part of the picture, `flip` to go above when there is no room
+below, and `preventOverflow` with `boundary: "clippingParents"` so it is kept inside the writing
+area instead of the viewport. A `maxHeight` of `calc(100vh - 32px)` with its own scroll, because
+the panel is taller than a laptop once the crop box is in it.
+
+"Gata" stays and is a different verb: it moves the caret past the picture so typing continues
+after it.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 259. Decided — every editor shows the two languages as tabs (2026-09-21)
+
+**Context.** The owner: "in pagina de eveniment pot vedea continutul biling unul sub altul, pe
+alte eveniment eil vad in tabs, hai sa fim consistenti!". The event editor has had a tab per
+language since §170. The standing-pages editor and the album editor stacked them, and argued for
+it in a comment: a page carries four fields, and both languages at once makes "the English one is
+empty" obvious *before* publication is refused.
+
+**Decision.** Tabs everywhere. The argument stopped being true when a page's body became a
+rich-text editor — two editors stacked is two screens of scrolling to reach the English title —
+and the incompleteness it protected is caught twice over anyway: by the publish rule
+(`AGENTS.md` §11.2) and by the "incomplet" mark the tab itself carries.
+
+*So:* `LocaleTabPanels` moved from the events module to `shared/ui`, unchanged, because the
+thing that makes it safe is already in it: **the hidden panel stays in the form.** A panel that
+unmounted on a tab change would post nothing for that language and the save would write empty
+strings over somebody's English text. With JavaScript off the first tab shows and the rest are
+unreachable — a degradation, not a data loss, since every hidden field still carries its
+`defaultValue`.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 260. Decided — the summary comes first, both descriptions fold, and a card's picture keeps its shape (2026-09-21)
+
+**Context.** Three messages about the same panel. "de asemenea partea de rezumat si descoere
+completa trebuie sa gie in acordeoane colapsabile", then the reason for the order — "si prima
+oara vad rezumat, apoi descriere full, asta e flow-ul logic" — and then, about the picture inside
+the summary, "cumva editorul nu e perfect, imainea arata diferit in card preview fata de cum e in
+editor" and "practic pe card au o inaltime fixa, ceea ce e cam gresit".
+
+§170 had decided the other order: the description first, "because it is what the writer came here
+to write", with the summary under it. The cost was a language panel two screens tall with two
+Tiptap instances mounted before anybody typed a character, and a *required* field sitting below
+the description that kept being left empty.
+
+**Decision.** *The panel is the visitor's order.* Title, summary, full description, rules,
+programme, what to bring, then the folded search-engine fields. The card, the hero and every
+share carry the summary; the description is what somebody reads after deciding to look.
+
+*Every long text is a fold.* Both descriptions are `LazyRichTextEditor` now, like the rules and
+the programme: the editor mounts when the section is opened, and until then the stored document
+rides in a hidden field — so a save that never opened a section never changes it. Ten Tiptap
+instances across two languages became none until asked for.
+
+*The emptiness §170 was worried about is answered on the closed fold*, not by the save: the
+summary's fold says "obligatoriu înainte de publicare" while it is empty, which is earlier than
+the refusal ever was.
+
+*A picture on a listing card has the shape it has.* The card capped every picture at 180 pixels
+and cut the rest from the centre — a crop nobody asked for, nobody could see, and which is why
+the editor and the card disagreed. It is gone: `height: auto` and no ceiling. The organizer's own
+crop box (§241) is where a portrait photograph becomes a band, and that is a choice made while it
+can be seen. The two card rules that remain are about the *column* — a figure takes the whole card
+whatever share of a page's column it was given, and a float goes back into the flow — because a
+card has one narrow column and no side.
+
+Tests: `tests/unit/content/editor-order.test.ts` (the order, four folds, no eager editor, the
+required hint in both languages) and `tests/unit/events/card-excerpt.test.ts` (no fixed
+measurement left in either direction).
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 261. Decided — a tooltip only where the row cannot show the words itself (2026-09-21)
+
+**Context.** The owner, on the calendar's list view: "pe calendar tooltipurile nu ar trebui să
+apară pe list view, sunt destul de enervante" — with a screenshot of a tooltip lying across two
+agenda rows, repeating the line underneath it word for word.
+
+**Decision.** `CalendarEventChip` keeps its tooltip in the month grid and drops it everywhere
+else. In a grid column some 40 pixels wide the chip is a stack of glyphs over a time and the
+title is cut or not drawn at all, so the tooltip is the only place the title exists. An agenda
+row carries the whole sentence, and `enterTouchDelay={0}` — right for a grid, where a tap is how
+a phone reads a chip — made the repetition pop up on every tap there.
+
+The link's `aria-label` is the whole sentence in both cases, so nothing is lost for a screen
+reader where the tooltip is gone.
+
+*The general rule, worth stating once:* a tooltip is for what does not fit, never a second copy
+of what does. §257 is the same rule about a tooltip's shape; this is about whether it should
+exist at all.
+
+Tests: `tests/unit/events/calendar.test.ts` — the dense case keeps the tooltip, the agenda case
+returns before it, and the accessible name is on the link either way.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 262. Decided — the phone's header row carries all three sections; the language moves to the bottom bar (2026-09-21)
+
+**Context.** The owner, with a screenshot of his own phone: "ar putea oare încăpea 'evenimente,
+calendar, contact' în toolbarul de sus pe mobil? ar fi fain să le avem pe toate, eventual mutăm
+selectorul de limbi în dreapta jos?" The row showed Evenimente and Calendar; Contact was in the ☰.
+
+The row is measured rather than broken at a breakpoint (2026-09-17), so this was never a rule to
+change — it was a width to find. At 393 pixels the container is 361 of which the lockup takes 63
+and the stacked RO/EN switcher 46.
+
+**Decision.** *The language switcher is the header's on a desktop and the footer's on a phone.*
+It goes in the bottom-right corner of the bar whose bottom-left corner already holds the scheme
+switch (§115), positioned on the bar for the same reason the social marks are — the line belongs
+to the `<summary>`, and a flex row cannot put a sibling between a summary and its panel. The
+build badge is `static` on a phone, so nothing else wants that corner at that width.
+
+*Two instances, one announced.* The header's copy is `display: none` below `sm` and the footer's
+above it, which keeps each in the tree exactly where it is drawn — so a screen reader finds one
+"Limbă" navigation at every width, and no page has two ways to change the language.
+
+*The sections' words are 14 pixels on a phone* rather than 15 (§158 set the step). Fifteen pixels
+across three labels, spent on whether "Contact" is on the row.
+
+*What did not change:* the lockup's size — 30 pixels tall on a phone is already the floor at which
+the club's own lettering inside it still reads (§158) — and the folding itself, which still decides
+from measurement. At 320 pixels three sections genuinely do not fit and the ☰ is the right answer.
+
+Tests: `tests/e2e/header-nav.spec.ts` — the three sections visible on the row at 393, nothing
+overflowing sideways at 320, and exactly one language switcher, in the footer on a phone and in
+the header on a desktop.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 263. Decided — a table says how it is drawn, and the editor draws it that way (2026-09-21)
+
+**Context.** The owner, twice. First "tabelele arată strange", and then the ask: "la tabele ar
+trebui să pot alege border and stuff, ca să pot folosi tabelele și ca și layout, și să pot centra
+info în ele".
+
+Two separate things were wrong. **The editor had no table rules at all** — the page drew a full
+grid with a shaded header row, the writing area drew whatever a browser does with an unstyled
+`<table>`, which is nothing — so a table was arranged against one drawing and published as
+another. And a table could only ever be a grid, which is why using one to lay two columns of text
+side by side looked like a spreadsheet somebody had left in the page.
+
+**Decision.** *Two attributes on the table node, and one description of the drawing.*
+
+- `borders`: `all` (the grid every table already has), `rows` (horizontal rules only — what a
+  price list or a printed timetable wants), or `none` (no lines, which is what makes a table
+  usable as a layout). In `none` the header row keeps its weight and loses its shading: bold is a
+  heading, shaded is a table's chrome.
+- `valign`: `top` as before, or `middle`.
+
+*Horizontal centring needed nothing.* A cell holds paragraphs and a paragraph has carried its own
+alignment since §213, so the toolbar's centre button already centres a cell's words — and finding
+that out was cheaper than adding a second alignment that would have fought it.
+
+*`table-layout.ts` is the one description*, the way `image-layout.ts` is for a picture: the page
+takes an `sx` from it, and the editor takes a block of rules keyed on `data-borders` /
+`data-valign`, which is how a ProseMirror node carries a choice into CSS. A borderless table gets
+a dashed outline **in the editor only**, because a writer still has to see where the cells are.
+
+*The default writes nothing.* `all` and `top` emit no attribute, so a table stored before today
+parses to exactly itself — no migration, and the golden-string tests stay green. The editor's
+`parseHTML` validates rather than trusting, because an unknown word would become an attribute the
+server's allowlist then refuses, which is a save that fails for a reason nobody can see.
+
+*Three controls, and they only appear inside a table* (§196's rule): one that cycles the borders
+and is **named after the state it is in** ("Linii: doar orizontale (apasă pentru niciuna)"), one
+for the vertical middle, and Tiptap's own header-row toggle — a layout table has no header row,
+and a table that grew one by accident had no way to lose it.
+
+*Also, since it was the same complaint:* the pages and album editors called English "Engleză"
+while the event editor called it "English". One name now, the language's own, from `Site` (§259).
+
+Tests: `tests/unit/content/rich-text-tables.test.ts` (the allowlist, the defaults, each variant's
+rules, and that the page has no rules of its own) and `tests/e2e/rich-text-tables.spec.ts` — a
+table drawn in the editor, restyled, saved, published, and the computed border width of a real
+cell read back as zero.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 264. Decided — the bibs are downloaded in batches from the registrations list, and the club marks them printed (2026-09-21)
+
+**Context.** The owner: "ar trebui să pot descărca BID-urile din pagina de înscrieri ca și batch!
+și să pot marca 'BID printat'". The sheet existed — `/api/admin/events/<id>/bibs`, with a preview
+page of its own since §180 — but only from the event's own screen, and it had no memory. Numbers
+arrive in waves: somebody registers on Thursday, the sheet went to the printer on Wednesday. The
+club's only choices were reprinting everything or remembering.
+
+**Decision.** *One column and one scope.*
+
+- `registrations.bib_printed_at` — **a timestamp, not a flag**, because "when" answers what a
+  flag cannot: a bib printed before the design changed has to be printed again.
+- `only=unprinted` on the sheet route, and `countBibs` for the two numbers the list shows. The
+  scope is one `WHERE` used by the list, the count and the marking, so they cannot drift apart.
+
+*The mark is its own press, beside the download and not inside it.* The sheet is a `GET` so it can
+be opened in a tab, saved, mailed to whoever has the printer and opened again — and a GET does not
+mutate (`AGENTS.md` §12.8). It is also honest: a PDF that downloaded is not a bib that printed,
+and only the club knows whether the printer had paper.
+
+*Marking is idempotent over the scope.* A row already marked keeps the timestamp it had, so a
+second press does not rewrite when the first batch went out — which is the fact that distinguishes
+"printed with Wednesday's sheet" from "printed just now". One audit row per batch, naming the
+event, the scope and the count and **no participant**: a printing record is not a record of who
+was printed (§67's rule about what an audit row may carry).
+
+*On the registrations list*, because that is the screen the club works from on race week: how many
+of the event's bibs are printed, a button for the unprinted batch, one for all of them, and the
+mark. Only with a single event selected — "all events" has no sheet — and only when it has numbers.
+
+*On the row*, a green tick beside a settled number with the date in its title, and the verb in the
+⋮ to mark one printed or not, which is the reprint of a single creased bib. Never on a provisional
+number (§214): that one is printed nowhere by design.
+
+*Who:* whoever may manage registrations, asserted in the service — the sheet is already
+Administrator-only, and the record of having printed it is the same information.
+
+Tests: `tests/integration/registrations/bibs-printed.test.ts` (the unprinted scope, the
+idempotence with two dated batches, the single-bib mark, the refusals, the role) and
+`tests/unit/registrations/row-verbs.test.ts` (offered only with a settled number, one direction
+at a time, before erase).
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 265. Decided — the configuration screens are panels, not one scroll (2026-09-21)
+
+**Context.** The owner: "partea de configurare ar trebui să aibă subtaburi, pt status, general,
+mailuri, captcha, etc". Two screens had each grown to six or seven sections on one scroll —
+`/devs` is six hundred lines, `/admin/tasks` seven hundred — so "where do I turn the anti-bot
+check off" meant scrolling past Neon's compute hours or the price of every service the club uses.
+
+**Decision.** *A `?panel=` query and a row of sub-tabs, on both screens.*
+
+- `/devs`: **status** (the verdict, the schema and the jobs, Neon's month, Vercel's month, what
+  each limit does, the runtime), **general** (which variables are present — never a value, §8 —
+  the rate limits, what each setting can be, who may do what), **email** (today's volume against
+  the plan, and what was captured locally).
+- `/admin/tasks`: **todo** (what is owed, its filters, the open decisions), **botCheck** (the one
+  switch that lives here, §254), **costs** (what the club pays and what the next thing costs).
+
+*A query parameter rather than a route each.* Every panel needs the same session and the same
+reading of the system — `/devs` maps `env` to booleans before it renders anything, which is the
+last code in the repository worth duplicating — so three routes would be three copies of one
+page's head. Anything unknown in `panel` reads as the first panel, never as an empty screen.
+
+*The two screens name each other.* `/devs` offers "Anti-robot", which is the club's switch on the
+other screen; the to-do screen offers "Sistem", when the reader's role may see it. They are two
+halves of one question the club asks together, and a sub-tab that crosses a route is cheaper than
+moving a control away from the people who need it.
+
+*`shared/ui/SubNav`* is a Server Component of plain anchors — the same decision `GallerySubNav`
+records: `AdminTabs` is a client island only because a layout cannot know which page it wraps,
+and a page always knows which panel it is showing. So this works with JavaScript off, and the
+current panel carries `aria-current="page"` rather than colour alone.
+
+Tests: `tests/e2e/config-panels.spec.ts` — each panel shows its own sections and not the others,
+a bare URL opens the first, a nonsense panel falls back, and the cross-screen sub-tab lands on the
+switch. `tests/e2e/tasks-cost.spec.ts` now opens the costs panel by its URL.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 266. Decided — a film in the text is a figure, sized like a picture (2026-09-22)
+
+**Context.** The owner: "that YouTube video must be embedded and resizable, not as a separate
+section". §110 put a film in the editorial body behind a closed disclosure with a bordered frame
+and a play line above it — which is a *section*, always the full width of the column, whatever
+the organizer wanted, because the node had no width to choose.
+
+**Decision.** *The film takes the picture's two attributes and the picture's own geometry.*
+`widthPercent` (100 / 75 / 50 / 33) and `align` (block / left / right), the same closed sets, read
+through the same defaults, and drawn by the same function — `imageFigureSx`. So a film beside a
+paragraph behaves exactly as a photograph beside one, down to becoming a full-width band below
+`sm`, and choosing a side from a full-width film halves it in the same transaction, which is the
+picture's rule (§193).
+
+*What did not change is the part that carries trust:* nothing is fetched from Google until the
+reader presses. The privacy notice says so ("YouTube, loaded when you press"), so the player is
+still a native `<details>` with a lazy iframe inside it — a closed disclosure keeps the iframe
+out of the viewport, so there is no request, no cookie, no script on load.
+
+*What changed is that the summary **is** the player's frame*: a 16:9 rectangle in the event's ink
+with a ▶ in the middle, and opening it hides the summary so the film fills exactly the box the
+poster filled. No border, no heading line, no thumbnail from `i.ytimg.com` — that last one would
+be the very request this shape exists to avoid. The editor keeps its thumbnail, where the request
+is the organizer's own doing (§110), and draws the film at the chosen width, because a film sized
+to half the column and shown full-width in the editor is the editor lying (§263's lesson).
+
+The notice under the frame is a caption now rather than a panel, joined to the organizer's own
+caption by a middle dot: it still says what pressing will load.
+
+Tests: `tests/unit/content/rich-text.test.ts` — the two attributes survive the allowlist, the
+defaults are filled as a picture's are, and anything outside the closed sets is refused.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 267. Decided — the events already held are a section at the foot of the listing (2026-09-22)
+
+**Context.** The owner: "old or closed events must be shown at the bottom on a different
+category". The listing shows what is still to come and nothing else (§167 added one exception:
+between seasons it leads with the club's last event so the page is not blank). Everything the
+club has held was therefore reachable only through the calendar's month view — so somebody
+looking for last month's race, or for the page with its photographs, had nowhere obvious to go.
+
+**Decision.** *A section of its own, at the foot, folded at every width.*
+
+`listPastEvents` is the query — finished, newest first, a limit — and the newest-first order is
+the point: the page above asks "what is next", this asks "what did we just do". Races do not come
+first here, unlike the listing proper; once an event is over its kind no longer ranks it.
+
+*Folded at every width*, unlike the "other events" fold above it, which opens from `sm` up (§78).
+The difference is the meaning: what is to come is what the page is for, and what is past is
+something a reader goes looking for. A closed `<details>` also costs a phone nothing to scroll by.
+
+*Twelve, and the calendar for the rest.* A weekly run is fifty rows a year, so the section is a
+window rather than an archive, and its own line says where the rest lives (§107, §116) instead of
+growing a pager nobody would page through.
+
+*Its own `<Suspense>` boundary and its own query*, so nothing above it waits for it — the lead
+and the list keep the two-query page they had (§166). Between seasons it skips the one row the
+lead is already showing, which would otherwise be the same card twice on one page.
+
+Tests: `tests/integration/events/publication.test.ts` — finished only, newest first, and never
+more rows than asked for.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 268. Decided — which language a message is previewed in is a tab, and the tab row has no bare words (2026-09-22)
+
+**Context.** Two things the owner saw on one screen this morning. On `/admin/emails`, "Română
+English" under the intro: two underlined words in a row, the current one told apart by being
+bold. "These need to be tabs." And on the backoffice tab row itself, "Emailuri" was the one
+entry with no glyph in a row of eleven, and the registration count sat in the label in the same
+ink as the word — "I am missing the icons for the email … for the registries I need a different
+color for the number".
+
+**Decision.** *The language switch is `SubNav`*, the row §265 already uses for a panel switch
+inside a section. Two of them now exist for the same job, so there is one control for "which
+view of this page am I looking at" rather than a different one per screen. It stays anchors
+rendered on the server, so the preview still works with JavaScript off, and the current tab is
+`aria-current="page"` rather than bold alone — colour or weight by itself is the signal
+BR-REQ-041-01 refuses.
+
+*The icon record is keyed by `AdminSection`.* The missing glyph was not an oversight anybody
+could have caught by reading: `Record<string, …>` accepts a table with a section missing, and
+the tab then renders as a plain word. Keying it by the union makes the next section added
+without a glyph a build failure. Eleven glyphs, one file each, as before.
+
+*The count is the club's secondary colour on a filled pill*, inside the label rather than a
+`<Badge>` — §255's reasoning stands, because a badge is positioned over the tab's own underline
+at 320 pixels. Orange under dark ink is the one accent pair `theme.ts` keeps identical in both
+schemes, so the pill needs no dark variant and clears AA on either.
+
+**Consequences.** `AdminTabs.tsx` (the `AdminSection` key, `ForwardToInboxIcon`, the pill),
+`admin/emails/page.tsx` (`SubNav` in place of the two `Link`s).
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 269. Decided — a backoffice screen is boxes, and the ones that are not today's work fold (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "overall I want the admin area to have more boxes and
+collapsables." The registrations screen is the case for it. Between the heading and the table
+sat a bib toolbar, a counter strip, an outbox line and eight filter fields, separated by nothing
+but vertical space — about a screen and a half of controls, most of them read once a week,
+above the list that is read every time. The configuration screens got sub-tabs for the same
+problem (§265); the screens that are one section each needed the smaller move.
+
+**Decision.** *One component, `shared/ui/Panel`.* A bordered section with a heading, an
+optional line saying what it is for, and an optional **aside** — a figure that stays visible
+while the panel is shut, because a closed fold that says nothing is a fold nobody opens. With
+`collapsible` it is a `<details>`; without it, the same box the panels on `/admin/emails`
+had each been drawing by hand.
+
+*A `<details>`, never client state.* The backoffice works with JavaScript off, and a panel
+whose open state lived in React is a panel that does not open before hydration — on the screens
+a volunteer opens on a phone at the desk, where §68's note about hydration windows was written.
+`DISCLOSURE_SUMMARY_SX` (§164) is what makes the summary read as a control, and it carries the
+44-pixel target. The summary is never `display: flex`: Chrome and Safari drop the marker when
+it is.
+
+*What folds is decided by whether it is today's work, and it opens itself when it is.* The bib
+panel opens when something is unprinted; the outbox when something is waiting; the filters when
+the list is actually narrowed, so nobody loses a filter behind a fold they cannot see; the
+invitation form on Echipa folds but starts open, for the accessibility reason below. The
+counter strip does not fold at all — it is what the screen is for.
+
+*The heading is a real `h2`, inside the `<summary>`.* A screen reader's heading list is how
+somebody skips to a section, and a folded section that is not in it cannot be skipped to.
+
+*Two things the e2e suite caught, and both are the rule now.* A panel that holds a form
+**starts open**: a closed `<details>` is not in the accessibility tree at all, so the contact
+recipients were a heading no screen reader and no test could find. And the heading goes *inside*
+the summary rather than being a summary with a heading's typography — `component="summary"` with
+`variant="h2"` styles the text and carries no heading role at all, which takes the section out of
+the list a screen reader navigates by. What may start closed is what is read rather than acted
+on, and only when there is nothing in it to act on: the outbox queue with nothing waiting.
+
+**Consequences.** `shared/ui/Panel.tsx`; the registrations list (bibs, the counter strip, the
+outbox, the filters); `EmailPlanPanel`, `OutboxQueuePanel`, `ClubNoticesPanel` and
+`ContactRecipientsPanel`, which now draw no frame of their own — the plan stays open, the other
+three fold; the invitation form on `/admin/staff`. Four message keys under `Admin.panels`,
+plus `registrations.filtersInUse` and `outbox.waitingShort` for the asides.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 270. Decided — the club writes an email in the same editor it writes a page, minus what an inbox cannot draw (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "the email template editors must also be rich text." §247
+gave the club the subject and the paragraphs of every message, as one textarea with a blank line
+between paragraphs. What it could not write was the thing a club actually wants in an email: a
+bold line, a link to the event, a list of what to bring.
+
+**Decision.** *The same editor, a narrower vocabulary.* `RichTextEditor` is mounted on the copy
+panel with a new `features` prop, and the email body allows paragraphs, two heading levels, the
+two lists, a quote, bold, italic, links and alignment. **A picture, a film and a table are
+refused**, each for its own reason rather than for tidiness: a picture in an email is a request
+to a server the moment it is opened, which is the tracking pixel every client blocks by default;
+a film cannot play in an inbox at all; a table is how a mail client lays out a whole message and
+the hard target is a 320-pixel phone. `features` hides the buttons; the **server** is what
+refuses the nodes, whatever a browser posts.
+
+*Its own renderer, not the page's.* `RichText.tsx` emits MUI `sx`, which is classes in a
+stylesheet, and a stylesheet is what Gmail and Outlook drop. `domain/email-rich-text.ts` writes
+the same inline `style` attributes `templates.ts` already writes by hand, so a paragraph the
+club wrote and a paragraph the platform ships are the same paragraph on the screen.
+
+*Both halves of a message come from one document.* A message is HTML and plain text, and the
+plain half is still built from `paragraphs` — which is now **derived from the document at save
+time** rather than typed separately. A club that edited the formatted words and left a stale
+textarea behind would otherwise have sent one wording to a reading client and another to a plain
+one. An `EmailBodyPart` carries the two halves of one block together, because the platform's own
+sentences ("you are already registered", "this number is provisional") sit among the club's
+paragraphs and are plain strings.
+
+*A mark may only wrap text that is already escaped*, which is the order §189 established for the
+`**bold**` markers, and a link's `href` was checked against the safe-protocol rule when the
+document was stored.
+
+*Nothing breaks on the way in or out.* `body` is optional on the stored entry: every entry
+written before today has none and reads exactly as it did. A document that cannot be parsed —
+an older browser posting the textarea, a node an email may not carry — falls back to the plain
+paragraphs beside it, the same direction `readEmailCopy` takes with an unreadable setting. A
+message still goes out.
+
+Tests: `tests/unit/notifications/email-rich-text.test.ts` — the three refusals, inline styles and
+no classes, escaping before marks, placeholders filled in the message and kept in the store, both
+halves of a list agreeing, and the club's bold line arriving in a rendered message.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 271. Decided — a table is a layout tool: columns are dragged, the lines and the header are coloured, and the editor shows where the cells are (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "tabelele ar trebui să fie mai smart, resizable și să pot
+seta culoarea borderului și headerelor, ca să pot face layout din tabele … practic am nevoie să
+pun căsuțe în text ca să împart text și poze în stânga și în dreapta, cumva e deja posibil dar
+nu am separatoarele clare." And, separately: "in the editor I want lines visible for layout but
+I also want a preview in a pop-up." §263 gave a table three border choices, one of which is
+"none" precisely so a table can be a layout. What it did not give was the two things a layout
+actually needs — column proportions and a way to see the cells while filling them.
+
+**Decision, four parts.**
+
+*Columns are dragged, and what is stored is a proportion.* `resizable` was false and `colwidth`
+was dropped, for a reason that still holds: a pixel width is measured on somebody's laptop and
+this site's hard target is a 320-pixel column. But what dragging an edge **says** is "this column
+is about twice that one", which is scale-free. So ProseMirror's own resizing is on, the pixels it
+writes are stored, and `tableColumnFractions` divides them by the row's total: the page emits a
+`<colgroup>` of percentages and switches to `table-layout: fixed`, which is what makes a browser
+honour them. Read from the **first row**, and only when no cell in it is merged — a colgroup
+built from a row with a `colspan` would be wrong. A table nobody sized keeps the automatic layout
+it has always had.
+
+*The lines and the header row have a colour, chosen from four names.* `borderColour` is
+`default`, `strong`, `blue` or `orange`; `headerFill` is `default`, `none`, `blue` or `orange`.
+**Names of the club's palette, never a value somebody typed** — the discipline every other
+attribute in the schema follows. A colour picker would put the brand in the hands of whoever is
+writing a page that day and would produce white on yellow the first week; a filled header also
+carries its own `contrastText`, so the pair clears AA in both schemes without anybody checking.
+A borderless table still drops the shading by default (§263) and keeps a fill that was actually
+chosen: that is a decision rather than a table's chrome.
+
+*The writing area always shows where the cells are.* The dashed guide that a borderless table
+had now covers a table of rows as well — both leave the writer typing into an invisible grid.
+It is an `outline`, so switching the lines moves nothing, and dashed, so it does not read as a
+line that will be published. ProseMirror's resize handle is drawn for the same reason: it renders
+an element with no styles of its own, so without a rule the gesture is undiscoverable.
+
+*A preview in a pop-up, and it is the same description.* The dialog shows the editor's own markup
+under `PREVIEW_CONTENT_SX` — the identical table rules, keyed under the dialog instead of under
+`.tiptap`, with the editing aids left out. That difference is the preview: the question it
+answers is "which of these lines will the reader see", and a preview that kept the guides could
+not answer it. The markup is this browser's own editor state rendered back to its author; what is
+*saved* still passes the server's allowlist, which is where the boundary is.
+
+*Rejected:* a colour picker (above); storing percentages rather than pixels (ProseMirror writes
+pixels and a translation on the way in would fight its own resizing); a preview that round-trips
+to the server to render the page's real components (a request per keystroke's worth of curiosity,
+for a drawing §263 already makes identical).
+
+Tests: `tests/unit/content/rich-text-table.test.ts` — the width kept and read as two thirds and
+one third, and no proportions when nobody sized a column; `rich-text-tables.test.ts` — the four
+defaults, palette names rather than values, the contrast pair, a layout table keeping a chosen
+fill, and the guide covering both line-less variants.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 272. Decided — the past section obeys the kind filter, and a special event is the whole card (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "și la evenimentele trecute trebuie să pot pune tipul lor,
+vreau să fac hilight la evenimentele speciale, testări de papuci, etc." The section of events
+already held (§267) ignored the kind filter above it entirely: choosing "Testare de echipament"
+narrowed what is to come and left twelve mixed rows underneath. And an event marked special wore
+a chip (§168) — one line among four on a card, which is not what "highlight" means when the
+thing being looked for is one shoe testing among eleven Monday runs.
+
+**Decision.** *The filter reaches the foot of the page.* `listPastEvents` takes the kind, and
+the filter is applied **in the query** rather than after it: the limit is the database's, so
+filtering a page of twelve mixed rows down to the two gear tests among them would show two and
+call them all of them. The heading names the kind while one is chosen, so a filtered section is
+never read as "this is everything the club has held".
+
+*A special event is drawn as one.* `specialCard` in `theme/surfaces.ts`: the club's secondary
+colour on the border and a four-percent wash of it behind, on the listing's card and on a series
+card whose any date is special. A wash **over** the card's own background rather than a fill
+instead of it — a replaced surface would put body text on a tint nobody has checked for
+contrast, and four percent reads the same in both schemes because it is a wash rather than a
+colour. The chip stays: colour alone is not a signal (BR-REQ-041-01), and the chip is what a
+screen reader announces.
+
+*The kind of a past event was never the thing missing* — every event has carried one since §112
+and the editor has always offered it. What was missing was being able to *see* the past by kind,
+which is what this adds. If the club also wants past events to carry a kind the list does not
+have, that is a new value in `EVENT_TYPES` and its own decision.
+
+**Consequences.** `listPastEvents` (the `type` argument), the listing's `PastEvents` section,
+`Events.pastCountOfType` in both catalogues, `theme/surfaces.ts`, `SeriesCard`.
+
+Baseline `BR-V1.43-2026-09-21`.
+
+## 273. Decided — the editor behaves like the ones people already know: a sticky toolbar, a bar over the selection, a word count (2026-09-22)
+
+**Context.** The owner, 2026-09-22: "I want that rich text editor to be almost as good as word
+doc editing", and then the sentence that decides the shape of it — "or at least close to
+WordPress, Amalia is used to WordPress." This is a usability requirement with a named user, not
+a feature list: what matters is that somebody who has written in WordPress finds their habits
+work here.
+
+**Decision.** Three habits, and nothing that widens what a document may contain.
+
+*The toolbar is sticky.* A description runs to several screens and the toolbar sat at the top of
+it, so making a word bold two screens down meant scrolling up, losing the selection, and
+scrolling back. Every editor people know keeps it in view.
+
+*A bar appears over the selection*, with bold, italic and link — the three verbs that are about
+the words somebody has just selected. Everything structural stays in the toolbar above.
+`@tiptap/react/menus` is a subpath of a package already installed, so this is no new dependency
+(§1.5), and it is the one part of "like WordPress" that is a recognisable gesture rather than a
+button in a different place.
+
+*A word count under the box*, counted from the editor's own text rather than from Tiptap's
+`CharacterCount` extension — one line against another package to install and configure.
+
+**What was deliberately not done.** Underline, strikethrough, text colour, font size and a
+colour picker: each is a widening of `domain/schema.ts`, which is the allowlist every stored
+body is validated against, and each is a way for a page to stop looking like the club's site.
+§263, §271 and §213 already gave the two decisions that carry a layout — how a table is drawn
+and where a line of text sits. "Close to WordPress" is about the *gestures*, and those are what
+this changes.
+
+**Consequences.** `RichTextEditor.tsx` (the sticky bar, `BubbleMenu`, `countWords`), one
+message key in each catalogue, the labels helper.
+
+Baseline `BR-V1.43-2026-09-21`.

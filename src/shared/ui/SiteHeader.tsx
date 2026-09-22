@@ -235,8 +235,21 @@ export default async function SiteHeader() {
           />
         </Box>
 
-        {/* The scheme switch left this row for the footer's bottom-left corner (§115). */}
-        <Box sx={{ order: 3, ml: "auto", flexShrink: 0, display: "flex", alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
+        {/*
+          The scheme switch left this row for the footer's bottom-left corner (§115), and on a
+          phone the language switcher has now followed it to the bottom-right (§262).
+
+          On a phone the header row is 328 pixels of which the lockup takes 63: the switcher's
+          46 were the difference between "Contact" being on the row and being in the ☰ menu, and
+          the owner asked for all three sections — "ar fi fain sa le avem pe toate, eventual
+          mutăm selectorul de limbi in dreapta jos". From `sm` up there is room for both, and a
+          setting belongs at the far end of the row it is on, so nothing moves there.
+
+          `display: none` rather than a second component: the footer renders its own switcher
+          and the hidden one is out of the accessibility tree, so exactly one "Limbă" navigation
+          is announced at every width.
+        */}
+        <Box sx={{ order: 3, ml: "auto", flexShrink: 0, display: { xs: "none", sm: "flex" }, alignItems: "center", gap: { xs: 0, sm: 0.5 } }}>
           <LocaleSwitcher />
         </Box>
       </Container>

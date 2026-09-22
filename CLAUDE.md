@@ -12,8 +12,9 @@ club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material 
 M1 — event pages, the full registration lifecycle, staff sign-in, legal document versioning,
 transactional email, a registrations backoffice, and since 2026-09-18 the race-day desk, a
 photo gallery on R2, recurring events and a rich-text event description — exists and is
-tested. **Production serves the club's `.com`** (first deployment 2026-09-17, `BR-V1.34`;
-`BR-V1.35` released 2026-09-18) and **QA serves its `qa.` subdomain**, each on its own
+tested. **Production serves the club's `.com`** (first deployment 2026-09-17; it runs
+`BR-V1.40` on schema `0054` as of 2026-09-22) and **QA serves its `qa.` subdomain** (`BR-V1.43`,
+schema `0056`, which is everything merged so far), each on its own
 Neon project in Frankfurt, each with staff sign-in through Zitadel; every environment but
 production carries clearly marked sample legal text (`DECISIONS.md` §29), so the participant
 journey can be walked on QA end to end. What is left is not application code — it is the list
@@ -153,14 +154,15 @@ sections and in `CHANGELOG.md`.
   a hand, the signed PDF emailed back and rendered per event, the blank paper form; retention
   three years, the document and the health note seven days after the event (§85–§87, §95).
   The club's archive copy of every signed declaration to `DECLARATIONS_ARCHIVE_TO` (§99).
-- Race numbers drawn at random at confirmation, never reused, a picture of every bib, a bib
+- Race numbers in registration order from the event's own first number (§173, reversing §94),
+  never reused; a picture of every bib, a bib
   sheet; a preferential number typed by hand among the free ones, emailed to the runner
   (§87, §94, §105). Check-in codes and hosted QR; "Înscrierile mele" on one link (§77).
 - Anti-bot: honeypot + timing check; Cloudflare Turnstile behind two keys (§97).
 
 **Email**
 
-- Seventeen message types (`email_outbox.email_message_type`), bilingual by default, one branded
+- Eighteen message types (`email_outbox.email_message_type`), bilingual by default, one branded
   card, the action as a button, deep links — event, programme, rules, "I can't make it any
   more", the PDF — and every one previewed on `/admin/emails` (§81, §91, §96). Tokens minted
   at send time, hashed at rest, single use (`AGENTS.md` §14.5). `EMAIL_DELIVERY_MODE` is `live`
@@ -223,8 +225,9 @@ short way in.
 that cannot see an address; and the first Administrator is a `staff_users` row inserted by
 hand, because the screen that invites people is behind the sign-in it would grant.
 
-**Still owed, all of it account creation or a decision rather than code** (as of 2026-09-19
-evening; `/admin/tasks` shows the same list with the steps, read from the system):
+**Still owed, all of it the club's own work rather than code** (checked against the live
+systems on 2026-09-22; `/admin/tasks` shows the same list with the steps, read from the system —
+it is the authority, this is the summary):
 
 1. ~~cron-job.org monitors~~ — done 2026-09-18 evening: six jobs, both environments `ok`.
 2. ~~Mailgun sending domain~~ — done 2026-09-18 evening: `mail.` subdomain verified,
@@ -233,10 +236,15 @@ evening; `/admin/tasks` shows the same list with the steps, read from the system
    sandbox (its own sending key is optional). Procedure: `SETUP.md` §35.
 3. ~~Production Zitadel application~~ — done 2026-09-17: application, `STAFF_AUTH_MODE=provider`,
    the owner's SUPERADMIN row. Sign in at `/admin` on the production host.
-4. **The club's approved legal texts** — privacy notice, terms, declaration — written and
-   approved in `/admin/legal` on production. Until then production correctly refuses every
-   registration.
-5. **Volunteer accounts** for race day (`SETUP.md` §34) and a rehearsal on QA.
+4. ~~The club's approved legal texts~~ — the **terms** and the **privacy notice** are approved
+   and live on production (verified 2026-09-22 at `/ro/termeni` and `/ro/confidentialitate`):
+   the club's own text, carrying its legal name, seat and CIF, with no placeholder and no
+   sample banner. The **declaration** is approved in the same screen and cannot be read from
+   outside — `/admin/legal` on production says which of the three are in effect, and a
+   registration is refused while it is not.
+5. **Volunteer accounts** for race day (`SETUP.md` §34) and a rehearsal on QA. Since the
+   invitation key is set (item 10), "Add" on Echipa creates the account and sends the
+   invitation itself.
 6. ~~Neon keys~~ — done 2026-09-18 evening: a project-scoped key on each Vercel project,
    `/devs` shows the database's month on both. Still optional: a custom domain for the R2
    bucket; the retention and support decisions of `SETUP.md` §30.
@@ -247,15 +255,27 @@ evening; `/admin/tasks` shows the same list with the steps, read from the system
    (`/admin/legal` → New version → "start from the platform's text", four facts to fill) —
    the same item as 4, with the texts now written.
 9. ~~The health monitor~~ — done 2026-09-19: `GET /api/health` every 30 minutes with failure
-   notifications on production and QA (`SETUP.md` §36). Release #58 is live; production is on
-   schema `0042`.
-10. **The invitation key** — a Zitadel service user with Org User Manager and its token as
-    `ZITADEL_MANAGEMENT_PAT` on both Vercel projects (`SETUP.md` §37), so "Add" on Echipa
-    sends the invitation itself (§123).
-11. **The contact form's Gmail** — an app password on the club's Google account, then
-    `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both Vercel
-    projects (`SETUP.md` §38). Until then `/contact` shows the club's address instead of the
-    form (§149).
+   notifications on production and QA (`SETUP.md` §36). Both answered `ok` on 2026-09-22.
+10. ~~The invitation key~~ — done 2026-09-20: the Zitadel service user's token is
+    `ZITADEL_MANAGEMENT_PAT` on **both** Vercel projects and predates the builds now serving,
+    so "Add" on Echipa creates the account and sends the invitation (§123, `SETUP.md` §37).
+11. ~~The contact form's Gmail~~ — done 2026-09-20: `CONTACT_SMTP_USER`,
+    `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` on both projects, and `/ro/contact` shows
+    the **form** on production and on QA rather than the address (§149, `SETUP.md` §38). Who
+    receives a message is `/admin/emails` → "Cine primește mesajele de contact".
+12. **The race itself, and this is the launch item.** Production publishes the weekly group run
+    and nothing else: the 21 November race has no event there, so nobody can register for it.
+    It is one save in `/admin/events` — the event, its capacity, its participation window, its
+    bib band — and then publish. Everything under it is live already, which is what items 1–11
+    were about. **The click list is `SETUP.md` §39**, field by field, with every value filled
+    in; the two the club alone can decide are marked there (how many places, and how many days
+    before the race a confirmation is asked and owed).
+
+**The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
+this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The
+club's four legal facts live the same way (`SETUP.md` §30), which is why the approved texts on
+production read with the club's real name and CIF while the templates in `legal-documents/` show
+`<PLACEHOLDER>`.
 
 Open pull requests are listed on GitHub; the convention below says who merges them.
 
@@ -266,7 +286,7 @@ Open pull requests are listed on GitHub; the convention below says who merges th
 | App | Next.js 16 App Router, TypeScript 5.9 strict, `src/`, Yarn 4, Node 22 | done |
 | UI | Material UI 9 + Emotion, `@mui/material-nextjs/v16-appRouter` | done |
 | i18n | `next-intl` 4; `ro` default, `en`; `localePrefix` always; no cross-locale fallback | done; both locales published |
-| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated (schema `0042` on both after release #58, 2026-09-19; `0043` comes with the next release); the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |
+| Data | PostgreSQL on Neon, Frankfurt; Drizzle over `node-postgres`, pooled URL. Local: `docker compose up -d db` | both projects live and migrated: production on `0054`, QA on `0056` (2026-09-22), and `0057_bib_printed` comes with the next release; the gated `migrate.yml` run on a push to `main` is the only way production migrates. Free plan: 100 CU-hours a month per project — `DECISIONS.md` §68 |
 | Hosting | Vercel Hobby, function region `fra1`; one project per environment | both live: production on the club's `.com` since 2026-09-17, QA on its `qa.` subdomain (`SETUP.md` §26). The build waits for the migration it was compiled against (`scripts/wait-for-migration.mjs`) |
 | Jobs | No in-process interval — serverless has no process for one. The request that queues an email drains the outbox after its own response (`notifications/drain.ts`); an external HTTP pinger POSTs both endpoints every fifteen minutes by day and hourly at night (Romania time) with each environment's `JOB_SECRET`; `.github/workflows/scheduled-jobs.yml` is the backstop, not the clock | all six monitors live since 2026-09-18 (production 15 min by day / hourly at night per endpoint, QA hourly); both `/api/health` `ok` |
 | Auth | staff only. **Decided:** Auth.js with the Zitadel OAuth provider, `staff_users` as the server-side allowlist (`DECISIONS.md` §26, reversing §24). Roles, helpers, backoffice, the development switcher and the provider wiring are all built, and a QA tenant exists | built; live in QA |

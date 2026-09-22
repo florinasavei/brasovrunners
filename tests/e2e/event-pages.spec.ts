@@ -292,7 +292,9 @@ test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
  * switcher that swapped the prefix would 404.
  */
 test.describe("BR-REQ-040-01 the language switcher", () => {
-  test("is in the header on every page, with the current language marked", async ({ page }) => {
+  test("is on every page, with the current language marked", async ({ page }) => {
+    // In the header from `sm` up and in the footer's corner on a phone since §262 — this asks
+    // that exactly one exists and works, wherever the width puts it.
     await page.goto("/ro/evenimente");
 
     const switcher = page.getByRole("navigation", { name: "Limbă" });
@@ -334,9 +336,17 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
     }));
     expect(overflow.documentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
 
-    // One row at every width (the owner, 2026-09-17: "on mobile the logo and the navbar must
-    // fit on the same row"). The logo, the nav and the language switcher share a line, so the
-    // header is one tap target tall plus its padding — never a second row under the lockup.
+    /*
+      One row at every width (the owner, 2026-09-17: "on mobile the logo and the navbar must fit
+      on the same row"). The logo and the sections share a line, so the header is one tap target
+      tall plus its padding — never a second row under the lockup.
+
+      **The language switcher is on that line from `sm` up and in the footer's bottom-right
+      corner on a phone** (§262): its 46 pixels were the difference between "Contact" being on
+      the row and being in the ☰ menu, and the owner asked for all three sections. So the
+      assertion is where it is, not that it is anywhere in particular — and on a phone that is
+      the bottom bar, which this checks by its own centre rather than the header's.
+    */
     const logo = page.getByRole("link", { name: "Brașov Runners" }).first();
     const language = page.getByRole("navigation", { name: "Limbă" });
     const nav = page.getByRole("navigation", { name: "Navigare principală" });
@@ -346,8 +356,17 @@ test.describe("BR-REQ-040-01 the language switcher", () => {
       nav.boundingBox(),
     ]);
     const centre = (box: { y: number; height: number } | null) => (box ? box.y + box.height / 2 : NaN);
-    expect(Math.abs(centre(logoBox) - centre(languageBox))).toBeLessThan(8);
     expect(Math.abs(centre(logoBox) - centre(navBox))).toBeLessThan(8);
+
+    const inHeader = (await page.locator("header").getByRole("navigation", { name: "Limbă" }).count()) === 1;
+    if (inHeader) {
+      expect(Math.abs(centre(logoBox) - centre(languageBox))).toBeLessThan(8);
+    } else {
+      // On the footer's one line, centred in it — a 44px bar and a 44px stack of RO over EN.
+      const barBox = await page.locator("footer").boundingBox();
+      expect(Math.abs(centre(languageBox) - centre({ y: barBox?.y ?? NaN, height: 44 }))).toBeLessThan(8);
+      await expect(page.locator("footer").getByRole("navigation", { name: "Limbă" })).toHaveCount(1);
+    }
     // Less than two tap targets tall: the two-row header this replaced was 112px.
     const headerBox = await header.boundingBox();
     expect(headerBox?.height ?? 999).toBeLessThan(88);

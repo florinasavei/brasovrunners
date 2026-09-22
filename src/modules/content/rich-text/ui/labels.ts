@@ -33,11 +33,38 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     tableDeleteRow: rt("tableDeleteRow"),
     tableDeleteColumn: rt("tableDeleteColumn"),
     tableDelete: rt("tableDelete"),
+    // §263: one control per choice, and the borders one is named after the state it is in, so
+    // the tooltip says "lines: rows only" rather than "cycle the lines".
+    tableBorders: {
+      all: rt("tableBordersAll"),
+      rows: rt("tableBordersRows"),
+      none: rt("tableBordersNone"),
+    },
+    // §271: one name per state, so the tooltip says which colour the table is in.
+    tableBorderColour: {
+      default: rt("tableBorderColourDefault"),
+      strong: rt("tableBorderColourStrong"),
+      blue: rt("tableBorderColourBlue"),
+      orange: rt("tableBorderColourOrange"),
+    },
+    tableHeaderFill: {
+      default: rt("tableHeaderFillDefault"),
+      none: rt("tableHeaderFillNone"),
+      blue: rt("tableHeaderFillBlue"),
+      orange: rt("tableHeaderFillOrange"),
+    },
+    tableValign: rt("tableValign"),
+    tableHeaderRow: rt("tableHeaderRow"),
     link: rt("link"),
     linkUrl: rt("linkUrl"),
     linkApply: rt("linkApply"),
     linkRemove: rt("linkRemove"),
     linkCancel: rt("linkCancel"),
+    // Raw, with its `{count}`: the island substitutes the number itself (§273).
+    words: rt.raw("words") as string,
+    preview: rt("preview"),
+    previewShort: rt("previewShort"),
+    previewClose: rt("previewClose"),
     undo: rt("undo"),
     redo: rt("redo"),
     image: rt("image"),
@@ -59,6 +86,8 @@ export function richTextEditorLabels(rt: Translate): Parameters<typeof RichTextE
     imageCropPosition: rt.raw("imageCropPosition") as string,
     imageRemove: rt("imageRemove"),
     imageDone: rt("imageDone"),
+    imageClose: rt("imageClose"),
+    imagePanel: rt("imagePanel"),
     imageNoAltOne: rt("imageNoAltOne"),
     // Raw, with its `{count}` placeholder: the island substitutes the number itself.
     imageNoAltMany: rt.raw("imageNoAltMany") as string,

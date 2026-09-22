@@ -8,7 +8,9 @@ import type { ReactNode } from "react";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import type { StaffUser } from "@/db/schema/staff-users";
-import { type AdminSection, visibleAdminSections } from "../domain/roles";
+import { getDb } from "@/db/client";
+import { registeredBadgeCount } from "@/modules/registrations/nav-count";
+import { type AdminSection, canManageRegistrations, visibleAdminSections } from "../domain/roles";
 import { STAFF_ROLE_LABEL } from "../domain/staff-labels";
 import AdminTabs, { type AdminTab } from "./AdminTabs";
 import { PAGE_WIDTH } from "@/theme/brand";
@@ -61,10 +63,22 @@ export default async function BackofficeShell({
     devs: getPathname({ locale, href: "/devs" }),
   };
 
+  /*
+    How many are signed up, beside the "Înscrieri" tab (§255).
+
+    Read here because the shell is the one place every backoffice page passes through, and
+    memoized for a minute inside `registeredBadgeCount` so the badge costs about one indexed
+    count a minute rather than one per page view — the club's database is a free Neon plan that
+    bills compute time (§68). Only for the roles that may open the list: for everybody else
+    there is no query and no number.
+  */
+  const registered = canManageRegistrations(staffUser.role) ? await registeredBadgeCount(getDb(), new Date()) : null;
+
   const tabs: AdminTab[] = visibleAdminSections(staffUser.role).map((section) => ({
     href: SECTION_HREF[section],
     label: t(`nav.${section}`),
     section,
+    ...(section === "registrations" ? { count: registered } : {}),
   }));
 
   return (

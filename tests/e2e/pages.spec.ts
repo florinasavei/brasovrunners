@@ -56,16 +56,22 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await page.goto("/ro/admin/pages/new");
 
     const field = (name: string) => page.locator(`[name="${name}"]`);
+    /* The two languages are tabs since §259: the English panel is `hidden` until its tab is
+       pressed, which is also how an organizer reaches it. */
+    const language = (name: RegExp) => page.getByRole("tab", { name });
     await field("navOrder").fill("5");
     await field("translations.ro.title").fill(title);
     await field("translations.ro.slug").fill(slug);
-    await field("translations.en.title").fill(`About the club ${suffix}`);
-    await field("translations.en.slug").fill(englishSlug);
 
     // The body is written in the editor, so the test writes it the way an organizer does:
     // press the heading control, type, press Enter, type the paragraph (BR-REQ-050-03, §11.3).
     await writeBody(page, "ro", "Cine suntem", "Un club de alergare din Brașov.");
+
+    await language(/English/).click();
+    await field("translations.en.title").fill(`About the club ${suffix}`);
+    await field("translations.en.slug").fill(englishSlug);
     await writeBody(page, "en", "Who we are", "A running club in Brașov.");
+    await language(/Română/).click();
 
     // A YouTube film in the Romanian body (§110): an address that is not YouTube's is refused
     // under the field; a real one becomes a block, and the page shows it behind one press.
@@ -150,6 +156,7 @@ test.describe.serial("BR-REQ-050-03 standing pages", () => {
     await field("translations.ro.title").fill(`Pe jumătate ${suffix}`);
     await field("translations.ro.slug").fill(`pe-jumatate-${suffix}`);
     await writeBody(page, "ro", null, "Un paragraf.");
+    await page.getByRole("tab", { name: /English/ }).click();
     await field("translations.en.title").fill(`Half done ${suffix}`);
     await field("translations.en.slug").fill(`half-done-${suffix}`);
     // The English body is left empty on purpose.

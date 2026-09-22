@@ -6,10 +6,12 @@ import {
   readRichText,
   type RichTextBlock,
   type RichTextText,
+  tableColumnFractions,
 } from "../domain/schema";
 import { cropGeometry, cropImageSx, cropWindowSx, imageCaptionSx, imageFigureSx } from "./image-layout";
 import { blockAlignSx } from "./text-align";
 import RichTextVideo from "./RichTextVideo";
+import { tableSx } from "./table-layout";
 
 /**
  * An editorial body, rendered on the server through the same allowlist that validated it
@@ -55,8 +57,18 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
   switch (block.type) {
     case "youtube":
       // Behind one press, like the event's own film (§69, §110): the embed is built from the
-      // id on the server, and nothing is fetched from Google until the reader opens it.
-      return <RichTextVideo videoId={block.attrs.videoId} caption={block.attrs.caption} />;
+      // id on the server, and nothing is fetched from Google until the reader opens it. Since
+      // §266 it is a figure in the flow with the picture's own width and side, which is why it
+      // takes `floats` as well: a document that floats anything clears around it the same way.
+      return (
+        <RichTextVideo
+          videoId={block.attrs.videoId}
+          caption={block.attrs.caption}
+          widthPercent={block.attrs.widthPercent}
+          align={block.attrs.align}
+          floats={floats}
+        />
+      );
     case "image": {
       // A plain <img>, lazy, sized by its stored dimensions so the page does not jump; the
       // address was validated to be one of this site's own variants (§72). Where the figure
@@ -149,7 +161,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
         </Box>
       );
 
-    case "table":
+    case "table": {
       /*
         A table (§196), and the whole of the difficulty is that this site's hard target is a
         320-pixel column.
@@ -166,7 +178,14 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
 
         Header cells become `<th scope>` — a column header says which column, a row header which
         row — so a screen reader announces "Ora de start, 10:00" rather than "10:00".
+
+        How it is *drawn* — a grid, horizontal rules only, or nothing at all, and where in the
+        cell the text sits — is the organizer's choice since §263 and lives in `table-layout.ts`,
+        which the editor draws from as well. It used to be the block of rules below, which the
+        editor had no copy of: the page showed a grid and the editor showed nothing, so a table
+        was arranged against one drawing and published as another.
       */
+      const columns = tableColumnFractions(block.content);
       return (
         <Box
           tabIndex={0}
@@ -176,21 +195,24 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
           <Box
             component="table"
             sx={{
-              borderCollapse: "collapse",
-              // Never narrower than it needs to be, never forced wider than the column.
-              minWidth: "min(100%, 28rem)",
-              "& td, & th": {
-                border: 1,
-                borderColor: "divider",
-                px: 1.5,
-                py: 1,
-                textAlign: "left",
-                verticalAlign: "top",
-              },
-              "& th": { fontWeight: 700, backgroundColor: "action.hover" },
-              "& p:last-of-type": { mb: 0 },
+              ...tableSx(block.attrs),
+              /*
+                Column proportions the organizer dragged (§271). `table-layout: fixed` is what
+                makes a browser honour a `<colgroup>` at all — with `auto` it sizes the columns
+                from their contents and the widths are a suggestion it ignores. Only a table that
+                was actually sized gets it; every other table keeps the automatic layout it has
+                always had, which is what a schedule of short facts wants.
+              */
+              ...(columns ? { tableLayout: "fixed", width: "100%" } : {}),
             }}
           >
+            {columns && (
+              <Box component="colgroup">
+                {columns.map((fraction, index) => (
+                  <Box component="col" key={index} sx={{ width: `${(fraction * 100).toFixed(4)}%` }} />
+                ))}
+              </Box>
+            )}
             <Box component="tbody">
               {block.content.map((row, rowIndex) => (
                 <Box component="tr" key={rowIndex}>
@@ -215,6 +237,7 @@ function renderBlock(block: RichTextBlock, floats = false): ReactNode {
           </Box>
         </Box>
       );
+    }
   }
 }
 

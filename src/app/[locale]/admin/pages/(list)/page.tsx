@@ -15,9 +15,10 @@ import { EDITORIAL_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-la
 import { requireStaff } from "@/modules/staff-identity/session";
 import { parseListQuery, pageCount } from "@/modules/staff-identity/domain/admin-list-query";
 import AdminTable, { type AdminColumn } from "@/modules/staff-identity/ui/AdminTable";
+import RowMenu, { type RowMenuItem } from "@/shared/ui/RowMenu";
 import ButtonLink from "@/shared/ui/ButtonLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { movePageAction } from "../actions";
+import { deletePageAction, movePageAction, transitionPageAction } from "../actions";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -185,6 +186,61 @@ export default async function AdminPagesPage({ params, searchParams }: Props) {
                     ariaLabel={t("pages.moveDownNamed", { title: row.title ?? t("pages.untitled") })}
                   />
                 </Box>
+              )}
+              {/*
+                The verbs, in the same ⋮ every other list uses (§256). The two forms beside it
+                are the Server Actions the menu submits — hidden, because the menu is the
+                control and a form in a table cell is not.
+              */}
+              {canEditTexts(actor.role) && (
+                <>
+                  <form id={`publish-${row.id}`} action={transitionPageAction} hidden>
+                    <input type="hidden" name="uiLocale" value={locale} />
+                    <input type="hidden" name="pageId" value={row.id} />
+                    <input type="hidden" name="expectedVersion" value={row.version} />
+                    <input type="hidden" name="to" value={row.editorialStatus === "PUBLISHED" ? "DRAFT" : "PUBLISHED"} />
+                  </form>
+                  <form id={`delete-${row.id}`} action={deletePageAction} hidden>
+                    <input type="hidden" name="uiLocale" value={locale} />
+                    <input type="hidden" name="pageId" value={row.id} />
+                  </form>
+                  <RowMenu
+                    ariaLabel={t("pages.rowActions", { title: row.title ?? t("pages.untitled") })}
+                    cancelLabel={t("confirm.cancel")}
+                    items={[
+                      {
+                        kind: "link",
+                        label: t("pages.edit"),
+                        icon: "edit",
+                        href: `${basePath}/${row.id}`,
+                      },
+                      {
+                        kind: "submit",
+                        label: row.editorialStatus === "PUBLISHED" ? t("pages.unpublish") : t("pages.publish"),
+                        icon: row.editorialStatus === "PUBLISHED" ? "unpublish" : "publish",
+                        formId: `publish-${row.id}`,
+                        color: row.editorialStatus === "PUBLISHED" ? "warning" : "primary",
+                        confirm: {
+                          title: row.editorialStatus === "PUBLISHED" ? t("pages.unpublishTitle") : t("pages.publishTitle"),
+                          body: row.editorialStatus === "PUBLISHED" ? t("pages.unpublishBody") : t("pages.publishBody"),
+                          confirmLabel: row.editorialStatus === "PUBLISHED" ? t("pages.unpublish") : t("pages.publish"),
+                        },
+                      },
+                      {
+                        kind: "submit",
+                        label: t("pages.delete"),
+                        icon: "delete",
+                        formId: `delete-${row.id}`,
+                        color: "error",
+                        confirm: {
+                          title: t("pages.deleteTitle"),
+                          body: t("pages.deleteBody", { title: row.title ?? t("pages.untitled") }),
+                          confirmLabel: t("pages.delete"),
+                        },
+                      },
+                    ] satisfies RowMenuItem[]}
+                  />
+                </>
               )}
             </Stack>
           );

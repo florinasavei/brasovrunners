@@ -23,7 +23,7 @@ import {
   parseContactErrorFields,
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
-import { turnstileSiteKey } from "@/modules/registrations/turnstile";
+import { activeBotCheckSiteKey } from "@/modules/registrations/bot-check";
 import TurnstileWidget from "@/modules/registrations/ui/TurnstileWidget";
 import { env } from "@/shared/config/env";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -69,7 +69,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
   const t = await getTranslations("Contact");
   const now = new Date();
   // Read once: the widget is drawn only when both keys are set (`turnstile.ts`).
-  const siteKey = turnstileSiteKey();
+  const siteKey = await activeBotCheckSiteKey(getDb(), new Date());
 
   const error = parseContactError(rawError);
   const rejected = parseContactErrorFields(fields);
