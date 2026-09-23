@@ -644,8 +644,12 @@ export async function requestRegistrationLink<T extends Record<string, unknown>>
   if (!registration || !isActiveStatus(registration.status)) return;
   // A cancelled event hands out no link (§NNN): each would open onto "this event is cancelled",
   // and its participants were told so in a message of its own. The same silent answer as above.
-  const event = await repo.findEventForAllocation(db, registration.eventId);
-  if (!event || event.eventStatus === "CANCELLED") return;
+  // Asked without an event, the lookup has already passed over cancelled ones, so a runner with
+  // another race still gets that one's link rather than nothing.
+  if (input.eventId) {
+    const event = await repo.findEventForAllocation(db, registration.eventId);
+    if (!event || event.eventStatus === "CANCELLED") return;
+  }
 
   const messageType = deriveAllowedResendMessageType(registration.status);
   if (!messageType) return;

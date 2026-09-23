@@ -7,7 +7,6 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import RecallField, { useRecall } from "@/shared/forms/recall";
-import CheckboxField from "@/shared/ui/CheckboxField";
 import { CHECKBOX_TAP_TARGET } from "@/shared/ui/tap-target";
 import { useSelectedValue } from "./OnlyForType";
 
@@ -44,7 +43,8 @@ export type EventNoticeLabels = {
  *
  * The note stays in the form while its tick is off, hidden rather than removed, so unticking by
  * mistake does not lose what was typed; the service ignores a note nobody asked to send. After a
- * refused submit every box comes back as it was posted (§315).
+ * refused submit every box comes back as it was posted (§315) — except a block the refused form
+ * never drew, which starts as it would on a fresh page: "tell them" ticked.
  */
 export default function EventNoticeFields({
   statusSelectName,
@@ -92,9 +92,23 @@ export default function EventNoticeFields({
         />
         {offerNotice && (
           <Box sx={{ mt: 1 }}>
-            <CheckboxField name="cancel.notify" defaultChecked>
-              {labels.cancelNotify}
-            </CheckboxField>
+            {/*
+              Ticked when it appears. After a refused save it comes back as posted — but only when
+              that save carried the cancellation at all (its reason box posts even when empty). One
+              posted while the select still said "Programat" never had this box, and "not posted"
+              there means "not drawn", not "unticked", so the box keeps its default (§315, §NNN).
+            */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  key={recall.generation}
+                  name="cancel.notify"
+                  defaultChecked={recall.has && recall.value("cancel.reason") !== undefined ? recall.value("cancel.notify") === "on" : true}
+                  sx={CHECKBOX_TAP_TARGET}
+                />
+              }
+              label={labels.cancelNotify}
+            />
             <Typography variant="body2" color="text.secondary" data-testid="cancel-count">
               {labels.cancelNotifyHelp}
             </Typography>

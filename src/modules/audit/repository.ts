@@ -79,7 +79,8 @@ export type AuditAction =
   /**
    * The event cancelled in the editor (§NNN): the reason the organizer typed, whether the
    * participants were told and how many were — never who they are. One row per date the save
-   * cancelled.
+   * cancelled, a date of the series that had already begun included: that one is marked
+   * `alreadyStarted` and told nobody.
    */
   | "event.cancelled"
   /** "Detalii actualizate" queued (§NNN): which facts changed, the organizer's note and the count. */

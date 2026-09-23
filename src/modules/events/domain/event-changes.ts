@@ -12,7 +12,10 @@ import { readScheduleItems } from "./schedule";
  * it was loaded with the event as it was written, inside the save's own transaction:
  *
  * - `place` — where to meet: the meeting point as the page shows it in any language (the event's
- *   own words, or a language's own name for the place, migration `0059`), or the map link.
+ *   own words, or a language's own name for the place, migration `0059`), or the map link. While
+ *   the place is *to be announced* (`events.location_to_be_announced`) no page shows any of it,
+ *   so nothing typed behind the switch is a change; switching it off is one, and the only one a
+ *   hidden place ever makes.
  * - `time` — when: the start, or a race's gun time. Not the end: nobody changes their plans for
  *   the finish of a group run, and a duration nudged by ten minutes is not worth an email.
  * - `programme` — the programme's timed rows: a time, a place, a row added or taken away. Not a
@@ -38,6 +41,13 @@ export type EventChangeFacts = {
   locationAddress: string | null;
   mapUrl: string | null;
   scheduleItems: unknown;
+  /**
+   * The place is not announced yet: every public reader is handed no name (in either language),
+   * no address, no map link and no programme place (the place-to-be-announced switch, which
+   * masks them in SQL). Optional so a row read without the column counts as announced, which is
+   * what every row written before it was.
+   */
+  locationToBeAnnounced?: boolean;
 };
 
 /** One language's own name for the place (migration `0059`); blank means "the event's". */
@@ -61,12 +71,29 @@ function placesByLanguage(event: EventChangeFacts, languages: readonly PlaceInLa
   return new Map(languages.map((language) => [language.locale, words(language.locationName) || fallback]));
 }
 
+const hidden = (event: EventChangeFacts) => event.locationToBeAnnounced === true;
+
+/**
+ * Whether the place a runner can *read* moved. Compared on what the pages show, not on what the
+ * columns hold, because the message says "the meeting point is now: …" and reads the place at
+ * send time (§NNN):
+ *
+ * - still hidden after the save, or hidden by it — never. Words typed behind the switch reach no
+ *   page, and a message would say "the meeting point is now: to be announced soon" about a place
+ *   nobody was told. Withdrawing an announced place is not counted either: the organizer who
+ *   wants to say why writes the note, which goes on its own.
+ * - announced by the save (hidden before, shown after) — always, whether or not the words behind
+ *   the switch changed at the same press: to the runner the place is new.
+ * - shown before and after — when the place, the map link or a language's own name differs.
+ */
 function placeChanged(
   before: EventChangeFacts,
   after: EventChangeFacts,
   languagesBefore: readonly PlaceInLanguage[],
   languagesAfter: readonly PlaceInLanguage[],
 ): boolean {
+  if (hidden(after)) return false;
+  if (hidden(before)) return true;
   if (eventPlace(before) !== eventPlace(after)) return true;
   if (words(before.mapUrl) !== words(after.mapUrl)) return true;
   const was = placesByLanguage(before, languagesBefore);
@@ -79,9 +106,17 @@ function placeChanged(
 
 const instant = (value: Date | null) => (value ? value.getTime() : null);
 
-/** The programme's timing and places, in order — the rows a runner plans the morning by. */
-function programmeTiming(json: unknown): string {
-  return JSON.stringify(readScheduleItems(json).map((item) => [item.startsAt, item.endsAt, words(item.place)]));
+/**
+ * The programme's timing and places, in order — the rows a runner plans the morning by. A row's
+ * place is read as the page shows it: none while the event's place is to be announced (§NNN),
+ * so a programme place edited behind the switch is no change, and the places appearing when the
+ * switch goes off are one.
+ */
+function programmeTiming(event: EventChangeFacts): string {
+  const placeShown = !hidden(event);
+  return JSON.stringify(
+    readScheduleItems(event.scheduleItems).map((item) => [item.startsAt, item.endsAt, placeShown ? words(item.place) : ""]),
+  );
 }
 
 export function eventChangesToAnnounce(
@@ -96,7 +131,7 @@ export function eventChangesToAnnounce(
   if (instant(before.startsAt) !== instant(after.startsAt) || instant(before.raceStartsAt) !== instant(after.raceStartsAt)) {
     changes.push("time");
   }
-  if (programmeTiming(before.scheduleItems) !== programmeTiming(after.scheduleItems)) changes.push("programme");
+  if (programmeTiming(before) !== programmeTiming(after)) changes.push("programme");
   return changes;
 }
 

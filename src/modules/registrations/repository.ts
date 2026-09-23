@@ -77,12 +77,18 @@ export async function findRegistrationByEventAndParticipant<T extends Record<str
 }
 
 /**
- * This participant's most recent registration that is still live, across every event.
+ * This participant's most recent registration that is still live, across every event that will
+ * still be run.
  *
  * For the participant-facing link request (§19.4), where the person has an address and a
  * problem — "nothing arrived" — and not necessarily the event in hand. Ordered by creation
  * rather than by event date so that the answer is the thing they most recently did, which is
  * what somebody asking for a link again is almost always asking about.
+ *
+ * Scheduled events only (§NNN): a cancelled event hands out no link, and a finished one has
+ * nothing left to link to. Filtered here rather than after the pick, so a runner whose newest
+ * registration is on a race that was called off still gets the link for the one they are going
+ * to run, instead of nothing.
  */
 export async function findLatestActiveRegistrationForParticipant<
   T extends Record<string, unknown>,
@@ -90,15 +96,17 @@ export async function findLatestActiveRegistrationForParticipant<
   const [row] = await db
     .select()
     .from(registrations)
+    .innerJoin(events, eq(events.id, registrations.eventId))
     .where(
       and(
         eq(registrations.participantId, participantId),
         inArray(registrations.status, [...ACTIVE_REGISTRATION_STATUSES]),
+        eq(events.eventStatus, "SCHEDULED"),
       ),
     )
     .orderBy(desc(registrations.createdAt))
     .limit(1);
-  return row;
+  return row?.registrations;
 }
 
 /** The event row locked for the length of the caller's transaction — the serialization point

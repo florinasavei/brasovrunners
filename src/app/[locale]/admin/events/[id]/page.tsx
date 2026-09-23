@@ -127,7 +127,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const { error, saved, assigned, total, notConfirmed, test, created, applied, offered, notPublished: notPublishedParam, notice: noticeParam, queued } = await searchParams;
   // What the save told the participants (§NNN), matched against the words there are — the query
   // string is typed by anybody, and it reaches `t("editor.notice.<x>")`.
-  const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet"] as const).find((kind) => kind === noticeParam);
+  const noticeOutcome = (["update", "none", "cancelled", "cancelledQuiet", "cancelledNobody"] as const).find((kind) => kind === noticeParam);
   const queuedCount = /^\d+$/.test(queued ?? "") ? (queued as string) : "0";
   // Why "create and publish" stopped at the draft (§315): a domain code, matched against the
   // codes there are — a query string is typed by anybody, and it reaches `t("errors.<x>")`.

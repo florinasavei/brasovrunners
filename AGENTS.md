@@ -1214,7 +1214,7 @@ Core invariants:
 2. unique database constraint;
 3. no place consumed before email confirmation;
 4. declaration required before Confirmed;
-5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is cancelled (`DECISIONS.md` §160); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
+5. Confirmed plus holds consume capacity: every `PENDING_DECLARATION` hold, and every unexpired `WAITLIST_OFFERED` hold — a declaration hold past its deadline is kept, and keeps its place, until a place is wanted for somebody waiting, or the event starts or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing, like the rest of its queue (§NNN); one waiter releases one hold, the oldest deadline first, never the event's whole stock of kept places;
 6. Pending email and Waitlisted do not occupy capacity, but eligible Waitlisted entries have allocation priority over later registrations;
 7. no capacity-changing transaction may let a later registration bypass that queue;
 8. cancellation is idempotent;
@@ -1254,17 +1254,23 @@ A restart must run inside the same capacity transaction and queue allocator as a
 first-time registration. It may never leapfrog an existing waiting list and may never
 land directly on `CONFIRMED`.
 
-`WAITLISTED -> EXPIRED` is performed by registration maintenance once the event has
+`WAITLISTED -> EXPIRED` is performed by registration maintenance once a scheduled event has
 started, with `expiry_reason = EVENT_STARTED`. No message is sent for it.
 
 `PENDING_DECLARATION -> EXPIRED` with `expiry_reason = DECLARATION_HOLD_LAPSED` happens only
 when the place is wanted, and to as many holds as are wanted: `wanted = waiting - free`
-places, released oldest deadline first, or every hold once the event has started or been
-cancelled (`DECISIONS.md` §160). Otherwise the hold outlives its deadline and the declaration
+places, released oldest deadline first, or every hold once the event has started or is
+`COMPLETED` (`DECISIONS.md` §160). Otherwise the hold outlives its deadline and the declaration
 is signed online, or on paper at the desk, at any time before the start; a row the start
 expired is re-allocated by `confirmByStaff` rather than refused, so the desk still confirms
 it while a place is free. `WAITLIST_OFFERED -> EXPIRED` happens at the offer's deadline
 regardless — an offer is a promise to the queue.
+
+A `CANCELLED` event's holds are left standing (§NNN), started or not: no declaration hold is
+released, no lapsed offer is written as expired, no waiting-list entry is closed at the start
+and nobody is offered a place. The registrations keep their status as the record of who had
+entered, and a race put back on finds its queue where it left it. Every read still counts an
+offer past its deadline as lapsed, so nothing is overbooked by the rows staying as they were.
 
 Any other transition requires explicit reviewed rule.
 
@@ -1285,7 +1291,7 @@ publicDirectAvailability =
 Rules:
 
 - public count means places a new registrant can receive after active holds and existing waiting-list priority;
-- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or been cancelled (`DECISIONS.md` §160), and a registration that waits behind a kept hold is offered that place in the same transaction;
+- every capacity-changing transaction expires stale holds and calls the queue allocator before giving a place to a later registration; a lapsed declaration hold is stale only as far as the queue wants its place, or once the event has started or is `COMPLETED` (`DECISIONS.md` §160) — a `CANCELLED` event's holds are left standing (§NNN) — and a registration that waits behind a kept hold is offered that place in the same transaction;
 - event row lock or equivalent safe serialization protects capacity and FIFO allocation;
 - public read may subtract eligible waiting entries as a conservative safeguard while maintenance is catching up, but it never mutates state;
 - scheduled maintenance expires holds and allocates released places;
@@ -2428,7 +2434,8 @@ On explicit POST with valid token/action session:
    locked row's own status — a declaration link now lives until the start (§160), so a race
    called off in between must not still be signed into;
 5. expire stale holds (a lapsed declaration hold is stale only as far as the queue wants its
-   place, or once the event has started or been cancelled, §160);
+   place, or once the event has started, §160; a cancelled event was refused at step 4, and its
+   holds are left standing, §NNN);
 6. verify current hold still active — a hold past its deadline that nothing wants is;
 7. if expired, allocate older eligible waiting entries first, then renew the hold only if direct capacity remains; otherwise move this participant to Waitlisted at the queue tail and stop;
 8. insert immutable acceptance;
@@ -2656,8 +2663,11 @@ Registration maintenance:
 
 - expire pending email tokens/registrations where policy applies;
 - expire declaration holds — only as many as the queue wants places for, oldest deadline
-  first, or all of them on an event that has started or been cancelled (`DECISIONS.md`
-  §160); a lapsed hold nothing wants is kept, and its event is not even selected;
+  first, or all of them on an event that has started (`DECISIONS.md` §160); a lapsed hold
+  nothing wants is kept, and its event is not even selected;
+- select scheduled events only: a `COMPLETED` event is over (§82), and a `CANCELLED` one is
+  left as it was cancelled (§NNN) — no hold or offer expired, no waiting list closed, no place
+  offered, no number settled, nothing mailed;
 - expire waiting-list offers;
 - queue the reminder two days before an event, and with it the declaration once more to
   whoever still owes a signature (`DECISIONS.md` §160);

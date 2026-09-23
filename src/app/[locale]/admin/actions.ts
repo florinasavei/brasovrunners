@@ -492,6 +492,8 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       ...(notice?.kind === "update" ? { notice: "update", queued: String(notice.queued) } : {}),
       ...(notice?.kind === "nothingToTell" ? { notice: "none" } : {}),
       ...(notice?.kind === "cancelled" ? { notice: notice.notified ? "cancelled" : "cancelledQuiet", queued: String(notice.queued) } : {}),
+      // An event with no registrations here had no box to untick: its own sentence, not "unticked".
+      ...(notice?.kind === "cancelledNobodyToTell" ? { notice: "cancelledNobody" } : {}),
     };
   } catch (error) {
     return refused(error, form, { fieldNames: eventFormFieldNames });

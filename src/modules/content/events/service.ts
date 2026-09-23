@@ -722,11 +722,15 @@ export type EventCancellationRequest = { reason: string; notify: boolean };
  *   written, so nothing was sent; the banner says so rather than letting the tick look ignored.
  * - `cancelled` — the save cancelled the event (or dates of its series); `queued` messages when
  *   the organizer left "tell them" ticked, none when they did not.
+ * - `cancelledNobodyToTell` — the save cancelled an event that takes no registrations here (a
+ *   group run, or the organizer's own page), so the editor drew no "tell them" box and nobody was
+ *   written to. Said apart so the banner does not blame a box that was never on the page.
  */
 export type EventNoticeOutcome =
   | { kind: "update"; queued: number; changes: EventChangeKind[] }
   | { kind: "nothingToTell" }
-  | { kind: "cancelled"; queued: number; notified: boolean };
+  | { kind: "cancelled"; queued: number; notified: boolean }
+  | { kind: "cancelledNobodyToTell" };
 
 type NoticeRequest = {
   notify: boolean;
@@ -799,16 +803,22 @@ type SavedDate = {
  * Registrations are not touched. A cancelled event's registrations keep their status as the
  * record of who had entered; nothing is cancelled on the runner's behalf, and a reinstated event
  * finds its queue where it left it.
+ *
+ * `alreadyStarted` is a date of the series other than the one being edited that had begun before
+ * the save (`announceSave`): nobody is written to about it, but a cancellation of it is still
+ * recorded — who, why, marked as told to nobody — because the audit trail is one row per date
+ * the save cancelled, whatever the date.
  */
 async function announceSavedDate<T extends Record<string, unknown>>(
   tx: Transaction<T>,
-  input: SavedDate & { actor: Actor; request: NoticeRequest; saveKey: string; now: Date },
+  input: SavedDate & { actor: Actor; request: NoticeRequest; saveKey: string; alreadyStarted: boolean; now: Date },
 ): Promise<EventNoticeOutcome | null> {
   const { before, after, request, actor, now } = input;
 
   if (before.eventStatus !== "CANCELLED" && after.eventStatus === "CANCELLED") {
     if (!request.cancellation) return null;
-    const queued = request.cancellation.notify
+    const tell = request.cancellation.notify && !input.alreadyStarted;
+    const queued = tell
       ? await queueEventCancelledNotices(tx, { eventId: after.id, saveKey: input.saveKey, reason: request.cancellation.reason, actorStaffUserId: actor.id, now })
       : 0;
     await recordAuditEvent(tx, {
@@ -817,13 +827,26 @@ async function announceSavedDate<T extends Record<string, unknown>>(
       entityType: "event",
       entityId: after.id,
       // Who, why, and whether the participants were told — the count, never who they are (§12.12).
-      metadata: { reason: request.cancellation.reason, notified: request.cancellation.notify, recipients: queued, version: after.version },
+      metadata: {
+        reason: request.cancellation.reason,
+        notified: tell,
+        recipients: queued,
+        version: after.version,
+        ...(input.alreadyStarted ? { alreadyStarted: true } : {}),
+      },
       now,
     });
-    return { kind: "cancelled", queued, notified: request.cancellation.notify };
+    /*
+      An event that takes no registrations here had no "tell them" box on the page (the editor
+      draws it for `INTERNAL` only), so "not told because the box was unticked" would name a box
+      nobody saw. Judged on the mode the page was drawn from, and only when nothing was queued:
+      a row left from an earlier mode that was written to is reported as told.
+    */
+    if (before.registrationMode !== "INTERNAL" && queued === 0) return { kind: "cancelledNobodyToTell" };
+    return { kind: "cancelled", queued, notified: tell };
   }
 
-  if (!request.notify || after.eventStatus !== "SCHEDULED") return null;
+  if (!request.notify || after.eventStatus !== "SCHEDULED" || input.alreadyStarted) return null;
   const languages = (rows: readonly EditableTranslation[]) => rows.map((row) => ({ locale: row.locale, locationName: row.locationName }));
   const changes = eventChangesToAnnounce(before, after, languages(input.translationsBefore), languages(input.translationsAfter));
   if (changes.length === 0 && !request.note) return { kind: "nothingToTell" };
@@ -847,12 +870,16 @@ async function announceSavedDate<T extends Record<string, unknown>>(
   return { kind: "update", queued, changes };
 }
 
-/** Every date's answer as the one the banner gives: a cancellation first, then messages sent, then "nothing to tell". */
+/**
+ * Every date's answer as the one the banner gives: a cancellation first (one with a box before
+ * one without), then messages sent, then "nothing to tell".
+ */
 function combineNoticeOutcomes(outcomes: readonly (EventNoticeOutcome | null)[]): EventNoticeOutcome | undefined {
   const cancelled = outcomes.filter((outcome): outcome is Extract<EventNoticeOutcome, { kind: "cancelled" }> => outcome?.kind === "cancelled");
   if (cancelled.length > 0) {
     return { kind: "cancelled", queued: cancelled.reduce((sum, outcome) => sum + outcome.queued, 0), notified: cancelled.some((outcome) => outcome.notified) };
   }
+  if (outcomes.some((outcome) => outcome?.kind === "cancelledNobodyToTell")) return { kind: "cancelledNobodyToTell" };
   const updates = outcomes.filter((outcome): outcome is Extract<EventNoticeOutcome, { kind: "update" }> => outcome?.kind === "update");
   if (updates.length > 0) {
     return {
@@ -871,7 +898,8 @@ function combineNoticeOutcomes(outcomes: readonly (EventNoticeOutcome | null)[])
  *
  * Another date of the series that has already begun is not told anything: "every date" reaches
  * last month's too (§130), and a runner who ran it is owed no "details updated" and no "it is
- * cancelled" about a morning that is over. The date being edited is always told when asked —
+ * cancelled" about a morning that is over. Its cancellation is still audited, and it is left out
+ * of the banner's count, which is of messages. The date being edited is always told when asked —
  * the organizer is looking at it, and a race called off at the start line is still news.
  */
 async function announceSave<T extends Record<string, unknown>>(
@@ -882,8 +910,9 @@ async function announceSave<T extends Record<string, unknown>>(
   const saveKey = `${input.saved.id}:v${input.saved.version}`;
   const outcomes: (EventNoticeOutcome | null)[] = [];
   for (const [index, date] of input.dates.entries()) {
-    if (index > 0 && date.before.startsAt.getTime() <= input.now.getTime()) continue;
-    outcomes.push(await announceSavedDate(tx, { ...date, actor: input.actor, request: input.request, saveKey, now: input.now }));
+    const alreadyStarted = index > 0 && date.before.startsAt.getTime() <= input.now.getTime();
+    const outcome = await announceSavedDate(tx, { ...date, actor: input.actor, request: input.request, saveKey, alreadyStarted, now: input.now });
+    if (!alreadyStarted) outcomes.push(outcome);
   }
   return combineNoticeOutcomes(outcomes);
 }

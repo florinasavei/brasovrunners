@@ -77,6 +77,62 @@ describe("§NNN the changes worth telling the participants about", () => {
   });
 });
 
+/**
+ * The place to be announced: every public reader is handed no place while the switch is on, so
+ * the comparison is of what a runner can read — a place is news when it is announced, and never
+ * while it stays hidden.
+ */
+describe("§NNN a place that is not announced yet", () => {
+  // No programme here, so each case is about the meeting point alone; the programme's own rule is last.
+  const SHOWN = after({ scheduleItems: null, locationToBeAnnounced: false });
+  const HIDDEN: EventChangeFacts = { ...SHOWN, locationToBeAnnounced: true };
+
+  it("a row read without the switch counts as announced", () => {
+    const unknown: EventChangeFacts = { ...SHOWN };
+    delete unknown.locationToBeAnnounced;
+    expect(eventChangesToAnnounce(unknown, SHOWN)).toEqual([]);
+    expect(eventChangesToAnnounce(unknown, { ...SHOWN, locationName: "Poiana Brașov" })).toEqual(["place"]);
+  });
+
+  it("a place typed behind the switch is no change while it stays hidden — the name, the map, a language's own name", () => {
+    expect(eventChangesToAnnounce(HIDDEN, { ...HIDDEN, locationName: "Poiana Brașov" })).toEqual([]);
+    expect(eventChangesToAnnounce(HIDDEN, { ...HIDDEN, mapUrl: "https://maps.example.test/b" })).toEqual([]);
+    expect(
+      eventChangesToAnnounce(HIDDEN, HIDDEN, [{ locale: "en", locationName: null }], [{ locale: "en", locationName: "Poiana Brașov" }]),
+    ).toEqual([]);
+  });
+
+  it("announcing the place is news, even when the words behind the switch did not change at the same press", () => {
+    expect(eventChangesToAnnounce(HIDDEN, SHOWN)).toEqual(["place"]);
+    expect(eventChangesToAnnounce(HIDDEN, { ...SHOWN, locationName: "Poiana Brașov" })).toEqual(["place"]);
+  });
+
+  it("an announced place that differs from the one shown before is news, as it always was", () => {
+    expect(eventChangesToAnnounce(SHOWN, { ...SHOWN, mapUrl: "https://maps.example.test/b" })).toEqual(["place"]);
+    expect(eventChangesToAnnounce(SHOWN, { ...SHOWN })).toEqual([]);
+  });
+
+  it("hiding an announced place is not a new place to tell — the note is how the organizer says why", () => {
+    expect(eventChangesToAnnounce(SHOWN, HIDDEN)).toEqual([]);
+    expect(eventChangesToAnnounce(SHOWN, { ...HIDDEN, locationName: "Poiana Brașov" })).toEqual([]);
+  });
+
+  it("a programme row's place follows the switch: hidden, it is no change; announced, the places that appear are one", () => {
+    const programme = (changes: Record<string, unknown>) => [{ ...(BEFORE.scheduleItems as Record<string, unknown>[])[0], ...changes }];
+    const hiddenWithTent: EventChangeFacts = { ...HIDDEN, scheduleItems: programme({}) };
+    expect(eventChangesToAnnounce(hiddenWithTent, { ...hiddenWithTent, scheduleItems: programme({ place: "Tribuna" }) })).toEqual([]);
+    // A row's time is shown whatever the switch says, so a new time is news either way.
+    expect(eventChangesToAnnounce(hiddenWithTent, { ...hiddenWithTent, scheduleItems: programme({ startsAt: "2026-10-11T05:30:00.000Z" }) })).toEqual([
+      "programme",
+    ]);
+    // Announced: the tent appears on the programme with the meeting point.
+    expect(eventChangesToAnnounce(hiddenWithTent, { ...SHOWN, scheduleItems: programme({}) })).toEqual(["place", "programme"]);
+    // A programme with no places reads the same on both sides of the switch.
+    const bare = programme({ place: null });
+    expect(eventChangesToAnnounce({ ...HIDDEN, scheduleItems: bare }, { ...SHOWN, scheduleItems: bare })).toEqual(["place"]);
+  });
+});
+
 describe("§NNN the organizer's note and reason, as plain text", () => {
   it("trims, keeps line breaks as one kind, and drops every other control character", () => {
     expect(eventNoticeTextSchema.parse("  Adu frontala.\r\nParcarea e închisă.\u0007  ")).toBe("Adu frontala.\nParcarea e închisă.");

@@ -881,7 +881,8 @@
           "update": "Emailuri „Detalii actualizate” puse la coadă: {queued}. Pleacă în câteva minute, fiecare în limba participantului.",
           "none": "Nu a plecat niciun email: nu s-a schimbat locul, data și ora sau programul, iar mesajul pentru participanți era gol.",
           "cancelled": "Evenimentul a fost anulat. Emailuri „Eveniment anulat” puse la coadă: {queued}.",
-          "cancelledQuiet": "Evenimentul a fost anulat. Participanții nu au fost anunțați, pentru că bifa era debifată."
+          "cancelledQuiet": "Evenimentul a fost anulat. Participanții nu au fost anunțați, pentru că bifa era debifată.",
+          "cancelledNobody": "Evenimentul a fost anulat. Nu primește înscrieri pe site, așa că nu a fost nimeni de anunțat prin email. Motivul este în jurnalul de audit."
         },
         "countTest": "Înscrieri de test, care primesc și ele emailul și nu sunt numărate nicăieri: {test}."
       }

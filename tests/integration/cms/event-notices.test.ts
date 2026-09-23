@@ -431,6 +431,61 @@ describe("§NNN the participants hear about a change when the organizer asks", (
     expect(await db.select().from(auditLogs).where(eq(auditLogs.action, "event.cancelled"))).toHaveLength(1);
   });
 
+  it("cancelling an event that takes no registrations here says there was nobody to tell, not that a box was unticked", async () => {
+    const event = await seedEvent({
+      type: "GROUP_RUN",
+      surface: "TRAIL",
+      registrationMode: "NONE",
+      capacity: null,
+      registrationOpensAt: null,
+      registrationClosesAt: null,
+      declarationDocumentId: null,
+    });
+
+    // The editor draws no "tell them" box for it, so the form posts the reason alone.
+    const result = await save(event.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason: "Ploaie torențială.", notify: false } });
+    expect(result.notice).toEqual({ kind: "cancelledNobodyToTell" });
+    expect((await reload(event.id)).eventStatus).toBe("CANCELLED");
+    expect(await queued("EVENT_CANCELLED")).toHaveLength(0);
+    // Still asked why, and still recorded who and why.
+    const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.cancelled"));
+    expect(audit.metadataJson).toMatchObject({ reason: "Ploaie torențială.", notified: false, recipients: 0 });
+  });
+
+  it("a series save that cancels a date already run records it too, and tells its runners nothing", async () => {
+    const source = await seedEvent({ type: "GROUP_RUN", registrationMode: "INTERNAL", capacity: null });
+    await repeatEvent(db, { actor: editor, eventId: source.id, rule: { cadence: "WEEKLY", weekdays: [], until: "2026-11-01", publish: false }, now: NOW });
+    const dates = await db.select().from(events).where(eq(events.repeatOf, source.id)).orderBy(asc(events.startsAt));
+    expect(dates.length).toBeGreaterThanOrEqual(2);
+    const [ran, upcoming] = dates;
+    // One date of the series was last Saturday: "every date" reaches it (§130).
+    await db
+      .update(events)
+      .set({ startsAt: new Date("2026-09-12T08:00:00+03:00"), endsAt: new Date("2026-09-12T09:30:00+03:00") })
+      .where(eq(events.id, ran.id));
+    await seedRegistrations(source.id, [{ name: "ana", status: "CONFIRMED" }]);
+    const [bogdansEntry] = await seedRegistrations(ran.id, [{ name: "bogdan", status: "CONFIRMED" }]);
+    await seedRegistrations(upcoming.id, [{ name: "carmen", status: "CONFIRMED" }]);
+
+    const reason = "Parcul este închis până la primăvară.";
+    const result = await save(source.id, { fields: { eventStatus: "CANCELLED" }, cancellation: { reason, notify: true }, scope: "all" });
+    expect(result.appliedTo).toBe(dates.length);
+    // The banner counts messages: Ana's and Carmen's, not Bogdan's — his morning is over.
+    expect(result.notice).toEqual({ kind: "cancelled", queued: 2, notified: true });
+    const notices = await queued("EVENT_CANCELLED");
+    expect(notices).toHaveLength(2);
+    expect(notices.some((row) => row.registrationId === bogdansEntry.id)).toBe(false);
+
+    // One audit row per date the save cancelled, the one already run included and marked so.
+    const audits = await db.select().from(auditLogs).where(eq(auditLogs.action, "event.cancelled"));
+    expect(audits).toHaveLength(dates.length + 1);
+    const ranAudit = audits.find((row) => row.entityId === ran.id)!;
+    expect(ranAudit.metadataJson).toMatchObject({ reason, notified: false, recipients: 0, alreadyStarted: true });
+    const upcomingAudit = audits.find((row) => row.entityId === upcoming.id)!;
+    expect(upcomingAudit.metadataJson).toMatchObject({ reason, notified: true, recipients: 1 });
+    expect(upcomingAudit.metadataJson).not.toHaveProperty("alreadyStarted");
+  });
+
   it("put back on, the event can say so when asked", async () => {
     const event = await seedEvent({ eventStatus: "CANCELLED" });
     await seedRegistrations(event.id, [{ name: "ana", status: "CONFIRMED" }]);

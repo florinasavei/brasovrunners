@@ -249,4 +249,24 @@ describe("§NNN a cancelled event allocates nothing and mails nothing on its own
     expect(mine.eventCancelled).toBe(true);
     expect(mine.selfCheckinOpen).toBe(false);
   });
+
+  it("asked without an event, the link is for the race still on, even when the newest registration is on one called off", async () => {
+    const running = await createEvent(5);
+    const ana = await enter(running, "ana@example.test");
+    await signDeclaration(db, running, ana.id, await signingInput(db, NOW, "Ana Pop"), NOW);
+
+    // A second race, entered an hour later — the newest registration — and then cancelled.
+    const later = new Date(NOW.getTime() + 3_600_000);
+    const calledOff = await createEvent(5);
+    await submitRegistration(db, calledOff, submissionInput("ana@example.test", later), later);
+    const [newest] = await db.select().from(registrations).where(eq(registrations.eventId, calledOff.id));
+    await confirmEmail(db, calledOff, newest.id, later);
+    await cancel(calledOff);
+    const before = await db.select({ id: emailOutbox.id }).from(emailOutbox);
+
+    await requestRegistrationLink(db, { email: "ana@example.test" }, new Date(later.getTime() + 60_000));
+    const sent = (await db.select().from(emailOutbox)).filter((row) => !before.some((earlier) => earlier.id === row.id) && row.participantId !== null);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].registrationId).toBe(ana.id);
+  });
 });
