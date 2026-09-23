@@ -78,6 +78,25 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       await stashDraftValues(declarationDraftOf(form), path);
       redirect(`${path}?invalid=name#${DECLARATION_ERROR_SUMMARY_ID}`);
     }
+    /*
+      An identity document the text asks for, left out or not a series and number (§NNN, found in
+      review): its own refusal as well, for the reason the name has one — the generic sentence
+      below asks for a tick, and a parent who had ticked would be left guessing that the child's
+      document was the missing piece. Reachable only past the browser's own `required` and
+      `pattern`, so it is rare; but a minor's declaration has two document boxes, and the page
+      says which one. The same draft comes back, so only the missing box is left to fill.
+
+      Not when the tick is missing as well: that is the generic refusal, which says to tick it.
+    */
+    if (
+      isDomainError(error) &&
+      error.code === "VALIDATION_ERROR" &&
+      !error.fields.includes("accepted") &&
+      (error.fields.includes("idDocument") || error.fields.includes("minorIdDocument"))
+    ) {
+      await stashDraftValues(declarationDraftOf(form), path);
+      redirect(`${path}?invalid=document#${DECLARATION_ERROR_SUMMARY_ID}`);
+    }
     // The checkbox is HTML-required, so this is only a client that bypassed it — treated the
     // same as an invalid token rather than as a server error, since nothing was consumed (the
     // whole transaction, including the token spend, rolled back with the validation failure).

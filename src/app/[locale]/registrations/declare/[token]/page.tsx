@@ -45,6 +45,9 @@ type Props = {
 
 const ID_DOCUMENT_TYPES = ["ID_CARD", "PASSPORT", "RESIDENCE_PERMIT", "OTHER"] as const;
 
+/** A document's series box, by the name it posts: the declarant's, and on a minor's declaration the minor's (§NNN). */
+type DocumentBox = "idDocument" | "minorIdDocument";
+
 /**
  * One signer's identity document, as the declaration asks for it (§95, §283): the kind, chosen
  * from a closed list, and the series and number, typed — never scanned. An adult has one; a minor's
@@ -65,8 +68,9 @@ function IdDocumentFields({
   kinds,
   defaultKind,
   defaultValue,
+  refused,
 }: {
-  name: "idDocument" | "minorIdDocument";
+  name: DocumentBox;
   typeLabel: string;
   typeHelp: string;
   label: string;
@@ -75,6 +79,8 @@ function IdDocumentFields({
   kinds: ReadonlyArray<{ kind: string; label: string }>;
   defaultKind: string;
   defaultValue: string;
+  /** The server refused the press for this box (`?invalid=document`, §NNN): shown in its red state. */
+  refused: boolean;
 }) {
   return (
     <>
@@ -98,8 +104,11 @@ function IdDocumentFields({
           </option>
         ))}
       </TextField>
+      {/* The id is the name it posts, like the signature boxes': what the refusal's link points at. */}
       <TextField
+        id={name}
         name={name}
+        error={refused}
         label={label}
         helperText={help}
         placeholder={placeholder}
@@ -194,7 +203,13 @@ export default async function DeclarePage({ params, searchParams }: Props) {
     written for an unticked box, and never anything that reads as a broken link.
   */
   const nameRefused = context.ok && invalid === "name";
-  const pressFailed = context.ok && Boolean(invalid) && !nameRefused;
+  /*
+    `invalid=document` is an identity document the text asks for and the press left out, or typed
+    as something that is not a series and number (§NNN, found in review) — past the browser's own
+    check. Its own refusal for the same reason: the generic sentence asks for a tick.
+  */
+  const documentRefused = context.ok && invalid === "document";
+  const pressFailed = context.ok && Boolean(invalid) && !nameRefused && !documentRefused;
   const journeyStep = spent ? spent.step : ("declare" as const);
 
   const db = getDb();
@@ -272,14 +287,15 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const canReply = Boolean(env.EMAIL_REPLY_TO);
   /*
     What the refused press had typed, brought back sealed by the action (§314) and read only for
-    that refusal — a stale draft never fills a form it was not kept for.
+    the refusals that keep it, a name's or a document's (§NNN) — a stale draft never fills a form
+    it was not kept for.
 
     Read, not consumed: a Server Component cannot delete a cookie, exactly as for the registration
     form's draft (§142). It lives its ten minutes on the token's own path, and a signature that
     succeeds clears it (`signDeclarationAction`); whoever can open this path holds the link that
     signs anyway, so an island whose only job is deleting it would not earn its JavaScript.
   */
-  const draft = nameRefused ? await readFormDraft() : null;
+  const draft = nameRefused || documentRefused ? await readFormDraft() : null;
   const draftKind = (value: string | undefined) => ID_DOCUMENT_TYPES.find((kind) => kind === value) ?? "ID_CARD";
   const documentKinds = ID_DOCUMENT_TYPES.map((kind) => ({ kind, label: t(`declare.idDocumentTypes.${kind}`) }));
   const contact = (chunks: ReactNode) => <MuiLink href={contactHref}>{chunks}</MuiLink>;
@@ -301,6 +317,17 @@ export default async function DeclarePage({ params, searchParams }: Props) {
   const needsDocuments = declaration ? asksForIdDocument(declaration.body) : false;
   const boxLabel = (box: SignatureBox) =>
     box === "minorTypedName" ? t("declare.minorTypedName") : minorName !== null ? t("declare.guardianTypedName") : t("declare.typedName");
+  /*
+    Which document boxes the server refused (§NNN): the ones the kept draft left empty — the draft
+    keeps only what was typed. A box typed but refused (not a series and number) leaves none
+    empty, and neither does a draft whose ten minutes are over; then every document box is named,
+    as for the signatures.
+  */
+  const everyDocument: DocumentBox[] = minorName !== null ? ["minorIdDocument", "idDocument"] : ["idDocument"];
+  const emptyDocuments = documentRefused && draft ? everyDocument.filter((box) => !draft[box]) : [];
+  const refusedDocuments: DocumentBox[] = !documentRefused ? [] : emptyDocuments.length > 0 ? emptyDocuments : everyDocument;
+  const documentLabel = (box: DocumentBox) =>
+    box === "minorIdDocument" ? t("declare.minorIdDocument") : minorName !== null ? t("declare.guardianIdDocument") : t("declare.idDocument");
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: 2, sm: 3 } }}>
@@ -403,6 +430,22 @@ export default async function DeclarePage({ params, searchParams }: Props) {
               )}
             </Alert>
           )}
+          {/*
+            An identity document refused on the server (§NNN): the same place, the same focusable
+            summary, a link to each box it names. Never both summaries at once — the URL carries
+            one code — so the id they share stays unique.
+          */}
+          {documentRefused && (
+            <Alert severity="error" id={DECLARATION_ERROR_SUMMARY_ID} role="alert" tabIndex={-1} sx={{ mb: 3 }}>
+              <AlertTitle>{t("declare.documentRefusedTitle")}</AlertTitle>
+              <Box>{t("declare.documentRefusedNothingRecorded")}</Box>
+              {refusedDocuments.map((box) => (
+                <Box key={box} sx={{ mt: 0.5 }}>
+                  <MuiLink href={`#${box}`}>{documentLabel(box)}</MuiLink>
+                </Box>
+              ))}
+            </Alert>
+          )}
           <form action={signDeclarationAction}>
             <Stack spacing={2} sx={{ mt: 3 }}>
               <input type="hidden" name="locale" value={locale} />
@@ -448,6 +491,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       kinds={documentKinds}
                       defaultKind={draftKind(draft?.idDocumentType)}
                       defaultValue={draft?.idDocument ?? ""}
+                      refused={refusedDocuments.includes("idDocument")}
                     />
                   )}
                   <SignatureField
@@ -488,6 +532,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       kinds={documentKinds}
                       defaultKind={draftKind(draft?.minorIdDocumentType)}
                       defaultValue={draft?.minorIdDocument ?? ""}
+                      refused={refusedDocuments.includes("minorIdDocument")}
                     />
                   )}
                   <SignatureField
@@ -516,6 +561,7 @@ export default async function DeclarePage({ params, searchParams }: Props) {
                       kinds={documentKinds}
                       defaultKind={draftKind(draft?.idDocumentType)}
                       defaultValue={draft?.idDocument ?? ""}
+                      refused={refusedDocuments.includes("idDocument")}
                     />
                   )}
                   <SignatureField

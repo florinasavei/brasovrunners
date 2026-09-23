@@ -36,7 +36,7 @@ export const termsRo: LegalDocumentBody = {
       paragraphs: [
         "Participi pe propria răspundere, declarându-te sănătos, pregătit pentru distanță și teren și conștient de limitele tale. Respecți indicațiile organizatorilor și ale voluntarilor, urmezi traseul marcat, respecți regulile de circulație și nu lași nimic în urmă; cine nu o face, pune pe cineva în pericol sau nu mai poate continua poate fi oprit sau exclus pe loc, fără despăgubire.",
         "Poți participa de la 14 ani împliniți în ziua evenimentului; o înscriere cu o dată a nașterii care arată mai puțin este refuzată. Un minor (14–17 ani) este înscris de părinte sau de tutorele legal, cu datele copilului; declarația o semnează amândoi, minorul și părintele, fiecare cu actul lui de identitate, iar părintele dă consimțămintele și răspunde pentru el.",
-        "Numărul de concurs și kitul se ridică personal, de la birou, cu actul de identitate de pe declarație (pentru un minor, al părintelui) și nu se cedează. Nu se acordă premii în bani. Pagina evenimentului poate adăuga reguli, care fac parte din acești termeni.",
+        "Numărul de concurs și kitul se ridică personal, de la birou, cu actul de identitate de pe declarație (pentru un minor, al minorului sau al părintelui ori tutorelui) și nu se cedează. Nu se acordă premii în bani. Pagina evenimentului poate adăuga reguli, care fac parte din acești termeni.",
       ],
     },
     {
@@ -114,7 +114,7 @@ export const termsEn: LegalDocumentBody = {
       paragraphs: [
         "You take part on your own responsibility, declaring yourself healthy, fit for the distance and terrain and aware of your limits. You follow the organisers' and volunteers' instructions, keep to the marked course, obey the rules of the road and leave nothing behind; whoever does not, endangers anybody or cannot continue may be stopped or excluded on the spot, without compensation.",
         "You may take part from the age of 14 on the day of the event; a registration whose date of birth gives less is refused. A minor (14 to 17) is registered by a parent or legal guardian with the child's details; the minor and the parent both sign the declaration, each with their own identity document, and the parent gives the consents and answers for them.",
-        "The race number and kit are collected in person at the desk against the identity document on the declaration (for a minor, the parent's) and are not passed on. No prize money is awarded. An event page may add rules that form part of these terms.",
+        "The race number and kit are collected in person at the desk against the identity document on the declaration (for a minor, the minor's or the parent's or guardian's) and are not passed on. No prize money is awarded. An event page may add rules that form part of these terms.",
       ],
     },
     {

@@ -169,16 +169,20 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
   });
 
   /**
-   * The minor's and the parent's documents, where the club's text names one (§NNN): each box
-   * exists only on a minor's declaration whose text asks for documents, so a text without them
-   * signs with the two names alone.
+   * The minor's and the parent's documents (§NNN), always asked here, and filled without asking
+   * whether the boxes exist (found in review: a conditional fill let the spec pass silently on a
+   * text that asked for none, and never proved both documents are stored). Every non-production
+   * database carries the approved sample declaration, which is the platform's text
+   * (`db/seeds/sample-legal-documents.ts`) and names `{{participantIdDocument}}` and
+   * `{{guardianIdDocument}}` — an older seed named `{{idDocument}}`, which asks just the same
+   * (`asksForIdDocument`). A database whose declaration asks for no document fails here, loudly.
    */
   async function fillBothDocuments(page: Page) {
     await page.locator('[name="accepted"]').check();
-    const minorDocument = page.locator('[name="minorIdDocument"]');
-    if (await minorDocument.count()) await minorDocument.fill("MP 654321");
-    const parentDocument = page.locator('[name="idDocument"]');
-    if (await parentDocument.count()) await parentDocument.fill("BV 123456");
+    await expect(page.locator('[name="minorIdDocument"]')).toHaveCount(1);
+    await expect(page.locator('[name="idDocument"]')).toHaveCount(1);
+    await page.locator('[name="minorIdDocument"]').fill("MP 654321");
+    await page.locator('[name="idDocument"]').fill("BV 123456");
   }
 
   /**
@@ -227,10 +231,8 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       await expect(summary.getByRole("link", { name: "Înscrierile mele" })).toHaveAttribute("href", "/ro/inscrieri/ale-mele");
       expect(await registrationStatus(registration.id)).toBe("PENDING_DECLARATION");
       // Everything typed came back: both documents and both signatures.
-      if (await plain.locator('[name="minorIdDocument"]').count()) {
-        await expect(plain.locator('[name="minorIdDocument"]')).toHaveValue("MP 654321");
-        await expect(plain.locator('[name="idDocument"]')).toHaveValue("BV 123456");
-      }
+      await expect(plain.locator('[name="minorIdDocument"]')).toHaveValue("MP 654321");
+      await expect(plain.locator('[name="idDocument"]')).toHaveValue("BV 123456");
       await expect(plain.locator('[name="minorTypedName"]')).toHaveValue(child);
 
       // Now the parent's box right and the minor's wrong: the minor's box is the one named.
@@ -254,10 +256,10 @@ test.describe("BR-REQ-033-02 §314 the signature is the registered name", () => 
       const acceptance = await latestAcceptance(registration.id);
       expect(acceptance?.typedName).toBe(parent.toLowerCase());
       expect(acceptance?.minorTypedName).toBe(child.toLowerCase());
-      if (acceptance?.idDocument !== null) {
-        expect(acceptance?.idDocument).toContain("BV 123456");
-        expect(acceptance?.minorIdDocument).toContain("MP 654321");
-      }
+      // Each document in its own column, as one line with its kind (§283): the parent's where the
+      // declarant's always was, the minor's beside it.
+      expect(acceptance?.idDocument).toBe("Carte de identitate BV 123456");
+      expect(acceptance?.minorIdDocument).toBe("Carte de identitate MP 654321");
     } finally {
       await context.close();
     }
